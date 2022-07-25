@@ -56,6 +56,9 @@ public:
     NumberFormat& number_format() const { return *m_number_format; }
     void set_number_format(NumberFormat* number_format) { m_number_format = number_format; }
 
+    PluralRules& plural_rules() const { return *m_plural_rules; }
+    void set_plural_rules(PluralRules* plural_rules) { m_plural_rules = plural_rules; }
+
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -65,6 +68,7 @@ private:
     Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]
     Numeric m_numeric { Numeric::Always };           // [[Numeric]]
     NumberFormat* m_number_format { nullptr };       // [[NumberFormat]]
+    PluralRules* m_plural_rules { nullptr };         // [[PluralRules]]
 };
 
 struct PatternPartitionWithUnit : public PatternPartition {

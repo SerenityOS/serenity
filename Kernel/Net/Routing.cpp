@@ -76,7 +76,7 @@ protected:
         });
         if (!maybe_mac_address.has_value())
             return true;
-        return blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
+        return !blocker.unblock_if_matching_ip_address(true, blocker.ip_address(), maybe_mac_address.value());
     }
 };
 
@@ -137,6 +137,8 @@ SpinlockProtected<Route::RouteList>& routing_table()
 
 ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, RefPtr<NetworkAdapter> adapter, UpdateTable update)
 {
+    dbgln_if(ROUTING_DEBUG, "update_routing_table {} {} {} {} {} {}", destination, gateway, netmask, flags, adapter, update == UpdateTable::Set ? "Set" : "Delete");
+
     auto route_entry = adopt_ref_if_nonnull(new (nothrow) Route { destination, gateway, netmask, flags, adapter.release_nonnull() });
     if (!route_entry)
         return ENOMEM;
@@ -151,7 +153,9 @@ ErrorOr<void> update_routing_table(IPv4Address const& destination, IPv4Address c
         }
         if (update == UpdateTable::Delete) {
             for (auto& route : table) {
-                if (route == *route_entry) {
+                dbgln_if(ROUTING_DEBUG, "candidate: {} {} {} {} {}", route.destination, route.gateway, route.netmask, route.flags, route.adapter);
+                if (route.matches(*route_entry)) {
+                    // FIXME: Remove all entries, not only the first one.
                     table.remove(route);
                     return {};
                 }

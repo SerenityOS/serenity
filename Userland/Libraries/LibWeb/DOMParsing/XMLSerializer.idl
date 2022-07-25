@@ -1,0 +1,7 @@
+#import <DOM/Node.idl>
+
+[Exposed=Window]
+interface XMLSerializer {
+    constructor();
+    DOMString serializeToString(Node root);
+};

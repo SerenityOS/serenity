@@ -88,7 +88,7 @@ String Square::to_algebraic() const
 Move::Move(StringView long_algebraic)
     : from(long_algebraic.substring_view(0, 2))
     , to(long_algebraic.substring_view(2, 2))
-    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""))
+    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""sv))
 {
 }
 
@@ -106,7 +106,7 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
     String move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });
 
-    if (move_string.contains("-")) {
+    if (move_string.contains('-')) {
         move.from = Square(turn == Color::White ? 0 : 7, 4);
         move.to = Square(turn == Color::White ? 0 : 7, move_string == "O-O" ? 6 : 2);
         move.promote_to = Type::None;
@@ -115,15 +115,15 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
         return move;
     }
 
-    if (algebraic.contains("#")) {
+    if (algebraic.contains('#')) {
         move.is_mate = true;
         move_string = move_string.substring(0, move_string.length() - 1);
-    } else if (algebraic.contains("+")) {
+    } else if (algebraic.contains('+')) {
         move.is_check = true;
         move_string = move_string.substring(0, move_string.length() - 1);
     }
 
-    if (algebraic.contains("=")) {
+    if (algebraic.contains('=')) {
         move.promote_to = piece_for_char_promotion(move_string.split('=').at(1).substring(0, 1));
         move_string = move_string.split('=').at(0);
     }
@@ -131,7 +131,7 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
     move.to = Square(move_string.substring(move_string.length() - 2, 2));
     move_string = move_string.substring(0, move_string.length() - 2);
 
-    if (move_string.contains("x")) {
+    if (move_string.contains('x')) {
         move.is_capture = true;
         move_string = move_string.substring(0, move_string.length() - 1);
     }
@@ -201,20 +201,20 @@ String Move::to_algebraic() const
     if (is_capture) {
         if (piece.type == Type::Pawn && !is_ambiguous)
             builder.append(from.to_algebraic().substring(0, 1));
-        builder.append("x");
+        builder.append('x');
     }
 
     builder.append(to.to_algebraic());
 
     if (promote_to != Type::None) {
-        builder.append("=");
+        builder.append('=');
         builder.append(char_for_piece(promote_to));
     }
 
     if (is_mate)
-        builder.append("#");
+        builder.append('#');
     else if (is_check)
-        builder.append("+");
+        builder.append('+');
 
     return builder.build();
 }
@@ -287,38 +287,38 @@ String Board::to_fen() const
             empty = 0;
         }
         if (rank < 7)
-            builder.append("/");
+            builder.append('/');
     }
 
     // 2. Active color
     VERIFY(m_turn != Color::None);
-    builder.append(m_turn == Color::White ? " w " : " b ");
+    builder.append(m_turn == Color::White ? " w "sv : " b "sv);
 
     // 3. Castling availability
-    builder.append(m_white_can_castle_kingside ? "K" : "");
-    builder.append(m_white_can_castle_queenside ? "Q" : "");
-    builder.append(m_black_can_castle_kingside ? "k" : "");
-    builder.append(m_black_can_castle_queenside ? "q" : "");
-    builder.append(" ");
+    builder.append(m_white_can_castle_kingside ? "K"sv : ""sv);
+    builder.append(m_white_can_castle_queenside ? "Q"sv : ""sv);
+    builder.append(m_black_can_castle_kingside ? "k"sv : ""sv);
+    builder.append(m_black_can_castle_queenside ? "q"sv : ""sv);
+    builder.append(' ');
 
     // 4. En passant target square
     if (!m_last_move.has_value())
-        builder.append("-");
+        builder.append('-');
     else if (m_last_move.value().piece.type == Type::Pawn) {
         if (m_last_move.value().from.rank == 1 && m_last_move.value().to.rank == 3)
             builder.append(Square(m_last_move.value().to.rank - 1, m_last_move.value().to.file).to_algebraic());
         else if (m_last_move.value().from.rank == 6 && m_last_move.value().to.rank == 4)
             builder.append(Square(m_last_move.value().to.rank + 1, m_last_move.value().to.file).to_algebraic());
         else
-            builder.append("-");
+            builder.append('-');
     } else {
-        builder.append("-");
+        builder.append('-');
     }
-    builder.append(" ");
+    builder.append(' ');
 
     // 5. Halfmove clock
     builder.append(String::number(min(m_moves_since_capture, m_moves_since_pawn_advance)));
-    builder.append(" ");
+    builder.append(' ');
 
     // 6. Fullmove number
     builder.append(String::number(1 + m_moves.size() / 2));

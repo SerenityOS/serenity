@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
@@ -178,7 +179,7 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
+    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
@@ -210,7 +211,7 @@ void PaintableBox::paint_background(PaintContext& context) const
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = absolute_border_box_rect();
 
-    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radius_data());
+    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radii_data());
 }
 
 void PaintableBox::paint_box_shadow(PaintContext& context) const
@@ -230,32 +231,70 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
             static_cast<int>(layer.spread_distance.to_px(layout_box())),
             layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
-    Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, absolute_border_box_rect().to_rounded<int>(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
-BorderRadiusData PaintableBox::normalized_border_radius_data() const
+BorderRadiiData PaintableBox::normalized_border_radii_data() const
 {
-    return Painting::normalized_border_radius_data(layout_box(), absolute_border_box_rect(),
+    return Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
         computed_values().border_bottom_left_radius());
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
     // FIXME: Support more overflow variations.
-    if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        context.painter().save();
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_border_box_rect()));
+    auto clip_rect = absolute_padding_box_rect().to_rounded<int>();
+    auto overflow_x = computed_values().overflow_x();
+    auto overflow_y = computed_values().overflow_y();
+
+    auto clip_overflow = [&] {
+        if (!m_clipping_overflow) {
+            context.painter().save();
+            context.painter().add_clip_rect(clip_rect);
+            m_clipping_overflow = true;
+        }
+    };
+
+    if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
+        clip_overflow();
+    }
+    if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
+        auto border_radii_data = normalized_border_radii_data();
+        auto const& border = box_model().border;
+        border_radii_data.shrink(border.top, border.right, border.bottom, border.left);
+        if (border_radii_data.has_any_radius()) {
+            auto corner_clipper = BorderRadiusCornerClipper::create(clip_rect, border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            if (corner_clipper.is_error()) {
+                dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
+                return;
+            }
+            clip_overflow();
+            m_overflow_corner_radius_clipper = corner_clipper.release_value();
+            m_overflow_corner_radius_clipper->sample_under_corners(context.painter());
+        }
     }
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
     // FIXME: Support more overflow variations.
-    if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden)
+    if (m_clipping_overflow) {
         context.painter().restore();
+        m_clipping_overflow = false;
+    }
+    if (m_overflow_corner_radius_clipper.has_value()) {
+        m_overflow_corner_radius_clipper->blit_corner_clipping(context.painter());
+        m_overflow_corner_radius_clipper = {};
+    }
 }
 
 static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment)
@@ -415,13 +454,24 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     bool should_clip_overflow = computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
+    Optional<BorderRadiusCornerClipper> corner_clipper;
 
     if (should_clip_overflow) {
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_padding_box_rect()));
+        auto clip_box = absolute_padding_box_rect().to_rounded<int>();
+        context.painter().add_clip_rect(clip_box);
         auto scroll_offset = static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset();
         context.painter().translate(-scroll_offset.to_type<int>());
+
+        auto border_radii = normalized_border_radii_data();
+        if (border_radii.has_any_radius()) {
+            auto clipper = BorderRadiusCornerClipper::create(clip_box, border_radii);
+            if (!clipper.is_error()) {
+                corner_clipper = clipper.release_value();
+                corner_clipper->sample_under_corners(context.painter());
+            }
+        }
     }
 
     // Text shadows
@@ -469,6 +519,8 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
     if (should_clip_overflow) {
         context.painter().restore();
+        if (corner_clipper.has_value())
+            corner_clipper->blit_corner_clipping(context.painter());
     }
 
     // FIXME: Merge this loop with the above somehow..

@@ -67,6 +67,8 @@ void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& 
     Window::for_each_window({}, [](auto& window) {
         Core::EventLoop::current().post_event(window, make<ThemeChangeEvent>());
     });
+
+    Application::the()->dispatch_event(*make<ThemeChangeEvent>());
 }
 
 void ConnectionToWindowServer::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query)

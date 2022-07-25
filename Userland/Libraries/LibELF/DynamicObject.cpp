@@ -16,8 +16,8 @@
 
 namespace ELF {
 
-DynamicObject::DynamicObject(String const& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
-    : m_filename(filename)
+DynamicObject::DynamicObject(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+    : m_filepath(filepath)
     , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
 {
@@ -41,7 +41,7 @@ void DynamicObject::dump() const
 {
     if constexpr (DYNAMIC_LOAD_DEBUG) {
         StringBuilder builder;
-        builder.append("\nd_tag      tag_name         value\n");
+        builder.append("\nd_tag      tag_name         value\n"sv);
         size_t num_dynamic_sections = 0;
 
         for_each_dynamic_entry([&](DynamicObject::DynamicEntry const& entry) {
@@ -336,7 +336,8 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_val
 
 StringView DynamicObject::symbol_string_table_string(ElfW(Word) index) const
 {
-    return StringView { (char const*)base_address().offset(m_string_table_offset + index).as_ptr() };
+    auto const* symbol_string_table_ptr = reinterpret_cast<char const*>(base_address().offset(m_string_table_offset + index).as_ptr());
+    return StringView { symbol_string_table_ptr, strlen(symbol_string_table_ptr) };
 }
 
 char const* DynamicObject::raw_symbol_string_table_string(ElfW(Word) index) const
@@ -474,9 +475,9 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::create(String const& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+NonnullRefPtr<DynamicObject> DynamicObject::create(String const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
-    return adopt_ref(*new DynamicObject(filename, base_address, dynamic_section_address));
+    return adopt_ref(*new DynamicObject(filepath, base_address, dynamic_section_address));
 }
 
 // offset is in PLT relocation table
@@ -499,7 +500,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
         if (result.value().type == STT_GNU_IFUNC)
             symbol_location = VirtualAddress { reinterpret_cast<IfuncResolver>(symbol_location.get())() };
     } else if (symbol.bind() != STB_WEAK) {
-        dbgln("did not find symbol while doing relocations for library {}: {}", m_filename, symbol.name());
+        dbgln("did not find symbol while doing relocations for library {}: {}", m_filepath, symbol.name());
         VERIFY_NOT_REACHED();
     }
 

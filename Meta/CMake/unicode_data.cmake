@@ -141,6 +141,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     set(UNICODE_NUMBER_FORMAT_HEADER LibUnicode/UnicodeNumberFormat.h)
     set(UNICODE_NUMBER_FORMAT_IMPLEMENTATION LibUnicode/UnicodeNumberFormat.cpp)
 
+    set(UNICODE_PLURAL_RULES_HEADER LibUnicode/UnicodePluralRules.h)
+    set(UNICODE_PLURAL_RULES_IMPLEMENTATION LibUnicode/UnicodePluralRules.cpp)
+
     set(UNICODE_RELATIVE_TIME_FORMAT_HEADER LibUnicode/UnicodeRelativeTimeFormat.h)
     set(UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION LibUnicode/UnicodeRelativeTimeFormat.cpp)
 
@@ -158,6 +161,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
         set(UNICODE_NUMBER_FORMAT_HEADER UnicodeNumberFormat.h)
         set(UNICODE_NUMBER_FORMAT_IMPLEMENTATION UnicodeNumberFormat.cpp)
+
+        set(UNICODE_PLURAL_RULES_HEADER UnicodePluralRules.h)
+        set(UNICODE_PLURAL_RULES_IMPLEMENTATION UnicodePluralRules.cpp)
 
         set(UNICODE_RELATIVE_TIME_FORMAT_HEADER UnicodeRelativeTimeFormat.h)
         set(UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION UnicodeRelativeTimeFormat.cpp)
@@ -202,6 +208,15 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         arguments -r "${CLDR_CORE_PATH}" -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"
     )
     invoke_generator(
+        "UnicodePluralRules"
+        Lagom::GenerateUnicodePluralRules
+        "${CLDR_VERSION_FILE}"
+        "${UNICODE_META_TARGET_PREFIX}"
+        "${UNICODE_PLURAL_RULES_HEADER}"
+        "${UNICODE_PLURAL_RULES_IMPLEMENTATION}"
+        arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}"
+    )
+    invoke_generator(
         "UnicodeRelativeTimeFormat"
         Lagom::GenerateUnicodeRelativeTimeFormat
         "${CLDR_VERSION_FILE}"
@@ -220,6 +235,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         ${UNICODE_LOCALE_IMPLEMENTATION}
         ${UNICODE_NUMBER_FORMAT_HEADER}
         ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
+        ${UNICODE_PLURAL_RULES_HEADER}
+        ${UNICODE_PLURAL_RULES_IMPLEMENTATION}
         ${UNICODE_RELATIVE_TIME_FORMAT_HEADER}
         ${UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION}
     )

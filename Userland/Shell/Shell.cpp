@@ -98,7 +98,7 @@ String Shell::prompt() const
                     break;
                 switch (*ptr) {
                 case 'X':
-                    builder.append("\033]0;");
+                    builder.append("\033]0;"sv);
                     break;
                 case 'a':
                     builder.append(0x07);
@@ -110,7 +110,7 @@ String Shell::prompt() const
                     builder.append(username);
                     break;
                 case 'h':
-                    builder.append(hostname);
+                    builder.append({ hostname, strlen(hostname) });
                     break;
                 case 'w': {
                     String home_path = getenv("HOME");
@@ -208,7 +208,7 @@ Vector<String> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
-        base = "/";
+        base = "/"sv;
         explicitly_set_base = true;
     }
     auto parts = split_path(path);
@@ -367,7 +367,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
         return adopt_ref(*new AST::StringValue(current_script));
 
     --index;
-    if (auto argv = lookup_local_variable("ARGV")) {
+    if (auto argv = lookup_local_variable("ARGV"sv)) {
         if (argv->is_list_without_resolution()) {
             AST::ListValue* list = static_cast<AST::ListValue*>(argv.ptr());
             if (list->values().size() <= index)
@@ -390,7 +390,7 @@ String Shell::local_variable_or(StringView name, String const& replacement) cons
     auto value = lookup_local_variable(name);
     if (value) {
         StringBuilder builder;
-        builder.join(" ", value->resolve_as_list(*this));
+        builder.join(' ', value->resolve_as_list(*this));
         return builder.to_string();
     }
     return replacement;
@@ -839,7 +839,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     close(sync_pipe[1]);
 
     StringBuilder cmd;
-    cmd.join(" ", command.argv);
+    cmd.join(' ', command.argv);
 
     auto command_copy = AST::Command(command);
     // Clear the next chain if it's to be immediately executed
@@ -887,7 +887,7 @@ void Shell::execute_process(Vector<char const*>&& argv)
 
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
-        auto parts = StringView { argv[0] }.split_view('/');
+        auto parts = StringView { argv[0], strlen(argv[0]) }.split_view('/');
         if (parts.size() == 1) {
             // If this is a path in the current directory and it caused execvp() to fail,
             // simply don't attempt to execute it, see #6774.
@@ -913,10 +913,10 @@ void Shell::execute_process(Vector<char const*>&& argv)
                     break;
                 auto& file = file_result.value();
                 auto line = file->read_line();
-                if (!line.starts_with("#!"))
+                if (!line.starts_with("#!"sv))
                     break;
                 GenericLexer shebang_lexer { line.substring_view(2) };
-                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r")).to_string();
+                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r"sv)).to_string();
                 argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
@@ -1139,27 +1139,27 @@ String Shell::escape_token_for_single_quotes(StringView token)
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
     StringBuilder builder;
-    builder.append("'");
+    builder.append("'"sv);
     auto started_single_quote = true;
 
     for (auto c : token) {
         switch (c) {
         case '\'':
-            builder.append("\"'\"");
+            builder.append("\"'\""sv);
             started_single_quote = false;
             continue;
         default:
             builder.append(c);
             if (!started_single_quote) {
                 started_single_quote = true;
-                builder.append("'");
+                builder.append("'"sv);
             }
             break;
         }
     }
 
     if (started_single_quote)
-        builder.append("'");
+        builder.append("'"sv);
 
     return builder.build();
 }
@@ -1174,10 +1174,10 @@ String Shell::escape_token_for_double_quotes(StringView token)
     for (auto c : token) {
         switch (c) {
         case '\"':
-            builder.append("\\\"");
+            builder.append("\\\""sv);
             continue;
         case '\\':
-            builder.append("\\\\");
+            builder.append("\\\\"sv);
             continue;
         default:
             builder.append(c);
@@ -1244,40 +1244,40 @@ static String do_escape(Shell::EscapeMode escape_mode, auto& token)
             break;
         case Shell::SpecialCharacterEscapeMode::Escaped:
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             builder.append('\\');
             builder.append(c);
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             break;
         case Shell::SpecialCharacterEscapeMode::QuotedAsEscape:
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
-                builder.append("\"");
+                builder.append("\""sv);
             switch (c) {
             case '\n':
-                builder.append(R"(\n)");
+                builder.append(R"(\n)"sv);
                 break;
             case '\t':
-                builder.append(R"(\t)");
+                builder.append(R"(\t)"sv);
                 break;
             case '\r':
-                builder.append(R"(\r)");
+                builder.append(R"(\r)"sv);
                 break;
             default:
                 VERIFY_NOT_REACHED();
             }
             if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
-                builder.append("\"");
+                builder.append("\""sv);
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             break;
         case Shell::SpecialCharacterEscapeMode::QuotedAsHex:
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
-                builder.append("\"");
+                builder.append("\""sv);
 
             if (c <= NumericLimits<u8>::max())
                 builder.appendff(R"(\x{:0>2x})", static_cast<u8>(c));
@@ -1285,9 +1285,9 @@ static String do_escape(Shell::EscapeMode escape_mode, auto& token)
                 builder.appendff(R"(\u{:0>8x})", static_cast<u32>(c));
 
             if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
-                builder.append("\"");
+                builder.append("\""sv);
             if (escape_mode == Shell::EscapeMode::SingleQuotedString)
-                builder.append("'");
+                builder.append("'"sv);
             break;
         }
     }
@@ -1460,7 +1460,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 
 Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const* node, EscapeMode escape_mode)
 {
-    auto token = offset ? part.substring_view(0, offset) : "";
+    auto token = offset ? part.substring_view(0, offset) : ""sv;
     String path;
 
     ssize_t last_slash = token.length() - 1;
@@ -1526,11 +1526,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
-                    suggestions.append({ escape_token(file, escape_mode), "/" });
+                    suggestions.append({ escape_token(file, escape_mode), "/"sv });
                 } else {
-                    if (!allow_direct_children && !file.contains("/"))
+                    if (!allow_direct_children && !file.contains('/'))
                         continue;
-                    suggestions.append({ escape_token(file, escape_mode), " " });
+                    suggestions.append({ escape_token(file, escape_mode), " "sv });
                 }
                 suggestions.last().input_offset = token_length;
                 suggestions.last().invariant_offset = invariant_offset;
@@ -1556,7 +1556,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         });
 
     if (!match)
-        return complete_path("", name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
+        return complete_path(""sv, name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
 
     String completion = match->path;
     auto token_length = escape_token(name, escape_mode).length();
@@ -1573,10 +1573,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
 
     int index = match - cached_path.data();
     for (int i = index - 1; i >= 0 && cached_path[i].path.starts_with(name); --i)
-        suggestions.append({ cached_path[i].path, " " });
+        suggestions.append({ cached_path[i].path, " "sv });
     for (size_t i = index + 1; i < cached_path.size() && cached_path[i].path.starts_with(name); ++i)
-        suggestions.append({ cached_path[i].path, " " });
-    suggestions.append({ cached_path[index].path, " " });
+        suggestions.append({ cached_path[i].path, " "sv });
+    suggestions.append({ cached_path[index].path, " "sv });
 
     for (auto& entry : suggestions) {
         entry.input_offset = token_length;
@@ -1590,7 +1590,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
 Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
-    auto pattern = offset ? name.substring_view(0, offset) : "";
+    auto pattern = offset ? name.substring_view(0, offset) : ""sv;
 
     auto invariant_offset = offset;
     size_t static_offset = 0;
@@ -1607,7 +1607,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
 
     // Look at the environment.
     for (auto i = 0; environ[i]; ++i) {
-        auto entry = StringView { environ[i] };
+        StringView entry { environ[i], strlen(environ[i]) };
         if (entry.starts_with(pattern)) {
             auto parts = entry.split_view('=');
             if (parts.is_empty() || parts.first().is_empty())
@@ -1631,7 +1631,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
 Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
-    auto pattern = offset ? name.substring_view(0, offset) : "";
+    auto pattern = offset ? name.substring_view(0, offset) : ""sv;
 
     auto invariant_offset = offset;
     size_t static_offset = 0;
@@ -1668,7 +1668,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
     size_t start = 0;
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
-    auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
+    auto option_pattern = offset > start ? option.substring_view(start, offset - start) : ""sv;
     auto invariant_offset = offset;
     size_t static_offset = 0;
     if (m_editor)
@@ -1762,7 +1762,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             AST::NodeVisitor::visit(node);
             auto list = pop_list();
             StringBuilder builder;
-            builder.join("", list);
+            builder.join(""sv, list);
             this->list().append(builder.build());
         }
 
@@ -1781,7 +1781,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             AST::NodeVisitor::visit(node);
             auto list = pop_list();
             StringBuilder builder;
-            builder.join("", list);
+            builder.join(""sv, list);
             this->list().append(builder.build());
         }
 
@@ -1898,32 +1898,32 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto parsed = parsed_result.release_value();
             if (parsed.is_object()) {
                 auto& object = parsed.as_object();
-                auto kind = object.get("kind").as_string_or("plain");
+                auto kind = object.get("kind"sv).as_string_or("plain");
                 if (kind == "path") {
-                    auto base = object.get("base").as_string_or("");
-                    auto part = object.get("part").as_string_or("");
-                    auto executable_only = object.get("executable_only").to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
+                    auto base = object.get("base"sv).as_string_or("");
+                    auto part = object.get("part"sv).as_string_or("");
+                    auto executable_only = object.get("executable_only"sv).to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
                     suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
                 } else if (kind == "program") {
-                    auto name = object.get("name").as_string_or("");
+                    auto name = object.get("name"sv).as_string_or("");
                     suggestions.extend(complete_program_name(name, name.length()));
                 } else if (kind == "proxy") {
                     if (m_completion_stack_info.size_free() < 4 * KiB) {
                         dbgln("Not enough stack space, recursion?");
                         return IterationDecision::Continue;
                     }
-                    auto argv = object.get("argv").as_string_or("");
+                    auto argv = object.get("argv"sv).as_string_or("");
                     dbgln("Proxy completion for {}", argv);
                     suggestions.extend(complete(argv));
                 } else if (kind == "plain") {
                     Line::CompletionSuggestion suggestion {
-                        object.get("completion").as_string_or(""),
-                        object.get("trailing_trivia").as_string_or(""),
-                        object.get("display_trivia").as_string_or(""),
+                        object.get("completion"sv).as_string_or(""),
+                        object.get("trailing_trivia"sv).as_string_or(""),
+                        object.get("display_trivia"sv).as_string_or(""),
                     };
-                    suggestion.static_offset = object.get("static_offset").to_u64(0);
-                    suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
-                    suggestion.allow_commit_without_listing = object.get("allow_commit_without_listing").to_bool(true);
+                    suggestion.static_offset = object.get("static_offset"sv).to_u64(0);
+                    suggestion.invariant_offset = object.get("invariant_offset"sv).to_u64(0);
+                    suggestion.allow_commit_without_listing = object.get("allow_commit_without_listing"sv).to_bool(true);
                     suggestions.append(move(suggestion));
                 } else {
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
@@ -1957,7 +1957,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(Strin
 
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)               \
     if (auto name_view = #fn_name##sv; name_view.starts_with(name)) \
-        suggestions.append({ name_view, " " });
+        suggestions.append({ name_view, " "sv });
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
@@ -2040,7 +2040,7 @@ bool Shell::read_single_line()
 
             if (is_eof || is_empty) {
                 // Pretend the user tried to execute builtin_exit()
-                auto exit_code = run_command("exit");
+                auto exit_code = run_command("exit"sv);
                 if (exit_code != 0) {
                     // If we didn't end up actually calling exit(), and the command didn't succeed, just pretend it's all okay
                     // unless we can't, then just quit anyway.
@@ -2082,12 +2082,25 @@ void Shell::notify_child_event()
     // The child might still be alive (and even running) when this signal is dispatched to us
     // so just...repeat until we find a suitable child.
     // This, of course, will mean that someone can send us a SIGCHILD and we'd be spinning here
-    // until the next child event we can actually handle.
+    // until the next child event we can actually handle, so stop after spending a total of 5110us (~5ms) on it.
     bool found_child = false;
-    do {
+    size_t const max_tries = 10;
+    size_t valid_attempts = max_tries;
+    useconds_t backoff_usec = 20;
+    int backoff_multiplier = 2;
+
+    for (;;) {
+        if (found_child || --valid_attempts == 0)
+            break;
+
         // Ignore stray SIGCHLD when there are no jobs.
         if (jobs.is_empty())
             return;
+
+        if (valid_attempts < max_tries - 1) {
+            usleep(backoff_usec);
+            backoff_usec *= backoff_multiplier;
+        }
 
         for (auto& it : jobs) {
             auto job_id = it.key;
@@ -2141,7 +2154,7 @@ void Shell::notify_child_event()
         for (auto job_id : disowned_jobs) {
             jobs.remove(job_id);
         }
-    } while (!found_child);
+    }
 }
 
 Shell::Shell()
@@ -2170,10 +2183,13 @@ Shell::Shell()
     // Add the default PATH vars.
     {
         StringBuilder path;
-        path.append(getenv("PATH"));
+        auto const* path_env_ptr = getenv("PATH");
+
+        if (path_env_ptr != NULL)
+            path.append({ path_env_ptr, strlen(path_env_ptr) });
         if (path.length())
-            path.append(":");
-        path.append("/usr/local/bin:/usr/bin:/bin");
+            path.append(":"sv);
+        path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv);
         setenv("PATH", path.to_string().characters(), true);
     }
 
@@ -2463,7 +2479,8 @@ void Shell::timer_event(Core::TimerEvent& event)
     if (m_is_subshell)
         return;
 
-    StringView option = getenv("HISTORY_AUTOSAVE_TIME_MS");
+    auto const* autosave_env_ptr = getenv("HISTORY_AUTOSAVE_TIME_MS");
+    auto option = autosave_env_ptr != NULL ? StringView { autosave_env_ptr, strlen(autosave_env_ptr) } : StringView {};
 
     auto time = option.to_uint();
     if (!time.has_value() || time.value() == 0) {

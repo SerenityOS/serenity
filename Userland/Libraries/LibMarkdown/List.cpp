@@ -22,14 +22,14 @@ String List::render_to_html(bool) const
     if (m_start_number != 1)
         builder.appendff(" start=\"{}\"", m_start_number);
 
-    builder.append(">\n");
+    builder.append(">\n"sv);
 
     for (auto& item : m_items) {
-        builder.append("<li>");
+        builder.append("<li>"sv);
         if (!m_is_tight || (item->blocks().size() != 0 && !dynamic_cast<Paragraph const*>(&(item->blocks()[0]))))
-            builder.append("\n");
+            builder.append('\n');
         builder.append(item->render_to_html(m_is_tight));
-        builder.append("</li>\n");
+        builder.append("</li>\n"sv);
     }
 
     builder.appendff("</{}>\n", tag);
@@ -43,11 +43,11 @@ String List::render_for_terminal(size_t) const
 
     int i = 0;
     for (auto& item : m_items) {
-        builder.append("  ");
+        builder.append("  "sv);
         if (m_is_ordered)
             builder.appendff("{}.", ++i);
         else
-            builder.append("*");
+            builder.append('*');
         builder.append(item->render_for_terminal());
     }
 

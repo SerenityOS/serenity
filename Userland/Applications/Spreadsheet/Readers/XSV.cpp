@@ -133,7 +133,7 @@ Vector<XSV::Field> XSV::read_row(bool header_row)
 XSV::Field XSV::read_one_field()
 {
     if ((m_behaviors & ParserBehavior::TrimLeadingFieldSpaces) != ParserBehavior::None)
-        m_lexer.consume_while(is_any_of(" \t\v"));
+        m_lexer.consume_while(is_any_of(" \t\v"sv));
 
     bool is_quoted = false;
     Field field;
@@ -145,7 +145,7 @@ XSV::Field XSV::read_one_field()
     }
 
     if ((m_behaviors & ParserBehavior::TrimTrailingFieldSpaces) != ParserBehavior::None) {
-        m_lexer.consume_while(is_any_of(" \t\v"));
+        m_lexer.consume_while(is_any_of(" \t\v"sv));
 
         if (!is_quoted) {
             // Also have to trim trailing spaces from unquoted fields.

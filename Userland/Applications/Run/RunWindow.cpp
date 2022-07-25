@@ -31,7 +31,7 @@ RunWindow::RunWindow()
 {
     load_history();
 
-    auto app_icon = GUI::Icon::default_icon("app-run");
+    auto app_icon = GUI::Icon::default_icon("app-run"sv);
 
     set_title("Run");
     set_icon(app_icon.bitmap_for_size(16));
@@ -47,7 +47,8 @@ RunWindow::RunWindow()
 
     m_path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path");
     m_path_combo_box->set_model(m_path_history_model);
-    m_path_combo_box->set_selected_index(0);
+    if (!m_path_history.is_empty())
+        m_path_combo_box->set_selected_index(0);
 
     m_ok_button = *main_widget.find_descendant_of_type_named<GUI::DialogButton>("ok_button");
     m_ok_button->on_click = [this](auto) {
@@ -100,7 +101,7 @@ void RunWindow::do_run()
         return;
     }
 
-    GUI::MessageBox::show_error(this, "Failed to run. Please check your command, path, or address, and try again.");
+    GUI::MessageBox::show_error(this, "Failed to run. Please check your command, path, or address, and try again."sv);
 
     show();
 }

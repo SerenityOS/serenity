@@ -193,7 +193,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     m_table_view->set_column_headers_visible(false);
 
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_model));
-    m_filter_model->set_filter_term("");
+    m_filter_model->set_filter_term(""sv);
 
     m_table_view->set_column_painting_delegate(0, make<ActionIconDelegate>());
     m_table_view->set_model(*m_filter_model);

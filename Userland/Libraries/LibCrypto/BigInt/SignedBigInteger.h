@@ -40,15 +40,15 @@ public:
     {
     }
 
-    static SignedBigInteger create_invalid()
+    [[nodiscard]] static SignedBigInteger create_invalid()
     {
         return { UnsignedBigInteger::create_invalid(), false };
     }
 
-    static SignedBigInteger import_data(StringView data) { return import_data((u8 const*)data.characters_without_null_termination(), data.length()); }
-    static SignedBigInteger import_data(u8 const* ptr, size_t length);
+    [[nodiscard]] static SignedBigInteger import_data(StringView data) { return import_data((u8 const*)data.characters_without_null_termination(), data.length()); }
+    [[nodiscard]] static SignedBigInteger import_data(u8 const* ptr, size_t length);
 
-    static SignedBigInteger create_from(i64 value)
+    [[nodiscard]] static SignedBigInteger create_from(i64 value)
     {
         auto sign = false;
         u64 unsigned_value;
@@ -63,15 +63,16 @@ public:
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
-    static SignedBigInteger from_base(u16 N, StringView str);
-    String to_base(u16 N) const;
+    [[nodiscard]] static SignedBigInteger from_base(u16 N, StringView str);
+    [[nodiscard]] String to_base(u16 N) const;
 
-    u64 to_u64() const;
-    double to_double() const;
+    [[nodiscard]] u64 to_u64() const;
+    [[nodiscard]] double to_double() const;
 
-    UnsignedBigInteger const& unsigned_value() const { return m_unsigned_data; }
-    Vector<u32, STARTING_WORD_SIZE> const words() const { return m_unsigned_data.words(); }
-    bool is_negative() const { return m_sign; }
+    [[nodiscard]] UnsignedBigInteger const& unsigned_value() const { return m_unsigned_data; }
+    [[nodiscard]] Vector<u32, STARTING_WORD_SIZE> const words() const { return m_unsigned_data.words(); }
+    [[nodiscard]] bool is_negative() const { return m_sign; }
+    [[nodiscard]] bool is_zero() const { return m_unsigned_data.is_zero(); }
 
     void negate()
     {
@@ -101,42 +102,42 @@ public:
         m_unsigned_data.invalidate();
     }
 
-    bool is_invalid() const { return m_unsigned_data.is_invalid(); }
+    [[nodiscard]] bool is_invalid() const { return m_unsigned_data.is_invalid(); }
 
     // These get + 1 byte for the sign.
-    size_t length() const { return m_unsigned_data.length() + 1; }
-    size_t trimmed_length() const { return m_unsigned_data.trimmed_length() + 1; };
+    [[nodiscard]] size_t length() const { return m_unsigned_data.length() + 1; }
+    [[nodiscard]] size_t trimmed_length() const { return m_unsigned_data.trimmed_length() + 1; };
 
-    SignedBigInteger plus(SignedBigInteger const& other) const;
-    SignedBigInteger minus(SignedBigInteger const& other) const;
-    SignedBigInteger bitwise_or(SignedBigInteger const& other) const;
-    SignedBigInteger bitwise_and(SignedBigInteger const& other) const;
-    SignedBigInteger bitwise_xor(SignedBigInteger const& other) const;
-    SignedBigInteger bitwise_not() const;
-    SignedBigInteger shift_left(size_t num_bits) const;
-    SignedBigInteger multiplied_by(SignedBigInteger const& other) const;
-    SignedDivisionResult divided_by(SignedBigInteger const& divisor) const;
+    [[nodiscard]] SignedBigInteger plus(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger minus(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger bitwise_or(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger bitwise_and(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger bitwise_xor(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger bitwise_not() const;
+    [[nodiscard]] SignedBigInteger shift_left(size_t num_bits) const;
+    [[nodiscard]] SignedBigInteger multiplied_by(SignedBigInteger const& other) const;
+    [[nodiscard]] SignedDivisionResult divided_by(SignedBigInteger const& divisor) const;
 
-    SignedBigInteger plus(UnsignedBigInteger const& other) const;
-    SignedBigInteger minus(UnsignedBigInteger const& other) const;
-    SignedBigInteger multiplied_by(UnsignedBigInteger const& other) const;
-    SignedDivisionResult divided_by(UnsignedBigInteger const& divisor) const;
+    [[nodiscard]] SignedBigInteger plus(UnsignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger minus(UnsignedBigInteger const& other) const;
+    [[nodiscard]] SignedBigInteger multiplied_by(UnsignedBigInteger const& other) const;
+    [[nodiscard]] SignedDivisionResult divided_by(UnsignedBigInteger const& divisor) const;
 
-    u32 hash() const;
+    [[nodiscard]] u32 hash() const;
 
     void set_bit_inplace(size_t bit_index);
 
-    bool operator==(SignedBigInteger const& other) const;
-    bool operator!=(SignedBigInteger const& other) const;
-    bool operator<(SignedBigInteger const& other) const;
-    bool operator<=(SignedBigInteger const& other) const;
-    bool operator>(SignedBigInteger const& other) const;
-    bool operator>=(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator==(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator!=(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator<(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator<=(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator>(SignedBigInteger const& other) const;
+    [[nodiscard]] bool operator>=(SignedBigInteger const& other) const;
 
-    bool operator==(UnsignedBigInteger const& other) const;
-    bool operator!=(UnsignedBigInteger const& other) const;
-    bool operator<(UnsignedBigInteger const& other) const;
-    bool operator>(UnsignedBigInteger const& other) const;
+    [[nodiscard]] bool operator==(UnsignedBigInteger const& other) const;
+    [[nodiscard]] bool operator!=(UnsignedBigInteger const& other) const;
+    [[nodiscard]] bool operator<(UnsignedBigInteger const& other) const;
+    [[nodiscard]] bool operator>(UnsignedBigInteger const& other) const;
 
 private:
     void ensure_sign_is_valid()

@@ -43,6 +43,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
+#include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -55,6 +56,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
@@ -63,7 +65,6 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -131,8 +132,11 @@ void Document::removed_last_ref()
             for (auto& node : descendants) {
                 VERIFY(&node.document() == this);
                 VERIFY(!node.is_document());
-                if (node.parent())
-                    node.remove();
+                if (node.parent()) {
+                    // We need to suppress mutation observers so that they don't try and queue a microtask for this Document which is in the process of dying,
+                    // which will cause an `!m_in_removed_last_ref` assertion failure when it tries to ref this Document.
+                    node.remove(true);
+                }
             }
         }
 
@@ -301,14 +305,14 @@ ExceptionOr<void> Document::close()
     return {};
 }
 
-Origin Document::origin() const
+HTML::Origin Document::origin() const
 {
     if (!m_url.is_valid())
         return {};
     return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
 }
 
-void Document::set_origin(Origin const& origin)
+void Document::set_origin(HTML::Origin const& origin)
 {
     m_url.set_protocol(origin.protocol());
     m_url.set_host(origin.host());
@@ -523,11 +527,49 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     return &body_layout_node->background_layers();
 }
 
+RefPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+{
+    RefPtr<HTML::HTMLBaseElement> base_element;
+
+    for_each_in_subtree_of_type<HTML::HTMLBaseElement>([&base_element](HTML::HTMLBaseElement const& base_element_in_tree) {
+        if (base_element_in_tree.has_attribute(HTML::AttributeNames::href)) {
+            base_element = base_element_in_tree;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return base_element;
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fallback-base-url
+AK::URL Document::fallback_base_url() const
+{
+    // FIXME: 1. If document is an iframe srcdoc document, then return the document base URL of document's browsing context's container document.
+    // FIXME: 2. If document's URL is about:blank, and document's browsing context's creator base URL is non-null, then return that creator base URL.
+
+    // 3. Return document's URL.
+    return m_url;
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#document-base-url
+AK::URL Document::base_url() const
+{
+    // 1. If there is no base element that has an href attribute in the Document, then return the Document's fallback base URL.
+    auto base_element = first_base_element_with_href_in_tree_order();
+    if (!base_element)
+        return fallback_base_url();
+
+    // 2. Otherwise, return the frozen base URL of the first base element in the Document that has an href attribute, in tree order.
+    return base_element->frozen_base_url();
+}
+
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
 AK::URL Document::parse_url(String const& url) const
 {
-    // FIXME: Make sure we do this according to spec.
-    return m_url.complete_url(url);
+    // FIXME: Pass in document's character encoding.
+    return base_url().complete_url(url);
 }
 
 void Document::set_needs_layout()
@@ -567,23 +609,25 @@ void Document::update_layout()
     auto viewport_rect = browsing_context()->viewport_rect();
 
     if (!m_layout_root) {
+        m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::FormattingState formatting_state;
-    Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
+    Layout::LayoutState layout_state;
+    layout_state.used_values_per_layout_node.resize(layout_node_count());
+    Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
 
     auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
-    auto& icb_state = formatting_state.get_mutable(icb);
-    icb_state.content_width = viewport_rect.width();
-    icb_state.content_height = viewport_rect.height();
+    auto& icb_state = layout_state.get_mutable(icb);
+    icb_state.set_content_width(viewport_rect.width());
+    icb_state.set_content_height(viewport_rect.height());
 
     icb.set_has_definite_width(true);
     icb.set_has_definite_height(true);
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
-    formatting_state.commit();
+    layout_state.commit();
 
     browsing_context()->set_needs_display();
 
@@ -1072,8 +1116,7 @@ void Document::adopt_node(Node& node)
         node.remove();
 
     if (&old_document != this) {
-        // FIXME: This should be shadow-including.
-        node.for_each_in_inclusive_subtree([&](auto& inclusive_descendant) {
+        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.set_document({}, *this);
             // FIXME: If inclusiveDescendant is an element, then set the node document of each attribute in inclusiveDescendant’s attribute list to document.
             return IterationDecision::Continue;
@@ -1083,8 +1126,7 @@ void Document::adopt_node(Node& node)
         //        enqueue a custom element callback reaction with inclusiveDescendant, callback name "adoptedCallback",
         //        and an argument list containing oldDocument and document.
 
-        // FIXME: This should be shadow-including.
-        node.for_each_in_inclusive_subtree([&](auto& inclusive_descendant) {
+        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.adopted_from(old_document);
             return IterationDecision::Continue;
         });

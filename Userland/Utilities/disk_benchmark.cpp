@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -105,7 +105,7 @@ ErrorOr<Result> benchmark(String const& filename, int file_size, ByteBuffer& buf
     if (!allow_cache)
         flags |= O_DIRECT;
 
-    int fd = TRY(Core::System::open(filename.characters(), flags, 0644));
+    int fd = TRY(Core::System::open(filename, flags, 0644));
 
     auto fd_cleanup = ScopeGuard([fd, filename] {
         auto void_or_error = Core::System::close(fd);

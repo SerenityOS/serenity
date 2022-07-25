@@ -17,7 +17,11 @@ namespace JS {
 ThrowCompletionOr<RegExpObject*> regexp_create(GlobalObject&, Value pattern, Value flags);
 
 Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(StringView flags);
-String parse_regex_pattern(StringView pattern, bool unicode);
+struct ParseRegexPatternError {
+    String error;
+};
+ErrorOr<String, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets);
+ThrowCompletionOr<String> parse_regex_pattern(StringView pattern, VM& vm, GlobalObject& global_object, bool unicode, bool unicode_sets);
 
 class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);

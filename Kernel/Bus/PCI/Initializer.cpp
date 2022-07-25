@@ -8,8 +8,8 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/PCI/SysFSPCI.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
@@ -24,7 +24,7 @@ static bool test_pci_io();
 UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 {
     auto boot_determined = kernel_command_line().pci_access_level();
-    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG").has_value())
+    if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG"sv).has_value())
         return PCIAccessLevel::IOAddressing;
 
     if (boot_determined != PCIAccessLevel::IOAddressing)
@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT void initialize()
         return;
     switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
-        auto mcfg = ACPI::Parser::the()->find_table("MCFG");
+        auto mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
         VERIFY(mcfg.has_value());
         auto success = Access::initialize_for_multiple_pci_domains(mcfg.value());
         VERIFY(success);
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT void initialize()
         VERIFY_NOT_REACHED();
     }
 
-    PCI::PCIBusSysFSDirectory::initialize();
+    PCIBusSysFSDirectory::initialize();
 
     MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
         dmesgln("{} {}", device_identifier.address(), device_identifier.hardware_id());

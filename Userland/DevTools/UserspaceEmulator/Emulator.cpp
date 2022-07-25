@@ -85,7 +85,7 @@ Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_bas
     auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
 
     // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
-    auxv.append({ ELF::AuxiliaryValue::Platform, "i386" });
+    auxv.append({ ELF::AuxiliaryValue::Platform, "i386"sv });
 
     auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
@@ -113,7 +113,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     Vector<u32> env_entries;
 
     for (auto const& variable : m_environment) {
-        m_cpu->push_string(variable.characters());
+        m_cpu->push_string(variable.view());
         env_entries.append(m_cpu->esp().value());
     }
 
@@ -154,7 +154,7 @@ bool Emulator::load_elf()
 {
     auto file_or_error = Core::MappedFile::map(m_executable_path);
     if (file_or_error.is_error()) {
-        reportln("Unable to map {}: {}", m_executable_path, file_or_error.error());
+        reportln("Unable to map {}: {}"sv, m_executable_path, file_or_error.error());
         return false;
     }
 
@@ -169,7 +169,7 @@ bool Emulator::load_elf()
     StringBuilder interpreter_path_builder;
     auto result_or_error = ELF::validate_program_headers(*(Elf32_Ehdr const*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value()) {
-        reportln("failed to validate ELF file");
+        reportln("failed to validate ELF file"sv);
         return false;
     }
     auto interpreter_path = interpreter_path_builder.string_view();
@@ -229,7 +229,7 @@ int Emulator::exec()
 
     size_t instructions_until_next_profile_dump = profile_instruction_interval();
     if (is_profiling() && m_loader_text_size.has_value())
-        emit_profile_event(profile_stream(), "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
+        emit_profile_event(profile_stream(), "mmap"sv, String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
@@ -493,7 +493,7 @@ String Emulator::create_backtrace_line(FlatPtr address)
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
 {
     for (auto const& address : backtrace) {
-        reportln("{}", create_backtrace_line(address));
+        reportln("{}"sv, create_backtrace_line(address));
     }
 }
 
@@ -511,7 +511,7 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     gettimeofday(&tv, nullptr);
     builder.appendff(R"~(, {{"type": "sample", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [)~", getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000);
     builder.join(',', raw_backtrace());
-    builder.append("]}\n");
+    builder.append("]}\n"sv);
     output.write_or_error(builder.string_view().bytes());
 }
 
@@ -626,7 +626,7 @@ void Emulator::dispatch_one_pending_signal()
         auto action = default_signal_action(signum);
         if (action == DefaultSignalAction::Ignore)
             return;
-        reportln("\n=={}== Got signal {} ({}), no handler registered", getpid(), signum, strsignal(signum));
+        reportln("\n=={}== Got signal {} ({}), no handler registered"sv, getpid(), signum, strsignal(signum));
         dump_backtrace();
         m_shutdown = true;
         return;
@@ -637,7 +637,7 @@ void Emulator::dispatch_one_pending_signal()
         return;
     }
 
-    reportln("\n=={}== Got signal {} ({}), handler at {:p}", getpid(), signum, strsignal(signum), handler.handler);
+    reportln("\n=={}== Got signal {} ({}), handler at {:p}"sv, getpid(), signum, strsignal(signum), handler.handler);
 
     auto old_esp = m_cpu->esp().value();
 
@@ -762,7 +762,7 @@ void Emulator::setup_signal_trampoline()
 void Emulator::dump_regions() const
 {
     const_cast<SoftMMU&>(m_mmu).for_each_region([&](Region const& region) {
-        reportln("{:p}-{:p}  {:c}{:c}{:c} {}  {}{}{} ",
+        reportln("{:p}-{:p}  {:c}{:c}{:c} {}  {}{}{} "sv,
             region.base(),
             region.end() - 1,
             region.is_readable() ? 'R' : '-',

@@ -569,9 +569,9 @@ Optional<bool> TextImpl::to_bool() const
 {
     if (!m_value.has_value())
         return {};
-    if (value().equals_ignoring_case("true") || value().equals_ignoring_case("t"))
+    if (value().equals_ignoring_case("true"sv) || value().equals_ignoring_case("t"sv))
         return true;
-    if (value().equals_ignoring_case("false") || value().equals_ignoring_case("f"))
+    if (value().equals_ignoring_case("false"sv) || value().equals_ignoring_case("f"sv))
         return false;
     return {};
 }
@@ -874,11 +874,11 @@ Vector<String> ContainerValueImpl::to_string_vector() const
 String ContainerValueImpl::to_string() const
 {
     StringBuilder builder;
-    builder.append("(");
+    builder.append('(');
     StringBuilder joined;
-    joined.join(", ", to_string_vector());
+    joined.join(", "sv, to_string_vector());
     builder.append(joined.string_view());
-    builder.append(")");
+    builder.append(')');
     return builder.build();
 }
 

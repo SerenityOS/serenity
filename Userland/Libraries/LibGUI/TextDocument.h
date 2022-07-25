@@ -80,6 +80,7 @@ public:
     TextDocumentSpan const* span_at(TextPosition const&) const;
 
     void append_line(NonnullOwnPtr<TextDocumentLine>);
+    NonnullOwnPtr<TextDocumentLine> take_line(size_t line_index);
     void remove_line(size_t line_index);
     void remove_all_lines();
     void insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine>);
@@ -215,6 +216,7 @@ protected:
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
     InsertTextCommand(TextDocument&, String const&, TextPosition const&);
+    virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
     virtual void undo() override;
     virtual void redo() override;
@@ -231,6 +233,7 @@ private:
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
     RemoveTextCommand(TextDocument&, String const&, TextRange const&);
+    virtual ~RemoveTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
     TextRange const& range() const { return m_range; }
@@ -246,6 +249,7 @@ class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
     ReplaceAllTextCommand(GUI::TextDocument& document, String const& text, GUI::TextRange const& range, String const& action_text);
+    virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
@@ -257,6 +261,30 @@ private:
     String m_text;
     GUI::TextRange m_range;
     String m_action_text;
+};
+
+class IndentSelection : public TextDocumentUndoCommand {
+public:
+    IndentSelection(TextDocument&, size_t tab_width, TextRange const&);
+    virtual void undo() override;
+    virtual void redo() override;
+    TextRange const& range() const { return m_range; }
+
+private:
+    size_t m_tab_width { 0 };
+    TextRange m_range;
+};
+
+class UnindentSelection : public TextDocumentUndoCommand {
+public:
+    UnindentSelection(TextDocument&, size_t tab_width, TextRange const&);
+    virtual void undo() override;
+    virtual void redo() override;
+    TextRange const& range() const { return m_range; }
+
+private:
+    size_t m_tab_width { 0 };
+    TextRange m_range;
 };
 
 }

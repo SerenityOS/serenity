@@ -1,0 +1,10 @@
+interface DOMPointReadOnly {
+
+    constructor(optional double x = 0, optional double y = 0, optional double z = 0, optional double w = 0);
+
+    readonly attribute double x;
+    readonly attribute double y;
+    readonly attribute double z;
+    readonly attribute double w;
+
+};

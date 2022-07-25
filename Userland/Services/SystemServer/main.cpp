@@ -30,6 +30,13 @@
 #include <unistd.h>
 
 String g_system_mode = "graphical";
+NonnullRefPtrVector<Service> g_services;
+
+// NOTE: This handler ensures that the destructor of g_services is called.
+static void sigterm_handler(int)
+{
+    exit(0);
+}
 
 static void sigchld_handler(int)
 {
@@ -95,7 +102,7 @@ static ErrorOr<void> chown_all_matching_device_nodes_under_specific_directory(St
         auto rc = stat(entry_name.characters(), &cur_file_stat);
         if (rc < 0)
             continue;
-        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
+        TRY(Core::System::chown(entry_name, 0, group.gr_gid));
     }
     return {};
 }
@@ -114,7 +121,7 @@ static ErrorOr<void> chown_all_matching_device_nodes(group const& group, unsigne
             continue;
         if (major(cur_file_stat.st_rdev) != major_number)
             continue;
-        TRY(Core::System::chown(entry_name.characters(), 0, group.gr_gid));
+        TRY(Core::System::chown(entry_name, 0, group.gr_gid));
     }
     return {};
 }
@@ -201,13 +208,6 @@ static void populate_devtmpfs_devices_based_on_devctl()
             create_devtmpfs_char_device(String::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
             break;
         }
-        case 29: {
-            if (is_block_device) {
-                create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
-                break;
-            }
-            break;
-        }
         case 229: {
             if (!is_block_device) {
                 create_devtmpfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
@@ -275,8 +275,8 @@ static void populate_devtmpfs_devices_based_on_devctl()
             break;
         }
         case 30: {
-            if (is_block_device) {
-                create_devtmpfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+            if (!is_block_device) {
+                create_devtmpfs_char_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
             }
             break;
         }
@@ -370,35 +370,35 @@ static void populate_devtmpfs()
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
-    TRY(Core::System::mount(-1, "/proc", "proc", MS_NOSUID));
-    TRY(Core::System::mount(-1, "/sys", "sys", 0));
-    TRY(Core::System::mount(-1, "/dev", "dev", 0));
+    TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
+    TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
+    TRY(Core::System::mount(-1, "/dev"sv, "dev"sv, 0));
 
-    TRY(Core::System::mkdir("/dev/audio", 0755));
+    TRY(Core::System::mkdir("/dev/audio"sv, 0755));
 
-    TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
-    TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
-    TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
+    TRY(Core::System::symlink("/proc/self/fd/0"sv, "/dev/stdin"sv));
+    TRY(Core::System::symlink("/proc/self/fd/1"sv, "/dev/stdout"sv));
+    TRY(Core::System::symlink("/proc/self/fd/2"sv, "/dev/stderr"sv));
 
-    TRY(Core::System::mkdir("/dev/gpu", 0755));
+    TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
 
     populate_devtmpfs();
 
-    TRY(Core::System::mkdir("/dev/pts", 0755));
+    TRY(Core::System::mkdir("/dev/pts"sv, 0755));
 
-    TRY(Core::System::mount(-1, "/dev/pts", "devpts", 0));
+    TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
 
-    TRY(Core::System::symlink("/dev/random", "/dev/urandom"));
+    TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
 
-    TRY(Core::System::chmod("/dev/urandom", 0666));
+    TRY(Core::System::chmod("/dev/urandom"sv, 0666));
 
-    auto phys_group = TRY(Core::System::getgrnam("phys"));
+    auto phys_group = TRY(Core::System::getgrnam("phys"sv));
     VERIFY(phys_group.has_value());
-    // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
+    // FIXME: Try to find a way to not hardcode the major number of display connector device nodes.
     TRY(chown_all_matching_device_nodes(phys_group.value(), 29));
 
     auto const filter_chown_ENOENT = [](ErrorOr<void> result) -> ErrorOr<void> {
-        auto const chown_enoent = Error::from_syscall("chown", -ENOENT);
+        auto const chown_enoent = Error::from_syscall("chown"sv, -ENOENT);
         if (result.is_error() && result.error() == chown_enoent) {
             dbgln("{}", result.release_error());
             return {};
@@ -406,18 +406,18 @@ static ErrorOr<void> prepare_synthetic_filesystems()
         return result;
     };
 
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0", 0, phys_group.value().gr_gid)));
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0", 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0"sv, 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0"sv, 0, phys_group.value().gr_gid)));
 
-    auto tty_group = TRY(Core::System::getgrnam("tty"));
+    auto tty_group = TRY(Core::System::getgrnam("tty"sv));
     VERIFY(tty_group.has_value());
     // FIXME: Try to find a way to not hardcode the major number of tty nodes.
     TRY(chown_all_matching_device_nodes(tty_group.release_value(), 4));
 
-    auto audio_group = TRY(Core::System::getgrnam("audio"));
+    auto audio_group = TRY(Core::System::getgrnam("audio"sv));
     VERIFY(audio_group.has_value());
-    TRY(Core::System::chown("/dev/audio", 0, audio_group->gr_gid));
-    TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio", audio_group.release_value()));
+    TRY(Core::System::chown("/dev/audio"sv, 0, audio_group->gr_gid));
+    TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio"sv, audio_group.release_value()));
 
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
     // because otherwise these file descriptors won't have a custody, making
@@ -426,7 +426,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     // This affects also every other process that inherits the file descriptors
     // from SystemServer, so it is important for other things (also for ProcFS
     // tests that are running in CI mode).
-    int stdin_new_fd = TRY(Core::System::open("/dev/null", O_NONBLOCK));
+    int stdin_new_fd = TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
 
     TRY(Core::System::dup2(stdin_new_fd, 0));
     TRY(Core::System::dup2(stdin_new_fd, 1));
@@ -442,7 +442,7 @@ static ErrorOr<void> mount_all_filesystems()
     pid_t pid = TRY(Core::System::fork());
 
     if (pid == 0)
-        TRY(Core::System::exec("/bin/mount", Vector<StringView> { "mount", "-a" }, Core::System::SearchInPath::No));
+        TRY(Core::System::exec("/bin/mount"sv, Vector { "mount"sv, "-a"sv }, Core::System::SearchInPath::No));
 
     wait(nullptr);
     return {};
@@ -453,7 +453,16 @@ static ErrorOr<void> create_tmp_coredump_directory()
     dbgln("Creating /tmp/coredump directory");
     auto old_umask = umask(0);
     // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
-    TRY(Core::System::mkdir("/tmp/coredump", 0777));
+    TRY(Core::System::mkdir("/tmp/coredump"sv, 0777));
+    umask(old_umask);
+    return {};
+}
+
+static ErrorOr<void> create_tmp_semaphore_directory()
+{
+    dbgln("Creating /tmp/semaphore directory");
+    auto old_umask = umask(0);
+    TRY(Core::System::mkdir("/tmp/semaphore"sv, 0777));
     umask(old_umask);
     return {};
 }
@@ -474,28 +483,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!user) {
         TRY(create_tmp_coredump_directory());
+        TRY(create_tmp_semaphore_directory());
         TRY(determine_system_mode());
     }
 
     Core::EventLoop event_loop;
 
     event_loop.register_signal(SIGCHLD, sigchld_handler);
+    event_loop.register_signal(SIGTERM, sigterm_handler);
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
-    NonnullRefPtrVector<Service> services;
     auto config = (user)
         ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
         : TRY(Core::ConfigFile::open_for_system("SystemServer"));
     for (auto const& name : config->groups()) {
         auto service = TRY(Service::try_create(*config, name));
         if (service->is_enabled())
-            services.append(service);
+            g_services.append(move(service));
     }
 
     // After we've set them all up, activate them!
-    dbgln("Activating {} services...", services.size());
-    for (auto& service : services)
+    dbgln("Activating {} services...", g_services.size());
+    for (auto& service : g_services)
         service.activate();
 
     return event_loop.exec();

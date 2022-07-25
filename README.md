@@ -18,6 +18,7 @@ You can watch videos of the system being developed on YouTube:
 
 * [Andreas Kling's channel](https://youtube.com/andreaskling)
 * [Linus Groh's channel](https://youtube.com/linusgroh)
+* [kleines Filmröllchen's channel](https://www.youtube.com/c/kleinesfilmroellchen)
 
 **FAQ**: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
 
@@ -112,6 +113,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Kenneth Myhra** - [kennethmyhra](https://github.com/kennethmyhra)
 * **Maciej** - [sppmacd](https://github.com/sppmacd)
 * **Sahan Fernando** - [ccapitalK](https://github.com/ccapitalK)
+* **Benjamin Maxwell** - [MacDue](https://github.com/MacDue)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 

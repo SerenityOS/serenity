@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <errno.h>
@@ -46,18 +47,12 @@ void endgrent()
         fclose(s_stream);
         s_stream = nullptr;
     }
-
-    memset(&s_group, 0, sizeof(s_group));
-
-    s_name = {};
-    s_passwd = {};
-    s_members = {};
-    s_members_ptrs = {};
 }
 
 struct group* getgrgid(gid_t gid)
 {
     setgrent();
+    ScopeGuard guard = [] { endgrent(); };
     while (auto* gr = getgrent()) {
         if (gr->gr_gid == gid)
             return gr;
@@ -68,6 +63,7 @@ struct group* getgrgid(gid_t gid)
 struct group* getgrnam(char const* name)
 {
     setgrent();
+    ScopeGuard guard = [] { endgrent(); };
     while (auto* gr = getgrent()) {
         if (!strcmp(gr->gr_name, name))
             return gr;

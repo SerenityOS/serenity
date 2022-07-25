@@ -16,6 +16,7 @@
 namespace Kernel {
 
 extern WorkQueue* g_io_work;
+extern WorkQueue* g_ata_work;
 
 class WorkQueue {
     AK_MAKE_NONCOPYABLE(WorkQueue);

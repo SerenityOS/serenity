@@ -132,12 +132,13 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(FlatPtr targe
 Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(String const& file, size_t line) const
 {
     String file_path = file;
-    if (!file_path.starts_with("/"))
+    if (!file_path.starts_with('/'))
         file_path = String::formatted("/{}", file_path);
 
-    constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
+    constexpr auto SERENITY_LIBS_PREFIX = "/usr/src/serenity"sv;
     if (file.starts_with(SERENITY_LIBS_PREFIX)) {
-        file_path = file.substring(sizeof(SERENITY_LIBS_PREFIX), file.length() - sizeof(SERENITY_LIBS_PREFIX));
+        size_t file_prefix_offset = SERENITY_LIBS_PREFIX.length() + 1;
+        file_path = file.substring(file_prefix_offset, file.length() - file_prefix_offset);
         file_path = String::formatted("../{}", file_path);
     }
 
@@ -325,9 +326,9 @@ void DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegi
             StringBuilder array_type_name;
             array_type_name.append(type_info->type_name);
             for (auto array_size : type_info->dimension_sizes) {
-                array_type_name.append("[");
+                array_type_name.append('[');
                 array_type_name.append(String::formatted("{:d}", array_size));
-                array_type_name.append("]");
+                array_type_name.append(']');
             }
             parent_variable->type_name = array_type_name.to_string();
         }

@@ -311,6 +311,8 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView nam
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents, associated_pid()));
     if (name == "vm"sv)
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats, associated_pid()));
+    if (name == "cmdline"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::CommandLine, associated_pid()));
     return ENOENT;
 }
 
@@ -571,6 +573,8 @@ ErrorOr<void> ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, 
         return process.procfs_get_perf_events(builder);
     case SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats:
         return process.procfs_get_virtual_memory_stats(builder);
+    case SegmentedProcFSIndex::MainProcessProperty::CommandLine:
+        return process.procfs_get_command_line(builder);
     default:
         VERIFY_NOT_REACHED();
     }

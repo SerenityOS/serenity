@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/WindowEventHandlers.h>
 
 namespace Web::HTML {
 
@@ -30,7 +31,8 @@ class Window final
     : public RefCounted<Window>
     , public Weakable<Window>
     , public DOM::EventTarget
-    , public HTML::GlobalEventHandlers {
+    , public HTML::GlobalEventHandlers
+    , public HTML::WindowEventHandlers {
 public:
     static NonnullRefPtr<Window> create_with_document(DOM::Document&);
     ~Window();
@@ -128,7 +130,10 @@ private:
     explicit Window(DOM::Document&);
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
+
+    // ^HTML::WindowEventHandlers
+    virtual DOM::EventTarget& window_event_handlers_to_event_target() override { return *this; }
 
     enum class Repeat {
         Yes,

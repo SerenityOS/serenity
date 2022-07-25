@@ -92,8 +92,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     // 3. If Type(item) is Object and item has an [[InitializedTemporalTime]] internal slot, then
     if (item.is_object() && is<PlainTime>(item.as_object())) {
         auto& plain_time = static_cast<PlainTime&>(item.as_object());
-        // a. Return ? CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
-        return TRY(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
+        // a. Return ! CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
+        return MUST(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
     }
 
     // 4. Return ? ToTemporalTime(item, overflow).

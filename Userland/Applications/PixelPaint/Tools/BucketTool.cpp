@@ -22,7 +22,7 @@ namespace PixelPaint {
 
 BucketTool::BucketTool()
 {
-    m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors();
+    m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
 static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs)

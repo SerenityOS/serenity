@@ -58,8 +58,8 @@ private:
     AK::Vector<AK::Tuple<size_t, int>> m_seek_table;
     AK::Array<AK::Array<AK::Array<float, 18>, 32>, 2> m_last_values {};
     AK::Array<AK::Array<float, 1024>, 2> m_synthesis_buffer {};
-    static LibDSP::MDCT<36> s_mdct_36;
-    static LibDSP::MDCT<12> s_mdct_12;
+    static DSP::MDCT<36> s_mdct_36;
+    static DSP::MDCT<12> s_mdct_12;
 
     u32 m_sample_rate { 0 };
     u8 m_num_channels { 0 };

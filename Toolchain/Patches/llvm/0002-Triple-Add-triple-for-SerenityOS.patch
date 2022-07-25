@@ -1,7 +1,7 @@
-From 0cf66d1dbcd3b7c0e2ddd65177066955c41352b7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 09:51:24 +0200
-Subject: [PATCH 2/9] [Triple] Add triple for SerenityOS
+Subject: [PATCH] [Triple] Add triple for SerenityOS
 
 ---
  llvm/include/llvm/ADT/Triple.h | 8 +++++++-
@@ -54,6 +54,3 @@ index a9afcc9db..aef8c7549 100644
      .Default(Triple::UnknownOS);
  }
  
--- 
-2.35.3
-

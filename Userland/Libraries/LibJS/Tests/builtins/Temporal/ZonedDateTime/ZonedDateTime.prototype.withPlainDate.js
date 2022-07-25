@@ -70,14 +70,14 @@ describe("errors", () => {
     test("missing properties", () => {
         expect(() => {
             new Temporal.ZonedDateTime(1n, {}).withPlainDate({});
-        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
+        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
 
         expect(() => {
-            new Temporal.ZonedDateTime(1n, {}).withPlainDate({ year: 1 });
+            new Temporal.ZonedDateTime(1n, {}).withPlainDate({ day: 1, year: 1 });
         }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
 
         expect(() => {
-            new Temporal.ZonedDateTime(1n, {}).withPlainDate({ year: 1, month: 1 });
-        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
+            new Temporal.ZonedDateTime(1n, {}).withPlainDate({ day: 1, month: 1 });
+        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
     });
 });

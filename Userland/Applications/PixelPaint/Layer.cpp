@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::Int
     VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return Error::from_string_literal("Layer size too large"sv);
+        return Error::from_string_literal("Layer size too large");
 
     auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
@@ -31,7 +31,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, Nonnul
     VERIFY(!bitmap->size().is_empty());
 
     if (bitmap->size().width() > 16384 || bitmap->size().height() > 16384)
-        return Error::from_string_literal("Layer size too large"sv);
+        return Error::from_string_literal("Layer size too large");
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, bitmap, move(name)));
 }
@@ -145,7 +145,7 @@ void Layer::erase_selection(Selection const& selection)
 ErrorOr<void> Layer::try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask)
 {
     if (mask && content->size() != mask->size())
-        return Error::from_string_literal("Layer content and mask must be same size"sv);
+        return Error::from_string_literal("Layer content and mask must be same size");
 
     m_content_bitmap = move(content);
     m_mask_bitmap = move(mask);

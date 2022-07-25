@@ -161,7 +161,7 @@ Optional<String> NewProjectDialog::get_available_project_name()
 Optional<String> NewProjectDialog::get_project_full_path()
 {
     // Do not permit forward-slashes in project names
-    if (m_name_input->text().contains("/"))
+    if (m_name_input->text().contains('/'))
         return {};
 
     auto create_in = m_create_in_input->text();
@@ -177,20 +177,20 @@ void NewProjectDialog::do_create_project()
 {
     auto project_template = selected_template();
     if (!project_template) {
-        GUI::MessageBox::show_error(this, "Could not create project: no template selected.");
+        GUI::MessageBox::show_error(this, "Could not create project: no template selected."sv);
         return;
     }
 
     auto maybe_project_name = get_available_project_name();
     auto maybe_project_full_path = get_project_full_path();
     if (!maybe_project_name.has_value() || !maybe_project_full_path.has_value()) {
-        GUI::MessageBox::show_error(this, "Could not create project: invalid project name or path.");
+        GUI::MessageBox::show_error(this, "Could not create project: invalid project name or path."sv);
         return;
     }
 
     auto create_in = m_create_in_input->text();
     if (!Core::File::exists(create_in) || !Core::File::is_directory(create_in)) {
-        auto result = GUI::MessageBox::show(this, String::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+        auto result = GUI::MessageBox::show(this, String::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (result != GUI::MessageBox::ExecResult::Yes)
             return;
 

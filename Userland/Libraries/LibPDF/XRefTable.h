@@ -116,10 +116,10 @@ struct Formatter<PDF::XRefTable> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& format_builder, PDF::XRefTable const& table)
     {
         StringBuilder builder;
-        builder.append("XRefTable {");
+        builder.append("XRefTable {"sv);
         for (auto& entry : table.m_entries)
             builder.appendff("\n  {}", entry);
-        builder.append("\n}");
+        builder.append("\n}"sv);
         return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };

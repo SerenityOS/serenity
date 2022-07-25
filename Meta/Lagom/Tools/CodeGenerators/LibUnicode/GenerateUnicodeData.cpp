@@ -146,8 +146,8 @@ struct UnicodeData {
 
 static String sanitize_entry(String const& entry)
 {
-    auto sanitized = entry.replace("-", "_", true);
-    sanitized = sanitized.replace(" ", "_", true);
+    auto sanitized = entry.replace("-"sv, "_"sv, ReplaceMode::All);
+    sanitized = sanitized.replace(" "sv, "_"sv, ReplaceMode::All);
 
     StringBuilder builder;
     bool next_is_upper = true;
@@ -229,7 +229,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
 
             if (!casing.locale.is_empty())
                 casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
-            casing.condition = casing.condition.replace("_", "", true);
+            casing.condition = casing.condition.replace("_"sv, ""sv, ReplaceMode::All);
 
             if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
                 unicode_data.conditions.append(casing.condition);
@@ -570,7 +570,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
         if (!assigned_code_point_range_start.has_value())
             assigned_code_point_range_start = data.code_point;
 
-        if (data.name.starts_with("<"sv) && data.name.ends_with(", First>")) {
+        if (data.name.starts_with("<"sv) && data.name.ends_with(", First>"sv)) {
             VERIFY(!code_point_range_start.has_value() && assigned_code_point_range_start.has_value());
             code_point_range_start = data.code_point;
 
@@ -578,7 +578,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
 
             assigned_code_points.append({ *assigned_code_point_range_start, previous_code_point });
             assigned_code_point_range_start.clear();
-        } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>")) {
+        } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>"sv)) {
             VERIFY(code_point_range_start.has_value());
 
             CodePointRange code_point_range { *code_point_range_start, data.code_point };
@@ -739,7 +739,7 @@ namespace Unicode {
         bool first = true;
         generator.append(", {");
         for (auto const& item : list) {
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::formatted(format, item));
             first = false;
         }

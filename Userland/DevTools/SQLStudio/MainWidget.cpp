@@ -9,14 +9,21 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/Token.h>
+#include <LibSQL/SQLClient.h>
 
 #include "MainWidget.h"
 #include "ScriptEditor.h"
@@ -28,7 +35,7 @@ MainWidget::MainWidget()
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         open_new_script();
     });
 
@@ -135,6 +142,14 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_results.clear();
+        m_current_line_for_parsing = 0;
+        // TODO select the database to use in UI.
+        m_connection_id = m_sql_client->connect("test");
+        read_next_sql_statement_of_editor();
+    });
+
     auto& toolbar_container = add<GUI::ToolbarContainer>();
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
@@ -149,6 +164,8 @@ MainWidget::MainWidget()
     toolbar.add_separator();
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_run_script_action);
 
     m_tab_widget = add<GUI::TabWidget>();
     m_tab_widget->set_close_button_enabled(true);
@@ -174,13 +191,52 @@ MainWidget::MainWidget()
         on_editor_change();
     };
 
+    m_action_tab_widget = add<GUI::TabWidget>();
+    m_action_tab_widget->set_fixed_height(0);
+    m_action_tab_widget->set_close_button_enabled(true);
+
+    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
+    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
+    m_query_results_widget->layout()->set_margins(6);
+    m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
+
+    m_action_tab_widget->on_tab_close_click = [this](auto&) {
+        m_action_tab_widget->set_fixed_height(0);
+    };
+
     m_statusbar = add<GUI::Statusbar>(3);
 
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected") + font().max_glyph_width());
+    m_statusbar->segment(1).set_fixed_width(font().width("000000 characters (00000 words) selected"sv) + font().max_glyph_width());
 
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000") + font().max_glyph_width());
+    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
+
+    m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
+    m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
+        read_next_sql_statement_of_editor();
+    };
+    m_sql_client->on_next_result = [this](int, Vector<String> const& row) {
+        m_results.append(row);
+    };
+    m_sql_client->on_results_exhausted = [this](int, int) {
+        if (m_results.size() == 0)
+            return;
+        if (m_results[0].size() == 0)
+            return;
+        Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
+        for (size_t i = 0; i < m_results[0].size(); i++)
+            query_result_fields.empend(String::formatted("column_{}", i + 1), String::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
+        auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
+        m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
+        for (auto& result_row : m_results) {
+            Vector<JsonValue> individual_result_as_json;
+            for (auto& result_row_column : result_row)
+                individual_result_as_json.append(result_row_column);
+            query_results_model->add(move(individual_result_as_json));
+        }
+        m_action_tab_widget->set_fixed_height(200);
+    };
 }
 
 void MainWidget::initialize_menu(GUI::Window* window)
@@ -203,12 +259,14 @@ void MainWidget::initialize_menu(GUI::Window* window)
     edit_menu.add_separator();
     edit_menu.add_action(*m_undo_action);
     edit_menu.add_action(*m_redo_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_run_script_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/SQLStudio.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("SQL Studio", GUI::Icon::default_icon("app-sql-studio"), window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("SQL Studio", GUI::Icon::default_icon("app-sql-studio"sv), window));
 }
 
 void MainWidget::open_new_script()
@@ -336,7 +394,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
 
         for (auto& url : urls) {
             auto& scheme = url.scheme();
-            if (!scheme.equals_ignoring_case("file"))
+            if (!scheme.equals_ignoring_case("file"sv))
                 continue;
 
             auto lexical_path = LexicalPath(url.path());
@@ -345,6 +403,76 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
             if (lexical_path.extension().equals_ignoring_case("db"sv))
                 open_database_from_file(lexical_path);
         }
+    }
+}
+
+String MainWidget::read_next_sql_statement_of_editor()
+{
+    StringBuilder piece;
+    do {
+        if (!piece.is_empty())
+            piece.append('\n');
+
+        auto line_maybe = read_next_line_of_editor();
+
+        if (!line_maybe.has_value())
+            return {};
+
+        auto& line = line_maybe.value();
+        auto lexer = SQL::AST::Lexer(line);
+
+        piece.append(line);
+
+        bool is_first_token = true;
+        bool is_command = false;
+        bool last_token_ended_statement = false;
+        bool tokens_found = false;
+
+        for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
+            tokens_found = true;
+            switch (token.type()) {
+            case SQL::AST::TokenType::ParenOpen:
+                ++m_editor_line_level;
+                break;
+            case SQL::AST::TokenType::ParenClose:
+                --m_editor_line_level;
+                break;
+            case SQL::AST::TokenType::SemiColon:
+                last_token_ended_statement = true;
+                break;
+            case SQL::AST::TokenType::Period:
+                if (is_first_token)
+                    is_command = true;
+                break;
+            default:
+                last_token_ended_statement = is_command;
+                break;
+            }
+
+            is_first_token = false;
+        }
+
+        if (tokens_found)
+            m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
+    } while ((m_editor_line_level > 0) || piece.is_empty());
+
+    auto statement_id = m_sql_client->sql_statement(m_connection_id, piece.to_string());
+    m_sql_client->async_statement_execute(statement_id);
+
+    return piece.to_string();
+}
+
+Optional<String> MainWidget::read_next_line_of_editor()
+{
+    auto editor = dynamic_cast<ScriptEditor*>(m_tab_widget->active_widget());
+    if (!editor)
+        return {};
+    if (m_current_line_for_parsing < editor->document().line_count()) {
+        String result = editor->document().line(m_current_line_for_parsing).to_utf8();
+        m_current_line_for_parsing++;
+        return result;
+    } else {
+        return {};
     }
 }
 

@@ -55,9 +55,12 @@ constexpr auto s_list_pattern_index_type = "u16"sv;
 using ListPatternListIndexType = u8;
 constexpr auto s_list_pattern_list_index_type = "u8"sv;
 
+using TextLayoutIndexType = u8;
+constexpr auto s_text_layout_index_type = "u8"sv;
+
 static String format_identifier(StringView owner, String identifier)
 {
-    identifier = identifier.replace("-"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
@@ -87,7 +90,7 @@ struct AK::Formatter<DisplayPattern> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DisplayPattern const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {} }}",
+            "{{ {}, {} }}"sv,
             patterns.locale_pattern,
             patterns.locale_separator);
     }
@@ -132,7 +135,7 @@ struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, ListPatterns const& patterns)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ ListPatternType::{}, Style::{}, {}, {}, {}, {} }}",
+            "{{ ListPatternType::{}, Style::{}, {}, {}, {}, {} }}"sv,
             format_identifier({}, patterns.type),
             format_identifier({}, patterns.style),
             patterns.start,
@@ -145,6 +148,35 @@ struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
 template<>
 struct AK::Traits<ListPatterns> : public GenericTraits<ListPatterns> {
     static unsigned hash(ListPatterns const& p) { return p.hash(); }
+};
+
+struct TextLayout {
+    unsigned hash() const
+    {
+        return character_order.hash();
+    }
+
+    bool operator==(TextLayout const& other) const
+    {
+        return character_order == other.character_order;
+    }
+
+    StringView character_order;
+};
+
+template<>
+struct AK::Formatter<TextLayout> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TextLayout const& patterns)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ CharacterOrder::{} }}"sv,
+            format_identifier({}, patterns.character_order));
+    }
+};
+
+template<>
+struct AK::Traits<TextLayout> : public GenericTraits<TextLayout> {
+    static unsigned hash(TextLayout const& t) { return t.hash(); }
 };
 
 using LanguageList = Vector<StringIndexType>;
@@ -177,6 +209,7 @@ struct Locale {
     KeywordListIndexType collation_numeric_keywords { 0 };
     KeywordListIndexType number_system_keywords { 0 };
     ListPatternListIndexType list_patterns { 0 };
+    TextLayoutIndexType text_layout { 0 };
 };
 
 struct LanguageMapping {
@@ -196,6 +229,7 @@ struct UnicodeLocaleData {
     UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
     UniqueStorage<ListPatterns, ListPatternIndexType> unique_list_patterns;
     UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
+    UniqueStorage<TextLayout, TextLayoutIndexType> unique_text_layouts;
 
     HashMap<String, Locale> locales;
     Vector<Alias> locale_aliases;
@@ -219,6 +253,7 @@ struct UnicodeLocaleData {
     HashMap<String, String> keyword_names;
 
     Vector<String> list_pattern_types;
+    Vector<String> character_orders;
     HashMap<String, StringIndexType> language_aliases;
     HashMap<String, StringIndexType> territory_aliases;
     HashMap<String, StringIndexType> script_aliases;
@@ -378,7 +413,7 @@ static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData&
 
 static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, UnicodeLocaleData& locale_data)
 {
-    constexpr auto desired_keywords = Array { "ca"sv, "kf"sv, "kn"sv, "nu"sv };
+    constexpr auto desired_keywords = Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
     auto keywords = TRY(read_json_file(bcp47_path));
 
     auto const& keyword_object = keywords.as_object().get("keyword"sv);
@@ -390,13 +425,26 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
         if (!desired_keywords.span().contains_slow(key))
             return;
 
-        auto const& name = value.as_object().get("_alias");
+        auto const& name = value.as_object().get("_alias"sv);
         locale_data.keyword_names.set(key, name.as_string());
 
         auto& keywords = locale_data.keywords.ensure(key);
 
+        // FIXME: ECMA-402 requires the list of supported collation types to include "default", but
+        //        that type does not appear in collation.json.
+        if (key == "co" && !keywords.contains_slow("default"sv))
+            keywords.append("default"sv);
+
         value.as_object().for_each_member([&](auto const& keyword, auto const& properties) {
             if (!properties.is_object())
+                return;
+
+            // Filter out values not permitted by ECMA-402.
+            // https://tc39.es/ecma402/#sec-intl-collator-internal-slots
+            if (key == "co"sv && keyword.is_one_of("search"sv, "standard"sv))
+                return;
+            // https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
+            if (key == "nu"sv && keyword.is_one_of("finance"sv, "native"sv, "traditio"sv))
                 return;
 
             if (auto const& preferred = properties.as_object().get("_preferred"sv); preferred.is_string()) {
@@ -406,6 +454,7 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
 
             if (auto const& alias = properties.as_object().get("_alias"sv); alias.is_string())
                 locale_data.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
+
             keywords.append(keyword);
         });
     });
@@ -546,6 +595,38 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
     });
 
     locale.list_patterns = locale_data.unique_list_pattern_lists.ensure(move(list_patterns));
+    return {};
+}
+
+static ErrorOr<void> parse_locale_layout(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath layout_path(move(misc_path));
+    layout_path = layout_path.append("layout.json"sv);
+
+    auto locale_layout = TRY(read_json_file(layout_path.string()));
+    auto const& main_object = locale_layout.as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(layout_path.parent().basename());
+    auto const& layout_object = locale_object.as_object().get("layout"sv);
+    auto const& orientation_object = layout_object.as_object().get("orientation"sv);
+
+    auto text_layout_character_order = [](StringView key) {
+        if (key == "left-to-right"sv)
+            return "ltr"sv;
+        if (key == "right-to-left"sv)
+            return "rtl"sv;
+        VERIFY_NOT_REACHED();
+    };
+
+    auto const& character_order_string = orientation_object.as_object().get("characterOrder"sv);
+    auto const& character_order = character_order_string.as_string();
+
+    TextLayout layout {};
+    layout.character_order = text_layout_character_order(character_order);
+
+    if (!locale_data.character_orders.contains_slow(layout.character_order))
+        locale_data.character_orders.append(layout.character_order);
+
+    locale.text_layout = locale_data.unique_text_layouts.ensure(move(layout));
     return {};
 }
 
@@ -932,6 +1013,7 @@ static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, Stri
 
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_list_patterns(misc_path, locale_data, locale));
+        TRY(parse_locale_layout(misc_path, locale_data, locale));
     }
 
     while (numbers_iterator.has_next()) {
@@ -983,6 +1065,7 @@ namespace Unicode {
     generate_enum(generator, format_identifier, "DateField"sv, {}, locale_data.date_fields, locale_data.date_field_aliases);
     generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
     generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
+    generate_enum(generator, format_identifier, "CharacterOrder"sv, {}, locale_data.character_orders);
     generate_enum(generator, format_identifier, "Key"sv, {}, keywords);
 
     for (auto& keyword : locale_data.keywords) {
@@ -1052,11 +1135,53 @@ struct Patterns {
     @string_index_type@ end { 0 };
     @string_index_type@ pair { 0 };
 };
+
+struct TextLayout {
+    CharacterOrder character_order;
+};
 )~~~");
 
-    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value);
-    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value, locale_data.keyword_aliases.find("nu"sv)->value);
+    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value,
+        [](auto calendar) {
+            // FIXME: Remove this filter when we support all calendars.
+            return calendar.is_one_of("gregory"sv, "iso8601"sv);
+        });
+    generate_available_values(generator, "get_available_collation_case_orderings"sv, locale_data.keywords.find("kf"sv)->value, locale_data.keyword_aliases.find("kf"sv)->value);
+    generate_available_values(generator, "get_available_collation_numeric_orderings"sv, locale_data.keywords.find("kn"sv)->value, locale_data.keyword_aliases.find("kn"sv)->value);
+    generate_available_values(generator, "get_available_collation_types"sv, locale_data.keywords.find("co"sv)->value, locale_data.keyword_aliases.find("co"sv)->value,
+        [](auto collation) {
+            // FIXME: Remove this filter when we support all collation types.
+            return collation == "default"sv;
+        });
+    generate_available_values(generator, "get_available_hour_cycles"sv, locale_data.keywords.find("hc"sv)->value);
+    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value);
     generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
+
+    generator.append(R"~~~(
+Span<StringView const> get_available_keyword_values(StringView key)
+{
+    auto key_value = key_from_string(key);
+    if (!key_value.has_value())
+        return {};
+
+    switch (*key_value) {
+    case Key::Ca:
+        return get_available_calendars();
+    case Key::Co:
+        return get_available_collation_types();
+    case Key::Hc:
+        return get_available_hour_cycles();
+    case Key::Kf:
+        return get_available_collation_case_orderings();
+    case Key::Kn:
+        return get_available_collation_numeric_orderings();
+    case Key::Nu:
+        return get_available_number_systems();
+    }
+
+    VERIFY_NOT_REACHED();
+}
+)~~~");
 
     locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
     locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
@@ -1068,6 +1193,7 @@ struct Patterns {
     locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
     locale_data.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
     locale_data.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
+    locale_data.unique_text_layouts.generate(generator, "TextLayout"sv, "s_text_layouts"sv, 30);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -1082,7 +1208,7 @@ struct Patterns {
         bool first = true;
         generator.append(", {");
         for (auto const& item : list) {
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(item));
             first = false;
         }
@@ -1102,7 +1228,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
             auto const& value = map.find(key)->value;
             auto mapping = mapping_getter(value);
 
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(mapping));
             first = false;
         }
@@ -1130,6 +1256,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
     append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
     append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
+    append_mapping(locales, locale_data.locales, s_text_layout_index_type, "s_locale_text_layouts"sv, [&](auto const& locale) { return locale.text_layout; });
 
     generator.append(R"~~~(
 
@@ -1416,24 +1543,12 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
 
+    append_from_string("CharacterOrder"sv, "character_order"sv, locale_data.character_orders);
+    generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, locale_data.character_orders);
+
     generator.append(R"~~~(
-Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
+static Span<@string_index_type@ const> find_keyword_indices(StringView locale, StringView key)
 {
-    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
-    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
-    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
-    if (key == "hc"sv) {
-        auto hour_cycles = get_locale_hour_cycles(locale);
-
-        Vector<StringView> values;
-        values.ensure_capacity(hour_cycles.size());
-
-        for (auto hour_cycle : hour_cycles)
-            values.unchecked_append(hour_cycle_to_string(hour_cycle));
-
-        return values;
-    }
-
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
         return {};
@@ -1462,7 +1577,60 @@ Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
         VERIFY_NOT_REACHED();
     }
 
-    auto keyword_indices = s_keyword_lists.at(keywords_index);
+    return s_keyword_lists.at(keywords_index);
+}
+
+Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key)
+{
+    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
+    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
+    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
+    if (key == "hc"sv) {
+        auto hour_cycles = get_locale_hour_cycles(locale);
+        if (hour_cycles.is_empty())
+            return {};
+
+        return hour_cycle_to_string(hour_cycles[0]);
+    }
+
+    // FIXME: Generate locale-preferred collation data when available in the CLDR.
+    if (key == "co"sv) {
+        auto collations = get_available_collation_types();
+        if (collations.is_empty())
+            return {};
+
+        return collations[0];
+    }
+
+    auto keyword_indices = find_keyword_indices(locale, key);
+    if (keyword_indices.is_empty())
+        return {};
+
+    return s_string_list[keyword_indices[0]];
+}
+
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
+{
+    // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
+    // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
+    //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
+    if (key == "hc"sv) {
+        auto hour_cycles = get_locale_hour_cycles(locale);
+
+        Vector<StringView> values;
+        values.ensure_capacity(hour_cycles.size());
+
+        for (auto hour_cycle : hour_cycles)
+            values.unchecked_append(hour_cycle_to_string(hour_cycle));
+
+        return values;
+    }
+
+    // FIXME: Generate locale-preferred collation data when available in the CLDR.
+    if (key == "co"sv)
+        return Vector<StringView> { get_available_collation_types() };
+
+    auto keyword_indices = find_keyword_indices(locale, key);
 
     Vector<StringView> keywords;
     keywords.ensure_capacity(keyword_indices.size());
@@ -1514,6 +1682,25 @@ Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView li
         }
     }
 
+    return {};
+}
+
+static Optional<TextLayout> text_layout_for_locale(StringView locale)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+
+    auto text_layouts_index = s_locale_text_layouts.at(locale_index);
+    return s_text_layouts.at(text_layouts_index);
+}
+
+Optional<CharacterOrder> character_order_for_locale(StringView locale)
+{
+    if (auto text_layout = text_layout_for_locale(locale); text_layout.has_value())
+        return text_layout->character_order;
     return {};
 }
 

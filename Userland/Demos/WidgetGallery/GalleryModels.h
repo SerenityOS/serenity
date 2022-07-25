@@ -64,9 +64,9 @@ public:
 
         while (iterator.has_next()) {
             auto path = iterator.next_full_path();
-            if (path.ends_with(".ini"))
+            if (path.ends_with(".ini"sv))
                 continue;
-            if (path.contains("2x"))
+            if (path.contains("2x"sv))
                 continue;
             Cursor cursor;
             cursor.path = move(path);
@@ -155,7 +155,7 @@ public:
 
         while (big_iterator.has_next()) {
             auto path = big_iterator.next_full_path();
-            if (!path.contains("filetype-") && !path.contains("app-"))
+            if (!path.contains("filetype-"sv) && !path.contains("app-"sv))
                 continue;
             IconSet icon_set;
             icon_set.big_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
@@ -169,7 +169,7 @@ public:
 
         while (little_iterator.has_next()) {
             auto path = little_iterator.next_full_path();
-            if (!path.contains("filetype-") && !path.contains("app-"))
+            if (!path.contains("filetype-"sv) && !path.contains("app-"sv))
                 continue;
             IconSet icon_set;
             icon_set.little_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();

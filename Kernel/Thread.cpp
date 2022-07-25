@@ -720,7 +720,7 @@ u32 Thread::pending_signals_for_state() const
 
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     VERIFY(process().is_user_process());
     SpinlockLocker scheduler_lock(g_scheduler_lock);
 
@@ -827,7 +827,7 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
         return DispatchSignalResult::Continue;
 
     u8 signal = 1;
-    for (; signal < 32; ++signal) {
+    for (; signal < NSIG; ++signal) {
         if ((signal_candidates & (1 << (signal - 1))) != 0) {
             break;
         }
@@ -871,6 +871,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
     case SIGIO:
     case SIGPROF:
     case SIGTERM:
+    case SIGCANCEL:
         return DefaultSignalAction::Terminate;
     case SIGCHLD:
     case SIGURG:
@@ -902,7 +903,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
 
 bool Thread::should_ignore_signal(u8 signal) const
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     auto const& action = m_process->m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
@@ -911,14 +912,14 @@ bool Thread::should_ignore_signal(u8 signal) const
 
 bool Thread::has_signal_handler(u8 signal) const
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     auto const& action = m_process->m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
 
 bool Thread::is_signal_masked(u8 signal) const
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     return (1 << (signal - 1)) & m_signal_mask;
 }
 
@@ -969,7 +970,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-    VERIFY(signal > 0 && signal <= 32);
+    VERIFY(signal > 0 && signal <= NSIG);
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
 
@@ -1051,6 +1052,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     ScopedAddressSpaceSwitcher switcher(m_process);
+
+    m_currently_handled_signal = signal;
 
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = m_signal_action_masks[signal].value_or(action.mask);
@@ -1357,7 +1360,7 @@ static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& proces
     bool mask_kernel_addresses = !process.is_superuser();
     if (!symbol.symbol) {
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
-            TRY(builder.try_append("0xdeadc0de\n"));
+            TRY(builder.try_append("0xdeadc0de\n"sv));
         } else {
             if (auto* region = process.address_space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
                 size_t offset = symbol.address - region->vaddr().get();
@@ -1419,7 +1422,7 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return {};
 
-    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific", PROT_READ | PROT_WRITE));
+    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
 
     m_thread_specific_range = region->range();
 
@@ -1509,5 +1512,5 @@ ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kern
 {
     return AK::Formatter<FormatString>::format(
         builder,
-        "{}({}:{})", value.process().name(), value.pid().value(), value.tid().value());
+        "{}({}:{})"sv, value.process().name(), value.pid().value(), value.tid().value());
 }

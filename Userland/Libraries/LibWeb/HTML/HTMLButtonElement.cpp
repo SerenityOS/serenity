@@ -56,7 +56,7 @@ String HTMLButtonElement::type() const
     auto value = attribute(HTML::AttributeNames::type);
 
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, _) \
-    if (value.equals_ignoring_case(#keyword))              \
+    if (value.equals_ignoring_case(#keyword##sv))          \
         return #keyword;
     ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE
@@ -70,7 +70,7 @@ HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
     auto value = attribute(HTML::AttributeNames::type);
 
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, state) \
-    if (value.equals_ignoring_case(#keyword))                  \
+    if (value.equals_ignoring_case(#keyword##sv))              \
         return HTMLButtonElement::TypeAttributeState::state;
     ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE

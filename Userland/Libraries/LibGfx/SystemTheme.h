@@ -245,15 +245,15 @@ enum class PathRole {
         __Count,
 };
 
-inline char const* to_string(PathRole role)
+inline StringView to_string(PathRole role)
 {
     switch (role) {
     case PathRole::NoRole:
-        return "NoRole";
+        return "NoRole"sv;
 #undef __ENUMERATE_PATH_ROLE
 #define __ENUMERATE_PATH_ROLE(role) \
     case PathRole::role:            \
-        return #role;
+        return #role##sv;
         ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
     default:

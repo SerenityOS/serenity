@@ -76,4 +76,15 @@ Result<bool, String> Workbook::write_to_file(Core::File& file)
     return true;
 }
 
+Result<bool, String> Workbook::import_file(Core::File& file)
+{
+    auto mime = Core::guess_mime_type_based_on_filename(file.filename());
+
+    auto sheets = TRY(ImportDialog::make_and_run_for(m_parent_window, mime, file, *this));
+    auto has_any_changes = !sheets.is_empty();
+    m_sheets.extend(move(sheets));
+
+    return has_any_changes;
+}
+
 }

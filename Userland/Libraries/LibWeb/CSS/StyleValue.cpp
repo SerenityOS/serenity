@@ -143,6 +143,12 @@ LengthStyleValue const& StyleValue::as_length() const
     return static_cast<LengthStyleValue const&>(*this);
 }
 
+LinearGradientStyleValue const& StyleValue::as_linear_gradient() const
+{
+    VERIFY(is_linear_gradient());
+    return static_cast<LinearGradientStyleValue const&>(*this);
+}
+
 ListStyleStyleValue const& StyleValue::as_list_style() const
 {
     VERIFY(is_list_style());
@@ -272,7 +278,7 @@ String BackgroundStyleValue::to_string() const
     StringBuilder builder;
     for (size_t i = 0; i < m_layer_count; i++) {
         if (i)
-            builder.append(", ");
+            builder.append(", "sv);
         if (i == m_layer_count - 1)
             builder.appendff("{} ", m_color->to_string());
         builder.appendff("{} {} {} {} {} {} {}", get_layer_value_string(m_image, i), get_layer_value_string(m_position, i), get_layer_value_string(m_size, i), get_layer_value_string(m_repeat, i), get_layer_value_string(m_attachment, i), get_layer_value_string(m_origin, i), get_layer_value_string(m_clip, i));
@@ -478,10 +484,13 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
 
             // Other side isn't a percentage, so the easiest way to handle it without duplicating all the logic, is just to swap `this` and `other`.
             CalculationResult new_value = other;
-            if (op == SumOperation::Add)
+            if (op == SumOperation::Add) {
                 new_value.add(*this, layout_node, percentage_basis);
-            else
-                new_value.subtract(*this, layout_node, percentage_basis);
+            } else {
+                // Turn 'this - other' into '-other + this', as 'A + B == B + A', but 'A - B != B - A'
+                new_value.multiply_by({ Number { Number::Type::Integer, -1.0f } }, layout_node);
+                new_value.add(*this, layout_node, percentage_basis);
+            }
 
             *this = new_value;
         });
@@ -652,18 +661,15 @@ Optional<Angle> CalculatedStyleValue::resolve_angle() const
     return {};
 }
 
-Optional<AnglePercentage> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
+Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Angle const& angle) -> Optional<AnglePercentage> {
+        [&](Angle const& angle) -> Optional<Angle> {
             return angle;
         },
-        [&](Percentage const& percentage) -> Optional<AnglePercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<AnglePercentage> {
+        [&](auto const&) -> Optional<Angle> {
             return {};
         });
 }
@@ -677,18 +683,15 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
     return {};
 }
 
-Optional<FrequencyPercentage> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
+Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Frequency const& frequency) -> Optional<FrequencyPercentage> {
+        [&](Frequency const& frequency) -> Optional<Frequency> {
             return frequency;
         },
-        [&](Percentage const& percentage) -> Optional<FrequencyPercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<FrequencyPercentage> {
+        [&](auto const&) -> Optional<Frequency> {
             return {};
         });
 }
@@ -702,18 +705,15 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
     return {};
 }
 
-Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
+Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
-        [&](Length const& length) -> Optional<LengthPercentage> {
+        [&](Length const& length) -> Optional<Length> {
             return length;
         },
-        [&](Percentage const& percentage) -> Optional<LengthPercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<LengthPercentage> {
+        [&](auto const&) -> Optional<Length> {
             return {};
         });
 }
@@ -735,18 +735,15 @@ Optional<Time> CalculatedStyleValue::resolve_time() const
     return {};
 }
 
-Optional<TimePercentage> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
+Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
 {
     auto result = m_expression->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
-        [&](Time const& time) -> Optional<TimePercentage> {
+        [&](Time const& time) -> Optional<Time> {
             return time;
         },
-        [&](Percentage const& percentage) -> Optional<TimePercentage> {
-            return percentage;
-        },
-        [&](auto const&) -> Optional<TimePercentage> {
+        [&](auto const&) -> Optional<Time> {
             return {};
         });
 }
@@ -1068,15 +1065,9 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-// https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
 String ColorStyleValue::to_string() const
 {
-    // The serialized form is derived from the computed value and thus, uses either the rgb() or rgba() form
-    // (depending on whether the alpha is exactly 1, or not), with lowercase letters for the function name.
-    // NOTE: Since we use Gfx::Color, having an "alpha of 1" means its value is 255.
-    if (m_color.alpha() == 255)
-        return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
-    return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
+    return serialize_a_srgb_value(m_color);
 }
 
 bool ColorStyleValue::equals(StyleValue const& other) const
@@ -1390,7 +1381,7 @@ void ImageStyleValue::resource_did_load()
     m_bitmap = resource()->bitmap();
     // FIXME: Do less than a full repaint if possible?
     if (m_document && m_document->browsing_context())
-        m_document->browsing_context()->set_needs_display({});
+        m_document->browsing_context()->set_needs_display();
 }
 
 String ImageStyleValue::to_string() const
@@ -1403,6 +1394,133 @@ bool ImageStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     return m_url == other.as_image().m_url;
+}
+
+String LinearGradientStyleValue::to_string() const
+{
+    StringBuilder builder;
+    auto side_or_corner_to_string = [](SideOrCorner value) {
+        switch (value) {
+        case SideOrCorner::Top:
+            return "top"sv;
+        case SideOrCorner::Bottom:
+            return "bottom"sv;
+        case SideOrCorner::Left:
+            return "left"sv;
+        case SideOrCorner::Right:
+            return "right"sv;
+        case SideOrCorner::TopLeft:
+            return "top left"sv;
+        case SideOrCorner::TopRight:
+            return "top right"sv;
+        case SideOrCorner::BottomLeft:
+            return "bottom left"sv;
+        case SideOrCorner::BottomRight:
+            return "bottom right"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    builder.append("linear-gradient("sv);
+    m_direction.visit(
+        [&](SideOrCorner side_or_corner) {
+            builder.appendff("to {}, "sv, side_or_corner_to_string(side_or_corner));
+        },
+        [&](Angle const& angle) {
+            builder.appendff("{}, "sv, angle.to_string());
+        });
+
+    bool first = true;
+    for (auto const& element : m_color_stop_list) {
+        if (!first)
+            builder.append(", "sv);
+
+        if (element.transition_hint.has_value()) {
+            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
+        }
+
+        serialize_a_srgb_value(builder, element.color_stop.color);
+        if (element.color_stop.length.has_value()) {
+            builder.appendff(" {}"sv, element.color_stop.length->to_string());
+        }
+        first = false;
+    }
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+static bool operator==(LinearGradientStyleValue::GradientDirection a, LinearGradientStyleValue::GradientDirection b)
+{
+    if (a.has<SideOrCorner>() && b.has<SideOrCorner>())
+        return a.get<SideOrCorner>() == b.get<SideOrCorner>();
+    if (a.has<Angle>() && b.has<Angle>())
+        return a.get<Angle>() == b.get<Angle>();
+    return false;
+}
+
+static bool operator==(GradientColorHint a, GradientColorHint b)
+{
+    return a.value == b.value;
+}
+
+static bool operator==(GradientColorStop a, GradientColorStop b)
+{
+    return a.color == b.color && a.length == b.length;
+}
+
+static bool operator==(ColorStopListElement a, ColorStopListElement b)
+{
+    return a.transition_hint == b.transition_hint && a.color_stop == b.color_stop;
+}
+
+bool LinearGradientStyleValue::equals(StyleValue const& other_) const
+{
+    if (type() != other_.type())
+        return false;
+    auto& other = other_.as_linear_gradient();
+
+    if (m_direction != other.m_direction || m_color_stop_list.size() != other.m_color_stop_list.size())
+        return false;
+
+    for (size_t i = 0; i < m_color_stop_list.size(); i++) {
+        if (m_color_stop_list[i] != other.m_color_stop_list[i])
+            return false;
+    }
+    return true;
+}
+
+float LinearGradientStyleValue::angle_degrees(Gfx::FloatRect const& gradient_rect) const
+{
+    auto corner_angle_degrees = [&] {
+        return static_cast<float>(atan2(gradient_rect.height(), gradient_rect.width())) * 180 / AK::Pi<float>;
+    };
+    return m_direction.visit(
+        [&](SideOrCorner side_or_corner) {
+            switch (side_or_corner) {
+            case SideOrCorner::Top:
+                return 0.0f;
+            case SideOrCorner::Bottom:
+                return 180.0f;
+            case SideOrCorner::Left:
+                return 270.0f;
+            case SideOrCorner::Right:
+                return 90.0f;
+            case SideOrCorner::TopRight:
+                return corner_angle_degrees();
+            case SideOrCorner::BottomLeft:
+                return corner_angle_degrees() + 180.0f;
+            case SideOrCorner::TopLeft:
+                return -corner_angle_degrees();
+            case SideOrCorner::BottomRight:
+                return -(corner_angle_degrees() + 180.0f);
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        },
+        [&](Angle const& angle) {
+            return angle.to_degrees();
+        });
 }
 
 bool InheritStyleValue::equals(StyleValue const& other) const
@@ -1527,7 +1645,7 @@ String ShadowStyleValue::to_string() const
     StringBuilder builder;
     builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
     if (m_placement == ShadowPlacement::Inner)
-        builder.append(" inset");
+        builder.append(" inset"sv);
     return builder.to_string();
 }
 
@@ -1579,7 +1697,7 @@ String TransformationStyleValue::to_string() const
     StringBuilder builder;
     builder.append(CSS::to_string(m_transform_function));
     builder.append('(');
-    builder.join(", ", m_values);
+    builder.join(", "sv, m_values);
     builder.append(')');
 
     return builder.to_string();

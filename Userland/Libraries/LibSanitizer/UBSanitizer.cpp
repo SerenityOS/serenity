@@ -31,12 +31,13 @@ static void print_location(SourceLocation const& location)
     static bool checked_env_for_deadly = false;
     if (!checked_env_for_deadly) {
         checked_env_for_deadly = true;
-        StringView options = getenv("UBSAN_OPTIONS");
+        auto const* options_ptr = getenv("UBSAN_OPTIONS");
+        auto options = options_ptr != NULL ? StringView { options_ptr, strlen(options_ptr) } : StringView {};
         // FIXME: Parse more options and complain about invalid options
         if (!options.is_null()) {
-            if (options.contains("halt_on_error=1"))
+            if (options.contains("halt_on_error=1"sv))
                 g_ubsan_is_deadly = true;
-            else if (options.contains("halt_on_error=0"))
+            else if (options.contains("halt_on_error=0"sv))
                 g_ubsan_is_deadly = false;
         }
     }
@@ -180,18 +181,18 @@ void __ubsan_handle_type_mismatch_v1(TypeMismatchData&, ValueHandle) __attribute
 void __ubsan_handle_type_mismatch_v1(TypeMismatchData& data, ValueHandle ptr)
 {
     constexpr StringView kinds[] = {
-        "load of",
-        "store to",
-        "reference binding to",
-        "member access within",
-        "member call on",
-        "constructor call on",
-        "downcast of",
-        "downcast of",
-        "upcast of",
-        "cast to virtual base of",
-        "_Nonnull binding to",
-        "dynamic operation on"
+        "load of"sv,
+        "store to"sv,
+        "reference binding to"sv,
+        "member access within"sv,
+        "member call on"sv,
+        "constructor call on"sv,
+        "downcast of"sv,
+        "downcast of"sv,
+        "upcast of"sv,
+        "cast to virtual base of"sv,
+        "_Nonnull binding to"sv,
+        "dynamic operation on"sv
     };
 
     auto location = data.location.permanently_clear();

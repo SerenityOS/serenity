@@ -180,19 +180,19 @@ ErrorOr<void> StringBuilder::try_append_escaped_for_json(StringView string)
     for (auto ch : string) {
         switch (ch) {
         case '\b':
-            TRY(try_append("\\b"));
+            TRY(try_append("\\b"sv));
             break;
         case '\n':
-            TRY(try_append("\\n"));
+            TRY(try_append("\\n"sv));
             break;
         case '\t':
-            TRY(try_append("\\t"));
+            TRY(try_append("\\t"sv));
             break;
         case '\"':
-            TRY(try_append("\\\""));
+            TRY(try_append("\\\""sv));
             break;
         case '\\':
-            TRY(try_append("\\\\"));
+            TRY(try_append("\\\\"sv));
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)

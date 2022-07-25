@@ -30,7 +30,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& si
     VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return Error::from_string_literal("Image size too large"sv);
+        return Error::from_string_literal("Image size too large");
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) Image(size));
 }
@@ -62,16 +62,16 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     // FIXME: Find a way to avoid the memory copying here.
     auto maybe_decoded_image = client->decode_image(bitmap_data);
     if (!maybe_decoded_image.has_value())
-        return Error::from_string_literal("Image decode failed"sv);
+        return Error::from_string_literal("Image decode failed");
 
     // FIXME: Support multi-frame images?
     auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
-        return Error::from_string_literal("Image decode failed (no frames)"sv);
+        return Error::from_string_literal("Image decode failed (no frames)");
 
     auto decoded_bitmap = decoded_image.frames.first().bitmap;
     if (decoded_bitmap.is_null())
-        return Error::from_string_literal("Image decode failed (no bitmap for frame)"sv);
+        return Error::from_string_literal("Image decode failed (no bitmap for frame)");
     return decoded_bitmap.release_nonnull();
 }
 
@@ -85,37 +85,37 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::B
 
 ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject const& json)
 {
-    auto image = TRY(try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() }));
+    auto image = TRY(try_create_with_size({ json.get("width"sv).to_i32(), json.get("height"sv).to_i32() }));
 
-    auto layers_value = json.get("layers");
+    auto layers_value = json.get("layers"sv);
     for (auto& layer_value : layers_value.as_array().values()) {
         auto& layer_object = layer_value.as_object();
-        auto name = layer_object.get("name").as_string();
+        auto name = layer_object.get("name"sv).as_string();
 
-        auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
+        auto bitmap_base64_encoded = layer_object.get("bitmap"sv).as_string();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
-        if (auto mask_object = layer_object.get("mask"); !mask_object.is_null()) {
+        if (auto mask_object = layer_object.get("mask"sv); !mask_object.is_null()) {
             auto mask_base64_encoded = mask_object.as_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(try_decode_bitmap(mask_data));
             TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
         }
 
-        auto width = layer_object.get("width").to_i32();
-        auto height = layer_object.get("height").to_i32();
+        auto width = layer_object.get("width"sv).to_i32();
+        auto height = layer_object.get("height"sv).to_i32();
 
         if (width != layer->size().width() || height != layer->size().height())
-            return Error::from_string_literal("Decoded layer bitmap has wrong size"sv);
+            return Error::from_string_literal("Decoded layer bitmap has wrong size");
 
         image->add_layer(*layer);
 
-        layer->set_location({ layer_object.get("locationx").to_i32(), layer_object.get("locationy").to_i32() });
-        layer->set_opacity_percent(layer_object.get("opacity_percent").to_i32());
-        layer->set_visible(layer_object.get("visible").as_bool());
-        layer->set_selected(layer_object.get("selected").as_bool());
+        layer->set_location({ layer_object.get("locationx"sv).to_i32(), layer_object.get("locationy"sv).to_i32() });
+        layer->set_opacity_percent(layer_object.get("opacity_percent"sv).to_i32());
+        layer->set_visible(layer_object.get("visible"sv).as_bool());
+        layer->set_selected(layer_object.get("selected"sv).as_bool());
     }
 
     return image;
@@ -123,24 +123,24 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
 
 void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
 {
-    MUST(json.add("width", m_size.width()));
-    MUST(json.add("height", m_size.height()));
+    MUST(json.add("width"sv, m_size.width()));
+    MUST(json.add("height"sv, m_size.height()));
     {
-        auto json_layers = MUST(json.add_array("layers"));
+        auto json_layers = MUST(json.add_array("layers"sv));
         for (auto const& layer : m_layers) {
             Gfx::BMPWriter bmp_writer;
             auto json_layer = MUST(json_layers.add_object());
-            MUST(json_layer.add("width", layer.size().width()));
-            MUST(json_layer.add("height", layer.size().height()));
-            MUST(json_layer.add("name", layer.name()));
-            MUST(json_layer.add("locationx", layer.location().x()));
-            MUST(json_layer.add("locationy", layer.location().y()));
-            MUST(json_layer.add("opacity_percent", layer.opacity_percent()));
-            MUST(json_layer.add("visible", layer.is_visible()));
-            MUST(json_layer.add("selected", layer.is_selected()));
-            MUST(json_layer.add("bitmap", encode_base64(bmp_writer.dump(layer.content_bitmap()))));
+            MUST(json_layer.add("width"sv, layer.size().width()));
+            MUST(json_layer.add("height"sv, layer.size().height()));
+            MUST(json_layer.add("name"sv, layer.name()));
+            MUST(json_layer.add("locationx"sv, layer.location().x()));
+            MUST(json_layer.add("locationy"sv, layer.location().y()));
+            MUST(json_layer.add("opacity_percent"sv, layer.opacity_percent()));
+            MUST(json_layer.add("visible"sv, layer.is_visible()));
+            MUST(json_layer.add("selected"sv, layer.is_selected()));
+            MUST(json_layer.add("bitmap"sv, encode_base64(bmp_writer.dump(layer.content_bitmap()))));
             if (layer.is_masked())
-                MUST(json_layer.add("mask", encode_base64(bmp_writer.dump(*layer.mask_bitmap()))));
+                MUST(json_layer.add("mask"sv, encode_base64(bmp_writer.dump(*layer.mask_bitmap()))));
             MUST(json_layer.finish());
         }
 

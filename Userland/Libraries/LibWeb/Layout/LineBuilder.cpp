@@ -9,10 +9,10 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state, LayoutMode layout_mode)
+LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_state, LayoutMode layout_mode)
     : m_context(context)
-    , m_formatting_state(formatting_state)
-    , m_containing_block_state(formatting_state.get_mutable(context.containing_block()))
+    , m_layout_state(layout_state)
+    , m_containing_block_state(layout_state.get_mutable(context.containing_block()))
     , m_layout_mode(layout_mode)
 {
     begin_new_line(false);
@@ -35,20 +35,8 @@ void LineBuilder::begin_new_line(bool increment_y)
 {
     if (increment_y)
         m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
-
-    switch (m_layout_mode) {
-    case LayoutMode::Normal:
-        m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
-        break;
-    case LayoutMode::MinContent:
-        m_available_width_for_current_line = 0;
-        break;
-    case LayoutMode::MaxContent:
-        m_available_width_for_current_line = INFINITY;
-        break;
-    }
+    m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
     m_max_height_on_current_line = 0;
-
     m_last_line_needs_update = true;
 }
 
@@ -62,9 +50,9 @@ LineBox& LineBuilder::ensure_last_line_box()
 
 void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size, float leading_margin, float trailing_margin)
 {
-    auto& box_state = m_formatting_state.get_mutable(box);
+    auto& box_state = m_layout_state.get_mutable(box);
     auto& line_box = ensure_last_line_box();
-    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
+    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width(), box_state.content_height(), box_state.border_box_top(), box_state.border_box_bottom());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.border_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
@@ -79,12 +67,8 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
-bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width)
+bool LineBuilder::should_break(float next_item_width)
 {
-    if (layout_mode == LayoutMode::MinContent)
-        return true;
-    if (layout_mode == LayoutMode::MaxContent)
-        return false;
     auto const& line_boxes = m_containing_block_state.line_boxes;
     if (line_boxes.is_empty() || line_boxes.last().is_empty())
         return false;
@@ -92,7 +76,7 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width)
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
-static float box_baseline(FormattingState const& state, Box const& box)
+static float box_baseline(LayoutState const& state, Box const& box)
 {
     auto const& box_state = state.get(box);
 
@@ -102,7 +86,7 @@ static float box_baseline(FormattingState const& state, Box const& box)
         case CSS::VerticalAlign::Top:
             return box_state.border_box_top();
         case CSS::VerticalAlign::Bottom:
-            return box_state.content_height + box_state.border_box_bottom();
+            return box_state.content_height() + box_state.border_box_bottom();
         default:
             break;
         }
@@ -130,7 +114,7 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
     float x_offset = m_context.leftmost_x_offset_at(m_current_y);
-    float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
+    float excess_horizontal_space = m_context.effective_containing_block_width() - line_box.width();
 
     switch (text_align) {
     case CSS::TextAlign::Center:
@@ -163,7 +147,7 @@ void LineBuilder::update_last_line()
                 fragment_baseline = font_metrics.ascent;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
-                fragment_baseline = box_baseline(m_formatting_state, box);
+                fragment_baseline = box_baseline(m_layout_state, box);
             }
 
             fragment_baseline += half_leading;
@@ -229,9 +213,9 @@ void LineBuilder::update_last_line()
         {
             // FIXME: Support inline-table elements.
             if (fragment.layout_node().is_replaced_box() || fragment.layout_node().is_inline_block()) {
-                auto const& fragment_box_state = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node()));
+                auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
                 top_of_inline_box = fragment.offset().y() - fragment_box_state.margin_box_top();
-                bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height + fragment_box_state.margin_box_bottom();
+                bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom();
             } else {
                 auto font_metrics = fragment.layout_node().font().pixel_metrics();
                 auto typographic_height = font_metrics.ascent + font_metrics.descent;

@@ -72,7 +72,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
     auto do_across = [&](StringView mode_name, auto& values) {
         if (is_inferred)
-            mode_name = "infer";
+            mode_name = "infer"sv;
         // Translate to a list of applications of `length <mode_name>`
         Vector<NonnullRefPtr<AST::Node>> resulting_nodes;
         resulting_nodes.ensure_capacity(values.size());
@@ -104,7 +104,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
         if (auto list = dynamic_cast<AST::ListValue*>(value.ptr())) {
             if (across)
-                return do_across("list", list->values());
+                return do_across("list"sv, list->values());
 
             return value_with_number(list->values().size());
         }
@@ -115,7 +115,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
 
         dbgln("List has {} entries", list.size());
         auto values = AST::make_ref_counted<AST::ListValue>(move(list));
-        return do_across("list", values->values());
+        return do_across("list"sv, values->values());
     }
     case String: {
         // 'across' will only accept lists, and '!across' will only accept non-lists here.
@@ -151,7 +151,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
             if (!across)
                 goto raise_no_list_allowed;
 
-            return do_across("string", list->values());
+            return do_across("string"sv, list->values());
         }
 
         if (across && !value->is_list()) {
@@ -184,7 +184,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         }
 
         auto values = AST::make_ref_counted<AST::ListValue>(move(list));
-        return do_across("string", values->values());
+        return do_across("string"sv, values->values());
     }
     }
 }

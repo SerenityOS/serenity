@@ -29,6 +29,7 @@ test("syntax errors", () => {
         "[1,2,3, ]",
         '{ "foo": "bar",}',
         '{ "foo": "bar", }',
+        "",
     ].forEach(test => {
         expect(() => {
             JSON.parse(test);

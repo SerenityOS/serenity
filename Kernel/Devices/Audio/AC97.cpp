@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -206,12 +207,12 @@ ErrorOr<size_t> AC97::write(size_t channel_index, UserOrKernelBuffer const& data
         m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_pages(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv, Memory::Region::Access::Write));
     }
 
-    auto remaining = length;
+    Checked<size_t> remaining = length;
     size_t offset = 0;
-    while (remaining > 0) {
-        TRY(write_single_buffer(data, offset, min(remaining, PAGE_SIZE)));
+    while (remaining > static_cast<size_t>(0)) {
+        TRY(write_single_buffer(data, offset, min(remaining.value(), PAGE_SIZE)));
         offset += PAGE_SIZE;
-        remaining -= PAGE_SIZE;
+        remaining.saturating_sub(PAGE_SIZE);
     }
 
     return length;
@@ -274,8 +275,12 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
 void AC97::AC97Channel::handle_dma_stopped()
 {
     dbgln_if(AC97_DEBUG, "AC97 @ {}: channel {}: DMA engine has stopped", m_device.pci_address(), name());
-    VERIFY(m_dma_running);
-    m_dma_running = false;
+    m_dma_running.with([this](auto& dma_running) {
+        // NOTE: QEMU might send spurious interrupts while we're not running, so we don't want to panic here.
+        if (!dma_running)
+            dbgln("AC97 @ {}: received DMA interrupt while it wasn't running", m_device.pci_address());
+        dma_running = false;
+    });
 }
 
 void AC97::AC97Channel::reset()
@@ -288,7 +293,9 @@ void AC97::AC97Channel::reset()
     while ((control_register.in<u8>() & AudioControlRegisterFlag::ResetRegisters) > 0)
         IO::delay(50);
 
-    m_dma_running = false;
+    m_dma_running.with([](auto& dma_running) {
+        dma_running = false;
+    });
 }
 
 void AC97::AC97Channel::set_last_valid_index(u32 buffer_address, u8 last_valid_index)
@@ -310,7 +317,9 @@ void AC97::AC97Channel::start_dma()
     control |= AudioControlRegisterFlag::InterruptOnCompletionEnable;
     control_register.out(control);
 
-    m_dma_running = true;
+    m_dma_running.with([](auto& dma_running) {
+        dma_running = true;
+    });
 }
 
 }

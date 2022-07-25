@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Thu, 5 May 2022 18:49:17 +0200
+Subject: [PATCH] Add build system support for SerenityOS
+
+---
+ configure | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/configure b/configure
+index 7c08c18..3177605 100755
+--- a/configure
++++ b/configure
+@@ -496,6 +496,8 @@ elif check_define __NetBSD__; then
+   targetos=netbsd
+ elif check_define __APPLE__; then
+   targetos=darwin
++elif check_define __serenity__; then
++  targetos=serenity
+ else
+   # This is a fatal error, but don't report it yet, because we
+   # might be going to just print the --help text, or it might
+@@ -509,6 +511,7 @@ mingw32="no"
+ bsd="no"
+ linux="no"
+ solaris="no"
++serenity="no"
+ case $targetos in
+ windows)
+   mingw32="yes"
+@@ -565,6 +568,9 @@ linux)
+   linux="yes"
+   vhost_user=${default_feature:-yes}
+ ;;
++serenity)
++  serenity="yes"
++;;
+ esac
+ 
+ if test ! -z "$cpu" ; then

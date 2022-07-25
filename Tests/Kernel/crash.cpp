@@ -46,7 +46,6 @@ int main(int argc, char** argv)
     bool do_execute_non_executable_memory = false;
     bool do_trigger_user_mode_instruction_prevention = false;
     bool do_use_io_instruction = false;
-    bool do_read_cpu_counter = false;
     bool do_pledge_violation = false;
     bool do_failing_assertion = false;
     bool do_deref_null_refptr = false;
@@ -72,7 +71,6 @@ int main(int argc, char** argv)
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
-    args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
     args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
@@ -270,13 +268,6 @@ int main(int argc, char** argv)
         any_failures |= !Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
             outln("Keyboard status: {:#02x}", keyboard_status);
-            return Crash::Failure::DidNotCrash;
-        }).run(run_type);
-    }
-
-    if (do_read_cpu_counter || do_all_crash_types) {
-        any_failures |= !Crash("Read the CPU timestamp counter", [] {
-            asm volatile("rdtsc");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

@@ -54,7 +54,7 @@ Vector<QueryParam> url_decode(StringView input)
         }
 
         // 4. Replace any 0x2B (+) in name and value with 0x20 (SP).
-        auto space_decoded_name = name.replace("+"sv, " "sv, true);
+        auto space_decoded_name = name.replace("+"sv, " "sv, ReplaceMode::All);
 
         // 5. Let nameString and valueString be the result of running UTF-8 decode without BOM on the percent-decoding of name and value, respectively.
         auto name_string = AK::URL::percent_decode(space_decoded_name);
@@ -234,7 +234,7 @@ void URLSearchParams::sort()
     update();
 }
 
-String URLSearchParams::to_string()
+String URLSearchParams::to_string() const
 {
     // return the serialization of this’s list.
     return url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded);

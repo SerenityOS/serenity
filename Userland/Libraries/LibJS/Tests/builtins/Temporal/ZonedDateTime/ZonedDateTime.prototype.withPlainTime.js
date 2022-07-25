@@ -118,10 +118,16 @@ describe("errors", () => {
     test("invalid plain time-like object", () => {
         expect(() => {
             new Temporal.ZonedDateTime(1n, {}).withPlainTime({});
-        }).toThrowWithMessage(TypeError, "Invalid plain time-like object");
+        }).toThrowWithMessage(
+            TypeError,
+            "Object must have at least one of the following properties: hour, microsecond, millisecond, minute, nanosecond, second"
+        );
 
         expect(() => {
             new Temporal.ZonedDateTime(1n, {}).withPlainTime({ foo: 1, bar: 2 });
-        }).toThrowWithMessage(TypeError, "Invalid plain time-like object");
+        }).toThrowWithMessage(
+            TypeError,
+            "Object must have at least one of the following properties: hour, microsecond, millisecond, minute, nanosecond, second"
+        );
     });
 });

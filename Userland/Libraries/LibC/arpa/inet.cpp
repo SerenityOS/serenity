@@ -64,7 +64,7 @@ int inet_pton(int af, char const* src, void* dst)
         *(uint32_t*)dst = u.l;
         return 1;
     } else if (af == AF_INET6) {
-        auto addr = IPv6Address::from_string(src);
+        auto addr = IPv6Address::from_string({ src, strlen(src) });
         if (!addr.has_value()) {
             errno = EINVAL;
             return 0;

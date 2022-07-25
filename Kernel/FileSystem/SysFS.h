@@ -8,109 +8,10 @@
 
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
-
-class SysFSDevicesDirectory;
-class SysFSRootDirectory final : public SysFSDirectory {
-    friend class SysFSComponentRegistry;
-
-public:
-    virtual StringView name() const override { return "."sv; }
-    static NonnullRefPtr<SysFSRootDirectory> create();
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-
-private:
-    SysFSRootDirectory();
-    RefPtr<SysFSBusDirectory> m_buses_directory;
-};
-
-class SysFSDeviceComponent final
-    : public SysFSComponent
-    , public Weakable<SysFSDeviceComponent> {
-    friend class SysFSComponentRegistry;
-
-public:
-    static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);
-    virtual StringView name() const override { return m_major_minor_formatted_device_name->view(); }
-    bool is_block_device() const { return m_block_device; }
-
-private:
-    SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const&);
-    IntrusiveListNode<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>> m_list_node;
-    bool m_block_device;
-
-    NonnullOwnPtr<KString> m_major_minor_formatted_device_name;
-};
-
-class SysFSDevicesDirectory final : public SysFSDirectory {
-public:
-    virtual StringView name() const override { return "dev"sv; }
-    static NonnullRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
-
-private:
-    explicit SysFSDevicesDirectory(SysFSRootDirectory const&);
-};
-
-class SysFSBlockDevicesDirectory final : public SysFSDirectory {
-public:
-    virtual StringView name() const override { return "block"sv; }
-    static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDevicesDirectory const&);
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
-
-private:
-    explicit SysFSBlockDevicesDirectory(SysFSDevicesDirectory const&);
-};
-
-class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
-public:
-    virtual StringView name() const override { return "char"sv; }
-    static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDevicesDirectory const&);
-    virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
-
-private:
-    explicit SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const&);
-};
-
-class SysFSBusDirectory : public SysFSDirectory {
-    friend class SysFSComponentRegistry;
-
-public:
-    virtual StringView name() const override { return "bus"sv; }
-    static NonnullRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
-
-private:
-    explicit SysFSBusDirectory(SysFSRootDirectory const&);
-};
-
-class SysFSComponentRegistry {
-    using DevicesList = MutexProtected<IntrusiveList<&SysFSDeviceComponent::m_list_node>>;
-
-public:
-    static SysFSComponentRegistry& the();
-
-    static void initialize();
-
-    SysFSComponentRegistry();
-    void register_new_component(SysFSComponent&);
-
-    SysFSDirectory& root_directory() { return m_root_directory; }
-    Mutex& get_lock() { return m_lock; }
-
-    void register_new_bus_directory(SysFSDirectory&);
-    SysFSBusDirectory& buses_directory();
-
-    DevicesList& devices_list();
-
-private:
-    Mutex m_lock;
-    NonnullRefPtr<SysFSRootDirectory> m_root_directory;
-    DevicesList m_devices_list;
-};
 
 class SysFS final : public FileSystem {
     friend class SysFSInode;
@@ -159,6 +60,19 @@ protected:
     virtual void did_seek(OpenFileDescription&, off_t) override final;
 
     NonnullRefPtr<SysFSComponent> m_associated_component;
+};
+
+class SysFSLinkInode : public SysFSInode {
+    friend class SysFS;
+
+public:
+    static ErrorOr<NonnullRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
+    virtual ~SysFSLinkInode() override;
+
+protected:
+    SysFSLinkInode(SysFS const&, SysFSComponent const&);
+    // ^Inode
+    virtual InodeMetadata metadata() const override;
 };
 
 class SysFSDirectoryInode : public SysFSInode {

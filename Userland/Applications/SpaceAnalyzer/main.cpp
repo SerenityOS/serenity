@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static constexpr StringView APP_NAME = "Space Analyzer";
+static constexpr auto APP_NAME = "Space Analyzer"sv;
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
@@ -88,11 +88,11 @@ static void fill_mounts(Vector<MountInfo>& output)
     auto content = file->read_all();
     auto json = JsonValue::from_string(content).release_value_but_fixme_should_propagate_errors();
 
-    json.as_array().for_each([&output](auto& value) {
+    json.as_array().for_each([&output](JsonValue const& value) {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
-        mount_info.mount_point = filesystem_object.get("mount_point").to_string();
-        mount_info.source = filesystem_object.get("source").as_string_or("none");
+        mount_info.mount_point = filesystem_object.get("mount_point"sv).to_string();
+        mount_info.source = filesystem_object.get("source"sv).as_string_or("none"sv);
         output.append(mount_info);
     });
 }
@@ -169,7 +169,7 @@ struct QueueEntry {
 
 static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
 {
-    VERIFY(!root.m_name.ends_with("/"));
+    VERIFY(!root.m_name.ends_with('/'));
 
     Queue<QueueEntry> queue;
     queue.enqueue(QueueEntry(root.m_name, &root));
@@ -177,7 +177,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
 
     StringBuilder builder = StringBuilder();
     builder.append(root.m_name);
-    builder.append("/");
+    builder.append('/');
     MountInfo* root_mount_info = find_mount_for_path(builder.to_string(), mounts);
     if (!root_mount_info) {
         return;
@@ -187,7 +187,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
 
         builder.clear();
         builder.append(queue_entry.path);
-        builder.append("/");
+        builder.append('/');
 
         MountInfo* mount_info = find_mount_for_path(builder.to_string(), mounts);
         if (!mount_info || (mount_info != root_mount_info && mount_info->source != root_mount_info->source)) {
@@ -254,21 +254,22 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     if (!error_accumulator.is_empty()) {
         StringBuilder builder;
         bool first = true;
-        builder.append("Some directories were not analyzed: ");
+        builder.append("Some directories were not analyzed: "sv);
         for (auto& key : error_accumulator.keys()) {
             if (!first) {
-                builder.append(", ");
+                builder.append(", "sv);
             }
-            builder.append(strerror(key));
-            builder.append(" (");
+            auto const* error = strerror(key);
+            builder.append({ error, strlen(error) });
+            builder.append(" ("sv);
             int value = error_accumulator.get(key).value();
             builder.append(String::number(value));
             if (value == 1) {
-                builder.append(" time");
+                builder.append(" time"sv);
             } else {
-                builder.append(" times");
+                builder.append(" times"sv);
             }
-            builder.append(")");
+            builder.append(')');
             first = false;
         }
         statusbar.set_text(builder.to_string());
@@ -307,7 +308,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
     // Configure application window.
-    auto app_icon = GUI::Icon::default_icon("app-space-analyzer");
+    auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
     auto window = GUI::Window::construct();
     window->set_title(APP_NAME);
     window->resize(640, 480);
@@ -335,14 +336,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
 
     // Configure the nodes context menu.
-    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(get_absolute_path_to_selected_node(treemapwidget)));
     });
-    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         LexicalPath path { get_absolute_path_to_selected_node(treemapwidget) };
         Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     });
-    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
@@ -357,7 +358,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     String::formatted("Failed to delete \"{}\": {}. Retry?",
                         deletion_result.error().file,
                         static_cast<Error const&>(deletion_result.error())),
-                    "Deletion failed",
+                    "Deletion failed"sv,
                     GUI::MessageBox::Type::Error,
                     GUI::MessageBox::InputType::YesNo);
                 if (retry_message_result == GUI::MessageBox::ExecResult::Yes) {
@@ -366,7 +367,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 GUI::MessageBox::show(window,
                     String::formatted("Successfully deleted \"{}\".", selected_node_path),
-                    "Deletion completed",
+                    "Deletion completed"sv,
                     GUI::MessageBox::Type::Information,
                     GUI::MessageBox::InputType::OK);
             }
@@ -403,7 +404,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
 
-            builder.append("/");
+            builder.append('/');
             builder.append(node->name());
 
             breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());

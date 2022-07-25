@@ -94,7 +94,7 @@ MainWidget::MainWidget()
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.protocol() == "file") {
             auto path = url.path();
-            if (!path.starts_with("/usr/share/man/")) {
+            if (!path.starts_with("/usr/share/man/"sv)) {
                 open_external(url);
                 return;
             }
@@ -114,7 +114,10 @@ MainWidget::MainWidget()
                 }
                 auto const section = url.paths()[0];
                 auto const page = url.paths()[1];
-                open_url(URL::create_with_file_scheme(String::formatted("/usr/share/man/man{}/{}.md", section, page), url.fragment()));
+                auto const path = String::formatted("/usr/share/man/man{}/{}.md", section, page);
+
+                m_history.push(path);
+                open_url(URL::create_with_file_scheme(path, url.fragment()));
             } else {
                 dbgln("Bad help operation '{}' in URL '{}'", url.host(), url);
             }
@@ -181,7 +184,7 @@ void MainWidget::set_start_page(StringView start_page, u32 section)
             m_history.push(path);
             open_page(path);
             set_start_page = true;
-        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md")) {
+        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md"sv)) {
             // > Help [/path/to/documentation/file.md]
             m_history.push(url.path());
             open_page(url.path());
@@ -241,11 +244,11 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_home_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
-    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png")), [&](auto&) {
+    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
         String path = "/usr/share/man/man1/Help.md";
         open_page(path);
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help")), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window)));
 
     m_context_menu = TRY(GUI::Menu::try_create());
     TRY(m_context_menu->try_add_action(*m_go_back_action));
@@ -259,30 +262,18 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     m_browse_view->set_model(*m_manual_model);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));
     m_search_view->set_model(*m_filter_model);
-    m_filter_model->set_filter_term("");
+    m_filter_model->set_filter_term(""sv);
 
     return {};
 }
 
 void MainWidget::open_url(URL const& url)
 {
+    m_go_back_action->set_enabled(m_history.can_go_back());
+    m_go_forward_action->set_enabled(m_history.can_go_forward());
+
     if (url.protocol() == "file") {
-        auto path = url.path();
-        auto source_result = m_manual_model->page_view(path);
-        if (source_result.is_error()) {
-            GUI::MessageBox::show(window(), String::formatted("{}", source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        auto source = source_result.value();
-        String html;
-        {
-            auto md_document = Markdown::Document::parse(source);
-            VERIFY(md_document);
-            html = md_document->render_to_html();
-        }
-
-        m_web_view->load_html(html, url);
+        m_web_view->load(url);
         m_web_view->scroll_to_top();
 
         GUI::Application::the()->deferred_invoke([&, path = url.path()] {
@@ -302,7 +293,7 @@ void MainWidget::open_url(URL const& url)
 void MainWidget::open_external(URL const& url)
 {
     if (!Desktop::Launcher::open(url))
-        GUI::MessageBox::show(window(), String::formatted("The link to '{}' could not be opened.", url), "Failed to open link", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("The link to '{}' could not be opened.", url), "Failed to open link"sv, GUI::MessageBox::Type::Error);
 }
 
 void MainWidget::open_page(String const& path)

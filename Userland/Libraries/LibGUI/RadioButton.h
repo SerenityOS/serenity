@@ -19,6 +19,8 @@ public:
 
     virtual void click(unsigned modifiers = 0) override;
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
 protected:
     explicit RadioButton(String text = {});
     virtual void paint_event(PaintEvent&) override;

@@ -30,7 +30,7 @@ public:
 
     virtual ~CSSSupportsRule() = default;
 
-    virtual StringView class_name() const override { return "CSSSupportsRule"; };
+    virtual StringView class_name() const override { return "CSSSupportsRule"sv; };
     virtual Type type() const override { return Type::Supports; };
 
     String condition_text() const override;

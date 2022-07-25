@@ -240,12 +240,12 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
     auto json = JsonValue::from_string(file->read_all());
     if (json.is_error() || !json.value().is_object())
-        return Error::from_string_literal("Invalid perfcore format (not a JSON object)"sv);
+        return Error::from_string_literal("Invalid perfcore format (not a JSON object)");
 
     auto const& object = json.value().as_object();
 
     if (!g_kernel_debuginfo_object.has_value()) {
-        auto debuginfo_file_or_error = Core::MappedFile::map("/boot/Kernel.debug");
+        auto debuginfo_file_or_error = Core::MappedFile::map("/boot/Kernel.debug"sv);
         if (!debuginfo_file_or_error.is_error()) {
             auto debuginfo_file = debuginfo_file_or_error.release_value();
             auto debuginfo_image = ELF::Image(debuginfo_file->bytes());
@@ -255,7 +255,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
     auto const* strings_value = object.get_ptr("strings"sv);
     if (!strings_value || !strings_value->is_array())
-        return Error::from_string_literal("Malformed profile (strings is not an array)"sv);
+        return Error::from_string_literal("Malformed profile (strings is not an array)");
 
     HashMap<FlatPtr, String> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
@@ -263,9 +263,9 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         profile_strings.set(string_id, value.to_string());
     }
 
-    auto const* events_value = object.get_ptr("events");
+    auto const* events_value = object.get_ptr("events"sv);
     if (!events_value || !events_value->is_array())
-        return Error::from_string_literal("Malformed profile (events is not an array)"sv);
+        return Error::from_string_literal("Malformed profile (events is not an array)");
 
     auto const& perf_events = events_value->as_array();
 
@@ -281,12 +281,12 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
         event.serial = next_serial;
         next_serial.increment();
-        event.timestamp = perf_event.get("timestamp").to_number<u64>();
-        event.lost_samples = perf_event.get("lost_samples").to_number<u32>();
-        event.pid = perf_event.get("pid").to_i32();
-        event.tid = perf_event.get("tid").to_i32();
+        event.timestamp = perf_event.get("timestamp"sv).to_number<u64>();
+        event.lost_samples = perf_event.get("lost_samples"sv).to_number<u32>();
+        event.pid = perf_event.get("pid"sv).to_i32();
+        event.tid = perf_event.get("tid"sv).to_i32();
 
-        auto type_string = perf_event.get("type").to_string();
+        auto type_string = perf_event.get("type"sv).to_string();
 
         if (type_string == "sample"sv) {
             event.data = Event::SampleData {};
@@ -403,7 +403,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
         auto maybe_kernel_base = Symbolication::kernel_base();
 
-        auto const* stack = perf_event.get_ptr("stack");
+        auto const* stack = perf_event.get_ptr("stack"sv);
         VERIFY(stack);
         auto const& stack_array = stack->as_array();
         for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
@@ -446,7 +446,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     }
 
     if (events.is_empty())
-        return Error::from_string_literal("No events captured (targeted process was never on CPU)"sv);
+        return Error::from_string_literal("No events captured (targeted process was never on CPU)");
 
     quick_sort(all_processes, [](auto& a, auto& b) {
         if (a.pid == b.pid)

@@ -76,7 +76,7 @@ void Game::paint_event(GUI::PaintEvent& event)
         auto message = String::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
         painter.draw_text(m_text_rect, message, Gfx::TextAlignment::Center, Color::White);
     } else {
-        painter.draw_text(m_text_rect, "Press any key to start", Gfx::TextAlignment::Center, Color::White);
+        painter.draw_text(m_text_rect, "Press any key to start"sv, Gfx::TextAlignment::Center, Color::White);
     }
 }
 

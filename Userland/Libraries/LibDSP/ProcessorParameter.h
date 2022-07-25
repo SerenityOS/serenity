@@ -14,7 +14,7 @@
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
-namespace LibDSP {
+namespace DSP {
 
 using ParameterFixedPoint = FixedPoint<8, i64>;
 
@@ -78,8 +78,8 @@ public:
     ParameterT value() const { return m_value; };
     void set_value(ParameterT value)
     {
-        set_value_sneaky(value, LibDSP::Detail::ProcessorParameterSetValueTag {});
-        if (did_change_value)
+        set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});
+        for (auto const& did_change_value : m_change_value_listeners)
             did_change_value(value);
     }
 
@@ -90,10 +90,15 @@ public:
             m_value = value;
     }
 
-    Function<void(ParameterT const&)> did_change_value;
+    // FIXME: Devise a good API for unregistering listeners.
+    void register_change_listener(Function<void(ParameterT const&)> listener)
+    {
+        m_change_value_listeners.append(move(listener));
+    }
 
 protected:
     ParameterT m_value;
+    Vector<Function<void(ParameterT const&)>> m_change_value_listeners;
 };
 }
 
@@ -151,14 +156,14 @@ public:
 
 }
 template<>
-struct AK::Formatter<LibDSP::ProcessorRangeParameter> : AK::StandardFormatter {
+struct AK::Formatter<DSP::ProcessorRangeParameter> : AK::StandardFormatter {
 
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
-    ErrorOr<void> format(FormatBuilder& builder, LibDSP::ProcessorRangeParameter value)
+    ErrorOr<void> format(FormatBuilder& builder, DSP::ProcessorRangeParameter value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };

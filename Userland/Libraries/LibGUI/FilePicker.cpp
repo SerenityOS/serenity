@@ -34,7 +34,7 @@ namespace GUI {
 
 Optional<String> FilePicker::get_open_filepath(Window* parent_window, String const& window_title, StringView path, bool folder, ScreenPosition screen_position)
 {
-    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, "", path, screen_position);
+    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position);
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -75,11 +75,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     case Mode::OpenMultiple:
     case Mode::OpenFolder:
         set_title("Open");
-        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors());
+        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     case Mode::Save:
         set_title("Save as");
-        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save-as.png").release_value_but_fixme_should_propagate_errors());
+        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     }
     resize(560, 320);
@@ -115,7 +115,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     auto open_parent_directory_action = Action::create(
-        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png").release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             set_path(String::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -129,13 +129,13 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
-            if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecResult::OK && !value.is_empty()) {
+            if (InputBox::show(this, value, "Enter name:"sv, "New directory"sv) == InputBox::ExecResult::OK && !value.is_empty()) {
                 auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
                 if (rc < 0) {
-                    MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error", MessageBox::Type::Error);
+                    MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error"sv, MessageBox::Type::Error);
                 } else {
                     m_model->invalidate();
                 }
@@ -272,12 +272,12 @@ void FilePicker::on_file_return()
     bool file_exists = Core::File::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
-        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found", MessageBox::Type::Error, MessageBox::InputType::OK);
+        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);
         return;
     }
 
     if (file_exists && m_mode == Mode::Save) {
-        auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
+        auto result = MessageBox::show(this, "File already exists. Overwrite?"sv, "Existing File"sv, MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecResult::Cancel)
             return;
     }
@@ -289,7 +289,7 @@ void FilePicker::on_file_return()
 void FilePicker::set_path(String const& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
-        GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         auto& common_locations_tray = *find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
         for (auto& location_button : m_common_location_buttons)
             common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);

@@ -2,4 +2,4 @@ set(SOURCES
     main.cpp
 )
 
-lagom_tool(IPCCompiler LIBS LagomMain)
+lagom_tool(IPCCompiler LIBS LibMain)

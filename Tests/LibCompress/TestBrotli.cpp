@@ -32,47 +32,47 @@ static void run_test(StringView const file_name)
 
 TEST_CASE(brotli_decompress_uncompressed)
 {
-    run_test("wellhello.txt");
+    run_test("wellhello.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_simple)
 {
-    run_test("hello.txt");
+    run_test("hello.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_simple2)
 {
-    run_test("wellhello2.txt");
+    run_test("wellhello2.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_lorem)
 {
-    run_test("lorem.txt");
+    run_test("lorem.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_lorem2)
 {
-    run_test("lorem2.txt");
+    run_test("lorem2.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_transform)
 {
-    run_test("transform.txt");
+    run_test("transform.txt"sv);
 }
 
 TEST_CASE(brotli_decompress_serenityos_html)
 {
-    run_test("serenityos.html");
+    run_test("serenityos.html"sv);
 }
 
 TEST_CASE(brotli_decompress_happy3rd_html)
 {
-    run_test("happy3rd.html");
+    run_test("happy3rd.html"sv);
 }
 
 TEST_CASE(brotli_decompress_katica_regular_10_font)
 {
-    run_test("KaticaRegular10.font");
+    run_test("KaticaRegular10.font"sv);
 }
 
 TEST_CASE(brotli_decompress_zero_one_bin)

@@ -9,6 +9,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Event.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -39,7 +40,27 @@ Dialog::ExecResult Dialog::exec()
         if (parent() && is<Window>(parent())) {
             auto& parent_window = *static_cast<Window*>(parent());
             if (parent_window.is_visible()) {
+                // Check the dialog's positiom against the Desktop's rect and reposition it to be entirely visible.
+                // If the dialog is larger than the desktop's rect just center it.
                 window_rect.center_within(parent_window.rect());
+                if (window_rect.size().width() < desktop_rect.size().width() && window_rect.size().height() < desktop_rect.size().height()) {
+                    auto taskbar_top_y = desktop_rect.bottom() - Desktop::the().taskbar_height();
+                    auto palette = GUI::Application::the()->palette();
+                    auto border_thickness = palette.window_border_thickness();
+                    auto top_border_title_thickness = border_thickness + palette.window_title_height();
+                    if (window_rect.top() < top_border_title_thickness) {
+                        window_rect.set_y(top_border_title_thickness);
+                    }
+                    if (window_rect.right() + border_thickness > desktop_rect.right()) {
+                        window_rect.translate_by((window_rect.right() + border_thickness - desktop_rect.right()) * -1, 0);
+                    }
+                    if (window_rect.bottom() + border_thickness > taskbar_top_y) {
+                        window_rect.translate_by(0, (window_rect.bottom() + border_thickness - taskbar_top_y) * -1);
+                    }
+                    if (window_rect.left() - border_thickness < 0) {
+                        window_rect.set_x(0 + border_thickness);
+                    }
+                }
                 break;
             }
         }

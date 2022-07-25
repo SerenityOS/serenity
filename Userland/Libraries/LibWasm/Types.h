@@ -48,16 +48,16 @@ String parse_error_to_string(ParseError);
 template<typename T>
 using ParseResult = Result<T, ParseError>;
 
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, TypeIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, FunctionIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, TableIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, ElementIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, MemoryIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
-TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
-TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, TypeIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, FunctionIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, TableIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, ElementIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, MemoryIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
 
 ParseError with_eof_check(InputStream const& stream, ParseError error_if_not_eof);
 

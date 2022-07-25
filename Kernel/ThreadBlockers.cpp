@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -360,6 +361,10 @@ bool Thread::SelectBlocker::setup_blocker()
 
         if (!should_block)
             continue;
+        if (!fd_entry.description) {
+            should_block = false;
+            continue;
+        }
         if (!fd_entry.description->blocker_set().add_blocker(*this, &fd_entry))
             should_block = false;
     }
@@ -371,8 +376,10 @@ Thread::SelectBlocker::~SelectBlocker() = default;
 void Thread::SelectBlocker::finalize()
 {
     Thread::FileBlocker::finalize();
-    for (auto& fd_entry : m_fds)
-        fd_entry.description->blocker_set().remove_blocker(*this);
+    for (auto& fd_entry : m_fds) {
+        if (fd_entry.description)
+            fd_entry.description->blocker_set().remove_blocker(*this);
+    }
 }
 
 void Thread::SelectBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
@@ -397,6 +404,7 @@ bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker,
         if (m_did_unblock)
             return false;
 
+        VERIFY(fd_info.description);
         auto unblock_flags = fd_info.description->should_unblock(fd_info.block_flags);
         if (unblock_flags == BlockFlags::None)
             return false;
@@ -420,6 +428,11 @@ size_t Thread::SelectBlocker::collect_unblocked_flags()
     size_t count = 0;
     for (auto& fd_entry : m_fds) {
         VERIFY(fd_entry.block_flags != FileBlocker::BlockFlags::None);
+
+        if (!fd_entry.description) {
+            count++;
+            continue;
+        }
 
         // unblock will have set at least the first descriptor's unblock
         // flags that triggered the unblock. Make sure we don't discard that
@@ -474,7 +487,15 @@ bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
         if (m_did_unblock)
             return false;
 
-        auto matching_pending_signal = bit_scan_forward(thread().pending_signals() & m_pending_set);
+        auto pending_signals = thread().pending_signals() & m_pending_set;
+
+        // Also unblock if we have just "handled" that signal and are in the procecss
+        // of running their signal handler (i.e. we just unmarked the signal as pending).
+        if (thread().m_currently_handled_signal)
+            pending_signals |= (1 << (thread().m_currently_handled_signal - 1)) & m_pending_set;
+
+        auto matching_pending_signal = bit_scan_forward(pending_signals);
+
         if (matching_pending_signal == 0)
             return false;
 
@@ -797,6 +818,39 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     // Because this may be called from add_blocker, in which case we should
     // not be actually trying to unblock the thread (because it hasn't actually
     // been blocked yet), we need to return true anyway
+    return true;
+}
+
+Thread::FlockBlocker::FlockBlocker(NonnullRefPtr<Inode> inode, flock const& flock)
+    : m_inode(move(inode))
+    , m_flock(flock)
+{
+}
+
+void Thread::FlockBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason reason)
+{
+    VERIFY(reason == UnblockImmediatelyReason::UnblockConditionAlreadyMet);
+}
+
+bool Thread::FlockBlocker::setup_blocker()
+{
+    return add_to_blocker_set(m_inode->flock_blocker_set());
+}
+
+bool Thread::FlockBlocker::try_unblock(bool from_add_blocker)
+{
+    if (!m_inode->can_apply_flock(m_flock))
+        return false;
+
+    {
+        SpinlockLocker lock(m_lock);
+        if (m_did_unblock)
+            return false;
+        m_did_unblock = true;
+    }
+
+    if (!from_add_blocker)
+        unblock_from_blocker();
     return true;
 }
 

@@ -175,7 +175,7 @@ time_t TimeManagement::ticks_per_second() const
     return m_time_keeper_timer->ticks_per_second();
 }
 
-time_t TimeManagement::boot_time() const
+time_t TimeManagement::boot_time()
 {
     return RTC::boot_time();
 }

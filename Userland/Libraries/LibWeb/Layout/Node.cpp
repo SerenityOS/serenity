@@ -23,6 +23,8 @@ Node::Node(DOM::Document& document, DOM::Node* node)
     : m_document(document)
     , m_dom_node(node)
 {
+    m_serial_id = m_document->next_layout_node_serial_id({});
+
     if (m_dom_node)
         m_dom_node->set_layout_node({}, this);
 }
@@ -278,9 +280,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         for (size_t layer_index = 0; layer_index < layer_count; layer_index++) {
             CSS::BackgroundLayerData layer;
 
-            if (auto image_value = value_for_layer(images, layer_index); image_value && image_value->is_image()) {
-                layer.image = image_value->as_image();
-                layer.image->load_bitmap(document());
+            if (auto image_value = value_for_layer(images, layer_index); image_value) {
+                if (image_value->is_image()) {
+                    image_value->as_image().load_bitmap(document());
+                    layer.background_image = image_value;
+                } else if (image_value->is_linear_gradient()) {
+                    layer.background_image = image_value;
+                }
             }
 
             if (auto attachment_value = value_for_layer(attachments, layer_index); attachment_value && attachment_value->has_identifier()) {
@@ -368,21 +374,33 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = computed_style.property(CSS::PropertyID::BorderBottomLeftRadius);
-    if (border_bottom_left_radius->is_border_radius())
-        computed_values.set_border_bottom_left_radius(border_bottom_left_radius->as_border_radius().horizontal_radius());
-
+    if (border_bottom_left_radius->is_border_radius()) {
+        computed_values.set_border_bottom_left_radius(
+            CSS::BorderRadiusData {
+                border_bottom_left_radius->as_border_radius().horizontal_radius(),
+                border_bottom_left_radius->as_border_radius().vertical_radius() });
+    }
     auto border_bottom_right_radius = computed_style.property(CSS::PropertyID::BorderBottomRightRadius);
-    if (border_bottom_right_radius->is_border_radius())
-        computed_values.set_border_bottom_right_radius(border_bottom_right_radius->as_border_radius().horizontal_radius());
-
+    if (border_bottom_right_radius->is_border_radius()) {
+        computed_values.set_border_bottom_right_radius(
+            CSS::BorderRadiusData {
+                border_bottom_right_radius->as_border_radius().horizontal_radius(),
+                border_bottom_right_radius->as_border_radius().vertical_radius() });
+    }
     auto border_top_left_radius = computed_style.property(CSS::PropertyID::BorderTopLeftRadius);
-    if (border_top_left_radius->is_border_radius())
-        computed_values.set_border_top_left_radius(border_top_left_radius->as_border_radius().horizontal_radius());
-
+    if (border_top_left_radius->is_border_radius()) {
+        computed_values.set_border_top_left_radius(
+            CSS::BorderRadiusData {
+                border_top_left_radius->as_border_radius().horizontal_radius(),
+                border_top_left_radius->as_border_radius().vertical_radius() });
+    }
     auto border_top_right_radius = computed_style.property(CSS::PropertyID::BorderTopRightRadius);
-    if (border_top_right_radius->is_border_radius())
-        computed_values.set_border_top_right_radius(border_top_right_radius->as_border_radius().horizontal_radius());
-
+    if (border_top_right_radius->is_border_radius()) {
+        computed_values.set_border_top_right_radius(
+            CSS::BorderRadiusData {
+                border_top_right_radius->as_border_radius().horizontal_radius(),
+                border_top_right_radius->as_border_radius().vertical_radius() });
+    }
     computed_values.set_display(computed_style.display());
 
     auto flex_direction = computed_style.flex_direction();
@@ -408,6 +426,14 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     auto align_items = computed_style.align_items();
     if (align_items.has_value())
         computed_values.set_align_items(align_items.value());
+
+    auto align_self = computed_style.align_self();
+    if (align_self.has_value())
+        computed_values.set_align_self(align_self.value());
+
+    auto appearance = computed_style.appearance();
+    if (appearance.has_value())
+        computed_values.set_appearance(appearance.value());
 
     auto position = computed_style.position();
     if (position.has_value())
@@ -556,7 +582,8 @@ bool Node::is_root_element() const
 
 String Node::class_name() const
 {
-    return demangle(typeid(*this).name());
+    auto const* mangled_name = typeid(*this).name();
+    return demangle({ mangled_name, strlen(mangled_name) });
 }
 
 String Node::debug_description() const
@@ -573,7 +600,7 @@ String Node::debug_description() const
                 builder.appendff(".{}", class_name);
         }
     } else {
-        builder.append("(anonymous)");
+        builder.append("(anonymous)"sv);
     }
     return builder.to_string();
 }

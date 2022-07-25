@@ -113,6 +113,8 @@ public:
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const;
 
     FlyString const& label() const { return m_label; }
     FlyString& label() { return m_label; }
@@ -142,6 +144,7 @@ public:
     using Statement::Statement;
 
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const = 0;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const;
 
 private:
     virtual bool is_iteration_statement() const final { return true; }
@@ -803,6 +806,7 @@ public:
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const override;
 
 private:
     NonnullRefPtr<Expression> m_test;
@@ -825,6 +829,7 @@ public:
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const override;
 
 private:
     NonnullRefPtr<Expression> m_test;
@@ -872,6 +877,7 @@ public:
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const override;
 
 private:
     RefPtr<ASTNode> m_init;
@@ -896,6 +902,7 @@ public:
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -921,6 +928,7 @@ public:
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -2002,6 +2010,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<FlyString> const&) const;
 
     Completion execute_impl(Interpreter&, GlobalObject&) const;
     void add_case(NonnullRefPtr<SwitchCase> switch_case) { m_cases.append(move(switch_case)); }

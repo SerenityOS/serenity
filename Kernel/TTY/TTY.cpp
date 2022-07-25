@@ -398,18 +398,18 @@ ErrorOr<void> TTY::set_termios(termios const& t)
     };
 
     constexpr FlagDescription unimplemented_iflags[] = {
-        { IGNBRK, "IGNBRK" },
-        { BRKINT, "BRKINT" },
-        { IGNPAR, "IGNPAR" },
-        { PARMRK, "PARMRK" },
-        { INPCK, "INPCK" },
-        { IGNCR, "IGNCR" },
-        { IUCLC, "IUCLC" },
-        { IXON, "IXON" },
-        { IXANY, "IXANY" },
-        { IXOFF, "IXOFF" },
-        { IMAXBEL, "IMAXBEL" },
-        { IUTF8, "IUTF8" }
+        { IGNBRK, "IGNBRK"sv },
+        { BRKINT, "BRKINT"sv },
+        { IGNPAR, "IGNPAR"sv },
+        { PARMRK, "PARMRK"sv },
+        { INPCK, "INPCK"sv },
+        { IGNCR, "IGNCR"sv },
+        { IUCLC, "IUCLC"sv },
+        { IXON, "IXON"sv },
+        { IXANY, "IXANY"sv },
+        { IXOFF, "IXOFF"sv },
+        { IMAXBEL, "IMAXBEL"sv },
+        { IUTF8, "IUTF8"sv }
     };
     for (auto flag : unimplemented_iflags) {
         if (m_termios.c_iflag & flag.value) {
@@ -419,11 +419,11 @@ ErrorOr<void> TTY::set_termios(termios const& t)
     }
 
     constexpr FlagDescription unimplemented_oflags[] = {
-        { OLCUC, "OLCUC" },
-        { ONOCR, "ONOCR" },
-        { ONLRET, "ONLRET" },
-        { OFILL, "OFILL" },
-        { OFDEL, "OFDEL" }
+        { OLCUC, "OLCUC"sv },
+        { ONOCR, "ONOCR"sv },
+        { ONLRET, "ONLRET"sv },
+        { OFILL, "OFILL"sv },
+        { OFDEL, "OFDEL"sv }
     };
     for (auto flag : unimplemented_oflags) {
         if (m_termios.c_oflag & flag.value) {
@@ -438,12 +438,12 @@ ErrorOr<void> TTY::set_termios(termios const& t)
     }
 
     constexpr FlagDescription unimplemented_cflags[] = {
-        { CSTOPB, "CSTOPB" },
-        { CREAD, "CREAD" },
-        { PARENB, "PARENB" },
-        { PARODD, "PARODD" },
-        { HUPCL, "HUPCL" },
-        { CLOCAL, "CLOCAL" }
+        { CSTOPB, "CSTOPB"sv },
+        { CREAD, "CREAD"sv },
+        { PARENB, "PARENB"sv },
+        { PARODD, "PARODD"sv },
+        { HUPCL, "HUPCL"sv },
+        { CLOCAL, "CLOCAL"sv }
     };
     for (auto flag : unimplemented_cflags) {
         if (m_termios.c_cflag & flag.value) {
@@ -453,8 +453,8 @@ ErrorOr<void> TTY::set_termios(termios const& t)
     }
 
     constexpr FlagDescription unimplemented_lflags[] = {
-        { TOSTOP, "TOSTOP" },
-        { IEXTEN, "IEXTEN" }
+        { TOSTOP, "TOSTOP"sv },
+        { IEXTEN, "IEXTEN"sv }
     };
     for (auto flag : unimplemented_lflags) {
         if (m_termios.c_lflag & flag.value) {

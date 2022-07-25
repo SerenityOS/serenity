@@ -82,7 +82,22 @@ enum class VeilState {
     Locked,
 };
 
-using FutexQueues = HashMap<FlatPtr, RefPtr<FutexQueue>>;
+static constexpr FlatPtr futex_key_private_flag = 0b1;
+union GlobalFutexKey {
+    struct {
+        Memory::VMObject const* vmobject;
+        FlatPtr offset;
+    } shared;
+    struct {
+        Memory::AddressSpace const* address_space;
+        FlatPtr user_address;
+    } private_;
+    struct {
+        FlatPtr parent;
+        FlatPtr offset;
+    } raw;
+};
+static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
@@ -301,6 +316,7 @@ public:
     ErrorOr<FlatPtr> sys$stat(Userspace<Syscall::SC_stat_params const*>);
     ErrorOr<FlatPtr> sys$lseek(int fd, Userspace<off_t*>, int whence);
     ErrorOr<FlatPtr> sys$ftruncate(int fd, Userspace<off_t const*>);
+    ErrorOr<FlatPtr> sys$posix_fallocate(int fd, Userspace<off_t const*>, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$kill(pid_t pid_or_pgid, int sig);
     [[noreturn]] void sys$exit(int status);
     ErrorOr<FlatPtr> sys$sigreturn(RegisterState& registers);
@@ -335,6 +351,7 @@ public:
     ErrorOr<FlatPtr> sys$sigaltstack(Userspace<stack_t const*> ss, Userspace<stack_t*> old_ss);
     ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set);
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
+    ErrorOr<FlatPtr> sys$sigsuspend(Userspace<sigset_t const*>);
     ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<timespec const*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
     ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<gid_t const*>);
@@ -349,7 +366,7 @@ public:
     ErrorOr<FlatPtr> sys$setresgid(GroupID, GroupID, GroupID);
     ErrorOr<FlatPtr> sys$alarm(unsigned seconds);
     ErrorOr<FlatPtr> sys$access(Userspace<char const*> pathname, size_t path_length, int mode);
-    ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, u32 extra_arg);
+    ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, uintptr_t extra_arg);
     ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, FlatPtr arg);
     ErrorOr<FlatPtr> sys$mkdir(Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
@@ -571,7 +588,10 @@ private:
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
+    void clear_signal_handlers_for_exec();
     void clear_futex_queues_on_exec();
+
+    ErrorOr<GlobalFutexKey> get_futex_key(FlatPtr user_address, bool shared);
 
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
@@ -586,6 +606,7 @@ public:
     ErrorOr<void> procfs_get_virtual_memory_stats(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_binary_link(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
+    ErrorOr<void> procfs_get_command_line(KBufferBuilder& builder) const;
     mode_t binary_link_required_mode() const;
     ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
@@ -817,17 +838,14 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Mutex m_big_lock { "Process", Mutex::MutexBehavior::BigLock };
-    Mutex m_ptrace_lock { "ptrace" };
+    Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
+    Mutex m_ptrace_lock { "ptrace"sv };
 
     RefPtr<Timer> m_alarm_timer;
 
     SpinlockProtected<UnveilData> m_unveil_data;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
-
-    FutexQueues m_futex_queues;
-    Spinlock m_futex_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
@@ -1034,6 +1052,14 @@ template<>
 struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::Process const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}({})", value.name(), value.pid().value());
+        return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.name(), value.pid().value());
     }
+};
+
+namespace AK {
+template<>
+struct Traits<Kernel::GlobalFutexKey> : public GenericTraits<Kernel::GlobalFutexKey> {
+    static unsigned hash(Kernel::GlobalFutexKey const& futex_key) { return pair_int_hash(ptr_hash(futex_key.raw.parent), ptr_hash(futex_key.raw.offset)); }
+    static bool equals(Kernel::GlobalFutexKey const& a, Kernel::GlobalFutexKey const& b) { return a.raw.parent == b.raw.parent && a.raw.offset == b.raw.offset; }
+};
 };

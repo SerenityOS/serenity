@@ -76,7 +76,10 @@ enum class OpCodeId : ByteCodeValueType {
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)               \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(ScriptExtension)      \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy) \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(LookupTable)
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(LookupTable)          \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(And)                  \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Or)                   \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(EndAndOr)
 
 enum class CharacterCompareType : ByteCodeValueType {
 #define __ENUMERATE_CHARACTER_COMPARE_TYPE(x) x,
@@ -532,10 +535,10 @@ enum class ExecutionResult : u8 {
 #undef __ENUMERATE_EXECUTION_RESULT
 };
 
-char const* execution_result_name(ExecutionResult result);
-char const* opcode_id_name(OpCodeId opcode_id);
-char const* boundary_check_type_name(BoundaryCheckType);
-char const* character_compare_type_name(CharacterCompareType result);
+StringView execution_result_name(ExecutionResult result);
+StringView opcode_id_name(OpCodeId opcode_id);
+StringView boundary_check_type_name(BoundaryCheckType);
+StringView character_compare_type_name(CharacterCompareType result);
 
 class OpCode {
 public:
@@ -552,8 +555,8 @@ public:
         return m_bytecode->at(state().instruction_position + 1 + offset);
     }
 
-    ALWAYS_INLINE char const* name() const;
-    static char const* name(OpCodeId);
+    ALWAYS_INLINE StringView name() const;
+    static StringView name(OpCodeId);
 
     ALWAYS_INLINE void set_state(MatchState& state) { m_state = &state; }
 
@@ -745,6 +748,7 @@ public:
     String arguments_string() const override;
     Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
+    static bool matches_character_class(CharClass, u32, bool insensitive);
 
 private:
     ALWAYS_INLINE static void compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);

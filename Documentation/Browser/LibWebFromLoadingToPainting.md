@@ -139,7 +139,7 @@ When a line box is filled up, we insert a break and begin a new box after it.
 
 We always keep track of how much space is available on the current line. When starting a new line, this is reset by computing the width of the IFC's containing block and then subtracting the size occupied by floating boxes on both sides. We get this information by querying the parent BFC about floating boxes intersecting the Y coordinate of the new line.
 
-The result of performing a layout is a FormattingState object. This object contains final metrics (including line boxes) for all layout nodes that were in scope of the layout. The FormattingState can either be committed (via `commit()`) or simply discarded. This allows us to perform non-destructive (or "immutable") layouts if we're only interested in measuring something.
+The result of performing a layout is a LayoutState object. This object contains the CSS "used values" (final metrics, including line boxes) for all box that were in scope of the layout. The LayoutState can either be committed (via `commit()`) or simply discarded. This allows us to perform non-destructive (or "immutable") layouts if we're only interested in measuring something.
 
 ### Paintable and the paint tree
 

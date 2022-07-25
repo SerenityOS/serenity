@@ -53,6 +53,8 @@ Gfx::Palette PageHost::palette() const
 void PageHost::set_palette_impl(Gfx::PaletteImpl const& impl)
 {
     m_palette_impl = impl;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style();
 }
 
 void PageHost::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
@@ -261,6 +263,11 @@ void PageHost::page_did_set_cookie(const URL& url, Web::Cookie::ParsedCookie con
 void PageHost::page_did_update_resource_count(i32 count_waiting)
 {
     m_client.async_did_update_resource_count(count_waiting);
+}
+
+void PageHost::request_file(NonnullRefPtr<Web::FileRequest>& file_request)
+{
+    m_client.request_file(file_request);
 }
 
 }

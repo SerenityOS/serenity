@@ -92,7 +92,7 @@ QuickLaunchWidget::QuickLaunchWidget()
 
     m_context_menu = GUI::Menu::construct();
     m_context_menu_default_action = GUI::Action::create("&Remove", [this](auto&) {
-        Config::remove_key("Taskbar", quick_launch, m_context_menu_app_name);
+        Config::remove_key("Taskbar"sv, quick_launch, m_context_menu_app_name);
         auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
         if (button) {
             remove_child(*button);
@@ -100,9 +100,9 @@ QuickLaunchWidget::QuickLaunchWidget()
     });
     m_context_menu->add_action(*m_context_menu_default_action);
 
-    auto keys = Config::list_keys("Taskbar", quick_launch);
+    auto keys = Config::list_keys("Taskbar"sv, quick_launch);
     for (auto& name : keys) {
-        auto value = Config::read_string("Taskbar", quick_launch, name);
+        auto value = Config::read_string("Taskbar"sv, quick_launch, name);
         auto entry = QuickLaunchEntry::create_from_config_value(value);
         if (!entry)
             continue;
@@ -112,7 +112,7 @@ QuickLaunchWidget::QuickLaunchWidget()
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView value)
 {
-    if (!value.starts_with("/") && value.ends_with(".af")) {
+    if (!value.starts_with('/') && value.ends_with(".af"sv)) {
         auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, value);
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
     }
@@ -121,7 +121,7 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView v
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 {
-    if (path.ends_with(".af"))
+    if (path.ends_with(".af"sv))
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(path));
     auto stat_or_error = Core::System::stat(path);
     if (stat_or_error.is_error()) {
@@ -137,7 +137,7 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 
 static String sanitize_entry_name(String const& name)
 {
-    return name.replace(" ", "", true).replace("=", "", true);
+    return name.replace(" "sv, ""sv, ReplaceMode::All).replace("="sv, ""sv, ReplaceMode::All);
 }
 
 void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
@@ -212,7 +212,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             if (entry) {
                 auto item_name = sanitize_entry_name(entry->name());
                 add_or_adjust_button(item_name, entry.release_nonnull());
-                Config::write_string("Taskbar", quick_launch, item_name, url.path());
+                Config::write_string("Taskbar"sv, quick_launch, item_name, url.path());
             }
         }
     }

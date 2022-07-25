@@ -6,11 +6,15 @@
  */
 
 #include <LibJS/Module.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/MutationObserverWrapper.h>
+#include <LibWeb/Bindings/MutationRecordWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -55,8 +59,7 @@ JS::VM& main_thread_vm()
         vm->host_promise_rejection_tracker = [](JS::Promise& promise, JS::Promise::RejectionOperation operation) {
             // 1. Let script be the running script.
             //    The running script is the script in the [[HostDefined]] field in the ScriptOrModule component of the running JavaScript execution context.
-            // FIXME: This currently assumes there's only a ClassicScript.
-            HTML::ClassicScript* script { nullptr };
+            HTML::Script* script { nullptr };
             vm->running_execution_context().script_or_module.visit(
                 [&script](WeakPtr<JS::Script>& js_script) {
                     script = verify_cast<HTML::ClassicScript>(js_script->host_defined());
@@ -67,19 +70,17 @@ JS::VM& main_thread_vm()
                 [](Empty) {
                 });
 
-            // If there's no script, we're out of luck. Return.
-            // FIXME: This can happen from JS::NativeFunction, which makes its callee contexts [[ScriptOrModule]] null.
-            if (!script) {
-                dbgln("FIXME: Unable to process unhandled promise rejection in host_promise_rejection_tracker as the running script is null.");
-                return;
+            // 2. If script is a classic script and script's muted errors is true, then return.
+            // NOTE: is<T>() returns false if nullptr is passed.
+            if (is<HTML::ClassicScript>(script)) {
+                auto const& classic_script = static_cast<HTML::ClassicScript const&>(*script);
+                if (classic_script.muted_errors() == HTML::ClassicScript::MutedErrors::Yes)
+                    return;
             }
 
-            // 2. If script's muted errors is true, terminate these steps.
-            if (script->muted_errors() == HTML::ClassicScript::MutedErrors::Yes)
-                return;
-
-            // 3. Let settings object be script's settings object.
-            auto& settings_object = script->settings_object();
+            // 3. Let settings object be the current settings object.
+            // 4. If script is not null, then set settings object to script's settings object.
+            auto& settings_object = script ? script->settings_object() : HTML::current_settings_object();
 
             switch (operation) {
             case JS::Promise::RejectionOperation::Reject:
@@ -287,6 +288,76 @@ JS::VM& main_thread_vm()
         };
     }
     return *vm;
+}
+
+// https://dom.spec.whatwg.org/#queue-a-mutation-observer-compound-microtask
+void queue_mutation_observer_microtask(DOM::Document& document)
+{
+    // FIXME: Is this the correct VM?
+    auto& vm = main_thread_vm();
+    auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());
+
+    // 1. If the surrounding agent’s mutation observer microtask queued is true, then return.
+    if (custom_data.mutation_observer_microtask_queued)
+        return;
+
+    // 2. Set the surrounding agent’s mutation observer microtask queued to true.
+    custom_data.mutation_observer_microtask_queued = true;
+
+    // 3. Queue a microtask to notify mutation observers.
+    // NOTE: This uses the implied document concept. In the case of mutation observers, it is always done in a node context, so document should be that node's document.
+    // FIXME: Is it safe to pass custom_data through?
+    HTML::queue_a_microtask(&document, [&custom_data]() {
+        // 1. Set the surrounding agent’s mutation observer microtask queued to false.
+        custom_data.mutation_observer_microtask_queued = false;
+
+        // 2. Let notifySet be a clone of the surrounding agent’s mutation observers.
+        auto notify_set = custom_data.mutation_observers;
+
+        // FIXME: 3. Let signalSet be a clone of the surrounding agent’s signal slots.
+
+        // FIXME: 4. Empty the surrounding agent’s signal slots.
+
+        // 5. For each mo of notifySet:
+        for (auto& mutation_observer : notify_set) {
+            // 1. Let records be a clone of mo’s record queue.
+            // 2. Empty mo’s record queue.
+            auto records = mutation_observer.take_records();
+
+            // 3. For each node of mo’s node list, remove all transient registered observers whose observer is mo from node’s registered observer list.
+            for (auto& node : mutation_observer.node_list()) {
+                // FIXME: Is this correct?
+                if (node.is_null())
+                    continue;
+
+                node->registered_observers_list().remove_all_matching([&mutation_observer](DOM::RegisteredObserver& registered_observer) {
+                    return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer.ptr() == &mutation_observer;
+                });
+            }
+
+            // 4. If records is not empty, then invoke mo’s callback with « records, mo », and mo. If this throws an exception, catch it, and report the exception.
+            if (!records.is_empty()) {
+                auto& callback = mutation_observer.callback();
+                auto& global_object = callback.callback_context.global_object();
+
+                auto* wrapped_records = MUST(JS::Array::create(global_object, 0));
+                for (size_t i = 0; i < records.size(); ++i) {
+                    auto& record = records.at(i);
+                    auto* wrapped_record = Bindings::wrap(global_object, record);
+                    auto property_index = JS::PropertyKey { i };
+                    MUST(wrapped_records->create_data_property(property_index, wrapped_record));
+                }
+
+                auto* wrapped_mutation_observer = Bindings::wrap(global_object, mutation_observer);
+
+                auto result = IDL::invoke_callback(callback, wrapped_mutation_observer, wrapped_records, wrapped_mutation_observer);
+                if (result.is_abrupt())
+                    HTML::report_exception(result);
+            }
+        }
+
+        // FIXME: 6. For each slot of signalSet, fire an event named slotchange, with its bubbles attribute set to true, at slot.
+    });
 }
 
 }

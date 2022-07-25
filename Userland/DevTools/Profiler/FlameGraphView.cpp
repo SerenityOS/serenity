@@ -165,6 +165,7 @@ String FlameGraphView::bar_label(StackBar const& bar) const
 void FlameGraphView::layout_bars()
 {
     m_bars.clear();
+    m_hovered_bar = nullptr;
 
     // Explicit copy here so the layout can mutate
     Vector<GUI::ModelIndex> selected = m_selected_indexes;

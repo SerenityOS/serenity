@@ -252,6 +252,7 @@ describe("ability to work with generic non-array objects", () => {
     });
 
     test("reverse", () => {
+        const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
         expect(Array.prototype.reverse.call(o)).toEqual({
             length: 5,
             4: "foo",
@@ -305,10 +306,10 @@ describe("ability to work with generic non-array objects", () => {
         ]);
     });
 
-    test("groupBy", () => {
+    test("group", () => {
         const visited = [];
         const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
-        const result = Array.prototype.groupBy.call(o, (value, _, object) => {
+        const result = Array.prototype.group.call(o, (value, _, object) => {
             expect(object).toBe(o);
             visited.push(value);
             return value !== undefined ? value.startsWith("b") : false;
@@ -318,12 +319,12 @@ describe("ability to work with generic non-array objects", () => {
         expect(result.true).toEqual(["bar", "baz"]);
     });
 
-    test("groupByToMap", () => {
+    test("groupToMap", () => {
         const visited = [];
         const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
         const falseObject = { false: false };
         const trueObject = { true: true };
-        const result = Array.prototype.groupByToMap.call(o, (value, _, object) => {
+        const result = Array.prototype.groupToMap.call(o, (value, _, object) => {
             expect(object).toBe(o);
             visited.push(value);
             return value !== undefined
@@ -340,5 +341,29 @@ describe("ability to work with generic non-array objects", () => {
 
         const trueResult = result.get(trueObject);
         expect(trueResult).toEqual(["bar", "baz"]);
+    });
+
+    test("toReversed", () => {
+        const result = Array.prototype.toReversed.call(o);
+        expect(result).toEqual([undefined, "baz", undefined, "bar", "foo"]);
+        expect(result).not.toBe(o);
+    });
+
+    test("toSorted", () => {
+        const result = Array.prototype.toSorted.call(o);
+        expect(result).toEqual(["bar", "baz", "foo", undefined, undefined]);
+        expect(result).not.toBe(o);
+    });
+
+    test("toSpliced", () => {
+        const result = Array.prototype.toSpliced.call(o, 1, 2, "hello", "friends");
+        expect(result).toEqual(["foo", "hello", "friends", "baz", undefined]);
+        expect(result).not.toBe(o);
+    });
+
+    test("with", () => {
+        const result = Array.prototype.with.call(o, 2, "hello");
+        expect(result).toEqual(["foo", "bar", "hello", "baz", undefined]);
+        expect(result).not.toBe(o);
     });
 });

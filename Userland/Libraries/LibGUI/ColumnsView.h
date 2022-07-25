@@ -37,6 +37,8 @@ private:
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent& event) override;
 
+    virtual void select_range(ModelIndex const&) override;
+
     void move_cursor(CursorMovement, SelectionUpdate) override;
 
     virtual void select_all() override;

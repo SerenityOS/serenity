@@ -7,6 +7,9 @@ interface CharacterData : Node {
     readonly attribute unsigned long length;
 
     DOMString substringData(unsigned long offset, unsigned long count);
+    undefined appendData(DOMString data);
+    undefined insertData(unsigned long offset, DOMString data);
+    undefined deleteData(unsigned long offset, unsigned long count);
     undefined replaceData(unsigned long offset, unsigned long count, DOMString data);
 
     readonly attribute Element? nextElementSibling;

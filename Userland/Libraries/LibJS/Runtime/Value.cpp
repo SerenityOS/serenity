@@ -156,7 +156,7 @@ static String double_to_string(double d)
         return builder.to_string();
     }
     if (-6 < exponent && exponent <= 0) {
-        builder.append("0.");
+        builder.append("0."sv);
         builder.append(String::repeated('0', -exponent));
         builder.append(digits);
         return builder.to_string();
@@ -382,7 +382,7 @@ bool Value::to_boolean() const
             return false;
         return m_value.as_double != 0;
     case Type::String:
-        return !m_value.as_string->string().is_empty();
+        return !m_value.as_string->is_empty();
     case Type::Symbol:
         return true;
     case Type::BigInt:
@@ -875,7 +875,7 @@ ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Va
     if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
         return lhs.as_i32() > rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, false, lhs, rhs));
+    TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
@@ -887,7 +887,7 @@ ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value 
     if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
         return lhs.as_i32() >= rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, true, lhs, rhs));
+    TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
@@ -899,7 +899,7 @@ ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value
     if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
         return lhs.as_i32() < rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, true, lhs, rhs));
+    TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
@@ -911,7 +911,7 @@ ThrowCompletionOr<Value> less_than_equals(GlobalObject& global_object, Value lhs
     if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
         return lhs.as_i32() <= rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, false, lhs, rhs));
+    TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
@@ -1523,7 +1523,7 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
 }
 
 // 7.2.13 IsLessThan ( x, y, LeftFirst ), https://tc39.es/ecma262/#sec-islessthan
-ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_first, Value lhs, Value rhs)
+ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs, Value rhs, bool left_first)
 {
     Value x_primitive;
     Value y_primitive;

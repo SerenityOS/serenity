@@ -200,7 +200,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
 
 static bool run_system_command(String const& command, StringView command_name)
 {
-    if (command.starts_with("cmake"))
+    if (command.starts_with("cmake"sv))
         warnln("\e[34mRunning CMake...\e[0m");
     else
         warnln("\e[34mRunning '{}'...\e[0m", command);
@@ -261,7 +261,7 @@ int main()
     configs.append({ "CUSTOM_FULL", "Full", "Customizable.", false });
     configs.append({ "CUSTOM_CURRENT", "Current", "Customize current configuration.", false });
 
-    auto configs_result = run_whiptail(WhiptailMode::Menu, configs, "SerenityOS - System Configurations", "Which system configuration do you want to use or customize?");
+    auto configs_result = run_whiptail(WhiptailMode::Menu, configs, "SerenityOS - System Configurations"sv, "Which system configuration do you want to use or customize?"sv);
     if (configs_result.is_error()) {
         warnln("ConfigureComponents cancelled.");
         return 0;
@@ -270,7 +270,7 @@ int main()
     VERIFY(configs_result.value().size() == 1);
     auto type = configs_result.value().first();
 
-    bool customize = type.starts_with("CUSTOM_");
+    bool customize = type.starts_with("CUSTOM_"sv);
     StringView build_type = customize ? type.substring_view(7) : type.view();
 
     // Step 4: Customize the configuration if the user requested to. In any case, set the components component.is_selected value correctly.
@@ -286,7 +286,7 @@ int main()
             if (is_required) {
                 if (!description_builder.is_empty())
                     description_builder.append(' ');
-                description_builder.append("[required]");
+                description_builder.append("[required]"sv);
             }
 
             // NOTE: Required components will always be preselected.
@@ -307,7 +307,7 @@ int main()
             options.append(move(option));
         }
 
-        auto result = run_whiptail(WhiptailMode::Checklist, options, "SerenityOS - System Components", "Which optional system components do you want to include?");
+        auto result = run_whiptail(WhiptailMode::Checklist, options, "SerenityOS - System Components"sv, "Which optional system components do you want to include?"sv);
         if (result.is_error()) {
             warnln("ConfigureComponents cancelled.");
             return 0;
@@ -352,11 +352,11 @@ int main()
 
     // Step 6: Run CMake, 'ninja clean' and 'rm -rf Root'
     auto command = String::join(' ', cmake_arguments);
-    if (!run_system_command(command, "CMake"))
+    if (!run_system_command(command, "CMake"sv))
         return 1;
-    if (!run_system_command("ninja clean", "Ninja"))
+    if (!run_system_command("ninja clean"sv, "Ninja"sv))
         return 1;
-    if (!run_system_command("rm -rf Root", "rm"))
+    if (!run_system_command("rm -rf Root"sv, "rm"sv))
         return 1;
     return 0;
 }

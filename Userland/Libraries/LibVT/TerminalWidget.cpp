@@ -97,9 +97,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
         update();
     };
 
-    m_cursor_blink_timer->set_interval(Config::read_i32("Terminal", "Text",
-        "CursorBlinkInterval",
-        500));
+    m_cursor_blink_timer->set_interval(Config::read_i32("Terminal"sv, "Text"sv, "CursorBlinkInterval"sv, 500));
     m_cursor_blink_timer->on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
@@ -114,7 +112,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     };
     m_auto_scroll_timer->start();
 
-    auto font_entry = Config::read_string("Terminal", "Text", "Font", "default");
+    auto font_entry = Config::read_string("Terminal"sv, "Text"sv, "Font"sv, "default"sv);
     if (font_entry == "default")
         set_font(Gfx::FontDatabase::default_fixed_width_font());
     else
@@ -122,14 +120,14 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
-    m_terminal.set_size(Config::read_i32("Terminal", "Window", "Width", 80), Config::read_i32("Terminal", "Window", "Height", 25));
+    m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
-    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/paste.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/paste.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
@@ -147,7 +145,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     update_copy_action();
     update_paste_action();
 
-    set_color_scheme(Config::read_string("Terminal", "Window", "ColorScheme", "Default"));
+    set_color_scheme(Config::read_string("Terminal"sv, "Window"sv, "ColorScheme"sv, "Default"sv));
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -170,7 +168,9 @@ void TerminalWidget::set_logical_focus(bool focus)
     m_has_logical_focus = focus;
     if (!m_has_logical_focus) {
         m_cursor_blink_timer->stop();
-    } else {
+        m_cursor_blink_state = true;
+    } else if (m_cursor_is_blinking_set) {
+        m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
         m_cursor_blink_timer->start();
     }
@@ -208,9 +208,11 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     }
 
     // Reset timer so cursor doesn't blink while typing.
-    m_cursor_blink_timer->stop();
-    m_cursor_blink_state = true;
-    m_cursor_blink_timer->start();
+    if (m_cursor_is_blinking_set) {
+        m_cursor_blink_timer->stop();
+        m_cursor_blink_state = true;
+        m_cursor_blink_timer->start();
+    }
 
     if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
         m_scrollbar->decrease_slider_by(m_terminal.rows());
@@ -315,7 +317,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
-                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
+                && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -389,7 +391,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (size_t column = 0; column < line.length(); ++column) {
             auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
-                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
+                && m_cursor_shape == VT::CursorShape::Block
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -421,18 +423,18 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (m_terminal.cursor_row() >= (m_terminal.rows() - rows_from_history))
             return;
 
-        if (m_has_logical_focus && (m_cursor_style == VT::CursorStyle::BlinkingBlock || m_cursor_style == VT::CursorStyle::SteadyBlock))
+        if (m_has_logical_focus && m_cursor_shape == VT::CursorShape::Block)
             return; // This has already been handled by inverting the cell colors
 
         auto cursor_color = terminal_color_to_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
         auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-        if (m_cursor_style == VT::CursorStyle::BlinkingUnderline || m_cursor_style == VT::CursorStyle::SteadyUnderline) {
+        if (m_cursor_shape == VT::CursorShape::Underline) {
             auto x1 = cell_rect.bottom_left().x();
             auto x2 = cell_rect.bottom_right().x();
             auto y = cell_rect.bottom_left().y();
             for (auto x = x1; x <= x2; ++x)
                 painter.set_pixel({ x, y }, cursor_color);
-        } else if (m_cursor_style == VT::CursorStyle::BlinkingBar || m_cursor_style == VT::CursorStyle::SteadyBar) {
+        } else if (m_cursor_shape == VT::CursorShape::Bar) {
             auto x = cell_rect.bottom_left().x();
             auto y1 = cell_rect.top_left().y();
             auto y2 = cell_rect.bottom_left().y();
@@ -753,7 +755,7 @@ void TerminalWidget::paste()
         return;
 
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("text/"))
+    if (!mime_type.starts_with("text/"sv))
         return;
     if (data.is_empty())
         return;
@@ -831,10 +833,12 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             if (!handlers.is_empty()) {
                 auto path = URL(attribute.href).path();
                 auto name = LexicalPath::basename(path);
-                if (path == handlers[0])
+                if (path == handlers[0]) {
                     set_tooltip(String::formatted("Execute {}", name));
-                else
-                    set_tooltip(String::formatted("Open {} with {}", name, LexicalPath::basename(handlers[0])));
+                } else {
+                    auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handlers[0]));
+                    set_tooltip(String::formatted("Open {} with {}", name, af->is_valid() ? af->name() : LexicalPath::basename(handlers[0])));
+                }
             }
         } else {
             m_hovered_href_id = {};
@@ -1037,30 +1041,26 @@ void TerminalWidget::emit(u8 const* data, size_t size)
     }
 }
 
-void TerminalWidget::set_cursor_style(CursorStyle style)
+void TerminalWidget::set_cursor_blinking(bool blinking)
 {
-    switch (style) {
-    case None:
-        m_cursor_blink_timer->stop();
-        m_cursor_blink_state = false;
-        break;
-    case SteadyBlock:
-    case SteadyUnderline:
-    case SteadyBar:
+    if (blinking) {
         m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
-        break;
-    case BlinkingBlock:
-    case BlinkingUnderline:
-    case BlinkingBar:
+        m_cursor_blink_timer->start();
+        m_cursor_is_blinking_set = true;
+    } else {
+        m_cursor_blink_timer->stop();
         m_cursor_blink_state = true;
-        m_cursor_blink_timer->restart();
-        break;
-    default:
-        dbgln("Cursor style not implemented");
+        m_cursor_is_blinking_set = false;
     }
-    m_cursor_style = style;
     invalidate_cursor();
+}
+
+void TerminalWidget::set_cursor_shape(CursorShape shape)
+{
+    m_cursor_shape = shape;
+    invalidate_cursor();
+    update();
 }
 
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
@@ -1170,7 +1170,7 @@ void TerminalWidget::update_copy_action()
 void TerminalWidget::update_paste_action()
 {
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    m_paste_action->set_enabled(mime_type.starts_with("text/") && !data.is_empty());
+    m_paste_action->set_enabled(mime_type.starts_with("text/"sv) && !data.is_empty());
 }
 
 void TerminalWidget::set_color_scheme(StringView name)
@@ -1183,14 +1183,14 @@ void TerminalWidget::set_color_scheme(StringView name)
     m_color_scheme_name = name;
 
     constexpr StringView color_names[] = {
-        "Black",
-        "Red",
-        "Green",
-        "Yellow",
-        "Blue",
-        "Magenta",
-        "Cyan",
-        "White"
+        "Black"sv,
+        "Red"sv,
+        "Green"sv,
+        "Yellow"sv,
+        "Blue"sv,
+        "Magenta"sv,
+        "Cyan"sv,
+        "White"sv
     };
 
     auto path = String::formatted("/res/terminal-colors/{}.ini", name);
@@ -1270,8 +1270,8 @@ void TerminalWidget::set_font_and_resize_to_fit(Gfx::Font const& font)
 // This basically wraps the code that handles sending the escape sequence in bracketed paste mode.
 void TerminalWidget::send_non_user_input(ReadonlyBytes bytes)
 {
-    constexpr StringView leading_control_sequence = "\e[200~";
-    constexpr StringView trailing_control_sequence = "\e[201~";
+    constexpr StringView leading_control_sequence = "\e[200~"sv;
+    constexpr StringView trailing_control_sequence = "\e[201~"sv;
 
     int nwritten;
     if (m_terminal.needs_bracketed_paste()) {
@@ -1299,6 +1299,35 @@ void TerminalWidget::set_auto_scroll_direction(AutoScrollDirection direction)
 {
     m_auto_scroll_direction = direction;
     m_auto_scroll_timer->set_active(direction != AutoScrollDirection::None);
+}
+
+Optional<VT::CursorShape> TerminalWidget::parse_cursor_shape(StringView cursor_shape_string)
+{
+    if (cursor_shape_string == "Block"sv)
+        return VT::CursorShape::Block;
+
+    if (cursor_shape_string == "Underline"sv)
+        return VT::CursorShape::Underline;
+
+    if (cursor_shape_string == "Bar"sv)
+        return VT::CursorShape::Bar;
+
+    return {};
+}
+
+String TerminalWidget::stringify_cursor_shape(VT::CursorShape cursor_shape)
+{
+    switch (cursor_shape) {
+    case VT::CursorShape::Block:
+        return "Block";
+    case VT::CursorShape::Underline:
+        return "Underline";
+    case VT::CursorShape::Bar:
+        return "Bar";
+    case VT::CursorShape::None:
+        return "None";
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }

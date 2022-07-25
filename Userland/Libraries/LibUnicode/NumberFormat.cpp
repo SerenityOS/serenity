@@ -22,13 +22,6 @@ Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(S
 Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
 Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
 
-Optional<StringView> get_default_number_system(StringView locale)
-{
-    if (auto systems = get_keywords_for_locale(locale, "nu"sv); !systems.is_empty())
-        return systems[0];
-    return {};
-}
-
 Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(StringView)
 {
     // Fall back to "latn" digits when Unicode data generation is disabled.
@@ -57,6 +50,17 @@ String replace_digits_for_number_system(StringView system, StringView number)
     return builder.build();
 }
 
+static u32 last_code_point(StringView string)
+{
+    Utf8View utf8_string { string };
+    u32 code_point = 0;
+
+    for (auto it = utf8_string.begin(); it != utf8_string.end(); ++it)
+        code_point = *it;
+
+    return code_point;
+}
+
 // https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
 Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView currency_display, [[maybe_unused]] StringView base_pattern)
 {
@@ -73,16 +77,6 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
 
     Utf8View utf8_currency_display { currency_display };
     Optional<String> currency_key_with_spacing;
-
-    auto last_code_point = [](StringView string) {
-        Utf8View utf8_string { string };
-        u32 code_point = 0;
-
-        for (auto it = utf8_string.begin(); it != utf8_string.end(); ++it)
-            code_point = *it;
-
-        return code_point;
-    };
 
     if (*number_index < *currency_index) {
         u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *currency_index));
@@ -105,7 +99,40 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
     }
 
     if (currency_key_with_spacing.has_value())
-        return base_pattern.replace(currency_key, *currency_key_with_spacing);
+        return base_pattern.replace(currency_key, *currency_key_with_spacing, ReplaceMode::FirstOnly);
+#endif
+
+    return {};
+}
+
+// https://unicode.org/reports/tr35/tr35-numbers.html#83-range-pattern-processing
+Optional<String> augment_range_pattern(StringView range_separator, StringView lower, StringView upper)
+{
+#if ENABLE_UNICODE_DATA
+    auto range_pattern_with_spacing = [&]() {
+        return String::formatted(" {} ", range_separator);
+    };
+
+    Utf8View utf8_range_separator { range_separator };
+    Utf8View utf8_upper { upper };
+
+    // NOTE: Our implementation does the prescribed checks backwards for simplicity.
+
+    // To determine whether to add spacing, the currently recommended heuristic is:
+    // 2. If the range pattern does not contain a character having the White_Space binary Unicode property after the {0} or before the {1} placeholders.
+    for (auto it = utf8_range_separator.begin(); it != utf8_range_separator.end(); ++it) {
+        if (code_point_has_property(*it, Property::White_Space))
+            return {};
+    }
+
+    // 1. If the lower string ends with a character other than a digit, or if the upper string begins with a character other than a digit.
+    if (auto it = utf8_upper.begin(); it != utf8_upper.end()) {
+        if (!code_point_has_general_category(*it, GeneralCategory::Decimal_Number))
+            return range_pattern_with_spacing();
+    }
+
+    if (!code_point_has_general_category(last_code_point(lower), GeneralCategory::Decimal_Number))
+        return range_pattern_with_spacing();
 #endif
 
     return {};

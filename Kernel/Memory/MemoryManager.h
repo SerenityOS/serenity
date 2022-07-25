@@ -51,10 +51,10 @@ enum class UsedMemoryRangeType {
 };
 
 static constexpr StringView UserMemoryRangeTypeNames[] {
-    "Low memory",
-    "Kernel",
-    "Boot module",
-    "Physical Pages"
+    "Low memory"sv,
+    "Kernel"sv,
+    "Boot module"sv,
+    "Physical Pages"sv
 };
 static_assert(array_size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
 
@@ -170,14 +170,12 @@ public:
         Yes
     };
 
-    ErrorOr<CommittedPhysicalPageSet> commit_user_physical_pages(size_t page_count);
-    void uncommit_user_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
+    ErrorOr<CommittedPhysicalPageSet> commit_physical_pages(size_t page_count);
+    void uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
 
-    NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
-    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
-    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_supervisor_physical_page();
-    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_supervisor_physical_pages(size_t size);
-    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_user_physical_pages(size_t size);
+    NonnullRefPtr<PhysicalPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
+    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
+    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
@@ -192,12 +190,10 @@ public:
     ErrorOr<NonnullOwnPtr<Region>> create_identity_mapped_region(PhysicalAddress, size_t);
 
     struct SystemMemoryInfo {
-        PhysicalSize user_physical_pages { 0 };
-        PhysicalSize user_physical_pages_used { 0 };
-        PhysicalSize user_physical_pages_committed { 0 };
-        PhysicalSize user_physical_pages_uncommitted { 0 };
-        PhysicalSize super_physical_pages { 0 };
-        PhysicalSize super_physical_pages_used { 0 };
+        PhysicalSize physical_pages { 0 };
+        PhysicalSize physical_pages_used { 0 };
+        PhysicalSize physical_pages_committed { 0 };
+        PhysicalSize physical_pages_uncommitted { 0 };
     };
 
     SystemMemoryInfo get_system_memory_info()
@@ -267,7 +263,7 @@ private:
 
     static Region* find_region_from_vaddr(VirtualAddress);
 
-    RefPtr<PhysicalPage> find_free_user_physical_page(bool);
+    RefPtr<PhysicalPage> find_free_physical_page(bool);
 
     ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
     {
@@ -289,8 +285,8 @@ private:
 
     ALWAYS_INLINE void verify_system_memory_info_consistency() const
     {
-        auto user_physical_pages_unused = m_system_memory_info.user_physical_pages_committed + m_system_memory_info.user_physical_pages_uncommitted;
-        VERIFY(m_system_memory_info.user_physical_pages == (m_system_memory_info.user_physical_pages_used + user_physical_pages_unused));
+        auto physical_pages_unused = m_system_memory_info.physical_pages_committed + m_system_memory_info.physical_pages_uncommitted;
+        VERIFY(m_system_memory_info.physical_pages == (m_system_memory_info.physical_pages_used + physical_pages_unused));
     }
 
     RefPtr<PageDirectory> m_kernel_page_directory;
@@ -300,8 +296,7 @@ private:
 
     SystemMemoryInfo m_system_memory_info;
 
-    NonnullOwnPtrVector<PhysicalRegion> m_user_physical_regions;
-    OwnPtr<PhysicalRegion> m_super_physical_region;
+    NonnullOwnPtrVector<PhysicalRegion> m_physical_regions;
     OwnPtr<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };

@@ -20,7 +20,7 @@ struct ColumnWidth {
 
 class TableFormattingContext final : public BlockFormattingContext {
 public:
-    explicit TableFormattingContext(FormattingState&, BlockContainer const&, FormattingContext* parent);
+    explicit TableFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
     ~TableFormattingContext();
 
     virtual void run(Box const&, LayoutMode) override;

@@ -34,7 +34,7 @@ public:
         if (g_profiling_all_threads) {
             VERIFY(g_global_perf_events);
             [[maybe_unused]] auto rc = g_global_perf_events->append_with_ip_and_bp(
-                process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, 0, nullptr);
+                process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, 0, {});
         }
     }
 
@@ -43,7 +43,7 @@ public:
         if (thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
-            [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_CREATE, thread.tid().value(), 0, nullptr, &thread);
+            [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_CREATE, thread.tid().value(), 0, {}, &thread);
         }
     }
 
@@ -52,7 +52,7 @@ public:
         // As an exception this doesn't check whether profiling is suppressed for
         // the thread so we can record the thread_exit event anyway.
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
-            [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_EXIT, thread.tid().value(), 0, nullptr, &thread);
+            [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_EXIT, thread.tid().value(), 0, {}, &thread);
         }
     }
 
@@ -62,7 +62,7 @@ public:
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                current_thread.pid(), current_thread.tid(), regs, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
+                current_thread.pid(), current_thread.tid(), regs, PERF_EVENT_SAMPLE, lost_time, 0, 0, {});
         }
     }
 
@@ -76,7 +76,7 @@ public:
     inline static void add_unmap_perf_event(Process& current_process, Memory::VirtualRange const& region)
     {
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {
-            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, region.base().get(), region.size(), nullptr);
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, region.base().get(), region.size(), {});
         }
     }
 
@@ -85,7 +85,7 @@ public:
         if (current_thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
-            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_CONTEXT_SWITCH, next_thread.pid().value(), next_thread.tid().value(), nullptr);
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_CONTEXT_SWITCH, next_thread.pid().value(), next_thread.tid().value(), {});
         }
     }
 
@@ -94,7 +94,7 @@ public:
         if (current_thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
-            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KMALLOC, size, ptr, nullptr);
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KMALLOC, size, ptr, {});
         }
     }
 
@@ -103,7 +103,7 @@ public:
         if (current_thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
-            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KFREE, size, ptr, nullptr);
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KFREE, size, ptr, {});
         }
     }
 
@@ -113,7 +113,7 @@ public:
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                thread.pid(), thread.tid(), regs, PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
+                thread.pid(), thread.tid(), regs, PERF_EVENT_PAGE_FAULT, 0, 0, 0, {});
         }
     }
 
@@ -123,7 +123,7 @@ public:
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
-                thread.pid(), thread.tid(), regs, PERF_EVENT_SYSCALL, 0, 0, 0, nullptr);
+                thread.pid(), thread.tid(), regs, PERF_EVENT_SYSCALL, 0, 0, 0, {});
         }
     }
 
@@ -149,7 +149,7 @@ public:
                 return;
             filepath_string_index = registered_result.value();
         } else {
-            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"); // TODO: Performance, unecessary allocations.
+            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"sv); // TODO: Performance, unecessary allocations.
             if (invalid_path_string.is_error())
                 return;
             auto registered_result = event_buffer->register_string(move(invalid_path_string.value()));
@@ -158,7 +158,7 @@ public:
             filepath_string_index = registered_result.value();
         }
 
-        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_READ, fd, size, 0, &thread, filepath_string_index, start_timestamp, result); // wrong arguments
+        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_READ, fd, size, {}, &thread, filepath_string_index, start_timestamp, result); // wrong arguments
     }
 
     inline static void timer_tick(RegisterState const& regs)

@@ -76,7 +76,7 @@ template<>
 struct Formatter<GUI::PersistentModelIndex> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, GUI::PersistentModelIndex const& value)
     {
-        return Formatter<FormatString>::format(builder, "PersistentModelIndex({},{},{})", value.row(), value.column(), value.internal_data());
+        return Formatter<FormatString>::format(builder, "PersistentModelIndex({},{},{})"sv, value.row(), value.column(), value.internal_data());
     }
 };
 
@@ -86,8 +86,7 @@ struct Traits<GUI::PersistentModelIndex> : public GenericTraits<GUI::PersistentM
     {
         if (index.has_valid_handle())
             return Traits<GUI::ModelIndex>::hash(index.m_handle->m_index);
-        else
-            return 0;
+        return 0;
     }
 };
 

@@ -73,9 +73,9 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
     };
 
     if (metadata.contains("assertion"))
-        prepend_metadata("assertion", "ASSERTION FAILED: {}");
+        prepend_metadata("assertion", "ASSERTION FAILED: {}"sv);
     else if (metadata.contains("pledge_violation"))
-        prepend_metadata("pledge_violation", "Has not pledged {}");
+        prepend_metadata("pledge_violation", "Has not pledged {}"sv);
 
     auto fault_address = metadata.get("fault_address");
     auto fault_type = metadata.get("fault_type");
@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    char const* coredump_path = nullptr;
+    String coredump_path {};
     bool unlink_on_exit = false;
     StringBuilder full_backtrace;
 
@@ -168,7 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto pid = coredump->process_pid();
     auto termination_signal = coredump->process_termination_signal();
 
-    auto app_icon = GUI::Icon::default_icon("app-crash-reporter");
+    auto app_icon = GUI::Icon::default_icon("app-crash-reporter"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Crash Reporter");
@@ -209,7 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& arguments_label = *widget->find_descendant_of_type_named<GUI::Label>("arguments_label");
-    arguments_label.set_text(String::join(" ", crashed_process_arguments));
+    arguments_label.set_text(String::join(' ', crashed_process_arguments));
 
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
@@ -241,7 +241,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_tab->layout()->set_margins(4);
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
-    environment_text_editor->set_text(String::join("\n", environment));
+    environment_text_editor->set_text(String::join('\n', environment));
     environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
@@ -250,7 +250,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     memory_regions_tab->layout()->set_margins(4);
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
-    memory_regions_text_editor->set_text(String::join("\n", memory_regions));
+    memory_regions_text_editor->set_text(String::join('\n', memory_regions));
     memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
     memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
     memory_regions_text_editor->set_visualize_trailing_whitespace(false);
@@ -263,16 +263,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
-    debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
+    debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
     debug_button.on_click = [&](int) {
-        GUI::Process::spawn_or_show_error(window, "/bin/HackStudio", Array { "-c", coredump_path });
+        GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "-c", coredump_path.characters() });
     };
 
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
-    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png")));
+    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
         if (full_backtrace.is_empty()) {
-            GUI::MessageBox::show(window, "Backtrace has not been generated yet. Please wait...", "Empty Backtrace", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, "Backtrace has not been generated yet. Please wait..."sv, "Empty Backtrace"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -283,7 +283,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file = file_or_error.value();
         if (!file->write(full_backtrace.to_string()))
-            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
 
     (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(

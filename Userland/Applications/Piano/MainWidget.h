@@ -29,7 +29,7 @@ public:
 
     void add_track_actions(GUI::Menu&);
 
-    void set_octave_and_ensure_note_change(LibDSP::Keyboard::Direction);
+    void set_octave_and_ensure_note_change(DSP::Keyboard::Direction);
     void set_octave_and_ensure_note_change(int);
 
 private:
@@ -39,7 +39,7 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void custom_event(Core::CustomEvent&) override;
 
-    void note_key_action(int key_code, LibDSP::Keyboard::Switch);
+    void note_key_action(int key_code, DSP::Keyboard::Switch);
     void special_key_action(int key_code);
 
     void turn_off_pressed_keys();

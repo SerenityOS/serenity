@@ -41,10 +41,10 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -137,10 +137,11 @@ void WindowObject::initialize_global_object()
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    // HTML::GlobalEventHandlers
+    // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \
     define_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
+    ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
     ADD_WINDOW_OBJECT_INTERFACES;
@@ -156,7 +157,7 @@ void WindowObject::visit_edges(Visitor& visitor)
         visitor.visit(it.value);
 }
 
-Origin WindowObject::origin() const
+HTML::Origin WindowObject::origin() const
 {
     return impl().associated_document().origin();
 }
@@ -182,7 +183,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObje
 
     auto* this_object = MUST(this_value.to_object(global_object));
 
-    if (StringView("WindowObject") != this_object->class_name())
+    if ("WindowObject"sv != this_object->class_name())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WindowObject");
     return &static_cast<WindowObject*>(this_object)->impl();
 }
@@ -719,6 +720,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_setter)
         return JS::js_undefined();                                                                                         \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 }

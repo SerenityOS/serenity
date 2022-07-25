@@ -11,6 +11,7 @@
 #include <Kernel/API/TimePage.h>
 #include <LibTimeZone/TimeZone.h>
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -283,7 +284,7 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
                 builder.append('\n');
                 break;
             case 'p':
-                builder.append(tm->tm_hour < 12 ? "AM" : "PM");
+                builder.append(tm->tm_hour < 12 ? "AM"sv : "PM"sv);
                 break;
             case 'r': {
                 int display_hour = tm->tm_hour % 12;
@@ -377,7 +378,7 @@ void tzset()
     StringView time_zone;
 
     if (char* tz = getenv("TZ"); tz != nullptr)
-        time_zone = tz;
+        time_zone = { tz, strlen(tz) };
     else
         time_zone = TimeZone::system_time_zone();
 
@@ -458,6 +459,8 @@ int clock_settime(clockid_t clock_id, struct timespec* ts)
 
 int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep)
 {
+    __pthread_maybe_cancel();
+
     Syscall::SC_clock_nanosleep_params params { clock_id, flags, requested_sleep, remaining_sleep };
     int rc = syscall(SC_clock_nanosleep, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);

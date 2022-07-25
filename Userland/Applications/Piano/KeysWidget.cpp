@@ -7,13 +7,13 @@
  */
 
 #include "KeysWidget.h"
-#include "LibDSP/Keyboard.h"
 #include "TrackManager.h"
 #include <AK/Array.h>
 #include <AK/StringView.h>
+#include <LibDSP/Keyboard.h>
 #include <LibGUI/Painter.h>
 
-KeysWidget::KeysWidget(NonnullRefPtr<LibDSP::Keyboard> keyboard)
+KeysWidget::KeysWidget(NonnullRefPtr<DSP::Keyboard> keyboard)
     : m_keyboard(move(keyboard))
 {
     set_fill_with_background_color(true);
@@ -27,7 +27,7 @@ int KeysWidget::mouse_note() const
         return -1;
 }
 
-void KeysWidget::set_key(i8 key, LibDSP::Keyboard::Switch switch_note)
+void KeysWidget::set_key(i8 key, DSP::Keyboard::Switch switch_note)
 {
     m_keyboard->set_keyboard_note_in_active_octave(key, switch_note);
 }
@@ -87,30 +87,30 @@ constexpr int black_key_height = 60;
 
 constexpr int white_key_labels_count = 12;
 constexpr Array<StringView, white_key_labels_count> white_key_labels = {
-    "A",
-    "S",
-    "D",
-    "F",
-    "G",
-    "H",
-    "J",
-    "K",
-    "L",
-    ";",
-    "\'",
-    "\u23CE", // Return key symbol
+    "A"sv,
+    "S"sv,
+    "D"sv,
+    "F"sv,
+    "G"sv,
+    "H"sv,
+    "J"sv,
+    "K"sv,
+    "L"sv,
+    ";"sv,
+    "\'"sv,
+    "\u23CE"sv, // Return key symbol
 };
 
 constexpr int black_key_labels_count = 8;
 constexpr Array<StringView, black_key_labels_count> black_key_labels = {
-    "W",
-    "E",
-    "T",
-    "Y",
-    "U",
-    "O",
-    "P",
-    "]",
+    "W"sv,
+    "E"sv,
+    "T"sv,
+    "Y"sv,
+    "U"sv,
+    "O"sv,
+    "P"sv,
+    "]"sv,
 };
 
 constexpr int black_key_offsets[] = {
@@ -253,7 +253,7 @@ void KeysWidget::mousedown_event(GUI::MouseEvent& event)
 
     m_mouse_note = note_for_event_position(event.position());
 
-    set_key(m_mouse_note, LibDSP::Keyboard::Switch::On);
+    set_key(m_mouse_note, DSP::Keyboard::Switch::On);
     update();
 }
 
@@ -264,7 +264,7 @@ void KeysWidget::mouseup_event(GUI::MouseEvent& event)
 
     m_mouse_down = false;
 
-    set_key(m_mouse_note, LibDSP::Keyboard::Switch::Off);
+    set_key(m_mouse_note, DSP::Keyboard::Switch::Off);
     update();
 }
 
@@ -278,8 +278,8 @@ void KeysWidget::mousemove_event(GUI::MouseEvent& event)
     if (m_mouse_note == new_mouse_note)
         return;
 
-    set_key(m_mouse_note, LibDSP::Keyboard::Switch::Off);
-    set_key(new_mouse_note, LibDSP::Keyboard::Switch::On);
+    set_key(m_mouse_note, DSP::Keyboard::Switch::Off);
+    set_key(new_mouse_note, DSP::Keyboard::Switch::On);
     update();
 
     m_mouse_note = new_mouse_note;

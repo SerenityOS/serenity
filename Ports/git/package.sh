@@ -14,7 +14,15 @@ build() {
 
 post_install() {
     run mkdir -p "${SERENITY_INSTALL_ROOT}/home/anon"
-    run_nocd cp default_gitconfig "${SERENITY_INSTALL_ROOT}/home/anon/.gitconfig"
+    cat << 'EOF' > "${SERENITY_INSTALL_ROOT}/home/anon/.gitconfig"
+[core]
+    editor = TextEditor
+    pager = less
+
+[user]
+    email = anon
+    name = anon
+EOF
 }
 
 export NO_PERL=YesPlease

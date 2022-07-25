@@ -15,7 +15,7 @@
     }
 
     @GUI::Widget {
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::HorizontalBoxLayout {
             margins: [8, 8, 6, 16]
         }
@@ -38,7 +38,7 @@
         title: "Screen settings"
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
@@ -64,7 +64,7 @@
         }
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::Label {
@@ -84,6 +84,8 @@
                 text: "2x"
                 fixed_width: 50
             }
+
+            @GUI::Layout::Spacer {}
         }
     }
 }

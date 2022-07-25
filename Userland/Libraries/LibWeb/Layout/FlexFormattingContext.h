@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class FlexFormattingContext final : public FormattingContext {
 public:
-    FlexFormattingContext(FormattingState&, Box const& flex_container, FormattingContext* parent);
+    FlexFormattingContext(LayoutState&, Box const& flex_container, FormattingContext* parent);
     ~FlexFormattingContext();
 
     virtual bool inhibits_floating() const override { return true; }
@@ -23,6 +23,9 @@ public:
     Box const& flex_container() const { return context_box(); }
 
 private:
+    SizeConstraint flex_container_main_constraint() const;
+    SizeConstraint flex_container_cross_constraint() const;
+
     void dump_items() const;
 
     struct DirectionAgnosticMargins {
@@ -30,10 +33,16 @@ private:
         float main_after { 0 };
         float cross_before { 0 };
         float cross_after { 0 };
+
+        bool main_before_is_auto { false };
+        bool main_after_is_auto { false };
+        bool cross_before_is_auto { false };
+        bool cross_after_is_auto { false };
     };
 
     struct FlexItem {
         Box& box;
+        CSS::FlexBasisData used_flex_basis {};
         float flex_base_size { 0 };
         float hypothetical_main_size { 0 };
         float hypothetical_cross_size { 0 };
@@ -42,7 +51,7 @@ private:
         bool frozen { false };
         Optional<float> flex_factor {};
         float scaled_flex_shrink_factor { 0 };
-        float max_content_flex_fraction { 0 };
+        float desired_flex_fraction { 0 };
         float main_size { 0 };
         float cross_size { 0 };
         float main_offset { 0 };
@@ -57,6 +66,7 @@ private:
     struct FlexLine {
         Vector<FlexItem*> items;
         float cross_size { 0 };
+        float remaining_free_space { 0 };
     };
 
     bool has_definite_main_size(Box const&) const;
@@ -79,13 +89,17 @@ private:
     bool has_main_max_size(Box const&) const;
     bool has_cross_max_size(Box const&) const;
     float sum_of_margin_padding_border_in_main_axis(Box const&) const;
-    float determine_min_main_size_of_child(Box const& box);
+    float automatic_minimum_size(FlexItem const&) const;
+    float content_based_minimum_size(FlexItem const&) const;
+    Optional<float> specified_size_suggestion(FlexItem const&) const;
+    Optional<float> transferred_size_suggestion(FlexItem const&) const;
+    float content_size_suggestion(FlexItem const&) const;
 
     void set_main_size(Box const&, float size);
     void set_cross_size(Box const&, float size);
     void set_offset(Box const&, float main_offset, float cross_offset);
-    void set_main_axis_first_margin(Box const&, float margin);
-    void set_main_axis_second_margin(Box const&, float margin);
+    void set_main_axis_first_margin(FlexItem&, float margin);
+    void set_main_axis_second_margin(FlexItem&, float margin);
 
     void copy_dimensions_from_flex_items_to_boxes();
 
@@ -105,6 +119,8 @@ private:
     void determine_hypothetical_cross_size_of_item(FlexItem&);
 
     void calculate_cross_size_of_each_flex_line(float cross_min_size, float cross_max_size);
+
+    CSS::AlignItems alignment_for_item(FlexItem const&) const;
 
     void determine_used_cross_size_of_each_flex_item();
 
@@ -130,7 +146,17 @@ private:
     [[nodiscard]] float calculate_main_min_content_contribution(FlexItem const&) const;
     [[nodiscard]] float calculate_main_max_content_contribution(FlexItem const&) const;
 
-    FormattingState::NodeState& m_flex_container_state;
+    [[nodiscard]] float calculate_min_content_main_size(FlexItem const&) const;
+    [[nodiscard]] float calculate_max_content_main_size(FlexItem const&) const;
+    [[nodiscard]] float calculate_min_content_cross_size(FlexItem const&) const;
+    [[nodiscard]] float calculate_max_content_cross_size(FlexItem const&) const;
+
+    [[nodiscard]] float calculate_fit_content_main_size(FlexItem const&) const;
+    [[nodiscard]] float calculate_fit_content_cross_size(FlexItem const&) const;
+
+    CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
+
+    LayoutState::UsedValues& m_flex_container_state;
 
     Vector<FlexLine> m_flex_lines;
     Vector<FlexItem> m_flex_items;

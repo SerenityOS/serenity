@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/poll.h>
@@ -18,6 +19,8 @@ extern "C" {
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/select.html
 int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval* timeout_tv)
 {
+    __pthread_maybe_cancel();
+
     timespec* timeout_ts = nullptr;
     timespec timeout;
     if (timeout_tv) {
@@ -30,6 +33,8 @@ int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timev
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pselect.html
 int pselect(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timespec const* timeout, sigset_t const* sigmask)
 {
+    __pthread_maybe_cancel();
+
     Vector<pollfd, FD_SETSIZE> fds;
 
     if (nfds < 0 || static_cast<size_t>(nfds) >= fds.capacity())

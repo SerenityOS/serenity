@@ -346,13 +346,13 @@ String escape_html_entities(StringView html)
     StringBuilder builder;
     for (size_t i = 0; i < html.length(); ++i) {
         if (html[i] == '<')
-            builder.append("&lt;");
+            builder.append("&lt;"sv);
         else if (html[i] == '>')
-            builder.append("&gt;");
+            builder.append("&gt;"sv);
         else if (html[i] == '&')
-            builder.append("&amp;");
+            builder.append("&amp;"sv);
         else if (html[i] == '"')
-            builder.append("&quot;");
+            builder.append("&quot;"sv);
         else
             builder.append(html[i]);
     }
@@ -391,26 +391,6 @@ String String::to_titlecase() const
 String String::invert_case() const
 {
     return StringUtils::invert_case(*this);
-}
-
-bool operator<(char const* characters, String const& string)
-{
-    return string.view() > characters;
-}
-
-bool operator>=(char const* characters, String const& string)
-{
-    return string.view() <= characters;
-}
-
-bool operator>(char const* characters, String const& string)
-{
-    return string.view() < characters;
-}
-
-bool operator<=(char const* characters, String const& string)
-{
-    return string.view() >= characters;
 }
 
 bool String::operator==(char const* cstring) const

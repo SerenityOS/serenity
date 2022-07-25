@@ -135,7 +135,7 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
 
     // Allocate twice of the max row * max column * sizeof(Cell) to ensure we can have some sort of history mechanism...
     auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
-    m_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells", Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
+    m_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
 
     // Add the lines, so we also ensure they will be flushed now
     for (size_t row = 0; row < rows(); row++) {
@@ -154,7 +154,7 @@ void VirtualConsole::refresh_after_resolution_change()
     // Note: From now on, columns() and rows() are updated with the new settings.
 
     auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
-    auto new_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells", Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
+    auto new_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
 
     if (rows() < old_rows_count) {
         m_lines.shrink(rows());
@@ -358,7 +358,12 @@ void VirtualConsole::emit(u8 const* data, size_t size)
         TTY::emit(data[i], true);
 }
 
-void VirtualConsole::set_cursor_style(VT::CursorStyle)
+void VirtualConsole::set_cursor_shape(VT::CursorShape)
+{
+    // Do nothing
+}
+
+void VirtualConsole::set_cursor_blinking(bool)
 {
     // Do nothing
 }

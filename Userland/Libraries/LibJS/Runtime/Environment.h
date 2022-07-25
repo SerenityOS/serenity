@@ -20,7 +20,7 @@ struct Variable {
 #define JS_ENVIRONMENT(class_, base_class) \
 public:                                    \
     using Base = base_class;               \
-    virtual StringView class_name() const override { return #class_; }
+    virtual StringView class_name() const override { return #class_##sv; }
 
 class Environment : public Cell {
 public:

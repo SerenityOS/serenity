@@ -9,7 +9,7 @@
 
         @GUI::GroupBox {
             title: "Orientation"
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::HorizontalBoxLayout {
                 margins: [10, 8, 8]
             }
@@ -30,7 +30,7 @@
         layout: @GUI::HorizontalBoxLayout {
             margins: [4]
         }
-        shrink_to_fit: true
+        preferred_height: "fit"
 
         @GUI::Label {
             text: "Offset"
@@ -48,18 +48,16 @@
             margins: [4]
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "ok_button"
             text: "OK"
-            max_width: 75
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            max_width: 75
         }
     }
 }

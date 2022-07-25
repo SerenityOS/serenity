@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,6 +11,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/Timer.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
@@ -137,7 +138,7 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     auto& url = request.url();
     request.start_timer();
@@ -212,21 +213,53 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     }
 
     if (url.protocol() == "file") {
-        auto file_result = Core::File::open(url.path(), Core::OpenMode::ReadOnly);
-        if (file_result.is_error()) {
-            auto& error = file_result.error();
-            log_failure(request, error);
-            if (error_callback)
-                error_callback(String::formatted("{}", error), error.code());
-            return;
-        }
+        if (request.page().has_value())
+            m_page = request.page().value();
 
-        auto file = file_result.release_value();
-        auto data = file->read_all();
-        log_success(request);
-        deferred_invoke([data = move(data), success_callback = move(success_callback)] {
+        if (!m_page.has_value())
+            return;
+        VERIFY(m_page.has_value());
+        auto file_ref = make_ref_counted<FileRequest>(url.path());
+        file_ref->on_file_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, file_ref](ErrorOr<i32> file_or_error) {
+            --m_pending_loads;
+            if (on_load_counter_change)
+                on_load_counter_change();
+
+            if (file_or_error.is_error()) {
+                log_failure(request, file_or_error.error());
+                if (error_callback)
+                    error_callback(String::formatted("{}", file_or_error.error()), file_or_error.error().code());
+                return;
+            }
+
+            auto const fd = file_or_error.value();
+
+            auto maybe_file = Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read);
+            if (maybe_file.is_error()) {
+                log_failure(request, maybe_file.error());
+                if (error_callback)
+                    error_callback(String::formatted("{}", maybe_file.error()), maybe_file.error().code());
+                return;
+            }
+
+            auto file = maybe_file.release_value();
+            auto maybe_data = file->read_all();
+            if (maybe_data.is_error()) {
+                log_failure(request, maybe_data.error());
+                if (error_callback)
+                    error_callback(String::formatted("{}", maybe_data.error()), maybe_data.error().code());
+                return;
+            }
+            auto data = maybe_data.release_value();
+            log_success(request);
             success_callback(data, {}, {});
-        });
+        };
+        m_page->client().request_file(file_ref);
+
+        ++m_pending_loads;
+        if (on_load_counter_change)
+            on_load_counter_change();
+
         return;
     }
 
@@ -249,7 +282,19 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 error_callback(start_request_failure_msg, {});
             return;
         }
+
+        if (timeout.has_value() && timeout.value() > 0) {
+            auto timer = Core::Timer::create_single_shot(timeout.value(), nullptr);
+            timer->on_timeout = [timer, protocol_request, timeout_callback = move(timeout_callback)]() mutable {
+                protocol_request->stop();
+                if (timeout_callback)
+                    timeout_callback();
+            };
+            timer->start();
+        }
+
         m_active_requests.set(*protocol_request);
+
         protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             --m_pending_loads;
             if (on_load_counter_change)
@@ -259,7 +304,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 if (status_code.has_value())
                     error_builder.appendff("Load failed: {}", *status_code);
                 else
-                    error_builder.append("Load failed");
+                    error_builder.append("Load failed"sv);
                 log_failure(request, error_builder.string_view());
                 if (error_callback)
                     error_callback(error_builder.to_string(), {});
@@ -287,11 +332,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     LoadRequest request;
     request.set_url(url);
-    load(request, move(success_callback), move(error_callback));
+    load(request, move(success_callback), move(error_callback), timeout, move(timeout_callback));
 }
 
 bool ResourceLoader::is_port_blocked(int port)

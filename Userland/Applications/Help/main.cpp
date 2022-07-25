@@ -17,7 +17,7 @@
 
 using namespace Help;
 
-static String parse_input(char const* input)
+static String parse_input(StringView input)
 {
     AK::URL url(input);
     if (url.is_valid())
@@ -33,7 +33,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/usr/share/man", "r"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -49,9 +50,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .name = "section",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](char const* input) {
+        .accept_value = [&](char const* input_ptr) {
+            StringView input { input_ptr, strlen(input_ptr) };
             // If it's a number, use it as the section
-            if (auto number = StringView(input).to_int(); number.has_value()) {
+            if (auto number = input.to_int(); number.has_value()) {
                 section = number.value();
                 return true;
             }
@@ -65,7 +67,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .name = "page",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](char const* input) {
+        .accept_value = [&](char const* input_ptr) {
+            StringView input { input_ptr, strlen(input_ptr) };
             // If start_page was already set by our section arg, then it can't be set again
             if (start_page.is_empty())
                 return false;
@@ -74,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } });
     args_parser.parse(arguments);
 
-    auto app_icon = GUI::Icon::default_icon("app-help");
+    auto app_icon = GUI::Icon::default_icon("app-help"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));

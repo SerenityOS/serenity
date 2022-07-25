@@ -28,6 +28,7 @@ extern "C" {
 #define MS_RDONLY (1 << 4)
 #define MS_REMOUNT (1 << 5)
 #define MS_WXALLOWED (1 << 6)
+#define MS_AXALLOWED (1 << 7)
 
 enum {
     _SC_MONOTONIC_CLOCK,
@@ -42,6 +43,7 @@ enum {
     _SC_SYMLOOP_MAX,
     _SC_MAPPED_FILES,
     _SC_ARG_MAX,
+    _SC_IOV_MAX,
 };
 
 #define _SC_MONOTONIC_CLOCK _SC_MONOTONIC_CLOCK
@@ -56,6 +58,7 @@ enum {
 #define _SC_SYMLOOP_MAX _SC_SYMLOOP_MAX
 #define _SC_MAPPED_FILES _SC_MAPPED_FILES
 #define _SC_ARG_MAX _SC_ARG_MAX
+#define _SC_IOV_MAX _SC_IOV_MAX
 
 #ifdef __cplusplus
 }

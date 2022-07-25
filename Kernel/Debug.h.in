@@ -31,6 +31,10 @@
 #cmakedefine01 ARP_DEBUG
 #endif
 
+#ifndef ATA_DEBUG
+#cmakedefine01 ATA_DEBUG
+#endif
+
 #ifndef BBFS_DEBUG
 #cmakedefine01 BBFS_DEBUG
 #endif
@@ -101,10 +105,6 @@
 
 #ifndef FUTEXQUEUE_DEBUG
 #cmakedefine01 FUTEXQUEUE_DEBUG
-#endif
-
-#ifndef GPT_DEBUG
-#cmakedefine01 GPT_DEBUG
 #endif
 
 #ifndef HPET_COMPARATOR_DEBUG
@@ -197,10 +197,6 @@
 
 #ifndef MASTERPTY_DEBUG
 #cmakedefine01 MASTERPTY_DEBUG
-#endif
-
-#ifndef MBR_DEBUG
-#cmakedefine01 MBR_DEBUG
 #endif
 
 #ifndef MOUSE_DEBUG

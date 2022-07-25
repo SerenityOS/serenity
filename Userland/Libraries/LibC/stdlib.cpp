@@ -12,12 +12,13 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibELF/AuxiliaryVector.h>
-#include <LibPthread/pthread.h>
 #include <alloca.h>
 #include <assert.h>
+#include <bits/pthread_cancel.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -133,7 +134,7 @@ private:
         if (is_below_cutoff) {
             return true;
         } else {
-            return m_num == m_cutoff && digit < m_max_digit_after_cutoff;
+            return m_num == m_cutoff && digit <= m_max_digit_after_cutoff;
         }
     }
 
@@ -810,6 +811,8 @@ void srandom(unsigned seed)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/system.html
 int system(char const* command)
 {
+    __pthread_maybe_cancel();
+
     if (!command)
         return 1;
 

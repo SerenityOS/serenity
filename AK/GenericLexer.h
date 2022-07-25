@@ -92,10 +92,10 @@ public:
 
     constexpr bool consume_specific(char const* next)
     {
-        return consume_specific(StringView { next });
+        return consume_specific(StringView { next, __builtin_strlen(next) });
     }
 
-    constexpr char consume_escaped_character(char escape_char = '\\', StringView escape_map = "n\nr\rt\tb\bf\f")
+    constexpr char consume_escaped_character(char escape_char = '\\', StringView escape_map = "n\nr\rt\tb\bf\f"sv)
     {
         if (!consume_specific(escape_char))
             return consume();
@@ -234,8 +234,8 @@ constexpr auto is_not_any_of(StringView values)
     return [values](auto c) { return !values.contains(c); };
 }
 
-constexpr auto is_path_separator = is_any_of("/\\");
-constexpr auto is_quote = is_any_of("'\"");
+constexpr auto is_path_separator = is_any_of("/\\"sv);
+constexpr auto is_quote = is_any_of("'\""sv);
 
 }
 

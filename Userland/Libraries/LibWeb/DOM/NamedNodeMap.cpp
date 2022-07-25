@@ -154,8 +154,8 @@ ExceptionOr<Attribute const*> NamedNodeMap::set_attribute(Attribute& attribute)
 void NamedNodeMap::replace_attribute(Attribute& old_attribute, Attribute& new_attribute, size_t old_attribute_index)
 {
     // 1. Handle attribute changes for oldAttr with oldAttr’s element, oldAttr’s value, and newAttr’s value.
-    // FIXME: The steps to handle an attribute change deal with mutation records and custom element states.
-    //        Once those are supported, implement these steps: https://dom.spec.whatwg.org/#handle-attribute-changes
+    VERIFY(old_attribute.owner_element());
+    old_attribute.handle_attribute_changes(*old_attribute.owner_element(), old_attribute.value(), new_attribute.value());
 
     // 2. Replace oldAttr by newAttr in oldAttr’s element’s attribute list.
     m_attributes.remove(old_attribute_index);
@@ -172,14 +172,29 @@ void NamedNodeMap::replace_attribute(Attribute& old_attribute, Attribute& new_at
 void NamedNodeMap::append_attribute(Attribute& attribute)
 {
     // 1. Handle attribute changes for attribute with element, null, and attribute’s value.
-    // FIXME: The steps to handle an attribute change deal with mutation records and custom element states.
-    //        Once those are supported, implement these steps: https://dom.spec.whatwg.org/#handle-attribute-changes
+    attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
 
     // 2. Append attribute to element’s attribute list.
     m_attributes.append(attribute);
 
     // 3. Set attribute’s element to element.
     attribute.set_owner_element(&associated_element());
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-remove
+void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
+{
+    NonnullRefPtr<Attribute> attribute = m_attributes.at(attribute_index);
+
+    // 1. Handle attribute changes for attribute with attribute’s element, attribute’s value, and null.
+    VERIFY(attribute->owner_element());
+    attribute->handle_attribute_changes(*attribute->owner_element(), attribute->value(), {});
+
+    // 2. Remove attribute from attribute’s element’s attribute list.
+    m_attributes.remove(attribute_index);
+
+    // 3. Set attribute’s element to null.
+    attribute->set_owner_element(nullptr);
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
@@ -192,7 +207,7 @@ Attribute const* NamedNodeMap::remove_attribute(StringView qualified_name)
 
     // 2. If attr is non-null, then remove attr.
     if (attribute)
-        m_attributes.remove(item_index);
+        remove_attribute_at_index(item_index);
 
     // 3. Return attr.
     return attribute;

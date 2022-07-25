@@ -37,11 +37,11 @@ CharacterMapWidget::CharacterMapWidget()
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_unicode_block_listview = find_descendant_of_type_named<GUI::ListView>("unicode_block_listview");
 
-    m_choose_font_action = GUI::Action::create("Choose Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_choose_font_action = GUI::Action::create("Choose Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         auto font_picker = GUI::FontPicker::construct(window(), &font(), false);
         if (font_picker->exec() == GUI::Dialog::ExecResult::OK) {
             auto& font = *font_picker->font();
-            Config::write_string("CharacterMap", "History", "Font", font.qualified_name());
+            Config::write_string("CharacterMap"sv, "History"sv, "Font"sv, font.qualified_name());
             set_font(font);
         }
     });
@@ -58,19 +58,19 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_copy_selection_action->set_status_tip("Copy the highlighted characters to the clipboard");
 
-    m_previous_glyph_action = GUI::Action::create("Previous character", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("Previous character", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_glyph_map->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_glyph_map->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
-    m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to glyph") == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
+        if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
@@ -83,7 +83,7 @@ CharacterMapWidget::CharacterMapWidget()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
 
-    m_find_glyphs_action = GUI::Action::create("&Find glyphs...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_find_glyphs_action = GUI::Action::create("&Find glyphs...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (m_find_window.is_null()) {
             m_find_window = GUI::Window::construct(window());
             auto& search_widget = m_find_window->set_main_widget<CharacterSearchWidget>();
@@ -91,7 +91,7 @@ CharacterMapWidget::CharacterMapWidget()
                 m_glyph_map->set_active_glyph(code_point);
                 m_glyph_map->scroll_to_glyph(code_point);
             };
-            m_find_window->set_icon(GUI::Icon::try_create_default_icon("find").value().bitmap_for_size(16));
+            m_find_window->set_icon(GUI::Icon::try_create_default_icon("find"sv).value().bitmap_for_size(16));
             m_find_window->set_title("Find a character");
             m_find_window->resize(300, 400);
         }
@@ -159,7 +159,7 @@ void CharacterMapWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_help_action([&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/CharacterMap.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"sv), &window));
 }
 
 void CharacterMapWidget::did_change_font()

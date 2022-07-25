@@ -26,8 +26,10 @@ public:
         FirstLine,
         FirstLetter,
         Marker,
+        ProgressValue,
+        ProgressBar
     };
-    static auto constexpr PseudoElementCount = to_underlying(PseudoElement::Marker) + 1;
+    static auto constexpr PseudoElementCount = to_underlying(PseudoElement::ProgressBar) + 1;
 
     struct SimpleSelector {
         enum class Type {
@@ -58,10 +60,10 @@ public:
                 // 3.
                 // - A is 1: Append "n" to result.
                 if (step_size == 1)
-                    result.append("n");
+                    result.append('n');
                 // - A is -1: Append "-n" to result.
                 else if (step_size == -1)
-                    result.append("-n");
+                    result.append("-n"sv);
                 // - A is non-zero: Serialize A and append it to result, then append "n" to result.
                 else if (step_size != 0)
                     result.appendff("{}n", step_size);
@@ -204,6 +206,10 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "first-letter"sv;
     case Selector::PseudoElement::Marker:
         return "marker"sv;
+    case Selector::PseudoElement::ProgressBar:
+        return "-webkit-progress-bar"sv;
+    case Selector::PseudoElement::ProgressValue:
+        return "-webkit-progress-value"sv;
     }
     VERIFY_NOT_REACHED();
 }

@@ -61,32 +61,6 @@ void Terminal::alter_ansi_mode(bool should_set, Parameters params)
 
 void Terminal::alter_private_mode(bool should_set, Parameters params)
 {
-    auto steady_cursor_to_blinking = [](CursorStyle style) {
-        switch (style) {
-        case SteadyBar:
-            return BlinkingBar;
-        case SteadyBlock:
-            return BlinkingBlock;
-        case SteadyUnderline:
-            return BlinkingUnderline;
-        default:
-            return style;
-        }
-    };
-
-    auto blinking_cursor_to_steady = [](CursorStyle style) {
-        switch (style) {
-        case BlinkingBar:
-            return SteadyBar;
-        case BlinkingBlock:
-            return SteadyBlock;
-        case BlinkingUnderline:
-            return SteadyUnderline;
-        default:
-            return style;
-        }
-    };
-
     for (auto mode : params) {
         switch (mode) {
         case 1:
@@ -105,23 +79,22 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
         case 12:
             if (should_set) {
                 // Start blinking cursor
-                m_cursor_style = steady_cursor_to_blinking(m_cursor_style);
+                m_client.set_cursor_blinking(true);
             } else {
                 // Stop blinking cursor
-                m_cursor_style = blinking_cursor_to_steady(m_cursor_style);
+                m_client.set_cursor_blinking(false);
             }
-            m_client.set_cursor_style(m_cursor_style);
             break;
         case 25:
             if (should_set) {
                 // Show cursor
-                m_cursor_style = m_saved_cursor_style;
-                m_client.set_cursor_style(m_cursor_style);
+                m_cursor_shape = m_saved_cursor_shape;
+                m_client.set_cursor_shape(m_cursor_shape);
             } else {
                 // Hide cursor
-                m_saved_cursor_style = m_cursor_style;
-                m_cursor_style = None;
-                m_client.set_cursor_style(None);
+                m_saved_cursor_shape = m_cursor_shape;
+                m_cursor_shape = VT::CursorShape::None;
+                m_client.set_cursor_shape(VT::CursorShape::None);
             }
             break;
         case 1047:
@@ -378,19 +351,18 @@ void Terminal::XTERM_WM(Parameters params)
         return;
     switch (params[0]) {
     case 22: {
+#ifndef KERNEL
         if (params.size() > 1 && params[1] == 1) {
             dbgln("FIXME: we don't support icon titles");
             return;
         }
         dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
-#ifdef KERNEL
-        (void)m_title_stack.try_append(m_current_window_title.release_nonnull()); // FIXME: Propagate Error
-#else
         (void)m_title_stack.try_append(move(m_current_window_title));
 #endif
         break;
     }
     case 23: {
+#ifndef KERNEL
         if (params.size() > 1 && params[1] == 1)
             return;
         if (m_title_stack.is_empty()) {
@@ -399,9 +371,6 @@ void Terminal::XTERM_WM(Parameters params)
         }
         m_current_window_title = m_title_stack.take_last();
         dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
-#ifdef KERNEL
-        m_client.set_window_title(m_current_window_title->view());
-#else
         m_client.set_window_title(m_current_window_title);
 #endif
         break;
@@ -674,22 +643,28 @@ void Terminal::DECSCUSR(Parameters params)
         style = params[0];
     switch (style) {
     case 1:
-        m_client.set_cursor_style(BlinkingBlock);
+        m_client.set_cursor_shape(VT::CursorShape::Block);
+        m_client.set_cursor_blinking(true);
         break;
     case 2:
-        m_client.set_cursor_style(SteadyBlock);
+        m_client.set_cursor_shape(VT::CursorShape::Block);
+        m_client.set_cursor_blinking(false);
         break;
     case 3:
-        m_client.set_cursor_style(BlinkingUnderline);
+        m_client.set_cursor_shape(VT::CursorShape::Underline);
+        m_client.set_cursor_blinking(true);
         break;
     case 4:
-        m_client.set_cursor_style(SteadyUnderline);
+        m_client.set_cursor_shape(VT::CursorShape::Underline);
+        m_client.set_cursor_blinking(false);
         break;
     case 5:
-        m_client.set_cursor_style(BlinkingBar);
+        m_client.set_cursor_shape(VT::CursorShape::Bar);
+        m_client.set_cursor_blinking(true);
         break;
     case 6:
-        m_client.set_cursor_style(SteadyBar);
+        m_client.set_cursor_shape(VT::CursorShape::Bar);
+        m_client.set_cursor_blinking(false);
         break;
     default:
         dbgln("Unknown cursor style {}", style);
@@ -710,7 +685,7 @@ void Terminal::IL(Parameters params)
 
 void Terminal::DA(Parameters)
 {
-    emit_string("\033[?1;0c");
+    emit_string("\033[?1;0c"sv);
 }
 
 void Terminal::DL(Parameters params)
@@ -980,7 +955,7 @@ void Terminal::DSR(Parameters params)
 {
     if (params.size() == 1 && params[0] == 5) {
         // Device status
-        emit_string("\033[0n"); // Terminal status OK!
+        emit_string("\033[0n"sv); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
         StringBuilder builder;
@@ -1288,10 +1263,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
         } else {
             // FIXME: the split breaks titles containing semicolons.
             // Should we expose the raw OSC string from the parser? Or join by semicolon?
-#ifdef KERNEL
-            m_current_window_title = Kernel::KString::try_create(stringview_ify(1)).release_value_but_fixme_should_propagate_errors();
-            m_client.set_window_title(m_current_window_title->view());
-#else
+#ifndef KERNEL
             m_current_window_title = stringview_ify(1).to_string();
             m_client.set_window_title(m_current_window_title);
 #endif
@@ -1409,7 +1381,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     case KeyCode::Key_Return:
         // The standard says that CR should be generated by the return key.
         // The TTY will take care of translating it to CR LF for the terminal.
-        emit_string("\r");
+        emit_string("\r"sv);
         return;
     default:
         break;
@@ -1421,7 +1393,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     }
 
     if (shift && key == KeyCode::Key_Tab) {
-        emit_string("\033[Z");
+        emit_string("\033[Z"sv);
         return;
     }
 
@@ -1437,7 +1409,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     // Alt modifier sends escape prefix.
     if (alt)
-        emit_string("\033");
+        emit_string("\033"sv);
 
     StringBuilder sb;
     sb.append_code_point(code_point);
@@ -1454,7 +1426,7 @@ void Terminal::unimplemented_escape_sequence(Intermediates intermediates, u8 las
     StringBuilder builder;
     builder.appendff("Unimplemented escape sequence {:c}", last_byte);
     if (!intermediates.is_empty()) {
-        builder.append(", intermediates: ");
+        builder.append(", intermediates: "sv);
         for (size_t i = 0; i < intermediates.size(); ++i)
             builder.append((char)intermediates[i]);
     }
@@ -1466,13 +1438,13 @@ void Terminal::unimplemented_csi_sequence(Parameters parameters, Intermediates i
     StringBuilder builder;
     builder.appendff("Unimplemented CSI sequence: {:c}", last_byte);
     if (!parameters.is_empty()) {
-        builder.append(", parameters: [");
+        builder.append(", parameters: ["sv);
         for (size_t i = 0; i < parameters.size(); ++i)
             builder.appendff("{}{}", (i == 0) ? "" : ", ", parameters[i]);
-        builder.append("]");
+        builder.append("]"sv);
     }
     if (!intermediates.is_empty()) {
-        builder.append(", intermediates:");
+        builder.append(", intermediates:"sv);
         for (size_t i = 0; i < intermediates.size(); ++i)
             builder.append((char)intermediates[i]);
     }
@@ -1486,15 +1458,15 @@ void Terminal::unimplemented_osc_sequence(OscParameters parameters, u8 last_byte
     bool first = true;
     for (auto parameter : parameters) {
         if (!first)
-            builder.append(", ");
-        builder.append("[");
+            builder.append(", "sv);
+        builder.append('[');
         for (auto character : parameter)
             builder.append((char)character);
-        builder.append("]");
+        builder.append(']');
         first = false;
     }
 
-    builder.append(" ]");
+    builder.append(" ]"sv);
     dbgln("{}", builder.string_view());
 }
 

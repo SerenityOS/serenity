@@ -145,15 +145,15 @@ template<typename TContext>
 ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("PortableImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("PortableImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == TContext::State::Error)
-        return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < TContext::State::Decoded) {
         bool success = decode(*m_context);
         if (!success)
-            return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
     }
 
     VERIFY(m_context->bitmap);

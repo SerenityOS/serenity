@@ -7,10 +7,13 @@
 #pragma once
 
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/WindowEventHandlers.h>
 
 namespace Web::HTML {
 
-class HTMLBodyElement final : public HTMLElement {
+class HTMLBodyElement final
+    : public HTMLElement
+    , public WindowEventHandlers {
 public:
     using WrapperType = Bindings::HTMLBodyElementWrapper;
 
@@ -22,7 +25,10 @@ public:
 
 private:
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target() override;
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
+
+    // ^HTML::WindowEventHandlers
+    virtual EventTarget& window_event_handlers_to_event_target() override;
 
     RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };

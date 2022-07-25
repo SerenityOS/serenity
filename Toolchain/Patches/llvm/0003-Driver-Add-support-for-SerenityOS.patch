@@ -1,7 +1,7 @@
-From 70cbf6e9ed46f0d39f43ac4a43b9bd2cc10da6c3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:09:50 +0200
-Subject: [PATCH 3/9] [Driver] Add support for SerenityOS
+Subject: [PATCH] [Driver] Add support for SerenityOS
 
 Adds support for the `$arch-pc-serenity` target to the Clang front end.
 This makes the compiler look for libraries and headers in the right
@@ -144,7 +144,7 @@ new file mode 100644
 index 000000000..955422438
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,340 @@
+@@ -0,0 +1,337 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -306,9 +306,6 @@ index 000000000..955422438
 +  }
 +
 +  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
-+    if (Args.hasArg(options::OPT_pthread, options::OPT_pthreads))
-+      CmdArgs.push_back("-lpthread");
-+
 +    if (!Args.hasArg(options::OPT_nolibc))
 +      CmdArgs.push_back("-lc");
 +  }
@@ -590,6 +587,3 @@ index 000000000..d414f8366
 +} // end namespace clang
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
--- 
-2.35.3
-

@@ -50,6 +50,7 @@ enum class Weekday : u8 {
 enum class DayPeriod : u8 {
     AM,
     PM,
+    Noon,
     Morning1,
     Morning2,
     Afternoon1,
@@ -190,6 +191,22 @@ Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_re
 Vector<HourCycle> get_regional_hour_cycles(StringView region);
 Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale);
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale);
+
+Optional<MinimumDaysRegion> minimum_days_region_from_string(StringView minimum_days_region);
+Optional<u8> get_regional_minimum_days(StringView region);
+Optional<u8> get_locale_minimum_days(StringView region);
+
+Optional<FirstDayRegion> first_day_region_from_string(StringView first_day_region);
+Optional<Weekday> get_regional_first_day(StringView region);
+Optional<Weekday> get_locale_first_day(StringView region);
+
+Optional<WeekendStartRegion> weekend_start_region_from_string(StringView weekend_start_region);
+Optional<Weekday> get_regional_weekend_start(StringView region);
+Optional<Weekday> get_locale_weekend_start(StringView region);
+
+Optional<WeekendEndRegion> weekend_end_region_from_string(StringView weekend_end_region);
+Optional<Weekday> get_regional_weekend_end(StringView region);
+Optional<Weekday> get_locale_weekend_end(StringView region);
 
 String combine_skeletons(StringView first, StringView second);
 

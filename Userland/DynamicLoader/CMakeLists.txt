@@ -25,6 +25,9 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LOADER_SOURCES ${LOADER_SOURCES} ../Libraries/LibSanitizer/UBSanitizer.cpp)
 endif()
 
+# pthread requires thread local storage, which DynamicLoader does not have.
+list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
+
 add_definitions(-D_DYNAMIC_LOADER)
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})

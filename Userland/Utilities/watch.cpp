@@ -33,7 +33,7 @@ static String build_header_string(Vector<char const*> const& command, struct tim
     StringBuilder builder;
     builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
     builder.join(' ', command);
-    builder.append("\x1b[0m");
+    builder.append("\x1b[0m"sv);
     return builder.build();
 }
 
@@ -42,7 +42,7 @@ static String build_header_string(Vector<char const*> const& command, Vector<Str
     StringBuilder builder;
     builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
     builder.join(' ', command);
-    builder.append("\x1b[0m");
+    builder.append("\x1b[0m"sv);
     return builder.build();
 }
 
@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_noheader, "Turn off the header describing the command and interval", "no-title", 't');
     args_parser.add_option(flag_beep_on_fail, "Beep if the command has a non-zero exit code", "beep", 'b');
     Core::ArgsParser::Option file_arg {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Run command whenever this file changes. Can be used multiple times.",
         .long_name = "file",
         .short_name = 'f',

@@ -98,7 +98,7 @@ ValueID value_id_from_string(StringView string)
         member_generator.set("name", name.to_string());
         member_generator.set("name:titlecase", title_casify(name.to_string()));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name@"))
+    if (string.equals_ignoring_case("@name@"sv))
         return ValueID::@name:titlecase@;
 )~~~");
     });

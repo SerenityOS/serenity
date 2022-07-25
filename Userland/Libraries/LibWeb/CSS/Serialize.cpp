@@ -112,9 +112,21 @@ void serialize_a_url(StringBuilder& builder, StringView url)
 {
     // To serialize a URL means to create a string represented by "url(",
     // followed by the serialization of the URL as a string, followed by ")".
-    builder.append("url(");
+    builder.append("url("sv);
     serialize_a_string(builder, url.to_string());
     builder.append(')');
+}
+
+// https://www.w3.org/TR/css-color-4/#serializing-sRGB-values
+void serialize_a_srgb_value(StringBuilder& builder, Color color)
+{
+    // The serialized form is derived from the computed value and thus, uses either the rgb() or rgba() form
+    // (depending on whether the alpha is exactly 1, or not), with lowercase letters for the function name.
+    // NOTE: Since we use Gfx::Color, having an "alpha of 1" means its value is 255.
+    if (color.alpha() == 255)
+        builder.appendff("rgb({}, {}, {})"sv, color.red(), color.green(), color.blue());
+    else
+        builder.appendff("rgba({}, {}, {}, {})"sv, color.red(), color.green(), color.blue(), (float)(color.alpha()) / 255.0f);
 }
 
 String escape_a_character(u32 character)
@@ -149,6 +161,13 @@ String serialize_a_url(StringView url)
 {
     StringBuilder builder;
     serialize_a_url(builder, url);
+    return builder.to_string();
+}
+
+String serialize_a_srgb_value(Color color)
+{
+    StringBuilder builder;
+    serialize_a_srgb_value(builder, color);
     return builder.to_string();
 }
 

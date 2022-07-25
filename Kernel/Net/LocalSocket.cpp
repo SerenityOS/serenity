@@ -45,8 +45,8 @@ ErrorOr<void> LocalSocket::try_for_each(Function<ErrorOr<void>(LocalSocket const
 
 ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
-    auto client_buffer = TRY(DoubleBuffer::try_create());
-    auto server_buffer = TRY(DoubleBuffer::try_create());
+    auto client_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Client buffer"sv));
+    auto server_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Server buffer"sv));
     return adopt_nonnull_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
 }
 
@@ -159,29 +159,23 @@ ErrorOr<void> LocalSocket::bind(Userspace<sockaddr const*> user_address, socklen
     return {};
 }
 
-ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size, ShouldBlock)
+ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(!m_bound);
-    if (address_size != sizeof(sockaddr_un))
+
+    if (address_size > sizeof(sockaddr_un))
         return set_so_error(EINVAL);
-    u16 sa_family_copy;
-    auto* user_address = reinterpret_cast<sockaddr const*>(address.unsafe_userspace_ptr());
-    SOCKET_TRY(copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)));
-    if (sa_family_copy != AF_LOCAL)
+
+    sockaddr_un address = {};
+    SOCKET_TRY(copy_from_user(&address, user_address, address_size));
+
+    if (address.sun_family != AF_LOCAL)
         return set_so_error(EINVAL);
+
     if (is_connected())
         return set_so_error(EISCONN);
 
-    OwnPtr<KString> maybe_path;
-    {
-        auto const& local_address = *reinterpret_cast<sockaddr_un const*>(user_address);
-        char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-        SOCKET_TRY(copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1));
-        safe_address[sizeof(safe_address) - 1] = '\0';
-        maybe_path = SOCKET_TRY(KString::try_create(safe_address));
-    }
-
-    auto path = maybe_path.release_nonnull();
+    auto path = SOCKET_TRY(KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) }));
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
 
     auto file = SOCKET_TRY(VirtualFileSystem::the().open(path->view(), O_RDWR, 0, Process::current().current_directory()));
@@ -374,12 +368,12 @@ StringView LocalSocket::socket_path() const
 ErrorOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(OpenFileDescription const& description) const
 {
     StringBuilder builder;
-    TRY(builder.try_append("socket:"));
+    TRY(builder.try_append("socket:"sv));
     TRY(builder.try_append(socket_path()));
 
     switch (role(description)) {
     case Role::Listener:
-        TRY(builder.try_append(" (listening)"));
+        TRY(builder.try_append(" (listening)"sv));
         break;
     case Role::Accepted:
         TRY(builder.try_appendff(" (accepted from pid {})", origin_pid()));
@@ -388,7 +382,7 @@ ErrorOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(OpenFileDescription con
         TRY(builder.try_appendff(" (connected to pid {})", acceptor_pid()));
         break;
     case Role::Connecting:
-        TRY(builder.try_append(" (connecting)"));
+        TRY(builder.try_append(" (connecting)"sv));
         break;
     default:
         break;

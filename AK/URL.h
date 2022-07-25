@@ -38,10 +38,6 @@ public:
 
     URL() = default;
     URL(StringView);
-    URL(char const* string)
-        : URL(StringView(string))
-    {
-    }
     URL(String const& string)
         : URL(string.view())
     {

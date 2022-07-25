@@ -19,16 +19,21 @@
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
+
+class NVMeController;
 class NVMeNameSpace : public StorageDevice {
+    friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullRefPtr<NVMeNameSpace>> try_create(NonnullRefPtrVector<NVMeQueue> queues, u8 controller_id, u16 nsid, size_t storage_size, size_t lba_size);
-    explicit NVMeNameSpace(NonnullRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> early_device_name);
+    static ErrorOr<NonnullRefPtr<NVMeNameSpace>> try_create(NVMeController const&, NonnullRefPtrVector<NVMeQueue> queues, u8 controller_id, u16 nsid, size_t storage_size, size_t lba_size);
 
     CommandSet command_set() const override { return CommandSet::NVMe; };
     void start_request(AsyncBlockDeviceRequest& request) override;
 
 private:
+    NVMeNameSpace(LUNAddress, NonnullRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> early_device_name);
+
+    virtual InterfaceType interface_type() const override { return InterfaceType::NVMe; }
     u16 m_nsid;
     NonnullRefPtrVector<NVMeQueue> m_queues;
 };

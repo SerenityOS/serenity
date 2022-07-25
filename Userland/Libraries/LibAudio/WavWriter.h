@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/StringView.h>
+#include <LibAudio/Sample.h>
 #include <LibCore/File.h>
 
 namespace Audio {
@@ -24,7 +25,7 @@ public:
     bool has_error() const { return !m_error_string.is_null(); }
     char const* error_string() const { return m_error_string.characters(); }
 
-    void write_samples(u8 const* samples, size_t size);
+    void write_samples(Span<Sample> samples);
     void finalize(); // You can finalize manually or let the destructor do it.
 
     u32 sample_rate() const { return m_sample_rate; }

@@ -359,11 +359,11 @@ void TreeNode::dump_if(int flag, String&& msg)
     builder.appendff("[#{}] ", pointer());
     if (!msg.is_empty())
         builder.appendff("{}", msg);
-    builder.append(": ");
+    builder.append(": "sv);
     if (m_up)
         builder.appendff("[^{}] -> ", m_up->pointer());
     else
-        builder.append("* -> ");
+        builder.append("* -> "sv);
     for (size_t ix = 0; ix < m_entries.size(); ix++) {
         if (!is_leaf())
             builder.appendff("[v{}] ", m_down[ix].pointer());
@@ -378,9 +378,9 @@ void TreeNode::dump_if(int flag, String&& msg)
     }
     builder.appendff(" (size {}", (int)size());
     if (is_leaf()) {
-        builder.append(", leaf");
+        builder.append(", leaf"sv);
     }
-    builder.append(")");
+    builder.append(')');
     dbgln(builder.build());
 }
 

@@ -46,7 +46,7 @@ void UndoStack::redo()
         on_state_change();
 }
 
-void UndoStack::push(NonnullOwnPtr<Command> command)
+ErrorOr<void> UndoStack::try_push(NonnullOwnPtr<Command> command)
 {
     // If the stack cursor is behind the top of the stack, nuke everything from here to the top.
     while (m_stack.size() != m_stack_index)
@@ -57,14 +57,21 @@ void UndoStack::push(NonnullOwnPtr<Command> command)
 
     if (!m_stack.is_empty() && is_current_modified()) {
         if (m_stack.last().merge_with(*command))
-            return;
+            return {};
     }
 
-    m_stack.append(move(command));
+    TRY(m_stack.try_append(move(command)));
     m_stack_index = m_stack.size();
 
     if (on_state_change)
         on_state_change();
+
+    return {};
+}
+
+void UndoStack::push(NonnullOwnPtr<Command> command)
+{
+    MUST(try_push(move(command)));
 }
 
 void UndoStack::set_current_unmodified()

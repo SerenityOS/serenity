@@ -17,7 +17,7 @@ NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 }
 
 ClipboardHistoryModel::ClipboardHistoryModel()
-    : m_history_limit(Config::read_i32("ClipboardHistory", "ClipboardHistory", "NumHistoryItems", 20))
+    : m_history_limit(Config::read_i32("ClipboardHistory"sv, "ClipboardHistory"sv, "NumHistoryItems"sv, 20))
 {
 }
 
@@ -37,26 +37,26 @@ String ClipboardHistoryModel::column_name(int column) const
     }
 }
 
-static char const* bpp_for_format_resilient(String format)
+static StringView bpp_for_format_resilient(String format)
 {
     unsigned format_uint = format.to_uint().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
     // Cannot use Gfx::Bitmap::bpp_for_format here, as we have to accept invalid enum values.
     switch (static_cast<Gfx::BitmapFormat>(format_uint)) {
     case Gfx::BitmapFormat::Indexed1:
-        return "1";
+        return "1"sv;
     case Gfx::BitmapFormat::Indexed2:
-        return "2";
+        return "2"sv;
     case Gfx::BitmapFormat::Indexed4:
-        return "4";
+        return "4"sv;
     case Gfx::BitmapFormat::Indexed8:
-        return "8";
+        return "8"sv;
     case Gfx::BitmapFormat::BGRx8888:
     case Gfx::BitmapFormat::BGRA8888:
-        return "32";
+        return "32"sv;
     case Gfx::BitmapFormat::Invalid:
         /* fall-through */
     default:
-        return "?";
+        return "?"sv;
     }
 }
 
@@ -69,21 +69,21 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     auto& time = item.time;
     switch (index.column()) {
     case Column::Data:
-        if (data_and_type.mime_type.starts_with("text/"))
+        if (data_and_type.mime_type.starts_with("text/"sv))
             return String::copy(data_and_type.data);
         if (data_and_type.mime_type == "image/x-serenityos") {
             StringBuilder builder;
-            builder.append("[");
+            builder.append('[');
             builder.append(data_and_type.metadata.get("width").value_or("?"));
             builder.append('x');
             builder.append(data_and_type.metadata.get("height").value_or("?"));
             builder.append('x');
             builder.append(bpp_for_format_resilient(data_and_type.metadata.get("format").value_or("0")));
-            builder.append(" bitmap");
-            builder.append("]");
+            builder.append(']');
+            builder.append(" bitmap"sv);
             return builder.to_string();
         }
-        if (data_and_type.mime_type.starts_with("glyph/")) {
+        if (data_and_type.mime_type.starts_with("glyph/"sv)) {
             StringBuilder builder;
             auto count = data_and_type.metadata.get("count").value().to_uint().value_or(0);
             auto start = data_and_type.metadata.get("start").value().to_uint().value_or(0);

@@ -806,27 +806,27 @@ void DDSLoadingContext::dump_debug()
 {
     StringBuilder builder;
 
-    builder.append("\nDDS:\n");
+    builder.append("\nDDS:\n"sv);
     builder.appendff("\tHeader Size: {}\n", header.size);
 
-    builder.append("\tFlags:");
+    builder.append("\tFlags:"sv);
     if ((header.flags & DDSFlags::DDSD_CAPS) == DDSFlags::DDSD_CAPS)
-        builder.append(" DDSD_CAPS");
+        builder.append(" DDSD_CAPS"sv);
     if ((header.flags & DDSFlags::DDSD_HEIGHT) == DDSFlags::DDSD_HEIGHT)
-        builder.append(" DDSD_HEIGHT");
+        builder.append(" DDSD_HEIGHT"sv);
     if ((header.flags & DDSFlags::DDSD_WIDTH) == DDSFlags::DDSD_WIDTH)
-        builder.append(" DDSD_WIDTH");
+        builder.append(" DDSD_WIDTH"sv);
     if ((header.flags & DDSFlags::DDSD_PITCH) == DDSFlags::DDSD_PITCH)
-        builder.append(" DDSD_PITCH");
+        builder.append(" DDSD_PITCH"sv);
     if ((header.flags & DDSFlags::DDSD_PIXELFORMAT) == DDSFlags::DDSD_PIXELFORMAT)
-        builder.append(" DDSD_PIXELFORMAT");
+        builder.append(" DDSD_PIXELFORMAT"sv);
     if ((header.flags & DDSFlags::DDSD_MIPMAPCOUNT) == DDSFlags::DDSD_MIPMAPCOUNT)
-        builder.append(" DDSD_MIPMAPCOUNT");
+        builder.append(" DDSD_MIPMAPCOUNT"sv);
     if ((header.flags & DDSFlags::DDSD_LINEARSIZE) == DDSFlags::DDSD_LINEARSIZE)
-        builder.append(" DDSD_LINEARSIZE");
+        builder.append(" DDSD_LINEARSIZE"sv);
     if ((header.flags & DDSFlags::DDSD_DEPTH) == DDSFlags::DDSD_DEPTH)
-        builder.append(" DDSD_DEPTH");
-    builder.append("\n");
+        builder.append(" DDSD_DEPTH"sv);
+    builder.append("\n"sv);
 
     builder.appendff("\tHeight: {}\n", header.height);
     builder.appendff("\tWidth: {}\n", header.width);
@@ -834,105 +834,105 @@ void DDSLoadingContext::dump_debug()
     builder.appendff("\tDepth: {}\n", header.depth);
     builder.appendff("\tMipmap Count: {}\n", header.mip_map_count);
 
-    builder.append("\tCaps:");
+    builder.append("\tCaps:"sv);
     if ((header.caps1 & Caps1Flags::DDSCAPS_COMPLEX) == Caps1Flags::DDSCAPS_COMPLEX)
-        builder.append(" DDSCAPS_COMPLEX");
+        builder.append(" DDSCAPS_COMPLEX"sv);
     if ((header.caps1 & Caps1Flags::DDSCAPS_MIPMAP) == Caps1Flags::DDSCAPS_MIPMAP)
-        builder.append(" DDSCAPS_MIPMAP");
+        builder.append(" DDSCAPS_MIPMAP"sv);
     if ((header.caps1 & Caps1Flags::DDSCAPS_TEXTURE) == Caps1Flags::DDSCAPS_TEXTURE)
-        builder.append(" DDSCAPS_TEXTURE");
-    builder.append("\n");
+        builder.append(" DDSCAPS_TEXTURE"sv);
+    builder.append("\n"sv);
 
-    builder.append("\tCaps2:");
+    builder.append("\tCaps2:"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP) == Caps2Flags::DDSCAPS2_CUBEMAP)
-        builder.append(" DDSCAPS2_CUBEMAP");
+        builder.append(" DDSCAPS2_CUBEMAP"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEX) == Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEX)
-        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEX");
+        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEX"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEX) == Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEX)
-        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEX");
+        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEX"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEY) == Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEY)
-        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEY");
+        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEY"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEY) == Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEY)
-        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEY");
+        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEY"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEZ) == Caps2Flags::DDSCAPS2_CUBEMAP_POSITIVEZ)
-        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEZ");
+        builder.append(" DDSCAPS2_CUBEMAP_POSITIVEZ"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEZ) == Caps2Flags::DDSCAPS2_CUBEMAP_NEGATIVEZ)
-        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEZ");
+        builder.append(" DDSCAPS2_CUBEMAP_NEGATIVEZ"sv);
     if ((header.caps2 & Caps2Flags::DDSCAPS2_VOLUME) == Caps2Flags::DDSCAPS2_VOLUME)
-        builder.append(" DDSCAPS2_VOLUME");
-    builder.append("\n");
+        builder.append(" DDSCAPS2_VOLUME"sv);
+    builder.append("\n"sv);
 
-    builder.append("Pixel Format:\n");
+    builder.append("Pixel Format:\n"sv);
     builder.appendff("\tStruct Size: {}\n", header.pixel_format.size);
 
-    builder.append("\tFlags:");
+    builder.append("\tFlags:"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_ALPHAPIXELS) == PixelFormatFlags::DDPF_ALPHAPIXELS)
-        builder.append(" DDPF_ALPHAPIXELS");
+        builder.append(" DDPF_ALPHAPIXELS"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_ALPHA) == PixelFormatFlags::DDPF_ALPHA)
-        builder.append(" DDPF_ALPHA");
+        builder.append(" DDPF_ALPHA"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_FOURCC) == PixelFormatFlags::DDPF_FOURCC)
-        builder.append(" DDPF_FOURCC");
+        builder.append(" DDPF_FOURCC"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_PALETTEINDEXED8) == PixelFormatFlags::DDPF_PALETTEINDEXED8)
-        builder.append(" DDPF_PALETTEINDEXED8");
+        builder.append(" DDPF_PALETTEINDEXED8"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_RGB) == PixelFormatFlags::DDPF_RGB)
-        builder.append(" DDPF_RGB");
+        builder.append(" DDPF_RGB"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_YUV) == PixelFormatFlags::DDPF_YUV)
-        builder.append(" DDPF_YUV");
+        builder.append(" DDPF_YUV"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_LUMINANCE) == PixelFormatFlags::DDPF_LUMINANCE)
-        builder.append(" DDPF_LUMINANCE");
+        builder.append(" DDPF_LUMINANCE"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_BUMPDUDV) == PixelFormatFlags::DDPF_BUMPDUDV)
-        builder.append(" DDPF_BUMPDUDV");
+        builder.append(" DDPF_BUMPDUDV"sv);
     if ((header.pixel_format.flags & PixelFormatFlags::DDPF_NORMAL) == PixelFormatFlags::DDPF_NORMAL)
-        builder.append(" DDPF_NORMAL");
-    builder.append("\n");
+        builder.append(" DDPF_NORMAL"sv);
+    builder.append("\n"sv);
 
-    builder.append("\tFour CC: ");
+    builder.append("\tFour CC: "sv);
     builder.appendff("{:c}", (header.pixel_format.four_cc >> (8 * 0)) & 0xFF);
     builder.appendff("{:c}", (header.pixel_format.four_cc >> (8 * 1)) & 0xFF);
     builder.appendff("{:c}", (header.pixel_format.four_cc >> (8 * 2)) & 0xFF);
     builder.appendff("{:c}", (header.pixel_format.four_cc >> (8 * 3)) & 0xFF);
-    builder.append("\n");
+    builder.append("\n"sv);
     builder.appendff("\tRGB Bit Count: {}\n", header.pixel_format.rgb_bit_count);
     builder.appendff("\tR Bit Mask: {}\n", header.pixel_format.r_bit_mask);
     builder.appendff("\tG Bit Mask: {}\n", header.pixel_format.g_bit_mask);
     builder.appendff("\tB Bit Mask: {}\n", header.pixel_format.b_bit_mask);
     builder.appendff("\tA Bit Mask: {}\n", header.pixel_format.a_bit_mask);
 
-    builder.append("DDS10:\n");
+    builder.append("DDS10:\n"sv);
     builder.appendff("\tFormat: {}\n", static_cast<u32>(header10.format));
 
-    builder.append("\tResource Dimension:");
+    builder.append("\tResource Dimension:"sv);
     if ((header10.resource_dimension & ResourceDimensions::DDS_DIMENSION_UNKNOWN) == ResourceDimensions::DDS_DIMENSION_UNKNOWN)
-        builder.append(" DDS_DIMENSION_UNKNOWN");
+        builder.append(" DDS_DIMENSION_UNKNOWN"sv);
     if ((header10.resource_dimension & ResourceDimensions::DDS_DIMENSION_BUFFER) == ResourceDimensions::DDS_DIMENSION_BUFFER)
-        builder.append(" DDS_DIMENSION_BUFFER");
+        builder.append(" DDS_DIMENSION_BUFFER"sv);
     if ((header10.resource_dimension & ResourceDimensions::DDS_DIMENSION_TEXTURE1D) == ResourceDimensions::DDS_DIMENSION_TEXTURE1D)
-        builder.append(" DDS_DIMENSION_TEXTURE1D");
+        builder.append(" DDS_DIMENSION_TEXTURE1D"sv);
     if ((header10.resource_dimension & ResourceDimensions::DDS_DIMENSION_TEXTURE2D) == ResourceDimensions::DDS_DIMENSION_TEXTURE2D)
-        builder.append(" DDS_DIMENSION_TEXTURE2D");
+        builder.append(" DDS_DIMENSION_TEXTURE2D"sv);
     if ((header10.resource_dimension & ResourceDimensions::DDS_DIMENSION_TEXTURE3D) == ResourceDimensions::DDS_DIMENSION_TEXTURE3D)
-        builder.append(" DDS_DIMENSION_TEXTURE3D");
-    builder.append("\n");
+        builder.append(" DDS_DIMENSION_TEXTURE3D"sv);
+    builder.append("\n"sv);
 
     builder.appendff("\tArray Size: {}\n", header10.array_size);
 
-    builder.append("\tMisc Flags:");
+    builder.append("\tMisc Flags:"sv);
     if ((header10.misc_flag & MiscFlags::DDS_RESOURCE_MISC_TEXTURECUBE) == MiscFlags::DDS_RESOURCE_MISC_TEXTURECUBE)
-        builder.append(" DDS_RESOURCE_MISC_TEXTURECUBE");
-    builder.append("\n");
+        builder.append(" DDS_RESOURCE_MISC_TEXTURECUBE"sv);
+    builder.append("\n"sv);
 
-    builder.append("\tMisc Flags 2:");
+    builder.append("\tMisc Flags 2:"sv);
     if ((header10.misc_flag2 & Misc2Flags::DDS_ALPHA_MODE_UNKNOWN) == Misc2Flags::DDS_ALPHA_MODE_UNKNOWN)
-        builder.append(" DDS_ALPHA_MODE_UNKNOWN");
+        builder.append(" DDS_ALPHA_MODE_UNKNOWN"sv);
     if ((header10.misc_flag2 & Misc2Flags::DDS_ALPHA_MODE_STRAIGHT) == Misc2Flags::DDS_ALPHA_MODE_STRAIGHT)
-        builder.append(" DDS_ALPHA_MODE_STRAIGHT");
+        builder.append(" DDS_ALPHA_MODE_STRAIGHT"sv);
     if ((header10.misc_flag2 & Misc2Flags::DDS_ALPHA_MODE_PREMULTIPLIED) == Misc2Flags::DDS_ALPHA_MODE_PREMULTIPLIED)
-        builder.append(" DDS_ALPHA_MODE_PREMULTIPLIED");
+        builder.append(" DDS_ALPHA_MODE_PREMULTIPLIED"sv);
     if ((header10.misc_flag2 & Misc2Flags::DDS_ALPHA_MODE_OPAQUE) == Misc2Flags::DDS_ALPHA_MODE_OPAQUE)
-        builder.append(" DDS_ALPHA_MODE_OPAQUE");
+        builder.append(" DDS_ALPHA_MODE_OPAQUE"sv);
     if ((header10.misc_flag2 & Misc2Flags::DDS_ALPHA_MODE_CUSTOM) == Misc2Flags::DDS_ALPHA_MODE_CUSTOM)
-        builder.append(" DDS_ALPHA_MODE_CUSTOM");
-    builder.append("\n");
+        builder.append(" DDS_ALPHA_MODE_CUSTOM"sv);
+    builder.append("\n"sv);
 
     dbgln("{}", builder.to_string());
 }
@@ -998,15 +998,15 @@ size_t DDSImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("DDSImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("DDSImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == DDSLoadingContext::State::Error)
-        return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < DDSLoadingContext::State::BitmapDecoded) {
         bool success = decode_dds(*m_context);
         if (!success)
-            return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("DDSImageDecoderPlugin: Decoding failed");
     }
 
     VERIFY(m_context->bitmap);

@@ -340,21 +340,21 @@ struct UnionType : public Type {
     String to_variant(IDL::Interface const& interface) const
     {
         StringBuilder builder;
-        builder.append("Variant<");
+        builder.append("Variant<"sv);
 
         auto flattened_types = flattened_member_types();
         for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
             auto& type = flattened_types.at(type_index);
 
             if (type_index > 0)
-                builder.append(", ");
+                builder.append(", "sv);
 
             auto cpp_type = idl_type_name_to_cpp_type(type, interface);
             builder.append(cpp_type.name);
         }
 
         if (includes_undefined())
-            builder.append(", Empty");
+            builder.append(", Empty"sv);
 
         builder.append('>');
         return builder.to_string();

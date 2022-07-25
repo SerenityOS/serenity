@@ -28,7 +28,7 @@ ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const
             return parent->m_region_tree.total_range();
         constexpr FlatPtr userspace_range_base = USER_RANGE_BASE;
         FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
-        size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
+        size_t random_offset = (get_fast_random<u8>() % 2 * MiB) & PAGE_MASK;
         FlatPtr base = userspace_range_base + random_offset;
         return VirtualRange(VirtualAddress { base }, userspace_range_ceiling - base);
     }();
@@ -253,9 +253,9 @@ Region* AddressSpace::find_region_containing(VirtualRange const& range)
     return m_region_tree.find_region_containing(range);
 }
 
-ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
+ErrorOr<Vector<Region*, 4>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
 {
-    Vector<Region*> regions = {};
+    Vector<Region*, 4> regions = {};
     size_t total_size_collected = 0;
 
     SpinlockLocker lock(m_lock);

@@ -186,7 +186,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     : Dialog(parent_window)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png").release_value_but_fixme_should_propagate_errors());
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
     set_title(title);
     set_resizable(false);
     resize(458, 326);
@@ -324,7 +324,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     m_html_text->on_change = [this]() {
         auto color_name = m_html_text->text();
         auto optional_color = Color::from_string(color_name);
-        if (optional_color.has_value() && (!color_name.starts_with("#") || color_name.length() == ((m_color_has_alpha_channel) ? 9 : 7))) {
+        if (optional_color.has_value() && (!color_name.starts_with('#') || color_name.length() == ((m_color_has_alpha_channel) ? 9 : 7))) {
             // The color length must be 9/7 (unless it is a name like red), because:
             //    - If we allowed 5/4 character rgb color, the field would reset to 9/7 characters after you deleted 4/3 characters.
             auto color = optional_color.value();
@@ -514,6 +514,8 @@ void CustomColorWidget::set_color(Color color)
 {
     m_color_field->set_color(color);
     m_color_field->set_hue(color.to_hsv().hue);
+
+    m_color_slider->set_value(color.to_hsv().hue);
 }
 
 ColorField::ColorField(Color color)

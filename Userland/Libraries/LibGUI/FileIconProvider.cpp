@@ -48,7 +48,7 @@ static void initialize_executable_icon_if_needed()
     if (initialized)
         return;
     initialized = true;
-    s_executable_icon = Icon::default_icon("filetype-executable");
+    s_executable_icon = Icon::default_icon("filetype-executable"sv);
 }
 
 static void initialize_filetype_image_icon_if_needed()
@@ -57,7 +57,7 @@ static void initialize_filetype_image_icon_if_needed()
     if (initialized)
         return;
     initialized = true;
-    s_filetype_image_icon = Icon::default_icon("filetype-image");
+    s_filetype_image_icon = Icon::default_icon("filetype-image"sv);
 }
 
 static void initialize_if_needed()
@@ -68,19 +68,19 @@ static void initialize_if_needed()
 
     auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini").release_value_but_fixme_should_propagate_errors();
 
-    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png").release_value_but_fixme_should_propagate_errors();
-    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png").release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png"sv).release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    s_hard_disk_icon = Icon::default_icon("hard-disk");
-    s_directory_icon = Icon::default_icon("filetype-folder");
-    s_directory_open_icon = Icon::default_icon("filetype-folder-open");
-    s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
-    s_home_directory_icon = Icon::default_icon("home-directory");
-    s_home_directory_open_icon = Icon::default_icon("home-directory-open");
-    s_desktop_directory_icon = Icon::default_icon("desktop");
-    s_file_icon = Icon::default_icon("filetype-unknown");
-    s_symlink_icon = Icon::default_icon("filetype-symlink");
-    s_socket_icon = Icon::default_icon("filetype-socket");
+    s_hard_disk_icon = Icon::default_icon("hard-disk"sv);
+    s_directory_icon = Icon::default_icon("filetype-folder"sv);
+    s_directory_open_icon = Icon::default_icon("filetype-folder-open"sv);
+    s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible"sv);
+    s_home_directory_icon = Icon::default_icon("home-directory"sv);
+    s_home_directory_open_icon = Icon::default_icon("home-directory-open"sv);
+    s_desktop_directory_icon = Icon::default_icon("desktop"sv);
+    s_file_icon = Icon::default_icon("filetype-unknown"sv);
+    s_symlink_icon = Icon::default_icon("filetype-symlink"sv);
+    s_socket_icon = Icon::default_icon("filetype-socket"sv);
 
     initialize_filetype_image_icon_if_needed();
     initialize_executable_icon_if_needed();
@@ -176,13 +176,13 @@ Icon FileIconProvider::icon_for_executable(String const& path)
     // If any of the required sections are missing then use the defaults
     Icon icon;
     struct IconSection {
-        char const* section_name;
+        StringView section_name;
         int image_size;
     };
 
     static constexpr Array<IconSection, 2> icon_sections = {
-        IconSection { .section_name = "serenity_icon_s", .image_size = 16 },
-        IconSection { .section_name = "serenity_icon_m", .image_size = 32 }
+        IconSection { .section_name = "serenity_icon_s"sv, .image_size = 16 },
+        IconSection { .section_name = "serenity_icon_m"sv, .image_size = 32 }
     };
 
     bool had_error = false;

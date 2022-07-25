@@ -97,7 +97,8 @@ enum class SubclassID {
 
 }
 
-TYPEDEF_DISTINCT_ORDERED_ID(u8, CapabilityID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, CapabilityID);
+
 namespace Capabilities {
 enum ID {
     Null = 0x0,
@@ -218,14 +219,14 @@ private:
     const u8 m_ptr;
 };
 
-TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
-TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
-TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptLine);
-TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptLine);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 
 class Access;
 class DeviceIdentifier {
@@ -300,7 +301,7 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(
             builder,
-            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.domain(), value.bus(), value.device(), value.function());
+            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]"sv, value.domain(), value.bus(), value.device(), value.function());
     }
 };
 
@@ -310,6 +311,6 @@ struct AK::Formatter<Kernel::PCI::HardwareID> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(
             builder,
-            "PCI::HardwareID [{:04x}:{:04x}]", value.vendor_id, value.device_id);
+            "PCI::HardwareID [{:04x}:{:04x}]"sv, value.vendor_id, value.device_id);
     }
 };

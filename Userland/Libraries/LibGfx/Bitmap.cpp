@@ -70,7 +70,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create(BitmapFormat format, IntSize c
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_shareable(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow");
 
     auto const pitch = minimum_pitch(size.width() * scale_factor, format);
     auto const data_size = size_in_bytes(pitch, size.height() * scale_factor);
@@ -98,22 +98,18 @@ Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, Backi
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow");
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int scale_factor)
 {
-    if (scale_factor > 1 && path.starts_with("/res/")) {
+    if (scale_factor > 1 && path.starts_with("/res/"sv)) {
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
-        highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append('/');
-        highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendff("-{}x.", scale_factor);
-        highdpi_icon_path.append(lexical_path.extension());
+        TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
 
-        auto highdpi_icon_string = highdpi_icon_path.to_string();
+        auto highdpi_icon_string = highdpi_icon_path.string_view();
         auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
 
         auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
@@ -129,7 +125,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
     return try_load_from_fd_and_close(fd, path);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
 {
     auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
@@ -138,7 +134,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String
             return bitmap.release_nonnull();
     }
 
-    return Error::from_string_literal("Gfx::Bitmap unable to load from fd"sv);
+    return Error::from_string_literal("Gfx::Bitmap unable to load from fd");
 }
 
 Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
@@ -210,22 +206,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(By
     };
 
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     palette.ensure_capacity(palette_size);
     for (size_t i = 0; i < palette_size; ++i) {
         if (!read(palette[i]))
-            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
     }
 
     if (stream.remaining() < actual_size)
-        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed");
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
@@ -552,7 +548,7 @@ Gfx::ShareableBitmap Bitmap::to_shareable_bitmap() const
 ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap backing store size overflow");
 
     auto const pitch = minimum_pitch(size.width() * scale_factor, format);
     auto const data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
@@ -562,7 +558,7 @@ ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSiz
     map_flags |= MAP_PURGEABLE;
     void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::formatted("GraphicsBitmap [{}]", size).characters());
 #else
-    void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
+    void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, -1, 0);
 #endif
     if (data == MAP_FAILED)
         return Error::from_errno(errno);

@@ -65,7 +65,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 {
     resize(530, 365);
     set_title("Spreadsheet Functions Help");
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors());
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
     set_accessory(true);
 
     auto& widget = set_main_widget<GUI::Widget>();
@@ -93,7 +93,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto& doc = doc_option.as_object();
             const auto& name = url.fragment();
 
-            auto* example_data_ptr = doc.get_ptr("example_data");
+            auto* example_data_ptr = doc.get_ptr("example_data"sv);
             if (!example_data_ptr || !example_data_ptr->is_object()) {
                 GUI::MessageBox::show_error(this, String::formatted("No example data found for '{}'", url.path()));
                 return;
@@ -143,47 +143,47 @@ String HelpWindow::render(StringView key)
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get(key).as_object();
 
-    auto name = doc.get("name").to_string();
-    auto argc = doc.get("argc").to_u32(0);
-    VERIFY(doc.has_array("argnames"));
-    auto& argnames = doc.get("argnames").as_array();
+    auto name = doc.get("name"sv).to_string();
+    auto argc = doc.get("argc"sv).to_u32(0);
+    VERIFY(doc.has_array("argnames"sv));
+    auto& argnames = doc.get("argnames"sv).as_array();
 
-    auto docstring = doc.get("doc").to_string();
+    auto docstring = doc.get("doc"sv).to_string();
 
     StringBuilder markdown_builder;
 
-    markdown_builder.append("# NAME\n`");
+    markdown_builder.append("# NAME\n`"sv);
     markdown_builder.append(name);
-    markdown_builder.append("`\n\n");
+    markdown_builder.append("`\n\n"sv);
 
-    markdown_builder.append("# ARGUMENTS\n");
+    markdown_builder.append("# ARGUMENTS\n"sv);
     if (argc > 0)
         markdown_builder.appendff("{} required argument(s):\n", argc);
     else
-        markdown_builder.append("No required arguments.\n");
+        markdown_builder.append("No required arguments.\n"sv);
 
     for (size_t i = 0; i < argc; ++i)
         markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
 
     if (argc > 0)
-        markdown_builder.append("\n");
+        markdown_builder.append("\n"sv);
 
     if ((size_t)argnames.size() > argc) {
         auto opt_count = argnames.size() - argc;
         markdown_builder.appendff("{} optional argument(s):\n", opt_count);
         for (size_t i = argc; i < (size_t)argnames.size(); ++i)
             markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
-        markdown_builder.append("\n");
+        markdown_builder.append("\n"sv);
     }
 
-    markdown_builder.append("# DESCRIPTION\n");
+    markdown_builder.append("# DESCRIPTION\n"sv);
     markdown_builder.append(docstring);
-    markdown_builder.append("\n\n");
+    markdown_builder.append("\n\n"sv);
 
-    if (doc.has("examples")) {
-        auto& examples = doc.get("examples");
+    if (doc.has("examples"sv)) {
+        auto& examples = doc.get("examples"sv);
         VERIFY(examples.is_object());
-        markdown_builder.append("# EXAMPLES\n");
+        markdown_builder.append("# EXAMPLES\n"sv);
         examples.as_object().for_each_member([&](auto& text, auto& description_value) {
             dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());
             markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());

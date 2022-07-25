@@ -13,6 +13,7 @@
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
@@ -129,7 +130,10 @@ private:
         {
         }
 
-        bool dma_running() const { return m_dma_running; }
+        bool dma_running() const
+        {
+            return m_dma_running.with([](auto value) { return value; });
+        }
         void handle_dma_stopped();
         StringView name() const { return m_name; }
         IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
@@ -140,7 +144,7 @@ private:
     private:
         IOAddress m_channel_base;
         AC97& m_device;
-        bool m_dma_running { false };
+        SpinlockProtected<bool> m_dma_running { false };
         StringView m_name;
     };
 

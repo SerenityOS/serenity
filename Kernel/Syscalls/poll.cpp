@@ -50,8 +50,11 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
     TRY(m_fds.with_shared([&](auto& fds) -> ErrorOr<void> {
         for (size_t i = 0; i < params.nfds; i++) {
             auto& pfd = fds_copy[i];
-            auto description = TRY(fds.open_file_description(pfd.fd));
-            BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
+            RefPtr<OpenFileDescription> description;
+            auto description_or_error = fds.open_file_description(pfd.fd);
+            if (!description_or_error.is_error())
+                description = description_or_error.release_value();
+            BlockFlags block_flags = BlockFlags::WriteError | BlockFlags::WriteHangUp; // always want POLLERR, POLLHUP, POLLNVAL
             if (pfd.events & POLLIN)
                 block_flags |= BlockFlags::Read;
             if (pfd.events & POLLOUT)
@@ -60,6 +63,8 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
                 block_flags |= BlockFlags::ReadPriority;
             if (pfd.events & POLLWRBAND)
                 block_flags |= BlockFlags::WritePriority;
+            if (pfd.events & POLLRDHUP)
+                block_flags |= BlockFlags::ReadHangUp;
             fds_info.unchecked_append({ move(description), block_flags });
         }
         return {};
@@ -91,12 +96,12 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
         if (fds_entry.unblocked_flags == BlockFlags::None)
             continue;
 
-        if (has_any_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
-            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp))
-                pfd.revents |= POLLRDHUP;
+        if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
+            pfd.revents |= POLLHUP;
+        if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError) || !fds_entry.description) {
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))
                 pfd.revents |= POLLERR;
-            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
+            if (!fds_entry.description)
                 pfd.revents |= POLLNVAL;
         } else {
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::Read)) {
@@ -107,13 +112,17 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
                 VERIFY(pfd.events & POLLPRI);
                 pfd.revents |= POLLPRI;
             }
-            if (has_flag(fds_entry.unblocked_flags, BlockFlags::Write)) {
+            if (!has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp) && has_flag(fds_entry.unblocked_flags, BlockFlags::Write)) {
                 VERIFY(pfd.events & POLLOUT);
                 pfd.revents |= POLLOUT;
             }
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WritePriority)) {
                 VERIFY(pfd.events & POLLWRBAND);
                 pfd.revents |= POLLWRBAND;
+            }
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp)) {
+                VERIFY(pfd.events & POLLRDHUP);
+                pfd.revents |= POLLRDHUP;
             }
         }
         if (pfd.revents)

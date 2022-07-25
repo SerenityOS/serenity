@@ -31,7 +31,7 @@ public:
         Shuffling,
     };
 
-    explicit Player(Audio::ConnectionFromClient& audio_client_connection);
+    explicit Player(Audio::ConnectionToServer& audio_client_connection);
     virtual ~Player() = default;
 
     void play_file_path(String const& path);
@@ -91,7 +91,7 @@ private:
     LoopMode m_loop_mode { LoopMode::None };
     ShuffleMode m_shuffle_mode { ShuffleMode::None };
 
-    Audio::ConnectionFromClient& m_audio_client_connection;
+    Audio::ConnectionToServer& m_audio_client_connection;
     PlaybackManager m_playback_manager;
 
     String m_loaded_filename;

@@ -1,0 +1,7 @@
+#import <WebGL/WebGLRenderingContextBase.idl>
+
+[Exposed=(Window,Worker)]
+interface WebGLRenderingContext {
+};
+
+WebGLRenderingContext includes WebGLRenderingContextBase;

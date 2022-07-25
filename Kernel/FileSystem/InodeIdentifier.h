@@ -15,8 +15,8 @@ namespace Kernel {
 class FileSystem;
 struct InodeMetadata;
 
-TYPEDEF_DISTINCT_ORDERED_ID(u32, FileSystemID);
-TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, FileSystemID);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
 
 class InodeIdentifier {
 public:
@@ -56,6 +56,6 @@ template<>
 struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::InodeIdentifier value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
+        return AK::Formatter<FormatString>::format(builder, "{}:{}"sv, value.fsid(), value.index());
     }
 };

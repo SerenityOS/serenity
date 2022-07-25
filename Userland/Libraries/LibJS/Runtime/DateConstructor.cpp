@@ -155,7 +155,7 @@ static double parse_date_string(String const& date_string)
 
     // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
     // Parse formats of this type: "Wed Apr 17 23:08:53 +0000 2019"
-    auto maybe_datetime = Core::DateTime::parse("%a %b %e %T %z %Y", date_string);
+    auto maybe_datetime = Core::DateTime::parse("%a %b %e %T %z %Y"sv, date_string);
     if (maybe_datetime.has_value())
         return 1000.0 * maybe_datetime->timestamp();
 

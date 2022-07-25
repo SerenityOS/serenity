@@ -152,7 +152,7 @@ ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> use
         return ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    TRY(socket.connect(*description, user_address, user_address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No));
+    TRY(socket.connect(*description, user_address, user_address_size));
     return 0;
 }
 
@@ -160,7 +160,7 @@ ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
-    if (how & ~SHUT_RDWR)
+    if (how != SHUT_RD && how != SHUT_WR && how != SHUT_RDWR)
         return EINVAL;
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())

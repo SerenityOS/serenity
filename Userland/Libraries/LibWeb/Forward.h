@@ -62,6 +62,7 @@ class InitialStyleValue;
 class Length;
 class LengthPercentage;
 class LengthStyleValue;
+class LinearGradientStyleValue;
 class ListStyleStyleValue;
 class MediaList;
 class MediaQuery;
@@ -118,6 +119,7 @@ class AbstractRange;
 class AbortController;
 class AbortSignal;
 class Attribute;
+class CDATASection;
 class CharacterData;
 class Comment;
 class CustomEvent;
@@ -136,6 +138,8 @@ class EventTarget;
 class HTMLCollection;
 class IDLEventListener;
 class LiveNodeList;
+class MutationObserver;
+class MutationRecord;
 class NamedNodeMap;
 class Node;
 class NodeFilter;
@@ -158,11 +162,34 @@ template<typename ValueType>
 class ExceptionOr;
 }
 
+namespace Web::DOMParsing {
+class XMLSerializer;
+}
+
 namespace Web::Encoding {
 class TextEncoder;
 }
 
+namespace Web::Fetch {
+class Headers;
+class HeadersIterator;
+}
+
+namespace Web::Fetch::Infrastructure {
+class Body;
+struct Header;
+class HeaderList;
+class Request;
+class Response;
+}
+
+namespace Web::FileAPI {
+class Blob;
+}
+
 namespace Web::Geometry {
+class DOMPoint;
+class DOMPointReadOnly;
 class DOMRect;
 class DOMRectList;
 class DOMRectReadOnly;
@@ -259,7 +286,9 @@ class ImageData;
 class MessageChannel;
 class MessageEvent;
 class MessagePort;
+class Origin;
 class PageTransitionEvent;
+struct PolicyContainer;
 class PromiseRejectionEvent;
 class WorkerDebugConsoleClient;
 class Storage;
@@ -302,6 +331,7 @@ class PaintableWithLines;
 class StackingContext;
 class TextPaintable;
 struct BorderRadiusData;
+struct BorderRadiiData;
 }
 
 namespace Web::RequestIdleCallback {
@@ -347,7 +377,7 @@ class ButtonBox;
 class CheckBox;
 class FlexFormattingContext;
 class FormattingContext;
-struct FormattingState;
+struct LayoutState;
 class InitialContainingBlock;
 class InlineFormattingContext;
 class Label;
@@ -369,12 +399,17 @@ class EditEventHandler;
 class EventHandler;
 class FrameLoader;
 class LoadRequest;
-class Origin;
 class Page;
 class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
+}
+
+namespace Web::WebGL {
+class WebGLContextEvent;
+class WebGLRenderingContext;
+class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
@@ -400,9 +435,11 @@ class AbstractRangeWrapper;
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
+class BlobWrapper;
 struct CallbackType;
 class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
+class CDATASectionWrapper;
 class CharacterDataWrapper;
 class CloseEventWrapper;
 class CommentWrapper;
@@ -425,6 +462,8 @@ class DocumentWrapper;
 class DOMExceptionWrapper;
 class DOMImplementationWrapper;
 class DOMParserWrapper;
+class DOMPointWrapper;
+class DOMPointReadOnlyWrapper;
 class DOMRectListWrapper;
 class DOMRectReadOnlyWrapper;
 class DOMRectWrapper;
@@ -436,6 +475,8 @@ class EventListenerWrapper;
 class EventTargetWrapper;
 class EventWrapper;
 class FocusEventWrapper;
+class HeadersWrapper;
+class HeadersIteratorWrapper;
 class HistoryWrapper;
 class HTMLAnchorElementWrapper;
 class HTMLAreaElementWrapper;
@@ -522,6 +563,8 @@ class MessageChannelWrapper;
 class MessageEventWrapper;
 class MessagePortWrapper;
 class MouseEventWrapper;
+class MutationObserverWrapper;
+class MutationRecordWrapper;
 class NamedNodeMapWrapper;
 class NodeFilterWrapper;
 class NodeIteratorWrapper;
@@ -576,6 +619,8 @@ class URLSearchParamsIteratorWrapper;
 class URLSearchParamsPrototype;
 class URLSearchParamsWrapper;
 class URLWrapper;
+class WebGLContextEventWrapper;
+class WebGLRenderingContextWrapper;
 class WebSocketWrapper;
 class WindowObject;
 class WindowProxy;
@@ -589,7 +634,9 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+class XMLSerializerWrapper;
 enum class CanPlayTypeResult;
+enum class EndingType;
 enum class DOMParserSupportedType;
 enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;

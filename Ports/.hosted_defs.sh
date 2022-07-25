@@ -14,6 +14,7 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_READELF="${READELF:=readelf}"
     export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
     export HOST_STRIP="${STRIP:=strip}"
+    export HOST_CXXFILT="${CXXFILT:=c++filt}"
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
@@ -23,16 +24,24 @@ export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}clang"
-    export CC="clang --target=${SERENITY_ARCH}-pc-serenity --sysroot=${SERENITY_BUILD_DIR}/Root"
-    export CXX="clang++ --target=${SERENITY_ARCH}-pc-serenity --sysroot=${SERENITY_BUILD_DIR}/Root"
+    export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin"
+    export CC="${SERENITY_ARCH}-pc-serenity-clang"
+    export CXX="${SERENITY_ARCH}-pc-serenity-clang++"
     export AR="llvm-ar"
     export RANLIB="llvm-ranlib"
     export READELF="llvm-readelf"
     export OBJCOPY="llvm-objcopy"
     export STRIP="llvm-strip"
-    export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/clang/bin:${HOST_PATH}"
+    export CXXFILT="llvm-cxxfilt"
+    # FIXME: Remove after next toolchain update (symlinks already in BuildClang.sh)
+    if [ ! -f "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang" ]; then
+        ln -s clang "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang"
+        ln -s clang++ "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity-clang++"
+        echo "--sysroot=${SERENITY_BUILD_DIR}/Root" > "${SERENITY_TOOLCHAIN_BINDIR}/${SERENITY_ARCH}-pc-serenity.cfg"
+    fi
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
+    export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin"
     export CC="${SERENITY_ARCH}-pc-serenity-gcc"
     export CXX="${SERENITY_ARCH}-pc-serenity-g++"
     export AR="${SERENITY_ARCH}-pc-serenity-ar"
@@ -40,8 +49,10 @@ else
     export READELF="${SERENITY_ARCH}-pc-serenity-readelf"
     export OBJCOPY="${SERENITY_ARCH}-pc-serenity-objcopy"
     export STRIP="${SERENITY_ARCH}-pc-serenity-strip"
-    export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin:${HOST_PATH}"
+    export CXXFILT="${SERENITY_ARCH}-pc-serenity-c++filt"
 fi
+
+export PATH="${SERENITY_TOOLCHAIN_BINDIR}:${HOST_PATH}"
 
 export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"

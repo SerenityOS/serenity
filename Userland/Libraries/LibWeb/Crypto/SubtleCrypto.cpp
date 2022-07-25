@@ -22,13 +22,14 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
-    auto data_buffer = Bindings::IDL::get_buffer_source_copy(*data.cell());
-    if (!data_buffer.has_value()) {
+    auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*data.cell());
+    if (data_buffer_or_error.is_error()) {
         auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to copy bytes from ArrayBuffer"));
         auto* promise = JS::Promise::create(global_object);
         promise->reject(error);
         return promise;
     }
+    auto& data_buffer = data_buffer_or_error.value();
 
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
     // FIXME: This is way more generic than it needs to be right now, so we simplify it.
@@ -60,7 +61,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
 
     // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm using algorithm, with data as message.
     ::Crypto::Hash::Manager hash { hash_kind };
-    hash.update(*data_buffer);
+    hash.update(data_buffer);
 
     auto digest = hash.digest();
     auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());

@@ -72,17 +72,16 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
         return DOM::IndexSizeError::create("CSS rule index out of bounds.");
 
     // 3. Set old rule to the indexth item in list.
-    auto& old_rule = m_rules[index];
+    NonnullRefPtr<CSSRule> old_rule = m_rules[index];
 
     // FIXME: 4. If old rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
-    (void)old_rule;
 
     // 5. Remove rule old rule from list at the zero-indexed position index.
     m_rules.remove(index);
 
     // 6. Set old rule’s parent CSS rule and parent CSS style sheet to null.
-    old_rule.set_parent_rule(nullptr);
-    old_rule.set_parent_style_sheet(nullptr);
+    old_rule->set_parent_rule(nullptr);
+    old_rule->set_parent_style_sheet(nullptr);
 
     return {};
 }

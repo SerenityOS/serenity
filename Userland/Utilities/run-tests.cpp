@@ -322,7 +322,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Show progress with OSC 9 (true, false)",
         .long_name = "show-progress",
         .short_name = 'p',
@@ -353,10 +353,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Make UBSAN deadly for all tests we run by default.
-    TRY(Core::System::setenv("UBSAN_OPTIONS", "halt_on_error=1", true));
+    TRY(Core::System::setenv("UBSAN_OPTIONS"sv, "halt_on_error=1"sv, true));
 
     if (!run_benchmarks)
-        TRY(Core::System::setenv("TESTS_ONLY", "1", true));
+        TRY(Core::System::setenv("TESTS_ONLY"sv, "1"sv, true));
 
     String test_root;
 

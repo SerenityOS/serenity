@@ -19,16 +19,16 @@ String Heading::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
-    builder.append("\033[0;31;1m\n");
+    builder.append("\033[0;31;1m\n"sv);
     switch (m_level) {
     case 1:
     case 2:
         builder.append(m_text.render_for_terminal().to_uppercase());
-        builder.append("\033[0m\n");
+        builder.append("\033[0m\n"sv);
         break;
     default:
         builder.append(m_text.render_for_terminal());
-        builder.append("\033[0m\n");
+        builder.append("\033[0m\n"sv);
         break;
     }
 

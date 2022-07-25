@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -17,9 +18,11 @@ extern "C" {
 
 int fcntl(int fd, int cmd, ...)
 {
+    __pthread_maybe_cancel();
+
     va_list ap;
     va_start(ap, cmd);
-    u32 extra_arg = va_arg(ap, u32);
+    uintptr_t extra_arg = va_arg(ap, uintptr_t);
     int rc = syscall(SC_fcntl, fd, cmd, extra_arg);
     va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -46,11 +49,15 @@ int inode_watcher_remove_watch(int fd, int wd)
 
 int creat(char const* path, mode_t mode)
 {
+    __pthread_maybe_cancel();
+
     return open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
 int open(char const* path, int options, ...)
 {
+    __pthread_maybe_cancel();
+
     if (!path) {
         errno = EFAULT;
         return -1;
@@ -71,6 +78,8 @@ int open(char const* path, int options, ...)
 
 int openat(int dirfd, char const* path, int options, ...)
 {
+    __pthread_maybe_cancel();
+
     if (!path) {
         errno = EFAULT;
         return -1;
@@ -102,6 +111,13 @@ int posix_fadvise(int fd, off_t offset, off_t len, int advice)
     (void)len;
     (void)advice;
     return 0;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_fallocate.html
+int posix_fallocate(int fd, off_t offset, off_t len)
+{
+    // posix_fallocate does not set errno.
+    return static_cast<int>(syscall(SC_posix_fallocate, fd, &offset, &len));
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/utimensat.html

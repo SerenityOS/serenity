@@ -75,17 +75,17 @@ enum class AlertDescription : u8 {
 #undef ENUMERATE_ALERT_DESCRIPTION
 };
 
-constexpr static char const* alert_name(AlertDescription descriptor)
+constexpr static StringView alert_name(AlertDescription descriptor)
 {
 #define ENUMERATE_ALERT_DESCRIPTION(name, value) \
     case AlertDescription::name:                 \
-        return #name;
+        return #name##sv;
 
     switch (descriptor) {
         ENUMERATE_ALERT_DESCRIPTIONS
     }
 
-    return "Unknown";
+    return "Unknown"sv;
 #undef ENUMERATE_ALERT_DESCRIPTION
 }
 

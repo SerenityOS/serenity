@@ -90,7 +90,7 @@ ErrorOr<void> Database::add_schema(SchemaDef const& schema)
     VERIFY(is_open());
     if (!m_schemas->insert(schema.key())) {
         warnln("Duplicate schema name {}"sv, schema.name());
-        return Error::from_string_literal("Duplicate schema name"sv);
+        return Error::from_string_literal("Duplicate schema name");
     }
     return {};
 }
@@ -127,7 +127,7 @@ ErrorOr<void> Database::add_table(TableDef& table)
     VERIFY(is_open());
     if (!m_tables->insert(table.key())) {
         warnln("Duplicate table name '{}'.'{}'"sv, table.parent()->name(), table.name());
-        return Error::from_string_literal("Duplicate table name"sv);
+        return Error::from_string_literal("Duplicate table name");
     }
     for (auto& column : table.columns()) {
         VERIFY(m_table_columns->insert(column.key()));
@@ -159,7 +159,7 @@ ErrorOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const
     auto schema_def = TRY(get_schema(schema));
     if (!schema_def) {
         warnln("Schema '{}' does not exist"sv, schema);
-        return Error::from_string_literal("Schema does not exist"sv);
+        return Error::from_string_literal("Schema does not exist");
     }
     auto ret = TableDef::construct(schema_def, name);
     ret->set_pointer((*table_iterator).pointer());

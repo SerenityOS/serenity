@@ -10,6 +10,8 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
+#include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibUnicode/Locale.h>
@@ -89,13 +91,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
     LocaleOptions opt {};
 
     // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 5. Set opt.[[LocaleMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
     // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
-    auto numbering_system = TRY(get_option(global_object, *options, vm.names.numberingSystem, Value::Type::String, {}, Empty {}));
+    auto numbering_system = TRY(get_option(global_object, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
     // 7. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
@@ -125,13 +127,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
         relative_time_format.set_numbering_system(result.nu.release_value());
 
     // 15. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
-    auto style = TRY(get_option(global_object, *options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
+    auto style = TRY(get_option(global_object, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 16. Set relativeTimeFormat.[[Style]] to style.
     relative_time_format.set_style(style.as_string().string());
 
     // 17. Let numeric be ? GetOption(options, "numeric", "string", « "always", "auto" », "always").
-    auto numeric = TRY(get_option(global_object, *options, vm.names.numeric, Value::Type::String, { "always"sv, "auto"sv }, "always"sv));
+    auto numeric = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::String, { "always"sv, "auto"sv }, "always"sv));
 
     // 18. Set relativeTimeFormat.[[Numeric]] to numeric.
     relative_time_format.set_numeric(numeric.as_string().string());
@@ -141,7 +143,8 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    // FIXME: We do not yet support Intl.PluralRules.
+    auto* plural_rules = MUST(construct(global_object, *global_object.intl_plural_rules_constructor(), js_string(vm, locale)));
+    relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.
     return &relative_time_format;

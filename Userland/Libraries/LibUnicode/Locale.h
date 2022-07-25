@@ -145,7 +145,12 @@ Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 String const& default_locale();
 bool is_locale_available(StringView locale);
 
+Span<StringView const> get_available_keyword_values(StringView key);
 Span<StringView const> get_available_calendars();
+Span<StringView const> get_available_collation_case_orderings();
+Span<StringView const> get_available_collation_numeric_orderings();
+Span<StringView const> get_available_collation_types();
+Span<StringView const> get_available_hour_cycles();
 Span<StringView const> get_available_number_systems();
 
 Style style_from_string(StringView style);
@@ -161,10 +166,13 @@ Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_
 
 Optional<Key> key_from_string(StringView key);
 Optional<KeywordCalendar> keyword_ca_from_string(StringView ca);
+Optional<KeywordCollation> keyword_co_from_string(StringView co);
+Optional<KeywordHours> keyword_hc_from_string(StringView hc);
 Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
 Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
 Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);
 Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
+Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
 Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
@@ -182,6 +190,10 @@ Optional<StringView> get_locale_short_date_field_mapping(StringView locale, Stri
 Optional<StringView> get_locale_narrow_date_field_mapping(StringView locale, StringView date_field);
 
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, Style style);
+
+Optional<CharacterOrder> character_order_from_string(StringView character_order);
+StringView character_order_to_string(CharacterOrder character_order);
+Optional<CharacterOrder> character_order_for_locale(StringView locale);
 
 Optional<StringView> resolve_language_alias(StringView language);
 Optional<StringView> resolve_territory_alias(StringView territory);

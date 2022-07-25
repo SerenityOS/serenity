@@ -13,14 +13,13 @@
 
 namespace AK {
 
-size_t calculate_base64_decoded_length(StringView);
+[[nodiscard]] size_t calculate_base64_decoded_length(StringView);
 
-size_t calculate_base64_encoded_length(ReadonlyBytes);
+[[nodiscard]] size_t calculate_base64_encoded_length(ReadonlyBytes);
 
-ErrorOr<ByteBuffer> decode_base64(StringView);
+[[nodiscard]] ErrorOr<ByteBuffer> decode_base64(StringView);
 
-String encode_base64(ReadonlyBytes);
-
+[[nodiscard]] String encode_base64(ReadonlyBytes);
 }
 
 using AK::decode_base64;

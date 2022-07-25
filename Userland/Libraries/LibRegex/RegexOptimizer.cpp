@@ -108,6 +108,190 @@ typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks(ByteCod
     return block_boundaries;
 }
 
+static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<CompareTypeAndValuePair> const& rhs)
+{
+
+    // We have to fully interpret the two sequences to determine if they overlap (that is, keep track of inversion state and what ranges they cover).
+    bool inverse { false };
+    bool temporary_inverse { false };
+    bool reset_temporary_inverse { false };
+
+    auto current_lhs_inversion_state = [&]() -> bool { return temporary_inverse ^ inverse; };
+
+    RedBlackTree<u32, u32> lhs_ranges;
+    RedBlackTree<u32, u32> lhs_negated_ranges;
+    HashTable<CharClass> lhs_char_classes;
+    HashTable<CharClass> lhs_negated_char_classes;
+
+    auto range_contains = [&]<typename T>(T& value) -> bool {
+        u32 start;
+        u32 end;
+
+        if constexpr (IsSame<T, CharRange>) {
+            start = value.from;
+            end = value.to;
+        } else {
+            start = value;
+            end = value;
+        }
+
+        auto* max = lhs_ranges.find_smallest_not_below(start);
+        return max && *max <= end;
+    };
+
+    auto char_class_contains = [&](CharClass const& value) -> bool {
+        if (lhs_char_classes.contains(value))
+            return true;
+
+        if (lhs_negated_char_classes.contains(value))
+            return false;
+
+        // This char class might match something in the ranges we have, and checking that is far too expensive, so just bail out.
+        return true;
+    };
+
+    for (auto const& pair : lhs) {
+        if (reset_temporary_inverse) {
+            reset_temporary_inverse = false;
+            temporary_inverse = false;
+        } else {
+            reset_temporary_inverse = true;
+        }
+
+        switch (pair.type) {
+        case CharacterCompareType::Inverse:
+            inverse = !inverse;
+            break;
+        case CharacterCompareType::TemporaryInverse:
+            temporary_inverse = true;
+            reset_temporary_inverse = true;
+            break;
+        case CharacterCompareType::AnyChar:
+            // Special case: if not inverted, AnyChar is always in the range.
+            if (!current_lhs_inversion_state())
+                return true;
+            break;
+        case CharacterCompareType::Char:
+            if (!current_lhs_inversion_state())
+                lhs_ranges.insert(pair.value, pair.value);
+            else
+                lhs_negated_ranges.insert(pair.value, pair.value);
+            break;
+        case CharacterCompareType::String:
+            // FIXME: We just need to look at the last character of this string, but we only have the first character here.
+            //        Just bail out to avoid false positives.
+            return true;
+        case CharacterCompareType::CharClass:
+            if (!current_lhs_inversion_state())
+                lhs_char_classes.set(static_cast<CharClass>(pair.value));
+            else
+                lhs_negated_char_classes.set(static_cast<CharClass>(pair.value));
+            break;
+        case CharacterCompareType::CharRange: {
+            auto range = CharRange(pair.value);
+            if (!current_lhs_inversion_state())
+                lhs_ranges.insert(range.from, range.to);
+            else
+                lhs_negated_ranges.insert(range.from, range.to);
+            break;
+        }
+        case CharacterCompareType::LookupTable:
+            // We've transformed this into a series of ranges in flat_compares(), so bail out if we see it.
+            return true;
+        case CharacterCompareType::Reference:
+            // We've handled this before coming here.
+            break;
+        case CharacterCompareType::Property:
+        case CharacterCompareType::GeneralCategory:
+        case CharacterCompareType::Script:
+        case CharacterCompareType::ScriptExtension:
+        case CharacterCompareType::And:
+        case CharacterCompareType::Or:
+        case CharacterCompareType::EndAndOr:
+            // FIXME: These are too difficult to handle, so bail out.
+            return true;
+        case CharacterCompareType::Undefined:
+        case CharacterCompareType::RangeExpressionDummy:
+            // These do not occur in valid bytecode.
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    if constexpr (REGEX_DEBUG) {
+        dbgln("lhs ranges:");
+        for (auto it = lhs_ranges.begin(); it != lhs_ranges.end(); ++it)
+            dbgln("  {}..{}", it.key(), *it);
+        dbgln("lhs negated ranges:");
+        for (auto it = lhs_negated_ranges.begin(); it != lhs_negated_ranges.end(); ++it)
+            dbgln("  {}..{}", it.key(), *it);
+    }
+
+    for (auto const& pair : rhs) {
+        if (reset_temporary_inverse) {
+            reset_temporary_inverse = false;
+            temporary_inverse = false;
+        } else {
+            reset_temporary_inverse = true;
+        }
+
+        dbgln_if(REGEX_DEBUG, "check {} ({})...", character_compare_type_name(pair.type), pair.value);
+
+        switch (pair.type) {
+        case CharacterCompareType::Inverse:
+            inverse = !inverse;
+            break;
+        case CharacterCompareType::TemporaryInverse:
+            temporary_inverse = true;
+            reset_temporary_inverse = true;
+            break;
+        case CharacterCompareType::AnyChar:
+            // Special case: if not inverted, AnyChar is always in the range.
+            if (!current_lhs_inversion_state())
+                return true;
+            break;
+        case CharacterCompareType::Char:
+            if (!current_lhs_inversion_state() && range_contains(pair.value))
+                return true;
+            break;
+        case CharacterCompareType::String:
+            // FIXME: We just need to look at the last character of this string, but we only have the first character here.
+            //        Just bail out to avoid false positives.
+            return true;
+        case CharacterCompareType::CharClass:
+            if (!current_lhs_inversion_state() && char_class_contains(static_cast<CharClass>(pair.value)))
+                return true;
+            break;
+        case CharacterCompareType::CharRange: {
+            auto range = CharRange(pair.value);
+            if (!current_lhs_inversion_state() && range_contains(range))
+                return true;
+            break;
+        }
+        case CharacterCompareType::LookupTable:
+            // We've transformed this into a series of ranges in flat_compares(), so bail out if we see it.
+            return true;
+        case CharacterCompareType::Reference:
+            // We've handled this before coming here.
+            break;
+        case CharacterCompareType::Property:
+        case CharacterCompareType::GeneralCategory:
+        case CharacterCompareType::Script:
+        case CharacterCompareType::ScriptExtension:
+        case CharacterCompareType::And:
+        case CharacterCompareType::Or:
+        case CharacterCompareType::EndAndOr:
+            // FIXME: These are too difficult to handle, so bail out.
+            return true;
+        case CharacterCompareType::Undefined:
+        case CharacterCompareType::RangeExpressionDummy:
+            // These do not occur in valid bytecode.
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    return false;
+}
+
 enum class AtomicRewritePreconditionResult {
     SatisfiedWithProperHeader,
     SatisfiedWithEmptyHeader,
@@ -179,17 +363,9 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
                 }))
                 return AtomicRewritePreconditionResult::NotSatisfied;
 
-            for (auto& repeated_value : repeated_values) {
-                // FIXME: This is too naive!
-                if (any_of(repeated_value, [](auto& compare) { return compare.type == CharacterCompareType::AnyChar; }))
-                    return AtomicRewritePreconditionResult::NotSatisfied;
+            if (any_of(repeated_values, [&](auto& repeated_value) { return has_overlap(compares, repeated_value); }))
+                return AtomicRewritePreconditionResult::NotSatisfied;
 
-                for (auto& repeated_compare : repeated_value) {
-                    // FIXME: This is too naive! it will miss _tons_ of cases since it doesn't check ranges!
-                    if (any_of(compares, [&](auto& compare) { return compare.type == repeated_compare.type && compare.value == repeated_compare.value; }))
-                        return AtomicRewritePreconditionResult::NotSatisfied;
-                }
-            }
             return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
         }
         case OpCodeId::CheckBegin:
@@ -615,6 +791,8 @@ enum class LookupTableInsertionOutcome {
     ReplaceWithAnyChar,
     TemporaryInversionNeeded,
     PermanentInversionNeeded,
+    FlushOnInsertion,
+    FinishFlushOnInsertion,
     CannotPlaceInTable,
 };
 static LookupTableInsertionOutcome insert_into_lookup_table(RedBlackTree<ByteCodeValueType, CharRange>& table, CompareTypeAndValuePair pair)
@@ -636,11 +814,16 @@ static LookupTableInsertionOutcome insert_into_lookup_table(RedBlackTree<ByteCod
         table.insert(range.from, range);
         break;
     }
+    case CharacterCompareType::EndAndOr:
+        return LookupTableInsertionOutcome::FinishFlushOnInsertion;
+    case CharacterCompareType::And:
+        return LookupTableInsertionOutcome::FlushOnInsertion;
     case CharacterCompareType::Reference:
     case CharacterCompareType::Property:
     case CharacterCompareType::GeneralCategory:
     case CharacterCompareType::Script:
     case CharacterCompareType::ScriptExtension:
+    case CharacterCompareType::Or:
         return LookupTableInsertionOutcome::CannotPlaceInTable;
     case CharacterCompareType::Undefined:
     case CharacterCompareType::RangeExpressionDummy:
@@ -660,7 +843,12 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
     if (pairs.size() <= 1) {
         for (auto& pair : pairs) {
             arguments.append(to_underlying(pair.type));
-            if (pair.type != CharacterCompareType::AnyChar && pair.type != CharacterCompareType::TemporaryInverse && pair.type != CharacterCompareType::Inverse)
+            if (pair.type != CharacterCompareType::AnyChar
+                && pair.type != CharacterCompareType::TemporaryInverse
+                && pair.type != CharacterCompareType::Inverse
+                && pair.type != CharacterCompareType::And
+                && pair.type != CharacterCompareType::Or
+                && pair.type != CharacterCompareType::EndAndOr)
                 arguments.append(pair.value);
             ++argument_count;
         }
@@ -672,6 +860,51 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
         bool invert_for_next_iteration = false;
         bool is_currently_inverted = false;
 
+        auto flush_tables = [&] {
+            auto append_table = [&](auto& table) {
+                ++argument_count;
+                arguments.append(to_underlying(CharacterCompareType::LookupTable));
+                auto size_index = arguments.size();
+                arguments.append(0);
+                Optional<CharRange> active_range;
+                size_t range_count = 0;
+                for (auto& range : table) {
+                    if (!active_range.has_value()) {
+                        active_range = range;
+                        continue;
+                    }
+
+                    if (range.from <= active_range->to + 1 && range.to + 1 >= active_range->from) {
+                        active_range = CharRange { min(range.from, active_range->from), max(range.to, active_range->to) };
+                    } else {
+                        ++range_count;
+                        arguments.append(active_range.release_value());
+                        active_range = range;
+                    }
+                }
+                if (active_range.has_value()) {
+                    ++range_count;
+                    arguments.append(active_range.release_value());
+                }
+                arguments[size_index] = range_count;
+            };
+
+            auto contains_regular_table = !table.is_empty();
+            auto contains_inverted_table = !inverted_table.is_empty();
+            if (contains_regular_table)
+                append_table(table);
+
+            if (contains_inverted_table) {
+                ++argument_count;
+                arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
+                append_table(inverted_table);
+            }
+
+            table.clear();
+            inverted_table.clear();
+        };
+
+        auto flush_on_every_insertion = false;
         for (auto& value : pairs) {
             auto should_invert_after_this_iteration = invert_for_next_iteration;
             invert_for_next_iteration = false;
@@ -679,6 +912,8 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
             auto insertion_result = insert_into_lookup_table(*current_table, value);
             switch (insertion_result) {
             case LookupTableInsertionOutcome::Successful:
+                if (flush_on_every_insertion)
+                    flush_tables();
                 break;
             case LookupTableInsertionOutcome::ReplaceWithAnyChar: {
                 table.clear();
@@ -693,16 +928,29 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 is_currently_inverted = !is_currently_inverted;
                 break;
             case LookupTableInsertionOutcome::PermanentInversionNeeded:
-                swap(current_table, current_inverted_table);
-                is_currently_inverted = !is_currently_inverted;
+                flush_tables();
+                arguments.append(to_underlying(CharacterCompareType::Inverse));
+                ++argument_count;
                 break;
+            case LookupTableInsertionOutcome::FlushOnInsertion:
+            case LookupTableInsertionOutcome::FinishFlushOnInsertion:
+                flush_tables();
+                flush_on_every_insertion = insertion_result == LookupTableInsertionOutcome::FlushOnInsertion;
+                [[fallthrough]];
             case LookupTableInsertionOutcome::CannotPlaceInTable:
                 if (is_currently_inverted) {
                     arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
                     ++argument_count;
                 }
                 arguments.append(to_underlying(value.type));
-                arguments.append(value.value);
+
+                if (value.type != CharacterCompareType::AnyChar
+                    && value.type != CharacterCompareType::TemporaryInverse
+                    && value.type != CharacterCompareType::Inverse
+                    && value.type != CharacterCompareType::And
+                    && value.type != CharacterCompareType::Or
+                    && value.type != CharacterCompareType::EndAndOr)
+                    arguments.append(value.value);
                 ++argument_count;
                 break;
             }
@@ -712,42 +960,8 @@ void Optimizer::append_character_class(ByteCode& target, Vector<CompareTypeAndVa
                 is_currently_inverted = !is_currently_inverted;
             }
         }
-        auto append_table = [&](auto& table) {
-            ++argument_count;
-            arguments.append(to_underlying(CharacterCompareType::LookupTable));
-            auto size_index = arguments.size();
-            arguments.append(0);
-            Optional<CharRange> active_range;
-            size_t range_count = 0;
-            for (auto& range : table) {
-                if (!active_range.has_value()) {
-                    active_range = range;
-                    continue;
-                }
 
-                if (range.from <= active_range->to + 1 && range.to + 1 >= active_range->from) {
-                    active_range = CharRange { min(range.from, active_range->from), max(range.to, active_range->to) };
-                } else {
-                    ++range_count;
-                    arguments.append(active_range.release_value());
-                    active_range = range;
-                }
-            }
-            if (active_range.has_value()) {
-                ++range_count;
-                arguments.append(active_range.release_value());
-            }
-            arguments[size_index] = range_count;
-        };
-
-        if (!table.is_empty())
-            append_table(table);
-
-        if (!inverted_table.is_empty()) {
-            ++argument_count;
-            arguments.append(to_underlying(CharacterCompareType::TemporaryInverse));
-            append_table(inverted_table);
-        }
+        flush_tables();
     }
 
     target.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));

@@ -1,7 +1,7 @@
 @GUI::Frame {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
-        margins: [10]
+        margins: [8]
     }
 
     @GUI::Frame {
@@ -11,27 +11,33 @@
         fixed_height: 136
     }
 
+    @GUI::Label {
+        autosize: true
+        text: "Shortcut: Super+H"
+        preferred_height: "shrink"
+    }
+
     @GUI::GroupBox {
         title: "Highlight color"
-        fixed_height: 80
+        preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::ColorInput {
             name: "highlight_color_input"
             has_alpha_channel: false
         }
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
     }
 
     @GUI::GroupBox {
         title: "Highlight opacity"
-        fixed_height: 80
+        preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2
@@ -65,7 +71,7 @@
 
     @GUI::GroupBox {
         title: "Highlight size"
-        fixed_height: 80
+        preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 2

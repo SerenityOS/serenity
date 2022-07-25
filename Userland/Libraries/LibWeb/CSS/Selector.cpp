@@ -151,22 +151,22 @@ String Selector::SimpleSelector::serialize() const
         if (!attribute.value.is_null()) {
             switch (attribute.match_type) {
             case Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
-                s.append("=");
+                s.append("="sv);
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-                s.append("~=");
+                s.append("~="sv);
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::ContainsString:
-                s.append("*=");
+                s.append("*="sv);
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
-                s.append("|=");
+                s.append("|="sv);
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
-                s.append("^=");
+                s.append("^="sv);
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
-                s.append("$=");
+                s.append("$="sv);
                 break;
             default:
                 break;
@@ -180,10 +180,10 @@ String Selector::SimpleSelector::serialize() const
         //    (the line just above is an addition to CSS OM to match Selectors Level 4 last draft)
         switch (attribute.case_type) {
         case Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch:
-            s.append(" i");
+            s.append(" i"sv);
             break;
         case Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch:
-            s.append(" s");
+            s.append(" s"sv);
             break;
         default:
             break;
@@ -304,16 +304,16 @@ String Selector::serialize() const
             //       so we have to check that one.
             switch (compound_selectors()[i + 1].combinator) {
             case Selector::Combinator::ImmediateChild:
-                s.append("> ");
+                s.append("> "sv);
                 break;
             case Selector::Combinator::NextSibling:
-                s.append("+ ");
+                s.append("+ "sv);
                 break;
             case Selector::Combinator::SubsequentSibling:
-                s.append("~ ");
+                s.append("~ "sv);
                 break;
             case Selector::Combinator::Column:
-                s.append("|| ");
+                s.append("|| "sv);
                 break;
             default:
                 break;
@@ -322,7 +322,7 @@ String Selector::serialize() const
             // 4. If this is the last part of the chain of the selector and there is a pseudo-element,
             // append "::" followed by the name of the pseudo-element, to s.
             if (compound_selector.simple_selectors.last().type == Selector::SimpleSelector::Type::PseudoElement) {
-                s.append("::");
+                s.append("::"sv);
                 s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element()));
             }
         }
@@ -336,22 +336,26 @@ String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selec
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
     StringBuilder builder;
-    builder.join(", ", selectors);
+    builder.join(", "sv, selectors);
     return builder.to_string();
 }
 
 Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
 {
-    if (name.equals_ignoring_case("after")) {
+    if (name.equals_ignoring_case("after"sv)) {
         return Selector::PseudoElement::After;
-    } else if (name.equals_ignoring_case("before")) {
+    } else if (name.equals_ignoring_case("before"sv)) {
         return Selector::PseudoElement::Before;
-    } else if (name.equals_ignoring_case("first-letter")) {
+    } else if (name.equals_ignoring_case("first-letter"sv)) {
         return Selector::PseudoElement::FirstLetter;
-    } else if (name.equals_ignoring_case("first-line")) {
+    } else if (name.equals_ignoring_case("first-line"sv)) {
         return Selector::PseudoElement::FirstLine;
-    } else if (name.equals_ignoring_case("marker")) {
+    } else if (name.equals_ignoring_case("marker"sv)) {
         return Selector::PseudoElement::Marker;
+    } else if (name.equals_ignoring_case("-webkit-progress-bar"sv)) {
+        return Selector::PseudoElement::ProgressBar;
+    } else if (name.equals_ignoring_case("-webkit-progress-value"sv)) {
+        return Selector::PseudoElement::ProgressValue;
     }
     return {};
 }

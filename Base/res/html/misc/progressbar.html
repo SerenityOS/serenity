@@ -1,56 +1,83 @@
 <html>
+<body>
+    <input type=button data-position="0" value="Set 0%">
+    <br>
+    <input type=button data-position="25" value="Set 25%">
+    <br>
+    <input type=button data-position="50" value="Set 50%">
+    <br>
+    <input type=button data-position="75" value="Set 75%">
+    <br>
+    <input type=button data-position="100" value="Set 100%">
+    <br>
 
-<body bgcolor="#408080" text="#ffffff">
-    <input type=button id=button1 value="Set 0%">
-    <br />
-
-    <input type=button id=button2 value="Set 25%">
-    <br />
-
-    <input type=button id=button3 value="Set 50%">
-    <br />
-
-    <input type=button id=button4 value="Set 75%">
-    <br />
-
-    <input type=button id=button5 value="Set 100%">
-    <br />
-
-    <progress id="progress" value="25" max="100"></progress>
     <div style="display: inline-block;">
-        <pre>Progress bar position: <span id=pos></span></pre>
+        <pre>Progress bar position: <span id="position-text"></span></pre>
     </div>
+    <br>
+    <br>
+    <em>A system progress bar (appearance: auto)</em>
+    <br>
+    <br>
+    <progress value="25" max="100"></progress>
+    <br>
+    <br>
+    <em>A primitive progress bar (appearance: none)</em>
+    <br>
+    <br>
+    <progress style="appearance: none" value="25" max="100"></progress>
+    <br>
+    <br>
+    <em>A primitive progress bar (appearance: none) with some styling</em>
+    <br>
+    <br>
+    <progress id="custom-progress" value="25" max="100"></progress>
+    <br>
 
+    <style>
+        body {
+            background-color: #060606;
+            color: white;
+            margin-left: 20px;
+        }
+
+        #custom-progress {
+            appearance: none;
+            width: 200px;
+            height: 20px;
+        }
+
+        #custom-progress::-webkit-progress-bar {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px 4px #ff3863d2;
+            background-color: #eee;
+        }
+
+        #custom-progress::-webkit-progress-value {
+            border-radius: 10px;
+            background-color: #ff3863d2;
+        }
+    </style>
 
     <script>
-        var progressBar = document.getElementById('progress');
-        document.getElementById('pos').innerHTML = progressBar.position;
+        const progressBars = document.querySelectorAll('progress');
+        const buttons = document.querySelectorAll('input[type=button]');
+        const positionText = document.getElementById('position-text');
 
-        document.getElementById('button1').addEventListener('click', function () {
-            progressBar.value = 0;
-            document.getElementById('pos').innerHTML = progressBar.position;
-        });
+        const setProgressPositions = (position) => {
+            progressBars.forEach(progressBar => {
+                progressBar.value = position;
+            })
+            positionText.innerHTML = position;
+        }
 
-        document.getElementById('button2').addEventListener('click', function () {
-            progressBar.value = 25;
-            document.getElementById('pos').innerHTML = progressBar.position;
-        });
-
-        document.getElementById('button3').addEventListener('click', function () {
-            progressBar.value = 50;
-            document.getElementById('pos').innerHTML = progressBar.position;
-        });
-
-        document.getElementById('button4').addEventListener('click', function () {
-            progressBar.value = 75;
-            document.getElementById('pos').innerHTML = progressBar.position;
-        });
-
-        document.getElementById('button5').addEventListener('click', function () {
-            progressBar.value = 100;
-            document.getElementById('pos').innerHTML = progressBar.position;
-        });
+        buttons.forEach(button => {
+            button.onclick = event => {
+                const position = event.target.getAttribute("data-position") | 0;
+                setProgressPositions(position);
+            }
+        })
     </script>
 </body>
-
 </html>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -425,13 +425,15 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
         // b. Assert: Type(foundLocaleData) is Record.
         // c. Let keyLocaleData be foundLocaleData.[[<key>]].
         // d. Assert: Type(keyLocaleData) is List.
-        auto key_locale_data = Unicode::get_keywords_for_locale(found_locale, key);
+        auto key_locale_data = Unicode::get_available_keyword_values(key);
 
         // e. Let value be keyLocaleData[0].
         // f. Assert: Type(value) is either String or Null.
+        // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
+        //       alphabetically, so we get the locale's preferred value from LibUnicode.
         Optional<String> value;
-        if (!key_locale_data.is_empty())
-            value = key_locale_data[0];
+        if (auto preference = Unicode::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
+            value = *preference;
 
         // g. Let supportedExtensionAddition be "".
         Optional<Unicode::Keyword> supported_extension_addition {};
@@ -571,7 +573,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
     auto* options_object = TRY(coerce_options_to_object(global_object, options));
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     Vector<String> supported_locales;
 
@@ -603,48 +605,39 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
     return TRY(options.to_object(global_object));
 }
 
-// 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Span<StringView const> values, Fallback fallback)
+// NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
+
+// 1.2.12 GetStringOrBooleanOption ( options, property, values, trueValue, falsyValue, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getstringorbooleanoption
+ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
 {
-    auto& vm = global_object.vm();
-
-    // 1. Assert: Type(options) is Object.
-
-    // 2. Let value be ? Get(options, property).
+    // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
-    // 3. If value is undefined, return fallback.
-    if (value.is_undefined()) {
-        return fallback.visit(
-            [](Empty) { return js_undefined(); },
-            [](bool f) { return Value(f); },
-            [&vm](StringView f) { return Value(js_string(vm, f)); });
-    }
+    // 2. If value is undefined, return fallback.
+    if (value.is_undefined())
+        return fallback;
 
-    // 4. Assert: type is "boolean" or "string".
-    VERIFY((type == Value::Type::Boolean) || (type == Value::Type::String));
+    // 3. If value is true, return trueValue.
+    if (value.is_boolean() && value.as_bool())
+        return true_value;
 
-    // 5. If type is "boolean", then
-    if (type == Value::Type::Boolean) {
-        // a. Set value to ToBoolean(value).
-        value = Value(value.to_boolean());
-    }
-    // 6. If type is "string", then
-    else {
-        // a. Set value to ? ToString(value).
-        value = TRY(value.to_primitive_string(global_object));
-    }
+    // 4. Let valueBoolean be ToBoolean(value).
+    auto value_boolean = value.to_boolean();
 
-    // 7. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
-    if (!values.is_empty()) {
-        // Note: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
-        VERIFY(value.is_string());
-        if (!values.contains_slow(value.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.to_string_without_side_effects(), property.as_string());
-    }
+    // 5. If valueBoolean is false, return falsyValue.
+    if (!value_boolean)
+        return falsy_value;
+
+    // 6. Let value be ? ToString(value).
+    auto value_string = TRY(value.to_string(global_object));
+
+    // 7. If values does not contain an element equal to value, return fallback.
+    auto it = find(values.begin(), values.end(), value_string);
+    if (it == values.end())
+        return fallback;
 
     // 8. Return value.
-    return value;
+    return StringOrBoolean { *it };
 }
 
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption

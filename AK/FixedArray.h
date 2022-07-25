@@ -92,11 +92,6 @@ public:
         return FixedArray<T>(m_size, elements);
     }
 
-    FixedArray<T> must_clone_but_fixme_should_propagate_errors() const
-    {
-        return MUST(try_clone());
-    }
-
     // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
     FixedArray(FixedArray<T> const&) = delete;
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
@@ -163,6 +158,12 @@ public:
     {
         ::swap(m_size, other.m_size);
         ::swap(m_elements, other.m_elements);
+    }
+
+    void fill_with(T const& value)
+    {
+        for (size_t i = 0; i < m_size; ++i)
+            m_elements[i] = value;
     }
 
     using Iterator = SimpleIterator<FixedArray, T>;

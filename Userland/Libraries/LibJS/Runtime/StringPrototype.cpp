@@ -791,7 +791,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             auto flags = TRY(regexp.as_object().get("flags"));
             auto flags_object = TRY(require_object_coercible(global_object, flags));
             auto flags_string = TRY(flags_object.to_string(global_object));
-            if (!flags_string.contains("g"))
+            if (!flags_string.contains('g'))
                 return vm.throw_completion<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
         }
         if (auto* matcher = TRY(regexp.get_method(global_object, *vm.well_known_symbol_match_all())))
@@ -885,7 +885,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             auto flags = TRY(search_value.as_object().get(vm.names.flags));
             auto flags_object = TRY(require_object_coercible(global_object, flags));
             auto flags_string = TRY(flags_object.to_string(global_object));
-            if (!flags_string.contains("g"))
+            if (!flags_string.contains('g'))
                 return vm.throw_completion<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
         }
 
@@ -969,13 +969,13 @@ static ThrowCompletionOr<Value> create_html(GlobalObject& global_object, Value s
         auto value_string = TRY(value.to_string(global_object));
         builder.append(' ');
         builder.append(attribute);
-        builder.append("=\"");
-        builder.append(value_string.replace("\"", "&quot;", true));
+        builder.append("=\""sv);
+        builder.append(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All));
         builder.append('"');
     }
     builder.append('>');
     builder.append(str);
-    builder.append("</");
+    builder.append("</"sv);
     builder.append(tag);
     builder.append('>');
     return js_string(vm, builder.build());

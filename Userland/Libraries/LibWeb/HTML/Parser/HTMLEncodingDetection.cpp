@@ -42,7 +42,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     GenericLexer lexer(lowercase_string);
 
     for (;;) {
-        auto charset_index = lexer.remaining().find("charset");
+        auto charset_index = lexer.remaining().find("charset"sv);
         if (!charset_index.has_value())
             return {};
 
@@ -72,7 +72,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
         return {};
 
     if (lexer.consume_specific('"')) {
-        auto matching_double_quote = lexer.remaining().find("\"");
+        auto matching_double_quote = lexer.remaining().find('"');
         if (!matching_double_quote.has_value())
             return {};
 
@@ -81,7 +81,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     }
 
     if (lexer.consume_specific('\'')) {
-        auto matching_single_quote = lexer.remaining().find("'");
+        auto matching_single_quote = lexer.remaining().find('\'');
         if (!matching_single_quote.has_value())
             return {};
 

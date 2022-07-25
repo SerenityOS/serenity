@@ -23,8 +23,8 @@ namespace GUI {
 Button::Button(String text)
     : AbstractButton(move(text))
 {
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     on_focus_change = [this](bool has_focus, auto) {
@@ -80,10 +80,14 @@ void Button::paint_event(PaintEvent& event)
 
     if (m_icon) {
         auto solid_color = m_icon->solid_color(60);
-        // Note: 4.5 is the minimum recommended contrast ratio for text on the web:
-        // (https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast)
-        // Reusing that threshold here as it seems to work reasonably well.
-        bool should_invert_icon = solid_color.has_value() && palette().button().contrast_ratio(*solid_color) < 4.5f;
+        bool should_invert_icon = false;
+        if (solid_color.has_value()) {
+            auto contrast_ratio = palette().button().contrast_ratio(*solid_color);
+            // Note: 4.5 is the minimum recommended contrast ratio for text on the web:
+            // (https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast)
+            // Reusing that threshold here as it seems to work reasonably well.
+            should_invert_icon = contrast_ratio < 4.5f && contrast_ratio < palette().button().contrast_ratio(solid_color->inverted());
+        }
         if (should_invert_icon)
             m_icon->invert();
         if (is_enabled()) {
@@ -135,6 +139,17 @@ void Button::click(unsigned modifiers)
         on_click(modifiers);
     if (m_action)
         m_action->activate(this);
+}
+
+void Button::middle_mouse_click(unsigned int modifiers)
+{
+    if (!is_enabled())
+        return;
+
+    NonnullRefPtr protector = *this;
+
+    if (on_middle_mouse_click)
+        on_middle_mouse_click(modifiers);
 }
 
 void Button::context_menu_event(ContextMenuEvent& context_menu_event)
@@ -251,6 +266,28 @@ void Button::timer_event(Core::TimerEvent&)
 
         update();
     }
+}
+
+Optional<UISize> Button::calculated_min_size() const
+{
+    int horizontal = 0, vertical = 0;
+
+    if (!text().is_empty()) {
+        auto& font = this->font();
+        horizontal = font.width(text()) + 2;
+        vertical = font.glyph_height() + 4; // FIXME: Use actual maximum total height
+    }
+
+    if (m_icon) {
+        vertical = max(vertical, m_icon->height());
+
+        horizontal += m_icon->width() + icon_spacing();
+    }
+
+    horizontal += 8;
+    vertical += 4;
+
+    return UISize(horizontal, vertical);
 }
 
 }

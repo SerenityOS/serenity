@@ -30,6 +30,12 @@ public:
         Ignore,
     };
 
+    enum class OptionArgumentMode {
+        None,
+        Optional,
+        Required,
+    };
+
     /// When an option is hidden.
     /// If the hide mode is not None, then it's always hidden from the usage/synopsis.
     enum class OptionHideMode {
@@ -39,7 +45,7 @@ public:
     };
 
     struct Option {
-        bool requires_argument { true };
+        OptionArgumentMode argument_mode { OptionArgumentMode::Required };
         char const* help_string { nullptr };
         char const* long_name { nullptr };
         char short_name { 0 };
@@ -83,8 +89,8 @@ public:
     void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    template<typename Integral>
+    void add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None) requires(IsIntegral<Integral>);
     void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);

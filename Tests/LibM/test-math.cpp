@@ -130,13 +130,13 @@ template<>
 struct Formatter<Extractor> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder& builder, Extractor const& value)
     {
-        TRY(builder.put_literal("{"));
+        TRY(builder.put_literal("{"sv));
         TRY(builder.put_u64(value.sign));
-        TRY(builder.put_literal(", "));
+        TRY(builder.put_literal(", "sv));
         TRY(builder.put_u64(value.exponent, 16, true));
-        TRY(builder.put_literal(", "));
+        TRY(builder.put_literal(", "sv));
         TRY(builder.put_u64(value.mantissa, 16, true));
-        TRY(builder.put_literal("}"));
+        TRY(builder.put_literal("}"sv));
         return {};
     }
 };

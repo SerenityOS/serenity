@@ -7,6 +7,7 @@
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/String.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/InputBox.h>
@@ -42,17 +43,17 @@ void OutOfProcessWebView::handle_web_content_process_crash()
 
     handle_resize();
     StringBuilder builder;
-    builder.append("<html><head><title>Crashed: ");
+    builder.append("<html><head><title>Crashed: "sv);
     builder.append(escape_html_entities(m_url.to_string()));
-    builder.append("</title></head><body>");
-    builder.append("<h1>Web page crashed");
+    builder.append("</title></head><body>"sv);
+    builder.append("<h1>Web page crashed"sv);
     if (!m_url.host().is_empty()) {
         builder.appendff(" on {}", escape_html_entities(m_url.host()));
     }
-    builder.append("</h1>");
+    builder.append("</h1>"sv);
     auto escaped_url = escape_html_entities(m_url.to_string());
     builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
-    builder.append("</body></html>");
+    builder.append("</body></html>"sv);
     load_html(builder.to_string(), m_url);
 }
 
@@ -182,6 +183,11 @@ void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
     client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
+}
+
+void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
+{
+    client().async_doubleclick(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
@@ -323,19 +329,19 @@ void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<Web
 
 void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
-    GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
+    GUI::MessageBox::show(window(), message, "Alert"sv, GUI::MessageBox::Type::Information);
 }
 
 bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
-    auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return confirm_result == GUI::Dialog::ExecResult::OK;
 }
 
 String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
     String response { default_ };
-    if (GUI::InputBox::show(window(), response, message, "Prompt") == GUI::InputBox::ExecResult::OK)
+    if (GUI::InputBox::show(window(), response, message, "Prompt"sv) == GUI::InputBox::ExecResult::OK)
         return response;
     return {};
 }
@@ -393,6 +399,15 @@ void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_wait
 {
     if (on_resource_status_change)
         on_resource_status_change(count_waiting);
+}
+
+void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
+{
+    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
+    if (file.is_error())
+        client().async_handle_file_return(file.error().code(), {}, request_id);
+    else
+        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
 }
 
 void OutOfProcessWebView::did_scroll()

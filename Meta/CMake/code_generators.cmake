@@ -37,7 +37,7 @@ function(compile_ipc source output)
     #       https://cmake.org/cmake/help/v3.23/command/cmake_path.html#relative-path
     string(LENGTH ${SerenityOS_SOURCE_DIR} root_source_dir_length)
     string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${root_source_dir_length} -1 current_source_dir_relative)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${output} DESTINATION usr/include${current_source_dir_relative} OPTIONAL)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${output} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${current_source_dir_relative}" OPTIONAL)
 endfunction()
 
 function(generate_state_machine source header)
@@ -78,8 +78,8 @@ function(compile_jakt source)
     )
     get_property(JAKT_INCLUDE_DIR TARGET Lagom::jakt PROPERTY IMPORTED_INCLUDE_DIRECTORIES)
     set_source_files_properties("${output}" PROPERTIES
-        INCLUDE_DIRECTORIES "${JAKT_INCLUDE_DIR};${JAKT_INCLUDE_DIR}/runtime"
-        COMPILE_FLAGS "-Wno-unused-local-typedefs")
+        INCLUDE_DIRECTORIES "${JAKT_INCLUDE_DIR}/runtime"
+        COMPILE_OPTIONS "-Wno-unused-local-typedefs;-Wno-unused-function")
     get_filename_component(output_name ${output} NAME)
     add_custom_target(generate_${output_name} DEPENDS ${output})
     add_dependencies(all_generated generate_${output_name})

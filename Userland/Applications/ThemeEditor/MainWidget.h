@@ -91,7 +91,10 @@ private:
     MainWidget();
 
     void save_to_file(Core::File&);
+    ErrorOr<Core::AnonymousBuffer> encode();
     void set_path(String);
+
+    void build_override_controls();
 
     void add_property_tab(PropertyTab const&);
     void set_alignment(Gfx::AlignmentRole, Gfx::TextAlignment);
@@ -111,6 +114,9 @@ private:
     RefPtr<PreviewWidget> m_preview_widget;
     RefPtr<GUI::TabWidget> m_property_tabs;
     RefPtr<GUI::Action> m_save_action;
+
+    RefPtr<GUI::Button> m_theme_override_apply;
+    RefPtr<GUI::Button> m_theme_override_reset;
 
     Optional<String> m_path;
     Gfx::Palette m_current_palette;

@@ -27,30 +27,30 @@ struct Command {
 
         switch (command) {
         case CMD_WILL:
-            builder.append("WILL");
+            builder.append("WILL"sv);
             break;
         case CMD_WONT:
-            builder.append("WONT");
+            builder.append("WONT"sv);
             break;
         case CMD_DO:
-            builder.append("DO");
+            builder.append("DO"sv);
             break;
         case CMD_DONT:
-            builder.append("DONT");
+            builder.append("DONT"sv);
             break;
         default:
             builder.append(String::formatted("UNKNOWN<{:02x}>", command));
             break;
         }
 
-        builder.append(" ");
+        builder.append(" "sv);
 
         switch (subcommand) {
         case SUB_ECHO:
-            builder.append("ECHO");
+            builder.append("ECHO"sv);
             break;
         case SUB_SUPPRESS_GO_AHEAD:
-            builder.append("SUPPRESS_GO_AHEAD");
+            builder.append("SUPPRESS_GO_AHEAD"sv);
             break;
         default:
             builder.append(String::formatted("UNKNOWN<{:02x}>", subcommand));

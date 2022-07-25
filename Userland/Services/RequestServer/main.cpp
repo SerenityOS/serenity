@@ -24,7 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     else
         TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
 
+#ifdef SIGINFO
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
+#endif
 
     if constexpr (TLS_SSL_KEYLOG_DEBUG)
         TRY(Core::System::pledge("stdio inet accept unix cpath wpath rpath sendfd recvfd"));

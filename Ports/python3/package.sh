@@ -2,6 +2,8 @@
 
 source version.sh
 
+export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/python/bin:${PATH}"
+
 port=python3
 version="${PYTHON_VERSION}"
 workdir="Python-${version}"

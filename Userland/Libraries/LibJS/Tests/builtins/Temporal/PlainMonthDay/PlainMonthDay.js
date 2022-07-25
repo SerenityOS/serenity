@@ -37,6 +37,12 @@ describe("errors", () => {
             new Temporal.PlainMonthDay(1, 0);
         }).toThrowWithMessage(RangeError, "Invalid plain month day");
     });
+
+    test("not within iso date time limit", () => {
+        expect(() => {
+            new Temporal.PlainMonthDay(9, 30, "iso8601", 999_999_999_999_999);
+        }).toThrowWithMessage(RangeError, "Invalid plain month day");
+    });
 });
 
 describe("normal behavior", () => {

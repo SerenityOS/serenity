@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
 
 namespace GUI {
@@ -76,6 +77,32 @@ public:
     Margins operator+(Margins const& other) const
     {
         return Margins { top() + other.top(), right() + other.right(), bottom() + other.bottom(), left() + other.left() };
+    }
+
+    [[nodiscard]] int primary_total_for_orientation(Gfx::Orientation const orientation) const
+    {
+        if (orientation == Gfx::Orientation::Horizontal)
+            return m_left + m_right;
+        else
+            return m_top + m_bottom;
+    }
+
+    [[nodiscard]] int secondary_total_for_orientation(Gfx::Orientation const orientation) const
+    {
+        if (orientation == Gfx::Orientation::Vertical)
+            return m_left + m_right;
+        else
+            return m_top + m_bottom;
+    }
+
+    [[nodiscard]] int horizontal_total() const
+    {
+        return m_left + m_right;
+    }
+
+    [[nodiscard]] int vertical_total() const
+    {
+        return m_top + m_bottom;
     }
 
 private:

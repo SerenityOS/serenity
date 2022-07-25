@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/File.h>
@@ -41,10 +42,18 @@ private:
     {
     }
 
-    virtual void handle_prompt_end(i32 error, Optional<IPC::File> const& fd, Optional<String> const& chosen_file) override;
+    virtual void handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> const& fd, Optional<String> const& chosen_file) override;
 
-    RefPtr<Core::Promise<Result>> m_promise;
-    GUI::Window* m_parent_window { nullptr };
+    int get_new_id();
+    Result handle_promise(int);
+
+    struct PromiseAndWindow {
+        RefPtr<Core::Promise<Result>> promise {};
+        GUI::Window* parent_window { nullptr };
+    };
+
+    HashMap<int, PromiseAndWindow> m_promises {};
+    int m_last_id { 0 };
 };
 
 }

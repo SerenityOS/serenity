@@ -7,7 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/Fetch/AbstractOperations.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::MimeSniff {
@@ -42,7 +42,7 @@ static bool contains_only_http_token_code_points(StringView string)
     // https://mimesniff.spec.whatwg.org/#http-token-code-point
     // An HTTP token code point is U+0021 (!), U+0023 (#), U+0024 ($), U+0025 (%), U+0026 (&), U+0027 ('), U+002A (*),
     // U+002B (+), U+002D (-), U+002E (.), U+005E (^), U+005F (_), U+0060 (`), U+007C (|), U+007E (~), or an ASCII alphanumeric.
-    constexpr auto is_certain_non_ascii_alphanumeric = is_any_of("!#$%&'*+-.^_`|~");
+    constexpr auto is_certain_non_ascii_alphanumeric = is_any_of("!#$%&'*+-.^_`|~"sv);
     for (char ch : string) {
         if (!is_certain_non_ascii_alphanumeric(ch) && !is_ascii_alphanumeric(ch))
             return false;
@@ -53,13 +53,8 @@ static bool contains_only_http_token_code_points(StringView string)
 // https://mimesniff.spec.whatwg.org/#parse-a-mime-type
 Optional<MimeType> MimeType::from_string(StringView string)
 {
-    // https://fetch.spec.whatwg.org/#http-whitespace
-    // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
-    // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-    constexpr char const* http_whitespace = "\n\r\t ";
-
     // 1. Remove any leading and trailing HTTP whitespace from input.
-    auto trimmed_string = string.trim(http_whitespace, TrimMode::Both);
+    auto trimmed_string = string.trim(Fetch::Infrastructure::HTTP_WHITESPACE, TrimMode::Both);
 
     // 2. Let position be a position variable for input, initially pointing at the start of input.
     GenericLexer lexer(trimmed_string);
@@ -82,7 +77,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
     auto subtype = lexer.consume_until(';');
 
     // 8. Remove any trailing HTTP whitespace from subtype.
-    subtype = subtype.trim(http_whitespace, TrimMode::Right);
+    subtype = subtype.trim(Fetch::Infrastructure::HTTP_WHITESPACE, TrimMode::Right);
 
     // 9. If subtype is the empty string or does not solely contain HTTP token code points, then return failure.
     if (subtype.is_empty() || !contains_only_http_token_code_points(subtype))
@@ -97,7 +92,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
         lexer.ignore(1);
 
         // 2. Collect a sequence of code points that are HTTP whitespace from input given position.
-        lexer.ignore_while(is_any_of(http_whitespace));
+        lexer.ignore_while(is_any_of(Fetch::Infrastructure::HTTP_WHITESPACE));
 
         // 3. Let parameterName be the result of collecting a sequence of code points that are not U+003B (;) or U+003D (=) from input, given position.
         auto parameter_name = lexer.consume_until([](char ch) {
@@ -129,7 +124,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
         // 8. If the code point at position within input is U+0022 ("), then:
         if (lexer.peek() == '"') {
             // 1. Set parameterValue to the result of collecting an HTTP quoted string from input, given position and the extract-value flag.
-            parameter_value = collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::Yes);
+            parameter_value = Fetch::Infrastructure::collect_an_http_quoted_string(lexer, Fetch::Infrastructure::HttpQuotedStringExtractValue::Yes);
 
             // 2. Collect a sequence of code points that are not U+003B (;) from input, given position.
             // NOTE: This uses the predicate version as the ignore_until(char) version will also ignore the ';'.
@@ -144,7 +139,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
             parameter_value = lexer.consume_until(';');
 
             // 2. Remove any trailing HTTP whitespace from parameterValue.
-            parameter_value = parameter_value.trim(http_whitespace, TrimMode::Right);
+            parameter_value = parameter_value.trim(Fetch::Infrastructure::HTTP_WHITESPACE, TrimMode::Right);
 
             // 3. If parameterValue is the empty string, then continue.
             if (parameter_value.is_empty())

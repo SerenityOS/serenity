@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
     TRY(Core::System::pledge("stdio rpath proc exec"));
 
-    char const* placeholder = nullptr;
+    StringView placeholder;
     bool split_with_nulls = false;
     char const* specified_delimiter = "\n";
     Vector<String> arguments;
@@ -74,15 +74,13 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 
     char entry_separator = split_with_nulls ? '\0' : *specified_delimiter;
 
-    StringView placeholder_view { placeholder };
-
-    if (!placeholder_view.is_empty())
+    if (!placeholder.is_empty())
         max_lines = 1;
 
     if (arguments.is_empty())
         arguments.append("echo");
 
-    ParsedInitialArguments initial_arguments(arguments, placeholder_view);
+    ParsedInitialArguments initial_arguments(arguments, placeholder);
 
     FILE* fp = stdin;
     bool is_stdin = true;
@@ -103,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
     int devnull_fd = 0;
 
     if (is_stdin) {
-        devnull_fd = TRY(Core::System::open("/dev/null", O_RDONLY | O_CLOEXEC));
+        devnull_fd = TRY(Core::System::open("/dev/null"sv, O_RDONLY | O_CLOEXEC));
     }
 
     size_t total_command_length = 0;
@@ -180,7 +178,7 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)> c
 
         Decision decision;
         do {
-            decision = callback(item);
+            decision = callback({ item, strlen(item) });
             if (decision == Stop) {
                 free(item);
                 return true;
@@ -199,7 +197,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
 
     if (verbose) {
         StringBuilder builder;
-        builder.join(" ", child_argv);
+        builder.join(' ', child_argv);
         warnln("xargs: {}", builder.to_string());
     }
 
@@ -256,8 +254,8 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<String>& arguments, String
     // Append an implicit placeholder at the end if no argument has any placeholders.
     if (!some_argument_has_placeholder) {
         Vector<StringView> parts;
-        parts.append("");
-        parts.append("");
+        parts.append(""sv);
+        parts.append(""sv);
         m_all_parts.append(move(parts));
     }
 }

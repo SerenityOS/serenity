@@ -27,6 +27,7 @@ __BEGIN_DECLS
 #define _IOLBF 1
 #define _IONBF 2
 
+#define L_ctermid 9
 #define L_tmpnam 256
 #define P_tmpdir "/tmp"
 
@@ -99,5 +100,6 @@ FILE* tmpfile(void);
 char* tmpnam(char*);
 FILE* popen(char const* command, char const* type);
 int pclose(FILE*);
+char* ctermid(char* s);
 
 __END_DECLS

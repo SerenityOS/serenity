@@ -28,6 +28,11 @@ public:
     size_t end() const { return m_end; }
     Mode mode() const { return m_mode; }
 
+    bool is_empty() const
+    {
+        return m_beginning < m_end;
+    }
+
 private:
     size_t m_beginning { 0 };
     size_t m_end { 0 };

@@ -11,11 +11,17 @@
 #include <AK/Types.h>
 #include <LibDSP/Music.h>
 
-namespace LibDSP {
+namespace DSP {
 
 // A clip is a self-contained snippet of notes or audio that can freely move inside and in between tracks.
 class Clip : public RefCounted<Clip> {
 public:
+    Clip(u32 start, u32 length)
+        : m_start(start)
+        , m_length(length)
+    {
+    }
+
     virtual ~Clip() = default;
 
     u32 start() const { return m_start; }
@@ -23,12 +29,6 @@ public:
     u32 end() const { return m_start + m_length; }
 
 protected:
-    Clip(u32 start, u32 length)
-        : m_start(start)
-        , m_length(length)
-    {
-    }
-
     u32 m_start;
     u32 m_length;
 };
@@ -45,12 +45,24 @@ private:
 
 class NoteClip final : public Clip {
 public:
-    void set_note(RollNote note);
+    NoteClip(u32 start, u32 length)
+        : Clip(start, length)
+    {
+    }
 
-    Array<SinglyLinkedList<RollNote>, note_frequencies.size()> const& notes() const { return m_notes; }
+    void set_note(RollNote note);
+    // May do nothing; that's fine.
+    void remove_note(RollNote note);
+
+    Span<RollNote const> notes() const { return m_notes.span(); }
+
+    RollNote operator[](size_t index) const { return m_notes[index]; }
+    RollNote operator[](size_t index) { return m_notes[index]; }
+    bool is_empty() const { return m_notes.is_empty(); }
 
 private:
-    Array<SinglyLinkedList<RollNote>, note_frequencies.size()> m_notes;
+    // FIXME: Better datastructures to think about here: B-Trees or good ol' RBTrees (not very cache friendly)
+    Vector<RollNote> m_notes;
 };
 
 }

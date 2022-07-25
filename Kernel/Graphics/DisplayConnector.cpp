@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -39,7 +42,7 @@ ErrorOr<Memory::Region*> DisplayConnector::mmap(Process& process, OpenFileDescri
         range,
         *m_shared_framebuffer_vmobject,
         0,
-        "Mapped Framebuffer",
+        "Mapped Framebuffer"sv,
         prot,
         shared);
 }
@@ -57,12 +60,26 @@ ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelB
 void DisplayConnector::will_be_destroyed()
 {
     GraphicsManagement::the().detach_display_connector({}, *this);
-    Device::will_be_destroyed();
+
+    VERIFY(m_symlink_sysfs_component);
+    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+
+    m_symlink_sysfs_component.clear();
+    SysFSDisplayConnectorsDirectory::the().unplug({}, *m_sysfs_device_directory);
+    before_will_be_destroyed_remove_from_device_management();
 }
 
 void DisplayConnector::after_inserting()
 {
-    Device::after_inserting();
+    after_inserting_add_to_device_management();
+    auto sysfs_display_connector_device_directory = DisplayConnectorSysFSDirectory::create(SysFSDisplayConnectorsDirectory::the(), *this);
+    m_sysfs_device_directory = sysfs_display_connector_device_directory;
+    SysFSDisplayConnectorsDirectory::the().plug({}, *sysfs_display_connector_device_directory);
+    VERIFY(!m_symlink_sysfs_component);
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSCharacterDevicesDirectory::the(), *this, *m_sysfs_device_directory));
+    m_symlink_sysfs_component = sys_fs_component;
+    after_inserting_add_symlink_to_device_identifier_directory();
+
     auto rounded_size = MUST(Memory::page_round_up(m_framebuffer_resource_size));
 
     if (!m_framebuffer_at_arbitrary_physical_range) {
@@ -214,16 +231,81 @@ ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
     return ByteBuffer::copy(m_edid_bytes, sizeof(m_edid_bytes));
 }
 
+struct GraphicsIOCtlChecker {
+    unsigned ioctl_number;
+    StringView name;
+    bool requires_ownership { false };
+};
+
+static constexpr GraphicsIOCtlChecker s_checkers[] = {
+    { GRAPHICS_IOCTL_GET_PROPERTIES, "GRAPHICS_IOCTL_GET_PROPERTIES"sv, false },
+    { GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER"sv, true },
+    { GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER"sv, false },
+    { GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS, "GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS"sv, true },
+    { GRAPHICS_IOCTL_FLUSH_HEAD, "GRAPHICS_IOCTL_FLUSH_HEAD"sv, true },
+    { GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING"sv, true },
+    { GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING"sv, false },
+    { GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING"sv, true },
+    { GRAPHICS_IOCTL_SET_RESPONSIBLE, "GRAPHICS_IOCTL_SET_RESPONSIBLE"sv, false },
+    { GRAPHICS_IOCTL_UNSET_RESPONSIBLE, "GRAPHICS_IOCTL_UNSET_RESPONSIBLE"sv, true },
+};
+
+static StringView ioctl_to_stringview(unsigned request)
+{
+    for (auto& checker : s_checkers) {
+        if (checker.ioctl_number == request)
+            return checker.name;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+bool DisplayConnector::ioctl_requires_ownership(unsigned request) const
+{
+    for (auto& checker : s_checkers) {
+        if (checker.ioctl_number == request)
+            return checker.requires_ownership;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    if (request != GRAPHICS_IOCTL_GET_HEAD_EDID) {
-        // Allow anyone to query the EDID. Eventually we'll publish the current EDID on /sys
-        // so it doesn't really make sense to require the video pledge to query it.
-        TRY(Process::current().require_promise(Pledge::video));
+    TRY(Process::current().require_promise(Pledge::video));
+
+    // Note: We only allow to set responsibility on a DisplayConnector,
+    // get the current ModeSetting or the hardware framebuffer properties without the
+    // need of having an established responsibility on a DisplayConnector.
+    if (ioctl_requires_ownership(request)) {
+        auto process = m_responsible_process.strong_ref();
+        if (!process || process.ptr() != &Process::current()) {
+            dbgln("DisplayConnector::ioctl: {} requires ownership over the device", ioctl_to_stringview(request));
+            return Error::from_errno(EPERM);
+        }
     }
 
-    // TODO: We really should have ioctls for destroying resources as well
     switch (request) {
+    case GRAPHICS_IOCTL_SET_RESPONSIBLE: {
+        SpinlockLocker locker(m_responsible_process_lock);
+        auto process = m_responsible_process.strong_ref();
+        // Note: If there's already a process being responsible, just return an error.
+        // We could technically return 0 if the the requesting process is already
+        // was set to be responsible for this DisplayConnector, but it servicing no
+        // no good purpose and should be considered a bug if this happens anyway.
+        if (process)
+            return Error::from_errno(EPERM);
+        m_responsible_process = Process::current();
+        return {};
+    }
+    case GRAPHICS_IOCTL_UNSET_RESPONSIBLE: {
+        SpinlockLocker locker(m_responsible_process_lock);
+        auto process = m_responsible_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (process.ptr() != &Process::current())
+            return Error::from_errno(EPERM);
+        m_responsible_process.clear();
+        return {};
+    }
     case GRAPHICS_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
         GraphicsConnectorProperties properties {};
@@ -254,25 +336,6 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             head_mode_setting.vertical_offset = m_current_mode_setting.vertical_offset;
         }
         return copy_to_user(user_head_mode_setting, &head_mode_setting);
-    }
-    case GRAPHICS_IOCTL_GET_HEAD_EDID: {
-        auto user_head_edid = static_ptr_cast<GraphicsHeadEDID*>(arg);
-        GraphicsHeadEDID head_edid {};
-        TRY(copy_from_user(&head_edid, user_head_edid));
-
-        auto edid_bytes = TRY(get_edid());
-        if (head_edid.bytes != nullptr) {
-            // Only return the EDID if a buffer was provided. Either way,
-            // we'll write back the bytes_size with the actual size
-            if (head_edid.bytes_size < edid_bytes.size()) {
-                head_edid.bytes_size = edid_bytes.size();
-                TRY(copy_to_user(user_head_edid, &head_edid));
-                return Error::from_errno(EOVERFLOW);
-            }
-            TRY(copy_to_user(head_edid.bytes, (void const*)edid_bytes.data(), edid_bytes.size()));
-        }
-        head_edid.bytes_size = edid_bytes.size();
-        return copy_to_user(user_head_edid, &head_edid);
     }
     case GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING: {
         auto user_mode_setting = static_ptr_cast<GraphicsHeadModeSetting const*>(arg);

@@ -81,9 +81,8 @@ void ConnectionFromClient::did_receive_headers(Badge<Request>, Request& request)
 
 void ConnectionFromClient::did_finish_request(Badge<Request>, Request& request, bool success)
 {
-    VERIFY(request.total_size().has_value());
-
-    async_request_finished(request.id(), success, request.total_size().value());
+    if (request.total_size().has_value())
+        async_request_finished(request.id(), success, request.total_size().value());
 
     m_requests.remove(request.id());
 }

@@ -8,7 +8,7 @@
 
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -28,7 +28,7 @@ enum AudioVariable : u32 {
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
+    auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     audio_client->async_pause_playback();
 
     String command = String::empty();
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath wpath recvfd thread"));
 
-    if (command.equals_ignoring_case("get") || command == "g") {
+    if (command.equals_ignoring_case("get"sv) || command == "g") {
         // Get variables
         Vector<AudioVariable> values_to_print;
         if (command_arguments.is_empty()) {
@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (!human_mode)
             outln();
-    } else if (command.equals_ignoring_case("set") || command == "s") {
+    } else if (command.equals_ignoring_case("set"sv) || command == "s") {
         // Set variables
         HashMap<AudioVariable, Variant<int, bool>> values_to_set;
         for (size_t i = 0; i < command_arguments.size(); ++i) {
@@ -120,9 +120,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else if (variable.is_one_of("m"sv, "mute"sv)) {
                 auto& mute_text = command_arguments[++i];
                 bool mute;
-                if (mute_text.equals_ignoring_case("true") || mute_text == "1") {
+                if (mute_text.equals_ignoring_case("true"sv) || mute_text == "1") {
                     mute = true;
-                } else if (mute_text.equals_ignoring_case("false") || mute_text == "0") {
+                } else if (mute_text.equals_ignoring_case("false"sv) || mute_text == "0") {
                     mute = false;
                 } else {
                     warnln("Error: {} is not one of {{0, 1, true, false}}", mute_text);

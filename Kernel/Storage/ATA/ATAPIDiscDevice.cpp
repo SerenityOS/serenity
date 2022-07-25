@@ -8,8 +8,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATAPIDiscDevice.h>
-#include <Kernel/Storage/ATA/IDEChannel.h>
-#include <Kernel/Storage/ATA/IDEController.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
@@ -35,7 +33,7 @@ ATAPIDiscDevice::~ATAPIDiscDevice() = default;
 
 StringView ATAPIDiscDevice::class_name() const
 {
-    return "ATAPIDiscDevice";
+    return "ATAPIDiscDevice"sv;
 }
 
 }

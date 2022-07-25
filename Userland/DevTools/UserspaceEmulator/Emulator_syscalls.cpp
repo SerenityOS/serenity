@@ -38,7 +38,7 @@ namespace UserspaceEmulator {
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     if constexpr (SPAM_DEBUG)
-        reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
+        reportln("Syscall: {} ({:x})"sv, Syscall::to_string((Syscall::Function)function), function);
     switch (function) {
     case SC_accept4:
         return virt$accept4(arg1);
@@ -261,7 +261,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_write:
         return virt$write(arg1, arg2, arg3);
     default:
-        reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
+        reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}"sv, getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
         TODO();
     }
@@ -297,7 +297,7 @@ FlatPtr Emulator::virt$perf_event(int event, FlatPtr arg1, FlatPtr arg2)
     if (event == PERF_EVENT_SIGNPOST) {
         if (is_profiling()) {
             if (profiler_string_id_map().size() > arg1)
-                emit_profile_event(profile_stream(), "signpost", String::formatted("\"arg1\": {}, \"arg2\": {}", arg1, arg2));
+                emit_profile_event(profile_stream(), "signpost"sv, String::formatted("\"arg1\": {}, \"arg2\": {}", arg1, arg2));
             syscall(SC_perf_event, PERF_EVENT_SIGNPOST, profiler_string_id_map().at(arg1), arg2);
         } else {
             syscall(SC_perf_event, PERF_EVENT_SIGNPOST, arg1, arg2);
@@ -846,7 +846,7 @@ static void round_to_page_size(FlatPtr& address, size_t& size)
 u32 Emulator::virt$munmap(FlatPtr address, size_t size)
 {
     if (is_profiling())
-        emit_profile_event(profile_stream(), "munmap", String::formatted("\"ptr\": {}, \"size\": {}", address, size));
+        emit_profile_event(profile_stream(), "munmap"sv, String::formatted("\"ptr\": {}, \"size\": {}", address, size));
     round_to_page_size(address, size);
     Vector<Region*, 4> marked_for_deletion;
     bool has_non_mmap_region = false;
@@ -894,7 +894,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
         } else {
             // mmap(nullptr, …, MAP_FIXED) is technically okay, but tends to be a bug.
             // Therefore, refuse to be helpful.
-            reportln("\n=={}==  \033[31;1mTried to mmap at nullptr with MAP_FIXED.\033[0m, {:#x} bytes.", getpid(), params.size);
+            reportln("\n=={}==  \033[31;1mTried to mmap at nullptr with MAP_FIXED.\033[0m, {:#x} bytes."sv, getpid(), params.size);
             dump_backtrace();
         }
     } else {
@@ -916,7 +916,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
     }
 
     if (is_profiling())
-        emit_profile_event(profile_stream(), "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
+        emit_profile_event(profile_stream(), "mmap"sv, String::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
 
     if (params.flags & MAP_ANONYMOUS) {
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
@@ -1082,7 +1082,7 @@ void Emulator::virt$sync()
 
 void Emulator::virt$exit(int status)
 {
-    reportln("\n=={}==  \033[33;1mSyscall: exit({})\033[0m, shutting down!", getpid(), status);
+    reportln("\n=={}==  \033[33;1mSyscall: exit({})\033[0m, shutting down!"sv, getpid(), status);
     m_exit_status = status;
     m_shutdown = true;
 }
@@ -1173,7 +1173,7 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         return syscall(SC_ioctl, fd, request, &enabled);
     }
     default:
-        reportln("Unsupported ioctl: {}", request);
+        reportln("Unsupported ioctl: {}"sv, request);
         dump_backtrace();
         TODO();
     }
@@ -1245,10 +1245,10 @@ int Emulator::virt$execve(FlatPtr params_addr)
     copy_string_list(arguments, params.arguments);
     copy_string_list(environment, params.environment);
 
-    reportln("\n=={}==  \033[33;1mSyscall:\033[0m execve", getpid());
-    reportln("=={}==  @ {}", getpid(), path);
+    reportln("\n=={}==  \033[33;1mSyscall:\033[0m execve"sv, getpid());
+    reportln("=={}==  @ {}"sv, getpid(), path);
     for (auto& argument : arguments)
-        reportln("=={}==    - {}", getpid(), argument);
+        reportln("=={}==    - {}"sv, getpid(), argument);
 
     if (access(path.characters(), X_OK) < 0) {
         if (errno == ENOENT || errno == EACCES)
@@ -1336,7 +1336,7 @@ int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
 int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
 {
     if (signum == SIGKILL) {
-        reportln("Attempted to sigaction() with SIGKILL");
+        reportln("Attempted to sigaction() with SIGKILL"sv);
         return -EINVAL;
     }
 

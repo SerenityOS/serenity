@@ -43,11 +43,6 @@ extern u8 end_of_kernel_ksyms[];
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
 
-// Treat the super pages as logically separate from .bss
-// FIXME: Find a solution so we don't need to expand this range each time
-// we are in a situation too many drivers try to allocate super pages.
-__attribute__((section(".super_pages"))) static u8 super_pages[4 * MiB];
-
 namespace Kernel::Memory {
 
 ErrorOr<FlatPtr> page_round_up(FlatPtr x)
@@ -92,7 +87,7 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     protect_kernel_image();
 
     // We're temporarily "committing" to two pages that we need to allocate below
-    auto committed_pages = commit_user_physical_pages(2).release_value();
+    auto committed_pages = commit_physical_pages(2).release_value();
 
     m_shared_zero_page = committed_pages.take_one();
 
@@ -344,22 +339,11 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     }
 
     for (auto& range : contiguous_physical_ranges) {
-        m_user_physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
+        m_physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
     }
 
-    // Super pages are guaranteed to be in the first 16MB of physical memory
-    VERIFY(virtual_to_low_physical((FlatPtr)super_pages) + sizeof(super_pages) < 0x1000000);
-
-    // Append statically-allocated super physical physical_region.
-    m_super_physical_region = PhysicalRegion::try_create(
-        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
-        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages)))));
-    VERIFY(m_super_physical_region);
-
-    m_system_memory_info.super_physical_pages += m_super_physical_region->size();
-
-    for (auto& region : m_user_physical_regions)
-        m_system_memory_info.user_physical_pages += region.size();
+    for (auto& region : m_physical_regions)
+        m_system_memory_info.physical_pages += region.size();
 
     register_reserved_ranges();
     for (auto& range : m_reserved_memory_ranges) {
@@ -368,20 +352,16 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
     initialize_physical_pages();
 
-    VERIFY(m_system_memory_info.super_physical_pages > 0);
-    VERIFY(m_system_memory_info.user_physical_pages > 0);
+    VERIFY(m_system_memory_info.physical_pages > 0);
 
     // We start out with no committed pages
-    m_system_memory_info.user_physical_pages_uncommitted = m_system_memory_info.user_physical_pages;
+    m_system_memory_info.physical_pages_uncommitted = m_system_memory_info.physical_pages;
 
     for (auto& used_range : m_used_memory_ranges) {
         dmesgln("MM: {} range @ {} - {} (size {:#x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
 
-    dmesgln("MM: Super physical region: {} - {} (size {:#x})", m_super_physical_region->lower(), m_super_physical_region->upper().offset(-1), PAGE_SIZE * m_super_physical_region->size());
-    m_super_physical_region->initialize_zones();
-
-    for (auto& region : m_user_physical_regions) {
+    for (auto& region : m_physical_regions) {
         dmesgln("MM: User physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
         region.initialize_zones();
     }
@@ -419,8 +399,8 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     // Now that we know how much memory we need for a contiguous array of PhysicalPage instances, find a memory region that can fit it
     PhysicalRegion* found_region { nullptr };
     Optional<size_t> found_region_index;
-    for (size_t i = 0; i < m_user_physical_regions.size(); ++i) {
-        auto& region = m_user_physical_regions[i];
+    for (size_t i = 0; i < m_physical_regions.size(); ++i) {
+        auto& region = m_physical_regions[i];
         if (region.size() >= physical_page_array_pages_and_page_tables_count) {
             found_region = &region;
             found_region_index = i;
@@ -433,12 +413,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         VERIFY_NOT_REACHED();
     }
 
-    VERIFY(m_system_memory_info.user_physical_pages >= physical_page_array_pages_and_page_tables_count);
-    m_system_memory_info.user_physical_pages -= physical_page_array_pages_and_page_tables_count;
+    VERIFY(m_system_memory_info.physical_pages >= physical_page_array_pages_and_page_tables_count);
+    m_system_memory_info.physical_pages -= physical_page_array_pages_and_page_tables_count;
 
     if (found_region->size() == physical_page_array_pages_and_page_tables_count) {
         // We're stealing the entire region
-        m_physical_pages_region = m_user_physical_regions.take(*found_region_index);
+        m_physical_pages_region = m_physical_regions.take(*found_region_index);
     } else {
         m_physical_pages_region = found_region->try_take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
     }
@@ -587,7 +567,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 
     bool did_purge = false;
-    auto page_table_or_error = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+    auto page_table_or_error = allocate_physical_page(ShouldZeroFill::Yes, &did_purge);
     if (page_table_or_error.is_error()) {
         dbgln("MM: Unable to allocate page table to map {}", vaddr);
         return nullptr;
@@ -776,7 +756,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
-    dma_buffer_page = TRY(allocate_supervisor_physical_page());
+    dma_buffer_page = TRY(allocate_physical_page());
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
     return allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
 }
@@ -791,7 +771,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
-    dma_buffer_pages = TRY(allocate_contiguous_supervisor_physical_pages(size));
+    dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
     return allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access, Region::Cacheable::No);
 }
@@ -844,27 +824,27 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
     return region;
 }
 
-ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)
+ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
     SpinlockLocker lock(s_mm_lock);
-    if (m_system_memory_info.user_physical_pages_uncommitted < page_count)
+    if (m_system_memory_info.physical_pages_uncommitted < page_count)
         return ENOMEM;
 
-    m_system_memory_info.user_physical_pages_uncommitted -= page_count;
-    m_system_memory_info.user_physical_pages_committed += page_count;
+    m_system_memory_info.physical_pages_uncommitted -= page_count;
+    m_system_memory_info.physical_pages_committed += page_count;
     return CommittedPhysicalPageSet { {}, page_count };
 }
 
-void MemoryManager::uncommit_user_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count)
+void MemoryManager::uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count)
 {
     VERIFY(page_count > 0);
 
     SpinlockLocker lock(s_mm_lock);
-    VERIFY(m_system_memory_info.user_physical_pages_committed >= page_count);
+    VERIFY(m_system_memory_info.physical_pages_committed >= page_count);
 
-    m_system_memory_info.user_physical_pages_uncommitted += page_count;
-    m_system_memory_info.user_physical_pages_committed -= page_count;
+    m_system_memory_info.physical_pages_uncommitted += page_count;
+    m_system_memory_info.physical_pages_committed -= page_count;
 }
 
 void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
@@ -872,46 +852,40 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
     SpinlockLocker lock(s_mm_lock);
 
     // Are we returning a user page?
-    for (auto& region : m_user_physical_regions) {
+    for (auto& region : m_physical_regions) {
         if (!region.contains(paddr))
             continue;
 
         region.return_page(paddr);
-        --m_system_memory_info.user_physical_pages_used;
+        --m_system_memory_info.physical_pages_used;
 
         // Always return pages to the uncommitted pool. Pages that were
         // committed and allocated are only freed upon request. Once
         // returned there is no guarantee being able to get them back.
-        ++m_system_memory_info.user_physical_pages_uncommitted;
+        ++m_system_memory_info.physical_pages_uncommitted;
         return;
     }
-
-    // If it's not a user page, it should be a supervisor page.
-    if (!m_super_physical_region->contains(paddr))
-        PANIC("MM: deallocate_user_physical_page couldn't figure out region for page @ {}", paddr);
-
-    m_super_physical_region->return_page(paddr);
-    --m_system_memory_info.super_physical_pages_used;
+    PANIC("MM: deallocate_physical_page couldn't figure out region for page @ {}", paddr);
 }
 
-RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
+RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 {
     VERIFY(s_mm_lock.is_locked());
     RefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
-        VERIFY(m_system_memory_info.user_physical_pages_committed > 0);
-        m_system_memory_info.user_physical_pages_committed--;
+        VERIFY(m_system_memory_info.physical_pages_committed > 0);
+        m_system_memory_info.physical_pages_committed--;
     } else {
         // We need to make sure we don't touch pages that we have committed to
-        if (m_system_memory_info.user_physical_pages_uncommitted == 0)
+        if (m_system_memory_info.physical_pages_uncommitted == 0)
             return {};
-        m_system_memory_info.user_physical_pages_uncommitted--;
+        m_system_memory_info.physical_pages_uncommitted--;
     }
-    for (auto& region : m_user_physical_regions) {
+    for (auto& region : m_physical_regions) {
         page = region.take_free_page();
         if (!page.is_null()) {
-            ++m_system_memory_info.user_physical_pages_used;
+            ++m_system_memory_info.physical_pages_used;
             break;
         }
     }
@@ -919,10 +893,10 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
     return page;
 }
 
-NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
+NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
     SpinlockLocker lock(s_mm_lock);
-    auto page = find_free_user_physical_page(true);
+    auto page = find_free_physical_page(true);
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
@@ -931,10 +905,10 @@ NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     SpinlockLocker lock(s_mm_lock);
-    auto page = find_free_user_physical_page(false);
+    auto page = find_free_physical_page(false);
     bool purged_pages = false;
 
     if (!page) {
@@ -948,7 +922,7 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(
                 return IterationDecision::Continue;
             if (auto purged_page_count = anonymous_vmobject.purge()) {
                 dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
-                page = find_free_user_physical_page(false);
+                page = find_free_physical_page(false);
                 purged_pages = true;
                 VERIFY(page);
                 return IterationDecision::Break;
@@ -972,68 +946,31 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_user_physical_page(
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_user_physical_pages(size_t size)
+ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(s_mm_lock);
     size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
 
     // We need to make sure we don't touch pages that we have committed to
-    if (m_system_memory_info.user_physical_pages_uncommitted < page_count)
+    if (m_system_memory_info.physical_pages_uncommitted < page_count)
         return ENOMEM;
 
-    for (auto& physical_region : m_user_physical_regions) {
+    for (auto& physical_region : m_physical_regions) {
         auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
         if (!physical_pages.is_empty()) {
             {
-                auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * page_count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
+                auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * page_count, "MemoryManager Allocation Sanitization"sv, Region::Access::Read | Region::Access::Write));
                 memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
             }
-            m_system_memory_info.user_physical_pages_uncommitted -= page_count;
-            m_system_memory_info.user_physical_pages_used += page_count;
+            m_system_memory_info.physical_pages_uncommitted -= page_count;
+            m_system_memory_info.physical_pages_used += page_count;
             return physical_pages;
         }
     }
 
     dmesgln("MM: no contiguous user physical pages available");
     return ENOMEM;
-}
-
-ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
-{
-    VERIFY(!(size % PAGE_SIZE));
-    SpinlockLocker lock(s_mm_lock);
-    size_t count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
-    auto physical_pages = m_super_physical_region->take_contiguous_free_pages(count);
-
-    if (physical_pages.is_empty()) {
-        dmesgln("MM: no super physical pages available");
-        return ENOMEM;
-    }
-
-    {
-        auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write));
-        memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * count);
-    }
-    m_system_memory_info.super_physical_pages_used += count;
-    return physical_pages;
-}
-
-ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_supervisor_physical_page()
-{
-    SpinlockLocker lock(s_mm_lock);
-    auto page = m_super_physical_region->take_free_page();
-
-    if (!page) {
-        dmesgln("MM: no super physical pages available");
-        return ENOMEM;
-    }
-
-    auto* ptr = quickmap_page(*page);
-    memset(ptr, 0, PAGE_SIZE);
-    unquickmap_page();
-    ++m_system_memory_info.super_physical_pages_used;
-    return page.release_nonnull();
 }
 
 void MemoryManager::enter_process_address_space(Process& process)
@@ -1212,21 +1149,21 @@ void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable
 CommittedPhysicalPageSet::~CommittedPhysicalPageSet()
 {
     if (m_page_count)
-        MM.uncommit_user_physical_pages({}, m_page_count);
+        MM.uncommit_physical_pages({}, m_page_count);
 }
 
 NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
 {
     VERIFY(m_page_count > 0);
     --m_page_count;
-    return MM.allocate_committed_user_physical_page({}, MemoryManager::ShouldZeroFill::Yes);
+    return MM.allocate_committed_physical_page({}, MemoryManager::ShouldZeroFill::Yes);
 }
 
 void CommittedPhysicalPageSet::uncommit_one()
 {
     VERIFY(m_page_count > 0);
     --m_page_count;
-    MM.uncommit_user_physical_pages({}, 1);
+    MM.uncommit_physical_pages({}, 1);
 }
 
 void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buffer[PAGE_SIZE])

@@ -8,7 +8,7 @@ describe("errors", () => {
         [-100, Infinity, NaN, 152n, undefined].forEach(value => {
             expect(() => {
                 new WeakRef(value);
-            }).toThrowWithMessage(TypeError, "is not an object");
+            }).toThrowWithMessage(TypeError, "cannot be held weakly");
         });
     });
     test("called without new", () => {
@@ -25,6 +25,11 @@ describe("normal behavior", () => {
 
     test("constructor with single object argument", () => {
         var a = new WeakRef({});
+        expect(a instanceof WeakRef).toBeTrue();
+    });
+
+    test("constructor with single symbol argument", () => {
+        var a = new WeakRef(Symbol());
         expect(a instanceof WeakRef).toBeTrue();
     });
 });

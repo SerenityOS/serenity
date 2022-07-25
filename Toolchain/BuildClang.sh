@@ -248,14 +248,14 @@ popd
 # === COPY HEADERS ===
 
 SRC_ROOT=$($REALPATH "$DIR"/..)
-FILES=$(find "$SRC_ROOT"/Kernel/API "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM "$SRC_ROOT"/Userland/Libraries/LibPthread "$SRC_ROOT"/Userland/Libraries/LibDl -name '*.h' -print)
+FILES=$(find "$SRC_ROOT"/Kernel/API "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM "$SRC_ROOT"/Userland/Libraries/LibDl -name '*.h' -print)
 
 for arch in $ARCHS; do
     mkdir -p "$BUILD/${arch}clang"
     pushd "$BUILD/${arch}clang"
         mkdir -p Root/usr/include/
         for header in $FILES; do
-            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" -e "s@$SRC_ROOT/Userland/Libraries/LibPthread@@" -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
+            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
             buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
         done
     popd
@@ -321,7 +321,13 @@ pushd "$DIR/Build/clang"
 popd
 
 pushd "$DIR/Local/clang/bin/"
-    buildstep "mold_symlink" ln -s ../../mold/bin/mold ld.mold
+    ln -s ../../mold/bin/mold ld.mold
+
+    for arch in $ARCHS; do
+        ln -s clang "$arch"-pc-serenity-clang
+        ln -s clang++ "$arch"-pc-serenity-clang++
+        echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
+    done
 popd
 
 # === SAVE TO CACHE ===

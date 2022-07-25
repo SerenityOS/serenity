@@ -27,7 +27,7 @@ public:
 
     // Intentionally not explicit. (To allow suggesting bare strings)
     CompletionSuggestion(String const& completion)
-        : CompletionSuggestion(completion, "", {})
+        : CompletionSuggestion(completion, ""sv, {})
     {
     }
 
@@ -36,7 +36,7 @@ public:
     {
     }
 
-    CompletionSuggestion(StringView completion, StringView trailing_trivia, StringView display_trivia = "")
+    CompletionSuggestion(StringView completion, StringView trailing_trivia, StringView display_trivia = ""sv)
         : CompletionSuggestion(completion, trailing_trivia, display_trivia, {})
     {
     }

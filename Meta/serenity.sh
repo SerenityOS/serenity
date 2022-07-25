@@ -199,7 +199,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-13 clang-14 clang-15
+    find_newest_compiler clang clang-13 clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$HOST_COMPILER")
         CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${HOST_COMPILER/clang/clang++}")

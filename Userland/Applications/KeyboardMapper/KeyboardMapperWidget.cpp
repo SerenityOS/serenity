@@ -58,7 +58,7 @@ void KeyboardMapperWidget::create_frame()
 
         tmp_button.on_click = [this, &tmp_button]() {
             String value;
-            if (GUI::InputBox::show(window(), value, "New Character:", "Select Character") == GUI::InputBox::ExecResult::OK) {
+            if (GUI::InputBox::show(window(), value, "New Character:"sv, "Select Character"sv) == GUI::InputBox::ExecResult::OK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
                 VERIFY(i > 0);
 
@@ -90,11 +90,11 @@ void KeyboardMapperWidget::create_frame()
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
     m_map_group->set_fixed_width(450);
 
-    add_map_radio_button("map", "Default");
-    add_map_radio_button("shift_map", "Shift");
-    add_map_radio_button("altgr_map", "AltGr");
-    add_map_radio_button("alt_map", "Alt");
-    add_map_radio_button("shift_altgr_map", "Shift+AltGr");
+    add_map_radio_button("map"sv, "Default"sv);
+    add_map_radio_button("shift_map"sv, "Shift"sv);
+    add_map_radio_button("altgr_map"sv, "AltGr"sv);
+    add_map_radio_button("alt_map"sv, "Alt"sv);
+    add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"sv);
 
     bottom_widget.layout()->add_spacer();
 }
@@ -257,7 +257,7 @@ void KeyboardMapperWidget::update_window_title()
 {
     StringBuilder sb;
     sb.append(m_filename);
-    sb.append("[*] - Keyboard Mapper");
+    sb.append("[*] - Keyboard Mapper"sv);
 
     window()->set_title(sb.to_string());
 }

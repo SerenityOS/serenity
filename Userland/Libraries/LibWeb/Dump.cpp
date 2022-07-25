@@ -35,7 +35,7 @@ namespace Web {
 static void indent(StringBuilder& builder, int levels)
 {
     for (int i = 0; i < levels; i++)
-        builder.append("  ");
+        builder.append("  "sv);
 }
 
 void dump_tree(DOM::Node const& node)
@@ -49,13 +49,13 @@ void dump_tree(StringBuilder& builder, DOM::Node const& node)
 {
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
-        builder.append("  ");
+        builder.append("  "sv);
     if (is<DOM::Element>(node)) {
         builder.appendff("<{}", verify_cast<DOM::Element>(node).local_name());
         verify_cast<DOM::Element>(node).for_each_attribute([&](auto& name, auto& value) {
             builder.appendff(" {}={}", name, value);
         });
-        builder.append(">\n");
+        builder.append(">\n"sv);
     } else if (is<DOM::Text>(node)) {
         builder.appendff("\"{}\"\n", verify_cast<DOM::Text>(node).data());
     } else {
@@ -89,7 +89,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 {
     static size_t indent = 0;
     for (size_t i = 0; i < indent; ++i)
-        builder.append("  ");
+        builder.append("  "sv);
 
     FlyString tag_name;
     if (layout_node.is_anonymous())
@@ -115,28 +115,28 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         identifier = builder.to_string();
     }
 
-    char const* nonbox_color_on = "";
-    char const* box_color_on = "";
-    char const* svg_box_color_on = "";
-    char const* positioned_color_on = "";
-    char const* floating_color_on = "";
-    char const* inline_block_color_on = "";
-    char const* line_box_color_on = "";
-    char const* fragment_color_on = "";
-    char const* flex_color_on = "";
-    char const* color_off = "";
+    StringView nonbox_color_on = ""sv;
+    StringView box_color_on = ""sv;
+    StringView svg_box_color_on = ""sv;
+    StringView positioned_color_on = ""sv;
+    StringView floating_color_on = ""sv;
+    StringView inline_block_color_on = ""sv;
+    StringView line_box_color_on = ""sv;
+    StringView fragment_color_on = ""sv;
+    StringView flex_color_on = ""sv;
+    StringView color_off = ""sv;
 
     if (interactive) {
-        nonbox_color_on = "\033[33m";
-        box_color_on = "\033[34m";
-        svg_box_color_on = "\033[31m";
-        positioned_color_on = "\033[31;1m";
-        floating_color_on = "\033[32;1m";
-        inline_block_color_on = "\033[36;1m";
-        line_box_color_on = "\033[34;1m";
-        fragment_color_on = "\033[35;1m";
-        flex_color_on = "\033[34;1m";
-        color_off = "\033[0m";
+        nonbox_color_on = "\033[33m"sv;
+        box_color_on = "\033[34m"sv;
+        svg_box_color_on = "\033[31m"sv;
+        positioned_color_on = "\033[31;1m"sv;
+        floating_color_on = "\033[32;1m"sv;
+        inline_block_color_on = "\033[36;1m"sv;
+        line_box_color_on = "\033[34;1m"sv;
+        fragment_color_on = "\033[35;1m"sv;
+        flex_color_on = "\033[34;1m"sv;
+        color_off = "\033[0m"sv;
     }
 
     if (!is<Layout::Box>(layout_node)) {
@@ -150,7 +150,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             color_off);
         if (interactive)
             builder.appendff(" @{:p}", &layout_node);
-        builder.append("\n");
+        builder.append("\n"sv);
     } else {
         auto& box = verify_cast<Layout::Box>(layout_node);
         StringView color_on = is<Layout::SVGBox>(box) ? svg_box_color_on : box_color_on;
@@ -226,7 +226,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
         builder.appendff(" children: {}", box.children_are_inline() ? "inline" : "not-inline");
 
-        builder.append("\n");
+        builder.append("\n"sv);
     }
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
@@ -234,7 +234,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         for (size_t line_box_index = 0; block.paint_box() && line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
             auto& line_box = block.paint_box()->line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
-                builder.append("  ");
+                builder.append("  "sv);
             builder.appendff("  {}line {}{} width: {}, height: {}, bottom: {}, baseline: {}\n",
                 line_box_color_on,
                 line_box_index,
@@ -246,7 +246,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
                 for (size_t i = 0; i < indent; ++i)
-                    builder.append("  ");
+                    builder.append("  "sv);
                 builder.appendff("    {}frag {}{} from {} ",
                     fragment_color_on,
                     fragment_index,
@@ -260,7 +260,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                     fragment.absolute_rect().to_string());
                 if (is<Layout::TextNode>(fragment.layout_node())) {
                     for (size_t i = 0; i < indent; ++i)
-                        builder.append("  ");
+                        builder.append("  "sv);
                     auto& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
                     builder.appendff("      \"{}\"\n", fragment_text);
@@ -282,7 +282,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
         for (auto& property : properties) {
             for (size_t i = 0; i < indent; ++i)
-                builder.append("    ");
+                builder.append("    "sv);
             builder.appendff("  ({}: {})\n", property.name, property.value);
         }
     }
@@ -303,10 +303,10 @@ void dump_selector(CSS::Selector const& selector)
 
 void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 {
-    builder.append("  CSS::Selector:\n");
+    builder.append("  CSS::Selector:\n"sv);
 
     for (auto& relative_selector : selector.compound_selectors()) {
-        builder.append("    ");
+        builder.append("    "sv);
 
         char const* relation_description = "";
         switch (relative_selector.combinator) {
@@ -455,22 +455,22 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 } else if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not
                     || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is
                     || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Where) {
-                    builder.append("([");
+                    builder.append("(["sv);
                     for (auto& selector : pseudo_class.argument_selector_list)
                         dump_selector(builder, selector);
-                    builder.append("])");
+                    builder.append("])"sv);
                 } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType)) {
                     builder.appendff("(step={}, offset={}", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
                     if (!pseudo_class.argument_selector_list.is_empty()) {
-                        builder.append(", selectors=[");
+                        builder.append(", selectors=["sv);
                         for (auto const& child_selector : pseudo_class.argument_selector_list)
                             dump_selector(builder, child_selector);
-                        builder.append("]");
+                        builder.append("]"sv);
                     }
-                    builder.append(")");
+                    builder.append(")"sv);
                 }
             }
 
@@ -491,6 +491,12 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     break;
                 case CSS::Selector::PseudoElement::Marker:
                     pseudo_element_description = "marker";
+                    break;
+                case CSS::Selector::PseudoElement::ProgressBar:
+                    pseudo_element_description = "-webkit-progress-bar";
+                    break;
+                case CSS::Selector::PseudoElement::ProgressValue:
+                    pseudo_element_description = "-webkit-progress-value";
                     break;
                 }
 
@@ -529,9 +535,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             }
 
             if (i != relative_selector.simple_selectors.size() - 1)
-                builder.append(", ");
+                builder.append(", "sv);
         }
-        builder.append("\n");
+        builder.append("\n"sv);
     }
 }
 
@@ -573,14 +579,14 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.appendff("font-family: {}\n", font_face.font_family());
 
     indent(builder, indent_levels + 1);
-    builder.append("sources:\n");
+    builder.append("sources:\n"sv);
     for (auto const& source : font_face.sources()) {
         indent(builder, indent_levels + 2);
         builder.appendff("url={}, format={}\n", source.url, source.format.value_or("???"));
     }
 
     indent(builder, indent_levels + 1);
-    builder.append("unicode-ranges:\n");
+    builder.append("unicode-ranges:\n"sv);
     for (auto const& unicode_range : font_face.unicode_ranges()) {
         indent(builder, indent_levels + 2);
         builder.appendff("{}\n", unicode_range.to_string());
@@ -619,20 +625,20 @@ void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule, int 
         dump_selector(builder, selector);
     }
     indent(builder, indent_levels);
-    builder.append("  Declarations:\n");
+    builder.append("  Declarations:\n"sv);
     auto& style_declaration = verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration());
     for (auto& property : style_declaration.properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
         if (property.important == CSS::Important::Yes)
-            builder.append(" \033[31;1m!important\033[0m");
+            builder.append(" \033[31;1m!important\033[0m"sv);
         builder.append('\n');
     }
     for (auto& property : style_declaration.custom_properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", property.key, property.value.value->to_string());
         if (property.value.important == CSS::Important::Yes)
-            builder.append(" \033[31;1m!important\033[0m");
+            builder.append(" \033[31;1m!important\033[0m"sv);
         builder.append('\n');
     }
 }

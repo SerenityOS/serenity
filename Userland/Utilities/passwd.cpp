@@ -30,7 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool del = false;
     bool lock = false;
     bool unlock = false;
-    char const* username = nullptr;
+    // FIXME: Replace with StringView once Core::Account::from_name stops taking a char const*.
+    String username {};
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify an account password.");
@@ -44,8 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uid_t current_uid = getuid();
 
     // target_account is the account we are changing the password of.
-    auto target_account = TRY((username)
-            ? Core::Account::from_name(username)
+    auto target_account = TRY(!username.is_empty()
+            ? Core::Account::from_name(username.characters())
             : Core::Account::from_uid(current_uid));
 
     setpwent();
@@ -63,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_password_enabled(true);
     } else {
         if (current_uid != 0) {
-            auto current_password = TRY(Core::get_password("Current password: "));
+            auto current_password = TRY(Core::get_password("Current password: "sv));
 
             if (!target_account.authenticate(current_password)) {
                 warnln("Incorrect or disabled password.");
@@ -72,8 +73,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        auto new_password = TRY(Core::get_password("New password: "));
-        auto new_password_retype = TRY(Core::get_password("Retype new password: "));
+        auto new_password = TRY(Core::get_password("New password: "sv));
+        auto new_password_retype = TRY(Core::get_password("Retype new password: "sv));
 
         if (new_password.is_empty() && new_password_retype.is_empty()) {
             warnln("No password supplied.");

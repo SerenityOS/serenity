@@ -131,17 +131,17 @@ void parse_attributes(ParsedCookie& parsed_cookie, StringView unparsed_attribute
 
 void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, StringView attribute_value)
 {
-    if (attribute_name.equals_ignoring_case("Expires")) {
+    if (attribute_name.equals_ignoring_case("Expires"sv)) {
         on_expires_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Max-Age")) {
+    } else if (attribute_name.equals_ignoring_case("Max-Age"sv)) {
         on_max_age_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Domain")) {
+    } else if (attribute_name.equals_ignoring_case("Domain"sv)) {
         on_domain_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Path")) {
+    } else if (attribute_name.equals_ignoring_case("Path"sv)) {
         on_path_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Secure")) {
+    } else if (attribute_name.equals_ignoring_case("Secure"sv)) {
         on_secure_attribute(parsed_cookie);
-    } else if (attribute_name.equals_ignoring_case("HttpOnly")) {
+    } else if (attribute_name.equals_ignoring_case("HttpOnly"sv)) {
         on_http_only_attribute(parsed_cookie);
     }
 }

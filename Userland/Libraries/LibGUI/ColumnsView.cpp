@@ -23,7 +23,7 @@ static constexpr Gfx::CharacterBitmap s_arrow_bitmap {
     "   ###   "
     "   ##    "
     "   #     "
-    "         ",
+    "         "sv,
     9, 9
 };
 
@@ -232,6 +232,20 @@ ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position)
     }
 
     return {};
+}
+
+void ColumnsView::select_range(ModelIndex const& index)
+{
+    auto min_row = min(selection_start_index().row(), index.row());
+    auto max_row = max(selection_start_index().row(), index.row());
+    auto parent = index.parent();
+
+    clear_selection();
+    for (auto row = min_row; row <= max_row; ++row) {
+        auto new_index = model()->index(row, m_model_column, parent);
+        if (new_index.is_valid())
+            toggle_selection(new_index);
+    }
 }
 
 void ColumnsView::mousedown_event(MouseEvent& event)

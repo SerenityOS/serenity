@@ -126,7 +126,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
 
         size_t size = 0;
         StringBuilder builder;
-        builder.append("merge");
+        builder.append("merge"sv);
         for (auto& entry : successors) {
             size += entry->size();
             builder.append('.');

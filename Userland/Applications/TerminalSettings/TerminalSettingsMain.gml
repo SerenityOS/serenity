@@ -7,7 +7,7 @@
 
     @GUI::GroupBox {
         title: "Bell Mode"
-        shrink_to_fit: false
+        preferred_height: "fit"
         fixed_height: 160
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
@@ -20,7 +20,7 @@
         }
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::VerticalBoxLayout {
                 spacing: 4
             }
@@ -44,7 +44,7 @@
 
     @GUI::GroupBox {
         title: "Scrollback Size (Lines)"
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
         }
@@ -64,7 +64,7 @@
 
     @GUI::GroupBox {
         title: "Exit Behaviour"
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
         }

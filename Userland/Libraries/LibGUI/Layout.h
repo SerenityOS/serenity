@@ -12,6 +12,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
+#include <LibGUI/UIDimensions.h>
 #include <LibGfx/Forward.h>
 
 namespace Core {
@@ -20,12 +21,12 @@ extern Core::ObjectClassRegistration registration_Layout;
 }
 }
 
-#define REGISTER_LAYOUT(namespace_, class_name)                                                                                                   \
-    namespace Core {                                                                                                                              \
-    namespace Registration {                                                                                                                      \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                      \
-        #namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Layout); \
-    }                                                                                                                                             \
+#define REGISTER_LAYOUT(namespace_, class_name)                                                                                                       \
+    namespace Core {                                                                                                                                  \
+    namespace Registration {                                                                                                                          \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                          \
+        #namespace_ "::" #class_name##sv, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Layout); \
+    }                                                                                                                                                 \
     }
 
 namespace GUI {
@@ -48,7 +49,8 @@ public:
     void remove_widget(Widget&);
 
     virtual void run(Widget&) = 0;
-    virtual Gfx::IntSize preferred_size() const = 0;
+    virtual UISize preferred_size() const = 0;
+    virtual UISize min_size() const = 0;
 
     void notify_adopted(Badge<Widget>, Widget&);
     void notify_disowned(Badge<Widget>, Widget&);

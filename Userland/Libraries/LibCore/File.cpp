@@ -115,6 +115,38 @@ bool File::is_device(String const& filename)
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
 
+bool File::is_block_device() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISBLK(stat.st_mode);
+}
+
+bool File::is_block_device(String const& filename)
+{
+    struct stat st;
+    if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISBLK(st.st_mode);
+}
+
+bool File::is_char_device() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISCHR(stat.st_mode);
+}
+
+bool File::is_char_device(String const& filename)
+{
+    struct stat st;
+    if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISCHR(st.st_mode);
+}
+
 bool File::is_directory() const
 {
     struct stat stat;
@@ -408,16 +440,18 @@ ErrorOr<void, File::CopyError> File::copy_file(String const& dst_path, struct st
     auto my_umask = umask(0);
     umask(my_umask);
     // NOTE: We don't copy the set-uid and set-gid bits unless requested.
-    if (preserve_mode != PreserveMode::PermissionsOwnershipTimestamps)
+    if (!has_flag(preserve_mode, PreserveMode::Permissions))
         my_umask |= 06000;
 
     if (fchmod(dst_fd, src_stat.st_mode & ~my_umask) < 0)
         return CopyError { errno, false };
 
-    if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
+    if (has_flag(preserve_mode, PreserveMode::Ownership)) {
         if (fchown(dst_fd, src_stat.st_uid, src_stat.st_gid) < 0)
             return CopyError { errno, false };
+    }
 
+    if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         // FIXME: Implement utimens() and use it here.
         struct utimbuf timbuf;
         timbuf.actime = src_stat.st_atime;
@@ -462,10 +496,12 @@ ErrorOr<void, File::CopyError> File::copy_directory(String const& dst_path, Stri
     if (chmod(dst_path.characters(), src_stat.st_mode & ~my_umask) < 0)
         return CopyError { errno, false };
 
-    if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
+    if (has_flag(preserve_mode, PreserveMode::Ownership)) {
         if (chown(dst_path.characters(), src_stat.st_uid, src_stat.st_gid) < 0)
             return CopyError { errno, false };
+    }
 
+    if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
         // FIXME: Implement utimens() and use it here.
         struct utimbuf timbuf;
         timbuf.actime = src_stat.st_atime;

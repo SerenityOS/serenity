@@ -26,7 +26,7 @@ namespace PixelPaint {
 ErrorOr<NonnullRefPtr<GUI::TreeViewModel>> create_filter_tree_model(ImageEditor* editor)
 {
     auto directory_icon = GUI::FileIconProvider::directory_icon();
-    auto filter_icon = GUI::Icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png")));
+    auto filter_icon = GUI::Icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png"sv)));
 
     auto filter_tree_model = GUI::TreeViewModel::create();
 

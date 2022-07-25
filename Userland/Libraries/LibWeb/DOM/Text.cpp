@@ -17,6 +17,11 @@ Text::Text(Document& document, String const& data)
 {
 }
 
+Text::Text(Document& document, NodeType type, String const& data)
+    : CharacterData(document, type, data)
+{
+}
+
 // https://dom.spec.whatwg.org/#dom-text-text
 NonnullRefPtr<Text> Text::create_with_global_object(Bindings::WindowObject& window, String const& data)
 {

@@ -410,6 +410,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 // 22.2.5.10 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
 // 22.2.5.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
+// 22.2.5.18 get RegExp.prototype.unicodeSets, https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodeSets
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                                    \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                                 \
     {                                                                                                     \
@@ -467,14 +468,16 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     // 11. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
     // 12. Let dotAll be ToBoolean(? Get(R, "dotAll")).
     // 13. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
-    // 14. Let unicode be ToBoolean(? Get(R, "unicode")).
-    // 15. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
-    // 16. Let sticky be ToBoolean(? Get(R, "sticky")).
-    // 17. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
+    // 14. Let unicodeSets be ! ToBoolean(? Get(R, "unicodeSets")).
+    // 15. If unicodeSets is true, append the code unit 0x0076 (LATIN SMALL LETTER V) as the last code unit of result.
+    // 16. Let unicode be ToBoolean(? Get(R, "unicode")).
+    // 17. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
+    // 18. Let sticky be ToBoolean(? Get(R, "sticky")).
+    // 19. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
     auto flag_##flag_name = TRY(regexp_object->get(vm.names.flagName)); \
     if (flag_##flag_name.to_boolean())                                  \
-        builder.append(#flag_char);
+        builder.append(#flag_char##sv);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
@@ -483,6 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 }
 
 // 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%2540%2540match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
     // 1. Let rx be the this value.
@@ -504,19 +508,23 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // 6. Else,
     // a. Assert: global is true.
 
-    // b. Let fullUnicode be ToBoolean(? Get(rx, "unicode")).
-    bool full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+    // b. Let fullUnicode be ToBoolean(? Get(rx, "unicodeSets")).
+    bool full_unicode = TRY(regexp_object->get(vm.names.unicodeSets)).to_boolean();
 
-    // c. Perform ? Set(rx, "lastIndex", +0𝔽, true).
+    // c. If fullUnicode is false, set fullUnicode to ! ToBoolean(? Get(rx, "unicode")).
+    if (!full_unicode)
+        full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+
+    // d. Perform ? Set(rx, "lastIndex", +0𝔽, true).
     TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-    // d. Let A be ! ArrayCreate(0).
+    // e. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));
 
-    // e. Let n be 0.
+    // f. Let n be 0.
     size_t n = 0;
 
-    // f. Repeat,
+    // g. Repeat,
     while (true) {
         // i. Let result be ? RegExpExec(rx, S).
         auto result = TRY(regexp_exec(global_object, *regexp_object, string));
@@ -552,6 +560,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 }
 
 // 22.2.5.9 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
     // 1. Let R be the this value.
@@ -576,7 +585,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     // 11. If flags contains "u", let fullUnicode be true.
     // 12. Else, let fullUnicode be false.
-    bool full_unicode = flags.contains('u');
+    bool full_unicode = flags.contains('u') || flags.contains('v');
 
     // 6. Let matcher be ? Construct(C, « R, flags »).
     auto* matcher = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(flags))));
@@ -593,6 +602,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 }
 
 // 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-@@replace
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 {
     auto string_value = vm.argument(0);
@@ -621,10 +631,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 8. If global is true, then
     if (global) {
-        // a. Let fullUnicode be ToBoolean(? Get(rx, "unicode")).
-        full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+        // a. Let fullUnicode be ToBoolean(? Get(rx, "unicodeSets")).
+        full_unicode = TRY(regexp_object->get(vm.names.unicodeSets)).to_boolean();
 
-        // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
+        // b. If fullUnicode is false, set fullUnicode to ! ToBoolean(? Get(rx, "unicode")).
+        if (!full_unicode)
+            full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+
+        // c. Perform ? Set(rx, "lastIndex", +0𝔽, true).
         TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
     }
 
@@ -863,7 +877,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 6. If flags contains "u", let unicodeMatching be true.
     // 7. Else, let unicodeMatching be false.
-    bool unicode_matching = flags.find('u').has_value();
+    bool unicode_matching = flags.contains('u') || flags.contains('v');
 
     // 8. If flags contains "y", let newFlags be flags.
     // 9. Else, let newFlags be the string-concatenation of flags and "y".

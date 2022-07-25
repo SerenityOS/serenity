@@ -22,14 +22,14 @@ class Point {
 public:
     Point() = default;
 
-    Point(T x, T y)
+    constexpr Point(T x, T y)
         : m_x(x)
         , m_y(y)
     {
     }
 
     template<typename U>
-    Point(U x, U y)
+    constexpr Point(U x, U y)
         : m_x(x)
         , m_y(y)
     {

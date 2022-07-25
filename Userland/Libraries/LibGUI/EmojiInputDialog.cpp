@@ -28,7 +28,7 @@ static Vector<u32> supported_emoji_code_points()
         if (lexical_path.extension() != "png")
             continue;
         auto basename = lexical_path.basename();
-        if (!basename.starts_with("U+"))
+        if (!basename.starts_with("U+"sv))
             continue;
         // FIXME: Handle multi code point emojis.
         if (basename.contains('_'))
@@ -92,6 +92,11 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
             }
         }
     }
+
+    on_active_window_change = [this](bool is_active_window) {
+        if (!is_active_window)
+            close();
+    };
 }
 
 void EmojiInputDialog::event(Core::Event& event)

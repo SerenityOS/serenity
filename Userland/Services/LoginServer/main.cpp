@@ -46,8 +46,8 @@ static void login(Core::Account const& account, LoginWindow& window)
     pid_t rc = waitpid(pid, &wstatus, 0);
     if (rc == -1)
         dbgln("waitpid failed: {}", strerror(errno));
-    if (rc != 0)
-        dbgln("SystemServer exited with non-zero status: {}", rc);
+    if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
+        dbgln("SystemServer exited with non-zero status: {}", WEXITSTATUS(wstatus));
 
     window.show();
 }
@@ -56,8 +56,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath exec proc id"));
+    TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath exec proc id"));
     TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/tmp", "c"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
@@ -70,9 +71,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto username = window->username();
         auto password = Core::SecretString::take_ownership(window->password().to_byte_buffer());
 
-        window->set_password("");
+        window->set_password(""sv);
 
-        auto fail_message = "Can't log in: invalid username or password.";
+        auto fail_message = "Can't log in: invalid username or password."sv;
 
         auto account = Core::Account::from_name(username.characters());
         if (account.is_error()) {
@@ -87,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        window->set_username("");
+        window->set_username(""sv);
         window->hide();
 
         login(account.value(), *window);

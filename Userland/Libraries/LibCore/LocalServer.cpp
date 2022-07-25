@@ -35,7 +35,7 @@ LocalServer::~LocalServer()
 ErrorOr<void> LocalServer::take_over_from_system_server(String const& socket_path)
 {
     if (m_listening)
-        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening"sv);
+        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening");
 
     auto socket = TRY(take_over_socket_from_system_server(socket_path));
     m_fd = TRY(socket->release_fd());
@@ -120,7 +120,7 @@ ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> LocalServer::accept()
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);
 #endif
     if (accepted_fd < 0) {
-        return Error::from_syscall("accept", -errno);
+        return Error::from_syscall("accept"sv, -errno);
     }
 
 #ifdef AK_OS_MACOS

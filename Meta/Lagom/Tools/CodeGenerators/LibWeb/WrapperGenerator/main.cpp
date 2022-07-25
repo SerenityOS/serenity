@@ -32,8 +32,8 @@ void generate_iterator_implementation(IDL::Interface const&);
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    StringView path = nullptr;
-    StringView import_base_path = nullptr;
+    StringView path;
+    StringView import_base_path;
     bool header_mode = false;
     bool implementation_mode = false;
     bool constructor_header_mode = false;
@@ -55,13 +55,13 @@ int main(int argc, char** argv)
     args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
     args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header search path passed to the compiler",
         .long_name = "header-include-path",
         .short_name = 'i',
         .value_name = "path",
         .accept_value = [&](char const* s) {
-            s_header_search_paths.append(s);
+            s_header_search_paths.append({ s, strlen(s) });
             return true;
         },
     });
@@ -85,10 +85,34 @@ int main(int argc, char** argv)
 
     auto& interface = IDL::Parser(path, data, import_base_path).parse();
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "URL", "WebSockets", "XHR")) {
+    static constexpr Array libweb_interface_namespaces = {
+        "CSS"sv,
+        "Crypto"sv,
+        "DOM"sv,
+        "DOMParsing"sv,
+        "Encoding"sv,
+        "Fetch"sv,
+        "FileAPI"sv,
+        "Geometry"sv,
+        "HTML"sv,
+        "HighResolutionTime"sv,
+        "IntersectionObserver"sv,
+        "NavigationTiming"sv,
+        "RequestIdleCallback"sv,
+        "ResizeObserver"sv,
+        "SVG"sv,
+        "Selection"sv,
+        "UIEvents"sv,
+        "URL"sv,
+        "WebGL"sv,
+        "WebSockets"sv,
+        "XHR"sv,
+    };
+
+    if (libweb_interface_namespaces.span().contains_slow(namespace_)) {
         StringBuilder builder;
         builder.append(namespace_);
-        builder.append("::");
+        builder.append("::"sv);
         builder.append(interface.name);
         interface.fully_qualified_name = builder.to_string();
     } else {

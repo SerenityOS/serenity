@@ -79,7 +79,7 @@ NonnullRefPtr<Encoding> Encoding::standard_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
-    auto name##_code_point = *Utf8View(StringView(string)).begin();          \
+    auto name##_code_point = *Utf8View(string##sv).begin();                  \
     encoding->m_descriptors.set(standard_code, { string, name##_code_point });
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
@@ -93,7 +93,7 @@ NonnullRefPtr<Encoding> Encoding::mac_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
-    auto name##_code_point = *Utf8View(StringView(string)).begin();          \
+    auto name##_code_point = *Utf8View(string##sv).begin();                  \
     encoding->m_descriptors.set(mac_code, { string, name##_code_point });
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
@@ -107,7 +107,7 @@ NonnullRefPtr<Encoding> Encoding::windows_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
-    auto name##_code_point = *Utf8View(StringView(string)).begin();          \
+    auto name##_code_point = *Utf8View(string##sv).begin();                  \
     encoding->m_descriptors.set(win_code, { string, name##_code_point });
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
@@ -121,7 +121,7 @@ NonnullRefPtr<Encoding> Encoding::pdf_doc_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
-    auto name##_code_point = *Utf8View(StringView(string)).begin();          \
+    auto name##_code_point = *Utf8View(string##sv).begin();                  \
     encoding->m_descriptors.set(pdf_code, { string, name##_code_point });
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
@@ -134,8 +134,8 @@ NonnullRefPtr<Encoding> Encoding::symbol_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(string, name, code)                               \
-    auto name##_code_point = *Utf8View(StringView(string)).begin(); \
+#define ENUMERATE(string, name, code)                       \
+    auto name##_code_point = *Utf8View(string##sv).begin(); \
     encoding->m_descriptors.set(code, { string, name##_code_point });
         ENUMERATE_SYMBOL_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
@@ -148,8 +148,8 @@ NonnullRefPtr<Encoding> Encoding::zapf_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(string, name, code)                               \
-    auto name##_code_point = *Utf8View(StringView(string)).begin(); \
+#define ENUMERATE(string, name, code)                       \
+    auto name##_code_point = *Utf8View(string##sv).begin(); \
     encoding->m_descriptors.set(code, { string, name##_code_point });
         ENUMERATE_ZAPF_DINGBATS_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE

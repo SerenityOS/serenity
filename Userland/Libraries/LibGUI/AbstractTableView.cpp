@@ -60,7 +60,7 @@ void AbstractTableView::auto_resize_column(int column)
 
     int header_width = m_column_header->font().width(model.column_name(column));
     if (column == m_key_column && model.is_column_sortable(column))
-        header_width += font().width(" \xE2\xAC\x86");
+        header_width += font().width(" \xE2\xAC\x86"sv);
 
     int column_width = header_width;
     bool is_empty = true;
@@ -99,7 +99,7 @@ void AbstractTableView::update_column_sizes()
             continue;
         int header_width = m_column_header->font().width(model.column_name(column));
         if (column == m_key_column && model.is_column_sortable(column))
-            header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
+            header_width += font().width(" \xE2\xAC\x86"sv); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
             auto cell_data = model.index(row, column).data();
@@ -411,7 +411,7 @@ void AbstractTableView::layout_headers()
         int y = frame_thickness();
         int width = max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
 
-        column_header().set_relative_rect(x, y, width, column_header().min_size().height());
+        column_header().set_relative_rect(x, y, width, column_header().effective_min_size().height().as_int());
     }
 
     if (row_header().is_visible()) {
@@ -422,7 +422,7 @@ void AbstractTableView::layout_headers()
         int y = frame_thickness() + column_header_height - vertical_scrollbar().value();
         int height = max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
 
-        row_header().set_relative_rect(x, y, row_header().min_size().width(), height);
+        row_header().set_relative_rect(x, y, row_header().effective_min_size().width().as_int(), height);
     }
 
     if (row_header().is_visible() && column_header().is_visible()) {

@@ -11,7 +11,7 @@
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Transport.h>
 
-namespace LibDSP::Effects {
+namespace DSP::Effects {
 
 // A simple digital delay effect using a delay buffer.
 // This is based on Piano's old built-in delay.

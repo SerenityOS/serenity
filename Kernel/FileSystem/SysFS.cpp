@@ -4,69 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
 #include <AK/StringView.h>
-#include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
-
-static Singleton<SysFSComponentRegistry> s_the;
-
-SysFSComponentRegistry& SysFSComponentRegistry::the()
-{
-    return *s_the;
-}
-
-UNMAP_AFTER_INIT void SysFSComponentRegistry::initialize()
-{
-    VERIFY(!s_the.is_initialized());
-    s_the.ensure_instance();
-}
-
-UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
-    : m_root_directory(SysFSRootDirectory::create())
-{
-}
-
-UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
-{
-    MutexLocker locker(m_lock);
-    m_root_directory->m_components.append(component);
-}
-
-SysFSComponentRegistry::DevicesList& SysFSComponentRegistry::devices_list()
-{
-    return m_devices_list;
-}
-
-NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
-{
-    return adopt_ref(*new (nothrow) SysFSRootDirectory);
-}
-
-ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
-{
-    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
-    TRY(callback({ ".", { fsid, component_index() }, 0 }));
-    TRY(callback({ "..", { fsid, 0 }, 0 }));
-
-    for (auto const& component : m_components) {
-        InodeIdentifier identifier = { fsid, component.component_index() };
-        TRY(callback({ component.name(), identifier, 0 }));
-    }
-    return {};
-}
-
-SysFSRootDirectory::SysFSRootDirectory()
-{
-    auto buses_directory = SysFSBusDirectory::must_create(*this);
-    auto devices_directory = SysFSDevicesDirectory::must_create(*this);
-    m_components.append(buses_directory);
-    m_components.append(devices_directory);
-    m_buses_directory = buses_directory;
-}
 
 ErrorOr<NonnullRefPtr<FileSystem>> SysFS::try_create()
 {
@@ -138,7 +82,7 @@ InodeMetadata SysFSInode::metadata() const
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = m_associated_component->size();
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     return metadata;
 }
 
@@ -187,6 +131,31 @@ ErrorOr<void> SysFSInode::truncate(u64 size)
     return m_associated_component->truncate(size);
 }
 
+ErrorOr<NonnullRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
+}
+
+SysFSLinkInode::SysFSLinkInode(SysFS const& fs, SysFSComponent const& component)
+    : SysFSInode(fs, component)
+{
+}
+
+SysFSLinkInode::~SysFSLinkInode() = default;
+
+InodeMetadata SysFSLinkInode::metadata() const
+{
+    // NOTE: No locking required as m_associated_component or its component index will never change during our lifetime.
+    InodeMetadata metadata;
+    metadata.inode = { fsid(), m_associated_component->component_index() };
+    metadata.mode = S_IFLNK | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
+    metadata.uid = 0;
+    metadata.gid = 0;
+    metadata.size = 0;
+    metadata.mtime = TimeManagement::boot_time();
+    return metadata;
+}
+
 ErrorOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSDirectoryInode(sysfs, component));
@@ -208,7 +177,7 @@ InodeMetadata SysFSDirectoryInode::metadata() const
     metadata.uid = 0;
     metadata.gid = 0;
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     return metadata;
 }
 ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
@@ -224,28 +193,6 @@ ErrorOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
     if (!component)
         return ENOENT;
     return TRY(component->to_inode(fs()));
-}
-
-SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
-{
-    return *m_root_directory->m_buses_directory;
-}
-
-void SysFSComponentRegistry::register_new_bus_directory(SysFSDirectory& new_bus_directory)
-{
-    VERIFY(!m_root_directory->m_buses_directory.is_null());
-    m_root_directory->m_buses_directory->m_components.append(new_bus_directory);
-}
-
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create(SysFSRootDirectory const& parent_directory)
-{
-    auto directory = adopt_ref(*new (nothrow) SysFSBusDirectory(parent_directory));
-    return directory;
-}
-
-UNMAP_AFTER_INIT SysFSBusDirectory::SysFSBusDirectory(SysFSRootDirectory const& parent_directory)
-    : SysFSDirectory(parent_directory)
-{
 }
 
 }

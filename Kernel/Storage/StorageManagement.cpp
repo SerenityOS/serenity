@@ -16,20 +16,22 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Storage/ATA/AHCIController.h>
-#include <Kernel/Storage/ATA/ISAIDEController.h>
-#include <Kernel/Storage/ATA/PCIIDEController.h>
+#include <Kernel/Storage/ATA/AHCI/Controller.h>
+#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
+#include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
+#include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/Storage/Partition/EBRPartitionTable.h>
-#include <Kernel/Storage/Partition/GUIDPartitionTable.h>
-#include <Kernel/Storage/Partition/MBRPartitionTable.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
+#include <LibPartition/EBRPartitionTable.h>
+#include <LibPartition/GUIDPartitionTable.h>
+#include <LibPartition/MBRPartitionTable.h>
 
 namespace Kernel {
 
 static Singleton<StorageManagement> s_the;
 static Atomic<u32> s_device_minor_number;
+static Atomic<u32> s_controller_id;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -129,16 +131,16 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
 {
-    auto mbr_table_or_error = MBRPartitionTable::try_to_initialize(device);
+    auto mbr_table_or_error = Partition::MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_error.is_error())
         return mbr_table_or_error.release_value();
-    auto ebr_table_or_error = EBRPartitionTable::try_to_initialize(device);
+    auto ebr_table_or_error = Partition::EBRPartitionTable::try_to_initialize(device);
     if (!ebr_table_or_error.is_error()) {
         return ebr_table_or_error.release_value();
     }
-    return TRY(GUIDPartitionTable::try_to_initialize(device));
+    return TRY(Partition::GUIDPartitionTable::try_to_initialize(device));
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
@@ -242,6 +244,13 @@ MinorNumber StorageManagement::generate_storage_minor_number()
     auto minor_number = s_device_minor_number.load();
     s_device_minor_number++;
     return minor_number;
+}
+
+u32 StorageManagement::generate_controller_id()
+{
+    auto controller_id = s_controller_id.load();
+    s_controller_id++;
+    return controller_id;
 }
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const

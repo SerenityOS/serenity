@@ -28,8 +28,8 @@ ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<Strin
 {
     if (m_pid != -1) {
         GUI::MessageBox::show(window(),
-            "A command is already running in this TerminalWrapper",
-            "Can't run command",
+            "A command is already running in this TerminalWrapper"sv,
+            "Can't run command"sv,
             GUI::MessageBox::Type::Error);
         return {};
     }
@@ -49,7 +49,7 @@ ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<Strin
 
             VERIFY(m_child_exit_status.has_value());
             if (m_child_exit_status.value() != 0)
-                return Error::from_string_literal(failure_message.value_or("Command execution failed"sv));
+                return Error::from_string_view(failure_message.value_or("Command execution failed"sv));
         }
 
         return {};
@@ -94,7 +94,7 @@ ErrorOr<int> TerminalWrapper::setup_master_pseudoterminal(WaitForChildOnExit wai
             if (WIFEXITED(wstatus)) {
                 m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\r\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
             } else if (WIFSTOPPED(wstatus)) {
-                m_terminal_widget->inject_string("\033[34;1m(Command stopped!)\033[0m\r\n");
+                m_terminal_widget->inject_string("\033[34;1m(Command stopped!)\033[0m\r\n"sv);
             } else if (WIFSIGNALED(wstatus)) {
                 m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\r\n", strsignal(WTERMSIG(wstatus))));
             }

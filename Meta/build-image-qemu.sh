@@ -14,6 +14,12 @@ fi
 
 set -e
 
+SUDO="sudo"
+
+if [ "$(uname -s)" = "SerenityOS" ]; then
+    SUDO="pls"
+fi
+
 die() {
     echo "die: $*"
     exit 1
@@ -25,7 +31,7 @@ if [ "$(id -u)" != 0 ]; then
     if [ -x "$FUSE2FS_PATH" ] && $FUSE2FS_PATH --help 2>&1 |grep fakeroot > /dev/null; then
         USE_FUSE2FS=1
     else
-        sudo -E -- "$0" "$@" || die "this script needs to run as root"
+        ${SUDO} -E -- "$0" "$@" || die "this script needs to run as root"
         exit 0
     fi
 else
@@ -39,6 +45,8 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
 
     E2FSCK="e2fsck"
+elif [ "$(uname -s)" = "SerenityOS" ]; then
+    E2FSCK="/usr/local/sbin/e2fsck"
 else
     E2FSCK="/usr/sbin/e2fsck"
 

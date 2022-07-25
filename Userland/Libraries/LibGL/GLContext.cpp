@@ -1216,18 +1216,18 @@ void GLContext::build_extension_string()
     // Ideally we would verify if the selected device adheres to the requested OpenGL context version before context creation
     // and refuse to create a context if it doesn't.
     if (m_device_info.supports_npot_textures)
-        extensions.append("GL_ARB_texture_non_power_of_two");
+        extensions.append("GL_ARB_texture_non_power_of_two"sv);
 
     if (m_device_info.num_texture_units > 1)
-        extensions.append("GL_ARB_multitexture");
+        extensions.append("GL_ARB_multitexture"sv);
 
-    m_extensions = String::join(" ", extensions);
+    m_extensions = String::join(' ', extensions);
 }
 
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
     // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
-    auto driver = MUST(GPU::Driver::try_create("softgpu"));
+    auto driver = MUST(GPU::Driver::try_create("softgpu"sv));
     auto device = MUST(driver->try_create_device(bitmap.size()));
     auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());

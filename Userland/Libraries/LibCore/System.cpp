@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
@@ -12,8 +12,8 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
-#include <LibSystem/syscall.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #ifdef __serenity__
+#    include <LibSystem/syscall.h>
 #    include <serenity.h>
 #endif
 
@@ -44,7 +45,7 @@ static int memfd_create(char const* name, unsigned int flags)
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
-        return Error::from_syscall(syscall_name, rc);                \
+        return Error::from_syscall(syscall_name##sv, rc);            \
     }                                                                \
     return success_value;
 
@@ -75,7 +76,7 @@ ErrorOr<void> pledge(StringView promises, StringView execpromises)
         { execpromises.characters_without_null_termination(), execpromises.length() },
     };
     int rc = syscall(SC_pledge, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("pledge", rc, {});
 }
 
 ErrorOr<void> unveil(StringView path, StringView permissions)
@@ -85,7 +86,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
         { permissions.characters_without_null_termination(), permissions.length() },
     };
     int rc = syscall(SC_unveil, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("unveil", rc, {});
 }
 
 ErrorOr<void> sendfd(int sockfd, int fd)
@@ -182,7 +183,7 @@ ErrorOr<void> profiling_free_buffer(pid_t pid)
 }
 #endif
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 ErrorOr<Optional<struct spwd>> getspent()
 {
     errno = 0;
@@ -248,7 +249,7 @@ ErrorOr<int> fcntl(int fd, int command, ...)
 {
     va_list ap;
     va_start(ap, command);
-    u32 extra_arg = va_arg(ap, u32);
+    uintptr_t extra_arg = va_arg(ap, uintptr_t);
     int rc = ::fcntl(fd, command, extra_arg);
     va_end(ap);
     if (rc < 0)
@@ -286,7 +287,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     int fd = -1;
 #if defined(__serenity__)
     fd = ::anon_create(round_up_to_power_of_two(size, PAGE_SIZE), options);
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__FreeBSD__)
     // FIXME: Support more options on Linux.
     auto linux_options = ((options & O_CLOEXEC) > 0) ? MFD_CLOEXEC : 0;
     fd = memfd_create("", linux_options);
@@ -342,7 +343,7 @@ ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode)
 #ifdef __serenity__
     Syscall::SC_open_params params { fd, { path.characters_without_null_termination(), path.length() }, options, mode };
     int rc = syscall(SC_open, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("open"sv, rc, rc);
+    HANDLE_SYSCALL_RETURN_VALUE("open", rc, rc);
 #else
     // NOTE: We have to ensure that the path is null-terminated.
     String path_string = path;
@@ -376,7 +377,7 @@ ErrorOr<struct stat> stat(StringView path)
 #ifdef __serenity__
     Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, AT_FDCWD, true };
     int rc = syscall(SC_stat, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("stat"sv, rc, st);
+    HANDLE_SYSCALL_RETURN_VALUE("stat", rc, st);
 #else
     String path_string = path;
     if (::stat(path_string.characters(), &st) < 0)
@@ -394,7 +395,7 @@ ErrorOr<struct stat> lstat(StringView path)
 #ifdef __serenity__
     Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, AT_FDCWD, false };
     int rc = syscall(SC_stat, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("lstat"sv, rc, st);
+    HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
     String path_string = path;
     if (::stat(path_string.characters(), &st) < 0)
@@ -532,7 +533,7 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
         true
     };
     int rc = syscall(SC_chmod, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("chmod"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("chmod", rc, {});
 #else
     String path = pathname;
     if (::chmod(path.characters(), mode) < 0)
@@ -563,7 +564,7 @@ ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid)
 #ifdef __serenity__
     Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid, AT_FDCWD, false };
     int rc = syscall(SC_chown, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("chown"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
     String path = pathname;
     if (::chown(path.characters(), uid, gid) < 0)
@@ -580,7 +581,7 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 #ifdef __serenity__
     Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid, AT_FDCWD, true };
     int rc = syscall(SC_chown, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("chown"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("chown", rc, {});
 #else
     String path = pathname;
     if (::lchown(path.characters(), uid, gid) < 0)
@@ -653,7 +654,7 @@ ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
 {
 #ifdef __serenity__
     int rc = syscall(SC_clock_settime, clock_id, ts);
-    HANDLE_SYSCALL_RETURN_VALUE("clocksettime"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("clocksettime", rc, {});
 #else
     if (::clock_settime(clock_id, ts) < 0)
         return Error::from_syscall("clocksettime"sv, -errno);
@@ -683,7 +684,7 @@ ErrorOr<off_t> lseek(int fd, off_t offset, int whence)
 {
     off_t rc = ::lseek(fd, offset, whence);
     if (rc < 0)
-        return Error::from_syscall("lseek", -errno);
+        return Error::from_syscall("lseek"sv, -errno);
     return rc;
 }
 
@@ -693,7 +694,7 @@ ErrorOr<void> endgrent()
     swap(old_errno, errno);
     ::endgrent();
     if (errno != 0)
-        return Error::from_syscall("endgrent", -errno);
+        return Error::from_syscall("endgrent"sv, -errno);
     errno = old_errno;
     return {};
 }
@@ -777,7 +778,7 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
         .linkpath = { link_path.characters_without_null_termination(), link_path.length() },
     };
     int rc = syscall(SC_symlink, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("symlink"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("symlink", rc, {});
 #else
     String target_string = target;
     String link_path_string = link_path;
@@ -793,7 +794,7 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
         return Error::from_errno(EFAULT);
 #ifdef __serenity__
     int rc = syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
-    HANDLE_SYSCALL_RETURN_VALUE("mkdir"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("mkdir", rc, {});
 #else
     String path_string = path;
     if (::mkdir(path_string.characters(), mode) < 0)
@@ -808,7 +809,7 @@ ErrorOr<void> chdir(StringView path)
         return Error::from_errno(EFAULT);
 #ifdef __serenity__
     int rc = syscall(SC_chdir, path.characters_without_null_termination(), path.length());
-    HANDLE_SYSCALL_RETURN_VALUE("chdir"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("chdir", rc, {});
 #else
     String path_string = path;
     if (::chdir(path_string.characters()) < 0)
@@ -823,7 +824,7 @@ ErrorOr<void> rmdir(StringView path)
         return Error::from_errno(EFAULT);
 #ifdef __serenity__
     int rc = syscall(SC_rmdir, path.characters_without_null_termination(), path.length());
-    HANDLE_SYSCALL_RETURN_VALUE("rmdir"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("rmdir", rc, {});
 #else
     String path_string = path;
     if (::rmdir(path_string.characters()) < 0)
@@ -859,7 +860,7 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
         .new_path = { new_path.characters_without_null_termination(), new_path.length() },
     };
     int rc = syscall(SC_rename, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("rename"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("rename", rc, {});
 #else
     String old_path_string = old_path;
     String new_path_string = new_path;
@@ -876,7 +877,7 @@ ErrorOr<void> unlink(StringView path)
 
 #ifdef __serenity__
     int rc = syscall(SC_unlink, AT_FDCWD, path.characters_without_null_termination(), path.length(), 0);
-    HANDLE_SYSCALL_RETURN_VALUE("unlink"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("unlink", rc, {});
 #else
     String path_string = path;
     if (::unlink(path_string.characters()) < 0)
@@ -895,7 +896,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
         buf = &maybe_buf.value();
 #ifdef __serenity__
     int rc = syscall(SC_utime, path.characters_without_null_termination(), path.length(), buf);
-    HANDLE_SYSCALL_RETURN_VALUE("utime"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("utime", rc, {});
 #else
     String path_string = path;
     if (::utime(path_string.characters(), buf) < 0)
@@ -909,7 +910,7 @@ ErrorOr<struct utsname> uname()
     utsname uts;
 #ifdef __serenity__
     int rc = syscall(SC_uname, &uts);
-    HANDLE_SYSCALL_RETURN_VALUE("uname"sv, rc, uts);
+    HANDLE_SYSCALL_RETURN_VALUE("uname", rc, uts);
 #else
     if (::uname(&uts) < 0)
         return Error::from_syscall("uname"sv, -errno);
@@ -917,16 +918,34 @@ ErrorOr<struct utsname> uname()
     return uts;
 }
 
+#ifndef AK_OS_ANDROID
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 {
-#ifdef __serenity__
+#    ifdef __serenity__
     int rc = syscall(SC_adjtime, delta, old_delta);
-    HANDLE_SYSCALL_RETURN_VALUE("adjtime"sv, rc, {});
-#else
+    HANDLE_SYSCALL_RETURN_VALUE("adjtime", rc, {});
+#    else
     if (::adjtime(delta, old_delta) < 0)
         return Error::from_syscall("adjtime"sv, -errno);
     return {};
+#    endif
+}
 #endif
+
+ErrorOr<String> find_file_in_path(StringView filename)
+{
+    auto const* path_ptr = getenv("PATH");
+    StringView path { path_ptr, strlen(path_ptr) };
+    if (path.is_empty())
+        path = "/bin:/usr/bin"sv;
+    auto parts = path.split_view(':');
+    for (auto& part : parts) {
+        auto candidate = String::formatted("{}/{}", part, filename);
+        if (Core::File::exists(candidate)) {
+            return candidate;
+        }
+    }
+    return Error::from_errno(ENOENT);
 }
 
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
@@ -969,27 +988,10 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
         return {};
     };
 
-    if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-        StringView path = getenv("PATH");
-        if (path.is_empty())
-            path = "/bin:/usr/bin";
-        auto parts = path.split_view(':');
-        for (auto& part : parts) {
-            auto candidate = String::formatted("{}/{}", part, filename);
-            params.path = { candidate.characters(), candidate.length() };
-            auto result = run_exec(params);
-            if (result.is_error()) {
-                if (result.error().code() != ENOENT)
-                    return result.error();
-            } else {
-                VERIFY_NOT_REACHED();
-            }
-        }
-        return Error::from_syscall("exec"sv, -ENOENT);
-    } else {
-        params.path = { filename.characters_without_null_termination(), filename.length() };
-    }
+    bool should_search_in_path = search_in_path == SearchInPath::Yes && !filename.contains('/');
+    String exec_filename = should_search_in_path ? TRY(find_file_in_path(filename)) : filename.to_string();
 
+    params.path = { exec_filename.characters(), exec_filename.length() };
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
@@ -1213,7 +1215,7 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
 #ifdef __serenity__
     Syscall::SC_mknod_params params { { pathname.characters_without_null_termination(), pathname.length() }, mode, dev };
     int rc = syscall(SC_mknod, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("mknod"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("mknod", rc, {});
 #else
     String path_string = pathname;
     if (::mknod(path_string.characters(), mode, dev) < 0)
@@ -1237,7 +1239,7 @@ ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
     auto const rc = ::setenv(name_string.characters(), value_string.characters(), overwrite);
 #endif
     if (rc < 0)
-        return Error::from_syscall("setenv", -errno);
+        return Error::from_syscall("setenv"sv, -errno);
     return {};
 }
 
@@ -1245,7 +1247,7 @@ ErrorOr<int> posix_openpt(int flags)
 {
     int const rc = ::posix_openpt(flags);
     if (rc < 0)
-        return Error::from_syscall("posix_openpt", -errno);
+        return Error::from_syscall("posix_openpt"sv, -errno);
     return rc;
 }
 
@@ -1253,7 +1255,7 @@ ErrorOr<void> grantpt(int fildes)
 {
     auto const rc = ::grantpt(fildes);
     if (rc < 0)
-        return Error::from_syscall("grantpt", -errno);
+        return Error::from_syscall("grantpt"sv, -errno);
     return {};
 }
 
@@ -1261,7 +1263,7 @@ ErrorOr<void> unlockpt(int fildes)
 {
     auto const rc = ::unlockpt(fildes);
     if (rc < 0)
-        return Error::from_syscall("unlockpt", -errno);
+        return Error::from_syscall("unlockpt"sv, -errno);
     return {};
 }
 
@@ -1272,7 +1274,7 @@ ErrorOr<void> access(StringView pathname, int mode)
 
 #ifdef __serenity__
     int rc = ::syscall(Syscall::SC_access, pathname.characters_without_null_termination(), pathname.length(), mode);
-    HANDLE_SYSCALL_RETURN_VALUE("access"sv, rc, {});
+    HANDLE_SYSCALL_RETURN_VALUE("access", rc, {});
 #else
     String path_string = pathname;
     if (::access(path_string.characters(), mode) < 0)

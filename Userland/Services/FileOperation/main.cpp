@@ -263,7 +263,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
             outln("MKDIR {}", item.destination);
             // FIXME: Support deduplication like open_destination_file() when the directory already exists.
             if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST)
-                return Error::from_syscall("mkdir", -errno);
+                return Error::from_syscall("mkdir"sv, -errno);
             break;
         }
 
@@ -355,7 +355,7 @@ String deduplicate_destination_file_name(String const& destination)
     StringBuilder basename;
     basename.appendff("{}-{}", title_without_counter, next_counter);
     if (!destination_path.extension().is_empty()) {
-        basename.append(".");
+        basename.append('.');
         basename.append(destination_path.extension());
     }
 

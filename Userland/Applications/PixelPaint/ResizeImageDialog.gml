@@ -8,7 +8,7 @@
 
     @GUI::GroupBox {
         title: "Size (px)"
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [4]
         }
@@ -69,7 +69,7 @@
 
     @GUI::GroupBox {
         title: "Scaling Mode"
-        shrink_to_fit: true
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [4]
         }
@@ -78,6 +78,12 @@
             name: "nearest_neighbor_radio"
             text: "Nearest neighbor"
             checked: true
+            autosize: true
+        }
+
+        @GUI::RadioButton {
+            name: "smooth_pixels_radio"
+            text: "Smooth Pixels"
             autosize: true
         }
 
@@ -91,18 +97,16 @@
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "ok_button"
             text: "OK"
-            max_width: 75
         }
 
-        @GUI::Button {
+        @GUI::DialogButton {
             name: "cancel_button"
             text: "Cancel"
-            max_width: 75
         }
     }
 }

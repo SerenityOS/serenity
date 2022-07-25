@@ -18,7 +18,7 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 
-static bool default_enable_content_filtering = true;
+static constexpr bool s_default_enable_content_filtering = true;
 
 static String filter_list_file_path()
 {
@@ -114,12 +114,14 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
     m_domain_list_view = find_descendant_of_type_named<GUI::ListView>("domain_list_view");
     m_add_new_domain_button = find_descendant_of_type_named<GUI::Button>("add_new_domain_button");
 
-    m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "EnableContentFilters"), GUI::AllowCallback::No);
+    m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, s_default_enable_content_filtering), GUI::AllowCallback::No);
     m_enable_content_filtering_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     m_add_new_domain_button->on_click = [&](unsigned) {
         String text;
-        if (GUI::InputBox::show(window(), text, "Enter domain name", "Add domain to Content Filter") == GUI::Dialog::ExecResult::OK) {
+
+        if (GUI::InputBox::show(window(), text, "Enter domain name"sv, "Add domain to Content Filter"sv) == GUI::Dialog::ExecResult::OK
+            && !text.is_empty()) {
             m_domain_list_model->add_domain(std::move(text));
             set_modified(true);
         }
@@ -149,11 +151,11 @@ void ContentFilterSettingsWidget::apply_settings()
 {
     // FIXME: Propagate errors
     MUST(m_domain_list_model->save());
-    Config::write_bool("Browser", "Preferences", "EnableContentFilters", m_enable_content_filtering_checkbox->is_checked());
+    Config::write_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, m_enable_content_filtering_checkbox->is_checked());
 }
 
 void ContentFilterSettingsWidget::reset_default_values()
 {
     m_domain_list_model->reset_default_values();
-    m_enable_content_filtering_checkbox->set_checked(default_enable_content_filtering);
+    m_enable_content_filtering_checkbox->set_checked(s_default_enable_content_filtering);
 }

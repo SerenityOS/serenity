@@ -191,7 +191,7 @@ describe("Lookup", () => {
         expect(lookup).toBeDefined();
         // Note: String ordering.
         expect(lookup("2", R`A0:A9`, R`B0:B9`)).toEqual("B2");
-        expect(lookup("20", R`A0:A9`, R`B0:B9`)).toBeUndefined();
+        expect(() => lookup("20", R`A0:A9`, R`B0:B9`)).toThrow();
         expect(lookup("80", R`A0:A9`, R`B0:B9`, undefined, "nextlargest")).toEqual("B9");
     });
 
@@ -199,7 +199,7 @@ describe("Lookup", () => {
         expect(reflookup).toBeDefined();
         // Note: String ordering.
         expect(reflookup("2", R`A0:A9`, R`B0:B9`).name).toEqual("B2");
-        expect(reflookup("20", R`A0:A9`, R`B0:B9`)).toEqual(here());
+        expect(() => reflookup("20", R`A0:A9`, R`B0:B9`)).toThrow();
         expect(reflookup("80", R`A0:A9`, R`B0:B9`, undefined, "nextlargest").name).toEqual("B9");
     });
 });

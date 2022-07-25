@@ -79,7 +79,7 @@ static ErrorOr<String> decode_html_entities(StringView const& str)
             }
 
             if (!found_entity)
-                return Error::from_string_literal("Failed to decode html entity"sv);
+                return Error::from_string_literal("Failed to decode html entity");
 
             if (entity_start.value() != start)
                 decoded_str.append(str.substring_view(start, entity_start.value() - start));
@@ -94,25 +94,25 @@ static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
 {
     auto parts = str.trim_whitespace().split_view('/', true);
     if (parts.size() != 3)
-        return Error::from_string_literal("Failed to parse approval date parts (mm/dd/yyyy)"sv);
+        return Error::from_string_literal("Failed to parse approval date parts (mm/dd/yyyy)");
 
     auto month = parts[0].to_uint();
     if (!month.has_value())
-        return Error::from_string_literal("Failed to parse month from approval date"sv);
+        return Error::from_string_literal("Failed to parse month from approval date");
     if (month.value() == 0 || month.value() > 12)
-        return Error::from_string_literal("Invalid month in approval date"sv);
+        return Error::from_string_literal("Invalid month in approval date");
 
     auto day = parts[1].to_uint();
     if (!day.has_value())
-        return Error::from_string_literal("Failed to parse day from approval date"sv);
+        return Error::from_string_literal("Failed to parse day from approval date");
     if (day.value() == 0 || day.value() > 31)
-        return Error::from_string_literal("Invalid day in approval date"sv);
+        return Error::from_string_literal("Invalid day in approval date");
 
     auto year = parts[2].to_uint();
     if (!year.has_value())
-        return Error::from_string_literal("Failed to parse year from approval date"sv);
+        return Error::from_string_literal("Failed to parse year from approval date");
     if (year.value() < 1900 || year.value() > 2999)
-        return Error::from_string_literal("Invalid year approval date"sv);
+        return Error::from_string_literal("Invalid year approval date");
 
     return ApprovalDate { .year = year.value(), .month = month.value(), .day = day.value() };
 }
@@ -132,15 +132,15 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
 
         auto row_start_tag_end = pnp_ids_file_contents.find(">"sv, row_start.value() + row_start_tag.length());
         if (!row_start_tag_end.has_value())
-            return Error::from_string_literal("Incomplete row start tag"sv);
+            return Error::from_string_literal("Incomplete row start tag");
 
         static auto const row_end_tag = "</tr>"sv;
         auto row_end = pnp_ids_file_contents.find(row_end_tag, row_start.value());
         if (!row_end.has_value())
-            return Error::from_string_literal("No matching row end tag found"sv);
+            return Error::from_string_literal("No matching row end tag found");
 
         if (row_start_tag_end.value() > row_end.value() + row_end_tag.length())
-            return Error::from_string_literal("Invalid row start tag"sv);
+            return Error::from_string_literal("Invalid row start tag");
 
         auto row_string = pnp_ids_file_contents.substring_view(row_start_tag_end.value() + 1, row_end.value() - row_start_tag_end.value() - 1);
         Vector<String, (size_t)PnpIdColumns::ColumnCount> columns;
@@ -153,31 +153,31 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
             static auto const column_end_tag = "</td>"sv;
             auto column_end = row_string.find(column_end_tag, column_start.value() + column_start_tag.length());
             if (!column_end.has_value())
-                return Error::from_string_literal("No matching column end tag found"sv);
+                return Error::from_string_literal("No matching column end tag found");
 
             auto column_content_row_offset = column_start.value() + column_start_tag.length();
             auto column_str = row_string.substring_view(column_content_row_offset, column_end.value() - column_content_row_offset).trim_whitespace();
             if (column_str.find('\"').has_value())
-                return Error::from_string_literal("Found '\"' in column content, escaping not supported!"sv);
+                return Error::from_string_literal("Found '\"' in column content, escaping not supported!");
             columns.append(column_str);
 
             column_row_offset = column_end.value() + column_end_tag.length();
         }
 
         if (columns.size() != (size_t)PnpIdColumns::ColumnCount)
-            return Error::from_string_literal("Unexpected number of columns found"sv);
+            return Error::from_string_literal("Unexpected number of columns found");
 
         auto approval_date = TRY(parse_approval_date(columns[(size_t)PnpIdColumns::ApprovalDate]));
         auto decoded_manufacturer_name = TRY(decode_html_entities(columns[(size_t)PnpIdColumns::ManufacturerName]));
         auto hash_set_result = pnp_id_data.set(columns[(size_t)PnpIdColumns::ManufacturerId], PnpIdData { .manufacturer_name = decoded_manufacturer_name, .approval_date = move(approval_date) });
         if (hash_set_result != AK::HashSetResult::InsertedNewEntry)
-            return Error::from_string_literal("Duplicate manufacturer ID encountered"sv);
+            return Error::from_string_literal("Duplicate manufacturer ID encountered");
 
         row_content_offset = row_end.value() + row_end_tag.length();
     }
 
     if (pnp_id_data.size() <= 1)
-        return Error::from_string_literal("Expected more than one row"sv);
+        return Error::from_string_literal("Expected more than one row");
 
     return pnp_id_data;
 }
@@ -283,7 +283,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadOnly) -> ErrorOr<NonnullRefPtr<Core::File>> {
         if (path.is_empty()) {
             args_parser.print_usage(stderr, arguments.argv[0]);
-            return Error::from_string_literal("Must provide all command line options"sv);
+            return Error::from_string_literal("Must provide all command line options");
         }
 
         return Core::File::open(path, mode);

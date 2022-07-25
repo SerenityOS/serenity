@@ -261,7 +261,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         auto& transformation_style_value = it.as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
-        Vector<Variant<CSS::LengthPercentage, float>> values;
+        Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value.is_length()) {
                 values.append({ transformation_value.to_length() });
@@ -270,7 +270,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             } else if (transformation_value.is_numeric()) {
                 values.append({ transformation_value.to_number() });
             } else if (transformation_value.is_angle()) {
-                values.append({ transformation_value.as_angle().angle().to_degrees() });
+                values.append({ transformation_value.as_angle().angle() });
             } else {
                 dbgln("FIXME: Unsupported value in transform!");
             }
@@ -308,6 +308,42 @@ Optional<CSS::AlignItems> StyleProperties::align_items() const
 {
     auto value = property(CSS::PropertyID::AlignItems);
     return value_id_to_align_items(value->to_identifier());
+}
+
+Optional<CSS::AlignSelf> StyleProperties::align_self() const
+{
+    auto value = property(CSS::PropertyID::AlignSelf);
+    return value_id_to_align_self(value->to_identifier());
+}
+
+Optional<CSS::Appearance> StyleProperties::appearance() const
+{
+    auto value = property(CSS::PropertyID::Appearance);
+    auto appearance = value_id_to_appearance(value->to_identifier());
+    if (appearance.has_value()) {
+        switch (*appearance) {
+        // Note: All these compatibility values can be treated as 'auto'
+        case CSS::Appearance::Textfield:
+        case CSS::Appearance::MenulistButton:
+        case CSS::Appearance::Searchfield:
+        case CSS::Appearance::Textarea:
+        case CSS::Appearance::PushButton:
+        case CSS::Appearance::SliderHorizontal:
+        case CSS::Appearance::Checkbox:
+        case CSS::Appearance::Radio:
+        case CSS::Appearance::SquareButton:
+        case CSS::Appearance::Menulist:
+        case CSS::Appearance::Listbox:
+        case CSS::Appearance::Meter:
+        case CSS::Appearance::ProgressBar:
+        case CSS::Appearance::Button:
+            appearance = CSS::Appearance::Auto;
+            break;
+        default:
+            break;
+        }
+    }
+    return appearance;
 }
 
 Optional<CSS::Position> StyleProperties::position() const

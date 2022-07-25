@@ -28,7 +28,7 @@ ErrorOr<void> DevPtsFS::initialize()
     m_root_inode->m_metadata.uid = 0;
     m_root_inode->m_metadata.gid = 0;
     m_root_inode->m_metadata.size = 0;
-    m_root_inode->m_metadata.mtime = mepoch;
+    m_root_inode->m_metadata.mtime = TimeManagement::boot_time();
     return {};
 }
 
@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) cons
     inode->m_metadata.mode = 0020600;
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
-    inode->m_metadata.mtime = mepoch;
+    inode->m_metadata.mtime = TimeManagement::boot_time();
     return inode;
 }
 
@@ -103,8 +103,8 @@ ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     if (identifier().index() > 1)
         return ENOTDIR;
 
-    TRY(callback({ ".", identifier(), 0 }));
-    TRY(callback({ "..", identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), 0 }));
+    TRY(callback({ ".."sv, identifier(), 0 }));
 
     return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<void> {
         StringBuilder builder;

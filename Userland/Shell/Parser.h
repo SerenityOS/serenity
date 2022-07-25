@@ -200,9 +200,9 @@ heredoc_entries :: { .*? (heredoc_entry) '\n' } [each heredoc_entries]
 variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
                 | identifier '=' '(' pipe_sequence ')' (' '+ variable_decls)? ' '*
 
-pipe_sequence :: command '|' pipe_sequence
+pipe_sequence :: command '|' '&'? pipe_sequence
                | command
-               | control_structure '|' pipe_sequence
+               | control_structure '|' '&'? pipe_sequence
                | control_structure
 
 control_structure[c] :: for_expr

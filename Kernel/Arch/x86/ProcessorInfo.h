@@ -42,8 +42,8 @@ public:
 
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
 
-    static constexpr StringView s_amd_vendor_id = "AuthenticAMD";
-    static constexpr StringView s_intel_vendor_id = "GenuineIntel";
+    static constexpr StringView s_amd_vendor_id = "AuthenticAMD"sv;
+    static constexpr StringView s_intel_vendor_id = "GenuineIntel"sv;
 
 private:
     static NonnullOwnPtr<KString> build_vendor_id_string();

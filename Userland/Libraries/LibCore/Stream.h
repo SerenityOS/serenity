@@ -37,7 +37,7 @@ public:
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
     virtual bool read_or_error(Bytes);
-    ErrorOr<ByteBuffer> read_all();
+    virtual ErrorOr<ByteBuffer> read_all(size_t block_size = 4096);
 
     virtual bool is_writable() const { return false; }
     /// Tries to write the entire contents of the buffer. It is possible for
@@ -62,6 +62,9 @@ public:
     virtual ~Stream()
     {
     }
+
+protected:
+    ErrorOr<ByteBuffer> read_all_impl(size_t block_size, size_t file_size = 0);
 };
 
 enum class SeekMode {
@@ -197,6 +200,7 @@ public:
 
     virtual bool is_readable() const override;
     virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<ByteBuffer> read_all(size_t block_size = 4096) override;
     virtual bool is_writable() const override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;

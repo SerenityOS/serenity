@@ -84,6 +84,11 @@ constexpr size_t align_up_to(const size_t value, const size_t alignment)
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
+constexpr size_t align_down_to(const size_t value, const size_t alignment)
+{
+    return value & ~(alignment - 1);
+}
+
 enum class [[nodiscard]] TriState : u8 {
     False,
     True,

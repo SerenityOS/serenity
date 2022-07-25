@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/RefCountForwarder.h>
 #include <AK/Variant.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
@@ -27,7 +27,7 @@ namespace Web::HTML {
 using CanvasImageSource = Variant<NonnullRefPtr<HTMLImageElement>, NonnullRefPtr<HTMLCanvasElement>>;
 
 class CanvasRenderingContext2D
-    : public RefCounted<CanvasRenderingContext2D>
+    : public RefCountForwarder<HTMLCanvasElement>
     , public Bindings::Wrappable {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
@@ -90,7 +90,7 @@ public:
 
     void reset_to_default_state();
 
-    HTMLCanvasElement* canvas() { return m_element; }
+    NonnullRefPtr<HTMLCanvasElement> canvas_for_binding() const;
 
     RefPtr<TextMetrics> measure_text(String const& text);
 
@@ -122,7 +122,8 @@ private:
 
     OwnPtr<Gfx::Painter> painter();
 
-    WeakPtr<HTMLCanvasElement> m_element;
+    HTMLCanvasElement& canvas_element();
+    HTMLCanvasElement const& canvas_element() const;
 
     // https://html.spec.whatwg.org/multipage/canvas.html#drawing-state
     struct DrawingState {

@@ -22,6 +22,8 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(format);
     JS_DECLARE_NATIVE_FUNCTION(format_to_parts);
+    JS_DECLARE_NATIVE_FUNCTION(format_range);
+    JS_DECLARE_NATIVE_FUNCTION(format_range_to_parts);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 

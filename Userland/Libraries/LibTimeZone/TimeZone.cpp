@@ -82,7 +82,7 @@ StringView system_time_zone()
 
 StringView current_time_zone()
 {
-    return canonicalize_time_zone(tzname[0]).value_or("UTC"sv);
+    return canonicalize_time_zone({ tzname[0], __builtin_strlen(tzname[0]) }).value_or("UTC"sv);
 }
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)
@@ -191,5 +191,9 @@ Optional<Location> get_time_zone_location(StringView time_zone)
         return get_time_zone_location(*maybe_time_zone);
     return {};
 }
+
+Optional<Region> __attribute__((weak)) region_from_string(StringView) { return {}; }
+StringView __attribute__((weak)) region_to_string(Region) { return {}; }
+Vector<StringView> __attribute__((weak)) time_zones_in_region(StringView) { return {}; }
 
 }

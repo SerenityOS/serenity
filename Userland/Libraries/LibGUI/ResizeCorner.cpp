@@ -30,7 +30,7 @@ static constexpr Gfx::CharacterBitmap s_resize_corner_shadows_bitmap {
     "                "
     " ## ## ## ## ## "
     " #  #  #  #  #  "
-    "                ",
+    "                "sv,
     16, 16
 };
 
@@ -50,7 +50,7 @@ static constexpr Gfx::CharacterBitmap s_resize_corner_highlights_bitmap {
     "                "
     "                "
     "  #  #  #  #  # "
-    "                ",
+    "                "sv,
     16, 16
 };
 

@@ -363,7 +363,7 @@ pushd "$DIR/Build/$ARCH"
         buildstep "binutils/install" "$MAKE" install || exit 1
     popd
 
-    echo "XXX serenity libc, libdl, libm and libpthread headers"
+    echo "XXX serenity libc, libdl and libm headers"
     mkdir -p "$BUILD"
     pushd "$BUILD"
         mkdir -p Root/usr/include/
@@ -375,7 +375,6 @@ pushd "$DIR/Build/$ARCH"
             "$SRC_ROOT"/Userland/Libraries/LibC \
             "$SRC_ROOT"/Userland/Libraries/LibDl \
             "$SRC_ROOT"/Userland/Libraries/LibM \
-            "$SRC_ROOT"/Userland/Libraries/LibPthread \
             -name '*.h' -print)
         for header in $FILES; do
             target=$(echo "$header" | sed \
@@ -383,7 +382,6 @@ pushd "$DIR/Build/$ARCH"
                 -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibDl@@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" \
-                -e "s@$SRC_ROOT/Userland/Libraries/LibPthread@@" \
                 -e "s@$SRC_ROOT/Kernel/@Kernel/@")
             buildstep "system_headers" $INSTALL -D "$header" "Root/usr/include/$target"
         done

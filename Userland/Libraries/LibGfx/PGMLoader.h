@@ -16,7 +16,7 @@ namespace Gfx {
 struct PGM {
     static constexpr auto ascii_magic_number = '2';
     static constexpr auto binary_magic_number = '5';
-    static constexpr StringView image_type = "PGM";
+    static constexpr StringView image_type = "PGM"sv;
     u16 max_val { 0 };
 };
 

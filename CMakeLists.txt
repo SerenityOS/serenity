@@ -152,13 +152,15 @@ if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(all_the_debug_macros)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
+set(CMAKE_STAGING_PREFIX "${CMAKE_BINARY_DIR}/Root")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/Root")
+set(CMAKE_INSTALL_DATAROOTDIR res)
+set(CMAKE_INSTALL_INCLUDEDIR usr/include)
+set(CMAKE_INSTALL_LIBDIR usr/lib)
+
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h DESTINATION usr/include/AK)
-
-set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
-set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/AK")
 
 # We disable it completely because it makes cmake very spammy.
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
@@ -184,7 +186,6 @@ include_directories(Userland/Libraries)
 include_directories(Userland/Libraries/LibC)
 include_directories(Userland/Libraries/LibCrypt)
 include_directories(Userland/Libraries/LibM)
-include_directories(Userland/Libraries/LibPthread)
 include_directories(Userland/Libraries/LibSystem)
 include_directories(Userland/Services)
 include_directories(Userland)
@@ -251,7 +252,7 @@ endif()
 
 if(EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
     message(STATUS "Extracting PCI ID database from ${PCI_IDS_GZ_PATH}...")
-    file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
+    file(MAKE_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}")
     execute_process(COMMAND "${GZIP_TOOL}" -d -c "${PCI_IDS_GZ_PATH}" OUTPUT_FILE "${PCI_IDS_INSTALL_PATH}")
 endif()
 
@@ -267,6 +268,6 @@ endif()
 
 if(EXISTS ${USB_IDS_GZ_PATH} AND NOT EXISTS ${USB_IDS_INSTALL_PATH})
     message(STATUS "Extracting USB ID database from ${USB_IDS_GZ_PATH}...")
-    file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
+    file(MAKE_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}")
     execute_process(COMMAND "${GZIP_TOOL}" -d -c "${USB_IDS_GZ_PATH}" OUTPUT_FILE "${USB_IDS_INSTALL_PATH}")
 endif()

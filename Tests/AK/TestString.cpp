@@ -47,14 +47,14 @@ TEST_CASE(equal)
 
 TEST_CASE(compare)
 {
-    EXPECT("a" < String("b"));
-    EXPECT(!("a" > String("b")));
-    EXPECT("b" > String("a"));
-    EXPECT(!("b" < String("b")));
-    EXPECT("a" >= String("a"));
-    EXPECT(!("a" >= String("b")));
-    EXPECT("a" <= String("a"));
-    EXPECT(!("b" <= String("a")));
+    EXPECT("a"sv < String("b"));
+    EXPECT(!("a"sv > String("b")));
+    EXPECT("b"sv > String("a"));
+    EXPECT(!("b"sv < String("b")));
+    EXPECT("a"sv >= String("a"));
+    EXPECT(!("a"sv >= String("b")));
+    EXPECT("a"sv <= String("a"));
+    EXPECT(!("b"sv <= String("a")));
 
     EXPECT(String("a") > String());
     EXPECT(!(String() > String("a")));
@@ -81,25 +81,25 @@ TEST_CASE(index_access)
 TEST_CASE(starts_with)
 {
     String test_string = "ABCDEF";
-    EXPECT(test_string.starts_with("AB"));
+    EXPECT(test_string.starts_with("AB"sv));
     EXPECT(test_string.starts_with('A'));
     EXPECT(!test_string.starts_with('B'));
-    EXPECT(test_string.starts_with("ABCDEF"));
-    EXPECT(!test_string.starts_with("DEF"));
-    EXPECT(test_string.starts_with("abc", CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string.starts_with("abc", CaseSensitivity::CaseSensitive));
+    EXPECT(test_string.starts_with("ABCDEF"sv));
+    EXPECT(!test_string.starts_with("DEF"sv));
+    EXPECT(test_string.starts_with("abc"sv, CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.starts_with("abc"sv, CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(ends_with)
 {
     String test_string = "ABCDEF";
-    EXPECT(test_string.ends_with("EF"));
+    EXPECT(test_string.ends_with("EF"sv));
     EXPECT(test_string.ends_with('F'));
     EXPECT(!test_string.ends_with('E'));
-    EXPECT(test_string.ends_with("ABCDEF"));
-    EXPECT(!test_string.ends_with("ABC"));
-    EXPECT(test_string.ends_with("def", CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string.ends_with("def", CaseSensitivity::CaseSensitive));
+    EXPECT(test_string.ends_with("ABCDEF"sv));
+    EXPECT(!test_string.ends_with("ABC"sv));
+    EXPECT(test_string.ends_with("def"sv, CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.ends_with("def"sv, CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(copy_string)
@@ -155,7 +155,7 @@ TEST_CASE(flystring)
         FlyString b = a;
         StringBuilder builder;
         builder.append('f');
-        builder.append("oo");
+        builder.append("oo"sv);
         FlyString c = builder.to_string();
         EXPECT_EQ(a.impl(), b.impl());
         EXPECT_EQ(a.impl(), c.impl());
@@ -166,40 +166,40 @@ TEST_CASE(replace)
 {
     String test_string = "Well, hello Friends!";
 
-    test_string = test_string.replace("Friends", "Testers");
+    test_string = test_string.replace("Friends"sv, "Testers"sv, ReplaceMode::FirstOnly);
     EXPECT(test_string == "Well, hello Testers!");
 
-    test_string = test_string.replace("ell", "e're", true);
+    test_string = test_string.replace("ell"sv, "e're"sv, ReplaceMode::All);
     EXPECT(test_string == "We're, he'reo Testers!");
 
-    test_string = test_string.replace("!", " :^)");
+    test_string = test_string.replace("!"sv, " :^)"sv, ReplaceMode::FirstOnly);
     EXPECT(test_string == "We're, he'reo Testers :^)");
 
     test_string = String("111._.111._.111");
-    test_string = test_string.replace("111", "|||", true);
+    test_string = test_string.replace("111"sv, "|||"sv, ReplaceMode::All);
     EXPECT(test_string == "|||._.|||._.|||");
 
-    test_string = test_string.replace("|||", "111");
+    test_string = test_string.replace("|||"sv, "111"sv, ReplaceMode::FirstOnly);
     EXPECT(test_string == "111._.|||._.|||");
 }
 
 TEST_CASE(count)
 {
     String test_string = "Well, hello Friends!";
-    u32 count = test_string.count("Friends");
+    u32 count = test_string.count("Friends"sv);
     EXPECT(count == 1);
 
-    count = test_string.count("ell");
+    count = test_string.count("ell"sv);
     EXPECT(count == 2);
 
-    count = test_string.count("!");
+    count = test_string.count("!"sv);
     EXPECT(count == 1);
 
     test_string = String("111._.111._.111");
-    count = test_string.count("111");
+    count = test_string.count("111"sv);
     EXPECT(count == 3);
 
-    count = test_string.count("._.");
+    count = test_string.count("._."sv);
     EXPECT(count == 2);
 }
 
@@ -251,24 +251,10 @@ TEST_CASE(split)
 TEST_CASE(builder_zero_initial_capacity)
 {
     StringBuilder builder(0);
-    builder.append("");
+    builder.append(""sv);
     auto built = builder.build();
     EXPECT_EQ(built.is_null(), false);
     EXPECT_EQ(built.length(), 0u);
-}
-
-TEST_CASE(sprintf)
-{
-    char buf1[128];
-    int ret1 = sprintf(buf1, "%+d", 12);
-    EXPECT_EQ(ret1, 3);
-
-    char buf2[128];
-    int ret2 = sprintf(buf2, "%+d", -12);
-    EXPECT_EQ(ret2, 3);
-
-    EXPECT_EQ(String(buf1), String("+12"));
-    EXPECT_EQ(String(buf2), String("-12"));
 }
 
 TEST_CASE(find)

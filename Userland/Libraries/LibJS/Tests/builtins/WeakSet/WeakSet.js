@@ -24,7 +24,7 @@ describe("normal behavior", () => {
     });
 
     test("constructor with single array argument", () => {
-        var a = new WeakSet([{ a: 1 }, { a: 2 }, { a: 3 }]);
+        var a = new WeakSet([{ a: 1 }, { a: 2 }, { a: 3 }, Symbol("foo")]);
         expect(a instanceof WeakSet).toBeTrue();
     });
 });

@@ -19,7 +19,7 @@ requires(IsEnum<EnumT>) class ProcessorParameterDropdown : public GUI::ComboBox 
     C_OBJECT(ProcessorParameterDropdown);
 
 public:
-    ProcessorParameterDropdown(LibDSP::ProcessorEnumParameter<EnumT>& parameter, Vector<String> modes)
+    ProcessorParameterDropdown(DSP::ProcessorEnumParameter<EnumT>& parameter, Vector<String> modes)
         : ComboBox()
         , m_parameter(parameter)
         , m_modes(move(modes))
@@ -33,11 +33,11 @@ public:
 
         on_change = [this]([[maybe_unused]] auto name, GUI::ModelIndex model_index) {
             auto value = static_cast<EnumT>(model_index.row());
-            m_parameter.set_value_sneaky(value, LibDSP::Detail::ProcessorParameterSetValueTag {});
+            m_parameter.set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});
         };
-        m_parameter.did_change_value = [this](auto new_value) {
+        m_parameter.register_change_listener([this](auto new_value) {
             set_selected_index(static_cast<int>(new_value));
-        };
+        });
     }
 
     // Release focus when escape is pressed
@@ -53,6 +53,6 @@ public:
     }
 
 private:
-    LibDSP::ProcessorEnumParameter<EnumT>& m_parameter;
+    DSP::ProcessorEnumParameter<EnumT>& m_parameter;
     Vector<String> m_modes;
 };

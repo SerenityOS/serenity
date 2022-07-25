@@ -62,9 +62,10 @@ void Statusbar::update_segment(size_t index)
             segment.set_fixed_width(width);
         }
     } else if (segment.mode() == Segment::Mode::Fixed) {
-        if (segment.max_width() != -1)
-            segment.set_restored_width(segment.max_width());
-        segment.set_fixed_width(segment.max_width());
+        if (segment.max_width().is_int()) {
+            segment.set_restored_width(segment.max_width().as_int());
+            segment.set_fixed_width(segment.max_width());
+        }
     }
 
     if (segment.override_text().is_null()) {
@@ -84,7 +85,7 @@ void Statusbar::update_segment(size_t index)
         segment.set_text(segment.override_text());
         segment.set_frame_shape(Gfx::FrameShape::NoFrame);
         if (segment.mode() != Segment::Mode::Proportional)
-            segment.set_fixed_width(-1);
+            segment.set_fixed_width(SpecialDimension::Grow);
     }
 }
 

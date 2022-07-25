@@ -44,14 +44,13 @@ if(NOT SERENITY_TOOLCHAIN STREQUAL "GNU")
 endif()
 set(SERENITY_BUILD_DIR "${PROJECT_BINARY_DIR}/../${SERENITY_ARCH}${SERENITY_BUILD_DIR_SUFFIX}")
 
-if (CMAKE_HOST_SYSTEM_NAME MATCHES "SerenityOS")
-    message(STATUS "Good job on building cmake!")
-else()
-    configure_file("${SERENITY_SOURCE_DIR}/Toolchain/CMake/${SERENITY_TOOLCHAIN}Toolchain.txt.in" "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" @ONLY)
-    set(SERENITY_TOOLCHAIN_FILE "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" CACHE PATH "Toolchain file to use for cross-compilation")
-    # Support non-cross builds by stuffing this in a variable
-    set(SERENITY_TOOLCHAIN_FILE_ARG "-DCMAKE_TOOLCHAIN_FILE:STRING=${SERENITY_TOOLCHAIN_FILE}")
-endif()
+# TODO: Figure out if and how we can skip this when building on Serenity.
+configure_file("${SERENITY_SOURCE_DIR}/Toolchain/CMake/${SERENITY_TOOLCHAIN}Toolchain.txt.in" "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" @ONLY)
+set(SERENITY_TOOLCHAIN_FILE "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" CACHE PATH "Toolchain file to use for cross-compilation")
+# Support non-cross builds by stuffing this in a variable
+set(SERENITY_TOOLCHAIN_FILE_ARG "-DCMAKE_TOOLCHAIN_FILE:STRING=${SERENITY_TOOLCHAIN_FILE}")
+
+configure_file("${SERENITY_SOURCE_DIR}/Toolchain/CMake/meson-cross-file-${SERENITY_TOOLCHAIN}.txt.in" "${SERENITY_BUILD_DIR}/meson-cross-file.txt" @ONLY)
 
 # Allow the Ninja generators to output messages as they happen by assigning
 # these jobs to the 'console' job pool

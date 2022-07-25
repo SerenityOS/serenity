@@ -12,7 +12,7 @@
 Threading::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
     : Core::Object(nullptr)
     , m_action(move(action))
-    , m_thread_name(thread_name.is_null() ? "" : thread_name)
+    , m_thread_name(thread_name.is_null() ? ""sv : thread_name)
 {
     register_property("thread_name", [&] { return JsonValue { m_thread_name }; });
     register_property("tid", [&] { return JsonValue { m_tid }; });
@@ -45,6 +45,7 @@ void Threading::Thread::start()
         VERIFY(rc == 0);
     }
     dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
+    m_started = true;
 }
 
 void Threading::Thread::detach()

@@ -32,6 +32,8 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
+    define_native_function(vm.names.formatRange, format_range, 2, attr);
+    define_native_function(vm.names.formatRangeToParts, format_range_to_parts, 2, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -59,6 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 }
 
 // 15.3.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
+// 1.4.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formattoparts
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 {
     auto value = vm.argument(0);
@@ -67,12 +70,65 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
     auto* number_format = TRY(typed_this_object(global_object));
 
-    // 3. Let x be ? ToNumeric(value).
-    value = TRY(value.to_numeric(global_object));
+    // 3. Let x be ? ToIntlMathematicalValue(value).
+    auto mathematical_value = TRY(to_intl_mathematical_value(global_object, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
     // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(global_object, *number_format, value);
+    return format_numeric_to_parts(global_object, *number_format, move(mathematical_value));
+}
+
+// 1.4.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrange
+JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
+{
+    auto start = vm.argument(0);
+    auto end = vm.argument(1);
+
+    // 1. Let nf be the this value.
+    // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
+    auto* number_format = TRY(typed_this_object(global_object));
+
+    // 3. If start is undefined or end is undefined, throw a TypeError exception.
+    if (start.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "start"sv);
+    if (end.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "end"sv);
+
+    // 4. Let x be ? ToIntlMathematicalValue(start).
+    auto x = TRY(to_intl_mathematical_value(global_object, start));
+
+    // 5. Let y be ? ToIntlMathematicalValue(end).
+    auto y = TRY(to_intl_mathematical_value(global_object, end));
+
+    // 6. Return ? FormatNumericRange(nf, x, y).
+    auto formatted = TRY(format_numeric_range(global_object, *number_format, move(x), move(y)));
+    return js_string(vm, move(formatted));
+}
+
+// 1.4.6 Intl.NumberFormat.prototype.formatRangeToParts ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrangetoparts
+JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
+{
+    auto start = vm.argument(0);
+    auto end = vm.argument(1);
+
+    // 1. Let nf be the this value.
+    // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
+    auto* number_format = TRY(typed_this_object(global_object));
+
+    // 3. If start is undefined or end is undefined, throw a TypeError exception.
+    if (start.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "start"sv);
+    if (end.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "end"sv);
+
+    // 4. Let x be ? ToIntlMathematicalValue(start).
+    auto x = TRY(to_intl_mathematical_value(global_object, start));
+
+    // 5. Let y be ? ToIntlMathematicalValue(end).
+    auto y = TRY(to_intl_mathematical_value(global_object, end));
+
+    // 6. Return ? FormatNumericRangeToParts(nf, x, y).
+    return TRY(format_numeric_range_to_parts(global_object, *number_format, move(x), move(y)));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
@@ -114,13 +170,34 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits())));
     if (number_format->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
-    MUST(options->create_data_property_or_throw(vm.names.useGrouping, Value(number_format->use_grouping())));
+    MUST(options->create_data_property_or_throw(vm.names.useGrouping, number_format->use_grouping_to_value(global_object)));
     MUST(options->create_data_property_or_throw(vm.names.notation, js_string(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
         MUST(options->create_data_property_or_throw(vm.names.compactDisplay, js_string(vm, number_format->compact_display_string())));
     MUST(options->create_data_property_or_throw(vm.names.signDisplay, js_string(vm, number_format->sign_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, js_string(vm, number_format->rounding_mode_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(number_format->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, js_string(vm, number_format->trailing_zero_display_string())));
 
-    // 5. Return options.
+    switch (number_format->rounding_type()) {
+    // 6. If nf.[[RoundingType]] is morePrecision, then
+    case NumberFormatBase::RoundingType::MorePrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "morePrecision"sv)));
+        break;
+    // 7. Else if nf.[[RoundingType]] is lessPrecision, then
+    case NumberFormatBase::RoundingType::LessPrecision:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "lessPrecision"sv)));
+        break;
+    // 8. Else,
+    default:
+        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, js_string(vm, "auto"sv)));
+        break;
+    }
+
+    // 9. Return options.
     return options;
 }
 

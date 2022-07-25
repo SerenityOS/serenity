@@ -220,6 +220,11 @@ public:
     bool update_theme(String theme_path, String theme_name, bool keep_desktop_background);
     void invalidate_after_theme_or_font_change();
 
+    bool set_theme_override(Core::AnonymousBuffer const& theme_override);
+    Optional<Core::AnonymousBuffer> get_theme_override() const;
+    void clear_theme_override();
+    bool is_theme_overridden() { return m_theme_overridden; }
+
     bool set_hovered_window(Window*);
     void deliver_mouse_event(Window&, MouseEvent const&, bool process_double_click);
 
@@ -331,6 +336,8 @@ public:
 
     bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
+    RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 
@@ -431,6 +438,7 @@ private:
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
     bool m_buttons_switched { false };
+    bool m_theme_overridden { false };
 
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;

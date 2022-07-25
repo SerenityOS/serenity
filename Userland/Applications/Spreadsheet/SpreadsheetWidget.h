@@ -25,6 +25,7 @@ public:
 
     void save(Core::File&);
     void load_file(Core::File&);
+    void import_sheets(Core::File&);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
@@ -82,6 +83,8 @@ private:
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_quit_action;
+
+    RefPtr<GUI::Action> m_import_action;
 
     RefPtr<GUI::Action> m_cut_action;
     RefPtr<GUI::Action> m_copy_action;

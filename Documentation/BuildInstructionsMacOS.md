@@ -34,3 +34,4 @@ Notes:
 
 - Installing macfuse for the first time requires enabling its system extension in System Preferences and then restarting
   your machine. The output from installing macfuse with brew says this, but it's easy to miss.
+- It's important to make sure that Xcode is not only installed but also accordingly updated, otherwise CMake will run into incompatibilities with GCC.

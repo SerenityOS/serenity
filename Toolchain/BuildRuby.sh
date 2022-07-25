@@ -5,9 +5,8 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ARCH=${ARCH:-"i686"}
-PREFIX_DIR="$DIR/Local/$ARCH"
-BUILD_DIR="$DIR/Build/$ARCH"
+PREFIX_DIR="$DIR/Local/ruby"
+BUILD_DIR="$DIR/Build/ruby"
 TARBALLS_DIR="$DIR/Tarballs"
 
 # shellcheck source=/dev/null
@@ -42,9 +41,9 @@ if [ -z "$MAKEJOBS" ]; then
 fi
 
 mkdir -p "${PREFIX_DIR}"
-mkdir -p "${BUILD_DIR}/ruby"
+mkdir -p "${BUILD_DIR}"
 
-pushd "${BUILD_DIR}/ruby"
+pushd "${BUILD_DIR}"
     "${TARBALLS_DIR}"/ruby-"${RUBY_VERSION}"/configure --prefix="${PREFIX_DIR}"
     make -j "${MAKEJOBS}"
     make install

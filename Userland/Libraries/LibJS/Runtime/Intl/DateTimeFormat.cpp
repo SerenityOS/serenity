@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Find.h>
 #include <AK/IterationDecision.h>
 #include <AK/NumericLimits.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -217,7 +218,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
             return {};
 
         // e. Let pattern be the string connector with the substring "{0}" replaced with timeFormat.[[pattern]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-        auto pattern = connector->pattern.replace("{0}"sv, time_format.pattern).replace("{1}"sv, date_format.pattern);
+        auto pattern = connector->pattern.replace("{0}"sv, time_format.pattern, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
 
         // f. Set format.[[pattern]] to pattern.
         format.pattern = move(pattern);
@@ -225,7 +226,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
         // g. If timeFormat has a [[pattern12]] field, then
         if (time_format.pattern12.has_value()) {
             // i. Let pattern12 be the string connector with the substring "{0}" replaced with timeFormat.[[pattern12]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-            auto pattern12 = connector->pattern.replace("{0}"sv, *time_format.pattern12).replace("{1}"sv, date_format.pattern);
+            auto pattern12 = connector->pattern.replace("{0}"sv, *time_format.pattern12, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
 
             // ii. Set format.[[pattern12]] to pattern12.
             format.pattern12 = move(pattern12);
@@ -430,7 +431,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     best_format->for_each_calendar_field_zipped_with(options, [&](auto& best_format_field, auto const& option_field, auto field_type) {
         switch (field_type) {
         case Unicode::CalendarPattern::Field::FractionalSecondDigits:
-            if (best_format->second.has_value() && option_field.has_value())
+            if ((best_format_field.has_value() || best_format->second.has_value()) && option_field.has_value())
                 best_format_field = option_field;
             break;
 
@@ -501,6 +502,30 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::Cal
     if (name == second)
         return make_style_and_value(second, range_options ? range_options->second : empty, *options.second, local_time.second);
     return {};
+}
+
+static Optional<StringView> resolve_day_period(StringView locale, StringView calendar, Unicode::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
+{
+    // Use the "noon" day period if the locale has it, but only if the time is either exactly 12:00.00 or would be displayed as such.
+    if (local_time.hour == 12) {
+        auto it = find_if(pattern_parts.begin(), pattern_parts.end(), [&](auto const& part) {
+            if (part.type == "minute"sv && local_time.minute != 0)
+                return true;
+            if (part.type == "second"sv && local_time.second != 0)
+                return true;
+            if (part.type == "fractionalSecondDigits"sv && local_time.millisecond != 0)
+                return true;
+            return false;
+        });
+
+        if (it == pattern_parts.end()) {
+            auto noon_symbol = Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Noon);
+            if (noon_symbol.has_value())
+                return *noon_symbol;
+        }
+    }
+
+    return Unicode::get_calendar_day_period_symbol_for_hour(locale, calendar, style, local_time.hour);
 }
 
 // 11.5.6 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
@@ -606,7 +631,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             auto style = date_time_format.day_period();
 
             // ii. Let fv be a String value representing the day period of tm in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-            auto symbol = Unicode::get_calendar_day_period_symbol_for_hour(data_locale, date_time_format.calendar(), style, local_time.hour);
+            auto symbol = resolve_day_period(data_locale, date_time_format.calendar(), style, pattern_parts, local_time);
             if (symbol.has_value())
                 formatted_value = *symbol;
 
@@ -1075,11 +1100,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto const& pattern = date_time_format.pattern();
 
         if (range_pattern->start_range.contains("{0}"sv)) {
-            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern);
-            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern);
+            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
         } else {
-            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern);
-            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern);
+            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
         }
 
         // FIXME: The above is not sufficient. For example, if the start date is days before the end date, and only the timeStyle

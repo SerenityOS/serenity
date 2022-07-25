@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 
 namespace Core {
 
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
 ErrorOr<void> Group::add_group(Group& group)
 {
     if (group.name().is_empty())

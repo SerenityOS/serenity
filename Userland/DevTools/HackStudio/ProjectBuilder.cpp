@@ -32,14 +32,15 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
     }
 
     if (active_file.is_null())
-        return Error::from_string_literal("no active file"sv);
+        return Error::from_string_literal("no active file");
 
-    if (active_file.ends_with(".js")) {
+    if (active_file.ends_with(".js"sv)) {
         TRY(m_terminal->run_command(String::formatted("js -A {}", active_file)));
         return {};
     }
 
     if (m_is_serenity == IsSerenityRepo::No) {
+        TRY(verify_make_is_installed());
         TRY(m_terminal->run_command("make"));
         return {};
     }
@@ -57,14 +58,15 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
     }
 
     if (active_file.is_null())
-        return Error::from_string_literal("no active file"sv);
+        return Error::from_string_literal("no active file");
 
-    if (active_file.ends_with(".js")) {
+    if (active_file.ends_with(".js"sv)) {
         TRY(m_terminal->run_command(String::formatted("js {}", active_file)));
         return {};
     }
 
     if (m_is_serenity == IsSerenityRepo::No) {
+        TRY(verify_make_is_installed());
         TRY(m_terminal->run_command("make run"));
         return {};
     }
@@ -87,7 +89,7 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
     auto cmake_file = find_cmake_file_for(active_file);
     if (!cmake_file.has_value()) {
         warnln("did not find cmake file for: {}", active_file);
-        return Error::from_string_literal("did not find cmake file"sv);
+        return Error::from_string_literal("did not find cmake file");
     }
 
     if (m_serenity_component_cmake_file == cmake_file.value())
@@ -102,6 +104,7 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::build_serenity_component()
 {
+    TRY(verify_make_is_installed());
     TRY(m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes, "Make failed"sv));
     return {};
 }
@@ -113,7 +116,7 @@ ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
     static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
     RegexResult result;
     if (!component_name.search(StringView { content }, result))
-        return Error::from_string_literal("component not found"sv);
+        return Error::from_string_literal("component not found");
 
     return String { result.capture_group_matches.at(0).at(0).view.string_view() };
 }
@@ -126,7 +129,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
         }
     }
 
-    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt").string();
+    auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
     if (Core::File::exists(cmake_file_path))
         MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed, false));
 
@@ -145,7 +148,7 @@ Optional<String> ProjectBuilder::find_cmake_file_for(StringView file_path) const
 {
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
-        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt");
+        auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
         if (Core::File::exists(cmake_path.string()))
             return cmake_path.string();
         directory = LexicalPath::dirname(directory);
@@ -243,7 +246,7 @@ void ProjectBuilder::for_each_library_dependencies(Function<void(String, Vector<
         auto library_name = result.capture_group_matches.at(0).at(0).view.string_view();
         auto dependencies_string = result.capture_group_matches.at(0).at(1).view.string_view();
 
-        func(library_name, dependencies_string.split_view(" "));
+        func(library_name, dependencies_string.split_view(' '));
     }
 }
 
@@ -252,7 +255,15 @@ ErrorOr<void> ProjectBuilder::verify_cmake_is_installed()
     auto res = Core::command("cmake --version", {});
     if (!res.is_error() && res.value().exit_code == 0)
         return {};
-    return Error::from_string_literal("CMake port is not installed"sv);
+    return Error::from_string_literal("CMake port is not installed");
+}
+
+ErrorOr<void> ProjectBuilder::verify_make_is_installed()
+{
+    auto res = Core::command("make --version", {});
+    if (!res.is_error() && res.value().exit_code == 0)
+        return {};
+    return Error::from_string_literal("Make port is not installed");
 }
 
 String ProjectBuilder::build_directory() const

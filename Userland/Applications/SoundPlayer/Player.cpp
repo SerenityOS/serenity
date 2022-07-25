@@ -7,7 +7,7 @@
 
 #include "Player.h"
 
-Player::Player(Audio::ConnectionFromClient& audio_client_connection)
+Player::Player(Audio::ConnectionToServer& audio_client_connection)
     : m_audio_client_connection(audio_client_connection)
     , m_playback_manager(audio_client_connection)
 {
@@ -44,7 +44,7 @@ void Player::play_file_path(String const& path)
         return;
 
     if (!Core::File::exists(path)) {
-        audio_load_error(path, "File does not exist");
+        audio_load_error(path, "File does not exist"sv);
         return;
     }
 
@@ -71,8 +71,8 @@ void Player::play_file_path(String const& path)
 
 bool Player::is_playlist(String const& path)
 {
-    return (path.ends_with(".m3u", AK::CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive));
+    return (path.ends_with(".m3u"sv, AK::CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".m3u8"sv, AK::CaseSensitivity::CaseInsensitive));
 }
 
 void Player::set_play_state(PlayState state)

@@ -37,7 +37,7 @@ describe("errors", () => {
     test("month or monthCode field is required", () => {
         const calendar = new Temporal.Calendar("iso8601");
         expect(() => {
-            calendar.monthDayFromFields({ year: 2021 });
+            calendar.monthDayFromFields({ year: 2021, day: 1 });
         }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
     });
 

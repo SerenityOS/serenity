@@ -64,7 +64,8 @@ private:
 String ASTNode::class_name() const
 {
     // NOTE: We strip the "JS::" prefix.
-    return demangle(typeid(*this).name()).substring(4);
+    auto const* typename_ptr = typeid(*this).name();
+    return demangle({ typename_ptr, strlen(typename_ptr) }).substring(4);
 }
 
 static void print_indent(int indent)
@@ -4092,6 +4093,7 @@ Completion DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) c
     if (false) {
         // a. Perform an implementation-defined debugging action.
         // b. Return a new implementation-defined Completion Record.
+        VERIFY_NOT_REACHED();
     }
     // 2. Else,
     else {

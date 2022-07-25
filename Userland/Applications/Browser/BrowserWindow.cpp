@@ -45,7 +45,7 @@ static String bookmarks_file_path()
 {
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
-    builder.append("/bookmarks.json");
+    builder.append("/bookmarks.json"sv);
     return builder.to_string();
 }
 
@@ -53,7 +53,7 @@ static String search_engines_file_path()
 {
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
-    builder.append("/SearchEngines.json");
+    builder.append("/SearchEngines.json"sv);
     return builder.to_string();
 }
 
@@ -61,7 +61,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
-    auto app_icon = GUI::Icon::default_icon("app-browser");
+    auto app_icon = GUI::Icon::default_icon("app-browser"sv);
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
     resize(730, 560);
@@ -100,7 +100,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::url_from_user_input(Browser::g_home_url), true);
+        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), true);
     };
 
     m_window_actions.on_next_tab = [this] {
@@ -123,25 +123,25 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     });
 
     m_window_actions.on_about = [this] {
-        auto app_icon = GUI::Icon::default_icon("app-browser");
-        GUI::AboutDialog::show("Browser", app_icon.bitmap_for_size(32), this);
+        auto app_icon = GUI::Icon::default_icon("app-browser"sv);
+        GUI::AboutDialog::show("Browser"sv, app_icon.bitmap_for_size(32), this);
     };
 
     m_window_actions.on_show_bookmarks_bar = [](auto& action) {
         Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
-        Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", action.is_checked());
+        Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, action.is_checked());
     };
 
-    bool show_bookmarks_bar = Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true);
+    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, true);
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
     m_window_actions.on_vertical_tabs = [this](auto& action) {
         m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
-        Config::write_bool("Browser", "Preferences", "VerticalTabs", action.is_checked());
+        Config::write_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, action.is_checked());
     };
 
-    bool vertical_tabs = Config::read_bool("Browser", "Preferences", "VerticalTabs", false);
+    bool vertical_tabs = Config::read_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, false);
     m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
     m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
 
@@ -258,13 +258,13 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            auto homepage_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
-            if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecResult::OK) {
+            auto homepage_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv);
+            if (GUI::InputBox::show(this, homepage_url, "Enter URL"sv, "Change homepage URL"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
-                    Config::write_string("Browser", "Preferences", "Home", homepage_url);
+                    Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
                     Browser::g_home_url = homepage_url;
                 } else {
-                    GUI::MessageBox::show_error(this, "The URL you have entered is not valid");
+                    GUI::MessageBox::show_error(this, "The URL you have entered is not valid"sv);
                 }
             }
         },
@@ -280,13 +280,13 @@ void BrowserWindow::build_menus()
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
     color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
-        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser", "Preferences", "ColorScheme", "auto"));
+        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
         m_color_scheme_actions.set_exclusive(true);
 
         auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
             auto action = GUI::Action::create_checkable(
                 name, [=, this](auto&) {
-                    Config::write_string("Browser", "Preferences", "ColorScheme", Web::CSS::preferred_color_scheme_to_string(preference_value));
+                    Config::write_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Web::CSS::preferred_color_scheme_to_string(preference_value));
                     active_tab().view().set_preferred_color_scheme(preference_value);
                 },
                 this);
@@ -302,9 +302,9 @@ void BrowserWindow::build_menus()
     }
 
     settings_menu.add_separator();
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
-            GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings");
+            GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
         });
     settings_menu.add_action(move(open_settings_action));
 
@@ -385,7 +385,7 @@ void BrowserWindow::build_menus()
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         String user_agent;
-        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecResult::OK || user_agent.is_empty() || user_agent.is_null()) {
+        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv) != GUI::InputBox::ExecResult::OK || user_agent.is_empty() || user_agent.is_null()) {
             m_disable_user_agent_spoofing->activate();
             return;
         }
@@ -426,7 +426,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     m_disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [](auto&) {
             g_search_engine = {};
-            Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+            Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         },
         this);
     search_engine_menu.add_action(*m_disable_search_engine_action);
@@ -444,13 +444,13 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 if (!json_item.is_object())
                     continue;
                 auto search_engine = json_item.as_object();
-                auto name = search_engine.get("title").to_string();
-                auto url_format = search_engine.get("url_format").to_string();
+                auto name = search_engine.get("title"sv).to_string();
+                auto url_format = search_engine.get("url_format"sv).to_string();
 
                 auto action = GUI::Action::create_checkable(
                     name, [&, url_format](auto&) {
                         g_search_engine = url_format;
-                        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+                        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
                     },
                     this);
                 search_engine_menu.add_action(action);
@@ -467,20 +467,20 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
         String search_engine;
-        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecResult::OK || search_engine.is_empty()) {
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK || search_engine.is_empty()) {
             m_disable_search_engine_action->activate();
             return;
         }
 
         auto argument_count = search_engine.count("{}"sv);
         if (argument_count != 1) {
-            GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!"sv, "Error"sv, GUI::MessageBox::Type::Error);
             m_disable_search_engine_action->activate();
             return;
         }
 
         g_search_engine = search_engine;
-        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         action.set_status_tip(search_engine);
     });
     search_engine_menu.add_action(custom_search_engine_action);
@@ -606,7 +606,9 @@ void BrowserWindow::config_string_did_change(String const& domain, String const&
             Browser::g_search_engine = value;
         else if (key == "Home")
             Browser::g_home_url = value;
-    } else if (group.starts_with("Proxy:")) {
+        else if (key == "NewTab")
+            Browser::g_new_tab_url = value;
+    } else if (group.starts_with("Proxy:"sv)) {
         dbgln("Proxy mapping changed: {}/{} = {}", group, key, value);
         auto proxy_spec = group.substring_view(6);
         auto existing_proxy = Browser::g_proxies.find(proxy_spec);

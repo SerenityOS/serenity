@@ -3,7 +3,7 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/unicode_data.cmake)
 if (DEFINED UNICODE_DATA_SOURCES)
     set(SOURCES ${UNICODE_DATA_SOURCES})
     serenity_lib(LibUnicodeData unicodedata)
-    target_compile_options(LibUnicodeData PRIVATE -g0 -Os)
+    target_compile_options(LibUnicodeData PRIVATE -g0 -Os -Wno-parentheses-equality)
     target_link_libraries(LibUnicodeData LibCore LibTimeZone)
 endif()
 
@@ -13,6 +13,7 @@ set(SOURCES
     DateTimeFormat.cpp
     Locale.cpp
     NumberFormat.cpp
+    PluralRules.cpp
     RelativeTimeFormat.cpp
 )
 

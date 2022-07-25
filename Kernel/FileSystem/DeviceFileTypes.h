@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MajorNumber);
-TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MinorNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MajorNumber);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MinorNumber);
 
 }

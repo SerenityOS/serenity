@@ -136,7 +136,7 @@ static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
 
             bool first = true;
             for (auto const& value : list) {
-                generator.append(first ? " " : ", ");
+                generator.append(first ? " "sv : ", "sv);
                 generator.append(String::formatted("{}", value));
                 first = false;
             }
@@ -211,7 +211,7 @@ struct CanonicalLanguageID {
             if (segments.size() == ++index)
                 return language_id;
         } else {
-            return Error::from_string_literal("Expected language subtag"sv);
+            return Error::from_string_literal("Expected language subtag");
         }
 
         if (Unicode::is_unicode_script_subtag(segments[index])) {
@@ -228,7 +228,7 @@ struct CanonicalLanguageID {
 
         while (index < segments.size()) {
             if (!Unicode::is_unicode_variant_subtag(segments[index]))
-                return Error::from_string_literal("Expected variant subtag"sv);
+                return Error::from_string_literal("Expected variant subtag");
             language_id.variants.append(unique_strings.ensure(segments[index++]));
         }
 
@@ -244,7 +244,7 @@ struct CanonicalLanguageID {
 inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView path, Core::Stream::OpenMode mode)
 {
     if (path.is_empty())
-        return Error::from_string_literal("Provided path is empty, please provide all command line options"sv);
+        return Error::from_string_literal("Provided path is empty, please provide all command line options");
 
     auto file = TRY(Core::Stream::File::open(path, mode));
     return Core::Stream::BufferedFile::create(move(file));
@@ -273,8 +273,12 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView s
         lexical_path = lexical_path.append(subpath);
 
     Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (iterator.has_error())
-        return Error::from_string_literal(iterator.error_string());
+    if (iterator.has_error()) {
+        // FIXME: Make Core::DirIterator return a StringView for its error
+        //        string.
+        auto const* error_string_ptr = iterator.error_string();
+        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
+    }
 
     return iterator;
 }
@@ -282,8 +286,12 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView s
 inline ErrorOr<String> next_path_from_dir_iterator(Core::DirIterator& iterator)
 {
     auto next_path = iterator.next_full_path();
-    if (iterator.has_error())
-        return Error::from_string_literal(iterator.error_string());
+    if (iterator.has_error()) {
+        // FIXME: Make Core::DirIterator return a StringView for its error
+        //        string.
+        auto const* error_string_ptr = iterator.error_string();
+        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
+    }
 
     return next_path;
 }
@@ -464,7 +472,7 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
         String mapping_name;
 
         if constexpr (IsNullPointer<IdentifierFormatter>)
-            mapping_name = name.replace("-"sv, "_"sv, true);
+            mapping_name = name.replace("-"sv, "_"sv, ReplaceMode::All);
         else
             mapping_name = format_identifier(type, name);
 
@@ -518,19 +526,21 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
 }
 
 template<typename T>
-void generate_available_values(SourceGenerator& generator, StringView name, Vector<T> const& values, Vector<Alias> const& aliases = {})
+void generate_available_values(SourceGenerator& generator, StringView name, Vector<T> const& values, Vector<Alias> const& aliases = {}, Function<bool(StringView)> value_filter = {})
 {
     generator.set("name", name);
-    generator.set("size", String::number(values.size()));
 
     generator.append(R"~~~(
 Span<StringView const> @name@()
 {
-    static constexpr Array<StringView, @size@> values { {)~~~");
+    static constexpr auto values = Array {)~~~");
 
     bool first = true;
     for (auto const& value : values) {
-        generator.append(first ? " " : ", ");
+        if (value_filter && !value_filter(value))
+            continue;
+
+        generator.append(first ? " "sv : ", "sv);
         first = false;
 
         if (auto it = aliases.find_if([&](auto const& alias) { return alias.alias == value; }); it != aliases.end())
@@ -539,7 +549,7 @@ Span<StringView const> @name@()
             generator.append(String::formatted("\"{}\"sv", value));
     }
 
-    generator.append(R"~~~( } };
+    generator.append(R"~~~( };
     return values.span();
 }
 )~~~");

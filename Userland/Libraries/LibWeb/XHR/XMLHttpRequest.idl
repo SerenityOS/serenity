@@ -1,5 +1,9 @@
 #import <XHR/XMLHttpRequestEventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <FileAPI/Blob.idl>
+#import <URL/URLSearchParams.idl>
+
+typedef (Blob or BufferSource or URLSearchParams or USVString) XMLHttpRequestBodyInit;
 
 enum XMLHttpRequestResponseType {
   "",
@@ -25,11 +29,12 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     readonly attribute DOMString responseText;
     readonly attribute any response;
     attribute XMLHttpRequestResponseType responseType;
+    attribute unsigned long timeout;
 
     undefined open(DOMString method, DOMString url);
     undefined open(ByteString method, USVString url, boolean async, optional USVString? username = {}, optional USVString? password = {});
     undefined setRequestHeader(DOMString name, DOMString value);
-    undefined send(optional USVString body = {});
+    undefined send(optional XMLHttpRequestBodyInit? body = null);
 
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();

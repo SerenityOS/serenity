@@ -103,6 +103,36 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return {};
     }
 
+    if (to_underlying(role) == to_underlying(Role::Tooltip)) {
+        auto const* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
+        if (!cell || !cell->thrown_value().has_value())
+            return {};
+
+        auto value = cell->thrown_value().value();
+        if (!value.is_object())
+            return {};
+
+        auto& object = value.as_object();
+        if (!is<JS::Error>(object))
+            return {};
+
+        auto& error = static_cast<JS::Error&>(object);
+        auto const& trace = error.traceback();
+        StringBuilder builder;
+        builder.appendff("{}\n", error.get_without_side_effects(object.vm().names.message).to_string_without_side_effects());
+        for (auto const& frame : trace.in_reverse()) {
+            if (frame.source_range.filename.contains("runtime.js"sv)) {
+                if (frame.function_name == "<unknown>")
+                    builder.appendff("  in a builtin function at line {}, column {}\n", frame.source_range.start.line, frame.source_range.start.column);
+                else
+                    builder.appendff("  while evaluating builtin '{}'\n", frame.function_name);
+            } else if (frame.source_range.filename.starts_with("cell "sv)) {
+                builder.appendff("  in cell '{}', at line {}, column {}\n", frame.source_range.filename.substring_view(5), frame.source_range.start.line, frame.source_range.start.column);
+            }
+        }
+        return builder.to_string();
+    }
+
     return {};
 }
 

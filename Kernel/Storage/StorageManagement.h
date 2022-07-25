@@ -11,13 +11,13 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
+#include <LibPartition/PartitionTable.h>
 
 namespace Kernel {
 
-class PartitionTable;
 class StorageManagement {
 
 public:
@@ -30,6 +30,8 @@ public:
 
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
+
+    static u32 generate_controller_id();
 
     void remove_device(StorageDevice&);
 
@@ -45,7 +47,7 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    ErrorOr<NonnullOwnPtr<PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
+    ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;
 

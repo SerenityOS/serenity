@@ -18,8 +18,8 @@ namespace GUI {
 TextBox::TextBox()
     : TextEditor(TextEditor::SingleLine)
 {
-    set_min_width(32);
-    set_fixed_height(22);
+    set_min_size({ 40, 22 });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
 }
 
 void TextBox::keydown_event(GUI::KeyEvent& event)

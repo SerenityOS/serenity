@@ -27,7 +27,7 @@ public:
 
     virtual ~CSSMediaRule() = default;
 
-    virtual StringView class_name() const override { return "CSSMediaRule"; };
+    virtual StringView class_name() const override { return "CSSMediaRule"sv; };
     virtual Type type() const override { return Type::Media; };
 
     virtual String condition_text() const override;

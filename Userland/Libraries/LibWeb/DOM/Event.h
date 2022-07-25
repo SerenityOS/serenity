@@ -67,7 +67,7 @@ public:
     void set_target(EventTarget* target) { m_target = target; }
 
     // NOTE: This is intended for the JS bindings.
-    RefPtr<EventTarget> src_target() const { return target(); }
+    RefPtr<EventTarget> src_element() const { return target(); }
 
     RefPtr<EventTarget> related_target() const { return m_related_target; }
     void set_related_target(EventTarget* related_target) { m_related_target = related_target; }

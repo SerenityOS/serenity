@@ -63,7 +63,7 @@ enum class PropertyID {
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (value.as_object().has("longhands"))
+        if (value.as_object().has("longhands"sv))
             shorthand_property_ids.append(name);
         else
             longhand_property_ids.append(name);
@@ -104,7 +104,7 @@ enum class PropertyID {
 
 PropertyID property_id_from_camel_case_string(StringView);
 PropertyID property_id_from_string(StringView);
-const char* string_from_property_id(PropertyID);
+StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 NonnullRefPtr<StyleValue> property_initial_value(PropertyID);
 
@@ -189,7 +189,7 @@ PropertyID property_id_from_string(StringView string)
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name@"))
+    if (string.equals_ignoring_case("@name@"sv))
         return PropertyID::@name:titlecase@;
 )~~~");
     });
@@ -198,7 +198,7 @@ PropertyID property_id_from_string(StringView string)
     return PropertyID::Invalid;
 }
 
-const char* string_from_property_id(PropertyID property_id) {
+StringView string_from_property_id(PropertyID property_id) {
     switch (property_id) {
 )~~~");
 
@@ -210,13 +210,13 @@ const char* string_from_property_id(PropertyID property_id) {
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
-        return "@name@";
+        return "@name@"sv;
 )~~~");
     });
 
     generator.append(R"~~~(
     default:
-        return "(invalid CSS::PropertyID)";
+        return "(invalid CSS::PropertyID)"sv;
     }
 }
 
@@ -229,8 +229,8 @@ bool is_inherited_property(PropertyID property_id)
         VERIFY(value.is_object());
 
         bool inherited = false;
-        if (value.as_object().has("inherited")) {
-            auto& inherited_value = value.as_object().get("inherited");
+        if (value.as_object().has("inherited"sv)) {
+            auto& inherited_value = value.as_object().get("inherited"sv);
             VERIFY(inherited_value.is_bool());
             inherited = inherited_value.as_bool();
         }
@@ -260,8 +260,8 @@ bool property_affects_layout(PropertyID property_id)
         VERIFY(value.is_object());
 
         bool affects_layout = true;
-        if (value.as_object().has("affects-layout"))
-            affects_layout = value.as_object().get("affects-layout").to_bool();
+        if (value.as_object().has("affects-layout"sv))
+            affects_layout = value.as_object().get("affects-layout"sv).to_bool();
 
         if (affects_layout) {
             auto member_generator = generator.fork();
@@ -288,8 +288,8 @@ bool property_affects_stacking_context(PropertyID property_id)
         VERIFY(value.is_object());
 
         bool affects_stacking_context = false;
-        if (value.as_object().has("affects-stacking-context"))
-            affects_stacking_context = value.as_object().get("affects-stacking-context").to_bool();
+        if (value.as_object().has("affects-stacking-context"sv))
+            affects_stacking_context = value.as_object().get("affects-stacking-context"sv).to_bool();
 
         if (affects_stacking_context) {
             auto member_generator = generator.fork();
@@ -322,11 +322,11 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
     //       works for now! :^)
 
     auto output_initial_value_code = [&](auto& name, auto& object) {
-        if (!object.has("initial")) {
+        if (!object.has("initial"sv)) {
             dbgln("No initial value specified for property '{}'", name);
             VERIFY_NOT_REACHED();
         }
-        auto& initial_value = object.get("initial");
+        auto& initial_value = object.get("initial"sv);
         VERIFY(initial_value.is_string());
         auto initial_value_string = initial_value.as_string();
 
@@ -335,7 +335,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
         member_generator.set("initial_value_string", initial_value_string);
         member_generator.append(R"~~~(
         {
-            auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@", PropertyID::@name:titlecase@);
+            auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@"sv, PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
             initial_values[to_underlying(PropertyID::@name:titlecase@)] = parsed_value.release_nonnull();
         }
@@ -344,14 +344,14 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (value.as_object().has("longhands"))
+        if (value.as_object().has("longhands"sv))
             return;
         output_initial_value_code(name, value.as_object());
     });
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (!value.as_object().has("longhands"))
+        if (!value.as_object().has("longhands"sv))
             return;
         output_initial_value_code(name, value.as_object());
     });
@@ -369,8 +369,8 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (value.as_object().has("quirks")) {
-            auto& quirks_value = value.as_object().get("quirks");
+        if (value.as_object().has("quirks"sv)) {
+            auto& quirks_value = value.as_object().get("quirks"sv);
             VERIFY(quirks_value.is_array());
             auto& quirks = quirks_value.as_array();
 
@@ -417,8 +417,8 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         auto& object = value.as_object();
-        bool has_valid_types = object.has("valid-types");
-        auto has_valid_identifiers = object.has("valid-identifiers");
+        bool has_valid_types = object.has("valid-types"sv);
+        auto has_valid_identifiers = object.has("valid-identifiers"sv);
         if (has_valid_types || has_valid_identifiers) {
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
@@ -461,7 +461,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
             };
 
             if (has_valid_types) {
-                auto valid_types_value = object.get("valid-types");
+                auto valid_types_value = object.get("valid-types"sv);
                 VERIFY(valid_types_value.is_array());
                 auto valid_types = valid_types_value.as_array();
                 if (!valid_types.is_empty()) {
@@ -480,36 +480,36 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         }
 
                         if (type_name == "angle") {
-                            output_numeric_value_check(property_generator, "is_angle", "as_angle().angle().to_degrees()", Array { "Angle"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "is_angle"sv, "as_angle().angle().to_degrees()"sv, Array { "Angle"sv }, min_value, max_value);
                         } else if (type_name == "color") {
                             property_generator.append(R"~~~(
         if (style_value.has_color())
             return true;
 )~~~");
                         } else if (type_name == "frequency") {
-                            output_numeric_value_check(property_generator, "is_frequency", "as_frequency().frequency().to_hertz()", Array { "Frequency"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "is_frequency"sv, "as_frequency().frequency().to_hertz()"sv, Array { "Frequency"sv }, min_value, max_value);
                         } else if (type_name == "image") {
                             property_generator.append(R"~~~(
-        if (style_value.is_image())
+        if (style_value.is_image() || style_value.is_linear_gradient())
             return true;
 )~~~");
                         } else if (type_name == "integer") {
-                            output_numeric_value_check(property_generator, "has_integer", "to_integer()", Array { "Integer"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "has_integer"sv, "to_integer()"sv, Array { "Integer"sv }, min_value, max_value);
                         } else if (type_name == "length") {
-                            output_numeric_value_check(property_generator, "has_length", "to_length().raw_value()", Array { "Length"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "has_length"sv, "to_length().raw_value()"sv, Array { "Length"sv }, min_value, max_value);
                         } else if (type_name == "number") {
-                            output_numeric_value_check(property_generator, "has_number", "to_number()", Array { "Integer"sv, "Number"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "has_number"sv, "to_number()"sv, Array { "Integer"sv, "Number"sv }, min_value, max_value);
                         } else if (type_name == "percentage") {
-                            output_numeric_value_check(property_generator, "is_percentage", "as_percentage().percentage().value()", Array { "Percentage"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "is_percentage"sv, "as_percentage().percentage().value()"sv, Array { "Percentage"sv }, min_value, max_value);
                         } else if (type_name == "resolution") {
-                            output_numeric_value_check(property_generator, "is_resolution", "as_resolution().resolution().to_dots_per_pixel()", Array<StringView, 0> {}, min_value, max_value);
+                            output_numeric_value_check(property_generator, "is_resolution"sv, "as_resolution().resolution().to_dots_per_pixel()"sv, Array<StringView, 0> {}, min_value, max_value);
                         } else if (type_name == "string") {
                             property_generator.append(R"~~~(
         if (style_value.is_string())
             return true;
 )~~~");
                         } else if (type_name == "time") {
-                            output_numeric_value_check(property_generator, "is_time", "as_time().time().to_seconds()", Array { "Time"sv }, min_value, max_value);
+                            output_numeric_value_check(property_generator, "is_time"sv, "as_time().time().to_seconds()"sv, Array { "Time"sv }, min_value, max_value);
                         } else if (type_name == "url") {
                             // FIXME: Handle urls!
                         } else {
@@ -526,7 +526,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
             }
 
             if (has_valid_identifiers) {
-                auto valid_identifiers_value = object.get("valid-identifiers");
+                auto valid_identifiers_value = object.get("valid-identifiers"sv);
                 VERIFY(valid_identifiers_value.is_array());
                 auto valid_identifiers = valid_identifiers_value.as_array();
                 if (!valid_identifiers.is_empty()) {
@@ -570,8 +570,8 @@ size_t property_maximum_value_count(PropertyID property_id)
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (value.as_object().has("max-values")) {
-            auto max_values = value.as_object().get("max-values");
+        if (value.as_object().has("max-values"sv)) {
+            auto max_values = value.as_object().get("max-values"sv);
             VERIFY(max_values.is_number() && !max_values.is_double());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));

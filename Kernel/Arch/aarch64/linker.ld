@@ -7,7 +7,6 @@ PHDRS
   data PT_LOAD ;
   ksyms PT_LOAD ;
   bss PT_LOAD ;
-  super_pages PT_LOAD ;
 }
 
 SECTIONS
@@ -54,11 +53,6 @@ SECTIONS
         . = ALIGN(4K);
         *(.heap)
     } :bss
-
-    .super_pages ALIGN(4K) (NOLOAD) : AT (ADDR(.super_pages))
-    {
-        *(.super_pages)
-    } :super_pages
 
     /*
         FIXME: 8MB is enough space for all of the tables required to identity map 

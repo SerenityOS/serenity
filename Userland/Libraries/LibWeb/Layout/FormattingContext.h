@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Layout/FormattingState.h>
+#include <LibWeb/Layout/LayoutState.h>
 
 namespace Web::Layout {
 
@@ -38,31 +38,35 @@ public:
 
     static bool creates_block_formatting_context(Box const&);
 
-    static float compute_width_for_replaced_element(FormattingState const&, ReplacedBox const&);
-    static float compute_height_for_replaced_element(FormattingState const&, ReplacedBox const&);
+    static float compute_width_for_replaced_element(LayoutState const&, ReplacedBox const&);
+    static float compute_height_for_replaced_element(LayoutState const&, ReplacedBox const&);
 
-    OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(FormattingState&, Box const& child_box);
+    OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(LayoutState&, Box const& child_box);
 
     virtual void parent_context_did_dimension_child_root_box() { }
 
-    struct MinAndMaxContentSize {
-        float min_content_size { 0 };
-        float max_content_size { 0 };
-    };
-
-    MinAndMaxContentSize calculate_min_and_max_content_width(Layout::Box const&) const;
-    MinAndMaxContentSize calculate_min_and_max_content_height(Layout::Box const&) const;
+    float calculate_min_content_width(Layout::Box const&) const;
+    float calculate_max_content_width(Layout::Box const&) const;
+    float calculate_min_content_height(Layout::Box const&) const;
+    float calculate_max_content_height(Layout::Box const&) const;
 
     float calculate_fit_content_height(Layout::Box const&, Optional<float> available_height) const;
     float calculate_fit_content_width(Layout::Box const&, Optional<float> available_width) const;
 
     virtual float greatest_child_width(Box const&);
 
+    float containing_block_width_for(Box const& box) const { return containing_block_width_for(box, m_state); }
+    float containing_block_height_for(Box const& box) const { return containing_block_height_for(box, m_state); }
+
+    static float containing_block_width_for(Box const&, LayoutState const&);
+    static float containing_block_height_for(Box const&, LayoutState const&);
+
+    virtual void run_intrinsic_size_determination(Box const&);
+
 protected:
-    FormattingContext(Type, FormattingState&, Box const&, FormattingContext* parent = nullptr);
+    FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);
 
     float calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const;
-    FormattingState::IntrinsicSizes calculate_intrinsic_sizes(Layout::Box const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
     void compute_inset(Box const& box);
@@ -77,11 +81,11 @@ protected:
         float preferred_minimum_width { 0 };
     };
 
-    static float tentative_width_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& width);
-    static float tentative_height_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& height);
-    static float compute_auto_height_for_block_formatting_context_root(FormattingState const&, BlockContainer const&);
-    static float compute_auto_height_for_block_level_element(FormattingState const&, Box const&);
-    static float calculate_auto_height(FormattingState const& state, Box const& box);
+    static float tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::LengthPercentage const& computed_width);
+    static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::LengthPercentage const& computed_height);
+    static float compute_auto_height_for_block_formatting_context_root(LayoutState const&, BlockContainer const&);
+    static float compute_auto_height_for_block_level_element(LayoutState const&, Box const&);
+    static float calculate_auto_height(LayoutState const& state, Box const& box);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
@@ -98,7 +102,7 @@ protected:
     FormattingContext* m_parent { nullptr };
     Box const& m_context_box;
 
-    FormattingState& m_state;
+    LayoutState& m_state;
 };
 
 }

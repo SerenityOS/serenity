@@ -2,7 +2,7 @@
     layout: @GUI::HorizontalBoxLayout {
         spacing: 4
     }
-    shrink_to_fit: true
+    preferred_height: "fit"
 
     @GUI::CheckBox {
         name: "checkbox"

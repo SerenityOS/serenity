@@ -273,6 +273,12 @@ ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& pr
 
     auto weak_ptr = TRY(this->try_make_weak_ptr());
     m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, move(weak_ptr)));
+
+    // This is not actually explicitly verified by any official documentation,
+    // but it's not listed anywhere as being cleared, and rsync expects it to work like this.
+    if (fork_parent)
+        m_signal_action_data = fork_parent->m_signal_action_data;
+
     return {};
 }
 
@@ -368,7 +374,7 @@ extern "C" char const asm_signal_trampoline_end[];
 void create_signal_trampoline()
 {
     // NOTE: We leak this region.
-    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Memory::Region::Access::ReadWrite).release_value().leak_ptr();
+    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines"sv, Memory::Region::Access::ReadWrite).release_value().leak_ptr();
     g_signal_trampoline_region->set_syscall_region(true);
 
     size_t trampoline_size = asm_signal_trampoline_end - asm_signal_trampoline;
@@ -732,7 +738,7 @@ void Process::die()
 void Process::terminate_due_to_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     VERIFY(&Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
     {
@@ -899,7 +905,7 @@ static constexpr StringView to_string(Pledge promise)
 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) \
     case Pledge::x:                   \
-        return #x;
+        return #x##sv;
     switch (promise) {
         ENUMERATE_PLEDGE_PROMISES
     }

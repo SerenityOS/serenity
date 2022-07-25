@@ -73,6 +73,7 @@
     __JS_ENUMERATE(Collator, collator, CollatorPrototype, CollatorConstructor)                                           \
     __JS_ENUMERATE(DateTimeFormat, date_time_format, DateTimeFormatPrototype, DateTimeFormatConstructor)                 \
     __JS_ENUMERATE(DisplayNames, display_names, DisplayNamesPrototype, DisplayNamesConstructor)                          \
+    __JS_ENUMERATE(DurationFormat, duration_format, DurationFormatPrototype, DurationFormatConstructor)                  \
     __JS_ENUMERATE(ListFormat, list_format, ListFormatPrototype, ListFormatConstructor)                                  \
     __JS_ENUMERATE(Locale, locale, LocalePrototype, LocaleConstructor)                                                   \
     __JS_ENUMERATE(NumberFormat, number_format, NumberFormatPrototype, NumberFormatConstructor)                          \
@@ -123,13 +124,14 @@
     __JS_ENUMERATE(toPrimitive, to_primitive)                \
     __JS_ENUMERATE(toStringTag, to_string_tag)
 
-#define JS_ENUMERATE_REGEXP_FLAGS              \
-    __JS_ENUMERATE(hasIndices, has_indices, d) \
-    __JS_ENUMERATE(global, global, g)          \
-    __JS_ENUMERATE(ignoreCase, ignore_case, i) \
-    __JS_ENUMERATE(multiline, multiline, m)    \
-    __JS_ENUMERATE(dotAll, dot_all, s)         \
-    __JS_ENUMERATE(unicode, unicode, u)        \
+#define JS_ENUMERATE_REGEXP_FLAGS                \
+    __JS_ENUMERATE(hasIndices, has_indices, d)   \
+    __JS_ENUMERATE(global, global, g)            \
+    __JS_ENUMERATE(ignoreCase, ignore_case, i)   \
+    __JS_ENUMERATE(multiline, multiline, m)      \
+    __JS_ENUMERATE(dotAll, dot_all, s)           \
+    __JS_ENUMERATE(unicodeSets, unicode_sets, v) \
+    __JS_ENUMERATE(unicode, unicode, u)          \
     __JS_ENUMERATE(sticky, sticky, y)
 
 namespace JS {
@@ -223,6 +225,8 @@ namespace Intl {
     class PrototypeName;
 JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
+
+class MathematicalValue;
 
 // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
 class Segments;

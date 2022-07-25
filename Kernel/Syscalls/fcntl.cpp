@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
+ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, uintptr_t arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
@@ -45,7 +45,10 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
         TRY(description->get_flock(Userspace<flock*>(arg)));
         return 0;
     case F_SETLK:
-        TRY(description->apply_flock(Process::current(), Userspace<flock const*>(arg)));
+        TRY(description->apply_flock(Process::current(), Userspace<flock const*>(arg), ShouldBlock::No));
+        return 0;
+    case F_SETLKW:
+        TRY(description->apply_flock(Process::current(), Userspace<flock const*>(arg), ShouldBlock::Yes));
         return 0;
     default:
         return EINVAL;

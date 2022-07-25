@@ -90,6 +90,7 @@ Window::Window(Core::Object* parent)
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
     REGISTER_SIZE_PROPERTY("base_size", base_size, set_base_size);
     REGISTER_SIZE_PROPERTY("size_increment", size_increment, set_size_increment);
+    REGISTER_BOOL_PROPERTY("obey_widget_min_size", is_obeying_widget_min_size, set_obey_widget_min_size);
 }
 
 Window::~Window()
@@ -124,7 +125,7 @@ void Window::show()
 
     Gfx::IntRect launch_origin_rect;
     if (auto* launch_origin_rect_string = getenv("__libgui_launch_origin_rect")) {
-        auto parts = StringView(launch_origin_rect_string).split_view(',');
+        auto parts = StringView { launch_origin_rect_string, strlen(launch_origin_rect_string) }.split_view(',');
         if (parts.size() == 4) {
             launch_origin_rect = Gfx::IntRect {
                 parts[0].to_int().value_or(0),
@@ -135,6 +136,8 @@ void Window::show()
         }
         unsetenv("__libgui_launch_origin_rect");
     }
+
+    update_min_size();
 
     ConnectionToWindowServer::the().async_create_window(
         m_window_id,
@@ -723,10 +726,9 @@ void Window::set_main_widget(Widget* widget)
     if (m_main_widget) {
         add_child(*widget);
         auto new_window_rect = rect();
-        if (m_main_widget->min_width() >= 0)
-            new_window_rect.set_width(max(new_window_rect.width(), m_main_widget->min_width()));
-        if (m_main_widget->min_height() >= 0)
-            new_window_rect.set_height(max(new_window_rect.height(), m_main_widget->min_height()));
+        auto new_widget_min_size = m_main_widget->effective_min_size();
+        new_window_rect.set_width(max(new_window_rect.width(), MUST(new_widget_min_size.width().shrink_value())));
+        new_window_rect.set_height(max(new_window_rect.height(), MUST(new_widget_min_size.height().shrink_value())));
         set_rect(new_window_rect);
         m_main_widget->set_relative_rect({ {}, new_window_rect.size() });
         m_main_widget->set_window(this);
@@ -1019,6 +1021,14 @@ void Window::set_forced_shadow(bool shadow)
     ConnectionToWindowServer::the().async_set_forced_shadow(m_window_id, shadow);
 }
 
+void Window::set_obey_widget_min_size(bool obey_widget_min_size)
+{
+    if (m_obey_widget_min_size != obey_widget_min_size) {
+        m_obey_widget_min_size = obey_widget_min_size;
+        schedule_relayout();
+    }
+}
+
 void Window::set_maximized(bool maximized)
 {
     m_maximized = maximized;
@@ -1028,14 +1038,24 @@ void Window::set_maximized(bool maximized)
     ConnectionToWindowServer::the().async_set_maximized(m_window_id, maximized);
 }
 
+void Window::update_min_size()
+{
+    if (main_widget()) {
+        main_widget()->do_layout();
+        if (m_obey_widget_min_size) {
+            auto min_size = main_widget()->effective_min_size();
+            set_minimum_size(MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()));
+        }
+    }
+}
+
 void Window::schedule_relayout()
 {
-    if (m_layout_pending)
+    if (m_layout_pending || !is_visible())
         return;
     m_layout_pending = true;
     deferred_invoke([this] {
-        if (main_widget())
-            main_widget()->do_layout();
+        update_min_size();
         update();
         m_layout_pending = false;
     });

@@ -27,7 +27,7 @@ NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::Devi
     // Setup memory transfer region
     auto scratch_space_region = MUST(MM.allocate_contiguous_kernel_region(
         32 * PAGE_SIZE,
-        "VirtGPU Scratch Space",
+        "VirtGPU Scratch Space"sv,
         Memory::Region::Access::ReadWrite));
 
     auto adapter = adopt_ref(*new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(scratch_space_region)));

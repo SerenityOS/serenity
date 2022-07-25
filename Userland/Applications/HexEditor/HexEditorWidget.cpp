@@ -92,19 +92,19 @@ HexEditorWidget::HexEditorWidget()
         m_editor->update();
     };
 
-    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String value;
-        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 window()->set_modified(false);
                 if (!m_editor->open_new_file(file_size.value())) {
-                    GUI::MessageBox::show(window(), "Entered file size is too large.", "Error", GUI::MessageBox::Type::Error);
+                    GUI::MessageBox::show(window(), "Entered file size is too large."sv, "Error"sv, GUI::MessageBox::Type::Error);
                     return;
                 }
                 set_path({});
             } else {
-                GUI::MessageBox::show(window(), "Invalid file size entered.", "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), "Invalid file size entered."sv, "Error"sv, GUI::MessageBox::Type::Error);
             }
         }
     });
@@ -125,7 +125,7 @@ HexEditorWidget::HexEditorWidget()
             return m_save_as_action->activate();
 
         if (!m_editor->save()) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
         } else {
             window()->set_modified(false);
             m_editor->update();
@@ -139,7 +139,7 @@ HexEditorWidget::HexEditorWidget()
             return;
         auto file = response.release_value();
         if (!m_editor->save_as(file)) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
@@ -148,7 +148,7 @@ HexEditorWidget::HexEditorWidget()
         dbgln("Wrote document to {}", file->filename());
     });
 
-    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
         bool find_all = false;
         if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecResult::OK) {
@@ -158,7 +158,7 @@ HexEditorWidget::HexEditorWidget()
                 m_search_results->update();
 
                 if (matches.is_empty()) {
-                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
@@ -174,7 +174,7 @@ HexEditorWidget::HexEditorWidget()
                 auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
 
                 if (!result.has_value()) {
-                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
@@ -185,7 +185,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         int new_offset;
         auto result = GoToOffsetDialog::show(
             window(),
@@ -201,31 +201,31 @@ HexEditorWidget::HexEditorWidget()
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
-        Config::write_bool("HexEditor", "Layout", "ShowToolbar", action.is_checked());
+        Config::write_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
 
     m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
         set_search_results_visible(action.is_checked());
     });
 
-    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     });
     m_copy_hex_action->set_enabled(false);
 
-    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     });
     m_copy_text_action->set_enabled(false);
 
-    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     });
     m_copy_as_c_code_action->set_enabled(false);
 
     m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
         }
@@ -386,29 +386,29 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_copy_as_c_code_action);
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_action);
-    edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
-            GUI::MessageBox::show(&window, "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "Nothing to search for"sv, "Not found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
         if (!result.has_value()) {
-            GUI::MessageBox::show(&window, String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
         m_last_found_index = result.value();
     }));
 
-    edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         int min_length = 4;
         auto matches = m_editor->find_all_strings(min_length);
         m_search_results->set_model(*new SearchResultsModel(move(matches)));
         m_search_results->update();
 
         if (matches.is_empty()) {
-            GUI::MessageBox::show(&window, "No strings found in this file", "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "No strings found in this file"sv, "Not found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
 
@@ -420,7 +420,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
 
     auto& view_menu = window.add_menu("&View");
 
-    auto show_toolbar = Config::read_bool("HexEditor", "Layout", "ShowToolbar", true);
+    auto show_toolbar = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
     view_menu.add_action(*m_layout_toolbar_action);
@@ -428,7 +428,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_layout_value_inspector_action);
     view_menu.add_separator();
 
-    auto bytes_per_row = Config::read_i32("HexEditor", "Layout", "BytesPerRow", 16);
+    auto bytes_per_row = Config::read_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, 16);
     m_editor->set_bytes_per_row(bytes_per_row);
     m_editor->update();
 
@@ -438,7 +438,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         auto action = GUI::Action::create_checkable(String::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
-            Config::write_i32("HexEditor", "Layout", "BytesPerRow", i);
+            Config::write_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, i);
         });
         m_bytes_per_row_actions.add_action(action);
         bytes_per_row_menu.add_action(action);
@@ -466,7 +466,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     little_endian_mode->set_checked(true);
 
     auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"sv), &window));
 }
 
 void HexEditorWidget::set_path(StringView path)
@@ -488,10 +488,10 @@ void HexEditorWidget::update_title()
 {
     StringBuilder builder;
     if (m_path.is_empty())
-        builder.append("Untitled");
+        builder.append("Untitled"sv);
     else
         builder.append(m_path);
-    builder.append("[*] - Hex Editor");
+    builder.append("[*] - Hex Editor"sv);
     window()->set_title(builder.to_string());
 }
 

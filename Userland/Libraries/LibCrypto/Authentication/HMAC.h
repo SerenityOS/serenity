@@ -77,7 +77,7 @@ public:
     String class_name() const
     {
         StringBuilder builder;
-        builder.append("HMAC-");
+        builder.append("HMAC-"sv);
         builder.append(m_inner_hasher.class_name());
         return builder.build();
     }

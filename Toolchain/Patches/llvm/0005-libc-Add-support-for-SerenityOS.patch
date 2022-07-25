@@ -1,7 +1,7 @@
-From fae5030852da34db641d636ad4c599e56b92ccdf Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:17:13 +0200
-Subject: [PATCH 5/9] [libc++] Add support for SerenityOS
+Subject: [PATCH] [libc++] Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
@@ -10,24 +10,31 @@ LibC, namely:
 * The number of errno constants defined by us is given by the value of
   the `ELAST` macro.
 * Multithreading is implemented though the pthread library.
-* Aligned memory allocation is provided by the MSVCRT-like
-  `_aligned_{malloc,free}` functions.
-
-Adds a hack for a header not found error when including
-`<initializer_list>` inside the SerenityOS kernel.
-
-Makes libc++ use its builtin character type table instead of the one
-provided by LibC as it is incomplete.
+* Use libc++'s builtin character type table instead of the one provided
+  by LibC as there's a lot of extra porting work to convince the rest of
+  locale.cpp to use our character type table properly.
 ---
- libcxx/include/__config                   | 6 ++++--
- libcxx/include/__locale                   | 2 +-
- libcxx/include/__support/newlib/xlocale.h | 4 ++--
- libcxx/include/initializer_list           | 2 ++
- libcxx/include/locale                     | 2 +-
- libcxx/include/new                        | 4 ++--
- libcxx/src/include/config_elast.h         | 2 ++
- 7 files changed, 14 insertions(+), 8 deletions(-)
+ libcxx/include/CMakeLists.txt               |  1 +
+ libcxx/include/__config                     |  6 ++++--
+ libcxx/include/__locale                     |  2 ++
+ libcxx/include/__support/serenity/xlocale.h | 24 +++++++++++++++++++++
+ libcxx/include/locale                       |  2 +-
+ libcxx/src/include/config_elast.h           |  2 ++
+ 6 files changed, 34 insertions(+), 3 deletions(-)
+ create mode 100644 libcxx/include/__support/serenity/xlocale.h
 
+diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
+index 53700fc9e..67d50bdbc 100644
+--- a/libcxx/include/CMakeLists.txt
++++ b/libcxx/include/CMakeLists.txt
+@@ -365,6 +365,7 @@ set(files
+   __support/musl/xlocale.h
+   __support/newlib/xlocale.h
+   __support/openbsd/xlocale.h
++  __support/serenity/xlocale.h
+   __support/solaris/floatingpoint.h
+   __support/solaris/wchar.h
+   __support/solaris/xlocale.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
 index 458d0c1b8..69f627294 100644
 --- a/libcxx/include/__config
@@ -53,53 +60,48 @@ index 458d0c1b8..69f627294 100644
  #endif
  
 diff --git a/libcxx/include/__locale b/libcxx/include/__locale
-index 51f35eece..4bc91ecb5 100644
+index 51f35eece..6f25098a2 100644
 --- a/libcxx/include/__locale
 +++ b/libcxx/include/__locale
-@@ -30,7 +30,7 @@
- #elif defined(__sun__)
- # include <xlocale.h>
- # include <__support/solaris/xlocale.h>
--#elif defined(_NEWLIB_VERSION)
-+#elif defined(_NEWLIB_VERSION) || defined(__serenity__)
- # include <__support/newlib/xlocale.h>
- #elif defined(__OpenBSD__)
- # include <__support/openbsd/xlocale.h>
-diff --git a/libcxx/include/__support/newlib/xlocale.h b/libcxx/include/__support/newlib/xlocale.h
-index b75f9263a..f5ffb9003 100644
---- a/libcxx/include/__support/newlib/xlocale.h
-+++ b/libcxx/include/__support/newlib/xlocale.h
-@@ -9,7 +9,7 @@
- #ifndef _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
- #define _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
- 
--#if defined(_NEWLIB_VERSION)
-+#if defined(_NEWLIB_VERSION) || defined(__serenity__)
- 
- #include <cstdlib>
- #include <clocale>
-@@ -22,6 +22,6 @@
- #include <__support/xlocale/__strtonum_fallback.h>
+@@ -44,6 +44,8 @@
+ # include <__support/musl/xlocale.h>
+ #elif defined(_LIBCPP_HAS_MUSL_LIBC)
+ # include <__support/musl/xlocale.h>
++#elif defined(__serenity__)
++# include <__support/serenity/xlocale.h>
  #endif
- 
--#endif // _NEWLIB_VERSION
-+#endif // _NEWLIB_VERSION || __serenity__
- 
- #endif
-diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
-index fefaf8cf8..c388bc246 100644
---- a/libcxx/include/initializer_list
-+++ b/libcxx/include/initializer_list
-@@ -43,7 +43,9 @@ template<class E> const E* end(initializer_list<E> il) noexcept; // constexpr in
- */
- 
- #include <__config>
-+#if !defined(__serenity__) || !defined(KERNEL)
- #include <cstddef>
-+#endif
  
  #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
- #pragma GCC system_header
+diff --git a/libcxx/include/__support/serenity/xlocale.h b/libcxx/include/__support/serenity/xlocale.h
+new file mode 100644
+index 000000000..0f939d2f6
+--- /dev/null
++++ b/libcxx/include/__support/serenity/xlocale.h
+@@ -0,0 +1,24 @@
++//===----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++#define _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++
++#if defined(__serenity__)
++
++#include <cstdlib>
++#include <clocale>
++#include <cwctype>
++#include <ctype.h>
++#include <__support/xlocale/__nop_locale_mgmt.h>
++#include <__support/xlocale/__posix_l_fallback.h>
++#include <__support/xlocale/__strtonum_fallback.h>
++
++#endif // __serenity__
++
++#endif
 diff --git a/libcxx/include/locale b/libcxx/include/locale
 index 7c2d2361f..229ca7258 100644
 --- a/libcxx/include/locale
@@ -113,28 +115,6 @@ index 7c2d2361f..229ca7258 100644
  #    define _LIBCPP_HAS_CATOPEN 1
  #    include <nl_types.h>
  #  endif
-diff --git a/libcxx/include/new b/libcxx/include/new
-index be0d972f4..d212bae46 100644
---- a/libcxx/include/new
-+++ b/libcxx/include/new
-@@ -320,7 +320,7 @@ inline _LIBCPP_INLINE_VISIBILITY void __libcpp_deallocate_unsized(void* __ptr, s
- // Returns the allocated memory, or `nullptr` on failure.
- inline _LIBCPP_INLINE_VISIBILITY
- void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
--#if defined(_LIBCPP_MSVCRT_LIKE)
-+#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
-   return ::_aligned_malloc(__size, __alignment);
- #else
-   void* __result = nullptr;
-@@ -332,7 +332,7 @@ void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
- 
- inline _LIBCPP_INLINE_VISIBILITY
- void __libcpp_aligned_free(void* __ptr) {
--#if defined(_LIBCPP_MSVCRT_LIKE)
-+#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
-   ::_aligned_free(__ptr);
- #else
-   ::free(__ptr);
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
 index 0ed53a3b2..7fffd937e 100644
 --- a/libcxx/src/include/config_elast.h
@@ -148,6 +128,3 @@ index 0ed53a3b2..7fffd937e 100644
  #elif defined(__sun__)
  #define _LIBCPP_ELAST ESTALE
  #elif defined(__MVS__)
--- 
-2.35.3
-

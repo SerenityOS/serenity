@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -232,6 +233,12 @@ void Inode::did_remove_child(InodeIdentifier, StringView name)
 
 void Inode::did_modify_contents()
 {
+    // FIXME: What happens if this fails?
+    //        ENOTIMPL would be a meaningless error to return here
+    auto time = kgettimeofday().to_truncated_seconds();
+    (void)set_mtime(time);
+    (void)set_ctime(time);
+
     m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);
     });
@@ -291,53 +298,71 @@ static inline ErrorOr<void> normalize_flock(OpenFileDescription const& descripti
     return {};
 }
 
-ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flock const& new_lock) const
+bool Inode::can_apply_flock(flock const& new_lock) const
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
-    return m_flocks.with([&](auto& flocks) -> ErrorOr<void> {
-        if (new_lock.l_type == F_UNLCK) {
-            for (auto const& lock : flocks) {
-                if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
-                    return {};
-            }
-            return EINVAL;
-        }
+    if (new_lock.l_type == F_UNLCK)
+        return true;
+
+    return m_flocks.with([&](auto& flocks) {
         for (auto const& lock : flocks) {
             if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
                 continue;
 
             if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
-                return EAGAIN;
+                return false;
 
             if (new_lock.l_type == F_WRLCK)
-                return EAGAIN;
+                return false;
         }
-        return {};
+        return true;
     });
 }
 
-ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
+ErrorOr<bool> Inode::try_apply_flock(Process const& process, OpenFileDescription const& description, flock const& lock)
+{
+    return m_flocks.with([&](auto& flocks) -> ErrorOr<bool> {
+        if (!can_apply_flock(lock))
+            return false;
+
+        if (lock.l_type == F_UNLCK) {
+            bool any_locks_unlocked = false;
+            for (size_t i = 0; i < flocks.size(); ++i) {
+                if (&description == flocks[i].owner && flocks[i].start == lock.l_start && flocks[i].len == lock.l_len) {
+                    flocks.remove(i);
+                    any_locks_unlocked |= true;
+                }
+            }
+
+            if (any_locks_unlocked)
+                m_flock_blocker_set.unblock_all_blockers_whose_conditions_are_met();
+
+            // Judging by the Linux implementation, unlocking a non-existent lock also works.
+            return true;
+        }
+
+        TRY(flocks.try_append(Flock { lock.l_start, lock.l_len, &description, process.pid().value(), lock.l_type }));
+        return true;
+    });
+}
+
+ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock, ShouldBlock should_block)
 {
     auto new_lock = TRY(copy_typed_from_user(input_lock));
     TRY(normalize_flock(description, new_lock));
 
-    return m_flocks.with([&](auto& flocks) -> ErrorOr<void> {
-        TRY(can_apply_flock(description, new_lock));
+    while (true) {
+        auto success = TRY(try_apply_flock(process, description, new_lock));
+        if (success)
+            return {};
 
-        if (new_lock.l_type == F_UNLCK) {
-            for (size_t i = 0; i < flocks.size(); ++i) {
-                if (&description == flocks[i].owner && flocks[i].start == new_lock.l_start && flocks[i].len == new_lock.l_len) {
-                    flocks.remove(i);
-                    return {};
-                }
-            }
-            return EINVAL;
-        }
+        if (should_block == ShouldBlock::No)
+            return EAGAIN;
 
-        TRY(flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
-        return {};
-    });
+        if (Thread::current()->block<Thread::FlockBlocker>({}, *this, new_lock).was_interrupted())
+            return EINTR;
+    }
 }
 
 ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace<flock*> reference_lock) const
@@ -349,6 +374,10 @@ ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace
     return m_flocks.with([&](auto& flocks) {
         for (auto const& lock : flocks) {
             if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
+                continue;
+
+            // Locks with the same owner can't conflict with each other.
+            if (lock.pid == Process::current().pid())
                 continue;
 
             if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {

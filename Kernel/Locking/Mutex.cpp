@@ -12,6 +12,8 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 
+extern bool g_in_early_boot;
+
 namespace Kernel {
 
 void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
@@ -19,8 +21,11 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
     VERIFY(!Processor::current_in_irq());
-    if constexpr (LOCK_IN_CRITICAL_DEBUG)
-        VERIFY_INTERRUPTS_ENABLED();
+    if constexpr (LOCK_IN_CRITICAL_DEBUG) {
+        // There are no interrupts enabled in early boot.
+        if (!g_in_early_boot)
+            VERIFY_INTERRUPTS_ENABLED();
+    }
     VERIFY(mode != Mode::Unlocked);
     auto* current_thread = Thread::current();
 
@@ -147,9 +152,12 @@ void Mutex::unlock()
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    if constexpr (LOCK_IN_CRITICAL_DEBUG)
-        VERIFY_INTERRUPTS_ENABLED();
     VERIFY(!Processor::current_in_irq());
+    if constexpr (LOCK_IN_CRITICAL_DEBUG) {
+        // There are no interrupts enabled in early boot.
+        if (!g_in_early_boot)
+            VERIFY_INTERRUPTS_ENABLED();
+    }
     auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
     Mode current_mode = m_mode;
@@ -205,8 +213,11 @@ void Mutex::unlock()
 
 void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& lock, u32 requested_locks)
 {
-    if constexpr (LOCK_IN_CRITICAL_DEBUG)
-        VERIFY_INTERRUPTS_ENABLED();
+    if constexpr (LOCK_IN_CRITICAL_DEBUG) {
+        // There are no interrupts enabled in early boot.
+        if (!g_in_early_boot)
+            VERIFY_INTERRUPTS_ENABLED();
+    }
     m_blocked_thread_lists.with([&](auto& lists) {
         auto append_to_list = [&]<typename L>(L& list) {
             VERIFY(!list.contains(current_thread));

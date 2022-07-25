@@ -1,25 +1,89 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
 
+static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullRefPtr<FutexQueue>>>> s_global_futex_queues;
+
 void Process::clear_futex_queues_on_exec()
 {
-    SpinlockLocker lock(m_futex_lock);
-    for (auto& it : m_futex_queues) {
-        bool did_wake_all;
-        it.value->wake_all(did_wake_all);
-        VERIFY(did_wake_all); // No one should be left behind...
+    s_global_futex_queues->with([this](auto& queues) {
+        auto const* address_space = &this->address_space();
+        queues.remove_all_matching([address_space](auto& futex_key, auto& futex_queue) {
+            if ((futex_key.raw.offset & futex_key_private_flag) == 0)
+                return false;
+            if (futex_key.private_.address_space != address_space)
+                return false;
+            bool did_wake_all;
+            futex_queue->wake_all(did_wake_all);
+            VERIFY(did_wake_all); // No one should be left behind...
+            return true;
+        });
+    });
+}
+
+ErrorOr<GlobalFutexKey> Process::get_futex_key(FlatPtr user_address, bool shared)
+{
+    if (user_address & 0b11) // user_address points to a u32, so must be 4byte aligned
+        return EINVAL;
+
+    auto range = Memory::VirtualRange { VirtualAddress(user_address), sizeof(u32) };
+
+    if (!Kernel::Memory::is_user_range(range))
+        return EFAULT;
+
+    if (!shared) { // If this is thread-shared, we can skip searching the matching region
+        return GlobalFutexKey {
+            .private_ = {
+                .address_space = &address_space(),
+                .user_address = user_address | futex_key_private_flag,
+            }
+        };
     }
-    m_futex_queues.clear();
+
+    auto* matching_region = address_space().find_region_containing(range);
+    if (!matching_region)
+        return EFAULT;
+
+    // The user wants to share this futex, but if the address doesn't point to a shared resource, there's not
+    // much sharing to be done, so let's mark this as private
+    if (!matching_region->is_shared()) {
+        return GlobalFutexKey {
+            .private_ = {
+                .address_space = &address_space(),
+                .user_address = user_address | futex_key_private_flag,
+            }
+        };
+    }
+
+    // This address is backed by a shared VMObject, if it's an AnonymousVMObject, it can be shared between processes
+    // via forking, and shared regions that are cloned during a fork retain their original AnonymousVMObject.
+    // On the other hand, if it's a SharedInodeVMObject, it can be shared by two processes mapping the same file as
+    // MAP_SHARED, but since they are deduplicated based on the inode, in all cases the VMObject pointer should be
+    // a unique global identifier.
+    // NOTE: This assumes that a program will not unmap the only region keeping the vmobject alive while waiting on it,
+    // if it does, it will get stuck waiting forever until interrupted by a signal, but since that use case is defined as
+    // a programmer error, we are fine with it.
+
+    auto const& vmobject = matching_region->vmobject();
+    if (vmobject.is_inode())
+        VERIFY(vmobject.is_shared_inode());
+
+    return GlobalFutexKey {
+        .shared = {
+            .vmobject = &vmobject,
+            .offset = matching_region->offset_in_vmobject_from_vaddr(range.base()) }
+    };
 }
 
 ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> user_params)
@@ -34,6 +98,8 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
     if (use_realtime_clock && cmd != FUTEX_WAIT && cmd != FUTEX_WAIT_BITSET) {
         return ENOSYS;
     }
+
+    bool shared = (params.futex_op & FUTEX_PRIVATE_FLAG) == 0;
 
     switch (cmd) {
     case FUTEX_WAIT:
@@ -56,42 +122,44 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
     }
     }
 
-    auto find_futex_queue = [&](FlatPtr user_address, bool create_if_not_found, bool* did_create = nullptr) -> RefPtr<FutexQueue> {
+    auto find_futex_queue = [&](GlobalFutexKey futex_key, bool create_if_not_found, bool* did_create = nullptr) -> ErrorOr<RefPtr<FutexQueue>> {
         VERIFY(!create_if_not_found || did_create != nullptr);
-        auto* queues = &m_futex_queues;
-        auto it = m_futex_queues.find(user_address);
-        if (it != m_futex_queues.end())
-            return it->value;
-        if (create_if_not_found) {
+        return s_global_futex_queues->with([&](auto& queues) -> ErrorOr<RefPtr<FutexQueue>> {
+            auto it = queues.find(futex_key);
+            if (it != queues.end())
+                return it->value;
+            if (!create_if_not_found)
+                return nullptr;
             *did_create = true;
-            auto futex_queue = adopt_ref(*new FutexQueue);
-            auto result = queues->set(user_address, futex_queue);
+            auto futex_queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FutexQueue));
+            auto result = TRY(queues.try_set(futex_key, futex_queue));
             VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             return futex_queue;
-        }
-        return {};
+        });
     };
 
-    auto remove_futex_queue = [&](FlatPtr user_address) {
-        if (auto it = m_futex_queues.find(user_address); it != m_futex_queues.end()) {
-            if (it->value->try_remove()) {
-                m_futex_queues.remove(it);
-            }
-        }
+    auto remove_futex_queue = [&](GlobalFutexKey futex_key) {
+        return s_global_futex_queues->with([&](auto& queues) {
+            auto it = queues.find(futex_key);
+            if (it == queues.end())
+                return;
+            if (it->value->try_remove())
+                queues.remove(it);
+        });
     };
 
-    auto do_wake = [&](FlatPtr user_address, u32 count, Optional<u32> bitmask) -> int {
+    auto do_wake = [&](FlatPtr user_address, u32 count, Optional<u32> const& bitmask) -> ErrorOr<int> {
         if (count == 0)
             return 0;
-        SpinlockLocker locker(m_futex_lock);
-        auto futex_queue = find_futex_queue(user_address, false);
+        auto futex_key = TRY(get_futex_key(user_address, shared));
+        auto futex_queue = TRY(find_futex_queue(futex_key, false));
         if (!futex_queue)
             return 0;
         bool is_empty;
         u32 woke_count = futex_queue->wake_n(count, bitmask, is_empty);
         if (is_empty) {
             // If there are no more waiters, we want to get rid of the futex!
-            remove_futex_queue(user_address);
+            remove_futex_queue(futex_key);
         }
         return (int)woke_count;
     };
@@ -102,6 +170,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
     auto do_wait = [&](u32 bitset) -> ErrorOr<FlatPtr> {
         bool did_create;
         RefPtr<FutexQueue> futex_queue;
+        auto futex_key = TRY(get_futex_key(user_address, shared));
         do {
             auto user_value = user_atomic_load_relaxed(params.userspace_address);
             if (!user_value.has_value())
@@ -112,9 +181,8 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
-            SpinlockLocker locker(m_futex_lock);
             did_create = false;
-            futex_queue = find_futex_queue(user_address, true, &did_create);
+            futex_queue = TRY(find_futex_queue(futex_key, true, &did_create));
             VERIFY(futex_queue);
             // We need to try again if we didn't create this queue and the existing queue
             // was removed before we were able to queue an imminent wait.
@@ -125,10 +193,9 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
 
         Thread::BlockResult block_result = futex_queue->wait_on(timeout, bitset);
 
-        SpinlockLocker locker(m_futex_lock);
         if (futex_queue->is_empty_and_no_imminent_waits()) {
             // If there are no more waiters, we want to get rid of the futex!
-            remove_futex_queue(user_address);
+            remove_futex_queue(futex_key);
         }
         if (block_result == Thread::BlockResult::InterruptedByTimeout) {
             return ETIMEDOUT;
@@ -144,25 +211,28 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
             return EAGAIN;
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
-        int woken_or_requeued = 0;
-        SpinlockLocker locker(m_futex_lock);
-        if (auto futex_queue = find_futex_queue(user_address, false)) {
-            RefPtr<FutexQueue> target_futex_queue;
-            bool is_empty, is_target_empty;
-            woken_or_requeued = futex_queue->wake_n_requeue(
-                params.val, [&]() -> FutexQueue* {
-                    // NOTE: futex_queue's lock is being held while this callback is called
-                    // The reason we're doing this in a callback is that we don't want to always
-                    // create a target queue, only if we actually have anything to move to it!
-                    target_futex_queue = find_futex_queue(user_address2, true);
-                    return target_futex_queue.ptr();
-                },
-                params.val2, is_empty, is_target_empty);
-            if (is_empty)
-                remove_futex_queue(user_address);
-            if (is_target_empty && target_futex_queue)
-                remove_futex_queue(user_address2);
-        }
+        auto futex_key = TRY(get_futex_key(user_address, shared));
+        auto futex_queue = TRY(find_futex_queue(futex_key, false));
+        if (!futex_queue)
+            return 0;
+
+        RefPtr<FutexQueue> target_futex_queue;
+        bool is_empty = false;
+        bool is_target_empty = false;
+        auto futex_key2 = TRY(get_futex_key(user_address2, shared));
+        auto woken_or_requeued = TRY(futex_queue->wake_n_requeue(
+            params.val, [&]() -> ErrorOr<FutexQueue*> {
+                // NOTE: futex_queue's lock is being held while this callback is called
+                // The reason we're doing this in a callback is that we don't want to always
+                // create a target queue, only if we actually have anything to move to it!
+                target_futex_queue = TRY(find_futex_queue(futex_key2, true));
+                return target_futex_queue.ptr();
+            },
+            params.val2, is_empty, is_target_empty));
+        if (is_empty)
+            remove_futex_queue(futex_key);
+        if (is_target_empty && target_futex_queue)
+            remove_futex_queue(futex_key2);
         return woken_or_requeued;
     };
 
@@ -171,7 +241,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         return do_wait(0);
 
     case FUTEX_WAKE:
-        return do_wake(user_address, params.val, {});
+        return TRY(do_wake(user_address, params.val, {}));
 
     case FUTEX_WAKE_OP: {
         Optional<u32> oldval;
@@ -204,7 +274,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         if (!oldval.has_value())
             return EFAULT;
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
-        auto result = do_wake(user_address, params.val, {});
+        auto result = TRY(do_wake(user_address, params.val, {}));
         if (params.val2 > 0) {
             bool compare_result;
             switch (_FUTEX_CMP(params.val3)) {
@@ -230,7 +300,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
                 return EINVAL;
             }
             if (compare_result)
-                result += do_wake(user_address2, params.val2, {});
+                result += TRY(do_wake(user_address2, params.val2, {}));
         }
         return result;
     }
@@ -251,7 +321,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         VERIFY(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAKE
         if (params.val3 == 0)
             return EINVAL;
-        return do_wake(user_address, params.val, params.val3);
+        return TRY(do_wake(user_address, params.val, params.val3));
     }
     return ENOSYS;
 }

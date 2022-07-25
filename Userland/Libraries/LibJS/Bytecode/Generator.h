@@ -81,9 +81,9 @@ public:
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
-    void begin_continuable_scope(Label continue_target);
+    void begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set);
     void end_continuable_scope();
-    void begin_breakable_scope(Label breakable_target);
+    void begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set);
     void end_breakable_scope();
 
     [[nodiscard]] Label nearest_continuable_scope() const;
@@ -138,7 +138,7 @@ public:
     {
         m_variable_scopes.last_matching([&](auto& x) { return x.mode == BindingMode::Global || x.mode == mode; })->known_bindings.set(identifier);
     }
-    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {})
+    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {}) const
     {
         for (auto index = m_variable_scopes.size(); index > 0; --index) {
             auto& scope = m_variable_scopes[index - 1];
@@ -150,6 +150,13 @@ public:
                 return true;
         }
         return false;
+    }
+    bool has_binding_in_current_scope(IdentifierTableIndex identifier) const
+    {
+        if (m_variable_scopes.is_empty())
+            return false;
+
+        return m_variable_scopes.last().known_bindings.contains(identifier);
     }
 
     void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block);
@@ -186,6 +193,9 @@ public:
         }
     }
 
+    Label perform_needed_unwinds_for_labelled_break_and_return_target_block(FlyString const& break_label);
+    Label perform_needed_unwinds_for_labelled_continue_and_return_target_block(FlyString const& continue_label);
+
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)
     {
@@ -200,6 +210,11 @@ private:
     void grow(size_t);
     void* next_slot();
 
+    struct LabelableScope {
+        Label bytecode_target;
+        Vector<FlyString> language_label_set;
+    };
+
     BasicBlock* m_current_basic_block { nullptr };
     NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
@@ -208,8 +223,8 @@ private:
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
-    Vector<Label> m_continuable_scopes;
-    Vector<Label> m_breakable_scopes;
+    Vector<LabelableScope> m_continuable_scopes;
+    Vector<LabelableScope> m_breakable_scopes;
     Vector<LexicalScope> m_variable_scopes;
     Vector<BlockBoundaryType> m_boundaries;
 };

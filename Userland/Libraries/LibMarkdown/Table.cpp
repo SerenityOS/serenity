@@ -42,10 +42,10 @@ String Table::render_for_terminal(size_t view_width) const
         write_aligned(col.header, width, col.alignment);
     }
 
-    builder.append("\n");
+    builder.append('\n');
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    builder.append("\n");
+    builder.append('\n');
 
     for (size_t i = 0; i < m_row_count; ++i) {
         bool first = true;
@@ -60,10 +60,10 @@ String Table::render_for_terminal(size_t view_width) const
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        builder.append("\n");
+        builder.append('\n');
     }
 
-    builder.append("\n");
+    builder.append('\n');
 
     return builder.to_string();
 }
@@ -84,29 +84,29 @@ String Table::render_to_html(bool) const
 
     StringBuilder builder;
 
-    builder.append("<table>");
-    builder.append("<thead>");
-    builder.append("<tr>");
+    builder.append("<table>"sv);
+    builder.append("<thead>"sv);
+    builder.append("<tr>"sv);
     for (auto& column : m_columns) {
         builder.appendff("<th style='text-align: {}'>", alignment_string(column.alignment));
         builder.append(column.header.render_to_html());
-        builder.append("</th>");
+        builder.append("</th>"sv);
     }
-    builder.append("</tr>");
-    builder.append("</thead>");
-    builder.append("<tbody>");
+    builder.append("</tr>"sv);
+    builder.append("</thead>"sv);
+    builder.append("<tbody>"sv);
     for (size_t i = 0; i < m_row_count; ++i) {
-        builder.append("<tr>");
+        builder.append("<tr>"sv);
         for (auto& column : m_columns) {
             VERIFY(i < column.rows.size());
             builder.appendff("<td style='text-align: {}'>", alignment_string(column.alignment));
             builder.append(column.rows[i].render_to_html());
-            builder.append("</td>");
+            builder.append("</td>"sv);
         }
-        builder.append("</tr>");
+        builder.append("</tr>"sv);
     }
-    builder.append("</tbody>");
-    builder.append("</table>");
+    builder.append("</tbody>"sv);
+    builder.append("</table>"sv);
 
     return builder.to_string();
 }
@@ -224,7 +224,7 @@ OwnPtr<Table> Table::parse(LineIterator& lines)
             if (i >= segments.size()) {
                 // Ran out of segments, but still have headers.
                 // Just make an empty cell.
-                table->m_columns[i].rows.append(Text::parse(""));
+                table->m_columns[i].rows.append(Text::parse(""sv));
             } else {
                 auto text = Text::parse(segments[i]);
                 table->m_columns[i].rows.append(move(text));

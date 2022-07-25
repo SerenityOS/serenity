@@ -49,7 +49,7 @@ public:
                     if (lexer.next_is('"'))
                         m_filename = lexer.consume_quoted_string();
                     else
-                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "sv));
                 } else {
                     m_might_be_wrong = true;
                 }
@@ -67,7 +67,7 @@ public:
                     if (lexer.next_is('"'))
                         m_filename = lexer.consume_quoted_string();
                     else
-                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "sv));
                 } else {
                     m_might_be_wrong = true;
                 }
@@ -132,7 +132,8 @@ private:
 
         if (!m_buffer.is_empty()) {
             auto size = OutputFileStream::write(m_buffer);
-            m_buffer = m_buffer.slice(size, m_buffer.size() - size);
+            // FIXME: Propagate errors.
+            m_buffer = MUST(m_buffer.slice(size, m_buffer.size() - size));
         }
 
         if (!m_buffer.is_empty())
@@ -147,7 +148,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* url_str = nullptr;
+    StringView url_str;
     bool save_at_provided_name = false;
     bool should_follow_url = false;
     char const* data = nullptr;
@@ -163,13 +164,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
     args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l');
     args_parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header entry to the request",
         .long_name = "header",
         .short_name = 'H',
         .value_name = "header-value",
         .accept_value = [&](auto* s) {
-            StringView header { s };
+            StringView header { s, strlen(s) };
             auto split = header.find(':');
             if (!split.has_value())
                 return false;
@@ -315,7 +316,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         request->stream_into(output_stream);
     };
 
-    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {}, proxy_data);
+    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data, strlen(data) }.bytes() : ReadonlyBytes {}, proxy_data);
     setup_request();
 
     dbgln("started request with id {}", request->id());

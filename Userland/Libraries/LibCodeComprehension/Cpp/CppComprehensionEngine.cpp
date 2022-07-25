@@ -695,16 +695,16 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
 
     String include_root;
     bool already_has_suffix = false;
-    if (partial_include.starts_with("<")) {
+    if (partial_include.starts_with('<')) {
         include_root = "/usr/include/";
         include_type = System;
-        if (partial_include.ends_with(">")) {
+        if (partial_include.ends_with('>')) {
             already_has_suffix = true;
             partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();
         }
-    } else if (partial_include.starts_with("\"")) {
+    } else if (partial_include.starts_with('"')) {
         include_root = filedb().project_root();
-        if (partial_include.length() > 1 && partial_include.ends_with("\"")) {
+        if (partial_include.length() > 1 && partial_include.ends_with('\"')) {
             already_has_suffix = true;
             partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();
         }
@@ -740,7 +740,7 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = String::formatted("{}{}{}/", prefix, include_dir, path);
             options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
-        } else if (path.ends_with(".h")) {
+        } else if (path.ends_with(".h"sv)) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
             auto completion = String::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
@@ -784,7 +784,7 @@ CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(St
 
 CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(StringView qualified_name)
 {
-    auto parts = qualified_name.split_view("::");
+    auto parts = qualified_name.split_view("::"sv);
     VERIFY(!parts.is_empty());
     auto name = parts.take_last();
     return SymbolName::create(name, move(parts));
@@ -923,7 +923,7 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
         for (auto token : document_of_declaration->parser().tokens_in_range(arg.start(), arg.end())) {
             tokens_text.append(token.text());
         }
-        hint.params.append(String::join(" ", tokens_text));
+        hint.params.append(String::join(' ', tokens_text));
     }
 
     return hint;

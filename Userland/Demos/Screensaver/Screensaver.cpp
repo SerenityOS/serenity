@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto app_icon = GUI::Icon::default_icon("app-screensaver");
+    auto app_icon = GUI::Icon::default_icon("app-screensaver"sv);
     auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
     window->set_title("Screensaver");

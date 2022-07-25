@@ -37,6 +37,6 @@ describe("regressions", () => {
     test("missing key/value properties on iterable entry", () => {
         expect(() => {
             new WeakMap([{}]);
-        }).toThrowWithMessage(TypeError, "undefined is not an object");
+        }).toThrowWithMessage(TypeError, "undefined cannot be held weakly");
     });
 });

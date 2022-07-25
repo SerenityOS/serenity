@@ -35,7 +35,7 @@ int Shell::builtin_dump(int argc, char const** argv)
     if (argc != 2)
         return 1;
 
-    Parser { argv[1] }.parse()->dump(0);
+    Parser { StringView { argv[1], strlen(argv[1]) } }.parse()->dump(0);
     return 0;
 }
 
@@ -124,7 +124,8 @@ int Shell::builtin_bg(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -206,13 +207,13 @@ int Shell::builtin_type(int argc, char const** argv)
             if (!dont_show_function_source) {
                 StringBuilder builder;
                 builder.append(fn.name);
-                builder.append("(");
+                builder.append('(');
                 for (size_t i = 0; i < fn.arguments.size(); i++) {
                     builder.append(fn.arguments[i]);
                     if (!(i == fn.arguments.size() - 1))
-                        builder.append(" ");
+                        builder.append(' ');
                 }
-                builder.append(") {\n");
+                builder.append(") {\n"sv);
                 if (fn.body) {
                     auto formatter = Formatter(*fn.body);
                     builder.append(formatter.format());
@@ -447,7 +448,7 @@ int Shell::builtin_export(int argc, char const** argv)
             if (value) {
                 auto values = value->resolve_as_list(*this);
                 StringBuilder builder;
-                builder.join(" ", values);
+                builder.join(' ', values);
                 parts.append(builder.to_string());
             } else {
                 // Ignore the export.
@@ -497,7 +498,8 @@ int Shell::builtin_fg(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -568,7 +570,8 @@ int Shell::builtin_disown(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -721,7 +724,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
     if (argc == 2) {
         directory_stack.append(cwd.characters());
         if (argv[1][0] == '/') {
-            path_builder.append(argv[1]);
+            path_builder.append({ argv[1], strlen(argv[1]) });
         } else {
             path_builder.appendff("{}/{}", cwd, argv[1]);
         }
@@ -732,7 +735,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
 
             if (arg[0] != '-') {
                 if (arg[0] == '/') {
-                    path_builder.append(arg);
+                    path_builder.append({ arg, strlen(arg) });
                 } else
                     path_builder.appendff("{}/{}", cwd, arg);
             }
@@ -828,7 +831,7 @@ int Shell::builtin_shift(int argc, char const** argv)
     if (count < 1)
         return 0;
 
-    auto argv_ = lookup_local_variable("ARGV");
+    auto argv_ = lookup_local_variable("ARGV"sv);
     if (!argv_) {
         warnln("shift: ARGV is unset");
         return 1;
@@ -861,7 +864,7 @@ int Shell::builtin_source(int argc, char const** argv)
     if (!parser.parse(argc, const_cast<char**>(argv)))
         return 1;
 
-    auto previous_argv = lookup_local_variable("ARGV");
+    auto previous_argv = lookup_local_variable("ARGV"sv);
     ScopeGuard guard { [&] {
         if (!args.is_empty())
             set_local_variable("ARGV", move(previous_argv));
@@ -969,7 +972,8 @@ int Shell::builtin_wait(int argc, char const** argv)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](StringView value) -> bool {
+        .accept_value = [&](auto const* value_ptr) -> bool {
+            StringView value { value_ptr, strlen(value_ptr) };
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -1071,14 +1075,14 @@ int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
-    auto kill_path = find_in_path("kill");
+    auto kill_path = find_in_path("kill"sv);
     if (kill_path.is_empty()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
     replaced_values.append(kill_path);
     for (auto i = 1; i < argc; ++i) {
-        if (auto job_id = resolve_job_spec(argv[i]); job_id.has_value()) {
+        if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
                 replaced_values.append(String::number(job->pid()));
@@ -1240,7 +1244,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 option.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert(value, type);
+                    auto result = try_convert({ value, strlen(value) }, type);
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1262,7 +1266,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 arg.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert(value, type);
+                    auto result = try_convert({ value, strlen(value) }, type);
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1284,7 +1288,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     };
 
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Stop processing arguments after a non-argument parameter is seen",
         .long_name = "stop-on-first-non-option",
         .accept_value = [&](auto) {
@@ -1293,7 +1297,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the general help string for the parser",
         .long_name = "general-help",
         .value_name = "string",
@@ -1303,7 +1307,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing an option",
         .long_name = "add-option",
         .value_name = "variable-name",
@@ -1322,7 +1326,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Accept multiple of the current option being given",
         .long_name = "list",
         .accept_value = [&](auto) {
@@ -1335,7 +1339,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Define the type of the option or argument being described",
         .long_name = "type",
         .value_name = "type",
@@ -1345,7 +1349,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            StringView ty = name;
+            StringView ty { name, strlen(name) };
             if (ty == "bool") {
                 if (auto option = current.get_pointer<Core::ArgsParser::Option>()) {
                     if (option->value_name != nullptr) {
@@ -1375,7 +1379,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the help string of the option or argument being defined",
         .long_name = "help-string",
         .value_name = "string",
@@ -1392,7 +1396,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the long name of the option being defined",
         .long_name = "long-name",
         .value_name = "name",
@@ -1411,7 +1415,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the short name of the option being defined",
         .long_name = "short-name",
         .value_name = "char",
@@ -1434,7 +1438,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the value name of the option being defined",
         .long_name = "value-name",
         .value_name = "string",
@@ -1469,7 +1473,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing a positional argument",
         .long_name = "add-positional-argument",
         .value_name = "variable",
@@ -1488,7 +1492,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the minimum required number of positional arguments for the argument being described",
         .long_name = "min",
         .value_name = "n",
@@ -1499,7 +1503,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            auto number = StringView(value).to_uint();
+            auto number = StringView { value, strlen(value) }.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --min: '{}', expected a non-negative number", value);
                 return false;
@@ -1516,7 +1520,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the maximum required number of positional arguments for the argument being described",
         .long_name = "max",
         .value_name = "n",
@@ -1527,7 +1531,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            auto number = StringView(value).to_uint();
+            auto number = StringView { value, strlen(value) }.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --max: '{}', expected a non-negative number", value);
                 return false;
@@ -1544,7 +1548,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
         },
     });
     parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = false,
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Mark the positional argument being described as required (shorthand for --min 1)",
         .long_name = "required",
         .accept_value = [&](auto) {

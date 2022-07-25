@@ -26,7 +26,7 @@ NonnullRefPtr<VirtIOGPU3DDevice> VirtIOGPU3DDevice::must_create(VirtIOGraphicsAd
     // Setup memory transfer region
     auto region_result = MM.allocate_kernel_region(
         NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
-        "VIRGL3D kernel upload buffer",
+        "VIRGL3D kernel upload buffer"sv,
         Memory::Region::Access::ReadWrite,
         AllocationStrategy::AllocateNow);
     VERIFY(!region_result.is_error());

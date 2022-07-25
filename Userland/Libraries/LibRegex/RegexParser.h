@@ -92,6 +92,8 @@ protected:
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
 
+    size_t tell() const { return m_parser_state.current_token.position(); }
+
     struct NamedCaptureGroup {
         size_t group_index { 0 };
         size_t minimum_length { 0 };
@@ -101,7 +103,7 @@ protected:
         Lexer& lexer;
         Token current_token;
         Error error = Error::NoError;
-        Token error_token { TokenType::Eof, 0, StringView(nullptr) };
+        Token error_token { TokenType::Eof, 0, {} };
         ByteCode bytecode;
         size_t capture_groups_count { 0 };
         size_t named_capture_groups_count { 0 };
@@ -220,6 +222,12 @@ public:
 private:
     bool parse_internal(ByteCode&, size_t&) override;
 
+    struct ParseFlags {
+        bool unicode { false };
+        bool named { false };
+        bool unicode_sets { false };
+    };
+
     enum class ReadDigitsInitialZeroState {
         Allow,
         Disallow,
@@ -235,25 +243,36 @@ private:
     using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory, Script, Empty>;
     Optional<PropertyEscape> read_unicode_property_escape();
 
-    bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_disjunction(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_alternative(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_term(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_assertion(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_atom(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_quantifier(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_pattern(ByteCode&, size_t&, ParseFlags);
+    bool parse_disjunction(ByteCode&, size_t&, ParseFlags);
+    bool parse_alternative(ByteCode&, size_t&, ParseFlags);
+    bool parse_term(ByteCode&, size_t&, ParseFlags);
+    bool parse_assertion(ByteCode&, size_t&, ParseFlags);
+    bool parse_atom(ByteCode&, size_t&, ParseFlags);
+    bool parse_quantifier(ByteCode&, size_t&, ParseFlags);
     bool parse_interval_quantifier(Optional<u64>& repeat_min, Optional<u64>& repeat_max);
-    bool parse_atom_escape(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_character_class(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_atom_escape(ByteCode&, size_t&, ParseFlags);
+    bool parse_character_class(ByteCode&, size_t&, ParseFlags);
+    bool parse_capture_group(ByteCode&, size_t&, ParseFlags);
     Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
-    bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
+    bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, ParseFlags);
     bool parse_unicode_property_escape(PropertyEscape& property, bool& negated);
 
+    bool parse_character_escape(Vector<CompareTypeAndValuePair>&, size_t&, ParseFlags);
+
+    bool parse_class_set_expression(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_union(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_intersection(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_subtraction(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_set_range(Vector<CompareTypeAndValuePair>&);
+    bool parse_class_set_operand(Vector<CompareTypeAndValuePair>&);
+    bool parse_nested_class(Vector<CompareTypeAndValuePair>&);
+    Optional<u32> parse_class_set_character();
+
     // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
-    bool parse_quantifiable_assertion(ByteCode&, size_t&, bool named);
-    bool parse_extended_atom(ByteCode&, size_t&, bool named);
-    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, bool unicode, bool named);
+    bool parse_quantifiable_assertion(ByteCode&, size_t&, ParseFlags);
+    bool parse_extended_atom(ByteCode&, size_t&, ParseFlags);
+    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, ParseFlags);
     bool parse_invalid_braced_quantifier(); // Note: This function either parses and *fails*, or doesn't parse anything and returns false.
     bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
     Optional<u8> parse_legacy_octal_escape();

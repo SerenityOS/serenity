@@ -50,6 +50,9 @@ public:
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
 
+    bool is_obeying_widget_min_size() { return m_obey_widget_min_size; }
+    void set_obey_widget_min_size(bool);
+
     bool is_minimizable() const { return m_minimizable; }
     void set_minimizable(bool minimizable) { m_minimizable = minimizable; }
 
@@ -228,6 +231,8 @@ protected:
     virtual void leave_event(Core::Event&);
 
 private:
+    void update_min_size();
+
     void update_cursor();
     void focus_a_widget_if_possible(FocusSource);
 
@@ -287,6 +292,7 @@ private:
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
     bool m_resizable { true };
+    bool m_obey_widget_min_size { true };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
     bool m_closeable { true };

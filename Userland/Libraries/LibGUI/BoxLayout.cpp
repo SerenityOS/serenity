@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Frhun <serenitystuff@frhun.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,74 +24,116 @@ BoxLayout::BoxLayout(Orientation orientation)
         "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);
 }
 
-Gfx::IntSize BoxLayout::preferred_size() const
+UISize BoxLayout::preferred_size() const
 {
-    Gfx::IntSize size;
-    size.set_primary_size_for_orientation(orientation(), preferred_primary_size());
-    size.set_secondary_size_for_orientation(orientation(), preferred_secondary_size());
-    return size;
-}
+    VERIFY(m_owner);
 
-int BoxLayout::preferred_primary_size() const
-{
-    auto widget = verify_cast<GUI::Widget>(parent());
-    int size = 0;
+    UIDimension result_primary { 0 };
+    UIDimension result_secondary { 0 };
 
+    bool first_item { true };
     for (auto& entry : m_entries) {
         if (!entry.widget || !entry.widget->is_visible())
             continue;
-        int preferred_primary_size = -1;
-        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
-            preferred_primary_size = entry.widget->layout()->preferred_size().primary_size_for_orientation(orientation());
+
+        UISize min_size = entry.widget->effective_min_size();
+        UISize max_size = entry.widget->max_size();
+        UISize preferred_size = entry.widget->effective_preferred_size();
+
+        if (result_primary != SpecialDimension::Grow) {
+            UIDimension item_primary_size = clamp(
+                preferred_size.primary_size_for_orientation(orientation()),
+                min_size.primary_size_for_orientation(orientation()),
+                max_size.primary_size_for_orientation(orientation()));
+
+            if (item_primary_size.is_int())
+                result_primary.add_if_int(item_primary_size.as_int());
+
+            if (item_primary_size.is_grow())
+                result_primary = SpecialDimension::Grow;
+
+            if (!first_item)
+                result_primary.add_if_int(spacing());
         }
-        int item_size = max(0, preferred_primary_size);
-        int min_size = entry.widget->min_size().primary_size_for_orientation(orientation());
-        if (min_size != -1)
-            item_size = max(min_size, item_size);
-        int max_size = entry.widget->max_size().primary_size_for_orientation(orientation());
-        if (max_size != -1)
-            item_size = min(max_size, item_size);
-        size += item_size + spacing();
+
+        {
+            UIDimension secondary_preferred_size = preferred_size.secondary_size_for_orientation(orientation());
+
+            if (secondary_preferred_size == SpecialDimension::OpportunisticGrow)
+                secondary_preferred_size = 0;
+
+            UIDimension item_secondary_size = clamp(
+                secondary_preferred_size,
+                min_size.secondary_size_for_orientation(orientation()),
+                max_size.secondary_size_for_orientation(orientation()));
+
+            result_secondary = max(item_secondary_size, result_secondary);
+        }
+
+        first_item = false;
     }
-    if (size > 0)
-        size -= spacing();
 
-    auto content_margins = widget->content_margins();
+    result_primary.add_if_int(
+        margins().primary_total_for_orientation(orientation())
+        + m_owner->content_margins().primary_total_for_orientation(orientation()));
+
+    result_secondary.add_if_int(
+        margins().secondary_total_for_orientation(orientation())
+        + m_owner->content_margins().secondary_total_for_orientation(orientation()));
+
     if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
-    else
-        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
-
-    if (!size)
-        return -1;
-    return size;
+        return { result_primary, result_secondary };
+    return { result_secondary, result_primary };
 }
 
-int BoxLayout::preferred_secondary_size() const
+UISize BoxLayout::min_size() const
 {
-    auto widget = verify_cast<GUI::Widget>(parent());
-    int size = 0;
+    VERIFY(m_owner);
+
+    UIDimension result_primary { 0 };
+    UIDimension result_secondary { 0 };
+
+    bool first_item { true };
     for (auto& entry : m_entries) {
         if (!entry.widget || !entry.widget->is_visible())
             continue;
-        int min_size = entry.widget->min_size().secondary_size_for_orientation(orientation());
-        int preferred_secondary_size = -1;
-        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
-            preferred_secondary_size = entry.widget->layout()->preferred_size().secondary_size_for_orientation(orientation());
-            size = max(size, preferred_secondary_size);
+
+        UISize min_size = entry.widget->effective_min_size();
+
+        {
+            UIDimension primary_min_size = min_size.primary_size_for_orientation(orientation());
+
+            VERIFY(primary_min_size.is_one_of(SpecialDimension::Shrink, SpecialDimension::Regular));
+
+            if (primary_min_size.is_int())
+                result_primary.add_if_int(primary_min_size.as_int());
+
+            if (!first_item)
+                result_primary.add_if_int(spacing());
         }
-        size = max(min_size, size);
+
+        {
+            UIDimension secondary_min_size = min_size.secondary_size_for_orientation(orientation());
+
+            VERIFY(secondary_min_size.is_one_of(SpecialDimension::Shrink, SpecialDimension::Regular));
+
+            result_secondary = max(result_secondary, secondary_min_size);
+        }
+
+        first_item = false;
     }
 
-    auto content_margins = widget->content_margins();
-    if (orientation() == Gfx::Orientation::Horizontal)
-        size += margins().top() + margins().bottom() + content_margins.top() + content_margins.bottom();
-    else
-        size += margins().left() + margins().right() + content_margins.left() + content_margins.right();
+    result_primary.add_if_int(
+        margins().primary_total_for_orientation(orientation())
+        + m_owner->content_margins().primary_total_for_orientation(orientation()));
 
-    if (!size)
-        return -1;
-    return size;
+    result_secondary.add_if_int(
+        margins().secondary_total_for_orientation(orientation())
+        + m_owner->content_margins().secondary_total_for_orientation(orientation()));
+
+    if (orientation() == Gfx::Orientation::Horizontal)
+        return { result_primary, result_secondary };
+    return { result_secondary, result_primary };
 }
 
 void BoxLayout::run(Widget& widget)
@@ -100,102 +143,223 @@ void BoxLayout::run(Widget& widget)
 
     struct Item {
         Widget* widget { nullptr };
-        int min_size { -1 };
-        int max_size { -1 };
+        UIDimension min_size { SpecialDimension::Shrink };
+        UIDimension max_size { SpecialDimension::Grow };
+        UIDimension preferred_size { SpecialDimension::Shrink };
         int size { 0 };
         bool final { false };
     };
 
     Vector<Item, 32> items;
+    int spacer_count = 0;
+    int opportunistic_growth_item_count = 0;
+    int opportunistic_growth_items_base_size_total = 0;
 
     for (size_t i = 0; i < m_entries.size(); ++i) {
         auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
-            items.append(Item { nullptr, -1, -1 });
+            items.append(Item { nullptr, { SpecialDimension::Shrink }, { SpecialDimension::Grow }, { SpecialDimension::Grow } });
+            spacer_count++;
             continue;
         }
         if (!entry.widget)
             continue;
         if (!entry.widget->is_visible())
             continue;
-        auto min_size = entry.widget->min_size();
-        auto max_size = entry.widget->max_size();
+        auto min_size = entry.widget->effective_min_size().primary_size_for_orientation(orientation());
+        auto max_size = entry.widget->max_size().primary_size_for_orientation(orientation());
+        auto preferred_size = entry.widget->effective_preferred_size().primary_size_for_orientation(orientation());
 
-        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
-            auto preferred_size = entry.widget->layout()->preferred_size();
-            min_size = max_size = preferred_size;
+        if (preferred_size == SpecialDimension::OpportunisticGrow) {
+            opportunistic_growth_item_count++;
+            opportunistic_growth_items_base_size_total += MUST(min_size.shrink_value());
+        } else {
+            preferred_size = clamp(preferred_size, min_size, max_size);
         }
 
-        items.append(Item { entry.widget.ptr(), min_size.primary_size_for_orientation(orientation()), max_size.primary_size_for_orientation(orientation()) });
+        items.append(
+            Item {
+                entry.widget.ptr(),
+                min_size,
+                max_size,
+                preferred_size });
     }
 
     if (items.is_empty())
         return;
 
     Gfx::IntRect content_rect = widget.content_rect();
-    int available_size = content_rect.size().primary_size_for_orientation(orientation()) - spacing() * (items.size() - 1);
-    int unfinished_items = items.size();
-
-    if (orientation() == Gfx::Orientation::Horizontal)
-        available_size -= margins().left() + margins().right();
-    else
-        available_size -= margins().top() + margins().bottom();
+    int uncommitted_size = content_rect.size().primary_size_for_orientation(orientation())
+        - spacing() * (items.size() - 1 - spacer_count)
+        - margins().primary_total_for_orientation(orientation());
+    int unfinished_regular_items = items.size() - spacer_count - opportunistic_growth_item_count;
+    int max_amongst_the_min_sizes = 0;
+    int max_amongst_the_min_sizes_of_opportunistically_growing_items = 0;
+    int regular_items_to_layout = 0;
+    int regular_items_min_size_total = 0;
 
     // Pass 1: Set all items to their minimum size.
     for (auto& item : items) {
-        item.size = 0;
-        if (item.min_size >= 0)
-            item.size = item.min_size;
-        available_size -= item.size;
+        VERIFY(item.min_size.is_one_of(SpecialDimension::Regular, SpecialDimension::Shrink));
+        item.size = MUST(item.min_size.shrink_value());
+        uncommitted_size -= item.size;
 
-        if (item.min_size >= 0 && item.max_size >= 0 && item.min_size == item.max_size) {
+        if (item.min_size.is_int() && item.max_size.is_int() && item.min_size == item.max_size) {
             // Fixed-size items finish immediately in the first pass.
             item.final = true;
-            --unfinished_items;
+            if (item.preferred_size == SpecialDimension::OpportunisticGrow) {
+                opportunistic_growth_item_count--;
+                opportunistic_growth_items_base_size_total -= MUST(item.min_size.shrink_value());
+            } else {
+                --unfinished_regular_items;
+            }
+        } else if (item.preferred_size != SpecialDimension::OpportunisticGrow && item.widget) {
+            max_amongst_the_min_sizes = max(max_amongst_the_min_sizes, MUST(item.min_size.shrink_value()));
+            regular_items_to_layout++;
+            regular_items_min_size_total += item.size;
+        } else if (item.preferred_size == SpecialDimension::OpportunisticGrow) {
+            max_amongst_the_min_sizes_of_opportunistically_growing_items = max(max_amongst_the_min_sizes_of_opportunistically_growing_items, MUST(item.min_size.shrink_value()));
         }
     }
 
-    // Pass 2: Distribute remaining available size evenly, respecting each item's maximum size.
-    while (unfinished_items && available_size > 0) {
-        int slice = available_size / unfinished_items;
-        // If available_size does not divide evenly by unfinished_items,
+    // Pass 2: Set all non final, non spacer items to the previously encountered maximum min_size of these kind of items
+    // This is done to ensure even growth, if the items don't have the same min_size, which most won't have.
+    // If you are unsure what effect this has, try looking at widget gallery with, and without this, it'll be obvious.
+    if (uncommitted_size > 0) {
+        int total_growth_if_not_overcommitted = regular_items_to_layout * max_amongst_the_min_sizes - regular_items_min_size_total;
+        int overcommitment_if_all_same_min_size = total_growth_if_not_overcommitted - uncommitted_size;
+        for (auto& item : items) {
+            if (item.final || item.preferred_size == SpecialDimension::OpportunisticGrow || !item.widget)
+                continue;
+            int extra_needed_space = max_amongst_the_min_sizes - item.size;
+
+            if (overcommitment_if_all_same_min_size > 0) {
+                extra_needed_space -= (overcommitment_if_all_same_min_size * extra_needed_space + (total_growth_if_not_overcommitted - 1)) / (total_growth_if_not_overcommitted);
+            }
+
+            VERIFY(extra_needed_space >= 0);
+            VERIFY(uncommitted_size >= extra_needed_space);
+
+            item.size += extra_needed_space;
+            if (item.max_size.is_int() && item.size > item.max_size.as_int())
+                item.size = item.max_size.as_int();
+            uncommitted_size -= item.size - MUST(item.min_size.shrink_value());
+        }
+    }
+
+    // Pass 3: Determine final item size for non spacers, and non opportunisticially growing widgets
+    int loop_counter = 0; // This doubles as a safeguard for when the loop below doesn't finish for some reason, and as a mechanism to ensure it runs at least once.
+    // This has to run at least once, to handle the case where the loop for evening out the min sizes was in an overcommitted state,
+    // and gave the Widget a larger size than its preferred size.
+    while (unfinished_regular_items && (uncommitted_size > 0 || loop_counter++ == 0)) {
+        VERIFY(loop_counter < 100);
+        int slice = uncommitted_size / unfinished_regular_items;
+        // If uncommitted_size does not divide evenly by unfinished_regular_items,
         // there are some extra pixels that have to be distributed.
-        int pixels = available_size - slice * unfinished_items;
-        available_size = 0;
+        int pixels = uncommitted_size - slice * unfinished_regular_items;
+        uncommitted_size = 0;
 
         for (auto& item : items) {
             if (item.final)
+                continue;
+            if (!item.widget)
+                continue;
+            if (item.preferred_size == SpecialDimension::OpportunisticGrow)
                 continue;
 
             int pixel = pixels ? 1 : 0;
             pixels -= pixel;
             int item_size_with_full_slice = item.size + slice + pixel;
-            item.size = item_size_with_full_slice;
 
-            if (item.max_size >= 0)
-                item.size = min(item.max_size, item_size_with_full_slice);
+            UIDimension resulting_size { 0 };
+            resulting_size = max(item.size, item_size_with_full_slice);
+            resulting_size = min(resulting_size, item.preferred_size);
+            resulting_size = min(resulting_size, item.max_size);
 
-            // If the slice was more than we needed, return remained to available_size.
-            int remainder_to_give_back = item_size_with_full_slice - item.size;
-            available_size += remainder_to_give_back;
-
-            if (item.max_size >= 0 && item.size == item.max_size) {
-                // We've hit the item's max size. Don't give it any more space.
+            if (resulting_size.is_shrink()) {
+                // FIXME: Propagate this error, so it is obvious where the mistake is actually made.
+                if (!item.min_size.is_int())
+                    dbgln("BoxLayout: underconstrained widget set to zero size: {} {}", item.widget->class_name(), item.widget->name());
+                resulting_size = MUST(item.min_size.shrink_value());
                 item.final = true;
-                --unfinished_items;
+            }
+
+            if (resulting_size.is_grow())
+                resulting_size = item_size_with_full_slice;
+
+            item.size = resulting_size.as_int();
+
+            // If the slice was more than we needed, return remainder to available_size.
+            // Note that this will in some cases even return more than the slice size.
+            uncommitted_size += item_size_with_full_slice - item.size;
+
+            if (item.final
+                || (item.max_size.is_int() && item.max_size.as_int() == item.size)
+                || (item.preferred_size.is_int() && item.preferred_size.as_int() == item.size)) {
+                item.final = true;
+                --unfinished_regular_items;
             }
         }
     }
 
-    // Pass 3: Place the widgets.
+    // Pass 4: Even out min_size for opportunistically growing items, analogous to pass 2
+    if (uncommitted_size > 0 && opportunistic_growth_item_count > 0) {
+        int total_growth_if_not_overcommitted = opportunistic_growth_item_count * max_amongst_the_min_sizes_of_opportunistically_growing_items - opportunistic_growth_items_base_size_total;
+        int overcommitment_if_all_same_min_size = total_growth_if_not_overcommitted - uncommitted_size;
+        for (auto& item : items) {
+            if (item.final || item.preferred_size != SpecialDimension::OpportunisticGrow || !item.widget)
+                continue;
+            int extra_needed_space = max_amongst_the_min_sizes_of_opportunistically_growing_items - item.size;
+
+            if (overcommitment_if_all_same_min_size > 0 && total_growth_if_not_overcommitted > 0) {
+                extra_needed_space -= (overcommitment_if_all_same_min_size * extra_needed_space + (total_growth_if_not_overcommitted - 1)) / (total_growth_if_not_overcommitted);
+            }
+
+            VERIFY(extra_needed_space >= 0);
+            VERIFY(uncommitted_size >= extra_needed_space);
+
+            item.size += extra_needed_space;
+            if (item.max_size.is_int() && item.size > item.max_size.as_int())
+                item.size = item.max_size.as_int();
+            uncommitted_size -= item.size - MUST(item.min_size.shrink_value());
+        }
+    }
+
+    loop_counter = 0;
+    // Pass 5: Determine the size for the opportunistically growing items.
+    while (opportunistic_growth_item_count > 0 && uncommitted_size > 0) {
+        VERIFY(loop_counter++ < 200);
+        int opportunistic_growth_item_extra_size = uncommitted_size / opportunistic_growth_item_count;
+        int pixels = uncommitted_size - opportunistic_growth_item_count * opportunistic_growth_item_extra_size;
+        VERIFY(pixels >= 0);
+        for (auto& item : items) {
+            if (item.preferred_size != SpecialDimension::OpportunisticGrow || item.final || !item.widget)
+                continue;
+
+            int pixel = (pixels > 0 ? 1 : 0);
+            pixels -= pixel;
+            int previous_size = item.size;
+            item.size += opportunistic_growth_item_extra_size + pixel;
+            if (item.max_size.is_int() && item.size >= item.max_size.as_int()) {
+                item.size = item.max_size.as_int();
+                item.final = true;
+                opportunistic_growth_item_count--;
+            }
+            uncommitted_size -= item.size - previous_size;
+        }
+    }
+
+    // Determine size of the spacers, according to the still uncommitted size
+    int spacer_width = 0;
+    if (spacer_count > 0 && uncommitted_size > 0) {
+        spacer_width = uncommitted_size / spacer_count;
+    }
+
+    // Pass 6: Place the widgets.
     int current_x = margins().left() + content_rect.x();
     int current_y = margins().top() + content_rect.y();
 
-    auto widget_rect_with_margins_subtracted = content_rect;
-    widget_rect_with_margins_subtracted.take_from_left(margins().left());
-    widget_rect_with_margins_subtracted.take_from_top(margins().top());
-    widget_rect_with_margins_subtracted.take_from_right(margins().right());
-    widget_rect_with_margins_subtracted.take_from_bottom(margins().bottom());
+    auto widget_rect_with_margins_subtracted = margins().applied_to(content_rect);
 
     for (auto& item : items) {
         Gfx::IntRect rect { current_x, current_y, 0, 0 };
@@ -204,17 +368,17 @@ void BoxLayout::run(Widget& widget)
 
         if (item.widget) {
             int secondary = widget.content_size().secondary_size_for_orientation(orientation());
-            if (orientation() == Gfx::Orientation::Horizontal)
-                secondary -= margins().top() + margins().bottom();
-            else
-                secondary -= margins().left() + margins().right();
+            secondary -= margins().secondary_total_for_orientation(orientation());
 
-            int min_secondary = item.widget->min_size().secondary_size_for_orientation(orientation());
-            int max_secondary = item.widget->max_size().secondary_size_for_orientation(orientation());
-            if (min_secondary >= 0)
-                secondary = max(secondary, min_secondary);
-            if (max_secondary >= 0)
-                secondary = min(secondary, max_secondary);
+            UIDimension min_secondary = item.widget->effective_min_size().secondary_size_for_orientation(orientation());
+            UIDimension max_secondary = item.widget->max_size().secondary_size_for_orientation(orientation());
+            UIDimension preferred_secondary = item.widget->effective_preferred_size().secondary_size_for_orientation(orientation());
+            if (preferred_secondary.is_int())
+                secondary = min(secondary, preferred_secondary.as_int());
+            if (min_secondary.is_int())
+                secondary = max(secondary, min_secondary.as_int());
+            if (max_secondary.is_int())
+                secondary = min(secondary, max_secondary.as_int());
 
             rect.set_secondary_size_for_orientation(orientation(), secondary);
 
@@ -224,12 +388,17 @@ void BoxLayout::run(Widget& widget)
                 rect.center_horizontally_within(widget_rect_with_margins_subtracted);
 
             item.widget->set_relative_rect(rect);
-        }
 
-        if (orientation() == Gfx::Orientation::Horizontal)
-            current_x += rect.width() + spacing();
-        else
-            current_y += rect.height() + spacing();
+            if (orientation() == Gfx::Orientation::Horizontal)
+                current_x += rect.width() + spacing();
+            else
+                current_y += rect.height() + spacing();
+        } else {
+            if (orientation() == Gfx::Orientation::Horizontal)
+                current_x += spacer_width;
+            else
+                current_y += spacer_width;
+        }
     }
 }
 

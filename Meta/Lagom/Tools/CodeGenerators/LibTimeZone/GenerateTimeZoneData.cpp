@@ -18,8 +18,8 @@
 
 namespace {
 
-using StringIndexType = u8;
-constexpr auto s_string_index_type = "u8"sv;
+using StringIndexType = u16;
+constexpr auto s_string_index_type = "u16"sv;
 
 struct DateTime {
     u16 year { 0 };
@@ -67,6 +67,9 @@ struct TimeZoneData {
     Vector<String> dst_offset_names;
 
     HashMap<String, TimeZone::Location> time_zone_coordinates;
+
+    HashMap<String, Vector<StringIndexType>> time_zone_regions;
+    Vector<String> time_zone_region_names;
 };
 
 }
@@ -76,7 +79,7 @@ struct AK::Formatter<DateTime> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DateTime const& date_time)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             date_time.year,
             date_time.month.value_or(1),
             date_time.day.value_or(1),
@@ -94,7 +97,7 @@ struct AK::Formatter<TimeZoneOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZoneOffset const& time_zone_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {} }}"sv,
             time_zone_offset.offset,
             time_zone_offset.until.value_or({}),
             time_zone_offset.until.has_value(),
@@ -110,7 +113,7 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {} }}"sv,
             dst_offset.offset,
             dst_offset.year_from,
             dst_offset.year_to,
@@ -124,7 +127,7 @@ struct AK::Formatter<TimeZone::Coordinate> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZone::Coordinate const& coordinate)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
+            "{{ {}, {}, {} }}"sv,
             coordinate.degrees,
             coordinate.minutes,
             coordinate.seconds);
@@ -136,7 +139,7 @@ struct AK::Formatter<TimeZone::Location> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZone::Location const& location)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {} }}",
+            "{{ {}, {} }}"sv,
             location.latitude,
             location.longitude);
     }
@@ -211,7 +214,7 @@ static void parse_dst_rule(StringView segment, TimeZoneOffset& time_zone)
 
 static void parse_format(StringView format, TimeZoneData& time_zone_data, TimeZoneOffset& time_zone)
 {
-    auto formats = format.replace("%s"sv, "{}"sv).split('/');
+    auto formats = format.replace("%s"sv, "{}"sv, ReplaceMode::FirstOnly).split('/');
     VERIFY(formats.size() <= 2);
 
     time_zone.standard_format = time_zone_data.unique_strings.ensure(formats[0]);
@@ -379,6 +382,7 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
             continue;
 
         auto segments = line.split_view('\t');
+        auto regions = segments[0];
         auto coordinates = segments[1];
         auto zone = segments[2];
 
@@ -389,6 +393,14 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
         auto longitude = parse_coordinate(coordinates.substring_view(index));
 
         time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
+
+        regions.for_each_split_view(',', false, [&](auto region) {
+            auto index = time_zone_data.unique_strings.ensure(zone);
+            time_zone_data.time_zone_regions.ensure(region).append(index);
+
+            if (!time_zone_data.time_zone_region_names.contains_slow(region))
+                time_zone_data.time_zone_region_names.append(region);
+        });
     }
 
     return {};
@@ -422,8 +434,8 @@ static String format_identifier(StringView owner, String identifier)
         }
     }
 
-    identifier = identifier.replace("-"sv, "_"sv, true);
-    identifier = identifier.replace("/"sv, "_"sv, true);
+    identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
+    identifier = identifier.replace("/"sv, "_"sv, ReplaceMode::All);
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
@@ -447,6 +459,7 @@ namespace TimeZone {
 
     generate_enum(generator, format_identifier, "TimeZone"sv, {}, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
     generate_enum(generator, format_identifier, "DaylightSavingsRule"sv, {}, time_zone_data.dst_offset_names);
+    generate_enum(generator, format_identifier, "Region"sv, {}, time_zone_data.time_zone_region_names);
 
     generator.append(R"~~~(
 }
@@ -544,16 +557,36 @@ static constexpr Array<@type@, @size@> @name@ { {
         generator.append("} };\n");
     };
 
-    generate_mapping(generator, time_zone_data.time_zone_names, "TimeZoneOffset"sv, "s_time_zone_offsets"sv, "s_time_zone_offsets_{}", format_identifier,
+    generate_mapping(generator, time_zone_data.time_zone_names, "TimeZoneOffset"sv, "s_time_zone_offsets"sv, "s_time_zone_offsets_{}"sv, format_identifier,
         [&](auto const& name, auto const& value) {
             auto const& time_zone_offsets = time_zone_data.time_zones.find(value)->value;
             append_offsets(name, "TimeZoneOffset"sv, time_zone_offsets);
         });
 
-    generate_mapping(generator, time_zone_data.dst_offset_names, "DaylightSavingsOffset"sv, "s_dst_offsets"sv, "s_dst_offsets_{}", format_identifier,
+    generate_mapping(generator, time_zone_data.dst_offset_names, "DaylightSavingsOffset"sv, "s_dst_offsets"sv, "s_dst_offsets_{}"sv, format_identifier,
         [&](auto const& name, auto const& value) {
             auto const& dst_offsets = time_zone_data.dst_offsets.find(value)->value;
             append_offsets(name, "DaylightSavingsOffset"sv, dst_offsets);
+        });
+
+    generate_mapping(generator, time_zone_data.time_zone_region_names, s_string_index_type, "s_regional_time_zones"sv, "s_regional_time_zones_{}"sv, format_identifier,
+        [&](auto const& name, auto const& value) {
+            auto const& time_zones = time_zone_data.time_zone_regions.find(value)->value;
+
+            generator.set("name", name);
+            generator.set("size", String::number(time_zones.size()));
+
+            generator.append(R"~~~(
+static constexpr Array<@string_index_type@, @size@> @name@ { {)~~~");
+
+            bool first = true;
+            for (auto const& time_zone : time_zones) {
+                generator.append(first ? " "sv : ", "sv);
+                generator.append(String::number(time_zone));
+                first = false;
+            }
+
+            generator.append(" } };");
         });
 
     generator.set("size", String::number(time_zone_data.time_zone_names.size()));
@@ -590,6 +623,7 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
 
     append_string_conversions("TimeZone"sv, "time_zone"sv, time_zone_data.time_zone_names, time_zone_data.time_zone_aliases);
     append_string_conversions("DaylightSavingsRule"sv, "daylight_savings_rule"sv, time_zone_data.dst_offset_names);
+    append_string_conversions("Region"sv, "region"sv, time_zone_data.time_zone_region_names);
 
     generator.append(R"~~~(
 static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)
@@ -690,7 +724,7 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
 
     auto format_name = [](auto format, auto offset) -> String {
         if (offset == 0)
-            return s_string_list[format].replace("{}"sv, ""sv);
+            return s_string_list[format].replace("{}"sv, ""sv, ReplaceMode::FirstOnly);
         return String::formatted(s_string_list[format], s_string_list[offset]);
     };
 
@@ -726,6 +760,25 @@ Optional<Location> get_time_zone_location(TimeZone time_zone)
     if (is_valid_coordinate(location.latitude) && is_valid_coordinate(location.longitude))
         return location;
     return {};
+}
+
+Vector<StringView> time_zones_in_region(StringView region)
+{
+    auto region_value = region_from_string(region);
+    if (!region_value.has_value())
+        return {};
+
+    auto region_index = to_underlying(*region_value);
+
+    auto const& regional_time_zones = s_regional_time_zones[region_index];
+
+    Vector<StringView> time_zones;
+    time_zones.ensure_capacity(regional_time_zones.size());
+
+    for (auto time_zone : regional_time_zones)
+        time_zones.unchecked_append(s_string_list[time_zone]);
+
+    return time_zones;
 }
 )~~~");
 

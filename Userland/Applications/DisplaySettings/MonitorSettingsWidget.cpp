@@ -153,7 +153,7 @@ void MonitorSettingsWidget::load_current_settings()
     for (size_t i = 0; i < m_screen_layout.screens.size(); i++) {
         String screen_display_name;
         if (m_screen_layout.screens[i].mode == WindowServer::ScreenLayout::Screen::Mode::Device) {
-            if (auto edid = EDID::Parser::from_framebuffer_device(m_screen_layout.screens[i].device.value(), 0); !edid.is_error()) { // TODO: multihead
+            if (auto edid = EDID::Parser::from_display_connector_device(m_screen_layout.screens[i].device.value(), 0); !edid.is_error()) { // TODO: multihead
                 screen_display_name = display_name_from_edid(edid.value());
                 m_screen_edids.append(edid.release_value());
             } else {
@@ -239,7 +239,7 @@ void MonitorSettingsWidget::apply_settings()
                     seconds_until_revert, seconds_until_revert == 1 ? "second" : "seconds");
             };
 
-            auto box = GUI::MessageBox::construct(window(), box_text(), "Apply new screen layout",
+            auto box = GUI::MessageBox::construct(window(), box_text(), "Apply new screen layout"sv,
                 GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             box->set_icon(window()->icon());
 
@@ -258,20 +258,20 @@ void MonitorSettingsWidget::apply_settings()
                 auto save_result = GUI::ConnectionToWindowServer::the().save_screen_layout();
                 if (!save_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),
-                        "Unable to save setting", GUI::MessageBox::Type::Error);
+                        "Unable to save setting"sv, GUI::MessageBox::Type::Error);
                 }
             } else {
                 auto restore_result = GUI::ConnectionToWindowServer::the().set_screen_layout(current_layout, false);
                 if (!restore_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error restoring settings: {}", restore_result.error_msg()),
-                        "Unable to restore setting", GUI::MessageBox::Type::Error);
+                        "Unable to restore setting"sv, GUI::MessageBox::Type::Error);
                 } else {
                     load_current_settings();
                 }
             }
         } else {
             GUI::MessageBox::show(window(), String::formatted("Error setting screen layout: {}", result.error_msg()),
-                "Unable to apply changes", GUI::MessageBox::Type::Error);
+                "Unable to apply changes"sv, GUI::MessageBox::Type::Error);
         }
     }
 }

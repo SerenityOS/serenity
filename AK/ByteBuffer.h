@@ -134,13 +134,12 @@ public:
     [[nodiscard]] void* end_pointer() { return data() + m_size; }
     [[nodiscard]] void const* end_pointer() const { return data() + m_size; }
 
-    // FIXME: Make this function handle failures too.
-    [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
+    [[nodiscard]] ErrorOr<ByteBuffer> slice(size_t offset, size_t size) const
     {
         // I cannot hand you a slice I don't have
         VERIFY(offset + size <= this->size());
 
-        return copy(offset_pointer(offset), size).release_value();
+        return copy(offset_pointer(offset), size);
     }
 
     void clear()
@@ -184,8 +183,9 @@ public:
     /// Ensures that the required space is available.
     ErrorOr<Bytes> get_bytes_for_writing(size_t length)
     {
-        TRY(try_ensure_capacity(size() + length));
-        return Bytes { data() + size(), length };
+        auto const old_size = size();
+        TRY(try_resize(old_size + length));
+        return Bytes { data() + old_size, length };
     }
 
     /// Like get_bytes_for_writing, but crashes if allocation fails.
@@ -321,4 +321,13 @@ private:
 };
 
 }
+
+template<>
+struct Traits<ByteBuffer> : public GenericTraits<ByteBuffer> {
+    static unsigned hash(ByteBuffer const& byte_buffer)
+    {
+        return Traits<ReadonlyBytes>::hash(byte_buffer.span());
+    }
+};
+
 }

@@ -381,6 +381,7 @@ class SpecialVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual String resolve_as_string(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SpecialVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
@@ -512,9 +513,15 @@ protected:
     RefPtr<SyntaxError> m_syntax_error_node;
 };
 
-#define NODE(name)                                               \
-    virtual String class_name() const override { return #name; } \
-    virtual Kind kind() const override { return Kind::name; }
+#define NODE(name)                             \
+    virtual String class_name() const override \
+    {                                          \
+        return #name;                          \
+    }                                          \
+    virtual Kind kind() const override         \
+    {                                          \
+        return Kind::name;                     \
+    }
 
 class PathRedirectionNode : public Node {
 public:

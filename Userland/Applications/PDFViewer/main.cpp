@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
+    auto app_icon = GUI::Icon::default_icon("app-pdf-viewer"sv);
 
     Config::pledge_domain("PDFViewer");
 

@@ -22,15 +22,13 @@ public:
     Gfx::Orientation orientation() const { return m_orientation; }
 
     virtual void run(Widget&) override;
-    virtual Gfx::IntSize preferred_size() const override;
+    virtual UISize preferred_size() const override;
+    virtual UISize min_size() const override;
 
 protected:
     explicit BoxLayout(Gfx::Orientation);
 
 private:
-    int preferred_primary_size() const;
-    int preferred_secondary_size() const;
-
     Gfx::Orientation m_orientation;
 };
 

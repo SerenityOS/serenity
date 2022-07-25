@@ -6,6 +6,10 @@ typedef EventHandlerNonNull? EventHandler;
 callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long colno, optional any error);
 typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
 
+[LegacyTreatNonObjectAsNull]
+callback OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event);
+typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
+
 interface mixin GlobalEventHandlers {
     attribute EventHandler onabort;
     attribute EventHandler onauxclick;
@@ -76,4 +80,23 @@ interface mixin GlobalEventHandlers {
     attribute EventHandler onwebkitanimationstart;
     attribute EventHandler onwebkittransitionend;
     attribute EventHandler onwheel;
+};
+
+interface mixin WindowEventHandlers {
+    attribute EventHandler onafterprint;
+    attribute EventHandler onbeforeprint;
+    attribute OnBeforeUnloadEventHandler onbeforeunload;
+    attribute EventHandler onhashchange;
+    attribute EventHandler onlanguagechange;
+    attribute EventHandler onmessage;
+    attribute EventHandler onmessageerror;
+    attribute EventHandler onoffline;
+    attribute EventHandler ononline;
+    attribute EventHandler onpagehide;
+    attribute EventHandler onpageshow;
+    attribute EventHandler onpopstate;
+    attribute EventHandler onrejectionhandled;
+    attribute EventHandler onstorage;
+    attribute EventHandler onunhandledrejection;
+    attribute EventHandler onunload;
 };

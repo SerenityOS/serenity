@@ -6,7 +6,7 @@
  */
 
 #include <AK/Types.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/Resampler.h>
 #include <LibCore/ArgsParser.h>
@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath sendfd unix thread"));
 
-    char const* path = nullptr;
+    StringView path {};
     bool should_loop = false;
     bool show_sample_progress = false;
 
@@ -34,13 +34,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
     args_parser.parse(arguments);
 
-    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"));
+    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"sv));
     TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop loop;
 
-    auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
+    auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto maybe_loader = Audio::Loader::create(path);
     if (maybe_loader.is_error()) {
         warnln("Failed to load audio file: {}", maybe_loader.error().description);

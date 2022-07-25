@@ -170,10 +170,10 @@ ErrorOr<void> Client::send_data(StringView data)
 
         switch (c) {
         case '\n':
-            builder.append("\r\n");
+            builder.append("\r\n"sv);
             break;
         case IAC:
-            builder.append("\xff\xff");
+            builder.append("\xff\xff"sv);
             break;
         default:
             builder.append(c);

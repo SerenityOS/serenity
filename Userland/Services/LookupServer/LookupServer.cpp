@@ -95,7 +95,7 @@ void LookupServer::load_etc_hosts()
         if (original_line.is_empty())
             break;
         auto trimmed_line = original_line.view().trim_whitespace();
-        auto replaced_line = trimmed_line.replace(" ", "\t", true);
+        auto replaced_line = trimmed_line.replace(" "sv, "\t"sv, ReplaceMode::All);
         auto fields = replaced_line.split_view('\t', false);
 
         if (fields.size() < 2) {
@@ -119,14 +119,14 @@ void LookupServer::load_etc_hosts()
 
         StringBuilder builder;
         builder.append(maybe_address->to_string_reversed());
-        builder.append(".in-addr.arpa");
+        builder.append(".in-addr.arpa"sv);
         add_answer(builder.to_string(), RecordType::PTR, name.as_string());
     }
 }
 
 static String get_hostname()
 {
-    char buffer[HOST_NAME_MAX];
+    char buffer[_POSIX_HOST_NAME_MAX];
     VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
     return buffer;
 }
@@ -182,7 +182,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
     }
 
     // Fourth, look up .local names using mDNS instead of DNS nameservers.
-    if (name.as_string().ends_with(".local")) {
+    if (name.as_string().ends_with(".local"sv)) {
         answers = m_mdns->lookup(name, record_type);
         for (auto& answer : answers)
             put_in_cache(answer);
@@ -196,7 +196,10 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
         int retries = 3;
         Vector<Answer> upstream_answers;
         do {
-            upstream_answers = TRY(lookup(name, nameserver, did_get_response, record_type));
+            auto upstream_answers_or_error = lookup(name, nameserver, did_get_response, record_type);
+            if (upstream_answers_or_error.is_error())
+                continue;
+            upstream_answers = upstream_answers_or_error.release_value();
             if (did_get_response)
                 break;
         } while (--retries);

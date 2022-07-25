@@ -342,17 +342,17 @@ size_t ICOImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("ICOImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("ICOImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == ICOLoadingContext::State::Error)
-        return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
         bool success = load_ico_bitmap(*m_context, {});
         if (!success) {
             m_context->state = ICOLoadingContext::State::Error;
-            return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed");
         }
         m_context->state = ICOLoadingContext::State::BitmapDecoded;
     }

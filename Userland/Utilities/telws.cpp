@@ -93,8 +93,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (line.is_empty())
             continue;
 
-        if (line.starts_with(".")) {
-            if (line.starts_with(".text ")) {
+        if (line.starts_with('.')) {
+            if (line.starts_with(".text "sv)) {
                 editor->add_to_history(line);
                 if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
                     outln("Could not send message : socket is not open.");
@@ -103,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 socket->send(line.substring(6));
                 continue;
             }
-            if (line.starts_with(".base64 ")) {
+            if (line.starts_with(".base64 "sv)) {
                 editor->add_to_history(line);
                 if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
                     outln("Could not send message : socket is not open.");

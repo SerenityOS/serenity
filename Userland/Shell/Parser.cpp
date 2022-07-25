@@ -192,7 +192,7 @@ Parser::SequenceParseResult Parser::parse_sequence()
     auto read_terminators = [&](bool consider_tabs_and_spaces) {
         if (m_heredoc_initiations.is_empty()) {
         discard_terminators:;
-            consume_while(is_any_of(consider_tabs_and_spaces ? " \t\n;" : "\n;"));
+            consume_while(is_any_of(consider_tabs_and_spaces ? " \t\n;"sv : "\n;"sv));
         } else {
             for (;;) {
                 if (consider_tabs_and_spaces && (peek() == '\t' || peek() == ' ')) {
@@ -208,7 +208,7 @@ Parser::SequenceParseResult Parser::parse_sequence()
                     consume();
                     if (!parse_heredoc_entries()) {
                         StringBuilder error_builder;
-                        error_builder.append("Expected to find heredoc entries for ");
+                        error_builder.append("Expected to find heredoc entries for "sv);
                         bool first = true;
                         for (auto& entry : m_heredoc_initiations) {
                             if (first)
@@ -249,7 +249,7 @@ Parser::SequenceParseResult Parser::parse_sequence()
         if (left.is_empty())
             break;
 
-        consume_while(is_any_of("\n;"));
+        consume_while(is_any_of("\n;"sv));
         auto pos_after_seps = save_offset();
         AST::Position separator_position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line };
 
@@ -280,7 +280,7 @@ Parser::SequenceParseResult Parser::parse_sequence()
         read_terminators(false);
         [[fallthrough]];
     case ';': {
-        consume_while(is_any_of("\n;"));
+        consume_while(is_any_of("\n;"sv));
         auto pos_after_seps = save_offset();
         separator_positions.empend(pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line);
         return { move(left), move(separator_positions), ShouldReadMoreSequences::Yes };
@@ -394,7 +394,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
         arguments.append({ arg_name, { name_offset, m_offset, start_line, line() } });
     }
 
-    consume_while(is_any_of("\n\t "));
+    consume_while(is_any_of("\n\t "sv));
 
     {
         RefPtr<AST::Node> syntax_error;
@@ -454,7 +454,7 @@ RefPtr<AST::Node> Parser::parse_or_logical_sequence()
 
     consume_while(is_whitespace);
     auto pos_before_or = save_offset();
-    if (!expect("||"))
+    if (!expect("||"sv))
         return and_sequence;
     auto pos_after_or = save_offset();
 
@@ -478,7 +478,7 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
 
     consume_while(is_whitespace);
     auto pos_before_and = save_offset();
-    if (!expect("&&"))
+    if (!expect("&&"sv))
         return pipe_sequence;
     auto pos_after_end = save_offset();
 
@@ -510,6 +510,18 @@ RefPtr<AST::Node> Parser::parse_pipe_sequence()
 
     auto before_pipe = save_offset();
     consume();
+    auto also_pipe_stderr = peek() == '&';
+    if (also_pipe_stderr) {
+        consume();
+
+        RefPtr<AST::Node> redirection;
+        {
+            auto redirection_start = push_start();
+            redirection = create<AST::Fd2FdRedirection>(STDERR_FILENO, STDOUT_FILENO);
+        }
+
+        left = create<AST::Join>(left.release_nonnull(), redirection.release_nonnull());
+    }
 
     if (auto pipe_seq = parse_pipe_sequence()) {
         return create<AST::Pipe>(left.release_nonnull(), pipe_seq.release_nonnull()); // Pipe
@@ -578,10 +590,10 @@ RefPtr<AST::Node> Parser::parse_continuation_control()
 
     auto rule_start = push_start();
 
-    if (expect("break")) {
+    if (expect("break"sv)) {
         {
             auto break_end = push_start();
-            if (consume_while(is_any_of(" \t\n;")).is_empty()) {
+            if (consume_while(is_any_of(" \t\n;"sv)).is_empty()) {
                 restore_to(*rule_start);
                 return nullptr;
             }
@@ -590,10 +602,10 @@ RefPtr<AST::Node> Parser::parse_continuation_control()
         return create<AST::ContinuationControl>(AST::ContinuationControl::Break);
     }
 
-    if (expect("continue")) {
+    if (expect("continue"sv)) {
         {
             auto continue_end = push_start();
-            if (consume_while(is_any_of(" \t\n;")).is_empty()) {
+            if (consume_while(is_any_of(" \t\n;"sv)).is_empty()) {
                 restore_to(*rule_start);
                 return nullptr;
             }
@@ -608,10 +620,10 @@ RefPtr<AST::Node> Parser::parse_continuation_control()
 RefPtr<AST::Node> Parser::parse_for_loop()
 {
     auto rule_start = push_start();
-    if (!expect("for"))
+    if (!expect("for"sv))
         return nullptr;
 
-    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+    if (consume_while(is_any_of(" \t\n"sv)).is_empty()) {
         restore_to(*rule_start);
         return nullptr;
     }
@@ -620,7 +632,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
     Optional<AST::Position> in_start_position, index_start_position;
 
     auto offset_before_index = current_position();
-    if (expect("index")) {
+    if (expect("index"sv)) {
         auto offset = current_position();
         if (!consume_while(is_whitespace).is_empty()) {
             auto offset_before_variable = current_position();
@@ -653,7 +665,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         };
         consume_while(is_whitespace);
         auto in_error_start = push_start();
-        if (!expect("in")) {
+        if (!expect("in"sv)) {
             auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop", true);
             return create<AST::ForLoop>(move(variable_name), move(index_variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
         }
@@ -669,7 +681,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
             iterated_expression = create<AST::SyntaxError>("Expected an expression in 'for' loop", true);
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
     {
         auto obrace_error_start = push_start();
         if (!expect('{')) {
@@ -699,10 +711,10 @@ RefPtr<AST::Node> Parser::parse_for_loop()
 RefPtr<AST::Node> Parser::parse_loop_loop()
 {
     auto rule_start = push_start();
-    if (!expect("loop"))
+    if (!expect("loop"sv))
         return nullptr;
 
-    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+    if (consume_while(is_any_of(" \t\n"sv)).is_empty()) {
         restore_to(*rule_start);
         return nullptr;
     }
@@ -736,10 +748,10 @@ RefPtr<AST::Node> Parser::parse_loop_loop()
 RefPtr<AST::Node> Parser::parse_if_expr()
 {
     auto rule_start = push_start();
-    if (!expect("if"))
+    if (!expect("if"sv))
         return nullptr;
 
-    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+    if (consume_while(is_any_of(" \t\n"sv)).is_empty()) {
         restore_to(*rule_start);
         return nullptr;
     }
@@ -779,23 +791,23 @@ RefPtr<AST::Node> Parser::parse_if_expr()
         return body;
     };
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
     auto true_branch = parse_braced_toplevel();
 
     auto end_before_else = m_offset;
     auto line_before_else = line();
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
     Optional<AST::Position> else_position;
     {
         auto else_start = push_start();
-        if (expect("else"))
+        if (expect("else"sv))
             else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
         else
             restore_to(end_before_else, line_before_else);
     }
 
     if (else_position.has_value()) {
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
         if (peek() == '{') {
             auto false_branch = parse_braced_toplevel();
             return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
@@ -834,7 +846,7 @@ RefPtr<AST::Node> Parser::parse_subshell()
 RefPtr<AST::Node> Parser::parse_match_expr()
 {
     auto rule_start = push_start();
-    if (!expect("match"))
+    if (!expect("match"sv))
         return nullptr;
 
     if (consume_while(is_whitespace).is_empty()) {
@@ -849,16 +861,16 @@ RefPtr<AST::Node> Parser::parse_match_expr()
             String {}, Optional<AST::Position> {}, Vector<AST::MatchEntry> {});
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     String match_name;
     Optional<AST::Position> as_position;
     auto as_start = m_offset;
     auto as_line = line();
-    if (expect("as")) {
+    if (expect("as"sv)) {
         as_position = AST::Position { as_start, m_offset, as_line, line() };
 
-        if (consume_while(is_any_of(" \t\n")).is_empty()) {
+        if (consume_while(is_any_of(" \t\n"sv)).is_empty()) {
             auto node = create<AST::MatchExpr>(
                 match_expression.release_nonnull(),
                 String {}, move(as_position), Vector<AST::MatchEntry> {});
@@ -876,7 +888,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         }
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     if (!expect('{')) {
         auto node = create<AST::MatchExpr>(
@@ -886,19 +898,19 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         return node;
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     Vector<AST::MatchEntry> entries;
     for (;;) {
         auto entry = parse_match_entry();
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
         if (entry.options.visit([](auto& x) { return x.is_empty(); }))
             break;
 
         entries.append(move(entry));
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     if (!expect('}')) {
         auto node = create<AST::MatchExpr>(
@@ -925,7 +937,7 @@ AST::MatchEntry Parser::parse_match_entry()
         Glob,
     } pattern_kind;
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     auto regex_pattern = parse_regex_pattern();
     if (regex_pattern.has_value()) {
@@ -943,14 +955,14 @@ AST::MatchEntry Parser::parse_match_entry()
         patterns.append(glob_pattern.release_nonnull());
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     auto previous_pipe_start_position = m_offset;
     auto previous_pipe_start_line = line();
     RefPtr<AST::SyntaxError> error;
     while (expect('|')) {
         pipe_positions.append({ previous_pipe_start_position, m_offset, previous_pipe_start_line, line() });
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
         switch (pattern_kind) {
         case Regex: {
             auto pattern = parse_regex_pattern();
@@ -972,19 +984,19 @@ AST::MatchEntry Parser::parse_match_entry()
         }
         }
 
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
 
         previous_pipe_start_line = line();
         previous_pipe_start_position = m_offset;
     }
 
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n"sv));
 
     auto as_start_position = m_offset;
     auto as_start_line = line();
-    if (pattern_kind == Glob && expect("as")) {
+    if (pattern_kind == Glob && expect("as"sv)) {
         match_as_position = AST::Position { as_start_position, m_offset, as_start_line, line() };
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
         if (!expect('(')) {
             if (!error)
                 error = create<AST::SyntaxError>("Expected an explicit list of identifiers after a pattern 'as'");
@@ -1003,7 +1015,7 @@ AST::MatchEntry Parser::parse_match_entry()
                     error = create<AST::SyntaxError>("Expected a close paren ')' to end the identifier list of pattern 'as'", true);
             }
         }
-        consume_while(is_any_of(" \t\n"));
+        consume_while(is_any_of(" \t\n"sv));
     }
 
     if (pattern_kind == Regex) {
@@ -1064,7 +1076,7 @@ Optional<Regex<ECMA262>> Parser::parse_regex_pattern()
     auto rule_start = push_start();
 
     auto start = m_offset;
-    if (!expect("(?:") && !expect("(?<"))
+    if (!expect("(?:"sv) && !expect("(?<"sv))
         return {};
 
     size_t open_parens = 1;
@@ -1072,9 +1084,9 @@ Optional<Regex<ECMA262>> Parser::parse_regex_pattern()
         if (at_end())
             break;
 
-        if (next_is("("))
+        if (next_is("("sv))
             ++open_parens;
-        else if (next_is(")"))
+        else if (next_is(")"sv))
             --open_parens;
         consume();
     }
@@ -1094,7 +1106,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
     auto rule_start = push_start();
 
     // heredoc entry
-    if (next_is("<<-") || next_is("<<~"))
+    if (next_is("<<-"sv) || next_is("<<~"sv))
         return nullptr;
 
     auto pipe_fd = 0;
@@ -1229,7 +1241,7 @@ RefPtr<AST::Node> Parser::parse_expression()
     };
 
     // Heredocs are expressions, so allow them
-    if (!(next_is("<<-") || next_is("<<~"))) {
+    if (!(next_is("<<-"sv) || next_is("<<~"sv))) {
         if (strchr("&|)} ;<>\n", starting_char) != nullptr)
             return nullptr;
     }
@@ -1237,7 +1249,7 @@ RefPtr<AST::Node> Parser::parse_expression()
     if (m_extra_chars_not_allowed_in_barewords.contains_slow(starting_char))
         return nullptr;
 
-    if (m_is_in_brace_expansion_spec && next_is(".."))
+    if (m_is_in_brace_expansion_spec && next_is(".."sv))
         return nullptr;
 
     if (isdigit(starting_char)) {
@@ -1524,7 +1536,7 @@ RefPtr<AST::Node> Parser::parse_variable_ref()
 RefPtr<AST::Slice> Parser::parse_slice()
 {
     auto rule_start = push_start();
-    if (!next_is("["))
+    if (!next_is("["sv))
         return nullptr;
 
     consume(); // [
@@ -1865,7 +1877,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
             continue;
         }
 
-        if (m_is_in_brace_expansion_spec && next_is("..")) {
+        if (m_is_in_brace_expansion_spec && next_is(".."sv)) {
             // Don't eat '..' in a brace expansion spec.
             break;
         }
@@ -1922,7 +1934,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
         return create<AST::Juxtaposition>(tilde.release_nonnull(), text.release_nonnull()); // Juxtaposition Variable Bareword
     }
 
-    if (string.starts_with("\\~")) {
+    if (string.starts_with("\\~"sv)) {
         // Un-escape the tilde, but only at the start (where it would be an expansion)
         string = string.substring(1, string.length() - 1);
     }
@@ -1969,7 +1981,7 @@ RefPtr<AST::Node> Parser::parse_glob()
                 textbuilder.append(bareword->text());
             } else if (glob_after->is_tilde()) {
                 auto bareword = static_cast<AST::Tilde*>(glob_after.ptr());
-                textbuilder.append("~");
+                textbuilder.append('~');
                 textbuilder.append(bareword->text());
             } else {
                 return create<AST::SyntaxError>(String::formatted("Invalid node '{}' in glob position, escape shell special characters", glob_after->class_name()));
@@ -2010,13 +2022,13 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
     auto rule_start = push_start();
     NonnullRefPtrVector<AST::Node> subexpressions;
 
-    if (next_is(",")) {
+    if (next_is(","sv)) {
         // Note that we don't consume the ',' here.
         subexpressions.append(create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None));
     } else {
         auto start_expr = parse_expression();
         if (start_expr) {
-            if (expect("..")) {
+            if (expect(".."sv)) {
                 if (auto end_expr = parse_expression()) {
                     if (end_expr->position().start_offset != start_expr->position().end_offset + 2)
                         end_expr->set_is_syntax_error(create<AST::SyntaxError>("Expected no whitespace between '..' and the following expression in brace expansion"));
@@ -2049,7 +2061,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
 
 RefPtr<AST::Node> Parser::parse_heredoc_initiation_record()
 {
-    if (!next_is("<<"))
+    if (!next_is("<<"sv))
         return nullptr;
 
     auto rule_start = push_start();

@@ -35,12 +35,12 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
         VERIFY_NOT_REACHED();
 
     if (value.argv.is_empty()) {
-        TRY(builder.put_literal("(ShellInternal)"));
+        TRY(builder.put_literal("(ShellInternal)"sv));
     } else {
         bool first = true;
         for (auto& arg : value.argv) {
             if (!first)
-                TRY(builder.put_literal(" "));
+                TRY(builder.put_literal(" "sv));
             first = false;
             TRY(builder.put_literal(arg));
         }
@@ -53,28 +53,28 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
             TRY(builder.put_i64(path_redir->fd));
             switch (path_redir->direction) {
             case Shell::AST::PathRedirection::Read:
-                TRY(builder.put_literal("<"));
+                TRY(builder.put_literal("<"sv));
                 break;
             case Shell::AST::PathRedirection::Write:
-                TRY(builder.put_literal(">"));
+                TRY(builder.put_literal(">"sv));
                 break;
             case Shell::AST::PathRedirection::WriteAppend:
-                TRY(builder.put_literal(">>"));
+                TRY(builder.put_literal(">>"sv));
                 break;
             case Shell::AST::PathRedirection::ReadWrite:
-                TRY(builder.put_literal("<>"));
+                TRY(builder.put_literal("<>"sv));
                 break;
             }
             TRY(builder.put_literal(path_redir->path));
         } else if (redir.is_fd_redirection()) {
             auto* fdredir = (Shell::AST::FdRedirection const*)&redir;
             TRY(builder.put_i64(fdredir->new_fd));
-            TRY(builder.put_literal(">"));
+            TRY(builder.put_literal(">"sv));
             TRY(builder.put_i64(fdredir->old_fd));
         } else if (redir.is_close_redirection()) {
             auto close_redir = (Shell::AST::CloseRedirection const*)&redir;
             TRY(builder.put_i64(close_redir->fd));
-            TRY(builder.put_literal(">&-"));
+            TRY(builder.put_literal(">&-"sv));
         } else {
             VERIFY_NOT_REACHED();
         }
@@ -84,23 +84,23 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
         for (auto& command : value.next_chain) {
             switch (command.action) {
             case Shell::AST::NodeWithAction::And:
-                TRY(builder.put_literal(" && "));
+                TRY(builder.put_literal(" && "sv));
                 break;
             case Shell::AST::NodeWithAction::Or:
-                TRY(builder.put_literal(" || "));
+                TRY(builder.put_literal(" || "sv));
                 break;
             case Shell::AST::NodeWithAction::Sequence:
-                TRY(builder.put_literal("; "));
+                TRY(builder.put_literal("; "sv));
                 break;
             }
 
-            TRY(builder.put_literal("("));
+            TRY(builder.put_literal("("sv));
             TRY(builder.put_literal(command.node->class_name()));
-            TRY(builder.put_literal("...)"));
+            TRY(builder.put_literal("...)"sv));
         }
     }
     if (!value.should_wait)
-        TRY(builder.put_literal("&"));
+        TRY(builder.put_literal("&"sv));
     return {};
 }
 
@@ -367,8 +367,8 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
                 return {};
 
             // If the literal isn't an option, treat it as a path.
-            if (!(text.starts_with("-") || text == "--" || text == "-"))
-                return set_results_trivia(shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node, escape_mode));
+            if (!(text.starts_with('-') || text == "--" || text == "-"))
+                return set_results_trivia(shell.complete_path(""sv, text, corrected_offset, Shell::ExecutableOnly::No, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node, escape_mode));
 
             // If the literal is an option, we have to know the program name
             // should we have no way to get that, bail early.
@@ -392,7 +392,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     }
     auto result = hit_test_position(offset);
     if (!result.matching_node)
-        return shell.complete_path("", "", 0, Shell::ExecutableOnly::No, result.closest_command_node.ptr(), nullptr, Shell::EscapeMode::Bareword);
+        return shell.complete_path(""sv, ""sv, 0, Shell::ExecutableOnly::No, result.closest_command_node.ptr(), nullptr, Shell::EscapeMode::Bareword);
 
     auto node = result.matching_node;
     if (node->is_bareword() || node != result.closest_node_with_semantic_meaning)
@@ -651,7 +651,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
         if (m_text == "-")
             return;
 
-        if (m_text.starts_with("--")) {
+        if (m_text.starts_with("--"sv)) {
             auto index = m_text.find('=').value_or(m_text.length() - 1) + 1;
             editor.stylize({ m_position.start_offset, m_position.start_offset + index }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         } else {
@@ -798,7 +798,7 @@ void CastToList::dump(int level) const
     if (m_inner)
         m_inner->dump(level + 1);
     else
-        print_indented("(empty)", level + 1);
+        print_indented("(empty)"sv, level + 1);
 }
 
 RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
@@ -934,7 +934,7 @@ Comment::~Comment()
 void ContinuationControl::dump(int level) const
 {
     Node::dump(level);
-    print_indented(m_kind == Continue ? "(Continue)" : "(Break)", level + 1);
+    print_indented(m_kind == Continue ? "(Continue)"sv : "(Break)"sv, level + 1);
 }
 
 RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
@@ -964,7 +964,7 @@ RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
     StringBuilder builder;
     auto values = m_inner->run(shell)->resolve_as_list(shell);
 
-    builder.join("", values);
+    builder.join(""sv, values);
 
     return make_ref_counted<StringValue>(builder.to_string());
 }
@@ -1079,15 +1079,15 @@ void FunctionDeclaration::dump(int level) const
 {
     Node::dump(level);
     print_indented(String::formatted("(name: {})\n", m_name.name), level + 1);
-    print_indented("(argument names)", level + 1);
+    print_indented("(argument names)"sv, level + 1);
     for (auto& arg : m_arguments)
         print_indented(String::formatted("(name: {})\n", arg.name), level + 2);
 
-    print_indented("(body)", level + 1);
+    print_indented("(body)"sv, level + 1);
     if (m_block)
         m_block->dump(level + 2);
     else
-        print_indented("(null)", level + 2);
+        print_indented("(null)"sv, level + 2);
 }
 
 RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
@@ -1173,12 +1173,12 @@ void ForLoop::dump(int level) const
     if (m_iterated_expression)
         m_iterated_expression->dump(level + 2);
     else
-        print_indented("(ever)", level + 2);
-    print_indented("Running", level + 1);
+        print_indented("(ever)"sv, level + 2);
+    print_indented("Running"sv, level + 1);
     if (m_block)
         m_block->dump(level + 2);
     else
-        print_indented("(null)", level + 2);
+        print_indented("(null)"sv, level + 2);
 }
 
 RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
@@ -1362,15 +1362,15 @@ Glob::~Glob()
 void Heredoc::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(End Key)", level + 1);
+    print_indented("(End Key)"sv, level + 1);
     print_indented(m_end, level + 2);
-    print_indented("(Allows Interpolation)", level + 1);
+    print_indented("(Allows Interpolation)"sv, level + 1);
     print_indented(String::formatted("{}", m_allows_interpolation), level + 2);
-    print_indented("(Contents)", level + 1);
+    print_indented("(Contents)"sv, level + 1);
     if (m_contents)
         m_contents->dump(level + 2);
     else
-        print_indented("(null)", level + 2);
+        print_indented("(null)"sv, level + 2);
 }
 
 RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
@@ -1437,24 +1437,24 @@ Heredoc::~Heredoc()
 void HistoryEvent::dump(int level) const
 {
     Node::dump(level);
-    print_indented("Event Selector", level + 1);
+    print_indented("Event Selector"sv, level + 1);
     switch (m_selector.event.kind) {
     case HistorySelector::EventKind::IndexFromStart:
-        print_indented("IndexFromStart", level + 2);
+        print_indented("IndexFromStart"sv, level + 2);
         break;
     case HistorySelector::EventKind::IndexFromEnd:
-        print_indented("IndexFromEnd", level + 2);
+        print_indented("IndexFromEnd"sv, level + 2);
         break;
     case HistorySelector::EventKind::ContainingStringLookup:
-        print_indented("ContainingStringLookup", level + 2);
+        print_indented("ContainingStringLookup"sv, level + 2);
         break;
     case HistorySelector::EventKind::StartingStringLookup:
-        print_indented("StartingStringLookup", level + 2);
+        print_indented("StartingStringLookup"sv, level + 2);
         break;
     }
     print_indented(String::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
 
-    print_indented("Word Selector", level + 1);
+    print_indented("Word Selector"sv, level + 1);
     auto print_word_selector = [&](HistorySelector::WordSelector const& selector) {
         switch (selector.kind) {
         case HistorySelector::WordSelectorKind::Index:
@@ -1467,12 +1467,12 @@ void HistoryEvent::dump(int level) const
     };
 
     if (m_selector.word_selector_range.end.has_value()) {
-        print_indented("Range Start", level + 2);
+        print_indented("Range Start"sv, level + 2);
         print_word_selector(m_selector.word_selector_range.start);
-        print_indented("Range End", level + 2);
+        print_indented("Range End"sv, level + 2);
         print_word_selector(m_selector.word_selector_range.end.value());
     } else {
-        print_indented("Direct Address", level + 2);
+        print_indented("Direct Address"sv, level + 2);
         print_word_selector(m_selector.word_selector_range.start);
     }
 }
@@ -1593,7 +1593,7 @@ void Execute::dump(int level) const
 {
     Node::dump(level);
     if (m_capture_stdout)
-        print_indented("(Capturing stdout)", level + 1);
+        print_indented("(Capturing stdout)"sv, level + 1);
     m_command->dump(level + 1);
 }
 
@@ -1649,7 +1649,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             NothingLeft,
         };
         auto check_and_call = [&] {
-            auto ifs = shell->local_variable_or("IFS", "\n");
+            auto ifs = shell->local_variable_or("IFS"sv, "\n"sv);
 
             if (auto offset = stream.offset_of(ifs.bytes()); offset.has_value()) {
                 auto line_end = offset.value();
@@ -1846,18 +1846,18 @@ Execute::~Execute()
 void IfCond::dump(int level) const
 {
     Node::dump(level);
-    print_indented("Condition", ++level);
+    print_indented("Condition"sv, ++level);
     m_condition->dump(level + 1);
-    print_indented("True Branch", level);
+    print_indented("True Branch"sv, level);
     if (m_true_branch)
         m_true_branch->dump(level + 1);
     else
-        print_indented("(empty)", level + 1);
-    print_indented("False Branch", level);
+        print_indented("(empty)"sv, level + 1);
+    print_indented("False Branch"sv, level);
     if (m_false_branch)
         m_false_branch->dump(level + 1);
     else
-        print_indented("(empty)", level + 1);
+        print_indented("(empty)"sv, level + 1);
 }
 
 RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
@@ -1957,9 +1957,9 @@ IfCond::~IfCond()
 void ImmediateExpression::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(function)", level + 1);
+    print_indented("(function)"sv, level + 1);
     print_indented(m_function.name, level + 2);
-    print_indented("(arguments)", level + 1);
+    print_indented("(arguments)"sv, level + 1);
     for (auto& argument : arguments())
         argument.dump(level + 2);
 }
@@ -2115,12 +2115,12 @@ void MatchExpr::dump(int level) const
     print_indented(String::formatted("(expression: {})", m_expr_name.characters()), level + 1);
     m_matched_expr->dump(level + 2);
     print_indented(String::formatted("(named: {})", m_expr_name.characters()), level + 1);
-    print_indented("(entries)", level + 1);
+    print_indented("(entries)"sv, level + 1);
     for (auto& entry : m_entries) {
         StringBuilder builder;
-        builder.append("(match");
+        builder.append("(match"sv);
         if (entry.match_names.has_value()) {
-            builder.append(" to names (");
+            builder.append(" to names ("sv);
             bool first = true;
             for (auto& name : entry.match_names.value()) {
                 if (!first)
@@ -2128,7 +2128,7 @@ void MatchExpr::dump(int level) const
                 first = false;
                 builder.append(name);
             }
-            builder.append("))");
+            builder.append("))"sv);
 
         } else {
             builder.append(')');
@@ -2143,11 +2143,11 @@ void MatchExpr::dump(int level) const
                 for (auto& option : options)
                     print_indented(String::formatted("(regex: {})", option.pattern_value), level + 3);
             });
-        print_indented("(execute)", level + 2);
+        print_indented("(execute)"sv, level + 2);
         if (entry.body)
             entry.body->dump(level + 3);
         else
-            print_indented("(nothing)", level + 3);
+            print_indented("(nothing)"sv, level + 3);
     }
 }
 
@@ -2522,7 +2522,7 @@ Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shel
     if (corrected_offset > node->text().length())
         return {};
 
-    return shell.complete_path("", node->text(), corrected_offset, Shell::ExecutableOnly::No, nullptr, nullptr);
+    return shell.complete_path(""sv, node->text(), corrected_offset, Shell::ExecutableOnly::No, nullptr, nullptr);
 }
 
 PathRedirectionNode::~PathRedirectionNode()
@@ -2532,9 +2532,9 @@ PathRedirectionNode::~PathRedirectionNode()
 void Range::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(From)", level + 1);
+    print_indented("(From)"sv, level + 1);
     m_start->dump(level + 2);
-    print_indented("(To)", level + 1);
+    print_indented("(To)"sv, level + 1);
     m_end->dump(level + 2);
 }
 
@@ -2665,7 +2665,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
@@ -2695,7 +2695,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
@@ -2872,13 +2872,13 @@ Slice::~Slice()
 void SimpleVariable::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(Name)", level + 1);
+    print_indented("(Name)"sv, level + 1);
     print_indented(m_name, level + 2);
-    print_indented("(Slice)", level + 1);
+    print_indented("(Slice)"sv, level + 1);
     if (m_slice)
         m_slice->dump(level + 2);
     else
-        print_indented("(None)", level + 2);
+        print_indented("(None)"sv, level + 2);
 }
 
 RefPtr<Value> SimpleVariable::run(RefPtr<Shell>)
@@ -2940,13 +2940,13 @@ SimpleVariable::~SimpleVariable()
 void SpecialVariable::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(Name)", level + 1);
+    print_indented("(Name)"sv, level + 1);
     print_indented(String { &m_name, 1 }, level + 1);
-    print_indented("(Slice)", level + 1);
+    print_indented("(Slice)"sv, level + 1);
     if (m_slice)
         m_slice->dump(level + 2);
     else
-        print_indented("(None)", level + 2);
+        print_indented("(None)"sv, level + 2);
 }
 
 RefPtr<Value> SpecialVariable::run(RefPtr<Shell>)
@@ -3052,7 +3052,7 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
 
         StringBuilder path_builder;
         path_builder.append(tilde_value);
-        path_builder.append("/");
+        path_builder.append('/');
         path_builder.append(bareword_value);
         auto path = path_builder.to_string();
 
@@ -3183,8 +3183,8 @@ RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", left);
-    builder.join(" ", right);
+    builder.join(' ', left);
+    builder.join(' ', right);
 
     return make_ref_counted<StringValue>(builder.to_string());
 }
@@ -3221,9 +3221,9 @@ StringPartCompose::~StringPartCompose()
 void SyntaxError::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(Error text)", level + 1);
+    print_indented("(Error text)"sv, level + 1);
     print_indented(m_syntax_error_text, level + 2);
-    print_indented("(Can be recovered from)", level + 1);
+    print_indented("(Can be recovered from)"sv, level + 1);
     print_indented(String::formatted("{}", m_is_continuable), level + 2);
 }
 
@@ -3347,7 +3347,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::WriteAppend));
     return make_ref_counted<CommandValue>(move(command));
@@ -3377,7 +3377,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(" ", path_segments);
+    builder.join(' ', path_segments);
 
     command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Write));
     return make_ref_counted<CommandValue>(move(command));
@@ -3396,7 +3396,7 @@ void VariableDeclarations::dump(int level) const
 {
     Node::dump(level);
     for (auto& var : m_variables) {
-        print_indented("Set", level + 1);
+        print_indented("Set"sv, level + 1);
         var.name->dump(level + 2);
         var.value->dump(level + 2);
     }
@@ -3414,6 +3414,7 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
         auto value = var.value->run(shell);
         if (shell && shell->has_any_error())
             break;
+        value = value->resolve_without_cast(shell);
 
         shell->set_local_variable(name, value.release_nonnull());
     }
@@ -3686,11 +3687,11 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
     case '$':
         return { resolve_slices(shell, String::number(getpid()), m_slices) };
     case '*':
-        if (auto argv = shell->lookup_local_variable("ARGV"))
+        if (auto argv = shell->lookup_local_variable("ARGV"sv))
             return resolve_slices(shell, argv->resolve_as_list(shell), m_slices);
         return resolve_slices(shell, Vector<String> {}, m_slices);
     case '#':
-        if (auto argv = shell->lookup_local_variable("ARGV")) {
+        if (auto argv = shell->lookup_local_variable("ARGV"sv)) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue*>(argv.ptr());
                 return { resolve_slices(shell, String::number(list_argv->values().size()), m_slices) };
@@ -3701,6 +3702,14 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
     default:
         return { resolve_slices(shell, "", m_slices) };
     }
+}
+
+NonnullRefPtr<Value> SpecialVariableValue::resolve_without_cast(RefPtr<Shell> shell)
+{
+    if (!shell)
+        return *this;
+
+    return make_ref_counted<ListValue>(resolve_as_list(shell));
 }
 
 TildeValue::~TildeValue()
@@ -3715,7 +3724,7 @@ String TildeValue::resolve_as_string(RefPtr<Shell> shell)
 Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;
-    builder.append("~");
+    builder.append('~');
     builder.append(m_username);
 
     if (!shell)

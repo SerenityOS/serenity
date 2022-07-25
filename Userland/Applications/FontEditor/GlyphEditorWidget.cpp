@@ -14,7 +14,11 @@
 #include <LibGfx/Palette.h>
 #include <string.h>
 
-void GlyphEditorWidget::initialize(Gfx::BitmapFont& mutable_font)
+REGISTER_WIDGET(FontEditor, GlyphEditorWidget);
+
+namespace FontEditor {
+
+void GlyphEditorWidget::set_font(Gfx::BitmapFont& mutable_font)
 {
     if (m_font == mutable_font)
         return;
@@ -270,4 +274,6 @@ void GlyphEditorWidget::set_scale(int scale)
         return;
     m_scale = clamp(scale, 1, 15);
     update();
+}
+
 }

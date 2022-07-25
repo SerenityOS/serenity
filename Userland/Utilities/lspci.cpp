@@ -21,13 +21,16 @@
 static bool flag_show_numerical = false;
 static bool flag_verbose = false;
 
-static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
-static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
-static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}";
+static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})"sv;
+static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})"sv;
+static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}"sv;
 
 static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
-    return AK::StringUtils::convert_to_uint_from_hex(String(buf.slice(2, buf.size() - 2).bytes())).release_value();
+    // FIXME: Propagate errors.
+    return AK::StringUtils::convert_to_uint_from_hex(
+        String(MUST(buf.slice(2, buf.size() - 2)).bytes()))
+        .release_value();
 }
 
 static u32 convert_sysfs_value_to_uint(String const& value)
@@ -42,15 +45,17 @@ static u32 convert_sysfs_value_to_uint(String const& value)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/res/pci.ids", "r"));
-    TRY(Core::System::unveil("/sys/bus/pci", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
     args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v');
     args_parser.parse(arguments);
+
+    if (!flag_show_numerical)
+        TRY(Core::System::unveil("/res/pci.ids", "r"));
+    TRY(Core::System::unveil("/sys/bus/pci", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto const format = flag_show_numerical ? format_numerical : format_textual;
 

@@ -242,5 +242,12 @@
     "author": "Andrew Kaster",
     "url": "https://discord.com/channels/830522505605283862/831544568767578162/959571489076690994",
     "utc_time": 1648850070
+  },
+  {
+    "quote": "The Border Radii Trilogy: Book Three: Box-Shadows",
+    "author": "MacDue",
+    "url": "https://github.com/SerenityOS/serenity/pull/14343",
+    "utc_time": 1655726258,
+    "context": "We're not quite sure where the first two books are, but the third one was a $NEWSPAPER best-seller"
   }
 ]

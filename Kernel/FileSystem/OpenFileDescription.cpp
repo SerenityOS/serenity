@@ -445,12 +445,12 @@ FileBlockerSet& OpenFileDescription::blocker_set()
     return m_file->blocker_set();
 }
 
-ErrorOr<void> OpenFileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
+ErrorOr<void> OpenFileDescription::apply_flock(Process const& process, Userspace<flock const*> lock, ShouldBlock should_block)
 {
     if (!m_inode)
         return EBADF;
 
-    return m_inode->apply_flock(process, *this, lock);
+    return m_inode->apply_flock(process, *this, lock, should_block);
 }
 
 ErrorOr<void> OpenFileDescription::get_flock(Userspace<flock*> lock) const

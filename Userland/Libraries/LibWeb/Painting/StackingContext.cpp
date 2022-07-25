@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
+#include <AK/ExtraMathConstants.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/AffineTransform.h>
@@ -27,6 +29,7 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
 
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     : m_box(box)
+    , m_transform(combine_transformations(m_box.computed_values().transformations()))
     , m_parent(parent)
 {
     VERIFY(m_parent != this);
@@ -48,12 +51,27 @@ void StackingContext::sort()
         child->sort();
 }
 
+static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phase)
+{
+    // There are not a fully correct mapping since some stacking context phases are combind.
+    switch (phase) {
+    case StackingContext::StackingContextPaintPhase::Floats:
+    case StackingContext::StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced:
+    case StackingContext::StackingContextPaintPhase::BackgroundAndBorders:
+        return PaintPhase::Background;
+    case StackingContext::StackingContextPaintPhase::Foreground:
+        return PaintPhase::Foreground;
+    case StackingContext::StackingContextPaintPhase::FocusAndOverlay:
+        return PaintPhase::Overlay;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
 {
-    if (phase == StackingContextPaintPhase::Foreground) {
-        if (auto* paintable = box.paintable())
-            paintable->before_children_paint(context, PaintPhase::Foreground);
-    }
+    if (auto* paintable = box.paintable())
+        paintable->before_children_paint(context, to_paint_phase(phase));
 
     box.for_each_child([&](auto& child) {
         // If `child` establishes its own stacking context, skip over it.
@@ -104,10 +122,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
         }
     });
 
-    if (phase == StackingContextPaintPhase::Foreground) {
-        if (auto* paintable = box.paintable())
-            paintable->after_children_paint(context, PaintPhase::Foreground);
-    }
+    if (auto* paintable = box.paintable())
+        paintable->after_children_paint(context, to_paint_phase(phase));
 }
 
 void StackingContext::paint_internal(PaintContext& context) const
@@ -116,11 +132,23 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw the background and borders for the context root (steps 1, 2)
     paint_node(m_box, context, PaintPhase::Background);
     paint_node(m_box, context, PaintPhase::Border);
+
+    auto paint_child = [&](auto* child) {
+        auto parent = child->m_box.parent();
+        auto* paintable = parent ? parent->paintable() : nullptr;
+        if (paintable)
+            paintable->before_children_paint(context, PaintPhase::Foreground);
+        child->paint(context);
+        if (paintable)
+            paintable->after_children_paint(context, PaintPhase::Foreground);
+    };
+
     // Draw positioned descendants with negative z-indices (step 3)
     for (auto* child : m_children) {
         if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
-            child->paint(context);
+            paint_child(child);
     }
+
     // Draw the background and borders for block-level children (step 4)
     paint_descendants(context, m_box, StackingContextPaintPhase::BackgroundAndBorders);
     // Draw the non-positioned floats (step 5)
@@ -133,7 +161,7 @@ void StackingContext::paint_internal(PaintContext& context) const
     for (auto* child : m_children) {
         if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
             continue;
-        child->paint(context);
+        paint_child(child);
     }
 
     paint_node(m_box, context, PaintPhase::FocusOutline);
@@ -144,10 +172,13 @@ void StackingContext::paint_internal(PaintContext& context) const
 Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformation const& transformation) const
 {
     auto count = transformation.values.size();
-    auto value = [this, transformation](size_t index, CSS::Length& reference) -> float {
+    auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
-            [this, reference](CSS::LengthPercentage const& value) {
-                return value.resolved(m_box, reference).to_px(m_box);
+            [this, reference_length](CSS::LengthPercentage const& value) {
+                return value.resolved(m_box, reference_length.value()).to_px(m_box);
+            },
+            [](CSS::Angle const& value) {
+                return value.to_degrees() * static_cast<float>(M_DEG2RAD);
             },
             [](float value) {
                 return value;
@@ -161,8 +192,8 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     switch (transformation.function) {
     case CSS::TransformFunction::Matrix:
         if (count == 6)
-            return Gfx::FloatMatrix4x4(value(0, width), value(2, width), 0, value(4, width),
-                value(1, height), value(3, height), 0, value(5, height),
+            return Gfx::FloatMatrix4x4(value(0), value(2), 0, value(4),
+                value(1), value(3), 0, value(5),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
@@ -194,19 +225,19 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
         break;
     case CSS::TransformFunction::Scale:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
-                0, value(0, height), 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         if (count == 2)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
-                0, value(0, height), 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::ScaleX:
         if (count == 1)
-            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
+            return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
@@ -214,9 +245,13 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     case CSS::TransformFunction::ScaleY:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, value(0, height), 0, 0,
+                0, value(0), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::Rotate:
+        if (count == 1)
+            return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
         break;
     default:
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_string());
@@ -236,10 +271,9 @@ Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transfo
 
 // FIXME: This extracts the affine 2D part of the full transformation matrix.
 //  Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
-Gfx::AffineTransform StackingContext::combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const
+Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 {
-    auto matrix = combine_transformations(transformations);
-    auto* m = matrix.elements();
+    auto* m = m_transform.elements();
     return Gfx::AffineTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3]);
 }
 
@@ -254,7 +288,7 @@ void StackingContext::paint(PaintContext& context) const
     if (opacity == 0.0f)
         return;
 
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto affine_transform = affine_transform_matrix();
 
     if (opacity < 1.0f || !affine_transform.is_identity()) {
         auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, context.painter().target()->size());
@@ -270,7 +304,12 @@ void StackingContext::paint(PaintContext& context) const
 
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         source_rect.translate_by(transform_origin);
-        context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
+
+        // NOTE: If the destination and source rects are the same size, we round the source rect to ensure that it's pixel-aligned.
+        if (transformed_destination_rect.size() == source_rect.size())
+            context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect.to_rounded<int>(), opacity);
+        else
+            context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
         paint_internal(context);
     }
@@ -288,9 +327,19 @@ Gfx::FloatPoint StackingContext::transform_origin() const
 
 Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
+    if (!m_box.is_visible())
+        return {};
+    if (m_box.computed_values().z_index().value_or(0) < 0)
+        return {};
+
     auto transform_origin = this->transform_origin();
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
-    auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
+    auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(position - transform_origin) + transform_origin;
+
+    // FIXME: Support more overflow variations.
+    if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        if (!paintable().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+            return {};
+    }
 
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
@@ -298,10 +347,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 7. the child stacking contexts with positive stack levels (least positive first).
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (!child.m_box.is_visible())
-            continue;
-        if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
@@ -310,12 +355,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     Optional<HitTestResult> result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto& paint_box) {
+        // FIXME: Support more overflow variations.
+        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                return TraversalDecision::SkipChildrenAndContinue;
+        }
+
         auto& layout_box = paint_box.layout_box();
         if (layout_box.is_positioned() && !paint_box.stacking_context()) {
             if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     if (result.has_value())
         return result;
@@ -329,12 +380,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 
     // 4. the non-positioned floats.
     paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+        // FIXME: Support more overflow variations.
+        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                return TraversalDecision::SkipChildrenAndContinue;
+        }
+
         auto& layout_box = paint_box.layout_box();
         if (layout_box.is_floating()) {
             if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     });
     if (result.has_value())
         return result;
@@ -342,12 +399,18 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box.children_are_inline()) {
         paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+            // FIXME: Support more overflow variations.
+            if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+                if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                    return TraversalDecision::SkipChildrenAndContinue;
+            }
+
             auto& layout_box = paint_box.layout_box();
             if (!layout_box.is_absolutely_positioned() && !layout_box.is_floating()) {
                 if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                     result = move(candidate);
             }
-            return IterationDecision::Continue;
+            return TraversalDecision::Continue;
         });
         if (result.has_value())
             return result;
@@ -356,10 +419,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 2. the child stacking contexts with negative stack levels (most negative first).
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            continue;
-        if (!child.m_box.is_visible())
-            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
@@ -384,10 +443,10 @@ void StackingContext::dump(int indent) const
     if (m_box.computed_values().z_index().has_value())
         builder.appendff("{}", m_box.computed_values().z_index().value());
     else
-        builder.append("auto");
+        builder.append("auto"sv);
     builder.append(')');
 
-    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto affine_transform = affine_transform_matrix();
     if (!affine_transform.is_identity()) {
         builder.appendff(", transform: {}", affine_transform);
     }

@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
-extern char const select_format_page_gml[];
+extern StringView select_format_page_gml;
 
 namespace Spreadsheet {
 
@@ -245,7 +245,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");
-    wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet").bitmap_for_size(16));
+    wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
     auto export_xsv = [&]() -> Result<void, String> {
         // FIXME: Prompt for the user to select a specific sheet to export
@@ -280,9 +280,11 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
         bool result = file.write(file_content);
         if (!result) {
             int error_number = errno;
+            auto const* error = strerror(error_number);
+
             StringBuilder sb;
-            sb.append("Unable to save file. Error: ");
-            sb.append(strerror(error_number));
+            sb.append("Unable to save file. Error: "sv);
+            sb.append({ error, strlen(error) });
 
             return sb.to_string();
         }

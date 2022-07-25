@@ -12,6 +12,10 @@
 #include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 
+namespace Kernel {
+class SysFSUSBDeviceInformation;
+}
+
 namespace Kernel::USB {
 
 class USBController;
@@ -22,6 +26,7 @@ class USBConfiguration;
 // glues together:
 //
 // https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_113_Simplified%20Description%20of%20USB%20Device%20Enumeration.pdf
+class Hub;
 class Device : public RefCounted<Device> {
 public:
     enum class DeviceSpeed : u8 {
@@ -51,6 +56,8 @@ public:
 
     Vector<USBConfiguration> const& configurations() const { return m_configurations; }
 
+    SysFSUSBDeviceInformation& sysfs_device_info_node(Badge<USB::Hub>) { return *m_sysfs_device_info_node; }
+
 protected:
     Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
 
@@ -69,6 +76,9 @@ protected:
 
 private:
     IntrusiveListNode<Device, NonnullRefPtr<Device>> m_hub_child_node;
+
+protected:
+    RefPtr<SysFSUSBDeviceInformation> m_sysfs_device_info_node;
 
 public:
     using List = IntrusiveList<&Device::m_hub_child_node>;

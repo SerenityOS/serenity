@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -66,7 +66,7 @@ TEST_CASE(should_convert_to_string)
 
 TEST_CASE(should_make_ipv4_address_from_string)
 {
-    auto const addr = IPv4Address::from_string("192.168.0.1");
+    auto const addr = IPv4Address::from_string("192.168.0.1"sv);
 
     EXPECT(addr.has_value());
     EXPECT_EQ(192, addr.value()[0]);
@@ -77,21 +77,21 @@ TEST_CASE(should_make_ipv4_address_from_string)
 
 TEST_CASE(should_make_empty_optional_from_bad_string)
 {
-    auto const addr = IPv4Address::from_string("bad string");
+    auto const addr = IPv4Address::from_string("bad string"sv);
 
     EXPECT(!addr.has_value());
 }
 
 TEST_CASE(should_make_empty_optional_from_out_of_range_values)
 {
-    auto const addr = IPv4Address::from_string("192.168.0.500");
+    auto const addr = IPv4Address::from_string("192.168.0.500"sv);
 
     EXPECT(!addr.has_value());
 }
 
 TEST_CASE(should_fill_d_octet_from_1_part)
 {
-    auto const addr = IPv4Address::from_string("1");
+    auto const addr = IPv4Address::from_string("1"sv);
 
     EXPECT(addr.has_value());
     EXPECT_EQ(0, addr.value()[0]);
@@ -102,7 +102,7 @@ TEST_CASE(should_fill_d_octet_from_1_part)
 
 TEST_CASE(should_fill_a_and_d_octets_from_2_parts)
 {
-    auto const addr = IPv4Address::from_string("192.1");
+    auto const addr = IPv4Address::from_string("192.1"sv);
 
     EXPECT(addr.has_value());
     EXPECT_EQ(192, addr.value()[0]);
@@ -113,7 +113,7 @@ TEST_CASE(should_fill_a_and_d_octets_from_2_parts)
 
 TEST_CASE(should_fill_a_b_d_octets_from_3_parts)
 {
-    auto const addr = IPv4Address::from_string("192.168.1");
+    auto const addr = IPv4Address::from_string("192.168.1"sv);
 
     EXPECT(addr.has_value());
     EXPECT_EQ(192, addr.value()[0]);
@@ -150,4 +150,17 @@ TEST_CASE(should_compare)
 
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
+}
+
+TEST_CASE(netmask_from_cidr)
+{
+    EXPECT(IPv4Address::netmask_from_cidr(24) == IPv4Address(255, 255, 255, 0));
+
+    EXPECT(IPv4Address::netmask_from_cidr(0) == IPv4Address(0, 0, 0, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(32) == IPv4Address(255, 255, 255, 255));
+
+    EXPECT(IPv4Address::netmask_from_cidr(28) == IPv4Address(255, 255, 255, 240));
+    EXPECT(IPv4Address::netmask_from_cidr(22) == IPv4Address(255, 255, 252, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(14) == IPv4Address(255, 252, 0, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(6) == IPv4Address(252, 0, 0, 0));
 }

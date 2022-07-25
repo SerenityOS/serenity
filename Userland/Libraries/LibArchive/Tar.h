@@ -13,6 +13,16 @@
 #include <string.h>
 #include <sys/types.h>
 
+// glibc before 2.28 defines these from sys/types.h, but we don't want
+// TarFileHeader::major() and TarFileHeader::minor() to use those macros
+#ifdef minor
+#    undef minor
+#endif
+
+#ifdef major
+#    undef major
+#endif
+
 namespace Archive {
 
 enum class TarFileType : char {
@@ -33,12 +43,12 @@ enum class TarFileType : char {
 };
 
 constexpr size_t block_size = 512;
-constexpr StringView gnu_magic = "ustar ";    // gnu format magic
-constexpr StringView gnu_version = " ";       // gnu format version
-constexpr StringView ustar_magic = "ustar";   // ustar format magic
-constexpr StringView ustar_version = "00";    // ustar format version
-constexpr StringView posix1_tar_magic = "";   // POSIX.1-1988 format magic
-constexpr StringView posix1_tar_version = ""; // POSIX.1-1988 format version
+constexpr StringView gnu_magic = "ustar "sv;    // gnu format magic
+constexpr StringView gnu_version = " "sv;       // gnu format version
+constexpr StringView ustar_magic = "ustar"sv;   // ustar format magic
+constexpr StringView ustar_version = "00"sv;    // ustar format version
+constexpr StringView posix1_tar_magic = ""sv;   // POSIX.1-1988 format magic
+constexpr StringView posix1_tar_version = ""sv; // POSIX.1-1988 format version
 
 template<size_t N>
 static size_t get_field_as_integral(char const (&field)[N])
@@ -89,7 +99,7 @@ public:
     time_t timestamp() const { return get_field_as_integral(m_timestamp); }
     unsigned checksum() const { return get_field_as_integral(m_checksum); }
     TarFileType type_flag() const { return TarFileType(m_type_flag); }
-    StringView link_name() const { return m_link_name; }
+    StringView link_name() const { return { m_link_name, strlen(m_link_name) }; }
     StringView magic() const { return get_field_as_string_view(m_magic); }
     StringView version() const { return get_field_as_string_view(m_version); }
     StringView owner_name() const { return get_field_as_string_view(m_owner_name); }

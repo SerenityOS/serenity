@@ -19,9 +19,9 @@ auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRe
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
     auto const& obj = json.as_object();
-    details->executable = obj.get("executable").to_string();
-    details->name = obj.get("name").to_string();
-    if (auto type_value = obj.get_ptr("type")) {
+    details->executable = obj.get("executable"sv).to_string();
+    details->name = obj.get("name"sv).to_string();
+    if (auto type_value = obj.get_ptr("type"sv)) {
         auto type_str = type_value->to_string();
         if (type_str == "app")
             details->launcher_type = LauncherType::Application;
@@ -36,7 +36,7 @@ auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRe
 class ConnectionToLaunchServer final
     : public IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/portal/launch")
+    IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/100/portal/launch")
 private:
     ConnectionToLaunchServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
@@ -59,7 +59,7 @@ ErrorOr<void> Launcher::add_allowed_url(URL const& url)
 {
     auto response_or_error = connection().try_add_allowed_url(url);
     if (response_or_error.is_error())
-        return Error::from_string_literal("Launcher::add_allowed_url: Failed"sv);
+        return Error::from_string_literal("Launcher::add_allowed_url: Failed");
     return {};
 }
 
@@ -67,7 +67,7 @@ ErrorOr<void> Launcher::add_allowed_handler_with_any_url(String const& handler)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_any_url(handler);
     if (response_or_error.is_error())
-        return Error::from_string_literal("Launcher::add_allowed_handler_with_any_url: Failed"sv);
+        return Error::from_string_literal("Launcher::add_allowed_handler_with_any_url: Failed");
     return {};
 }
 
@@ -75,7 +75,7 @@ ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(String const
 {
     auto response_or_error = connection().try_add_allowed_handler_with_only_specific_urls(handler, urls);
     if (response_or_error.is_error())
-        return Error::from_string_literal("Launcher::add_allowed_handler_with_only_specific_urls: Failed"sv);
+        return Error::from_string_literal("Launcher::add_allowed_handler_with_only_specific_urls: Failed");
     return {};
 }
 
@@ -83,7 +83,7 @@ ErrorOr<void> Launcher::seal_allowlist()
 {
     auto response_or_error = connection().try_seal_allowlist();
     if (response_or_error.is_error())
-        return Error::from_string_literal("Launcher::seal_allowlist: Failed"sv);
+        return Error::from_string_literal("Launcher::seal_allowlist: Failed");
     return {};
 }
 

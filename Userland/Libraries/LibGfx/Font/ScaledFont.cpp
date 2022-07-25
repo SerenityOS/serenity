@@ -19,8 +19,8 @@ ALWAYS_INLINE int ScaledFont::unicode_view_width(T const& view) const
 {
     if (view.is_empty())
         return 0;
-    int width = 0;
-    int longest_width = 0;
+    float width = 0;
+    float longest_width = 0;
     u32 last_code_point = 0;
     for (auto code_point : view) {
         if (code_point == '\n' || code_point == '\r') {

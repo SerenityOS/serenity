@@ -25,7 +25,8 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
     // 2. Switch on type:
     if (type == Bindings::DOMParserSupportedType::Text_Html) {
         // -> "text/html"
-        // FIXME: 1. Set document's type to "html".
+        // 1. Set document's type to "html".
+        document->set_document_type(DOM::Document::Type::HTML);
 
         // 2. Create an HTML parser parser, associated with document.
         // 3. Place string into the input stream for parser. The encoding confidence is irrelevant.
@@ -34,7 +35,7 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
 
         // 4. Start parser and let it run until it has consumed all the characters just inserted into the input stream.
         // FIXME: This is to match the default URL. Instead, pass in this's relevant global object's associated Document's URL.
-        parser->run("about:blank");
+        parser->run("about:blank"sv);
     } else {
         // -> Otherwise
 

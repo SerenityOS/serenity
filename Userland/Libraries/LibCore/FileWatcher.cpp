@@ -83,7 +83,7 @@ static String canonicalize_path(String path)
         return LexicalPath::canonicalized_path(move(path));
     char* cwd = getcwd(nullptr, 0);
     VERIFY(cwd);
-    return LexicalPath::join(cwd, move(path)).string();
+    return LexicalPath::join({ cwd, strlen(cwd) }, move(path)).string();
 }
 
 ErrorOr<bool> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type event_mask)
@@ -204,6 +204,30 @@ FileWatcher::~FileWatcher()
     m_notifier->on_ready_to_read = nullptr;
     close(m_notifier->fd());
     dbgln_if(FILE_WATCHER_DEBUG, "Stopped watcher at fd {}", m_notifier->fd());
+}
+
+#else
+// FIXME: Implement Core::FileWatcher for linux, macOS, and *BSD
+FileWatcher::~FileWatcher() { }
+FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
+    : FileWatcherBase(watcher_fd)
+    , m_notifier(move(notifier))
+{
+}
+
+ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags)
+{
+    return Error::from_errno(ENOTSUP);
+}
+
+ErrorOr<bool> FileWatcherBase::add_watch(String, FileWatcherEvent::Type)
+{
+    return Error::from_errno(ENOTSUP);
+}
+
+ErrorOr<bool> FileWatcherBase::remove_watch(String)
+{
+    return Error::from_errno(ENOTSUP);
 }
 
 #endif

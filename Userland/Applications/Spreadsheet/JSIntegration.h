@@ -39,6 +39,7 @@ public:
     JS_DECLARE_NATIVE_FUNCTION(column_index);
     JS_DECLARE_NATIVE_FUNCTION(column_arithmetic);
     JS_DECLARE_NATIVE_FUNCTION(get_column_bound);
+    JS_DECLARE_NATIVE_FUNCTION(get_name);
 
 private:
     virtual void visit_edges(Visitor&) override;

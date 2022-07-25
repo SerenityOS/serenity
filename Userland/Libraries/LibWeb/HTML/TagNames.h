@@ -90,6 +90,7 @@ namespace Web::HTML::TagNames {
     __ENUMERATE_HTML_TAG(marquee)    \
     __ENUMERATE_HTML_TAG(math)       \
     __ENUMERATE_HTML_TAG(menu)       \
+    __ENUMERATE_HTML_TAG(menuitem)   \
     __ENUMERATE_HTML_TAG(meta)       \
     __ENUMERATE_HTML_TAG(meter)      \
     __ENUMERATE_HTML_TAG(nav)        \

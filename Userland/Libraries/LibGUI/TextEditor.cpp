@@ -89,12 +89,12 @@ void TextEditor::create_actions()
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
-    m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"));
+    m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
-            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:", "Go to line") == InputBox::ExecResult::OK) {
+                if (InputBox::show(window(), value, "Line:"sv, "Go to line"sv) == InputBox::ExecResult::OK) {
                     auto line_target = value.to_uint();
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -743,6 +743,17 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
+Optional<UISize> TextEditor::calculated_min_size() const
+{
+    auto margins = content_margins();
+    int horizontal = margins.left() + margins.right(),
+        vertical = margins.top() + margins.bottom();
+    int vertical_content_size = font().glyph_height() + 4;
+    if (!is_multi_line() && m_icon)
+        vertical_content_size = max(vertical_content_size, icon_size() + 2);
+    return UISize(horizontal, vertical);
+}
+
 void TextEditor::select_all()
 {
     TextPosition start_of_document { 0, 0 };
@@ -856,6 +867,21 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
+    if (event.key() == KeyCode::Key_Tab) {
+        if (!is_editable())
+            return;
+        if (has_selection()) {
+            if (event.modifiers() == Mod_Shift) {
+                unindent_selection();
+                return;
+            }
+            if (is_indenting_selection()) {
+                indent_selection();
+                return;
+            }
+        }
+    }
+
     if (event.key() == KeyCode::Key_Delete) {
         if (!is_editable())
             return;
@@ -939,6 +965,50 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     event.ignore();
+}
+
+bool TextEditor::is_indenting_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+    auto const whole_line_selected = selection_end.column() - selection_start.column() >= current_line().length() - current_line().first_non_whitespace_column();
+    auto const on_same_line = selection_start.line() == selection_end.line();
+
+    if (has_selection() && (whole_line_selected || !on_same_line)) {
+        return true;
+    }
+
+    return false;
+}
+
+void TextEditor::indent_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    if (is_indenting_selection()) {
+        execute<IndentSelection>(m_soft_tab_width, TextRange(selection_start, selection_end));
+        m_selection.set_start({ selection_start.line(), selection_start.column() + m_soft_tab_width });
+        m_selection.set_end({ selection_end.line(), selection_end.column() + m_soft_tab_width });
+        set_cursor({ m_cursor.line(), m_cursor.column() + m_soft_tab_width });
+    }
+}
+
+void TextEditor::unindent_selection()
+{
+    auto const selection_start = m_selection.start() > m_selection.end() ? m_selection.end() : m_selection.start();
+    auto const selection_end = m_selection.end() > m_selection.start() ? m_selection.end() : m_selection.start();
+
+    if (current_line().first_non_whitespace_column() != 0) {
+        if (current_line().first_non_whitespace_column() > m_soft_tab_width && selection_start.column() != 0) {
+            m_selection.set_start({ selection_start.line(), selection_start.column() - m_soft_tab_width });
+            m_selection.set_end({ selection_end.line(), selection_end.column() - m_soft_tab_width });
+        } else if (selection_start.column() != 0) {
+            m_selection.set_start({ selection_start.line(), selection_start.column() - current_line().leading_spaces() });
+            m_selection.set_end({ selection_end.line(), selection_end.column() - current_line().leading_spaces() });
+        }
+        execute<UnindentSelection>(m_soft_tab_width, TextRange(selection_start, selection_end));
+    }
 }
 
 void TextEditor::delete_previous_word()
@@ -1490,7 +1560,7 @@ void TextEditor::paste()
         return;
 
     auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("text/"))
+    if (!mime_type.starts_with("text/"sv))
         return;
 
     if (data.is_empty())
@@ -1883,8 +1953,8 @@ void TextEditor::document_did_update_undo_stack()
     m_undo_action->set_enabled(can_undo() && !text_is_secret());
     m_redo_action->set_enabled(can_redo() && !text_is_secret());
 
-    m_undo_action->set_text(make_action_text("&Undo", document().undo_stack().undo_action_text()));
-    m_redo_action->set_text(make_action_text("&Redo", document().undo_stack().redo_action_text()));
+    m_undo_action->set_text(make_action_text("&Undo"sv, document().undo_stack().undo_action_text()));
+    m_redo_action->set_text(make_action_text("&Redo"sv, document().undo_stack().redo_action_text()));
 
     // FIXME: This is currently firing more often than it should.
     //        Ideally we'd only send this out when the undo stack modified state actually changes.
@@ -1912,7 +1982,7 @@ void TextEditor::cursor_did_change()
 
 void TextEditor::clipboard_content_did_change(String const& mime_type)
 {
-    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"));
+    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"sv));
 }
 
 void TextEditor::set_document(TextDocument& document)

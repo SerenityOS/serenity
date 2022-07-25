@@ -30,6 +30,7 @@ enum class MainProcessProperty {
     CurrentWorkDirectoryLink = 5,
     PerformanceEvents = 6,
     VirtualMemoryStats = 7,
+    CommandLine = 8,
 };
 
 enum class ProcessSubDirectory {
@@ -137,7 +138,7 @@ public:
 protected:
     virtual bool acquire_link(KBufferBuilder& builder) = 0;
     explicit ProcFSExposedLink(StringView name);
-    mutable Mutex m_lock { "ProcFSLink" };
+    mutable Mutex m_lock { "ProcFSLink"sv };
 };
 
 namespace PCI {

@@ -11,6 +11,8 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/Font/BitmapFont.h>
 
+namespace FontEditor {
+
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)
 public:
@@ -26,8 +28,6 @@ public:
 
     virtual ~GlyphEditorWidget() override = default;
 
-    void initialize(Gfx::BitmapFont&);
-
     int glyph() const { return m_glyph; }
     void set_glyph(int);
     bool is_glyph_empty();
@@ -41,6 +41,7 @@ public:
 
     Gfx::BitmapFont& font() { return *m_font; }
     Gfx::BitmapFont const& font() const { return *m_font; }
+    void set_font(Gfx::BitmapFont&);
 
     int scale() const { return m_scale; }
     void set_scale(int scale);
@@ -71,3 +72,5 @@ private:
     Mode m_mode { Paint };
     bool m_is_clicking_valid_cell { false };
 };
+
+}

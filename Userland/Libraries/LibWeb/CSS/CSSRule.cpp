@@ -25,18 +25,12 @@ void CSSRule::set_css_text(StringView)
 
 void CSSRule::set_parent_rule(CSSRule* parent_rule)
 {
-    if (parent_rule)
-        m_parent_rule = parent_rule->make_weak_ptr();
-    else
-        m_parent_rule = nullptr;
+    m_parent_rule = parent_rule;
 }
 
 void CSSRule::set_parent_style_sheet(CSSStyleSheet* parent_style_sheet)
 {
-    if (parent_style_sheet)
-        m_parent_style_sheet = parent_style_sheet->make_weak_ptr();
-    else
-        m_parent_style_sheet = nullptr;
+    m_parent_style_sheet = parent_style_sheet;
 }
 
 }

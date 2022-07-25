@@ -51,33 +51,33 @@ TEST_CASE(decode_utf8)
 TEST_CASE(validate_invalid_ut8)
 {
     size_t valid_bytes;
-    char invalid_utf8_1[] = { 42, 35, (char)182, 9, 0 };
-    Utf8View utf8_1 { StringView { invalid_utf8_1 } };
+    char invalid_utf8_1[] = { 42, 35, (char)182, 9 };
+    Utf8View utf8_1 { StringView { invalid_utf8_1, 4 } };
     EXPECT(!utf8_1.validate(valid_bytes));
     EXPECT(valid_bytes == 2);
 
-    char invalid_utf8_2[] = { 42, 35, (char)208, (char)208, 0 };
-    Utf8View utf8_2 { StringView { invalid_utf8_2 } };
+    char invalid_utf8_2[] = { 42, 35, (char)208, (char)208 };
+    Utf8View utf8_2 { StringView { invalid_utf8_2, 4 } };
     EXPECT(!utf8_2.validate(valid_bytes));
     EXPECT(valid_bytes == 2);
 
-    char invalid_utf8_3[] = { (char)208, 0 };
-    Utf8View utf8_3 { StringView { invalid_utf8_3 } };
+    char invalid_utf8_3[] = { (char)208 };
+    Utf8View utf8_3 { StringView { invalid_utf8_3, 1 } };
     EXPECT(!utf8_3.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 
-    char invalid_utf8_4[] = { (char)208, 35, 0 };
-    Utf8View utf8_4 { StringView { invalid_utf8_4 } };
+    char invalid_utf8_4[] = { (char)208, 35 };
+    Utf8View utf8_4 { StringView { invalid_utf8_4, 2 } };
     EXPECT(!utf8_4.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 
-    char invalid_utf8_5[] = { (char)0xf4, (char)0x8f, (char)0xbf, (char)0xc0, 0 }; // U+110000
-    Utf8View utf8_5 { StringView { invalid_utf8_5 } };
+    char invalid_utf8_5[] = { (char)0xf4, (char)0x8f, (char)0xbf, (char)0xc0 }; // U+110000
+    Utf8View utf8_5 { StringView { invalid_utf8_5, 4 } };
     EXPECT(!utf8_5.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 
-    char invalid_utf8_6[] = { (char)0xf4, (char)0xa1, (char)0xb0, (char)0xbd, 0 }; // U+121c3d
-    Utf8View utf8_6 { StringView { invalid_utf8_6 } };
+    char invalid_utf8_6[] = { (char)0xf4, (char)0xa1, (char)0xb0, (char)0xbd }; // U+121c3d
+    Utf8View utf8_6 { StringView { invalid_utf8_6, 4 } };
     EXPECT(!utf8_6.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 }
@@ -122,8 +122,8 @@ TEST_CASE(decode_invalid_ut8)
 {
     // Test case 1 : Getting an extension byte as first byte of the code point
     {
-        char raw_data[] = { 'a', 'b', (char)0xA0, 'd', 0 };
-        Utf8View view { StringView { raw_data } };
+        char raw_data[] = { 'a', 'b', (char)0xA0, 'd' };
+        Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd' };
         String expected_underlying_bytes[] = { "a", "b", "\xA0", "d" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
@@ -140,8 +140,8 @@ TEST_CASE(decode_invalid_ut8)
 
     // Test case 2 : Getting a non-extension byte when an extension byte is expected
     {
-        char raw_data[] = { 'a', 'b', (char)0xC0, 'd', 'e', 0 };
-        Utf8View view { StringView { raw_data } };
+        char raw_data[] = { 'a', 'b', (char)0xC0, 'd', 'e' };
+        Utf8View view { StringView { raw_data, 5 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd', 'e' };
         String expected_underlying_bytes[] = { "a", "b", "\xC0", "d", "e" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
@@ -158,8 +158,8 @@ TEST_CASE(decode_invalid_ut8)
 
     // Test case 3 : Not enough bytes before the end of the string
     {
-        char raw_data[] = { 'a', 'b', (char)0x90, 'd', 0 };
-        Utf8View view { StringView { raw_data } };
+        char raw_data[] = { 'a', 'b', (char)0x90, 'd' };
+        Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 0xFFFD, 'd' };
         String expected_underlying_bytes[] = { "a", "b", "\x90", "d" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
@@ -176,8 +176,8 @@ TEST_CASE(decode_invalid_ut8)
 
     // Test case 4 : Not enough bytes at the end of the string
     {
-        char raw_data[] = { 'a', 'b', 'c', (char)0x90, 0 };
-        Utf8View view { StringView { raw_data } };
+        char raw_data[] = { 'a', 'b', 'c', (char)0x90 };
+        Utf8View view { StringView { raw_data, 4 } };
         u32 expected_characters[] = { 'a', 'b', 'c', 0xFFFD };
         String expected_underlying_bytes[] = { "a", "b", "c", "\x90" };
         size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);

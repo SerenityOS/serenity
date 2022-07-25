@@ -24,19 +24,19 @@ namespace HackStudio {
 
 void DebugInfoWidget::init_toolbar()
 {
-    m_continue_action = GUI::Action::create("Continue", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-continue.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    m_continue_action = GUI::Action::create("Continue", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-continue.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Continue);
     });
 
-    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-over.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-over.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOver);
     });
 
-    m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-in.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-in.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceSingleStep);
     });
 
-    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-out.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-step-out.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOut);
     });
 
@@ -106,7 +106,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
     if (does_variable_support_writing(variable)) {
         context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
             String value;
-            if (GUI::InputBox::show(window(), value, "Enter new value:", "Set variable value") == GUI::InputBox::ExecResult::OK) {
+            if (GUI::InputBox::show(window(), value, "Enter new value:"sv, "Set variable value"sv) == GUI::InputBox::ExecResult::OK) {
                 auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
                 model.set_variable_value(index, value, window());
             }

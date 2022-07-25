@@ -1,6 +1,6 @@
 set(SOURCES
     SampleFormats.cpp
-    ConnectionFromClient.cpp
+    ConnectionToServer.cpp
     Loader.cpp
     WavLoader.cpp
     FlacLoader.cpp

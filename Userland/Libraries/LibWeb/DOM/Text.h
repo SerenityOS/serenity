@@ -12,7 +12,7 @@
 
 namespace Web::DOM {
 
-class Text final : public CharacterData {
+class Text : public CharacterData {
 public:
     using WrapperType = Bindings::TextWrapper;
 
@@ -31,6 +31,9 @@ public:
     HTML::HTMLInputElement* owner_input_element() { return m_owner_input_element; }
 
     ExceptionOr<NonnullRefPtr<Text>> split_text(size_t offset);
+
+protected:
+    Text(Document&, NodeType, String const&);
 
 private:
     WeakPtr<HTML::HTMLInputElement> m_owner_input_element;

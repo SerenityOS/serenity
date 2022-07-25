@@ -6,6 +6,20 @@
       "align-items"
     ]
   },
+  "align-self": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "align-self"
+    ]
+  },
+  "appearance": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "appearance"
+    ]
+  },
   "background": {
     "affects-layout": false,
     "inherited": false,
@@ -579,14 +593,14 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "number"
+      "number [0,∞]"
     ]
   },
   "flex-shrink": {
     "inherited": false,
     "initial": "1",
     "valid-types": [
-      "number"
+      "number [0,∞]"
     ]
   },
   "order": {
@@ -1211,7 +1225,8 @@
   },
   "transform": {
     "inherited": false,
-    "initial": "none"
+    "initial": "none",
+    "affects-stacking-context": true
   },
   "transform-origin": {
     "affects-layout": false,

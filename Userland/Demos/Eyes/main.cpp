@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if ((grid_rows > 0) ^ (grid_columns > 0)) {
@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         extra_columns = num_eyes % max_in_row;
     }
 
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-eyes"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-eyes"sv));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Eyes");

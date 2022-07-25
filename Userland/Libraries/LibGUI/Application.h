@@ -83,6 +83,7 @@ public:
 
     Function<void(Action&)> on_action_enter;
     Function<void(Action&)> on_action_leave;
+    Function<void()> on_theme_change;
 
     auto const& global_shortcut_actions(Badge<GUI::CommandPalette>) const { return m_global_shortcut_actions; }
 

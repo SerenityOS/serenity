@@ -61,9 +61,9 @@ private:
         StringBuilder builder;
         builder.append(action.text());
         if (action.shortcut().is_valid()) {
-            builder.append(" (");
+            builder.append(" ("sv);
             builder.append(action.shortcut().to_string());
-            builder.append(")");
+            builder.append(')');
         }
         return builder.to_string();
     }
@@ -131,6 +131,15 @@ void Toolbar::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     painter.fill_rect(event.rect(), palette().button());
+}
+
+Optional<UISize> Toolbar::calculated_preferred_size() const
+{
+    if (m_orientation == Gfx::Orientation::Horizontal)
+        return { { SpecialDimension::Grow, SpecialDimension::Fit } };
+    else
+        return { { SpecialDimension::Fit, SpecialDimension::Grow } };
+    VERIFY_NOT_REACHED();
 }
 
 }

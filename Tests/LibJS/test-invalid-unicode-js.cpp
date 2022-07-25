@@ -37,7 +37,7 @@ static bool triggers_immediate_unicode_fault(StringView code)
 
 TEST_CASE(no_input_only_gives_eof)
 {
-    char const* code = "";
+    auto code = ""sv;
     auto lexer = JS::Lexer(code);
     EXPECT(produces_eof_tokens(lexer));
 }
@@ -134,7 +134,7 @@ TEST_CASE(long_invalid_unicode_and_valid_code)
 
 TEST_CASE(invalid_unicode_after_valid_code_and_before_eof)
 {
-    char const* code = "let \xEA\xFD;";
+    auto code = "let \xEA\xFD;"sv;
     auto lexer = JS::Lexer(code);
     auto let_token = lexer.next();
     EXPECT_EQ(let_token.type(), JS::TokenType::Let);

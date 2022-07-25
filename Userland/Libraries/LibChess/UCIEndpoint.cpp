@@ -76,27 +76,27 @@ NonnullOwnPtr<Command> Endpoint::read_command()
 
     if (line == "uci") {
         return make<UCICommand>(UCICommand::from_string(line));
-    } else if (line.starts_with("debug")) {
+    } else if (line.starts_with("debug"sv)) {
         return make<DebugCommand>(DebugCommand::from_string(line));
-    } else if (line.starts_with("isready")) {
+    } else if (line.starts_with("isready"sv)) {
         return make<IsReadyCommand>(IsReadyCommand::from_string(line));
-    } else if (line.starts_with("setoption")) {
+    } else if (line.starts_with("setoption"sv)) {
         return make<SetOptionCommand>(SetOptionCommand::from_string(line));
-    } else if (line.starts_with("position")) {
+    } else if (line.starts_with("position"sv)) {
         return make<PositionCommand>(PositionCommand::from_string(line));
-    } else if (line.starts_with("go")) {
+    } else if (line.starts_with("go"sv)) {
         return make<GoCommand>(GoCommand::from_string(line));
-    } else if (line.starts_with("stop")) {
+    } else if (line.starts_with("stop"sv)) {
         return make<StopCommand>(StopCommand::from_string(line));
-    } else if (line.starts_with("id")) {
+    } else if (line.starts_with("id"sv)) {
         return make<IdCommand>(IdCommand::from_string(line));
-    } else if (line.starts_with("uciok")) {
+    } else if (line.starts_with("uciok"sv)) {
         return make<UCIOkCommand>(UCIOkCommand::from_string(line));
-    } else if (line.starts_with("readyok")) {
+    } else if (line.starts_with("readyok"sv)) {
         return make<ReadyOkCommand>(ReadyOkCommand::from_string(line));
-    } else if (line.starts_with("bestmove")) {
+    } else if (line.starts_with("bestmove"sv)) {
         return make<BestMoveCommand>(BestMoveCommand::from_string(line));
-    } else if (line.starts_with("info")) {
+    } else if (line.starts_with("info"sv)) {
         return make<InfoCommand>(InfoCommand::from_string(line));
     }
 

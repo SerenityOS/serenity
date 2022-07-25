@@ -70,8 +70,7 @@ struct AK::Formatter<JS::Cell> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Cell const* cell)
     {
         if (!cell)
-            return Formatter<FormatString>::format(builder, "Cell{nullptr}");
-        else
-            return Formatter<FormatString>::format(builder, "{}({})", cell->class_name(), cell);
+            return builder.put_string("Cell{nullptr}"sv);
+        return Formatter<FormatString>::format(builder, "{}({})"sv, cell->class_name(), cell);
     }
 };

@@ -142,9 +142,9 @@ bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data
         parser->run(document.url());
         return true;
     }
-    if (mime_type.ends_with("+xml") || mime_type.is_one_of("text/xml", "application/xml"))
+    if (mime_type.ends_with("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
         return build_xml_document(document, data);
-    if (mime_type.starts_with("image/"))
+    if (mime_type.starts_with("image/"sv))
         return build_image_document(document, data);
     if (mime_type == "text/plain" || mime_type == "application/json")
         return build_text_document(document, data);

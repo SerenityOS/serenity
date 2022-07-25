@@ -246,9 +246,10 @@ input[type=submit], input[type=button], input[type=reset], input[type=checkbox],
 }
 
 button, input[type=submit], input[type=button], input[type=reset] {
-    padding: 4px 8px;
+    padding: 1px 4px;
     background-color: -libweb-palette-button;
     border: 1px solid -libweb-palette-threed-shadow1;
+    color: -libweb-palette-button-text;
 }
 
 button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover {
@@ -314,4 +315,25 @@ iframe { border: 2px inset; }
     video {
         filter: invert(100%);
     }
+}
+
+/* This is the same as default intrinsic size of a <progress> element */
+progress {
+    width: 300px;
+    height: 12px;
+}
+
+/* The default progress-value/bar CSS below is the same as Blink/WebKit.
+ * Note: Setting any more than the backgrond-color may have unintended consequences, as sites don't expect to unset more than that.
+ */
+
+progress::-webkit-progress-bar {
+    width: inherit;
+    height: inherit;
+    background-color: grey;
+}
+
+progress::-webkit-progress-value {
+    height: inherit;
+    background-color: green;
 }

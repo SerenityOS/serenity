@@ -178,7 +178,7 @@ TCPSocket::~TCPSocket()
 ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
-    auto scratch_buffer = TRY(KBuffer::try_create_with_size(65536));
+    auto scratch_buffer = TRY(KBuffer::try_create_with_size("TCPSocket: Scratch buffer"sv, 65536));
     return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
@@ -420,7 +420,7 @@ ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
     return {};
 }
 
-ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBlock should_block)
+ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
 {
     MutexLocker locker(mutex());
 
@@ -444,7 +444,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description, Shou
 
     evaluate_block_conditions();
 
-    if (should_block == ShouldBlock::Yes) {
+    if (description.is_blocking()) {
         locker.unlock();
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())

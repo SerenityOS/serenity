@@ -9,14 +9,14 @@
 #include <AK/Error.h>
 #include <AK/NumericLimits.h>
 
-namespace LibDSP {
+namespace DSP {
 
 void Keyboard::set_keyboard_note(u8 pitch, Keyboard::Switch note_switch)
 {
     VERIFY(pitch < note_frequencies.size());
 
     if (note_switch == Switch::Off) {
-        m_pressed_notes.remove(pitch);
+        m_pressed_notes[pitch] = {};
         return;
     }
 
@@ -27,7 +27,7 @@ void Keyboard::set_keyboard_note(u8 pitch, Keyboard::Switch note_switch)
         .velocity = NumericLimits<i8>::max(),
     };
 
-    m_pressed_notes.set(pitch, fake_note);
+    m_pressed_notes[pitch] = fake_note;
 }
 void Keyboard::set_keyboard_note_in_active_octave(i8 octave_offset, Switch note_switch)
 {
@@ -57,7 +57,7 @@ ErrorOr<void> Keyboard::set_virtual_keyboard_octave(u8 octave)
 
 bool Keyboard::is_pressed(u8 pitch) const
 {
-    return m_pressed_notes.get(pitch).has_value() && m_pressed_notes.get(pitch)->is_playing(m_transport->time());
+    return m_pressed_notes[pitch].has_value() && m_pressed_notes[pitch]->is_playing(m_transport->time());
 }
 
 bool Keyboard::is_pressed_in_active_octave(i8 octave_offset) const

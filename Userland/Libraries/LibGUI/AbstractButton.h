@@ -35,7 +35,11 @@ public:
     bool is_hovered() const { return m_hovered; }
     bool is_being_pressed() const { return m_being_pressed; }
 
+    unsigned allowed_mouse_buttons_for_pressing() const { return m_allowed_mouse_buttons_for_pressing; }
+    void set_allowed_mouse_buttons_for_pressing(unsigned allowed_buttons) { m_allowed_mouse_buttons_for_pressing = allowed_buttons; }
+
     virtual void click(unsigned modifiers = 0) = 0;
+    virtual void middle_mouse_click(unsigned) {};
     virtual bool is_uncheckable() const { return true; }
 
     int auto_repeat_interval() const { return m_auto_repeat_interval; }
@@ -64,6 +68,9 @@ private:
     bool m_being_pressed { false };
     bool m_being_keyboard_pressed { false };
     bool m_exclusive { false };
+
+    MouseButton m_pressed_mouse_button { MouseButton::None };
+    unsigned m_allowed_mouse_buttons_for_pressing { MouseButton::Primary };
 
     int m_auto_repeat_interval { 0 };
     RefPtr<Core::Timer> m_auto_repeat_timer;

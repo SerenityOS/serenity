@@ -44,7 +44,7 @@ PDFViewer::PDFViewer()
 
     start_timer(30'000);
 
-    m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer", "Display", "PageMode", 0));
+    m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, 0));
 }
 
 PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
@@ -289,7 +289,7 @@ void PDFViewer::rotate(int degrees)
 void PDFViewer::set_page_view_mode(PageViewMode mode)
 {
     m_page_view_mode = mode;
-    Config::write_i32("PDFViewer", "Display", "PageMode", static_cast<i32>(mode));
+    Config::write_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, static_cast<i32>(mode));
     update();
 }
 

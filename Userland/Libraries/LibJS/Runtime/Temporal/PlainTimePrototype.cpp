@@ -182,8 +182,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalTimeLike).
     TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_time_like));
 
-    // 5. Let partialTime be ? ToPartialTime(temporalTimeLike).
-    auto partial_time = TRY(to_partial_time(global_object, temporal_time_like));
+    // 5. Let partialTime be ? ToTemporalTimeRecord(temporalTimeLike, partial).
+    auto partial_time = TRY(to_temporal_time_record(global_object, temporal_time_like, ToTemporalTimeRecordCompleteness::Partial));
 
     // 6. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -230,8 +230,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 20. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
     auto result = TRY(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
-    // 21. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+    // 21. Return ! CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return MUST(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 // 4.3.13 Temporal.PlainTime.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.until
@@ -299,32 +299,17 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::round)
     // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"));
 
-    double maximum;
+    // 8. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
-    // 8. If smallestUnit is "hour", then
-    if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
-    }
-    // 9. Else if smallestUnit is "minute" or "second", then
-    else if (smallest_unit == "minute"sv || smallest_unit == "second"sv) {
-        // a. Let maximum be 60.
-        maximum = 60;
-    }
-    // 10. Else,
-    else {
-        // a. Let maximum be 1000.
-        maximum = 1000;
-    }
+    // 9. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *round_to, *maximum, false));
 
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, false).
-    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *round_to, maximum, false));
-
-    // 12. Let result be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    // 10. Let result be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
     auto result = round_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
 
-    // 13. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+    // 11. Return ! CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return MUST(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 // 4.3.16 Temporal.PlainTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals

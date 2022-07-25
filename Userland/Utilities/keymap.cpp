@@ -55,8 +55,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini", Core::ConfigFile::AllowWriting::Yes));
 
-    int rc = 0;
-
     if (!mappings.is_empty()) {
         auto mappings_vector = mappings.split(',');
 
@@ -77,10 +75,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto keymaps = String::join(',', mappings_vector);
         mapper_config->write_entry("Mapping", "Keymaps", keymaps);
         TRY(mapper_config->sync());
-        rc = set_keymap(mappings_vector.first());
-        if (rc != 0) {
-            return rc;
-        }
     }
 
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps");
@@ -95,14 +89,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (!keymaps_vector.find(mapping).is_end()) {
-            rc = set_keymap(mapping);
-            if (rc != 0) {
+            int rc = set_keymap(mapping);
+            if (rc == 0)
                 return rc;
-            }
         } else {
             warnln("Keymap '{}' is not in list of configured keymaps ({})", mapping, keymaps);
         }
     }
 
-    return 0;
+    return set_keymap(keymaps_vector.first());
 }

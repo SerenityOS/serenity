@@ -99,41 +99,37 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Options");
 }
 
-// 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+// 13.3 GetOption ( options, property, type, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const& default_)
 {
     VERIFY(property.is_string());
 
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(options) is Object.
-    // 2. Assert: Each element of types is Boolean, String, or Number.
-
-    // 3. Let value be ? Get(options, property).
+    // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
-    // 4. If value is undefined, return fallback.
-    if (value.is_undefined())
-        return fallback;
+    // 2. If value is undefined, then
+    if (value.is_undefined()) {
+        // a. If default is required, throw a RangeError exception.
+        if (default_.has<GetOptionRequired>())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, "undefined"sv, property.as_string());
 
-    OptionType type;
-    // 5. If types contains Type(value), then
-    if (auto value_type = to_option_type(value); value_type.has_value() && types.contains_slow(*value_type)) {
-        // a. Let type be Type(value).
-        type = *value_type;
-    }
-    // 6. Else,
-    else {
-        // a. Let type be the last element of types.
-        type = types.last();
+        // b. Return default.
+        return default_.visit(
+            [](GetOptionRequired) -> Value { VERIFY_NOT_REACHED(); },
+            [](Empty) { return js_undefined(); },
+            [](bool b) { return Value(b); },
+            [](double d) { return Value(d); },
+            [&vm](StringView s) { return Value(js_string(vm, s)); });
     }
 
-    // 7. If type is Boolean, then
+    // 5. If type is "boolean", then
     if (type == OptionType::Boolean) {
         // a. Set value to ToBoolean(value).
         value = Value(value.to_boolean());
     }
-    // 8. Else if type is Number, then
+    // 6. Else if type is "number", then
     else if (type == OptionType::Number) {
         // a. Set value to ? ToNumber(value).
         value = TRY(value.to_number(global_object));
@@ -142,57 +138,28 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
         if (value.is_nan())
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
     }
-    // 9. Else,
+    // 7. Else,
     else {
-        // a. Set value to ? ToString(value).
+        // a. Assert: type is "string".
+        VERIFY(type == OptionType::String);
+
+        // b. Set value to ? ToString(value).
         value = TRY(value.to_primitive_string(global_object));
     }
 
-    // 10. If values is not empty, then
+    // 8. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
     if (!values.is_empty()) {
+        // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        // a. If values does not contain value, throw a RangeError exception.
         if (!values.contains_slow(value.as_string().string()))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
     }
 
-    // 11. Return value.
+    // 9. Return value.
     return value;
 }
 
-// 13.4 GetStringOrNumberOption ( options, property, stringValues, minimum, maximum, fallback ), https://tc39.es/proposal-temporal/#sec-getstringornumberoption
-template<typename NumberType>
-ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Assert: Type(options) is Object.
-
-    // 2. Let value be ? GetOption(options, property, « Number, String », empty, fallback).
-    auto value = TRY(get_option(global_object, options, property, { OptionType::Number, OptionType::String }, {}, fallback));
-
-    // 3. If Type(value) is Number, then
-    if (value.is_number()) {
-        // a. If value < minimum or value > maximum, throw a RangeError exception.
-        if (value.as_double() < minimum || value.as_double() > maximum)
-            return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_double(), property.as_string());
-
-        // b. Return floor(ℝ(value)).
-        return static_cast<NumberType>(floor(value.as_double()));
-    }
-
-    // 4. Assert: Type(value) is String.
-    VERIFY(value.is_string());
-
-    // 5. If stringValues does not contain value, throw a RangeError exception.
-    if (!string_values.contains_slow(value.as_string().string()))
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
-
-    // 6. Return value.
-    return value.as_string().string();
-}
-
-// 13.5 ToTemporalOverflow ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
+// 13.4 ToTemporalOverflow ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Object const* options)
 {
     auto& vm = global_object.vm();
@@ -201,14 +168,14 @@ ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Obje
     if (options == nullptr)
         return "constrain"sv;
 
-    // 2. Return ? GetOption(options, "overflow", « String », « "constrain", "reject" », "constrain").
-    auto option = TRY(get_option(global_object, *options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
+    // 2. Return ? GetOption(options, "overflow", "string", « "constrain", "reject" », "constrain").
+    auto option = TRY(get_option(global_object, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, "constrain"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.6 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
+// 13.5 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object, Object const* options)
 {
     auto& vm = global_object.vm();
@@ -217,26 +184,26 @@ ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object
     if (options == nullptr)
         return "compatible"sv;
 
-    // 2. Return ? GetOption(options, "disambiguation", « String », « "compatible", "earlier", "later", "reject" », "compatible").
-    auto option = TRY(get_option(global_object, *options, vm.names.disambiguation, { OptionType::String }, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
+    // 2. Return ? GetOption(options, "disambiguation", "string", « "compatible", "earlier", "later", "reject" », "compatible").
+    auto option = TRY(get_option(global_object, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, "compatible"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.7 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
+// 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "roundingMode", « String », « "ceil", "floor", "trunc", "halfExpand" », fallback).
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.roundingMode, { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback)));
+    // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "trunc", "halfExpand" », fallback).
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.roundingMode, OptionType::String, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, fallback.view()));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.8 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
+// 13.7 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
 StringView negate_temporal_rounding_mode(String const& rounding_mode)
 {
     // 1. If roundingMode is "ceil", return "floor".
@@ -251,7 +218,7 @@ StringView negate_temporal_rounding_mode(String const& rounding_mode)
     return rounding_mode;
 }
 
-// 13.9 ToTemporalOffset ( options, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
+// 13.8 ToTemporalOffset ( options, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
 ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object const* options, String const& fallback)
 {
     auto& vm = global_object.vm();
@@ -260,50 +227,50 @@ ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object
     if (options == nullptr)
         return fallback;
 
-    // 2. Return ? GetOption(options, "offset", « String », « "prefer", "use", "ignore", "reject" », fallback).
-    auto option = TRY(get_option(global_object, *options, vm.names.offset, { OptionType::String }, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
+    // 2. Return ? GetOption(options, "offset", "string", « "prefer", "use", "ignore", "reject" », fallback).
+    auto option = TRY(get_option(global_object, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback.view()));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.10 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
+// 13.9 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "calendarName", « String », « "auto", "always", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.calendarName, { OptionType::String }, { "auto"sv, "always"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "calendarName", "string", « "auto", "always", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.11 ToShowTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowtimezonenameoption
+// 13.10 ToShowTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowtimezonenameoption
 ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "timeZoneName", « String », « "auto", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.timeZoneName, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "timeZoneName", "string, « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.12 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
+// 13.11 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
 ThrowCompletionOr<String> to_show_offset_option(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "offset", « String », « "auto", "never" », "auto").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+    // 1. Return ? GetOption(normalizedOptions, "offset", "string", « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, OptionType::String, { "auto"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.13 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
+// 13.12 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_object, Object const& normalized_options, Optional<double> dividend, bool inclusive)
 {
     auto& vm = global_object.vm();
@@ -330,8 +297,8 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
         maximum = 1;
     }
 
-    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1𝔽).
-    auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
+    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", "number", undefined, 1𝔽).
+    auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, OptionType::Number, {}, 1.0));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
@@ -351,40 +318,28 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     return floored_increment;
 }
 
-// 13.14 ToTemporalDateTimeRoundingIncrement ( normalizedOptions, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetimeroundingincrement
+// 13.13 ToTemporalDateTimeRoundingIncrement ( normalizedOptions, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetimeroundingincrement
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject& global_object, Object const& normalized_options, StringView smallest_unit)
 {
-    double maximum;
+    u16 maximum;
 
     // 1. If smallestUnit is "day", then
     if (smallest_unit == "day"sv) {
         // a. Let maximum be 1.
         maximum = 1;
     }
-    // 2. Else if smallestUnit is "hour", then
-    else if (smallest_unit == "hour"sv) {
-        // a. Let maximum be 24.
-        maximum = 24;
-    }
-    // 3. Else if smallestUnit is "minute" or "second", then
-    else if (smallest_unit.is_one_of("minute"sv, "second"sv)) {
-        // a. Let maximum be 60.
-        maximum = 60;
-    }
-    // 4. Else,
+    // 2. Else,
     else {
-        // a. Assert: smallestUnit is "millisecond", "microsecond", or "nanosecond".
-        VERIFY(smallest_unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv));
-
-        // b. Let maximum be 1000.
-        maximum = 1000;
+        // a. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+        // b. Assert: maximum is not undefined.
+        maximum = *maximum_temporal_duration_rounding_increment(smallest_unit);
     }
 
-    // 5. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
+    // 3. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
     return to_temporal_rounding_increment(global_object, normalized_options, maximum, false);
 }
 
-// 13.15 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
+// 13.14 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object const& normalized_options)
 {
     auto& vm = global_object.vm();
@@ -429,41 +384,56 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     // 7. Assert: smallestUnit is undefined.
     VERIFY(!smallest_unit.has_value());
 
-    // 8. Let digits be ? GetStringOrNumberOption(normalizedOptions, "fractionalSecondDigits", « "auto" », 0, 9, "auto").
-    auto digits_variant = TRY(get_string_or_number_option<u8>(global_object, normalized_options, vm.names.fractionalSecondDigits, { "auto"sv }, 0, 9, js_string(vm, "auto"sv)));
+    // 8. Let fractionalDigitsVal be ? Get(normalizedOptions, "fractionalSecondDigits").
+    auto fractional_digits_value = TRY(normalized_options.get(vm.names.fractionalSecondDigits));
 
-    // 9. If digits is "auto", then
-    if (digits_variant.has<String>()) {
-        VERIFY(digits_variant.get<String>() == "auto"sv);
-        // a. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
+    // 10. If Type(fractionalDigitsVal) is not Number, then
+    if (!fractional_digits_value.is_number()) {
+        // a. If fractionalDigitsVal is not undefined, then
+        if (!fractional_digits_value.is_undefined()) {
+            // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
+            if (TRY(fractional_digits_value.to_string(global_object)) != "auto"sv)
+                return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+        }
+
+        // b. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = "auto"sv, .unit = "nanosecond"sv, .increment = 1 };
     }
 
-    auto digits = digits_variant.get<u8>();
+    // 11. If fractionalDigitsVal is NaN, +∞𝔽, or -∞𝔽, throw a RangeError exception.
+    if (fractional_digits_value.is_nan() || fractional_digits_value.is_infinity())
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
-    // 10. If digits is 0, then
-    if (digits == 0) {
+    // 12. If ℝ(fractionalDigitsVal) < 0 or ℝ(fractionalDigitsVal) > 9, throw a RangeError exception.
+    if (fractional_digits_value.as_double() < 0 || fractional_digits_value.as_double() > 9)
+        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+
+    // 13. Let fractionalDigitCount be floor(ℝ(fractionalDigitsVal)).
+    auto fractional_digit_count = static_cast<u8>(floor(fractional_digits_value.as_double()));
+
+    // 10. If fractionalDigitCount is 0, then
+    if (fractional_digit_count == 0) {
         // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
     }
 
-    // 11. If digits is 1, 2, or 3, then
-    if (digits == 1 || digits == 2 || digits == 3) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - digits) };
+    // 11. If fractionalDigitCount is 1, 2, or 3, then
+    if (fractional_digit_count == 1 || fractional_digit_count == 2 || fractional_digit_count == 3) {
+        // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - fractionalDigitCount) }.
+        return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - fractional_digit_count) };
     }
 
-    // 12. If digits is 4, 5, or 6, then
-    if (digits == 4 || digits == 5 || digits == 6) {
-        // a. Return the Record { [[Precision]]: digits, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - digits) }.
-        return SecondsStringPrecision { .precision = digits, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - digits) };
+    // 12. If fractionalDigitCount is 4, 5, or 6, then
+    if (fractional_digit_count == 4 || fractional_digit_count == 5 || fractional_digit_count == 6) {
+        // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - fractionalDigitCount) }.
+        return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - fractional_digit_count) };
     }
 
-    // 13. Assert: digits is 7, 8, or 9.
-    VERIFY(digits == 7 || digits == 8 || digits == 9);
+    // 13. Assert: fractionalDigitCount is 7, 8, or 9.
+    VERIFY(fractional_digit_count == 7 || fractional_digit_count == 8 || fractional_digit_count == 9);
 
-    // 14. Return the Record { [[Precision]]: digits, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - digits) }.
-    return SecondsStringPrecision { .precision = digits, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - digits) };
+    // 14. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - fractionalDigitCount) }.
+    return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - fractional_digit_count) };
 }
 
 struct TemporalUnit {
@@ -486,8 +456,8 @@ static Vector<TemporalUnit> temporal_units = {
     { "nanosecond"sv, "nanoseconds"sv, UnitGroup::Time }
 };
 
-// 13.16 GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues ] ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalunit
-ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_object, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, Variant<TemporalUnitRequired, Optional<StringView>> const& default_, Vector<StringView> const& extra_values)
+// 13.15 GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues ] ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalunit
+ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_object, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values)
 {
     auto& vm = global_object.vm();
 
@@ -513,19 +483,19 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
         singular_names.extend(extra_values);
     }
 
-    Value default_value;
+    OptionDefault default_value;
 
     // 4. If default is required, then
     if (default_.has<TemporalUnitRequired>()) {
         // a. Let defaultValue be undefined.
-        default_value = js_undefined();
+        default_value = {};
     }
     // 5. Else,
     else {
         auto default_string = default_.get<Optional<StringView>>();
 
         // a. Let defaultValue be default.
-        default_value = default_string.has_value() ? js_string(vm, *default_string) : js_undefined();
+        default_value = default_string.has_value() ? OptionDefault { *default_string } : OptionDefault {};
 
         // b. If defaultValue is not undefined and singularNames does not contain defaultValue, then
         if (default_string.has_value() && !singular_names.contains_slow(*default_string)) {
@@ -553,8 +523,8 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
 
     // 8. NOTE: For each singular Temporal unit name that is contained within allowedValues, the corresponding plural name is also contained within it.
 
-    // 9. Let value be ? GetOption(normalizedOptions, key, « String », allowedValues, defaultValue).
-    auto option_value = TRY(get_option(global_object, normalized_options, key, { OptionType::String }, allowed_values, default_value));
+    // 9. Let value be ? GetOption(normalizedOptions, key, "string", allowedValues, defaultValue).
+    auto option_value = TRY(get_option(global_object, normalized_options, key, OptionType::String, allowed_values.span(), default_value));
 
     // 10. If value is undefined and default is required, throw a RangeError exception.
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
@@ -576,7 +546,7 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
     return value;
 }
 
-// 13.17 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
+// 13.16 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object, Object const& options)
 {
     auto& vm = global_object.vm();
@@ -628,7 +598,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // e. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, Vector<StringView> {}));
 
         // f. Let dateOptions be OrdinaryObjectCreate(null).
         auto* date_options = Object::create(global_object, nullptr);
@@ -742,11 +712,11 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone.as_object(), *calendar));
     }
 
-    // 9. Return ! CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+    // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
-// 13.18 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
+// 13.17 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
 StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 {
     // 1. Assert: Both u1 and u2 are listed in the Singular column of Table 13.
@@ -767,40 +737,36 @@ StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
     VERIFY_NOT_REACHED();
 }
 
-// 13.19 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
-ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object, Object const* options, String largest_unit)
+// 13.18 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
+ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object, Object const& options, String largest_unit)
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is undefined, set options to OrdinaryObjectCreate(null).
-    if (options == nullptr)
-        options = Object::create(global_object, nullptr);
+    // 1. Let merged be OrdinaryObjectCreate(null).
+    auto* merged = Object::create(global_object, nullptr);
 
-    // 2. Let merged be OrdinaryObjectCreate(%Object.prototype%).
-    auto* merged = Object::create(global_object, global_object.object_prototype());
+    // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
+    auto keys = TRY(options.enumerable_own_property_names(Object::PropertyKind::Key));
 
-    // 3. Let keys be ? EnumerableOwnPropertyNames(options, key).
-    auto keys = TRY(options->enumerable_own_property_names(Object::PropertyKind::Key));
-
-    // 4. For each element nextKey of keys, do
+    // 3. For each element nextKey of keys, do
     for (auto& key : keys) {
         auto next_key = MUST(PropertyKey::from_value(global_object, key));
 
         // a. Let propValue be ? Get(options, nextKey).
-        auto prop_value = TRY(options->get(next_key));
+        auto prop_value = TRY(options.get(next_key));
 
         // b. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
         MUST(merged->create_data_property_or_throw(next_key, prop_value));
     }
 
-    // 5. Perform ! CreateDataPropertyOrThrow(merged, "largestUnit", largestUnit).
+    // 4. Perform ! CreateDataPropertyOrThrow(merged, "largestUnit", largestUnit).
     MUST(merged->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, move(largest_unit))));
 
-    // 6. Return merged.
+    // 5. Return merged.
     return merged;
 }
 
-// 13.20 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
+// 13.19 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
 {
     // 1. If unit is "year", "month", "week", or "day", then
@@ -828,7 +794,7 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
     return 1000;
 }
 
-// 13.21 RejectObjectWithCalendarOrTimeZone ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejectobjectwithcalendarortimezone
+// 13.20 RejectObjectWithCalendarOrTimeZone ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejectobjectwithcalendarortimezone
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& global_object, Object& object)
 {
     auto& vm = global_object.vm();
@@ -862,10 +828,10 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
     return {};
 }
 
-// 13.22 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
+// 13.21 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
-    // 1. Assert: second, millisecond, microsecond and nanosecond are integers.
+    // 1. Assert: second, millisecond, microsecond, and nanosecond are integers.
 
     // Non-standard sanity check
     if (precision.has<StringView>())
@@ -912,7 +878,7 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     return String::formatted("{}.{}", seconds_string, fraction_string);
 }
 
-// 13.24 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
+// 13.23 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative)
 {
     // 1. If isNegative is true, return the specification type in the third column of Table 14 where the first column is roundingMode and the second column is "negative".
@@ -966,7 +932,7 @@ UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool i
 // it uses mathematical values which can be arbitrarily (but not infinitely) large.
 // Incidentally V8's Temporal implementation does the same :^)
 
-// 13.25 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+// 13.24 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
 double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode)
 {
     // 1. If x is equal to r1, return r1.
@@ -1026,7 +992,7 @@ double apply_unsigned_rounding_mode(double x, double r1, double r2, Optional<Uns
     return r2;
 }
 
-// 13.25 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
+// 13.24 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-applyunsignedroundingmode
 Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResult const& x, Crypto::SignedBigInteger const& r1, Crypto::SignedBigInteger const& r2, Optional<UnsignedRoundingMode> const& unsigned_rounding_mode, Crypto::UnsignedBigInteger const& increment)
 {
     // 1. If x is equal to r1, return r1.
@@ -1086,7 +1052,7 @@ Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResu
     return r2;
 }
 
-// 13.26 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.25 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 double round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 {
     VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
@@ -1132,7 +1098,7 @@ double round_number_to_increment(double x, u64 increment, StringView rounding_mo
     return rounded * static_cast<double>(increment);
 }
 
-// 13.26 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
+// 13.25 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
 {
     VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
@@ -1184,6 +1150,40 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
         rounded.negate();
 
     // 9. Return rounded × increment.
+    return rounded.multiplied_by(increment_big_int);
+}
+
+// 13.26 RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrementasifpositive
+Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
+{
+    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+
+    // OPTIMIZATION: If the increment is 1 the number is always rounded
+    if (increment == 1)
+        return x;
+
+    auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
+
+    // 1. Let quotient be x / increment.
+    auto division_result = x.divided_by(increment_big_int);
+
+    // OPTIMIZATION: If there's no remainder the number is already rounded
+    if (division_result.remainder.unsigned_value().is_zero())
+        return x;
+
+    // 2. Let unsignedRoundingMode be GetUnsignedRoundingMode(roundingMode, false).
+    auto unsigned_rounding_mode = get_unsigned_rounding_mode(rounding_mode, false);
+
+    // 3. Let r1 be the largest integer such that r1 ≤ quotient.
+    auto r1 = division_result.quotient;
+
+    // 4. Let r2 be the smallest integer such that r2 > quotient.
+    auto r2 = division_result.quotient.plus("1"_bigint);
+
+    // 5. Let rounded be ApplyUnsignedRoundingMode(quotient, r1, r2, unsignedRoundingMode).
+    auto rounded = apply_unsigned_rounding_mode(division_result, r1, r2, unsigned_rounding_mode, increment_big_int);
+
+    // 6. Return rounded × increment.
     return rounded.multiplied_by(increment_big_int);
 }
 
@@ -1695,10 +1695,10 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
 
-    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIANAName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIdentifier Parse Nodes contained within parseResult, or an empty sequence of code points if not present.
     auto z = parse_result->utc_designator;
     auto offset_string = parse_result->time_zone_numeric_utc_offset;
-    auto name = parse_result->time_zone_iana_name;
+    auto name = parse_result->time_zone_identifier;
 
     // 4. If name is empty, then
     //     a. Set name to undefined.
@@ -1764,61 +1764,13 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
 }
 
 // 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
+ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& vm = global_object.vm();
 
-    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(global_object, global_object.object_prototype());
+    // 1. Let result be OrdinaryObjectCreate(null).
+    auto* result = Object::create(global_object, nullptr);
     VERIFY(result);
-
-    // 2. For each value property of fieldNames, do
-    for (auto& property : field_names) {
-        // a. Let value be ? Get(fields, property).
-        auto value = TRY(fields.get(property));
-
-        // b. If value is undefined, then
-        if (value.is_undefined()) {
-            // i. If requiredFields contains property, then
-            if (required_fields.contains_slow(property)) {
-                // 1. Throw a TypeError exception.
-                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
-            }
-            // ii. If property is in the Property column of Table 13, then
-            // NOTE: The other properties in the table are automatically handled as their default value is undefined
-            if (property.is_one_of("hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
-                // 1. Set value to the corresponding Default value of the same row.
-                value = Value(0);
-            }
-        }
-        // c. Else,
-        else {
-            // i. If property is in the Property column of Table 13 and there is a Conversion value in the same row, then
-            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
-            // 2. Set value to ? Conversion(value).
-            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
-                value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
-            else if (property.is_one_of("month"sv, "day"sv))
-                value = Value(TRY(to_positive_integer(global_object, value)));
-            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
-                value = TRY(value.to_primitive_string(global_object));
-        }
-
-        // d. Perform ! CreateDataPropertyOrThrow(result, property, value).
-        MUST(result->create_data_property_or_throw(property, value));
-    }
-
-    // 3. Return result.
-    return result;
-}
-
-// 13.44 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
-ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(global_object, global_object.object_prototype());
 
     // 2. Let any be false.
     auto any = false;
@@ -1833,23 +1785,51 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
             // i. Set any to true.
             any = true;
 
-            // ii. If property is in the Property column of Table 13, then
-            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
-            // 2. Set value to ? Conversion(value).
-            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
+            // ii. If property is in the Property column of Table 15 and there is a Conversion value in the same row, then
+            // 1. Let Conversion be the Conversion value of the same row.
+            // 2. If Conversion is ToIntegerThrowOnInfinity, then
+            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv)) {
+                // a. Set value to ? ToIntegerThrowOnInfinity(value).
+                // b. Set value to 𝔽(value).
                 value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
-            else if (property.is_one_of("month"sv, "day"sv))
+            }
+            // 3. Else if Conversion is ToPositiveInteger, then
+            else if (property.is_one_of("month"sv, "day"sv)) {
+                // a. Set value to ? ToPositiveInteger(value).
+                // b. Set value to 𝔽(value).
                 value = Value(TRY(to_positive_integer(global_object, value)));
-            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
+            }
+            // 4. Else,
+            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv)) {
+                // a. Assert: Conversion is ToString.
+                // b. Set value to ? ToString(value).
                 value = TRY(value.to_primitive_string(global_object));
+            }
+
+            // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
+            MUST(result->create_data_property_or_throw(property, value));
+        }
+        // c. Else if requiredFields is a List, then
+        else if (required_fields.has<Vector<StringView>>()) {
+            // i. If requiredFields contains property, then
+            if (required_fields.get<Vector<StringView>>().contains_slow(property)) {
+                // 1. Throw a TypeError exception.
+                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
+            }
+            // ii. If property is in the Property column of Table 13, then
+            // NOTE: The other properties in the table are automatically handled as their default value is undefined
+            if (property.is_one_of("hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+                // 1. Set value to the corresponding Default value of the same row.
+                value = Value(0);
+            }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
             MUST(result->create_data_property_or_throw(property, value));
         }
     }
 
-    // 4. If any is false, then
-    if (!any) {
+    // 4. If requiredFields is partial and any is false, then
+    if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
     }
@@ -1857,4 +1837,63 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
     // 5. Return result.
     return result;
 }
+
+// 13.44 GetDifferenceSettings ( operation, options, unitGroup, disallowedUnits, fallbackSmallestUnit, smallestLargestDefaultUnit ), https://tc39.es/proposal-temporal/#sec-temporal-getdifferencesettings
+ThrowCompletionOr<DifferenceSettings> get_difference_settings(GlobalObject& global_object, DifferenceOperation operation, Value options_value, UnitGroup unit_group, Vector<StringView> const& disallowed_units, TemporalUnitDefault const& fallback_smallest_unit, StringView smallest_largest_default_unit)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, options_value));
+
+    // 2. Let smallestUnit be ? GetTemporalUnit(options, "smallestUnit", unitGroup, fallbackSmallestUnit).
+    auto smallest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.smallestUnit, unit_group, fallback_smallest_unit));
+
+    // 3. If disallowedUnits contains smallestUnit, throw a RangeError exception.
+    if (disallowed_units.contains_slow(*smallest_unit))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
+
+    // 4. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units(smallest_largest_default_unit, *smallest_unit);
+
+    // 5. Let largestUnit be ? GetTemporalUnit(options, "largestUnit", unitGroup, "auto").
+    auto largest_unit = TRY(get_temporal_unit(global_object, *options, vm.names.largestUnit, unit_group, { "auto"sv }));
+
+    // 6. If disallowedUnits contains largestUnit, throw a RangeError exception.
+    if (disallowed_units.contains_slow(*largest_unit))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *largest_unit, "largestUnit"sv);
+
+    // 7. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
+    if (largest_unit == "auto"sv)
+        largest_unit = default_largest_unit;
+
+    // 8. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
+    if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+
+    // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 10. If operation is since, then
+    if (operation == DifferenceOperation::Since) {
+        // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+    }
+
+    // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
+
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, Optional<double> { maximum }, false));
+
+    // 13. Return the Record { [[SmallestUnit]]: smallestUnit, [[LargestUnit]]: largestUnit, [[RoundingMode]]: roundingMode, [[RoundingIncrement]]: roundingIncrement, [[Options]]: options }.
+    return DifferenceSettings {
+        .smallest_unit = smallest_unit.release_value(),
+        .largest_unit = largest_unit.release_value(),
+        .rounding_mode = move(rounding_mode),
+        .rounding_increment = rounding_increment,
+        .options = *options,
+    };
+}
+
 }

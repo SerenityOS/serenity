@@ -15,6 +15,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web::DOM {
@@ -72,6 +73,7 @@ public:
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text(); }
     bool is_attribute() const { return type() == NodeType::ATTRIBUTE_NODE; }
+    bool is_cdata_section() const { return type() == NodeType::CDATA_SECTION_NODE; }
     virtual bool is_shadow_root() const { return false; }
 
     virtual bool requires_svg_container() const { return false; }
@@ -222,6 +224,17 @@ public:
 
     size_t length() const;
 
+    NonnullRefPtrVector<RegisteredObserver>& registered_observers_list() { return m_registered_observer_list; }
+    NonnullRefPtrVector<RegisteredObserver> const& registered_observers_list() const { return m_registered_observer_list; }
+
+    void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
+
+    void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+
+    // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
+    template<typename Callback>
+    IterationDecision for_each_shadow_including_descendant(Callback);
+
 protected:
     Node(Document&, NodeType);
 
@@ -232,6 +245,13 @@ protected:
     bool m_child_needs_style_update { false };
 
     i32 m_id;
+
+    // https://dom.spec.whatwg.org/#registered-observer-list
+    // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
+    NonnullRefPtrVector<RegisteredObserver> m_registered_observer_list;
+
+private:
+    void queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 };
 
 }

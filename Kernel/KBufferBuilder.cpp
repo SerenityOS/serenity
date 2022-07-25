@@ -24,7 +24,7 @@ inline bool KBufferBuilder::check_expand(size_t size)
     if (rounded_new_buffer_size_or_error.is_error()) {
         return false;
     }
-    auto new_buffer_or_error = KBuffer::try_create_with_size(rounded_new_buffer_size_or_error.value());
+    auto new_buffer_or_error = KBuffer::try_create_with_size("KBufferBuilder"sv, rounded_new_buffer_size_or_error.value());
     if (new_buffer_or_error.is_error())
         return false;
     auto new_buffer = new_buffer_or_error.release_value();
@@ -51,7 +51,7 @@ OwnPtr<KBuffer> KBufferBuilder::build()
 
 ErrorOr<KBufferBuilder> KBufferBuilder::try_create()
 {
-    auto buffer = TRY(KBuffer::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite));
+    auto buffer = TRY(KBuffer::try_create_with_size("KBufferBuilder"sv, 4 * MiB, Memory::Region::Access::ReadWrite));
     return KBufferBuilder { move(buffer) };
 }
 
@@ -105,19 +105,19 @@ ErrorOr<void> KBufferBuilder::append_escaped_for_json(StringView string)
     for (auto ch : string) {
         switch (ch) {
         case '\b':
-            TRY(append("\\b"));
+            TRY(append("\\b"sv));
             break;
         case '\n':
-            TRY(append("\\n"));
+            TRY(append("\\n"sv));
             break;
         case '\t':
-            TRY(append("\\t"));
+            TRY(append("\\t"sv));
             break;
         case '\"':
-            TRY(append("\\\""));
+            TRY(append("\\\""sv));
             break;
         case '\\':
-            TRY(append("\\\\"));
+            TRY(append("\\\\"sv));
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)

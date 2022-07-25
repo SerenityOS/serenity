@@ -221,7 +221,7 @@ String URL::serialize_data_url() const
     builder.append(':');
     builder.append(m_data_mime_type);
     if (m_data_payload_is_base64)
-        builder.append(";base64");
+        builder.append(";base64"sv);
     builder.append(',');
     // NOTE: The specification does not say anything about encoding this, but we should encode at least control and non-ASCII
     //       characters (since this is also a valid representation of the same data URL).
@@ -239,7 +239,7 @@ String URL::serialize(ExcludeFragment exclude_fragment) const
     builder.append(':');
 
     if (!m_host.is_null()) {
-        builder.append("//");
+        builder.append("//"sv);
 
         if (includes_credentials()) {
             builder.append(percent_encode(m_username, PercentEncodeSet::Userinfo));
@@ -259,7 +259,7 @@ String URL::serialize(ExcludeFragment exclude_fragment) const
         builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
     } else {
         if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-            builder.append("/.");
+            builder.append("/."sv);
         for (auto& segment : m_paths) {
             builder.append('/');
             builder.append(percent_encode(segment, PercentEncodeSet::Path));
@@ -293,7 +293,7 @@ String URL::serialize_for_display() const
     builder.append(':');
 
     if (!m_host.is_null()) {
-        builder.append("//");
+        builder.append("//"sv);
         builder.append(m_host);
         if (m_port.has_value())
             builder.appendff(":{}", *m_port);
@@ -303,7 +303,7 @@ String URL::serialize_for_display() const
         builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
     } else {
         if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-            builder.append("/.");
+            builder.append("/."sv);
         for (auto& segment : m_paths) {
             builder.append('/');
             builder.append(percent_encode(segment, PercentEncodeSet::Path));

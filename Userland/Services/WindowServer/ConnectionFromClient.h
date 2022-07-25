@@ -142,6 +142,10 @@ private:
     virtual Messages::WindowServer::StartDragResponse start_drag(String const&, HashMap<String, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
     virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(String const&, String const&, bool keep_desktop_background) override;
     virtual Messages::WindowServer::GetSystemThemeResponse get_system_theme() override;
+    virtual Messages::WindowServer::SetSystemThemeOverrideResponse set_system_theme_override(Core::AnonymousBuffer const&) override;
+    virtual Messages::WindowServer::GetSystemThemeOverrideResponse get_system_theme_override() override;
+    virtual void clear_system_theme_override() override;
+    virtual Messages::WindowServer::IsSystemThemeOverriddenResponse is_system_theme_overridden() override;
     virtual void apply_cursor_theme(String const&) override;
     virtual void set_cursor_highlight_radius(int radius) override;
     virtual Messages::WindowServer::GetCursorHighlightRadiusResponse get_cursor_highlight_radius() override;

@@ -13,6 +13,12 @@
 
 namespace Web::Painting {
 
+enum class TraversalDecision {
+    Continue,
+    SkipChildrenAndContinue,
+    Break,
+};
+
 enum class PaintPhase {
     Background,
     Border,
@@ -53,27 +59,27 @@ public:
     Paintable const* next_sibling() const;
 
     template<typename U, typename Callback>
-    IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
+    TraversalDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
     {
         if (is<U>(*this)) {
-            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
-                return IterationDecision::Break;
+            if (auto decision = callback(static_cast<const U&>(*this)); decision != TraversalDecision::Continue)
+                return decision;
         }
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
-                return IterationDecision::Break;
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     }
 
     template<typename U, typename Callback>
-    IterationDecision for_each_in_subtree_of_type(Callback callback) const
+    TraversalDecision for_each_in_subtree_of_type(Callback callback) const
     {
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
-                return IterationDecision::Break;
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
         }
-        return IterationDecision::Continue;
+        return TraversalDecision::Continue;
     }
 
     virtual void paint(PaintContext&, PaintPhase) const { }

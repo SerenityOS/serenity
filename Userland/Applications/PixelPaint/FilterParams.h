@@ -44,7 +44,7 @@ private:
         // FIXME: Help! Make this GUI less ugly.
         StringBuilder builder;
         builder.appendff("{}x{}", N, N);
-        builder.append(" Convolution");
+        builder.append(" Convolution"sv);
         set_title(builder.string_view());
 
         resize(200, 250);
@@ -65,6 +65,7 @@ private:
             for (size_t column = 0; column < columns; ++column) {
                 if (index < columns * rows) {
                     auto& textbox = horizontal_container.template add<GUI::TextBox>();
+                    textbox.set_min_width(22);
                     textbox.on_change = [&, row = row, column = column] {
                         auto& element = m_matrix.elements()[row][column];
                         char* endptr = nullptr;
@@ -72,7 +73,7 @@ private:
                         if (endptr != nullptr)
                             element = value;
                         else
-                            textbox.set_text("");
+                            textbox.set_text(""sv);
                     };
                 } else {
                     horizontal_container.template add<GUI::Widget>();

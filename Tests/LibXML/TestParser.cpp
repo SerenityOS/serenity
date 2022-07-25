@@ -15,7 +15,16 @@ TEST_CASE(char_data_ending)
         // but it did _not_ consume it and would instead tell GenericLexer that it should stop consuming characters. Therefore, we only consumed 2 characters.
         // Then, it would see that we are in the state where we've seen the full `]]>` and try to take off three characters from the end of the consumed
         // input when we only have 2 characters, causing an assertion failure as we are asking to take off more characters than there really is.
-        XML::Parser parser("<C>]]>");
+        XML::Parser parser("<C>]]>"sv);
+        (void)parser.parse();
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}
+
+TEST_CASE(character_reference_integer_overflow)
+{
+    EXPECT_NO_CRASH("parsing character references that do not fit in 32 bits should not crash", [] {
+        XML::Parser parser("<G>&#6666666666"sv);
         (void)parser.parse();
         return Test::Crash::Failure::DidNotCrash;
     });

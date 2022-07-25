@@ -14,7 +14,7 @@
 
 TEST_CASE(test_fontdatabase_get_by_name)
 {
-    char const* name = "Liza 10 400 0";
+    auto name = "Liza 10 400 0"sv;
     auto& font_database = Gfx::FontDatabase::the();
     EXPECT(!font_database.get_by_name(name)->name().is_null());
 }
@@ -55,7 +55,7 @@ TEST_CASE(test_set_name)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    char const* name = "my newly created font";
+    auto name = "my newly created font"sv;
     font->set_name(name);
 
     EXPECT(!font->name().is_null());
@@ -68,7 +68,7 @@ TEST_CASE(test_set_family)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    char const* family = "my newly created font family";
+    auto family = "my newly created font family"sv;
     font->set_family(family);
 
     EXPECT(!font->family().is_null());
@@ -105,7 +105,7 @@ TEST_CASE(test_width)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    EXPECT(font->width("A") == glyph_width);
+    EXPECT(font->width("A"sv) == glyph_width);
 }
 
 TEST_CASE(test_glyph_or_emoji_width)

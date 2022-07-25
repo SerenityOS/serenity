@@ -137,8 +137,8 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
 
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
-        VERIFY(feature.has("type"));
-        auto feature_type = feature.get("type");
+        VERIFY(feature.has("type"sv));
+        auto feature_type = feature.get("type"sv);
         VERIFY(feature_type.is_string());
         member_generator.set("is_range", feature_type.as_string() == "range" ? "true" : "false");
         member_generator.append(R"~~~(
@@ -165,7 +165,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
     case MediaFeatureID::@name:titlecase@:)~~~");
 
         bool have_output_value_type_switch = false;
-        if (feature.has("values")) {
+        if (feature.has("values"sv)) {
             auto append_value_type_switch_if_needed = [&]() {
                 if (!have_output_value_type_switch) {
                     member_generator.append(R"~~~(
@@ -173,7 +173,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
                 }
                 have_output_value_type_switch = true;
             };
-            auto& values = feature.get("values");
+            auto& values = feature.get("values"sv);
             VERIFY(values.is_array());
             auto& values_array = values.as_array();
             for (auto& type : values_array.values()) {
@@ -243,7 +243,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
     case MediaFeatureID::@name:titlecase@:)~~~");
 
         bool have_output_identifier_switch = false;
-        if (feature.has("values")) {
+        if (feature.has("values"sv)) {
             auto append_identifier_switch_if_needed = [&]() {
                 if (!have_output_identifier_switch) {
                     member_generator.append(R"~~~(
@@ -251,7 +251,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
                 }
                 have_output_identifier_switch = true;
             };
-            auto& values = feature.get("values");
+            auto& values = feature.get("values"sv);
             VERIFY(values.is_array());
             auto& values_array = values.as_array();
             for (auto& identifier : values_array.values()) {

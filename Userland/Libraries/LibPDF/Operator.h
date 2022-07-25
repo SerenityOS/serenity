@@ -174,10 +174,10 @@ struct Formatter<PDF::Operator> : Formatter<StringView> {
             PDF::Operator::operator_symbol(op.type()));
 
         if (!op.arguments().is_empty()) {
-            builder.append(" [");
+            builder.append(" ["sv);
             for (auto& argument : op.arguments())
                 builder.appendff(" {}", argument);
-            builder.append(" ]");
+            builder.append(" ]"sv);
         }
 
         return Formatter<StringView>::format(format_builder, builder.to_string());

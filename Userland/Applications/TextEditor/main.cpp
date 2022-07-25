@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("TextEditor");
 
-    char const* preview_mode = "auto";
+    auto preview_mode = "auto"sv;
     char const* file_to_edit = nullptr;
     Core::ArgsParser parser;
     parser.add_option(preview_mode, "Preview mode, one of 'none', 'html', 'markdown', 'auto'", "preview-mode", '\0', "mode");
@@ -32,14 +32,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    StringView preview_mode_view = preview_mode;
-
-    auto app_icon = GUI::Icon::default_icon("app-text-editor");
+    auto app_icon = GUI::Icon::default_icon("app-text-editor"sv);
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 400);
@@ -54,13 +52,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    if (preview_mode_view == "auto") {
+    if (preview_mode == "auto") {
         text_widget->set_auto_detect_preview_mode(true);
-    } else if (preview_mode_view == "markdown") {
+    } else if (preview_mode == "markdown") {
         text_widget->set_preview_mode(MainWidget::PreviewMode::Markdown);
-    } else if (preview_mode_view == "html") {
+    } else if (preview_mode == "html") {
         text_widget->set_preview_mode(MainWidget::PreviewMode::HTML);
-    } else if (preview_mode_view == "none") {
+    } else if (preview_mode == "none") {
         text_widget->set_preview_mode(MainWidget::PreviewMode::None);
     } else {
         warnln("Invalid mode '{}'", preview_mode);

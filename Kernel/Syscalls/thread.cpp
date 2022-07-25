@@ -156,7 +156,7 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::thread));
 
-    if (signal < 0 || signal >= 32)
+    if (signal < 0 || signal >= NSIG)
         return EINVAL;
 
     auto thread = Thread::from_tid(tid);

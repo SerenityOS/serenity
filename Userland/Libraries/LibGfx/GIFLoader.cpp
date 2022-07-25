@@ -695,20 +695,20 @@ size_t GIFImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
 {
     if (m_context->error_state >= GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame) {
-        return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
-            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");
         }
     }
 
     if (m_context->error_state == GIFLoadingContext::ErrorState::NoError && !decode_frame(*m_context, index)) {
         if (m_context->state < GIFLoadingContext::State::FrameComplete || !decode_frame(*m_context, 0)) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
-            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");
         }
         m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
     }

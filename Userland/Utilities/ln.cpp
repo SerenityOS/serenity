@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments argmuments)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath"));
 
@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments argmuments)
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
     args_parser.add_positional_argument(target, "Link target", "target");
     args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argmuments);
+    args_parser.parse(arguments);
 
     String path_buffer;
     if (!path) {

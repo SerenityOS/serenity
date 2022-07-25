@@ -6,23 +6,38 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
 
 // 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
-ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t length, Object* prototype)
+ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, u64 length, Object* prototype)
 {
     auto& vm = global_object.vm();
+
+    // 1. If length > 2^32 - 1, throw a RangeError exception.
     if (length > NumericLimits<u32>::max())
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
+
+    // 2. If proto is not present, set proto to %Array.prototype%.
     if (!prototype)
         prototype = global_object.array_prototype();
+
+    // 3. Let A be MakeBasicObject(« [[Prototype]], [[Extensible]] »).
+    // 4. Set A.[[Prototype]] to proto.
+    // 5. Set A.[[DefineOwnProperty]] as specified in 10.4.2.1.
     auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
+
+    // 6. Perform ! OrdinaryDefineOwnProperty(A, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));
+
+    // 7. Return A.
     return array;
 }
 
@@ -140,6 +155,111 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 
     // 19. Return true.
     return true;
+}
+
+// 1.1.1.2 CompareArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparearrayelements
+ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If x and y are both undefined, return +0𝔽.
+    if (x.is_undefined() && y.is_undefined())
+        return 0;
+
+    // 2. If x is undefined, return 1𝔽.
+    if (x.is_undefined())
+        return 1;
+
+    // 3. If y is undefined, return -1𝔽.
+    if (y.is_undefined())
+        return -1;
+
+    // 4. If comparefn is not undefined, then
+    if (comparefn != nullptr) {
+        // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
+        auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
+        auto value_number = TRY(value.to_number(global_object));
+
+        // b. If v is NaN, return +0𝔽.
+        if (value_number.is_nan())
+            return 0;
+
+        // c. Return v.
+        return value_number.as_double();
+    }
+
+    // 5. Let xString be ? ToString(x).
+    auto* x_string = js_string(vm, TRY(x.to_string(global_object)));
+
+    // 6. Let yString be ? ToString(y).
+    auto* y_string = js_string(vm, TRY(y.to_string(global_object)));
+
+    // 7. Let xSmaller be ! IsLessThan(xString, yString, true).
+    auto x_smaller = MUST(is_less_than(global_object, x_string, y_string, true));
+
+    // 8. If xSmaller is true, return -1𝔽.
+    if (x_smaller == TriState::True)
+        return -1;
+
+    // 9. Let ySmaller be ! IsLessThan(yString, xString, true).
+    auto y_smaller = MUST(is_less_than(global_object, y_string, x_string, true));
+
+    // 10. If ySmaller is true, return 1𝔽.
+    if (y_smaller == TriState::True)
+        return 1;
+
+    // 11. Return +0𝔽.
+    return 0;
+}
+
+// 1.1.1.3 SortIndexedProperties ( obj, len, SortCompare, skipHoles ), https://tc39.es/proposal-change-array-by-copy/#sec-sortindexedproperties
+ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(GlobalObject& global_object, Object const& object, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes)
+{
+    // 1. Let items be a new empty List.
+    auto items = MarkedVector<Value> { global_object.heap() };
+
+    // 2. Let k be 0.
+    // 3. Repeat, while k < len,
+    for (size_t k = 0; k < length; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_key = PropertyKey { k };
+
+        bool k_read;
+
+        // b. If skipHoles is true, then
+        if (skip_holes) {
+            // i. Let kRead be ? HasProperty(obj, Pk).
+            k_read = TRY(object.has_property(property_key));
+        }
+        // c. Else,
+        else {
+            // i. Let kRead be true.
+            k_read = true;
+        }
+
+        // d. If kRead is true, then
+        if (k_read) {
+            // i. Let kValue be ? Get(obj, Pk).
+            auto k_value = TRY(object.get(property_key));
+
+            // ii. Append kValue to items.
+            items.append(k_value);
+        }
+
+        // e. Set k to k + 1.
+    }
+
+    // 4. Sort items using an implementation-defined sequence of calls to SortCompare. If any such call returns an abrupt completion, stop before performing any further calls to SortCompare or steps in this algorithm and return that Completion Record.
+    // FIXME: Support AK::Function in array_merge_sort() to avoid having to create a NativeFunction.
+    auto* native_comparefn = NativeFunction::create(global_object, "", [&](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+        auto x = vm.argument(0);
+        auto y = vm.argument(1);
+        return TRY(sort_compare(x, y));
+    });
+    TRY(array_merge_sort(global_object, native_comparefn, items));
+
+    // 5. Return items.
+    return items;
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property

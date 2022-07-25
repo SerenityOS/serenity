@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibWeb/Painting/BorderPainting.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
@@ -28,13 +30,6 @@ public:
         Gfx::FloatRect scrollable_overflow_rect;
         Gfx::FloatPoint scroll_offset;
     };
-    Optional<OverflowData> m_overflow_data;
-
-    Gfx::FloatPoint m_offset;
-    Gfx::FloatSize m_content_size;
-
-    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
-    Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     Gfx::FloatRect absolute_rect() const;
     Gfx::FloatPoint effective_offset() const;
@@ -128,12 +123,23 @@ protected:
 
     virtual Gfx::FloatRect compute_absolute_rect() const;
 
+    Painting::BorderRadiiData normalized_border_radii_data() const;
+
 private:
-    Painting::BorderRadiusData normalized_border_radius_data() const;
+    Optional<OverflowData> m_overflow_data;
+
+    Gfx::FloatPoint m_offset;
+    Gfx::FloatSize m_content_size;
+
+    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
+    Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
+
+    mutable bool m_clipping_overflow { false };
+    Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 };
 
 class PaintableWithLines : public PaintableBox {

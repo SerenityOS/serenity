@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     TestAbort.cpp
     TestAssert.cpp
+    TestCType.cpp
     TestIo.cpp
     TestLibCExec.cpp
     TestLibCDirEnt.cpp
@@ -13,6 +14,10 @@ set(TEST_SOURCES
     TestMemalign.cpp
     TestMemmem.cpp
     TestMkDir.cpp
+    TestPthreadCancel.cpp
+    TestPthreadCleanup.cpp
+    TestPthreadSpinLocks.cpp
+    TestPthreadRWLocks.cpp
     TestQsort.cpp
     TestRaise.cpp
     TestRealpath.cpp

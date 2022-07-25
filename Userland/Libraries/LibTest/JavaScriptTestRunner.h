@@ -275,9 +275,9 @@ inline Vector<String> TestRunner::get_test_paths() const
 {
     Vector<String> paths;
     iterate_directory_recursively(m_test_root, [&](String const& file_path) {
-        if (!file_path.ends_with(".js"))
+        if (!file_path.ends_with(".js"sv))
             return;
-        if (!file_path.ends_with("test-common.js"))
+        if (!file_path.ends_with("test-common.js"sv))
             paths.append(file_path);
     });
     quick_sort(paths);
@@ -413,9 +413,9 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
             Test::Case test { test_name, Test::Result::Fail, "", 0 };
 
             VERIFY(test_value.is_object());
-            VERIFY(test_value.as_object().has("result"));
+            VERIFY(test_value.as_object().has("result"sv));
 
-            auto result = test_value.as_object().get("result");
+            auto result = test_value.as_object().get("result"sv);
             VERIFY(result.is_string());
             auto result_string = result.as_string();
             if (result_string == "pass") {
@@ -425,8 +425,8 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
                 test.result = Test::Result::Fail;
                 m_counts.tests_failed++;
                 suite.most_severe_test_result = Test::Result::Fail;
-                VERIFY(test_value.as_object().has("details"));
-                auto details = test_value.as_object().get("details");
+                VERIFY(test_value.as_object().has("details"sv));
+                auto details = test_value.as_object().get("details"sv);
                 VERIFY(result.is_string());
                 test.details = details.as_string();
             } else {
@@ -436,7 +436,7 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
                 m_counts.tests_skipped++;
             }
 
-            test.duration_us = test_value.as_object().get("duration").to_u64(0);
+            test.duration_us = test_value.as_object().get("duration"sv).to_u64(0);
 
             suite.tests.append(test);
         });

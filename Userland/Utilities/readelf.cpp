@@ -232,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    char const* path;
+    StringView path {};
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;
@@ -367,8 +367,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         outln();
 
-        outln("  Type:                              {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"));
-        outln("  Machine:                           {} ({})", header.e_machine, ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"));
+        outln("  Type:                              {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"sv));
+        outln("  Machine:                           {} ({})", header.e_machine, ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"sv));
         outln("  Version:                           {:#x}", header.e_version);
         outln("  Entry point address:               {:#x}", header.e_entry);
         outln("  Start of program headers:          {} (bytes into file)", header.e_phoff);
@@ -416,7 +416,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (display_program_headers) {
         if (!display_all) {
-            outln("ELF file type is {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"));
+            outln("ELF file type is {} ({})", header.e_type, ELF::Image::object_file_type_to_string(header.e_type).value_or("(?)"sv));
             outln("Entry point {:#x}\n", header.e_entry);
             outln("There are {} program headers, starting at offset {}", header.e_phnum, header.e_phoff);
             outln();
@@ -549,7 +549,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (display_unwind_info) {
         // TODO: Unwind info
-        outln("Decoding of unwind sections for machine type {} is not supported.", ELF::Image::object_machine_type_to_string(header.e_machine).value_or("?"));
+        outln("Decoding of unwind sections for machine type {} is not supported.", ELF::Image::object_machine_type_to_string(header.e_machine).value_or("?"sv));
         outln();
     }
 

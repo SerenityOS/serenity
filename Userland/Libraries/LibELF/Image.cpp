@@ -60,7 +60,7 @@ void Image::dump() const
         return;
     }
 
-    dbgln("    type:    {}", ELF::Image::object_file_type_to_string(header().e_type).value_or("(?)"));
+    dbgln("    type:    {}", ELF::Image::object_file_type_to_string(header().e_type).value_or("(?)"sv));
     dbgln("    machine: {}", header().e_machine);
     dbgln("    entry:   {:x}", header().e_entry);
     dbgln("    shoff:   {}", header().e_shoff);
@@ -163,7 +163,7 @@ StringView Image::table_string(unsigned table_index, unsigned offset) const
     VERIFY(m_valid);
     auto& sh = section_header(table_index);
     if (sh.sh_type != SHT_STRTAB)
-        return nullptr;
+        return {};
     size_t computed_offset = sh.sh_offset + offset;
     if (computed_offset >= m_size) {
         if (m_verbose_logging)

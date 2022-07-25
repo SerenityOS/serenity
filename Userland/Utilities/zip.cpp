@@ -16,7 +16,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* zip_path;
+    StringView zip_path;
     Vector<StringView> source_paths;
     bool recurse = false;
     bool force = false;
@@ -31,9 +31,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     auto cwd = TRY(Core::System::getcwd());
-    TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, zip_path), "wc"));
+    TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, zip_path), "wc"sv));
     for (auto const& source_path : source_paths) {
-        TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, source_path), "r"));
+        TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, source_path), "r"sv));
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 

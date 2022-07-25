@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::DOM {
@@ -45,7 +46,12 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank")
+    enum class Type {
+        XML,
+        HTML
+    };
+
+    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank"sv)
     {
         return adopt_ref(*new Document(url));
     }
@@ -55,6 +61,9 @@ public:
     }
 
     virtual ~Document() override;
+
+    size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
+    size_t layout_node_count() const { return m_next_layout_node_serial_id; }
 
     String cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(String const&, Cookie::Source = Cookie::Source::NonHttp);
@@ -66,12 +75,16 @@ public:
 
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
+    AK::URL fallback_base_url() const;
+    AK::URL base_url() const;
+
+    RefPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
 
     String url_string() const { return m_url.to_string(); }
     String document_uri() const { return m_url.to_string(); }
 
-    Origin origin() const;
-    void set_origin(Origin const& origin);
+    HTML::Origin origin() const;
+    void set_origin(HTML::Origin const& origin);
 
     AK::URL parse_url(String const&) const;
 
@@ -178,7 +191,7 @@ public:
     JS::Realm& realm();
     JS::Interpreter& interpreter();
 
-    JS::Value run_javascript(StringView source, StringView filename = "(unknown)");
+    JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
     ExceptionOr<NonnullRefPtr<Element>> create_element(String const& tag_name);
     ExceptionOr<NonnullRefPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);
@@ -203,6 +216,12 @@ public:
     QuirksMode mode() const { return m_quirks_mode; }
     bool in_quirks_mode() const { return m_quirks_mode == QuirksMode::Yes; }
     void set_quirks_mode(QuirksMode mode) { m_quirks_mode = mode; }
+
+    Type document_type() const { return m_type; }
+    void set_document_type(Type type) { m_type = type; }
+
+    // https://dom.spec.whatwg.org/#xml-document
+    bool is_xml_document() const { return m_type == Type::XML; }
 
     ExceptionOr<NonnullRefPtr<Node>> import_node(NonnullRefPtr<Node> node, bool deep);
     void adopt_node(Node&);
@@ -349,7 +368,7 @@ private:
     explicit Document(const AK::URL&);
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
 
@@ -375,6 +394,8 @@ private:
     }
 
     unsigned m_referencing_node_count { 0 };
+
+    size_t m_next_layout_node_serial_id { 0 };
 
     OwnPtr<CSS::StyleComputer> m_style_computer;
     RefPtr<CSS::StyleSheetList> m_style_sheets;
@@ -407,6 +428,10 @@ private:
     NonnullRefPtrVector<HTML::HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
 
     QuirksMode m_quirks_mode { QuirksMode::No };
+
+    // https://dom.spec.whatwg.org/#concept-document-type
+    Type m_type { Type::HTML };
+
     bool m_editable { false };
 
     WeakPtr<Element> m_focused_element;

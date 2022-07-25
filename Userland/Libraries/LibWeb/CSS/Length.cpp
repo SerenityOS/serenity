@@ -64,6 +64,8 @@ Length Length::resolved(Layout::Node const& layout_node) const
         return m_calculated_style->resolve_length(layout_node).release_value();
     if (is_relative())
         return make_px(to_px(layout_node));
+    if (!isfinite(m_value))
+        return make_auto();
     return *this;
 }
 

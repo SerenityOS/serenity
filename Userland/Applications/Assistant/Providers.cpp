@@ -52,7 +52,7 @@ void TerminalResult::activate() const
     // FIXME: This should be a GUI::Process::spawn_or_show_error(), however this is a
     // Assistant::Result object, which does not have access to the application's GUI::Window* pointer
     // (which spawn_or_show_error() needs incase it has to open a error message box).
-    (void)Core::Process::spawn("/bin/Terminal", Array { "-k", "-e", title().characters() });
+    (void)Core::Process::spawn("/bin/Terminal"sv, Array { "-k", "-e", title().characters() });
 }
 
 void URLResult::activate() const
@@ -62,7 +62,7 @@ void URLResult::activate() const
 
 void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
-    if (query.starts_with("=") || query.starts_with('$'))
+    if (query.starts_with('=') || query.starts_with('$'))
         return;
 
     NonnullRefPtrVector<Result> results;
@@ -81,7 +81,7 @@ void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<R
 
 void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
-    if (!query.starts_with("="))
+    if (!query.starts_with('='))
         return;
 
     auto vm = JS::VM::create();

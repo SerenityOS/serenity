@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Gradients</title>
+    <style>
+        div {
+            border: 1px solid black;
+            margin: 20px;
+        }
+
+        .box {
+            width: 200px;
+            height: 200px;
+        }
+
+        .rect {
+            width: 400px;
+            height: 225px;
+        }
+
+        .grad-0 {
+            background-image: linear-gradient(to top, red, yellow);
+        }
+
+        .grad-1 {
+            background-image: linear-gradient(to bottom, red, yellow);
+        }
+
+        .grad-2 {
+            background-image: linear-gradient(to left, red, yellow);
+        }
+
+        .grad-3 {
+            background-image: linear-gradient(to right, red, yellow);
+        }
+
+        .grad-4 {
+            background-image: linear-gradient(to top, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+            linear-gradient(to bottom, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+            linear-gradient(to left, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+        }
+
+        .grad-5 {
+            background-image: linear-gradient(to top, blue, 30%, orange, 10%, red);
+        }
+
+        .grad-6 {
+            background-image: linear-gradient(to top, blue 30%, 30%, orange 20%, 10%, red);
+        }
+
+        .grad-7 {
+            width: 400px;
+            height: 225px;
+            background-image: linear-gradient(to right, red 0%, black 20%, yellow 60%, cyan 100%);
+        }
+
+        .grad-8 {
+            background-image: linear-gradient(
+                to right,
+                red,
+                #f06d06,
+                rgb(255, 255, 0),
+                green
+                );
+        }
+
+        .grad-9 {
+            background: linear-gradient(135deg, #333 25%, transparent 25%) -50px 0,
+                        linear-gradient(225deg, #333 25%, transparent 25%) -50px 0,
+                        linear-gradient(315deg, #333 25%, transparent 25%),
+                        linear-gradient(45deg, #333 25%, transparent 25%);
+        }
+
+        .grad-10 {
+            background-image: linear-gradient(90deg, red, transparent, blue);
+        }
+
+        .grad-11 {
+            background-image: linear-gradient(to top right, indigo, white, deeppink);
+        }
+
+        .grad-12 {
+            background-image: linear-gradient(to top left, indigo, white, deeppink);
+        }
+
+        .grad-13 {
+            background-image: linear-gradient(to bottom left, indigo, white, deeppink);
+        }
+
+        .grad-14 {
+            background-image: linear-gradient(to bottom right,  indigo, white, deeppink);
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Gradients!</h1>
+    <b>Simple gradients:</b><br/>
+    <div class="box grad-0"></div>
+    <div class="box grad-1"></div>
+    <div class="box grad-2"></div>
+    <div class="box grad-3"></div>
+    <div class="box grad-4"></div>
+    <b>Funky color hints:</b><br>
+    <div class="box grad-5"></div>
+    <div class="box grad-6"></div>
+    <b>Multiple color stops + arbitrary angles (click to spin!):</b><br>
+    <div id="gradient-spin" class="rect grad-7"></div>
+    <b>Default color stops:</b><br>
+    <div class="box grad-8"></div>
+    <div class="box grad-9"></div>
+    <b>Pre-multiplied alpha mixing test:</b><br>
+    <div class="box grad-10"></div>
+    <b>To corner:</b><br>
+    <div class="rect grad-11"></div>
+    <div class="rect grad-12"></div>
+    <div class="rect grad-13"></div>
+    <div class="rect grad-14"></div>
+  </body>
+  <script>
+    const boxes = document.querySelectorAll(".box, .rect");
+    const backgroundMap = {};
+    for (const rule of document.styleSheets[0].cssRules) {
+        backgroundMap[rule.selectorText] = rule.style.backgroundImage;
+    }
+
+    // Extract backgroundImage CSS and place above each box
+    updateLabels = () => {
+        boxes.forEach(box => {
+            const grad = box.classList[1];
+            const cssText = backgroundMap['.'+grad];
+            let el = document.getElementById(grad);
+            let newEl = document.createElement('code');
+            let text = document.createTextNode(box.style.backgroundImage || cssText);
+            newEl.appendChild(text);
+            newEl.id = grad;
+            if (!el)
+                box.parentNode.insertBefore(newEl, box)
+            else
+                box.parentNode.replaceChild(newEl, el);
+        })
+    }
+
+    // Spinning gradient demo/test
+    let angle = 0;
+    let spinIntervalId = -1;
+    const gradientSpin = document.getElementById("gradient-spin");
+    gradientSpin.onclick = () => {
+        if (spinIntervalId <= -1) {
+            spinIntervalId = setInterval(() => {
+                gradientSpin.style.backgroundImage = `linear-gradient(${angle}deg, red 0%, black 20%, yellow 60%, cyan 100%)`;
+                angle += 1;
+                updateLabels();
+            }, 100)
+        }  else {
+            clearInterval(spinIntervalId);
+            spinIntervalId = -1;
+        }
+    }
+
+    updateLabels();
+  </script>
+</html>

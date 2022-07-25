@@ -1,5 +1,4 @@
 set(SOURCES
-    Account.cpp
     AnonymousBuffer.cpp
     ArgsParser.cpp
     ConfigFile.cpp
@@ -38,6 +37,9 @@ set(SOURCES
     UDPServer.cpp
     Version.cpp
 )
+if (NOT ANDROID)
+    list(APPEND SOURCES Account.cpp)
+endif()
 
 serenity_lib(LibCore core)
 target_link_libraries(LibCore LibC LibCrypt)

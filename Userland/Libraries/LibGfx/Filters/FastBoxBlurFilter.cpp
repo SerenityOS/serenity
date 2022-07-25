@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
@@ -33,42 +37,14 @@ void FastBoxBlurFilter::apply_single_pass(size_t radius)
     apply_single_pass(radius, radius);
 }
 
-// Based on the super fast blur algorithm by Quasimondo, explored here: https://stackoverflow.com/questions/21418892/understanding-super-fast-blur-algorithm
-void FastBoxBlurFilter::apply_single_pass(size_t radius_x, size_t radius_y)
+template<typename GetPixelFunction, typename SetPixelFunction>
+static void do_single_pass(int width, int height, size_t radius_x, size_t radius_y, GetPixelFunction get_pixel_function, SetPixelFunction set_pixel_function)
 {
-    auto format = m_bitmap.format();
-    VERIFY(format == BitmapFormat::BGRA8888 || format == BitmapFormat::BGRx8888);
-
-    Function<Color(int, int)> get_pixel_function;
-    Function<void(int, int, Color)> set_pixel_function;
-    switch (format) {
-    case BitmapFormat::BGRx8888:
-        get_pixel_function = [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRx8888>(x, y); };
-        set_pixel_function = [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRx8888>(x, y, color); };
-        break;
-    case BitmapFormat::BGRA8888:
-        get_pixel_function = [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRA8888>(x, y); };
-        set_pixel_function = [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color); };
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    int height = m_bitmap.height();
-    int width = m_bitmap.width();
-
     int div_x = 2 * radius_x + 1;
     int div_y = 2 * radius_y + 1;
 
-    Vector<u8, 1024> intermediate_red;
-    Vector<u8, 1024> intermediate_green;
-    Vector<u8, 1024> intermediate_blue;
-    Vector<u8, 1024> intermediate_alpha;
-
-    intermediate_red.resize(width * height);
-    intermediate_green.resize(width * height);
-    intermediate_blue.resize(width * height);
-    intermediate_alpha.resize(width * height);
+    Vector<Color, 1024> intermediate;
+    intermediate.resize(width * height);
 
     // First pass: vertical
     for (int y = 0; y < height; ++y) {
@@ -87,10 +63,12 @@ void FastBoxBlurFilter::apply_single_pass(size_t radius_x, size_t radius_y)
         }
         // Slide horizontally
         for (int x = 0; x < width; ++x) {
-            intermediate_red[y * width + x] = (sum_red / div_x);
-            intermediate_green[y * width + x] = (sum_green / div_x);
-            intermediate_blue[y * width + x] = (sum_blue / div_x);
-            intermediate_alpha[y * width + x] = (sum_alpha / div_x);
+            auto const index = y * width + x;
+            auto& current_intermediate = intermediate[index];
+            current_intermediate.set_red(sum_red / div_x);
+            current_intermediate.set_green(sum_green / div_x);
+            current_intermediate.set_blue(sum_blue / div_x);
+            current_intermediate.set_alpha(sum_alpha / div_x);
 
             auto leftmost_x_coord = max(x - (int)radius_x, 0);
             auto rightmost_x_coord = min(x + (int)radius_x + 1, width - 1);
@@ -119,10 +97,11 @@ void FastBoxBlurFilter::apply_single_pass(size_t radius_x, size_t radius_y)
         // Setup sliding window
         for (int i = -(int)radius_y; i <= (int)radius_y; ++i) {
             int offset = clamp(i, 0, height - 1) * width + x;
-            sum_red += intermediate_red[offset];
-            sum_green += intermediate_green[offset];
-            sum_blue += intermediate_blue[offset];
-            sum_alpha += intermediate_alpha[offset];
+            auto& current_intermediate = intermediate[offset];
+            sum_red += current_intermediate.red();
+            sum_green += current_intermediate.green();
+            sum_blue += current_intermediate.blue();
+            sum_alpha += current_intermediate.alpha();
         }
 
         for (int y = 0; y < height; ++y) {
@@ -134,18 +113,46 @@ void FastBoxBlurFilter::apply_single_pass(size_t radius_x, size_t radius_y)
 
             set_pixel_function(x, y, color);
 
-            auto topmost_y_coord = max(y - (int)radius_y, 0);
-            auto bottommost_y_coord = min(y + (int)radius_y + 1, height - 1);
+            auto const bottommost_y_coord = min(y + (int)radius_y + 1, height - 1);
+            auto const bottom_index = x + bottommost_y_coord * width;
+            auto& bottom_intermediate = intermediate[bottom_index];
+            sum_red += bottom_intermediate.red();
+            sum_green += bottom_intermediate.green();
+            sum_blue += bottom_intermediate.blue();
+            sum_alpha += bottom_intermediate.alpha();
 
-            sum_red += intermediate_red[x + bottommost_y_coord * width];
-            sum_red -= intermediate_red[x + topmost_y_coord * width];
-            sum_green += intermediate_green[x + bottommost_y_coord * width];
-            sum_green -= intermediate_green[x + topmost_y_coord * width];
-            sum_blue += intermediate_blue[x + bottommost_y_coord * width];
-            sum_blue -= intermediate_blue[x + topmost_y_coord * width];
-            sum_alpha += intermediate_alpha[x + bottommost_y_coord * width];
-            sum_alpha -= intermediate_alpha[x + topmost_y_coord * width];
+            auto const topmost_y_coord = max(y - (int)radius_y, 0);
+            auto const top_index = x + topmost_y_coord * width;
+            auto& top_intermediate = intermediate[top_index];
+            sum_red -= top_intermediate.red();
+            sum_green -= top_intermediate.green();
+            sum_blue -= top_intermediate.blue();
+            sum_alpha -= top_intermediate.alpha();
         }
+    }
+}
+
+// Based on the super fast blur algorithm by Quasimondo, explored here: https://stackoverflow.com/questions/21418892/understanding-super-fast-blur-algorithm
+FLATTEN void FastBoxBlurFilter::apply_single_pass(size_t radius_x, size_t radius_y)
+{
+    auto format = m_bitmap.format();
+    VERIFY(format == BitmapFormat::BGRA8888 || format == BitmapFormat::BGRx8888);
+
+    switch (format) {
+    case BitmapFormat::BGRx8888:
+        do_single_pass(
+            m_bitmap.width(), m_bitmap.height(), radius_x, radius_y,
+            [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRx8888>(x, y); },
+            [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRx8888>(x, y, color); });
+        break;
+    case BitmapFormat::BGRA8888:
+        do_single_pass(
+            m_bitmap.width(), m_bitmap.height(), radius_x, radius_y,
+            [&](int x, int y) { return m_bitmap.get_pixel<StorageFormat::BGRA8888>(x, y); },
+            [&](int x, int y, Color color) { return m_bitmap.set_pixel<StorageFormat::BGRA8888>(x, y, color); });
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 

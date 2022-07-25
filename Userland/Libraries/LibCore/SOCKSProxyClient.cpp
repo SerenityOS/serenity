@@ -74,23 +74,23 @@ StringView reply_response_name(Reply reply)
 {
     switch (reply) {
     case Reply::Succeeded:
-        return "Succeeded";
+        return "Succeeded"sv;
     case Reply::GeneralSocksServerFailure:
-        return "GeneralSocksServerFailure";
+        return "GeneralSocksServerFailure"sv;
     case Reply::ConnectionNotAllowedByRuleset:
-        return "ConnectionNotAllowedByRuleset";
+        return "ConnectionNotAllowedByRuleset"sv;
     case Reply::NetworkUnreachable:
-        return "NetworkUnreachable";
+        return "NetworkUnreachable"sv;
     case Reply::HostUnreachable:
-        return "HostUnreachable";
+        return "HostUnreachable"sv;
     case Reply::ConnectionRefused:
-        return "ConnectionRefused";
+        return "ConnectionRefused"sv;
     case Reply::TTLExpired:
-        return "TTLExpired";
+        return "TTLExpired"sv;
     case Reply::CommandNotSupported:
-        return "CommandNotSupported";
+        return "CommandNotSupported"sv;
     case Reply::AddressTypeNotSupported:
-        return "AddressTypeNotSupported";
+        return "AddressTypeNotSupported"sv;
     }
     VERIFY_NOT_REACHED();
 }
@@ -277,7 +277,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(Socket& under
             auto reply = TRY(send_connect_request_message(underlying, version, target, target_port, command));
             if (reply != Reply::Succeeded) {
                 underlying.close();
-                return Error::from_string_literal(reply_response_name(reply));
+                return Error::from_string_view(reply_response_name(reply));
             }
 
             return adopt_nonnull_own_or_enomem(new SOCKSProxyClient {
@@ -296,7 +296,7 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(Socket& under
             auto reply = TRY(send_connect_request_message(underlying, version, target, target_port, command));
             if (reply != Reply::Succeeded) {
                 underlying.close();
-                return Error::from_string_literal(reply_response_name(reply));
+                return Error::from_string_view(reply_response_name(reply));
             }
 
             return adopt_nonnull_own_or_enomem(new SOCKSProxyClient {

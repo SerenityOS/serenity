@@ -14,6 +14,9 @@
 #    include <serenity.h>
 #elif defined(__linux__) or defined(AK_OS_MACOS)
 #    include <pthread.h>
+#elif defined(__FreeBSD__)
+#    include <pthread.h>
+#    include <pthread_np.h>
 #endif
 
 namespace AK {
@@ -25,15 +28,25 @@ StackInfo::StackInfo()
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();
     }
-#elif defined(__linux__)
+#elif defined(__linux__) or defined(__FreeBSD__)
     int rc;
-    pthread_attr_t attr = {};
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+#    ifdef __linux__
     if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
-        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
+        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
     }
+#    else
+    if ((rc = pthread_attr_get_np(pthread_self(), &attr)) != 0) {
+        fprintf(stderr, "pthread_attr_get_np: %s\n", strerror(rc));
+        VERIFY_NOT_REACHED();
+    }
+#    endif
+
     if ((rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size)) != 0) {
-        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
+        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);

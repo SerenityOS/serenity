@@ -74,6 +74,7 @@ set(SOURCES
     DOM/AbortSignal.cpp
     DOM/Attribute.cpp
     DOM/Attribute.idl
+    DOM/CDATASection.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -93,6 +94,9 @@ set(SOURCES
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
     DOM/LiveNodeList.cpp
+    DOM/MutationObserver.cpp
+    DOM/MutationRecord.cpp
+    DOM/MutationType.cpp
     DOM/NamedNodeMap.cpp
     DOM/Node.cpp
     DOM/NodeIterator.cpp
@@ -109,10 +113,21 @@ set(SOURCES
     DOM/Text.idl
     DOM/TreeWalker.cpp
     DOMParsing/InnerHTML.cpp
+    DOMParsing/XMLSerializer.cpp
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
-    Fetch/AbstractOperations.cpp
+    Fetch/Headers.cpp
+    Fetch/HeadersIterator.cpp
+    Fetch/Infrastructure/HTTP.cpp
+    Fetch/Infrastructure/URL.cpp
+    Fetch/Infrastructure/HTTP/Bodies.cpp
+    Fetch/Infrastructure/HTTP/Headers.cpp
+    Fetch/Infrastructure/HTTP/Methods.cpp
+    Fetch/Infrastructure/HTTP/Requests.cpp
+    Fetch/Infrastructure/HTTP/Responses.cpp
+    Fetch/Infrastructure/HTTP/Statuses.cpp
+    FileAPI/Blob.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
@@ -225,12 +240,14 @@ set(SOURCES
     HTML/TextMetrics.cpp
     HTML/Timer.cpp
     HTML/Window.cpp
+    HTML/WindowEventHandlers.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
     HighResolutionTime/Performance.cpp
     ImageDecoding.cpp
+    Infra/ByteSequences.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
@@ -242,7 +259,6 @@ set(SOURCES
     Layout/CheckBox.cpp
     Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
-    Layout/FormattingState.cpp
     Layout/FrameBox.cpp
     Layout/ImageBox.cpp
     Layout/InitialContainingBlock.cpp
@@ -252,6 +268,7 @@ set(SOURCES
     Layout/Label.cpp
     Layout/LabelableNode.cpp
     Layout/LayoutPosition.cpp
+    Layout/LayoutState.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
     Layout/LineBuilder.cpp
@@ -274,6 +291,7 @@ set(SOURCES
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
     Loader/ContentFilter.cpp
+    Loader/FileRequest.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
@@ -289,9 +307,11 @@ set(SOURCES
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
+    Painting/BorderRadiusCornerClipper.cpp
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
+    Painting/GradientPainting.cpp
     Painting/ImagePaintable.cpp
     Painting/InlinePaintable.cpp
     Painting/LabelablePaintable.cpp
@@ -306,9 +326,9 @@ set(SOURCES
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
-    Painting/TextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
+    Painting/TextPaintable.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
     SVG/AttributeNames.cpp
@@ -352,6 +372,9 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
+    WebGL/WebGLContextAttributes.cpp
+    WebGL/WebGLRenderingContext.cpp
+    WebGL/WebGLRenderingContextBase.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
@@ -372,7 +395,9 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibWasm LibXML)
+
+# NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML)
 link_with_unicode_data(LibWeb)
 
 generate_js_wrappers(LibWeb)

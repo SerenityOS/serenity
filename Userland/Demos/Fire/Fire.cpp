@@ -221,7 +221,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    auto app_icon = GUI::Icon::default_icon("app-fire");
+    auto app_icon = GUI::Icon::default_icon("app-fire"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();

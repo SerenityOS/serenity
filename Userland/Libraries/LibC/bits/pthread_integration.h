@@ -18,20 +18,9 @@ void __pthread_fork_atfork_register_prepare(void (*)(void));
 void __pthread_fork_atfork_register_parent(void (*)(void));
 void __pthread_fork_atfork_register_child(void (*)(void));
 
-int __pthread_mutex_init(pthread_mutex_t*, pthread_mutexattr_t const*);
-int __pthread_mutex_lock(pthread_mutex_t*);
-int __pthread_mutex_trylock(pthread_mutex_t*);
 int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t*);
-int __pthread_mutex_unlock(pthread_mutex_t*);
 
 typedef void (*KeyDestructor)(void*);
-
-int __pthread_key_create(pthread_key_t*, KeyDestructor);
-int __pthread_key_delete(pthread_key_t);
-void* __pthread_getspecific(pthread_key_t);
-int __pthread_setspecific(pthread_key_t, void const*);
-
-int __pthread_self(void);
 
 void __pthread_key_destroy_for_current_thread(void);
 

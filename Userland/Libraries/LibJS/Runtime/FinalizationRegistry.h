@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,8 +25,8 @@ public:
     explicit FinalizationRegistry(Realm&, JobCallback, Object& prototype);
     virtual ~FinalizationRegistry() override = default;
 
-    void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);
-    bool remove_by_token(Object& unregister_token);
+    void add_finalization_record(Cell& target, Value held_value, Cell* unregister_token);
+    bool remove_by_token(Cell& unregister_token);
     ThrowCompletionOr<void> cleanup(Optional<JobCallback> = {});
 
     virtual void remove_dead_cells(Badge<Heap>) override;
@@ -46,7 +46,7 @@ private:
     struct FinalizationRecord {
         Cell* target { nullptr };
         Value held_value;
-        Object* unregister_token { nullptr };
+        Cell* unregister_token { nullptr };
     };
     SinglyLinkedList<FinalizationRecord> m_records;
 };

@@ -24,6 +24,7 @@ for cmd in \
         Meta/check-debug-flags.sh \
         Meta/check-markdown.sh \
         Meta/check-newlines-at-eof.py \
+        Meta/check-png-sizes.sh \
         Meta/check-style.py \
         Meta/lint-executable-resources.sh \
         Meta/lint-keymaps.py \

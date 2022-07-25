@@ -10,8 +10,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
+#include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
-#include <LibUnicode/NumberFormat.h>
 
 namespace JS::Intl {
 
@@ -26,6 +26,8 @@ void RelativeTimeFormat::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     if (m_number_format)
         visitor.visit(m_number_format);
+    if (m_plural_rules)
+        visitor.visit(m_plural_rules);
 }
 
 void RelativeTimeFormat::set_numeric(StringView numeric)
@@ -179,10 +181,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto value_partitions = partition_number_pattern(global_object, relative_time_format.number_format(), Value(value));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
+    auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
+
     // 22. Let pattern be po.[[<pr>]].
-    // FIXME: Use ResolvePlural when Intl.PluralRules is implemented.
-    auto pattern = Unicode::select_pattern_with_plurality(patterns, value);
-    if (!pattern.has_value())
+    auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality; });
+    if (pattern == patterns.end())
         return Vector<PatternPartitionWithUnit> {};
 
     // 23. Return ! MakePartsList(pattern, unit, fv).

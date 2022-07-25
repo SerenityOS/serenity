@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath unix"));
 
     auto config = TRY(Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes));
-    TRY(Core::System::unveil(config->filename(), "rwc"));
+    TRY(Core::System::unveil(config->filename(), "rwc"sv));
     TRY(Core::System::unveil("/dev/audio", "wc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

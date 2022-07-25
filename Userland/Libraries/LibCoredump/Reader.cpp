@@ -157,7 +157,8 @@ const JsonObject Reader::process_info() const
     }
     if (!process_info_notes_entry)
         return {};
-    auto process_info_json_value = JsonValue::from_string(process_info_notes_entry->json_data);
+    auto const* json_data_ptr = process_info_notes_entry->json_data;
+    auto process_info_json_value = JsonValue::from_string({ json_data_ptr, strlen(json_data_ptr) });
     if (process_info_json_value.is_error())
         return {};
     if (!process_info_json_value.value().is_object())
@@ -195,14 +196,14 @@ Optional<MemoryRegionInfo> Reader::region_containing(FlatPtr address) const
 int Reader::process_pid() const
 {
     auto process_info = this->process_info();
-    auto pid = process_info.get("pid");
+    auto pid = process_info.get("pid"sv);
     return pid.to_number<int>();
 }
 
 u8 Reader::process_termination_signal() const
 {
     auto process_info = this->process_info();
-    auto termination_signal = process_info.get("termination_signal");
+    auto termination_signal = process_info.get("termination_signal"sv);
     auto signal_number = termination_signal.to_number<u8>();
     if (signal_number <= SIGINVAL || signal_number >= NSIG)
         return SIGINVAL;
@@ -212,14 +213,14 @@ u8 Reader::process_termination_signal() const
 String Reader::process_executable_path() const
 {
     auto process_info = this->process_info();
-    auto executable_path = process_info.get("executable_path");
+    auto executable_path = process_info.get("executable_path"sv);
     return executable_path.as_string_or({});
 }
 
 Vector<String> Reader::process_arguments() const
 {
     auto process_info = this->process_info();
-    auto arguments = process_info.get("arguments");
+    auto arguments = process_info.get("arguments"sv);
     if (!arguments.is_array())
         return {};
     Vector<String> vector;
@@ -233,7 +234,7 @@ Vector<String> Reader::process_arguments() const
 Vector<String> Reader::process_environment() const
 {
     auto process_info = this->process_info();
-    auto environment = process_info.get("environment");
+    auto environment = process_info.get("environment"sv);
     if (!environment.is_array())
         return {};
     Vector<String> vector;
@@ -256,7 +257,8 @@ HashMap<String, String> Reader::metadata() const
     }
     if (!metadata_notes_entry)
         return {};
-    auto metadata_json_value = JsonValue::from_string(metadata_notes_entry->json_data);
+    auto const* json_data_ptr = metadata_notes_entry->json_data;
+    auto metadata_json_value = JsonValue::from_string({ json_data_ptr, strlen(json_data_ptr) });
     if (metadata_json_value.is_error())
         return {};
     if (!metadata_json_value.value().is_object())

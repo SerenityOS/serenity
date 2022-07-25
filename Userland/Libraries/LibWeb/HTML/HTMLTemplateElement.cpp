@@ -24,8 +24,7 @@ DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document
         if (!document.associated_inert_template_document()) {
             auto new_document = DOM::Document::create();
             new_document->set_created_for_appropriate_template_contents(true);
-
-            // FIXME: If doc is an HTML document, mark new doc as an HTML document also.
+            new_document->set_document_type(document.document_type());
 
             document.set_associated_inert_template_document(new_document);
         }

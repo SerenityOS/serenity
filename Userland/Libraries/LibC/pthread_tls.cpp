@@ -5,8 +5,8 @@
  */
 
 #include <AK/Atomic.h>
-#include <LibPthread/pthread.h>
 #include <errno.h>
+#include <pthread.h>
 #include <unistd.h>
 
 #ifndef _DYNAMIC_LOADER
@@ -28,10 +28,11 @@ static KeyTable s_keys;
 
 __thread SpecificTable t_specifics;
 
-int __pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_create.html
+int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
 {
     int ret = 0;
-    __pthread_mutex_lock(&s_keys.mutex);
+    pthread_mutex_lock(&s_keys.mutex);
     if (s_keys.next >= max_keys) {
         ret = EAGAIN;
     } else {
@@ -39,25 +40,23 @@ int __pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
         s_keys.destructors[*key] = destructor;
         ret = 0;
     }
-    __pthread_mutex_unlock(&s_keys.mutex);
+    pthread_mutex_unlock(&s_keys.mutex);
     return ret;
 }
 
-int pthread_key_create(pthread_key_t*, KeyDestructor) __attribute__((weak, alias("__pthread_key_create")));
-
-int __pthread_key_delete(pthread_key_t key)
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_delete.html
+int pthread_key_delete(pthread_key_t key)
 {
     if (key < 0 || key >= max_keys)
         return EINVAL;
-    __pthread_mutex_lock(&s_keys.mutex);
+    pthread_mutex_lock(&s_keys.mutex);
     s_keys.destructors[key] = nullptr;
-    __pthread_mutex_unlock(&s_keys.mutex);
+    pthread_mutex_unlock(&s_keys.mutex);
     return 0;
 }
 
-int pthread_key_delete(pthread_key_t) __attribute__((weak, alias("__pthread_key_delete")));
-
-void* __pthread_getspecific(pthread_key_t key)
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getspecific.html
+void* pthread_getspecific(pthread_key_t key)
 {
     if (key < 0)
         return nullptr;
@@ -66,9 +65,8 @@ void* __pthread_getspecific(pthread_key_t key)
     return t_specifics.values[key];
 }
 
-void* pthread_getspecific(pthread_key_t) __attribute__((weak, alias("__pthread_getspecific")));
-
-int __pthread_setspecific(pthread_key_t key, void const* value)
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setspecific.html
+int pthread_setspecific(pthread_key_t key, void const* value)
 {
     if (key < 0)
         return EINVAL;
@@ -79,14 +77,12 @@ int __pthread_setspecific(pthread_key_t key, void const* value)
     return 0;
 }
 
-int pthread_setspecific(pthread_key_t, void const*) __attribute__((weak, alias("__pthread_setspecific")));
-
 void __pthread_key_destroy_for_current_thread()
 {
     // This function will either be called during exit_thread, for a pthread, or
     // during global program shutdown for the main thread.
 
-    __pthread_mutex_lock(&s_keys.mutex);
+    pthread_mutex_lock(&s_keys.mutex);
     size_t num_used_keys = s_keys.next;
 
     // Dr. POSIX accounts for weird key destructors setting their own key again.
@@ -105,7 +101,7 @@ void __pthread_key_destroy_for_current_thread()
         if (!any_nonnull_destructors)
             break;
     }
-    __pthread_mutex_unlock(&s_keys.mutex);
+    pthread_mutex_unlock(&s_keys.mutex);
 }
 }
 #endif

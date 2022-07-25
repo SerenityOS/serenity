@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,9 +42,13 @@ ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_tar
     auto& global_object = this->global_object();
 
     auto target = vm.argument(0);
-    if (!target.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
-    return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object()));
+    if (!can_be_held_weakly(target))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
+
+    if (target.is_object())
+        return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, target.as_object()));
+    VERIFY(target.is_symbol());
+    return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, target.as_symbol()));
 }
 
 }

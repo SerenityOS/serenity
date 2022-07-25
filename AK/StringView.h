@@ -33,11 +33,6 @@ public:
     {
         VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE constexpr StringView(char const* cstring)
-        : m_characters(cstring)
-        , m_length(cstring ? __builtin_strlen(cstring) : 0)
-    {
-    }
     ALWAYS_INLINE StringView(ReadonlyBytes bytes)
         : m_characters(reinterpret_cast<char const*>(bytes.data()))
         , m_length(bytes.size())
@@ -131,6 +126,14 @@ public:
     [[nodiscard]] Vector<StringView> split_view(StringView, bool keep_empty = false) const;
 
     [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
+
+    [[nodiscard]] StringView find_last_split_view(char separator) const
+    {
+        auto begin = find_last(separator);
+        if (!begin.has_value())
+            return *this;
+        return substring_view(begin.release_value() + 1);
+    }
 
     template<VoidFunction<StringView> Callback>
     void for_each_split_view(char separator, bool keep_empty, Callback callback) const
@@ -268,7 +271,7 @@ public:
     }
 
 #ifndef KERNEL
-    [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const;
+    [[nodiscard]] String replace(StringView needle, StringView replacement, ReplaceMode) const;
 #endif
     [[nodiscard]] size_t count(StringView needle) const
     {

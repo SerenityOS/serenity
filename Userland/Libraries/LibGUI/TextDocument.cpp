@@ -263,16 +263,26 @@ void TextDocument::append_line(NonnullOwnPtr<TextDocumentLine> line)
 
 void TextDocument::insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine> line)
 {
-    lines().insert((int)line_index, move(line));
+    lines().insert(line_index, move(line));
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_insert_line(line_index);
     }
 }
 
+NonnullOwnPtr<TextDocumentLine> TextDocument::take_line(size_t line_index)
+{
+    auto line = lines().take(line_index);
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_remove_line(line_index);
+    }
+    return line;
+}
+
 void TextDocument::remove_line(size_t line_index)
 {
-    lines().remove((int)line_index);
+    lines().remove(line_index);
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_remove_line(line_index);
@@ -930,6 +940,62 @@ bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
 String ReplaceAllTextCommand::action_text() const
 {
     return m_action_text;
+}
+
+IndentSelection::IndentSelection(TextDocument& document, size_t tab_width, TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_tab_width(tab_width)
+    , m_range(range)
+{
+}
+
+void IndentSelection::redo()
+{
+    auto const tab = String::repeated(' ', m_tab_width);
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        m_document.insert_at({ i, 0 }, tab, m_client);
+    }
+
+    m_document.set_all_cursors(m_range.start());
+}
+
+void IndentSelection::undo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        m_document.remove({ { i, 0 }, { i, m_tab_width } });
+    }
+
+    m_document.set_all_cursors(m_range.start());
+}
+
+UnindentSelection::UnindentSelection(TextDocument& document, size_t tab_width, TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_tab_width(tab_width)
+    , m_range(range)
+{
+}
+
+void UnindentSelection::redo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).leading_spaces() >= m_tab_width)
+            m_document.remove({ { i, 0 }, { i, m_tab_width } });
+        else
+            m_document.remove({ { i, 0 }, { i, m_document.line(i).leading_spaces() } });
+    }
+
+    m_document.set_all_cursors(m_range.start());
+}
+
+void UnindentSelection::undo()
+{
+    auto const tab = String::repeated(' ', m_tab_width);
+
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++)
+        m_document.insert_at({ i, 0 }, tab, m_client);
+
+    m_document.set_all_cursors(m_range.start());
 }
 
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)

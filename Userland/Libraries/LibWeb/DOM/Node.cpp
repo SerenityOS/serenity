@@ -11,6 +11,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/Comment.h>
@@ -21,16 +22,18 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/LiveNodeList.h>
+#include <LibWeb/DOM/MutationType.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Origin.h>
 
 namespace Web::DOM {
 
@@ -81,8 +84,8 @@ Node::~Node()
 // https://dom.spec.whatwg.org/#dom-node-baseuri
 String Node::base_uri() const
 {
-    // FIXME: Return this’s node document’s document base URL, serialized.
-    return document().url_string();
+    // Return this’s node document’s document base URL, serialized.
+    return document().base_url().to_string();
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
@@ -345,7 +348,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
     // 1. Let nodes be node’s children, if node is a DocumentFragment node; otherwise « node ».
     NonnullRefPtrVector<Node> nodes;
     if (is<DocumentFragment>(*node))
-        nodes = verify_cast<DocumentFragment>(*node).children_as_vector();
+        nodes = node->children_as_vector();
     else
         nodes.append(node);
 
@@ -361,8 +364,9 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         // 1. Remove its children with the suppress observers flag set.
         node->remove_all_children(true);
 
-        // FIXME: 2. Queue a tree mutation record for node with « », nodes, null, and null.
+        // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
+        node->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(nodes), nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -380,7 +384,12 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         }
     }
 
-    // FIXME: 6. Let previousSibling be child’s previous sibling or parent’s last child if child is null. (Currently unused so not included)
+    // 6. Let previousSibling be child’s previous sibling or parent’s last child if child is null.
+    RefPtr<Node> previous_sibling;
+    if (child)
+        previous_sibling = child->previous_sibling();
+    else
+        previous_sibling = last_child();
 
     // 7. For each node in nodes, in tree order:
     // FIXME: In tree order
@@ -418,9 +427,8 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
     }
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
-    if (!suppress_observers) {
-        // FIXME: queue a tree mutation record for parent with nodes, « », previousSibling, and child.
-    }
+    if (!suppress_observers)
+        queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create({}), previous_sibling, child);
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -517,8 +525,11 @@ void Node::remove(bool suppress_observers)
         node_iterator.run_pre_removing_steps(*this);
     });
 
-    // FIXME: 9. Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
-    // FIXME: 10. Let oldNextSibling be node’s next sibling. (Currently unused so not included)
+    // 9. Let oldPreviousSibling be node’s previous sibling.
+    RefPtr<Node> old_previous_sibling = previous_sibling();
+
+    // 10. Let oldNextSibling be node’s next sibling.
+    RefPtr<Node> old_next_sibling = next_sibling();
 
     // 11. Remove node from its parent’s children.
     parent->TreeNode::remove_child(*this);
@@ -552,13 +563,23 @@ void Node::remove(bool suppress_observers)
         return IterationDecision::Continue;
     });
 
-    // FIXME: 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
-    //      if registered’s options["subtree"] is true, then append a new transient registered observer
-    //      whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
+    // 19. For each inclusive ancestor inclusiveAncestor of parent, and then for each registered of inclusiveAncestor’s registered observer list,
+    //     if registered’s options["subtree"] is true, then append a new transient registered observer
+    //     whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
+    for (auto* inclusive_ancestor = parent; inclusive_ancestor; inclusive_ancestor = inclusive_ancestor->parent()) {
+        for (auto& registered : inclusive_ancestor->m_registered_observer_list) {
+            if (registered.options.subtree) {
+                auto transient_observer = TransientRegisteredObserver::create(registered.observer, registered.options, registered);
+                m_registered_observer_list.append(move(transient_observer));
+            }
+        }
+    }
 
     // 20. If suppress observers flag is unset, then queue a tree mutation record for parent with « », « node », oldPreviousSibling, and oldNextSibling.
     if (!suppress_observers) {
-        // FIXME: queue a tree mutation record for parent with « », « node », oldPreviousSibling, and oldNextSibling.
+        NonnullRefPtrVector<Node> removed_nodes;
+        removed_nodes.append(*this);
+        parent->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling, old_next_sibling);
     }
 
     // 21. Run the children changed steps for parent.
@@ -617,30 +638,40 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
     }
 
     // 7. Let referenceChild be child’s next sibling.
-    auto reference_child = child->next_sibling();
+    RefPtr<Node> reference_child = child->next_sibling();
 
     // 8. If referenceChild is node, then set referenceChild to node’s next sibling.
     if (reference_child == node)
         reference_child = node->next_sibling();
 
-    // FIXME: 9. Let previousSibling be child’s previous sibling. (Currently unused so not included)
-    // FIXME: 10. Let removedNodes be the empty set. (Currently unused so not included)
+    // 9. Let previousSibling be child’s previous sibling.
+    RefPtr<Node> previous_sibling = child->previous_sibling();
+
+    // 10. Let removedNodes be the empty set.
+    NonnullRefPtrVector<Node> removed_nodes;
 
     // 11. If child’s parent is non-null, then:
     // NOTE: The above can only be false if child is node.
     if (child->parent()) {
-        // FIXME: 1. Set removedNodes to « child ».
+        // 1. Set removedNodes to « child ».
+        removed_nodes.append(child);
 
         // 2. Remove child with the suppress observers flag set.
         child->remove(true);
     }
 
-    // FIXME: 12. Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ». (Currently unused so not included)
+    // 12. Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ».
+    NonnullRefPtrVector<Node> nodes;
+    if (is<DocumentFragment>(*node))
+        nodes = node->children_as_vector();
+    else
+        nodes.append(node);
 
     // 13. Insert node into parent before referenceChild with the suppress observers flag set.
     insert_before(node, reference_child, true);
 
-    // FIXME: 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
+    // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
+    queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create(move(removed_nodes)), previous_sibling, reference_child);
 
     // 15. Return child.
     return child;
@@ -680,7 +711,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
         document_copy->set_content_type(document_->content_type());
         document_copy->set_url(document_->url());
         document_copy->set_origin(document_->origin());
-        // FIXME: Set type ("xml" or "html")
+        document_copy->set_document_type(document_->document_type());
         document_copy->set_quirks_mode(document_->mode());
         copy = move(document_copy);
     } else if (is<DocumentType>(this)) {
@@ -792,10 +823,7 @@ void Node::removed_last_ref()
 
 void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
 {
-    if (layout_node)
-        m_layout_node = layout_node->make_weak_ptr();
-    else
-        m_layout_node = nullptr;
+    m_layout_node = layout_node;
 }
 
 EventTarget* Node::get_parent(Event const&)
@@ -967,16 +995,16 @@ bool Node::is_uninteresting_whitespace_node() const
 
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
-    MUST(object.add("name", node_name().view()));
-    MUST(object.add("id", id()));
+    MUST(object.add("name"sv, node_name().view()));
+    MUST(object.add("id"sv, id()));
     if (is_document()) {
-        MUST(object.add("type", "document"));
+        MUST(object.add("type"sv, "document"));
     } else if (is_element()) {
-        MUST(object.add("type", "element"));
+        MUST(object.add("type"sv, "element"));
 
         auto const* element = static_cast<DOM::Element const*>(this);
         if (element->has_attributes()) {
-            auto attributes = MUST(object.add_object("attributes"));
+            auto attributes = MUST(object.add_object("attributes"sv));
             element->for_each_attribute([&attributes](auto& name, auto& value) {
                 MUST(attributes.add(name, value));
             });
@@ -986,7 +1014,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
         if (element->is_browsing_context_container()) {
             auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
             if (auto const* content_document = container->content_document()) {
-                auto children = MUST(object.add_array("children"));
+                auto children = MUST(object.add_array("children"sv));
                 JsonObjectSerializer<StringBuilder> content_document_object = MUST(children.add_object());
                 content_document->serialize_tree_as_json(content_document_object);
                 MUST(content_document_object.finish());
@@ -994,10 +1022,10 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
             }
         }
     } else if (is_text()) {
-        MUST(object.add("type", "text"));
+        MUST(object.add("type"sv, "text"));
 
         auto text_node = static_cast<DOM::Text const*>(this);
-        MUST(object.add("text", text_node->data()));
+        MUST(object.add("text"sv, text_node->data()));
     } else if (is_comment()) {
         MUST(object.add("type"sv, "comment"sv));
         MUST(object.add("data"sv, static_cast<DOM::Comment const&>(*this).data()));
@@ -1006,7 +1034,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     MUST((object.add("visible"sv, !!layout_node())));
 
     if (has_child_nodes()) {
-        auto children = MUST(object.add_array("children"));
+        auto children = MUST(object.add_array("children"sv));
         for_each_child([&children](DOM::Node& child) {
             if (child.is_uninteresting_whitespace_node())
                 return;
@@ -1088,10 +1116,20 @@ bool Node::is_shadow_including_inclusive_ancestor_of(Node const& other) const
 // https://dom.spec.whatwg.org/#concept-node-replace-all
 void Node::replace_all(RefPtr<Node> node)
 {
-    // FIXME: 1. Let removedNodes be parent’s children. (Current unused so not included)
-    // FIXME: 2. Let addedNodes be the empty set. (Currently unused so not included)
-    // FIXME: 3. If node is a DocumentFragment node, then set addedNodes to node’s children.
-    // FIXME: 4. Otherwise, if node is non-null, set addedNodes to « node ».
+    // 1. Let removedNodes be parent’s children.
+    auto removed_nodes = children_as_vector();
+
+    // 2. Let addedNodes be the empty set.
+    NonnullRefPtrVector<Node> added_nodes;
+
+    // 3. If node is a DocumentFragment node, then set addedNodes to node’s children.
+    if (node && is<DocumentFragment>(*node)) {
+        added_nodes = node->children_as_vector();
+    }
+    // 4. Otherwise, if node is non-null, set addedNodes to « node ».
+    else if (node) {
+        added_nodes.append(*node);
+    }
 
     // 5. Remove all parent’s children, in tree order, with the suppress observers flag set.
     remove_all_children(true);
@@ -1100,7 +1138,9 @@ void Node::replace_all(RefPtr<Node> node)
     if (node)
         insert_before(*node, nullptr, true);
 
-    // FIXME: 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
+    // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
+    if (!added_nodes.is_empty() || !removed_nodes.is_empty())
+        queue_tree_mutation_record(StaticNodeList::create(move(added_nodes)), StaticNodeList::create(move(removed_nodes)), nullptr, nullptr);
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
@@ -1283,6 +1323,76 @@ Painting::PaintableBox const* Node::paint_box() const
     if (!layout_node()->is_box())
         return nullptr;
     return static_cast<Layout::Box const&>(*layout_node()).paint_box();
+}
+
+// https://dom.spec.whatwg.org/#queue-a-mutation-record
+void Node::queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+{
+    // 1. Let interestedObservers be an empty map.
+    // mutationObserver -> mappedOldValue
+    OrderedHashMap<NonnullRefPtr<MutationObserver>, String> interested_observers;
+
+    // 2. Let nodes be the inclusive ancestors of target.
+    NonnullRefPtrVector<Node> nodes;
+    nodes.append(*this);
+
+    for (auto* parent_node = parent(); parent_node; parent_node = parent_node->parent())
+        nodes.append(*parent_node);
+
+    // 3. For each node in nodes, and then for each registered of node’s registered observer list:
+    for (auto& node : nodes) {
+        for (auto& registered_observer : node.m_registered_observer_list) {
+            // 1. Let options be registered’s options.
+            auto& options = registered_observer.options;
+
+            // 2. If none of the following are true
+            //      - node is not target and options["subtree"] is false
+            //      - type is "attributes" and options["attributes"] either does not exist or is false
+            //      - type is "attributes", options["attributeFilter"] exists, and options["attributeFilter"] does not contain name or namespace is non-null
+            //      - type is "characterData" and options["characterData"] either does not exist or is false
+            //      - type is "childList" and options["childList"] is false
+            //    then:
+            if (!(&node != this && !options.subtree)
+                && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
+                && !(type == MutationType::attributes && options.attribute_filter.has_value() && (!attribute_namespace.is_null() || !options.attribute_filter->contains_slow(attribute_name)))
+                && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
+                && !(type == MutationType::childList && !options.child_list)) {
+                // 1. Let mo be registered’s observer.
+                auto mutation_observer = registered_observer.observer;
+
+                // 2. If interestedObservers[mo] does not exist, then set interestedObservers[mo] to null.
+                if (!interested_observers.contains(mutation_observer))
+                    interested_observers.set(mutation_observer, {});
+
+                // 3. If either type is "attributes" and options["attributeOldValue"] is true, or type is "characterData" and options["characterDataOldValue"] is true, then set interestedObservers[mo] to oldValue.
+                if ((type == MutationType::attributes && options.attribute_old_value.has_value() && options.attribute_old_value.value()) || (type == MutationType::characterData && options.character_data_old_value.has_value() && options.character_data_old_value.value()))
+                    interested_observers.set(mutation_observer, old_value);
+            }
+        }
+    }
+
+    // 4. For each observer → mappedOldValue of interestedObservers:
+    for (auto& interested_observer : interested_observers) {
+        // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
+        //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
+        auto record = MutationRecord::create(type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
+
+        // 2. Enqueue record to observer’s record queue.
+        interested_observer.key->enqueue_record({}, move(record));
+    }
+
+    // 5. Queue a mutation observer microtask.
+    Bindings::queue_mutation_observer_microtask(document());
+}
+
+// https://dom.spec.whatwg.org/#queue-a-tree-mutation-record
+void Node::queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+{
+    // 1. Assert: either addedNodes or removedNodes is not empty.
+    VERIFY(added_nodes->length() > 0 || removed_nodes->length() > 0);
+
+    // 2. Queue a mutation record of "childList" for target with null, null, null, addedNodes, removedNodes, previousSibling, and nextSibling.
+    queue_mutation_record(MutationType::childList, {}, {}, {}, move(added_nodes), move(removed_nodes), previous_sibling, next_sibling);
 }
 
 }

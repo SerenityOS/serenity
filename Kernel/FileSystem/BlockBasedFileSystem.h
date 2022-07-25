@@ -13,7 +13,7 @@ namespace Kernel {
 
 class BlockBasedFileSystem : public FileBackedFileSystem {
 public:
-    TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
+    AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 
     virtual ~BlockBasedFileSystem() override;
     virtual ErrorOr<void> initialize() override;

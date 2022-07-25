@@ -46,7 +46,8 @@ export AFL_NOOPT=1
 echo "Building Lagom Tools..."
 cmake -GNinja -B Build/tools \
     -DBUILD_LAGOM=OFF \
-    -DCMAKE_INSTALL_PREFIX=Build/tool-install
+    -DCMAKE_INSTALL_PREFIX=Build/tool-install \
+    -Dpackage=LagomTools
 ninja -C Build/tools install
 
 # Restore flags for oss-fuzz

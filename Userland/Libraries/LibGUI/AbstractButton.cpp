@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,7 +94,7 @@ void AbstractButton::mousemove_event(MouseEvent& event)
 {
     bool is_over = rect().contains(event.position());
     m_hovered = is_over;
-    if (event.buttons() & MouseButton::Primary) {
+    if (event.buttons() & m_pressed_mouse_button) {
         bool being_pressed = is_over;
         if (being_pressed != m_being_pressed) {
             m_being_pressed = being_pressed;
@@ -111,8 +112,9 @@ void AbstractButton::mousemove_event(MouseEvent& event)
 
 void AbstractButton::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Primary) {
+    if (event.button() & m_allowed_mouse_buttons_for_pressing) {
         m_being_pressed = true;
+        m_pressed_mouse_button = event.button();
         repaint();
 
         if (m_auto_repeat_interval) {
@@ -126,14 +128,25 @@ void AbstractButton::mousedown_event(MouseEvent& event)
 
 void AbstractButton::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Primary && m_being_pressed) {
+    if (event.button() == m_pressed_mouse_button && m_being_pressed) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
         bool was_being_pressed = m_being_pressed;
         m_being_pressed = false;
+        m_pressed_mouse_button = MouseButton::None;
         repaint();
-        if (was_being_pressed && !was_auto_repeating)
-            click(event.modifiers());
+        if (was_being_pressed && !was_auto_repeating) {
+            switch (event.button()) {
+            case MouseButton::Primary:
+                click(event.modifiers());
+                break;
+            case MouseButton::Middle:
+                middle_mouse_click(event.modifiers());
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
     }
     Widget::mouseup_event(event);
 }

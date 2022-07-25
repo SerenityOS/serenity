@@ -29,6 +29,7 @@ int inode_watcher_add_watch(int fd, char const* path, size_t path_length, unsign
 int inode_watcher_remove_watch(int fd, int wd);
 
 int posix_fadvise(int fd, off_t offset, off_t len, int advice);
+int posix_fallocate(int fd, off_t offset, off_t len);
 
 int utimensat(int dirfd, char const* path, struct timespec const times[2], int flag);
 

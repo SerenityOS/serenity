@@ -59,7 +59,7 @@ void EditorWrapper::set_mode_non_displayable()
     auto palette = editor().palette();
     palette.set_color(Gfx::ColorRole::BaseText, Color::from_rgb(0xffffff));
     editor().set_palette(palette);
-    editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?");
+    editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?"sv);
 }
 
 void EditorWrapper::set_filename(String const& filename)
@@ -108,7 +108,7 @@ void EditorWrapper::update_title()
         title.append(m_filename);
 
     if (editor().document().is_modified())
-        title.append(" (*)");
+        title.append(" (*)"sv);
     m_filename_title = title.to_string();
 }
 

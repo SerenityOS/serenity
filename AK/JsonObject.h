@@ -182,9 +182,9 @@ inline void JsonValue::serialize(Builder& builder) const
 {
     switch (m_type) {
     case Type::String: {
-        builder.append("\"");
+        builder.append('\"');
         builder.append_escaped_for_json({ m_value.as_string->characters(), m_value.as_string->length() });
-        builder.append("\"");
+        builder.append('\"');
     } break;
     case Type::Array:
         m_value.as_array->serialize(builder);
@@ -193,7 +193,7 @@ inline void JsonValue::serialize(Builder& builder) const
         m_value.as_object->serialize(builder);
         break;
     case Type::Bool:
-        builder.append(m_value.as_bool ? "true" : "false");
+        builder.append(m_value.as_bool ? "true"sv : "false"sv);
         break;
 #if !defined(KERNEL)
     case Type::Double:
@@ -213,7 +213,7 @@ inline void JsonValue::serialize(Builder& builder) const
         builder.appendff("{}", as_u64());
         break;
     case Type::Null:
-        builder.append("null");
+        builder.append("null"sv);
         break;
     default:
         VERIFY_NOT_REACHED();

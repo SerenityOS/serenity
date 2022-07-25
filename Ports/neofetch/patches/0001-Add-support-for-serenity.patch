@@ -10,7 +10,7 @@ Co-Authored-By: Nico Weber <thakis@chromium.org>
  1 file changed, 90 insertions(+), 31 deletions(-)
 
 diff --git a/neofetch b/neofetch
-index 1e4b564..ea5e351 100755
+index 1e4b564..d2a12cd 100755
 --- a/neofetch
 +++ b/neofetch
 @@ -794,7 +794,7 @@ image_source="auto"
@@ -124,10 +124,10 @@ index 1e4b564..ea5e351 100755
  
 +        "SerenityOS")
 +            memstat="$(cat /proc/memstat)"
-+            user_physical_allocated="$(echo $memstat | jq .user_physical_allocated)"
-+            user_physical_available="$(echo $memstat | jq .user_physical_available)"
-+            mem_used="$((user_physical_allocated * 4096 / 1024 / 1024))"
-+            mem_free="$((user_physical_available * 4096 / 1024 / 1024))"
++            physical_allocated="$(echo $memstat | jq .physical_allocated)"
++            physical_available="$(echo $memstat | jq .physical_available)"
++            mem_used="$((physical_allocated * 4096 / 1024 / 1024))"
++            mem_free="$((physical_available * 4096 / 1024 / 1024))"
 +            mem_total="$((mem_used + mem_free))"
 +        ;;
 +

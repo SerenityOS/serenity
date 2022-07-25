@@ -16,7 +16,7 @@
 
 namespace Threading {
 
-TYPEDEF_DISTINCT_ORDERED_ID(intptr_t, ThreadError);
+AK_TYPEDEF_DISTINCT_ORDERED_ID(intptr_t, ThreadError);
 
 class Thread final : public Core::Object {
     C_OBJECT(Thread);
@@ -32,13 +32,15 @@ public:
 
     String thread_name() const { return m_thread_name; }
     pthread_t tid() const { return m_tid; }
+    bool is_started() const { return m_started; }
 
 private:
-    explicit Thread(Function<intptr_t()> action, StringView thread_name = nullptr);
+    explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     String m_thread_name;
     bool m_detached { false };
+    bool m_started { false };
 };
 
 template<typename T>

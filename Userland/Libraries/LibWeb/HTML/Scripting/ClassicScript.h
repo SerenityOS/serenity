@@ -28,8 +28,6 @@ public:
     JS::Script* script_record() { return m_script_record; }
     JS::Script const* script_record() const { return m_script_record; }
 
-    EnvironmentSettingsObject& settings_object() { return m_settings_object; }
-
     enum class RethrowErrors {
         No,
         Yes,
@@ -41,7 +39,6 @@ public:
 private:
     ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
 
-    EnvironmentSettingsObject& m_settings_object;
     RefPtr<JS::Script> m_script_record;
     MutedErrors m_muted_errors { MutedErrors::No };
     Optional<JS::Parser::Error> m_error_to_rethrow;

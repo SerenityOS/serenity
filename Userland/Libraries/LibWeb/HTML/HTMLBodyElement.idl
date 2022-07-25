@@ -1,3 +1,4 @@
+#import <DOM/EventHandler.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLBodyElement : HTMLElement {
@@ -10,3 +11,5 @@ interface HTMLBodyElement : HTMLElement {
     [Reflect] attribute DOMString background;
 
 };
+
+HTMLBodyElement includes WindowEventHandlers;

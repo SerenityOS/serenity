@@ -34,9 +34,8 @@ private:
     GraphWidget* m_graph;
     // Is null if we have a valid graph
     String m_graph_widget_name {};
-    RefPtr<GUI::Label> m_user_physical_pages_label;
-    RefPtr<GUI::Label> m_user_physical_pages_committed_label;
-    RefPtr<GUI::Label> m_supervisor_physical_pages_label;
+    RefPtr<GUI::Label> m_physical_pages_label;
+    RefPtr<GUI::Label> m_physical_pages_committed_label;
     RefPtr<GUI::Label> m_kmalloc_space_label;
     RefPtr<GUI::Label> m_kmalloc_count_label;
     RefPtr<GUI::Label> m_kfree_count_label;

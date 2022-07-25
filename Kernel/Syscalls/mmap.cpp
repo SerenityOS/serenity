@@ -75,7 +75,7 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
 
-    if (map_anonymous && make_executable)
+    if (map_anonymous && make_executable && !(executable()->mount_flags() & MS_AXALLOWED))
         return EINVAL;
 
     if (map_stack && make_executable)
@@ -571,23 +571,36 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
     // Note: This is not specified
     auto rounded_size = TRY(Memory::page_round_up(size));
 
-    // FIXME: We probably want to sync all mappings in the address+size range.
-    auto* region = address_space().find_region_containing(Memory::VirtualRange { address.vaddr(), rounded_size });
+    auto regions = TRY(address_space().find_regions_intersecting(Memory::VirtualRange { address.vaddr(), rounded_size }));
     // All regions from address upto address+size shall be mapped
-    if (!region)
+    if (regions.is_empty())
         return ENOMEM;
 
-    auto& vmobject = region->vmobject();
-    if (!vmobject.is_shared_inode())
-        return 0;
+    size_t total_intersection_size = 0;
+    Memory::VirtualRange range_to_sync { address.vaddr(), rounded_size };
+    for (auto const* region : regions) {
+        // Region was not mapped
+        if (!region->is_mmap())
+            return ENOMEM;
+        total_intersection_size += region->range().intersect(range_to_sync).size();
+    }
+    // Part of the indicated range was not mapped
+    if (total_intersection_size != size)
+        return ENOMEM;
 
-    off_t offset = region->offset_in_vmobject() + address.ptr() - region->range().base().get();
+    for (auto* region : regions) {
+        auto& vmobject = region->vmobject();
+        if (!vmobject.is_shared_inode())
+            continue;
 
-    auto& inode_vmobject = static_cast<Memory::SharedInodeVMObject&>(vmobject);
-    // FIXME: Handle MS_ASYNC
-    TRY(inode_vmobject.sync(offset / PAGE_SIZE, size / PAGE_SIZE));
-    // FIXME: Handle MS_INVALIDATE
-    // FIXME: If msync() causes any write to a file, the file's st_ctime and st_mtime fields shall be marked for update.
+        off_t offset = region->offset_in_vmobject() + address.ptr() - region->range().base().get();
+
+        auto& inode_vmobject = static_cast<Memory::SharedInodeVMObject&>(vmobject);
+        // FIXME: If multiple regions belong to the same vmobject we might want to coalesce these writes
+        // FIXME: Handle MS_ASYNC
+        TRY(inode_vmobject.sync(offset / PAGE_SIZE, rounded_size / PAGE_SIZE));
+        // FIXME: Handle MS_INVALIDATE
+    }
     return 0;
 }
 

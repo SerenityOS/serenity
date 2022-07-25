@@ -26,7 +26,7 @@ public:
     static constexpr int card_count = 13;
     static constexpr int card_radius = 5;
     static constexpr Array<StringView, card_count> labels = {
-        "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
+        "A"sv, "2"sv, "3"sv, "4"sv, "5"sv, "6"sv, "7"sv, "8"sv, "9"sv, "10"sv, "J"sv, "Q"sv, "K"sv
     };
 
     enum class Suit {
@@ -104,6 +104,6 @@ struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
             VERIFY_NOT_REACHED();
         }
 
-        return Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], suit);
+        return Formatter<FormatString>::format(builder, "{:>2}{}"sv, Cards::Card::labels[card.value()], suit);
     }
 };

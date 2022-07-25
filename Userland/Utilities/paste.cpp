@@ -27,7 +27,7 @@ static void spawn_command(Span<StringView> command, ByteBuffer const& data, char
         MUST(Core::System::dup2(pipefd[0], 0));
         MUST(Core::System::close(pipefd[0]));
         MUST(Core::System::close(pipefd[1]));
-        MUST(Core::System::setenv("CLIPBOARD_STATE", state, true));
+        MUST(Core::System::setenv("CLIPBOARD_STATE"sv, { state, strlen(state) }, true));
         MUST(Core::System::exec(command[0], command, Core::System::SearchInPath::Yes));
         perror("exec");
         exit(1);
@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& clipboard = GUI::Clipboard::the();
 
     if (watch) {
-        watch_command.append(nullptr);
+        watch_command.append({});
 
         clipboard.on_change = [&](String const&) {
             // Technically there's a race here...
@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!print_type) {
         out("{}", StringView(data_and_type.data));
         // Append a newline to text contents, unless the caller says otherwise.
-        if (data_and_type.mime_type.starts_with("text/") && !no_newline)
+        if (data_and_type.mime_type.starts_with("text/"sv) && !no_newline)
             outln();
     } else {
         outln("{}", data_and_type.mime_type);

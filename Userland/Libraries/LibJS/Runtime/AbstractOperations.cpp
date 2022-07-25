@@ -456,6 +456,25 @@ Environment& get_this_environment(VM& vm)
     VERIFY_NOT_REACHED();
 }
 
+// 9.14 CanBeHeldWeakly ( v ), https://tc39.es/proposal-symbols-as-weakmap-keys/#sec-canbeheldweakly-abstract-operation
+bool can_be_held_weakly(Value value)
+{
+    // 1. If Type(v) is Object, return true.
+    if (value.is_object())
+        return true;
+
+    // 2. If Type(v) is Symbol, then
+    if (value.is_symbol()) {
+        // a. For each element e of the GlobalSymbolRegistry List (see 19.4.2.2), do
+        //     i. If SameValue(e.[[Symbol]], v) is true, return false.
+        // b. Return true.
+        return !value.as_symbol().is_global();
+    }
+
+    // 3. Return false.
+    return false;
+}
+
 // 13.3.7.2 GetSuperConstructor ( ), https://tc39.es/ecma262/#sec-getsuperconstructor
 Object* get_super_constructor(VM& vm)
 {
@@ -684,10 +703,13 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
         executable->name = "eval"sv;
         if (Bytecode::g_dump_bytecode)
             executable->dump();
-        eval_result = TRY(bytecode_interpreter->run(*executable));
-        // Turn potentially empty JS::Value from the bytecode interpreter into an empty Optional
-        if (eval_result.has_value() && eval_result->is_empty())
-            eval_result = {};
+        auto result_or_error = bytecode_interpreter->run_and_return_frame(*executable, nullptr);
+        if (result_or_error.value.is_error())
+            return result_or_error.value.release_error();
+
+        auto& result = result_or_error.frame->registers[0];
+        if (!result.is_empty())
+            eval_result = result;
     } else {
         auto& ast_interpreter = vm.interpreter();
         eval_result = TRY(program->execute(ast_interpreter, global_object));

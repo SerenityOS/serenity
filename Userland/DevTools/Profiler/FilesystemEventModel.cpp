@@ -35,7 +35,7 @@ FileEventNode& FileEventNode::find_or_create_node(String const& searched_path)
     auto current = parts.take_first();
 
     StringBuilder sb;
-    sb.join("/", parts);
+    sb.join('/', parts);
     auto new_s = sb.to_string();
 
     for (auto& child : m_children) {
@@ -75,7 +75,7 @@ FileEventNode& FileEventNode::create_recursively(String new_path)
         m_children.append(new_node);
 
         StringBuilder sb;
-        sb.join("/", parts);
+        sb.join('/', parts);
 
         return new_node->create_recursively(sb.to_string());
     }

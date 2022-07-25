@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -65,9 +66,12 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
         object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
         break;
     }
-    case PropertyKind::KeyValue:
-        TRY(object->set(name, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    case PropertyKind::KeyValue: {
+        bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
+        if (!succeeded && interpreter.vm().in_strict_mode())
+            return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
         break;
+    }
     case PropertyKind::Spread:
         TRY(object->copy_data_properties(value, {}, interpreter.global_object()));
         break;
@@ -336,6 +340,8 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
 
     if (m_mode == EnvironmentMode::Lexical) {
+        VERIFY(!m_is_global);
+
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
@@ -346,10 +352,16 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         else
             vm.lexical_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
     } else {
-        if (m_is_immutable)
-            vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
-        else
-            vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        if (!m_is_global) {
+            if (m_is_immutable)
+                vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+            else
+                vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+        } else {
+            // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
+            //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
+            verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
+        }
     }
     return {};
 }
@@ -494,7 +506,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.is_arrow_function());
+    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
     return {};
 }
 
@@ -759,8 +771,31 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     auto name = m_class_expression.name();
     auto scope = interpreter.ast_interpreter_scope();
     auto& ast_interpreter = scope.interpreter();
-    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? "" : name));
+    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? ""sv : name));
     interpreter.accumulator() = class_object;
+    return {};
+}
+
+// 13.5.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation
+ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    // 1. Let val be the result of evaluating UnaryExpression.
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(interpreter.vm().resolve_binding(string));
+
+    // 2. If val is a Reference Record, then
+    //    a. If IsUnresolvableReference(val) is true, return "undefined".
+    if (reference.is_unresolvable()) {
+        interpreter.accumulator() = js_string(interpreter.vm(), "undefined"sv);
+        return {};
+    }
+
+    // 3. Set val to ? GetValue(val).
+    auto value = TRY(reference.get_value(interpreter.global_object()));
+
+    // 4. NOTE: This step is replaced in section B.3.6.3.
+    // 5. Return a String according to Table 41.
+    interpreter.accumulator() = js_string(interpreter.vm(), value.typeof());
     return {};
 }
 
@@ -787,7 +822,7 @@ String NewBigInt::to_string_impl(Bytecode::Executable const&) const
 String NewArray::to_string_impl(Bytecode::Executable const&) const
 {
     StringBuilder builder;
-    builder.append("NewArray");
+    builder.append("NewArray"sv);
     if (m_element_count != 0) {
         builder.appendff(" [{}-{}]", m_elements[0], m_elements[1]);
     }
@@ -819,7 +854,7 @@ String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&
     StringBuilder builder;
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
     if (m_excluded_names_count != 0) {
-        builder.append(" excluding:[");
+        builder.append(" excluding:["sv);
         for (size_t i = 0; i < m_excluded_names_count; ++i) {
             builder.appendff("{}", m_excluded_names[i]);
             if (i != m_excluded_names_count - 1)
@@ -856,7 +891,7 @@ String CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
 String CreateVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
-    return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
+    return String::formatted("CreateVariable env:{} immutable:{} global:{} {} ({})", mode_string, m_is_immutable, m_is_global, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String EnterObjectEnvironment::to_string_impl(Executable const&) const
@@ -927,7 +962,7 @@ String Call::to_string_impl(Bytecode::Executable const&) const
     StringBuilder builder;
     builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
     if (m_argument_count != 0) {
-        builder.append(", arguments:[");
+        builder.append(", arguments:["sv);
         for (size_t i = 0; i < m_argument_count; ++i) {
             builder.appendff("{}", m_arguments[i]);
             if (i != m_argument_count - 1)
@@ -1001,14 +1036,14 @@ String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
 String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
-    builder.append("PushDeclarativeEnvironment");
+    builder.append("PushDeclarativeEnvironment"sv);
     if (!m_variables.is_empty()) {
-        builder.append(" {");
+        builder.append(" {"sv);
         Vector<String> names;
         for (auto& it : m_variables)
             names.append(executable.get_string(it.key));
-        builder.join(", ", names);
-        builder.append("}");
+        builder.append('}');
+        builder.join(", "sv, names);
     }
     return builder.to_string();
 }
@@ -1074,6 +1109,11 @@ String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetNewTarget"sv;
+}
+
+String TypeofVariable::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 }

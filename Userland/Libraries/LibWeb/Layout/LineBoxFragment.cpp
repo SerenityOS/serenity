@@ -5,8 +5,8 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibWeb/Layout/FormattingState.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>

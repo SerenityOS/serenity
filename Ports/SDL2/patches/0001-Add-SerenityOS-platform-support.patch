@@ -226,7 +226,7 @@ index 8aa7298..c16af45 100644
  
 diff --git a/src/audio/serenity/SDL_serenityaudio.cpp b/src/audio/serenity/SDL_serenityaudio.cpp
 new file mode 100644
-index 0000000..7f770ed
+index 0000000..8a5abd5
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.cpp
 @@ -0,0 +1,160 @@
@@ -264,7 +264,7 @@ index 0000000..7f770ed
 +}
 +
 +#    include <AK/Time.h>
-+#    include <LibAudio/ConnectionFromClient.h>
++#    include <LibAudio/ConnectionToServer.h>
 +#    include <LibAudio/SampleFormats.h>
 +#    include <time.h>
 +#    include "SDL_serenityaudio.h"
@@ -315,7 +315,7 @@ index 0000000..7f770ed
 +    if (!h->event_loop)
 +        h->event_loop = make<Core::EventLoop>(Core::EventLoop::MakeInspectable::No);
 +    if (!h->client)
-+        h->client = MUST(Audio::ConnectionFromClient::try_create());
++        h->client = MUST(Audio::ConnectionToServer::try_create());
 +
 +    h->client->async_start_playback();
 +
@@ -392,7 +392,7 @@ index 0000000..7f770ed
 +#endif
 diff --git a/src/audio/serenity/SDL_serenityaudio.h b/src/audio/serenity/SDL_serenityaudio.h
 new file mode 100644
-index 0000000..e1b98b3
+index 0000000..8d152ca
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.h
 @@ -0,0 +1,38 @@
@@ -423,13 +423,13 @@ index 0000000..e1b98b3
 +#include "../SDL_sysaudio.h"
 +#include <AK/OwnPtr.h>
 +#include <AK/RefPtr.h>
-+#include <LibAudio/ConnectionFromClient.h>
++#include <LibAudio/ConnectionToServer.h>
 +#include <LibCore/EventLoop.h>
 +
 +#define _THIS SDL_AudioDevice* that
 +
 +struct SDL_PrivateAudioData {
-+    RefPtr<Audio::ConnectionFromClient> client;
++    RefPtr<Audio::ConnectionToServer> client;
 +    OwnPtr<Core::EventLoop> event_loop;
 +    Uint8* mixbuf { nullptr };
 +    size_t mixlen { 0 };
@@ -596,7 +596,7 @@ index 0000000..89e9e91
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymessagebox.cpp b/src/video/serenity/SDL_serenitymessagebox.cpp
 new file mode 100644
-index 0000000..ac5e358
+index 0000000..fe41a8b
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymessagebox.cpp
 @@ -0,0 +1,40 @@
@@ -633,7 +633,7 @@ index 0000000..ac5e358
 +
 +extern "C" int SERENITY_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
 +{
-+    GUI::MessageBox::show(nullptr, messageboxdata->message, messageboxdata->title);
++    GUI::MessageBox::show(nullptr, { messageboxdata->message, strlen(messageboxdata->message) }, { messageboxdata->title, strlen(messageboxdata->title) });
 +    return 0;
 +}
 +

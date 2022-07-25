@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     srand(time(nullptr));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-2048"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-2048"sv));
 
     auto window = TRY(GUI::Window::try_create());
 
@@ -45,21 +45,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    size_t board_size = Config::read_i32("2048", "", "board_size", 4);
-    u32 target_tile = Config::read_i32("2048", "", "target_tile", 2048);
-    bool evil_ai = Config::read_bool("2048", "", "evil_ai", false);
+    size_t board_size = Config::read_i32("2048"sv, ""sv, "board_size"sv, 4);
+    u32 target_tile = Config::read_i32("2048"sv, ""sv, "target_tile"sv, 2048);
+    bool evil_ai = Config::read_bool("2048"sv, ""sv, "evil_ai"sv, false);
 
     if ((target_tile & (target_tile - 1)) != 0) {
         // If the target tile is not a power of 2, reset to its default value.
         target_tile = 2048;
     }
 
-    Config::write_i32("2048", "", "board_size", board_size);
-    Config::write_i32("2048", "", "target_tile", target_tile);
-    Config::write_bool("2048", "", "evil_ai", evil_ai);
+    Config::write_i32("2048"sv, ""sv, "board_size"sv, board_size);
+    Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
+    Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
     window->set_double_buffering_enabled(false);
     window->set_title("2048");
@@ -108,15 +108,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (!size_dialog->temporary()) {
 
-            Config::write_i32("2048", "", "board_size", board_size);
-            Config::write_i32("2048", "", "target_tile", target_tile);
-            Config::write_bool("2048", "", "evil_ai", evil_ai);
+            Config::write_i32("2048"sv, ""sv, "board_size"sv, board_size);
+            Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
+            Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
-            GUI::MessageBox::show(window, "New settings have been saved and will be applied on a new game", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
+            GUI::MessageBox::show(window, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
             return;
         }
 
-        GUI::MessageBox::show(window, "New settings have been set and will be applied on the next game", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window, "New settings have been set and will be applied on the next game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
     auto start_a_new_game = [&] {
         // Do not leak game states between games.
@@ -149,7 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             update();
             auto want_to_continue = GUI::MessageBox::show(window,
                 String::formatted("You won the game in {} turns with a score of {}. Would you like to continue?", game.turns(), game.score()),
-                "Congratulations!",
+                "Congratulations!"sv,
                 GUI::MessageBox::Type::Question,
                 GUI::MessageBox::InputType::YesNo);
             if (want_to_continue == GUI::MessageBox::ExecResult::Yes)
@@ -162,7 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             update();
             GUI::MessageBox::show(window,
                 String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
-                "You lost!",
+                "You lost!"sv,
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
             break;
@@ -171,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         start_a_new_game();
     })));
 
@@ -192,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png")), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
 

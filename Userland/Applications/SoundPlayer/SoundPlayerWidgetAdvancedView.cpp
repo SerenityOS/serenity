@@ -24,7 +24,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionFromClient& connection)
+SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionToServer& connection)
     : Player(connection)
     , m_window(window)
 {
@@ -43,11 +43,11 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
 
-    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors();
-    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png").release_value_but_fixme_should_propagate_errors();
-    m_stop_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop.png").release_value_but_fixme_should_propagate_errors();
-    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors();
-    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors();
+    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_stop_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors();
 
     m_visualization = m_player_view->add<BarsVisualizationWidget>();
 
@@ -224,7 +224,7 @@ void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
 void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded)
 {
     if (!loaded) {
-        GUI::MessageBox::show(&m_window, String::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(&m_window, String::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
         return;
     }
     set_playlist_visible(true);
@@ -233,6 +233,6 @@ void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded
 
 void SoundPlayerWidgetAdvancedView::audio_load_error(StringView path, StringView error_string)
 {
-    GUI::MessageBox::show(&m_window, String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error" : error_string),
-        "Filetype error", GUI::MessageBox::Type::Error);
+    GUI::MessageBox::show(&m_window, String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
+        "Filetype error"sv, GUI::MessageBox::Type::Error);
 }

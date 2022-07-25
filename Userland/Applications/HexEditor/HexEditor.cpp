@@ -194,17 +194,17 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
 
     StringBuilder output_string_builder;
     output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", m_selection_end - m_selection_start);
-    output_string_builder.append("    ");
+    output_string_builder.append("    "sv);
     for (size_t i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_document->get(i).value);
         if (i >= m_selection_end - 1)
             continue;
         if ((j % 12) == 0)
-            output_string_builder.append(",\n    ");
+            output_string_builder.append(",\n    "sv);
         else
-            output_string_builder.append(", ");
+            output_string_builder.append(", "sv);
     }
-    output_string_builder.append("\n};\n");
+    output_string_builder.append("\n};\n"sv);
 
     GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
     return true;
@@ -604,8 +604,17 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 line_height() - m_line_spacing
             };
 
+            const u8 cell_value = m_document->get(byte_position).value;
+            auto line = String::formatted("{:02X}", cell_value);
+
             Gfx::Color background_color = palette().color(background_role());
-            Gfx::Color text_color = edited_flag ? Color::Red : palette().color(foreground_role());
+            Gfx::Color text_color = [&]() -> Gfx::Color {
+                if (edited_flag)
+                    return Color::Red;
+                if (cell_value == 0x00)
+                    return palette().color(ColorRole::PlaceholderText);
+                return palette().color(foreground_role());
+            }();
 
             if (highlight_flag) {
                 background_color = edited_flag ? palette().selection().inverted() : palette().selection();
@@ -616,8 +625,6 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
             painter.fill_rect(hex_display_rect, background_color);
 
-            const u8 cell_value = m_document->get(byte_position).value;
-            auto line = String::formatted("{:02X}", cell_value);
             painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Hex) {
@@ -640,7 +647,13 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             };
 
             background_color = palette().color(background_role());
-            text_color = edited_flag ? Color::Red : palette().color(foreground_role());
+            text_color = [&]() -> Gfx::Color {
+                if (edited_flag)
+                    return Color::Red;
+                if (cell_value == 0x00)
+                    return palette().color(ColorRole::PlaceholderText);
+                return palette().color(foreground_role());
+            }();
 
             if (highlight_flag) {
                 background_color = edited_flag ? palette().selection().inverted() : palette().selection();

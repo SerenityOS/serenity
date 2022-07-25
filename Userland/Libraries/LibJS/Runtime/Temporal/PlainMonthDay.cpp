@@ -96,7 +96,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
         auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
         // e. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, {}));
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
 
         // f. Let month be ? Get(fields, "month").
         auto month = TRY(fields->get(vm.names.month));
@@ -155,18 +155,22 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global
     if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
 
-    // 4. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.
+    // 4. If ISODateTimeWithinLimits(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
+    if (!iso_date_time_within_limits(global_object, reference_iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
+
+    // 5. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.
     if (!new_target)
         new_target = global_object.temporal_plain_month_day_constructor();
 
-    // 5. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainMonthDay.prototype%", « [[InitializedTemporalMonthDay]], [[ISOMonth]], [[ISODay]], [[ISOYear]], [[Calendar]] »).
-    // 6. Set object.[[ISOMonth]] to isoMonth.
-    // 7. Set object.[[ISODay]] to isoDay.
-    // 8. Set object.[[Calendar]] to calendar.
-    // 9. Set object.[[ISOYear]] to referenceISOYear.
+    // 6. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainMonthDay.prototype%", « [[InitializedTemporalMonthDay]], [[ISOMonth]], [[ISODay]], [[ISOYear]], [[Calendar]] »).
+    // 7. Set object.[[ISOMonth]] to isoMonth.
+    // 8. Set object.[[ISODay]] to isoDay.
+    // 9. Set object.[[Calendar]] to calendar.
+    // 10. Set object.[[ISOYear]] to referenceISOYear.
     auto* object = TRY(ordinary_create_from_constructor<PlainMonthDay>(global_object, *new_target, &GlobalObject::temporal_plain_month_day_prototype, iso_month, iso_day, reference_iso_year, calendar));
 
-    // 10. Return object.
+    // 11. Return object.
     return object;
 }
 

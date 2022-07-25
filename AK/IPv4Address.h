@@ -119,6 +119,13 @@ public:
         return IPv4Address(a, b, c, d);
     }
 
+    static constexpr IPv4Address netmask_from_cidr(int cidr)
+    {
+        VERIFY(cidr >= 0 && cidr <= 32);
+        u32 value = 0xffffffffull << (32 - cidr);
+        return IPv4Address((value & 0xff000000) >> 24, (value & 0xff0000) >> 16, (value & 0xff00) >> 8, (value & 0xff));
+    }
+
     constexpr in_addr_t to_in_addr_t() const { return m_data; }
     constexpr u32 to_u32() const { return m_data; }
 

@@ -31,7 +31,7 @@ struct Context {
 
 struct ValidationError : public Error {
     ValidationError(String error)
-        : Error(Error::from_string_literal(error))
+        : Error(Error::from_string_view(error))
         , error_string(move(error))
     {
     }
@@ -200,11 +200,11 @@ public:
         ErrorOr<void, ValidationError> take(ValueType type, SourceLocation location = SourceLocation::current())
         {
             if (is_empty())
-                return Errors::invalid("stack state", type, "<nothing>", location);
+                return Errors::invalid("stack state"sv, type, "<nothing>"sv, location);
 
             auto type_on_stack = take_last();
             if (type_on_stack != type)
-                return Errors::invalid("stack state", type, type_on_stack, location);
+                return Errors::invalid("stack state"sv, type, type_on_stack, location);
 
             return {};
         }
@@ -287,13 +287,13 @@ private:
             else
                 builder.appendff("Invalid stack state in <unknown>: ");
 
-            builder.append("Expected [ ");
+            builder.append("Expected [ "sv);
 
             expected.apply_as_args([&]<typename... Ts>(Ts const&... args) {
                 (builder.appendff("{} ", args), ...);
             });
 
-            builder.append("], but found [ ");
+            builder.append("], but found [ "sv);
 
             auto actual_size = stack.actual_size();
             for (size_t i = 1; i <= min(count, actual_size); ++i) {
@@ -305,7 +305,7 @@ private:
                     break;
                 }
             }
-            builder.append("]");
+            builder.append(']');
             return { builder.to_string() };
         }
 

@@ -15,7 +15,7 @@
 #include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 
-namespace LibDSP {
+namespace DSP {
 
 using Sample = Audio::Sample;
 
@@ -60,6 +60,24 @@ struct RollNote {
     }
 
     constexpr bool is_playing(u32 time) const { return on_sample <= time && time <= off_sample; }
+    constexpr bool is_playing_during(u32 start_time, u32 end_time) const
+    {
+        // There are three scenarios for a playing note.
+        return
+            // 1. The note ends within our time frame.
+            (this->off_sample >= start_time && this->off_sample < end_time)
+            // 2. The note starts within our time frame.
+            || (this->on_sample >= start_time && this->on_sample < end_time)
+            // 3. The note starts before our time frame and ends after it.
+            || (this->on_sample < start_time && this->off_sample >= end_time);
+    }
+
+    constexpr bool overlaps_with(RollNote const& other) const
+    {
+        // Notes don't overlap if one is completely before or behind the other.
+        return !((this->on_sample < other.on_sample && this->off_sample < other.on_sample)
+            || (this->on_sample >= other.off_sample && this->off_sample >= other.off_sample));
+    }
 };
 
 enum class SignalType : u8 {
@@ -75,26 +93,6 @@ public:
     static constexpr unsigned hash(u8 value)
     {
         return static_cast<unsigned>(value);
-    }
-};
-
-using RollNotes = OrderedHashMap<u8, RollNote, PerfectNoteHashTraits>;
-
-struct Signal : public Variant<FixedArray<Sample>, RollNotes> {
-    using Variant::Variant;
-    AK_MAKE_NONCOPYABLE(Signal);
-
-public:
-    Signal& operator=(Signal&&) = default;
-    Signal(Signal&&) = default;
-
-    ALWAYS_INLINE SignalType type() const
-    {
-        if (has<FixedArray<Sample>>())
-            return SignalType::Sample;
-        if (has<RollNotes>())
-            return SignalType::Note;
-        return SignalType::Invalid;
     }
 };
 
@@ -196,7 +194,27 @@ constexpr Array<double, 84> note_frequencies = {
     3951.0664100489994,
 };
 
+using RollNotes = Array<Optional<RollNote>, note_frequencies.size()>;
+
 constexpr size_t const notes_per_octave = 12;
 constexpr double const middle_c = note_frequencies[36];
+
+struct Signal : public Variant<FixedArray<Sample>, RollNotes> {
+    using Variant::Variant;
+    AK_MAKE_NONCOPYABLE(Signal);
+
+public:
+    Signal& operator=(Signal&&) = default;
+    Signal(Signal&&) = default;
+
+    ALWAYS_INLINE SignalType type() const
+    {
+        if (has<FixedArray<Sample>>())
+            return SignalType::Sample;
+        if (has<RollNotes>())
+            return SignalType::Note;
+        return SignalType::Invalid;
+    }
+};
 
 }

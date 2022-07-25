@@ -9,21 +9,23 @@
 #include <AK/ByteBuffer.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/WebGL/WebGLRenderingContext.h>
 
 namespace Web::HTML {
 
 class HTMLCanvasElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
+    using RenderingContext = Variant<NonnullRefPtr<CanvasRenderingContext2D>, NonnullRefPtr<WebGL::WebGLRenderingContext>, Empty>;
 
     HTMLCanvasElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLCanvasElement() override;
 
     Gfx::Bitmap const* bitmap() const { return m_bitmap; }
     Gfx::Bitmap* bitmap() { return m_bitmap; }
-    bool create_bitmap();
+    bool create_bitmap(size_t minimum_width = 0, size_t minimum_height = 0);
 
-    CanvasRenderingContext2D* get_context(String type);
+    JS::ThrowCompletionOr<RenderingContext> get_context(String const& type, JS::Value options);
 
     unsigned width() const;
     unsigned height() const;
@@ -33,11 +35,22 @@ public:
 
     String to_data_url(String const& type, Optional<double> quality) const;
 
+    void present();
+
 private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    enum class HasOrCreatedContext {
+        No,
+        Yes,
+    };
+
+    HasOrCreatedContext create_2d_context();
+    JS::ThrowCompletionOr<HasOrCreatedContext> create_webgl_context(JS::Value options);
+    void reset_context_to_default_state();
+
     RefPtr<Gfx::Bitmap> m_bitmap;
-    RefPtr<CanvasRenderingContext2D> m_context;
+    RenderingContext m_context;
 };
 
 }

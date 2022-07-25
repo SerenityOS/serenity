@@ -26,7 +26,7 @@ struct MemoryRegionInfo {
 
     StringView object_name() const
     {
-        if (region_name.contains("Loader.so"))
+        if (region_name.contains("Loader.so"sv))
             return "Loader.so"sv;
         auto maybe_colon_index = region_name.find(':');
         if (!maybe_colon_index.has_value())
@@ -133,12 +133,13 @@ void Reader::for_each_memory_region_info(Func func) const
         };
         ByteReader::load(raw_data.data(), raw_memory_region_info);
 
+        auto const* region_name_ptr = bit_cast<char const*>(raw_data.offset_pointer(raw_data.size()));
         MemoryRegionInfo memory_region_info {
             raw_memory_region_info.header,
             raw_memory_region_info.region_start,
             raw_memory_region_info.region_end,
             raw_memory_region_info.program_header_index,
-            { bit_cast<char const*>(raw_data.offset_pointer(raw_data.size())) },
+            { region_name_ptr, strlen(region_name_ptr) },
         };
         IterationDecision decision = func(memory_region_info);
         if (decision == IterationDecision::Break)

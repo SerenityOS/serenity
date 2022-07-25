@@ -1,0 +1,15 @@
+typedef unsigned long GLenum;
+typedef boolean GLboolean;
+typedef unsigned long GLbitfield;
+typedef long GLint;
+typedef long GLsizei;
+
+// FIXME: These should be "unrestricted float"
+typedef float GLfloat;
+typedef float GLclampf;
+
+enum WebGLPowerPreference {
+    "default",
+    "low-power",
+    "high-performance"
+};

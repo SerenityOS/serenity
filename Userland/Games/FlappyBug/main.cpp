@@ -31,14 +31,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    u32 high_score = Config::read_i32("FlappyBug", "Game", "HighScore", 0);
+    u32 high_score = Config::read_i32("FlappyBug"sv, "Game"sv, "HighScore"sv, 0);
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flappybug"));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flappybug"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Flappy Bug");
     window->set_double_buffering_enabled(false);
@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (score <= high_score)
             return high_score;
 
-        Config::write_i32("FlappyBug", "Game", "HighScore", score);
+        Config::write_i32("FlappyBug"sv, "Game"sv, "HighScore"sv, score);
         high_score = score;
 
         return high_score;

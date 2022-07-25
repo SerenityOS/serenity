@@ -281,7 +281,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
                 auto& foreground_container = static_formatting_container.add<GUI::Widget>();
                 foreground_container.set_layout<GUI::HorizontalBoxLayout>();
                 foreground_container.layout()->set_margins({ 4, 0, 0 });
-                foreground_container.set_shrink_to_fit(true);
+                foreground_container.set_preferred_height(GUI::SpecialDimension::Fit);
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
                 foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -301,7 +301,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
                 auto& background_container = static_formatting_container.add<GUI::Widget>();
                 background_container.set_layout<GUI::HorizontalBoxLayout>();
                 background_container.layout()->set_margins({ 4, 0, 0 });
-                background_container.set_shrink_to_fit(true);
+                background_container.set_preferred_height(GUI::SpecialDimension::Fit);
 
                 auto& background_label = background_container.add<GUI::Label>();
                 background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -427,7 +427,9 @@ ConditionView::~ConditionView()
 
 ConditionsView::ConditionsView()
 {
-    set_layout<GUI::VerticalBoxLayout>().set_spacing(2);
+    auto& layout = set_layout<GUI::VerticalBoxLayout>();
+    layout.set_spacing(4);
+    layout.set_margins({ 6 });
 }
 
 void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)

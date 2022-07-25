@@ -28,6 +28,10 @@ public:
 
     bool is_device() const;
     static bool is_device(String const& filename);
+    bool is_block_device() const;
+    static bool is_block_device(String const& filename);
+    bool is_char_device() const;
+    static bool is_char_device(String const& filename);
 
     bool is_link() const;
     static bool is_link(String const& filename);
@@ -56,8 +60,10 @@ public:
     };
 
     enum class PreserveMode {
-        Nothing,
-        PermissionsOwnershipTimestamps,
+        Nothing = 0,
+        Permissions = (1 << 0),
+        Ownership = (1 << 1),
+        Timestamps = (1 << 2),
     };
 
     struct CopyError : public Error {
@@ -112,5 +118,7 @@ private:
     String m_filename;
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
+
+AK_ENUM_BITWISE_OPERATORS(File::PreserveMode);
 
 }

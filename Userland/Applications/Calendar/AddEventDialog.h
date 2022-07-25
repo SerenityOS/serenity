@@ -45,5 +45,24 @@ private:
         MonthListModel() = default;
     };
 
+    class MeridiemListModel final : public GUI::Model {
+    public:
+        enum Column {
+            Meridiem,
+            __Count,
+        };
+
+        static NonnullRefPtr<MeridiemListModel> create() { return adopt_ref(*new MeridiemListModel); }
+        virtual ~MeridiemListModel() override = default;
+
+        virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+        virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+        virtual String column_name(int) const override;
+        virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+
+    private:
+        MeridiemListModel() = default;
+    };
+
     Core::DateTime m_date_time;
 };

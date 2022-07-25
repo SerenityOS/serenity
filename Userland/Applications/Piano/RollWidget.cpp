@@ -8,6 +8,7 @@
  */
 
 #include "RollWidget.h"
+#include "LibGUI/Event.h"
 #include "TrackManager.h"
 #include <AK/IntegralMath.h>
 #include <LibGUI/Painter.h>
@@ -134,9 +135,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     painter.translate(-x_offset, -y_offset);
     painter.translate(horizontal_note_offset_remainder, note_offset_remainder);
 
-    for (int note = note_count - (note_offset + notes_to_paint); note <= (note_count - 1) - note_offset; ++note) {
-        int y = ((note_count - 1) - note) * note_height;
-        for (auto roll_note : m_track_manager.current_track().roll_notes(note)) {
+    for (auto const& clip : m_track_manager.current_track()->notes()) {
+        for (auto const& roll_note : clip->notes()) {
+            int y = ((note_count - 1) - roll_note.pitch) * note_height;
             int x = m_roll_width * (static_cast<double>(roll_note.on_sample) / roll_length);
             int width = m_roll_width * (static_cast<double>(roll_note.length()) / roll_length);
             if (x + width < x_offset || x > x_offset + widget_inner_rect().width())
@@ -150,9 +151,12 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(rect, note_pressed_color);
             painter.draw_rect(rect, Color::Black);
         }
+    }
 
+    for (int note = note_count - (note_offset + notes_to_paint); note <= (note_count - 1) - note_offset; ++note) {
+        int y = ((note_count - 1) - note) * note_height;
         Gfx::IntRect note_name_rect(3, y, 1, note_height);
-        char const* note_name = note_names[note % notes_per_octave];
+        auto note_name = note_names[note % notes_per_octave];
 
         painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
         note_name_rect.translate_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
@@ -197,7 +201,13 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
 
     if (m_note_drag_location.has_value()) {
         // Clear previous note
-        m_track_manager.current_track().set_roll_note(m_drag_note, m_note_drag_location.value().on_sample, m_note_drag_location.value().off_sample);
+        m_track_manager.current_track()->remove_note(m_note_drag_location.value());
+    }
+
+    // Right-Click deletes notes
+    if (event.button() == GUI::MouseButton::Secondary) {
+        update();
+        return;
     }
 
     auto get_note_x = [&](int x0) {
@@ -220,8 +230,8 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
 
     u32 on_sample = roll_length * (static_cast<double>(min(x0, x1)) / m_num_notes);
     u32 off_sample = (roll_length * (static_cast<double>(max(x0, x1) + 1) / m_num_notes)) - 1;
-    m_track_manager.current_track().set_roll_note(m_drag_note, on_sample, off_sample);
-    m_note_drag_location = RollNote { on_sample, off_sample, (u8)m_drag_note, 0 };
+    m_note_drag_location = RollNote { on_sample, off_sample, (u8)m_drag_note, 127 };
+    m_track_manager.current_track()->set_note(m_note_drag_location.value());
 
     update();
 }

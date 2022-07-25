@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <wchar.h>
 
 TEST_CASE(wcspbrk)
@@ -613,4 +614,47 @@ TEST_CASE(mblen)
     ret = mblen("\xff", 1);
     EXPECT_EQ(ret, -1);
     EXPECT_EQ(errno, EILSEQ);
+}
+
+TEST_CASE(wcsftime)
+{
+    // FIXME: Test actual wide char inputs once those are implemented.
+
+    auto* buf = static_cast<wchar_t*>(malloc(32 * sizeof(wchar_t)));
+    if (!buf) {
+        FAIL("Could not allocate space for copy target");
+        return;
+    }
+
+    struct tm time = {
+        .tm_sec = 54,
+        .tm_min = 44,
+        .tm_hour = 12,
+        .tm_mday = 27,
+        .tm_mon = 4,
+        .tm_year = 121,
+        .tm_wday = 4,
+        .tm_yday = 0,
+        .tm_isdst = 0,
+    };
+
+    size_t ret;
+
+    // Normal behavior.
+    ret = wcsftime(buf, 32, L"%a, %d %b %Y %H:%M:%S", &time);
+    EXPECT_EQ(ret, 25ul);
+    EXPECT_EQ(wcscmp(buf, L"Thu, 27 May 2021 12:44:54"), 0);
+
+    // String fits exactly.
+    ret = wcsftime(buf, 26, L"%a, %d %b %Y %H:%M:%S", &time);
+    EXPECT_EQ(ret, 25ul);
+    EXPECT_EQ(wcscmp(buf, L"Thu, 27 May 2021 12:44:54"), 0);
+
+    // Buffer is too small.
+    ret = wcsftime(buf, 25, L"%a, %d %b %Y %H:%M:%S", &time);
+    EXPECT_EQ(ret, 0ul);
+    ret = wcsftime(buf, 1, L"%a, %d %b %Y %H:%M:%S", &time);
+    EXPECT_EQ(ret, 0ul);
+    ret = wcsftime(nullptr, 0, L"%a, %d %b %Y %H:%M:%S", &time);
+    EXPECT_EQ(ret, 0ul);
 }

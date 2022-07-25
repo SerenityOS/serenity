@@ -283,7 +283,8 @@ public:
             Routing,
             Sleep,
             Signal,
-            Wait
+            Wait,
+            Flock
         };
         virtual ~Blocker();
         virtual StringView state_string() const = 0;
@@ -586,11 +587,10 @@ public:
             Connect = 1 << 5,
             SocketFlags = Accept | Connect,
 
-            WriteNotOpen = 1 << 6,
-            WriteError = 1 << 7,
-            WriteHangUp = 1 << 8,
-            ReadHangUp = 1 << 9,
-            Exception = WriteNotOpen | WriteError | WriteHangUp | ReadHangUp,
+            WriteError = 1 << 6,
+            WriteHangUp = 1 << 7,
+            ReadHangUp = 1 << 8,
+            Exception = WriteError | WriteHangUp | ReadHangUp,
         };
 
         virtual Type blocker_type() const override { return Type::File; }
@@ -668,7 +668,7 @@ public:
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
-            NonnullRefPtr<OpenFileDescription> description;
+            RefPtr<OpenFileDescription> description;
             BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };
@@ -787,6 +787,41 @@ public:
         Process& m_process;
         Vector<ProcessBlockInfo, 2> m_processes;
         bool m_finalized { false };
+    };
+
+    class FlockBlocker final : public Blocker {
+    public:
+        FlockBlocker(NonnullRefPtr<Inode>, flock const&);
+        virtual StringView state_string() const override { return "Locking File"sv; }
+        virtual Type blocker_type() const override { return Type::Flock; }
+        virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual bool setup_blocker() override;
+        bool try_unblock(bool from_add_blocker);
+
+    private:
+        NonnullRefPtr<Inode> m_inode;
+        flock const& m_flock;
+        bool m_did_unblock { false };
+    };
+
+    class FlockBlockerSet final : public BlockerSet {
+    public:
+        void unblock_all_blockers_whose_conditions_are_met()
+        {
+            BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+                VERIFY(b.blocker_type() == Blocker::Type::Flock);
+                auto& blocker = static_cast<Thread::FlockBlocker&>(b);
+                return blocker.try_unblock(false);
+            });
+        }
+
+    private:
+        bool should_add_blocker(Blocker& b, void*) override
+        {
+            VERIFY(b.blocker_type() == Blocker::Type::Flock);
+            auto& blocker = static_cast<Thread::FlockBlocker&>(b);
+            return !blocker.try_unblock(true);
+        }
     };
 
     template<typename AddBlockerHandler>
@@ -1210,6 +1245,7 @@ private:
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
+    u8 m_currently_handled_signal { 0 };
     u32 m_signal_mask { 0 };
     FlatPtr m_alternative_signal_stack { 0 };
     FlatPtr m_alternative_signal_stack_size { 0 };

@@ -94,7 +94,7 @@ InodeMetadata DevTmpFSInode::metadata() const
     metadata.uid = m_uid;
     metadata.gid = m_gid;
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = TimeManagement::boot_time();
     switch (node_type()) {
     case Type::RootDirectory:
         metadata.inode = { fsid(), 1 };
@@ -102,7 +102,7 @@ InodeMetadata DevTmpFSInode::metadata() const
         metadata.uid = 0;
         metadata.gid = 0;
         metadata.size = 0;
-        metadata.mtime = mepoch;
+        metadata.mtime = TimeManagement::boot_time();
         break;
     case Type::Directory:
         metadata.inode = { fsid(), index() };
@@ -205,8 +205,8 @@ DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode() = default;
 ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock);
-    TRY(callback({ ".", identifier(), 0 }));
-    TRY(callback({ "..", identifier(), 0 }));
+    TRY(callback({ "."sv, identifier(), 0 }));
+    TRY(callback({ ".."sv, identifier(), 0 }));
     for (auto& node : m_nodes) {
         InodeIdentifier identifier = { fsid(), node.index() };
         TRY(callback({ node.name(), identifier, 0 }));

@@ -11,7 +11,7 @@
 #include "MainWidget.h"
 #include "TrackManager.h"
 #include <AK/Queue.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
 
-    auto app_icon = GUI::Icon::default_icon("app-piano");
+    auto app_icon = GUI::Icon::default_icon("app-piano"sv);
     auto window = GUI::Window::construct();
     auto main_widget = TRY(window->try_set_main_widget<MainWidget>(track_manager, audio_loop));
     window->set_title("Piano");
@@ -51,13 +51,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget_updater->start();
 
     auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png")), [&](const GUI::Action&) {
+    file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
         wav_writer.set_file(save_path.value());
         if (wav_writer.has_error()) {
-            GUI::MessageBox::show(window, String::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error"sv, GUI::MessageBox::Type::Error);
             wav_writer.clear_error();
             return;
         }

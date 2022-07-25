@@ -54,6 +54,7 @@ private:
     void load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json);
     void update_node_box_model(Optional<String> node_box_sizing_json);
     void clear_style_json();
+    void clear_node_box_model();
 
     RefPtr<WebView::OutOfProcessWebView> m_web_view;
 

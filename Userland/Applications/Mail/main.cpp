@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc", "r"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_protocol("/bin/MailSettings")));
@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
 
-    auto app_icon = GUI::Icon::default_icon("app-mail");
+    auto app_icon = GUI::Icon::default_icon("app-mail"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto mail_widget = TRY(window->try_set_main_widget<MailWidget>());

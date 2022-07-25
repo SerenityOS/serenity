@@ -18,8 +18,6 @@
 
 namespace Kernel {
 
-static constexpr u32 mepoch = 476763780;
-
 class FileSystem : public RefCounted<FileSystem> {
     friend class Inode;
 
@@ -69,7 +67,7 @@ protected:
     void set_block_size(u64 size) { m_block_size = size; }
     void set_fragment_size(size_t size) { m_fragment_size = size; }
 
-    mutable Mutex m_lock { "FS" };
+    mutable Mutex m_lock { "FS"sv };
 
 private:
     FileSystemID m_fsid;

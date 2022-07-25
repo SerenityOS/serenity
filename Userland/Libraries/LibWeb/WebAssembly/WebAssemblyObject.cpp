@@ -299,7 +299,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
     if (link_result.is_error()) {
         // FIXME: Throw a LinkError.
         StringBuilder builder;
-        builder.append("LinkError: Missing ");
+        builder.append("LinkError: Missing "sv);
         builder.join(' ', link_result.error().missing_imports);
         return vm.throw_completion<JS::TypeError>(global_object, builder.build());
     }

@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_app(TerminalSettings ICON app-terminal)
-target_link_libraries(TerminalSettings LibGUI LibConfig LibMain)
+target_link_libraries(TerminalSettings LibGUI LibConfig LibMain LibVT)

@@ -18,6 +18,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/FileRequest.h>
 
 namespace Web {
 
@@ -51,6 +52,7 @@ public:
     bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned modifiers);
     bool handle_mousemove(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
     bool handle_mousewheel(Gfx::IntPoint const&, unsigned button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
@@ -109,6 +111,8 @@ public:
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }
+
+    virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
 
 protected:
     virtual ~PageClient() = default;

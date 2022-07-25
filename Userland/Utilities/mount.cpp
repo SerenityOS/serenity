@@ -8,6 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -37,6 +38,8 @@ static int parse_options(StringView options)
             flags |= MS_REMOUNT;
         else if (part == "wxallowed")
             flags |= MS_WXALLOWED;
+        else if (part == "axallowed")
+            flags |= MS_AXALLOWED;
         else
             warnln("Ignoring invalid option: {}", part);
     }
@@ -64,6 +67,42 @@ static int get_source_fd(StringView source)
     return fd_or_error.release_value();
 }
 
+static bool mount_by_line(String const& line)
+{
+    // Skip comments and blank lines.
+    if (line.is_empty() || line.starts_with('#'))
+        return true;
+
+    Vector<String> parts = line.split('\t');
+    if (parts.size() < 3) {
+        warnln("Invalid fstab entry: {}", line);
+        return false;
+    }
+
+    auto mountpoint = parts[1];
+    auto fstype = parts[2];
+    int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
+
+    if (mountpoint == "/") {
+        dbgln("Skipping mounting root");
+        return true;
+    }
+
+    auto filename = parts[0];
+
+    int fd = get_source_fd(filename);
+
+    dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
+
+    auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
+    if (error_or_void.is_error()) {
+        warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
 static ErrorOr<void> mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
@@ -75,37 +114,32 @@ static ErrorOr<void> mount_all()
     while (fstab->can_read_line()) {
         auto line = fstab->read_line();
 
-        // Skip comments and blank lines.
-        if (line.is_empty() || line.starts_with("#"))
-            continue;
-
-        Vector<String> parts = line.split('\t');
-        if (parts.size() < 3) {
-            warnln("Invalid fstab entry: {}", line);
+        if (!mount_by_line(line))
             all_ok = false;
-            continue;
-        }
+    }
 
-        auto mountpoint = parts[1];
-        auto fstype = parts[2];
-        int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
+    auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d", Core::DirIterator::SkipDots);
 
-        if (mountpoint == "/") {
-            dbgln("Skipping mounting root");
-            continue;
-        }
+    if (fstab_directory_iterator.has_error() && fstab_directory_iterator.error() != ENOENT) {
+        dbgln("Failed to open /etc/fstab.d: {}", fstab_directory_iterator.error_string());
+    } else if (!fstab_directory_iterator.has_error()) {
+        while (fstab_directory_iterator.has_next()) {
+            auto path = fstab_directory_iterator.next_full_path();
+            auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
 
-        auto filename = parts[0];
+            if (file_or_error.is_error()) {
+                dbgln("Failed to open '{}': {}", path, file_or_error.error());
+                continue;
+            }
 
-        int fd = get_source_fd(filename);
+            auto file = file_or_error.release_value();
 
-        dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
+            while (file->can_read_line()) {
+                auto line = file->read_line();
 
-        auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
-        if (error_or_void.is_error()) {
-            warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
-            all_ok = false;
-            continue;
+                if (!mount_by_line(line))
+                    all_ok = false;
+            }
         }
     }
 
@@ -125,11 +159,11 @@ static ErrorOr<void> print_mounts()
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
-        auto class_name = fs_object.get("class_name").to_string();
-        auto mount_point = fs_object.get("mount_point").to_string();
-        auto source = fs_object.get("source").as_string_or("none");
-        auto readonly = fs_object.get("readonly").to_bool();
-        auto mount_flags = fs_object.get("mount_flags").to_int();
+        auto class_name = fs_object.get("class_name"sv).to_string();
+        auto mount_point = fs_object.get("mount_point"sv).to_string();
+        auto source = fs_object.get("source"sv).as_string_or("none");
+        auto readonly = fs_object.get("readonly"sv).to_bool();
+        auto mount_flags = fs_object.get("mount_flags"sv).to_int();
 
         out("{} on {} type {} (", source, mount_point, class_name);
 
@@ -148,6 +182,8 @@ static ErrorOr<void> print_mounts()
             out(",bind");
         if (mount_flags & MS_WXALLOWED)
             out(",wxallowed");
+        if (mount_flags & MS_AXALLOWED)
+            out(",axallowed");
 
         outln(")");
     });
@@ -168,7 +204,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
-    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');
+    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
     args_parser.parse(arguments);
 
     if (should_mount_all) {
@@ -183,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!source.is_empty() && !mountpoint.is_empty()) {
         if (fs_type.is_empty())
-            fs_type = "ext2";
+            fs_type = "ext2"sv;
         int flags = !options.is_empty() ? parse_options(options) : 0;
 
         int fd = get_source_fd(source);

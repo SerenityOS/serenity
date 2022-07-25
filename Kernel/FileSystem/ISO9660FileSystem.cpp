@@ -227,7 +227,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
 {
     VERIFY(!m_primary_volume);
 
-    auto block = TRY(KBuffer::try_create_with_size(m_logical_block_size, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Temporary volume descriptor storage"));
+    auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Temporary volume descriptor storage"sv, m_logical_block_size, Memory::Region::Access::Read | Memory::Region::Access::Write));
     auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
 
     auto current_block_index = first_data_area_block;
@@ -239,7 +239,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
         }
 
         auto const* header = reinterpret_cast<ISO::VolumeDescriptorHeader const*>(block->data());
-        if (StringView { header->identifier, 5 } != "CD001") {
+        if (StringView { header->identifier, 5 } != "CD001"sv) {
             dbgln_if(ISO9660_DEBUG, "Header magic at volume descriptor {} is not valid", current_block_index - first_data_area_block);
             return EIO;
         }
@@ -383,7 +383,7 @@ ErrorOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for
         return EIO;
     }
 
-    auto blocks = TRY(KBuffer::try_create_with_size(data_length, Memory::Region::Access::Read | Memory::Region::Access::Write, "ISO9660FS: Directory traversal buffer"));
+    auto blocks = TRY(KBuffer::try_create_with_size("ISO9660FS: Directory traversal buffer"sv, data_length, Memory::Region::Access::Read | Memory::Region::Access::Write));
     auto blocks_buffer = UserOrKernelBuffer::for_kernel_buffer(blocks->data());
     TRY(raw_read_blocks(BlockBasedFileSystem::BlockIndex { extent_location }, data_length / logical_block_size(), blocks_buffer));
     auto entry = TRY(DirectoryEntry::try_create(extent_location, data_length, move(blocks)));
@@ -408,7 +408,7 @@ ErrorOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKernel
     if (static_cast<u64>(offset) >= data_length)
         return 0;
 
-    auto block = TRY(KBuffer::try_create_with_size(fs().m_logical_block_size));
+    auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Inode read buffer"sv, fs().m_logical_block_size));
     auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
 
     size_t total_bytes = min(size, data_length - offset);

@@ -19,7 +19,7 @@
         }
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             layout: @GUI::VerticalBoxLayout {
                 spacing: 4
             }
@@ -59,15 +59,15 @@
             @GUI::Label {
                 text: "Preview:"
                 text_alignment: "CenterLeft"
+                preferred_width: 120
             }
 
-            @GUI::Frame {
-                layout: @GUI::VerticalBoxLayout {}
-
-                @GUI::Label {
-                    name: "clock_preview"
-                    text: "12:34:56"
-                }
+            @GUI::Label {
+                shape: "Container"
+                thickness: 2
+                shadow: "Sunken"
+                name: "clock_preview"
+                text: "12:34:56"
             }
         }
     }

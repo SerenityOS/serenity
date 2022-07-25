@@ -208,6 +208,70 @@ describe("errors", () => {
             new Intl.NumberFormat("en", { signDisplay: "hello!" });
         }).toThrowWithMessage(RangeError, "hello! is not a valid value for option signDisplay");
     });
+
+    test("roundingPriority option is invalid", () => {
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingPriority: "hello!" });
+        }).toThrowWithMessage(
+            RangeError,
+            "hello! is not a valid value for option roundingPriority"
+        );
+    });
+
+    test("roundingMode option is invalid", () => {
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingMode: "hello!" });
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option roundingMode");
+    });
+
+    test("roundingIncrement option is invalid", () => {
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingIncrement: "hello!" });
+        }).toThrowWithMessage(RangeError, "Value NaN is NaN or is not between 1 and 5000");
+
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingIncrement: 0 });
+        }).toThrowWithMessage(RangeError, "Value 0 is NaN or is not between 1 and 5000");
+
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingIncrement: 5001 });
+        }).toThrowWithMessage(RangeError, "Value 5001 is NaN or is not between 1 and 5000");
+
+        expect(() => {
+            new Intl.NumberFormat("en", {
+                roundingIncrement: 3,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }).toThrowWithMessage(RangeError, "3 is not a valid rounding increment");
+
+        expect(() => {
+            new Intl.NumberFormat("en", { roundingIncrement: 5, minimumSignificantDigits: 1 });
+        }).toThrowWithMessage(
+            TypeError,
+            "5 is not a valid rounding increment for rounding type significantDigits"
+        );
+
+        expect(() => {
+            new Intl.NumberFormat("en", {
+                roundingIncrement: 5,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 3,
+            });
+        }).toThrowWithMessage(
+            RangeError,
+            "5 is not a valid rounding increment for inequal min/max fraction digits"
+        );
+    });
+
+    test("trailingZeroDisplay option is invalid", () => {
+        expect(() => {
+            new Intl.NumberFormat("en", { trailingZeroDisplay: "hello!" });
+        }).toThrowWithMessage(
+            RangeError,
+            "hello! is not a valid value for option trailingZeroDisplay"
+        );
+    });
 });
 
 describe("normal behavior", () => {
@@ -344,9 +408,65 @@ describe("normal behavior", () => {
     });
 
     test("all valid signDisplay options", () => {
-        ["auto", "never", "always", "exceptZero"].forEach(signDisplay => {
+        ["auto", "never", "always", "exceptZero", "negative"].forEach(signDisplay => {
             expect(() => {
                 new Intl.NumberFormat("en", { signDisplay: signDisplay });
+            }).not.toThrow();
+        });
+    });
+
+    test("valid useGrouping options", () => {
+        ["min2", "auto", "always", false, true, ""].forEach(useGrouping => {
+            expect(() => {
+                new Intl.NumberFormat("en", { useGrouping: useGrouping });
+            }).not.toThrow();
+        });
+    });
+
+    test("all valid roundingPriority options", () => {
+        ["auto", "morePrecision", "lessPrecision"].forEach(roundingPriority => {
+            expect(() => {
+                new Intl.NumberFormat("en", { roundingPriority: roundingPriority });
+            }).not.toThrow();
+        });
+    });
+
+    test("all valid roundingMode options", () => {
+        [
+            "ceil",
+            "floor",
+            "expand",
+            "trunc",
+            "halfCeil",
+            "halfFloor",
+            "halfExpand",
+            "halfTrunc",
+            "halfEven",
+        ].forEach(roundingMode => {
+            expect(() => {
+                new Intl.NumberFormat("en", { roundingMode: roundingMode });
+            }).not.toThrow();
+        });
+    });
+
+    test("all valid roundingIncrement options", () => {
+        [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000].forEach(
+            roundingIncrement => {
+                expect(() => {
+                    new Intl.NumberFormat("en", {
+                        roundingIncrement: roundingIncrement,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    });
+                }).not.toThrow();
+            }
+        );
+    });
+
+    test("all valid trailingZeroDisplay options", () => {
+        ["auto", "stripIfInteger"].forEach(trailingZeroDisplay => {
+            expect(() => {
+                new Intl.NumberFormat("en", { trailingZeroDisplay: trailingZeroDisplay });
             }).not.toThrow();
         });
     });

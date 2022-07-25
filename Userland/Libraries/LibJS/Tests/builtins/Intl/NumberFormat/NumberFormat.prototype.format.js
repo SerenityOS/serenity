@@ -78,6 +78,34 @@ describe("style=decimal", () => {
         expect(en.format(12.3456)).toBe("12.3456");
         expect(en.format(12.34567)).toBe("12.3457");
         expect(en.format(12.34561)).toBe("12.3456");
+        expect(en.format(0.00000000000000000000000000000123)).toBe(
+            "0.000000000000000000000000000001230"
+        );
+        expect(en.format(-0.00000000000000000000000000000123)).toBe(
+            "-0.000000000000000000000000000001230"
+        );
+        expect(en.format(12344501000000000000000000000000000)).toBe(
+            "12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(-12344501000000000000000000000000000)).toBe(
+            "-12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(12344501000000000000000000000000000n)).toBe(
+            "12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+        expect(en.format(-12344501000000000000000000000000000n)).toBe(
+            "-12,344,500,000,000,000,000,000,000,000,000,000"
+        );
+
+        const enLargeMaxSignificantDigits = new Intl.NumberFormat("en", {
+            minimumSignificantDigits: 4,
+            maximumSignificantDigits: 21,
+        });
+        expect(enLargeMaxSignificantDigits.format(1)).toBe("1.000");
+        expect(enLargeMaxSignificantDigits.format(1n)).toBe("1.000");
+        expect(enLargeMaxSignificantDigits.format(123456789123456789123456789123456789n)).toBe(
+            "123,456,789,123,456,789,123,000,000,000,000,000"
+        );
 
         const ar = new Intl.NumberFormat("ar", {
             minimumSignificantDigits: 4,
@@ -206,6 +234,21 @@ describe("style=decimal", () => {
         expect(en.format(1290000)).toBe("1.3 million");
         expect(en.format(12000000)).toBe("12 million");
         expect(en.format(12900000)).toBe("13 million");
+
+        const enFullwide = new Intl.NumberFormat("en", {
+            notation: "compact",
+            compactDisplay: "long",
+            numberingSystem: "fullwide",
+        });
+        expect(enFullwide.format(1)).toBe("１");
+        expect(enFullwide.format(1200)).toBe("１.２ thousand");
+        expect(enFullwide.format(1290)).toBe("１.３ thousand");
+        expect(enFullwide.format(12000)).toBe("１２ thousand");
+        expect(enFullwide.format(12900)).toBe("１３ thousand");
+        expect(enFullwide.format(1200000)).toBe("１.２ million");
+        expect(enFullwide.format(1290000)).toBe("１.３ million");
+        expect(enFullwide.format(12000000)).toBe("１２ million");
+        expect(enFullwide.format(12900000)).toBe("１３ million");
 
         const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "long" });
         expect(ar.format(1)).toBe("\u0661");
@@ -347,29 +390,103 @@ describe("style=decimal", () => {
         expect(ar.format(-1)).toBe("\u061c-\u0661");
     });
 
-    test("useGrouping=true", () => {
-        const en = new Intl.NumberFormat("en", { useGrouping: true });
+    test("signDisplay=negative", () => {
+        const en = new Intl.NumberFormat("en", { signDisplay: "negative" });
+        expect(en.format(0)).toBe("0");
+        expect(en.format(1)).toBe("1");
+        expect(en.format(-0)).toBe("0");
+        expect(en.format(-1)).toBe("-1");
+
+        const ar = new Intl.NumberFormat("ar", { signDisplay: "negative" });
+        expect(ar.format(0)).toBe("\u0660");
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(-0)).toBe("\u0660");
+        expect(ar.format(-1)).toBe("\u061c-\u0661");
+    });
+
+    test("useGrouping=always", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "always" });
         expect(en.format(123)).toBe("123");
         expect(en.format(1234)).toBe("1,234");
         expect(en.format(12345)).toBe("12,345");
         expect(en.format(123456)).toBe("123,456");
         expect(en.format(1234567)).toBe("1,234,567");
 
-        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: true });
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "always" });
         expect(enIn.format(123)).toBe("123");
         expect(enIn.format(1234)).toBe("1,234");
         expect(enIn.format(12345)).toBe("12,345");
         expect(enIn.format(123456)).toBe("1,23,456");
         expect(enIn.format(1234567)).toBe("12,34,567");
 
-        const ar = new Intl.NumberFormat("ar", { useGrouping: true });
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "always" });
         expect(ar.format(123)).toBe("\u0661\u0662\u0663");
         expect(ar.format(1234)).toBe("\u0661\u066c\u0662\u0663\u0664");
         expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
         expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
         expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
 
-        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: true });
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "always" });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1\u00a0234");
+        expect(plPl.format(12345)).toBe("12\u00a0345");
+        expect(plPl.format(123456)).toBe("123\u00a0456");
+        expect(plPl.format(1234567)).toBe("1\u00a0234\u00a0567");
+    });
+
+    test("useGrouping=auto", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "auto" });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1,234");
+        expect(en.format(12345)).toBe("12,345");
+        expect(en.format(123456)).toBe("123,456");
+        expect(en.format(1234567)).toBe("1,234,567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "auto" });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1,234");
+        expect(enIn.format(12345)).toBe("12,345");
+        expect(enIn.format(123456)).toBe("1,23,456");
+        expect(enIn.format(1234567)).toBe("12,34,567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "auto" });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u066c\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "auto" });
+        expect(plPl.format(123)).toBe("123");
+        expect(plPl.format(1234)).toBe("1234");
+        expect(plPl.format(12345)).toBe("12\u00a0345");
+        expect(plPl.format(123456)).toBe("123\u00a0456");
+        expect(plPl.format(1234567)).toBe("1\u00a0234\u00a0567");
+    });
+
+    test("useGrouping=min2", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: "min2" });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1234");
+        expect(en.format(12345)).toBe("12,345");
+        expect(en.format(123456)).toBe("123,456");
+        expect(en.format(1234567)).toBe("1,234,567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: "min2" });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1234");
+        expect(enIn.format(12345)).toBe("12,345");
+        expect(enIn.format(123456)).toBe("1,23,456");
+        expect(enIn.format(1234567)).toBe("12,34,567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: "min2" });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+
+        const plPl = new Intl.NumberFormat("pl-PL", { useGrouping: "min2" });
         expect(plPl.format(123)).toBe("123");
         expect(plPl.format(1234)).toBe("1234");
         expect(plPl.format(12345)).toBe("12\u00a0345");
@@ -405,6 +522,422 @@ describe("style=decimal", () => {
         expect(plPl.format(12345)).toBe("12345");
         expect(plPl.format(123456)).toBe("123456");
         expect(plPl.format(1234567)).toBe("1234567");
+    });
+
+    test("roundingPriority=lessPrecision", () => {
+        const nf = (locale, minSignificant, maxSignificant, minFraction, maxFraction) => {
+            return new Intl.NumberFormat(locale, {
+                roundingPriority: "lessPrecision",
+                minimumSignificantDigits: minSignificant,
+                maximumSignificantDigits: maxSignificant,
+                minimumFractionDigits: minFraction,
+                maximumFractionDigits: maxFraction,
+            });
+        };
+
+        expect(nf("en", 2, undefined, 2, undefined).format(1)).toBe("1.00");
+        expect(nf("en", 3, undefined, 1, undefined).format(1)).toBe("1.0");
+        expect(nf("en", undefined, 2, undefined, 2).format(1.23)).toBe("1.2");
+        expect(nf("en", undefined, 3, undefined, 1).format(1.23)).toBe("1.2");
+
+        expect(nf("ar", 2, undefined, 2, undefined).format(1)).toBe("\u0661\u066b\u0660\u0660");
+        expect(nf("ar", 3, undefined, 1, undefined).format(1)).toBe("\u0661\u066b\u0660");
+        expect(nf("ar", undefined, 2, undefined, 2).format(1.23)).toBe("\u0661\u066b\u0662");
+        expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662");
+    });
+
+    test("roundingPriority=morePrecision", () => {
+        const nf = (locale, minSignificant, maxSignificant, minFraction, maxFraction) => {
+            return new Intl.NumberFormat(locale, {
+                roundingPriority: "morePrecision",
+                minimumSignificantDigits: minSignificant,
+                maximumSignificantDigits: maxSignificant,
+                minimumFractionDigits: minFraction,
+                maximumFractionDigits: maxFraction,
+            });
+        };
+
+        expect(nf("en", 2, undefined, 2, undefined).format(1)).toBe("1.0");
+        expect(nf("en", 3, undefined, 1, undefined).format(1)).toBe("1.00");
+        expect(nf("en", undefined, 2, undefined, 2).format(1.23)).toBe("1.23");
+        expect(nf("en", undefined, 3, undefined, 1).format(1.23)).toBe("1.23");
+
+        expect(nf("ar", 2, undefined, 2, undefined).format(1)).toBe("\u0661\u066b\u0660");
+        expect(nf("ar", 3, undefined, 1, undefined).format(1)).toBe("\u0661\u066b\u0660\u0660");
+        expect(nf("ar", undefined, 2, undefined, 2).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
+        expect(nf("ar", undefined, 3, undefined, 1).format(1.23)).toBe("\u0661\u066b\u0662\u0663");
+    });
+
+    test("roundingMode=ceil", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "ceil",
+        });
+        expect(en.format(1.11)).toBe("1.2");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "ceil",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=expand", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "expand",
+        });
+        expect(en.format(1.11)).toBe("1.2");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.2");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "expand",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=floor", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "floor",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.2");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "floor",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfCeil", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfCeil",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfCeil",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfEven", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfEven",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfEven",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfExpand", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfExpand",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.2");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfExpand",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfFloor", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfFloor",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.2");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfFloor",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0662");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=halfTrunc", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfTrunc",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "halfTrunc",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingMode=trunc", () => {
+        const en = new Intl.NumberFormat("en", {
+            maximumSignificantDigits: 2,
+            roundingMode: "trunc",
+        });
+        expect(en.format(1.11)).toBe("1.1");
+        expect(en.format(1.15)).toBe("1.1");
+        expect(en.format(1.2)).toBe("1.2");
+        expect(en.format(-1.11)).toBe("-1.1");
+        expect(en.format(-1.15)).toBe("-1.1");
+        expect(en.format(-1.2)).toBe("-1.2");
+
+        const ar = new Intl.NumberFormat("ar", {
+            maximumSignificantDigits: 2,
+            roundingMode: "trunc",
+        });
+        expect(ar.format(1.11)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.15)).toBe("\u0661\u066b\u0661");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662");
+        expect(ar.format(-1.11)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.15)).toBe("\u061c-\u0661\u066b\u0661");
+        expect(ar.format(-1.2)).toBe("\u061c-\u0661\u066b\u0662");
+    });
+
+    test("roundingIncrement", () => {
+        const nf = (roundingIncrement, fractionDigits) => {
+            return new Intl.NumberFormat([], {
+                roundingIncrement: roundingIncrement,
+                minimumFractionDigits: fractionDigits,
+                maximumFractionDigits: fractionDigits,
+            });
+        };
+
+        const nf1 = nf(1, 2);
+        expect(nf1.format(1.01)).toBe("1.01");
+        expect(nf1.format(1.02)).toBe("1.02");
+        expect(nf1.format(1.03)).toBe("1.03");
+        expect(nf1.format(1.04)).toBe("1.04");
+        expect(nf1.format(1.05)).toBe("1.05");
+
+        const nf2 = nf(2, 2);
+        expect(nf2.format(1.01)).toBe("1.02");
+        expect(nf2.format(1.02)).toBe("1.02");
+        expect(nf2.format(1.03)).toBe("1.04");
+        expect(nf2.format(1.04)).toBe("1.04");
+        expect(nf2.format(1.05)).toBe("1.06");
+
+        const nf5 = nf(5, 2);
+        expect(nf5.format(1.01)).toBe("1.00");
+        expect(nf5.format(1.02)).toBe("1.00");
+        expect(nf5.format(1.03)).toBe("1.05");
+        expect(nf5.format(1.04)).toBe("1.05");
+        expect(nf5.format(1.05)).toBe("1.05");
+
+        const nf10 = nf(10, 2);
+        expect(nf10.format(1.1)).toBe("1.10");
+        expect(nf10.format(1.12)).toBe("1.10");
+        expect(nf10.format(1.15)).toBe("1.20");
+        expect(nf10.format(1.2)).toBe("1.20");
+
+        const nf20 = nf(20, 2);
+        expect(nf20.format(1.05)).toBe("1.00");
+        expect(nf20.format(1.1)).toBe("1.20");
+        expect(nf20.format(1.15)).toBe("1.20");
+        expect(nf20.format(1.2)).toBe("1.20");
+
+        const nf25 = nf(25, 2);
+        expect(nf25.format(1.25)).toBe("1.25");
+        expect(nf25.format(1.3125)).toBe("1.25");
+        expect(nf25.format(1.375)).toBe("1.50");
+        expect(nf25.format(1.5)).toBe("1.50");
+
+        const nf50 = nf(50, 2);
+        expect(nf50.format(1.5)).toBe("1.50");
+        expect(nf50.format(1.625)).toBe("1.50");
+        expect(nf50.format(1.75)).toBe("2.00");
+        expect(nf50.format(1.875)).toBe("2.00");
+        expect(nf50.format(2.0)).toBe("2.00");
+
+        const nf100 = nf(100, 3);
+        expect(nf100.format(1.1)).toBe("1.100");
+        expect(nf100.format(1.125)).toBe("1.100");
+        expect(nf100.format(1.15)).toBe("1.200");
+        expect(nf100.format(1.175)).toBe("1.200");
+        expect(nf100.format(1.2)).toBe("1.200");
+
+        const nf200 = nf(200, 3);
+        expect(nf200.format(1.2)).toBe("1.200");
+        expect(nf200.format(1.25)).toBe("1.200");
+        expect(nf200.format(1.3)).toBe("1.400");
+        expect(nf200.format(1.35)).toBe("1.400");
+        expect(nf200.format(1.4)).toBe("1.400");
+
+        const nf250 = nf(250, 3);
+        expect(nf250.format(1.25)).toBe("1.250");
+        expect(nf250.format(1.3125)).toBe("1.250");
+        expect(nf250.format(1.375)).toBe("1.500");
+        expect(nf250.format(1.4375)).toBe("1.500");
+        expect(nf250.format(1.5)).toBe("1.500");
+
+        const nf500 = nf(500, 3);
+        expect(nf500.format(1.5)).toBe("1.500");
+        expect(nf500.format(1.625)).toBe("1.500");
+        expect(nf500.format(1.75)).toBe("2.000");
+        expect(nf500.format(1.875)).toBe("2.000");
+        expect(nf500.format(2.0)).toBe("2.000");
+
+        const nf1000 = nf(1000, 4);
+        expect(nf1000.format(1.1)).toBe("1.1000");
+        expect(nf1000.format(1.125)).toBe("1.1000");
+        expect(nf1000.format(1.15)).toBe("1.2000");
+        expect(nf1000.format(1.175)).toBe("1.2000");
+        expect(nf1000.format(1.2)).toBe("1.2000");
+
+        const nf2000 = nf(2000, 4);
+        expect(nf2000.format(1.2)).toBe("1.2000");
+        expect(nf2000.format(1.25)).toBe("1.2000");
+        expect(nf2000.format(1.3)).toBe("1.4000");
+        expect(nf2000.format(1.35)).toBe("1.4000");
+        expect(nf2000.format(1.4)).toBe("1.4000");
+
+        const nf2500 = nf(2500, 4);
+        expect(nf2500.format(1.25)).toBe("1.2500");
+        expect(nf2500.format(1.3125)).toBe("1.2500");
+        expect(nf2500.format(1.375)).toBe("1.5000");
+        expect(nf2500.format(1.4375)).toBe("1.5000");
+        expect(nf2500.format(1.5)).toBe("1.5000");
+
+        const nf5000 = nf(5000, 4);
+        expect(nf5000.format(1.5)).toBe("1.5000");
+        expect(nf5000.format(1.625)).toBe("1.5000");
+        expect(nf5000.format(1.75)).toBe("2.0000");
+        expect(nf5000.format(1.875)).toBe("2.0000");
+        expect(nf5000.format(2.0)).toBe("2.0000");
+    });
+
+    test("trailingZeroDisplay=auto", () => {
+        const en = new Intl.NumberFormat("en", {
+            trailingZeroDisplay: "auto",
+            minimumSignificantDigits: 5,
+        });
+        expect(en.format(1)).toBe("1.0000");
+        expect(en.format(1n)).toBe("1.0000");
+        expect(en.format(12)).toBe("12.000");
+        expect(en.format(12n)).toBe("12.000");
+        expect(en.format(1.2)).toBe("1.2000");
+
+        const ar = new Intl.NumberFormat("ar", {
+            trailingZeroDisplay: "auto",
+            minimumSignificantDigits: 5,
+        });
+        expect(ar.format(1)).toBe("\u0661\u066b\u0660\u0660\u0660\u0660");
+        expect(ar.format(1n)).toBe("\u0661\u066b\u0660\u0660\u0660\u0660");
+        expect(ar.format(12)).toBe("\u0661\u0662\u066b\u0660\u0660\u0660");
+        expect(ar.format(12n)).toBe("\u0661\u0662\u066b\u0660\u0660\u0660");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u0660\u0660");
+    });
+
+    test("trailingZeroDisplay=stripIfInteger", () => {
+        const en = new Intl.NumberFormat("en", {
+            trailingZeroDisplay: "stripIfInteger",
+            minimumSignificantDigits: 5,
+        });
+        expect(en.format(1)).toBe("1");
+        expect(en.format(1n)).toBe("1");
+        expect(en.format(12)).toBe("12");
+        expect(en.format(12n)).toBe("12");
+        expect(en.format(1.2)).toBe("1.2000");
+
+        const ar = new Intl.NumberFormat("ar", {
+            trailingZeroDisplay: "stripIfInteger",
+            minimumSignificantDigits: 5,
+        });
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(1n)).toBe("\u0661");
+        expect(ar.format(12)).toBe("\u0661\u0662");
+        expect(ar.format(12n)).toBe("\u0661\u0662");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u0660\u0660");
     });
 });
 
@@ -505,6 +1038,19 @@ describe("style=percent", () => {
         expect(en.format(0.123)).toBe("12%");
         expect(en.format(0.1234)).toBe("12%");
 
+        const enFullwide = new Intl.NumberFormat("en", {
+            style: "percent",
+            notation: "compact",
+            numberingSystem: "fullwide",
+        });
+        expect(enFullwide.format(0.01)).toBe("１%");
+        expect(enFullwide.format(0.012)).toBe("１.２%");
+        expect(enFullwide.format(0.0123)).toBe("１.２%");
+        expect(enFullwide.format(0.0129)).toBe("１.３%");
+        expect(enFullwide.format(0.12)).toBe("１２%");
+        expect(enFullwide.format(0.123)).toBe("１２%");
+        expect(enFullwide.format(0.1234)).toBe("１２%");
+
         const ar = new Intl.NumberFormat("ar", { style: "percent", notation: "compact" });
         expect(ar.format(0.01)).toBe("\u0661\u066a\u061c");
         expect(ar.format(0.012)).toBe("\u0661\u066b\u0662\u066a\u061c");
@@ -563,6 +1109,20 @@ describe("style=percent", () => {
         const ar = new Intl.NumberFormat("ar", { style: "percent", signDisplay: "exceptZero" });
         expect(ar.format(0.0)).toBe("\u0660\u066a\u061c");
         expect(ar.format(0.01)).toBe("\u061c+\u0661\u066a\u061c");
+        expect(ar.format(-0.0)).toBe("\u0660\u066a\u061c");
+        expect(ar.format(-0.01)).toBe("\u061c-\u0661\u066a\u061c");
+    });
+
+    test("signDisplay=negative", () => {
+        const en = new Intl.NumberFormat("en", { style: "percent", signDisplay: "negative" });
+        expect(en.format(0.0)).toBe("0%");
+        expect(en.format(0.01)).toBe("1%");
+        expect(en.format(-0.0)).toBe("0%");
+        expect(en.format(-0.01)).toBe("-1%");
+
+        const ar = new Intl.NumberFormat("ar", { style: "percent", signDisplay: "negative" });
+        expect(ar.format(0.0)).toBe("\u0660\u066a\u061c");
+        expect(ar.format(0.01)).toBe("\u0661\u066a\u061c");
         expect(ar.format(-0.0)).toBe("\u0660\u066a\u061c");
         expect(ar.format(-0.01)).toBe("\u061c-\u0661\u066a\u061c");
     });
@@ -889,6 +1449,50 @@ describe("style=currency", () => {
         });
         expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+    });
+
+    test("signDisplay=negative", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            signDisplay: "negative",
+        });
+        expect(en1.format(0)).toBe("$0.00");
+        expect(en1.format(1)).toBe("$1.00");
+        expect(en1.format(-0)).toBe("$0.00");
+        expect(en1.format(-1)).toBe("-$1.00");
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            currencySign: "accounting",
+            signDisplay: "negative",
+        });
+        expect(en2.format(0)).toBe("$0.00");
+        expect(en2.format(1)).toBe("$1.00");
+        expect(en2.format(-0)).toBe("$0.00");
+        expect(en2.format(-1)).toBe("($1.00)");
+
+        const ar1 = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            signDisplay: "negative",
+        });
+        expect(ar1.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+
+        const ar2 = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            currencySign: "accounting",
+            signDisplay: "negative",
+        });
+        expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
         expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
     });

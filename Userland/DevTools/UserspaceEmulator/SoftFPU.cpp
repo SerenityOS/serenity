@@ -20,18 +20,18 @@
 #    pragma GCC optimize("O3")
 #endif
 
-#define TODO_INSN()                                                                   \
-    do {                                                                              \
-        reportln("\n=={}== Unimplemented instruction: {}\n", getpid(), __FUNCTION__); \
-        m_emulator.dump_backtrace();                                                  \
-        _exit(0);                                                                     \
+#define TODO_INSN()                                                                     \
+    do {                                                                                \
+        reportln("\n=={}== Unimplemented instruction: {}\n"sv, getpid(), __FUNCTION__); \
+        m_emulator.dump_backtrace();                                                    \
+        _exit(0);                                                                       \
     } while (0)
 
 template<typename T>
 ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, char const* message)
 {
     if (value_with_shadow.is_uninitialized()) [[unlikely]] {
-        reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
+        reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n"sv, message);
         UserspaceEmulator::Emulator::the().dump_backtrace();
     }
 }
@@ -41,14 +41,14 @@ namespace UserspaceEmulator { // NOLINT(readability-implicit-bool-conversion) 0/
 ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
 {
     if (m_reg_is_mmx[index]) [[unlikely]] {
-        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({} abs)\033[0m\n", index);
+        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({} abs)\033[0m\n"sv, index);
         m_emulator.dump_backtrace();
     }
 }
 ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
 {
     if (!m_reg_is_mmx[index]) [[unlikely]] {
-        reportln("\033[31;1mWarning! Use of an FPU value ({} abs)  as an MMX register\033[0m\n", index);
+        reportln("\033[31;1mWarning! Use of an FPU value ({} abs)  as an MMX register\033[0m\n"sv, index);
         m_emulator.dump_backtrace();
     }
 }
@@ -161,7 +161,7 @@ ALWAYS_INLINE void SoftFPU::fpu_set_exception(FPU_Exception ex)
     // the previous eip
 
     // FIXME: Call FPU Exception handler
-    reportln("Trying to call Exception handler from {}", fpu_exception_string(ex));
+    reportln("Trying to call Exception handler from {}"sv, fpu_exception_string(ex));
     fpu_dump_env();
     m_emulator.dump_backtrace();
     TODO();

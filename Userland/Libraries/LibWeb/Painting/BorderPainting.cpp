@@ -1,50 +1,63 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Path.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
-BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::LengthPercentage top_left_radius, CSS::LengthPercentage top_right_radius, CSS::LengthPercentage bottom_right_radius, CSS::LengthPercentage bottom_left_radius)
+BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
 {
-    // FIXME: Some values should be relative to the height() if specified, but which?
-    //        Spec just says "Refer to corresponding dimension of the border box."
-    //        For now, all relative values are relative to the width.
+    BorderRadiusData bottom_left_radius_px {};
+    BorderRadiusData bottom_right_radius_px {};
+    BorderRadiusData top_left_radius_px {};
+    BorderRadiusData top_right_radius_px {};
+
     auto width_length = CSS::Length::make_px(rect.width());
-    auto bottom_left_radius_px = bottom_left_radius.resolved(node, width_length).to_px(node);
-    auto bottom_right_radius_px = bottom_right_radius.resolved(node, width_length).to_px(node);
-    auto top_left_radius_px = top_left_radius.resolved(node, width_length).to_px(node);
-    auto top_right_radius_px = top_right_radius.resolved(node, width_length).to_px(node);
+    bottom_left_radius_px.horizontal_radius = bottom_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    bottom_right_radius_px.horizontal_radius = bottom_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    top_left_radius_px.horizontal_radius = top_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    top_right_radius_px.horizontal_radius = top_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+
+    auto height_length = CSS::Length::make_px(rect.height());
+    bottom_left_radius_px.vertical_radius = bottom_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
+    bottom_right_radius_px.vertical_radius = bottom_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
+    top_left_radius_px.vertical_radius = top_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
+    top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     auto f = 1.0f;
     auto width_reciprocal = 1.0f / rect.width();
     auto height_reciprocal = 1.0f / rect.height();
-    f = max(f, width_reciprocal * (top_left_radius_px + top_right_radius_px));
-    f = max(f, height_reciprocal * (top_right_radius_px + bottom_right_radius_px));
-    f = max(f, width_reciprocal * (bottom_left_radius_px + bottom_right_radius_px));
-    f = max(f, height_reciprocal * (top_left_radius_px + bottom_left_radius_px));
+    f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
+    f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
+    f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
+    f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
 
     f = 1.0f / f;
 
-    top_left_radius_px = (int)(top_left_radius_px * f);
-    top_right_radius_px = (int)(top_right_radius_px * f);
-    bottom_right_radius_px = (int)(bottom_right_radius_px * f);
-    bottom_left_radius_px = (int)(bottom_left_radius_px * f);
+    top_left_radius_px.horizontal_radius *= f;
+    top_left_radius_px.vertical_radius *= f;
+    top_right_radius_px.horizontal_radius *= f;
+    top_right_radius_px.vertical_radius *= f;
+    bottom_right_radius_px.horizontal_radius *= f;
+    bottom_right_radius_px.vertical_radius *= f;
+    bottom_left_radius_px.horizontal_radius *= f;
+    bottom_left_radius_px.vertical_radius *= f;
 
-    return BorderRadiusData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
+    return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
 
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& a_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
+void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
-    auto rect = a_rect.to_rounded<float>();
-
     auto const& border_data = [&] {
         switch (edge) {
         case BorderEdge::Top:
@@ -64,14 +77,14 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
 
     auto color = border_data.color;
     auto border_style = border_data.line_style;
-    int int_width = max((int)width, 1);
+    int int_width = ceil(width);
 
     struct Points {
-        Gfx::FloatPoint p1;
-        Gfx::FloatPoint p2;
+        Gfx::IntPoint p1;
+        Gfx::IntPoint p2;
     };
 
-    auto points_for_edge = [](BorderEdge edge, Gfx::FloatRect const& rect) -> Points {
+    auto points_for_edge = [](BorderEdge edge, Gfx::IntRect const& rect) -> Points {
         switch (edge) {
         case BorderEdge::Top:
             return { rect.top_left(), rect.top_right() };
@@ -83,8 +96,6 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
             return { rect.top_left(), rect.bottom_left() };
         }
     };
-
-    auto [p1, p2] = points_for_edge(edge, rect);
 
     if (border_style == CSS::LineStyle::Inset) {
         auto top_left_color = Color::from_rgb(0x5a5a5a);
@@ -103,6 +114,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
         gfx_line_style = Gfx::Painter::LineStyle::Dashed;
 
     if (gfx_line_style != Gfx::Painter::LineStyle::Solid) {
+        auto [p1, p2] = points_for_edge(edge, rect);
         switch (edge) {
         case BorderEdge::Top:
             p1.translate_by(int_width / 2, int_width / 2);
@@ -121,175 +133,253 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
             p2.translate_by(int_width / 2, -int_width / 2);
             break;
         }
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, int_width, gfx_line_style);
+        if (border_style == CSS::LineStyle::Dotted) {
+            Gfx::AntiAliasingPainter aa_painter { context.painter() };
+            aa_painter.draw_line(p1.to_type<float>(), p2.to_type<float>(), color, int_width, gfx_line_style);
+            return;
+        }
+        context.painter().draw_line(p1, p2, color, int_width, gfx_line_style);
         return;
     }
 
-    auto draw_line = [&](auto& p1, auto& p2) {
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, gfx_line_style);
+    auto draw_horizontal_or_vertical_line = [&](auto p1, auto p2) {
+        // Note: Using fill_rect() here since draw_line() produces some overlapping pixels
+        // at the end of a line, which cause issues on borders with transparency.
+        p2.translate_by(1, 1);
+        context.painter().fill_rect(Gfx::IntRect::from_two_points(p1, p2), color);
     };
 
-    float p1_step = 0;
-    float p2_step = 0;
+    auto draw_border = [&](auto const& border, auto const& radius, auto const& opposite_border, auto const& opposite_radius, auto p1_step_translate, auto p2_step_translate) {
+        auto [p1, p2] = points_for_edge(edge, rect);
+        auto current_p1 = p1.to_type<float>();
+        auto current_p2 = p2.to_type<float>();
+        auto p1_step = radius ? 0 : border.width / static_cast<float>(int_width);
+        auto p2_step = opposite_radius ? 0 : opposite_border.width / static_cast<float>(int_width);
+        for (int i = 0; i < int_width; ++i) {
+            draw_horizontal_or_vertical_line(current_p1.to_type<int>(), current_p2.to_type<int>());
+            p1_step_translate(current_p1, p1_step);
+            p2_step_translate(current_p2, p2_step);
+        }
+    };
 
-    bool has_top_left_radius = border_radius_data.top_left > 0;
-    bool has_top_right_radius = border_radius_data.top_right > 0;
-    bool has_bottom_left_radius = border_radius_data.bottom_left > 0;
-    bool has_bottom_right_radius = border_radius_data.bottom_right > 0;
-
+    // FIXME: There is some overlap where two borders (without border radii meet),
+    // which produces artifacts if the border color has some transparency.
+    // (this only happens if the angle between the two borders is not 45 degrees)
     switch (edge) {
     case BorderEdge::Top:
-        p1_step = has_top_left_radius ? 0 : borders_data.left.width / (float)int_width;
-        p2_step = has_top_right_radius ? 0 : borders_data.right.width / (float)int_width;
-        for (int i = 0; i < int_width; ++i) {
-            draw_line(p1, p2);
-            p1.translate_by(p1_step, 1);
-            p2.translate_by(-p2_step, 1);
-        }
+        draw_border(
+            borders_data.left, border_radii_data.top_left, borders_data.right, border_radii_data.top_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(step, 1);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-step, 1);
+            });
         break;
     case BorderEdge::Right:
-        p1_step = has_top_right_radius ? 0 : borders_data.top.width / (float)int_width;
-        p2_step = has_bottom_right_radius ? 0 : borders_data.bottom.width / (float)int_width;
-        for (int i = int_width - 1; i >= 0; --i) {
-            draw_line(p1, p2);
-            p1.translate_by(-1, p1_step);
-            p2.translate_by(-1, -p2_step);
-        }
+        draw_border(
+            borders_data.top, border_radii_data.top_right, borders_data.bottom, border_radii_data.bottom_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(-1, step);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-1, -step);
+            });
         break;
     case BorderEdge::Bottom:
-        p1_step = has_bottom_left_radius ? 0 : borders_data.left.width / (float)int_width;
-        p2_step = has_bottom_right_radius ? 0 : borders_data.right.width / (float)int_width;
-        for (int i = int_width - 1; i >= 0; --i) {
-            draw_line(p1, p2);
-            p1.translate_by(p1_step, -1);
-            p2.translate_by(-p2_step, -1);
-        }
+        draw_border(
+            borders_data.left, border_radii_data.bottom_left, borders_data.right, border_radii_data.bottom_right,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(step, -1);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(-step, -1);
+            });
         break;
     case BorderEdge::Left:
-        p1_step = has_top_left_radius ? 0 : borders_data.top.width / (float)int_width;
-        p2_step = has_bottom_left_radius ? 0 : borders_data.bottom.width / (float)int_width;
-        for (int i = 0; i < int_width; ++i) {
-            draw_line(p1, p2);
-            p1.translate_by(1, p1_step);
-            p2.translate_by(1, -p2_step);
-        }
+        draw_border(
+            borders_data.top, border_radii_data.top_left, borders_data.bottom, border_radii_data.bottom_left,
+            [](auto& current_p1, auto step) {
+                current_p1.translate_by(1, step);
+            },
+            [](auto& current_p2, auto step) {
+                current_p2.translate_by(1, -step);
+            });
         break;
     }
 }
 
-void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
+RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize const& corners_size)
 {
-    auto const border_rect = bordered_rect;
-
-    auto const top_left_radius = border_radius_data.top_left;
-    auto const top_right_radius = border_radius_data.top_right;
-    auto const bottom_right_radius = border_radius_data.bottom_right;
-    auto const bottom_left_radius = border_radius_data.bottom_left;
-
-    // FIXME: Support elliptical border radii.
-
-    Gfx::FloatRect top_border_rect = {
-        border_rect.x() + top_left_radius,
-        border_rect.y(),
-        border_rect.width() - top_left_radius - top_right_radius,
-        border_rect.height()
+    auto allocate_mask_bitmap = [&]() -> RefPtr<Gfx::Bitmap> {
+        auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_size);
+        if (!bitmap.is_error())
+            return bitmap.release_value();
+        return nullptr;
     };
-    Gfx::FloatRect right_border_rect = {
-        border_rect.x(),
-        border_rect.y() + top_right_radius,
-        border_rect.width(),
-        border_rect.height() - top_right_radius - bottom_right_radius
-    };
-    Gfx::FloatRect bottom_border_rect = {
-        border_rect.x() + bottom_left_radius,
-        border_rect.y(),
-        border_rect.width() - bottom_left_radius - bottom_right_radius,
-        border_rect.height()
-    };
-    Gfx::FloatRect left_border_rect = {
-        border_rect.x(),
-        border_rect.y() + top_left_radius,
-        border_rect.width(),
-        border_rect.height() - top_left_radius - bottom_left_radius
-    };
-
-    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radius_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radius_data, borders_data);
-
-    // Draws a quarter circle clockwise
-    auto draw_quarter_circle = [&](Gfx::FloatPoint const& from, Gfx::FloatPoint const& to, Gfx::Color color, int thickness) {
-        Gfx::FloatPoint center = { 0, 0 };
-        Gfx::FloatPoint offset = { 0, 0 };
-        Gfx::FloatPoint circle_position = { 0, 0 };
-
-        auto radius = fabsf(from.x() - to.x());
-
-        if (from.x() < to.x() && from.y() > to.y()) {
-            // top-left
-            center.set_x(radius);
-            center.set_y(radius);
-            offset.set_y(1);
-        } else if (from.x() < to.x() && from.y() < to.y()) {
-            // top-right
-            circle_position.set_x(from.x());
-            center.set_y(radius);
-            offset.set_x(-1);
-            offset.set_y(1);
-        } else if (from.x() > to.x() && from.y() < to.y()) {
-            // bottom-right
-            circle_position.set_x(to.x());
-            circle_position.set_y(from.y());
-            offset.set_x(-1);
-        } else if (from.x() > to.x() && from.y() > to.y()) {
-            // bottom-left
-            circle_position.set_y(to.y());
-            center.set_x(radius);
-        } else {
-            // You are lying about your intentions of drawing a quarter circle, your coordinates are (partly) the same!
-            return;
+    // FIXME: Allocate per page?
+    static thread_local auto corner_bitmap = allocate_mask_bitmap();
+    // Only reallocate the corner bitmap is the existing one is too small.
+    // (should mean no more allocations after the first paint -- amortised zero allocations :^))
+    if (corner_bitmap && corner_bitmap->rect().size().contains(corners_size)) {
+        Gfx::Painter painter { *corner_bitmap };
+        painter.clear_rect({ { 0, 0 }, corners_size }, Gfx::Color());
+    } else {
+        corner_bitmap = allocate_mask_bitmap();
+        if (!corner_bitmap) {
+            dbgln("Failed to allocate corner bitmap with size {}", corners_size);
+            return nullptr;
         }
+    }
+    return corner_bitmap;
+}
 
-        Gfx::FloatRect circle_rect = {
-            border_rect.x() + circle_position.x(),
-            border_rect.y() + circle_position.y(),
-            radius,
-            radius
-        };
+void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
+{
+    if (borders_data.top.width <= 0 && borders_data.right.width <= 0 && borders_data.left.width <= 0 && borders_data.bottom.width <= 0)
+        return;
 
-        context.painter().draw_circle_arc_intersecting(
-            Gfx::enclosing_int_rect(circle_rect),
-            (center + offset).to_rounded<int>(),
-            radius,
-            color,
-            thickness);
+    Gfx::IntRect border_rect = bordered_rect.to_rounded<int>();
+
+    auto top_left = border_radii_data.top_left.as_corner();
+    auto top_right = border_radii_data.top_right.as_corner();
+    auto bottom_right = border_radii_data.bottom_right.as_corner();
+    auto bottom_left = border_radii_data.bottom_left.as_corner();
+
+    // Disable border radii if the corresponding borders don't exist:
+    if (borders_data.bottom.width <= 0 && borders_data.left.width <= 0)
+        bottom_left = { 0, 0 };
+    if (borders_data.bottom.width <= 0 && borders_data.right.width <= 0)
+        bottom_right = { 0, 0 };
+    if (borders_data.top.width <= 0 && borders_data.left.width <= 0)
+        top_left = { 0, 0 };
+    if (borders_data.top.width <= 0 && borders_data.right.width <= 0)
+        top_right = { 0, 0 };
+
+    auto int_width = [&](auto value) -> int {
+        return ceil(value);
     };
 
-    // FIXME: Which color to use?
-    if (top_left_radius != 0) {
-        Gfx::FloatPoint arc_start = { 0, top_left_radius };
-        Gfx::FloatPoint arc_end = { top_left_radius, 0 };
-        draw_quarter_circle(arc_start, arc_end, borders_data.top.color, borders_data.top.width);
-    }
+    Gfx::IntRect top_border_rect = {
+        border_rect.x() + top_left.horizontal_radius,
+        border_rect.y(),
+        border_rect.width() - top_left.horizontal_radius - top_right.horizontal_radius,
+        int_width(borders_data.top.width)
+    };
+    Gfx::IntRect right_border_rect = {
+        border_rect.x() + (border_rect.width() - int_width(borders_data.right.width)),
+        border_rect.y() + top_right.vertical_radius,
+        int_width(borders_data.right.width),
+        border_rect.height() - top_right.vertical_radius - bottom_right.vertical_radius
+    };
+    Gfx::IntRect bottom_border_rect = {
+        border_rect.x() + bottom_left.horizontal_radius,
+        border_rect.y() + (border_rect.height() - int_width(borders_data.bottom.width)),
+        border_rect.width() - bottom_left.horizontal_radius - bottom_right.horizontal_radius,
+        int_width(borders_data.bottom.width)
+    };
+    Gfx::IntRect left_border_rect = {
+        border_rect.x(),
+        border_rect.y() + top_left.vertical_radius,
+        int_width(borders_data.left.width),
+        border_rect.height() - top_left.vertical_radius - bottom_left.vertical_radius
+    };
 
-    if (top_right_radius != 0) {
-        Gfx::FloatPoint arc_start = { top_left_radius + top_border_rect.width(), 0 };
-        Gfx::FloatPoint arc_end = { bordered_rect.width(), top_right_radius };
-        draw_quarter_circle(arc_start, arc_end, borders_data.top.color, borders_data.top.width);
-    }
+    // Avoid overlapping pixels on the edges, in the easy 45 degree corners case:
+    if (!top_left && top_border_rect.height() == left_border_rect.width())
+        top_border_rect.shrink(0, 0, 0, 1);
+    if (!top_right && top_border_rect.height() == right_border_rect.width())
+        top_border_rect.shrink(0, 1, 0, 0);
+    if (!bottom_left && bottom_border_rect.height() == left_border_rect.width())
+        bottom_border_rect.shrink(0, 0, 0, 1);
+    if (!bottom_right && bottom_border_rect.height() == right_border_rect.width())
+        bottom_border_rect.shrink(0, 1, 0, 0);
 
-    if (bottom_right_radius != 0) {
-        Gfx::FloatPoint arc_start = { bordered_rect.width(), top_right_radius + right_border_rect.height() };
-        Gfx::FloatPoint arc_end = { bottom_border_rect.width() + bottom_left_radius, bordered_rect.height() };
-        draw_quarter_circle(arc_start, arc_end, borders_data.bottom.color, borders_data.bottom.width);
-    }
+    auto border_color_no_alpha = borders_data.top.color;
+    border_color_no_alpha.set_alpha(255);
 
-    if (bottom_left_radius != 0) {
-        Gfx::FloatPoint arc_start = { bottom_left_radius, bordered_rect.height() };
-        Gfx::FloatPoint arc_end = { 0, bordered_rect.height() - bottom_left_radius };
-        draw_quarter_circle(arc_start, arc_end, borders_data.bottom.color, borders_data.bottom.width);
-    }
+    // Paint the strait line part of the border:
+    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radii_data, borders_data);
+    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radii_data, borders_data);
+
+    if (!top_left && !top_right && !bottom_left && !bottom_right)
+        return;
+
+    // Cache the smallest possible bitmap to render just the corners for the border.
+    auto expand_width = abs(int_width(borders_data.left.width) - int_width(borders_data.right.width));
+    auto expand_height = abs(int_width(borders_data.top.width) - int_width(borders_data.bottom.width));
+    Gfx::IntRect corner_mask_rect {
+        0, 0,
+        max(
+            top_left.horizontal_radius + top_right.horizontal_radius + expand_width,
+            bottom_left.horizontal_radius + bottom_right.horizontal_radius + expand_height),
+        max(
+            top_left.vertical_radius + bottom_left.vertical_radius + expand_width,
+            top_right.vertical_radius + bottom_right.vertical_radius + expand_height)
+    };
+
+    auto corner_bitmap = get_cached_corner_bitmap(corner_mask_rect.size());
+    if (!corner_bitmap)
+        return;
+    Gfx::Painter painter { *corner_bitmap };
+
+    Gfx::AntiAliasingPainter aa_painter { painter };
+
+    // Paint a little tile sheet for the corners
+    // TODO: Support various line styles on the corners (dotted, dashes, etc)
+
+    // Paint the outer (minimal) corner rounded rectangle:
+    aa_painter.fill_rect_with_rounded_corners(corner_mask_rect, border_color_no_alpha, top_left, top_right, bottom_right, bottom_left);
+
+    // Subtract the inner corner rectangle:
+    auto inner_corner_mask_rect = corner_mask_rect.shrunken(
+        int_width(borders_data.top.width),
+        int_width(borders_data.right.width),
+        int_width(borders_data.bottom.width),
+        int_width(borders_data.left.width));
+    auto inner_top_left = top_left;
+    auto inner_top_right = top_right;
+    auto inner_bottom_right = bottom_right;
+    auto inner_bottom_left = bottom_left;
+    inner_top_left.horizontal_radius = max(0, inner_top_left.horizontal_radius - int_width(borders_data.left.width));
+    inner_top_left.vertical_radius = max(0, inner_top_left.vertical_radius - int_width(borders_data.top.width));
+    inner_top_right.horizontal_radius = max(0, inner_top_right.horizontal_radius - int_width(borders_data.right.width));
+    inner_top_right.vertical_radius = max(0, inner_top_right.vertical_radius - int_width(borders_data.top.width));
+    inner_bottom_right.horizontal_radius = max(0, inner_bottom_right.horizontal_radius - int_width(borders_data.right.width));
+    inner_bottom_right.vertical_radius = max(0, inner_bottom_right.vertical_radius - int_width(borders_data.bottom.width));
+    inner_bottom_left.horizontal_radius = max(0, inner_bottom_left.horizontal_radius - int_width(borders_data.left.width));
+    inner_bottom_left.vertical_radius = max(0, inner_bottom_left.vertical_radius - int_width(borders_data.bottom.width));
+    aa_painter.fill_rect_with_rounded_corners(inner_corner_mask_rect, border_color_no_alpha, inner_top_left, inner_top_right, inner_bottom_right, inner_bottom_left, Gfx::AntiAliasingPainter::BlendMode::AlphaSubtract);
+
+    // TODO: Support dual color corners. Other browsers will render a rounded corner between two borders of
+    // different colors using both colours, normally split at a 45 degree angle (though the exact angle is interpolated).
+    auto blit_corner = [&](Gfx::IntPoint const& position, Gfx::IntRect const& src_rect, Color corner_color) {
+        context.painter().blit_filtered(position, *corner_bitmap, src_rect, [&](auto const& corner_pixel) {
+            return corner_color.with_alpha((corner_color.alpha() * corner_pixel.alpha()) / 255);
+        });
+    };
+
+    // FIXME: Corners should actually split between the two colors, if both are provided (and differ)
+    auto pick_corner_color = [](auto const& border, auto const& adjacent_border) {
+        if (border.width > 0)
+            return border.color;
+        return adjacent_border.color;
+    };
+
+    // Blit the corners into to their corresponding locations:
+    if (top_left)
+        blit_corner(border_rect.top_left(), top_left.as_rect(), pick_corner_color(borders_data.top, borders_data.left));
+
+    if (top_right)
+        blit_corner(border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
+
+    if (bottom_right)
+        blit_corner(border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width() - bottom_right.horizontal_radius, corner_mask_rect.height() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
+
+    if (bottom_left)
+        blit_corner(border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
 }
 
 }

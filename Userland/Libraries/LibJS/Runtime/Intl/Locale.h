@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/Forward.h>
@@ -72,5 +73,20 @@ private:
     Optional<String> m_numbering_system; // [[NumberingSystem]]
     bool m_numeric { false };            // [[Numeric]]
 };
+
+// Table 1: WeekInfo Record Fields, https://tc39.es/proposal-intl-locale-info/#table-locale-weekinfo-record
+struct WeekInfo {
+    u8 minimal_days { 0 }; // [[MinimalDays]]
+    u8 first_day { 0 };    // [[FirstDay]]
+    Vector<u8> weekend;    // [[Weekend]]
+};
+
+Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale);
+Array* time_zones_of_locale(GlobalObject& global_object, StringView region);
+StringView character_direction_of_locale(Locale const& locale);
+WeekInfo week_info_of_locale(Locale const& locale);
 
 }

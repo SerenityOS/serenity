@@ -57,35 +57,35 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     pid_vm_fields.empend(
         "Address", Gfx::TextAlignment::CenterLeft,
-        [](auto& object) { return String::formatted("{:p}", object.get("address").to_u64()); },
-        [](auto& object) { return object.get("address").to_u64(); });
+        [](auto& object) { return String::formatted("{:p}", object.get("address"sv).to_u64()); },
+        [](auto& object) { return object.get("address"sv).to_u64(); });
     pid_vm_fields.empend("size", "Size", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_resident", "Resident", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_dirty", "Dirty", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
-        if (object.get("readable").to_bool())
+        if (object.get("readable"sv).to_bool())
             builder.append('R');
-        if (object.get("writable").to_bool())
+        if (object.get("writable"sv).to_bool())
             builder.append('W');
-        if (object.get("executable").to_bool())
+        if (object.get("executable"sv).to_bool())
             builder.append('X');
-        if (object.get("shared").to_bool())
+        if (object.get("shared"sv).to_bool())
             builder.append('S');
-        if (object.get("syscall").to_bool())
+        if (object.get("syscall"sv).to_bool())
             builder.append('C');
-        if (object.get("stack").to_bool())
+        if (object.get("stack"sv).to_bool())
             builder.append('T');
         return builder.to_string();
     });
     pid_vm_fields.empend("VMObject type", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        auto type = object.get("vmobject").to_string();
-        if (type.ends_with("VMObject"))
+        auto type = object.get("vmobject"sv).to_string();
+        if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;
     });
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        if (object.get("volatile").to_bool())
+        if (object.get("volatile"sv).to_bool())
             return "Volatile";
         return "Non-volatile";
     });
@@ -98,7 +98,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             return GUI::Variant(0);
         },
         [](JsonObject const& object) {
-            auto pagemap = object.get("pagemap").as_string_or({});
+            auto pagemap = object.get("pagemap"sv).as_string_or({});
             return pagemap;
         });
     pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);
@@ -123,7 +123,7 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
 void ProcessMemoryMapWidget::refresh()
 {
     if (m_pid != -1)
-        m_json_model->invalidate();
+        m_json_model->update();
 }
 
 }

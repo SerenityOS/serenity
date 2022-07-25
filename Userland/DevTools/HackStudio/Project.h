@@ -33,7 +33,7 @@ public:
     String to_absolute_path(String const&) const;
     bool project_is_serenity() const;
 
-    static constexpr StringView config_file_path = ".hackstudio/config.json";
+    static constexpr auto config_file_path = ".hackstudio/config.json"sv;
     NonnullOwnPtr<ProjectConfig> config() const;
 
 private:

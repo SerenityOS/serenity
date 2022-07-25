@@ -58,6 +58,32 @@ enum class FlexBasis {
     Auto,
 };
 
+// Note: The sides must be before the corners in this enum (as this order is used in parsing).
+enum class SideOrCorner {
+    Top,
+    Bottom,
+    Left,
+    Right,
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight
+};
+
+struct GradientColorStop {
+    Color color;
+    Optional<LengthPercentage> length;
+};
+
+struct GradientColorHint {
+    LengthPercentage value;
+};
+
+struct ColorStopListElement {
+    Optional<GradientColorHint> transition_hint;
+    GradientColorStop color_stop;
+};
+
 // FIXME: Find a better place for this helper.
 inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
 {
@@ -67,8 +93,9 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     case CSS::ImageRendering::Smooth:
         return Gfx::Painter::ScalingMode::BilinearBlend;
     case CSS::ImageRendering::CrispEdges:
-    case CSS::ImageRendering::Pixelated:
         return Gfx::Painter::ScalingMode::NearestNeighbor;
+    case CSS::ImageRendering::Pixelated:
+        return Gfx::Painter::ScalingMode::SmoothPixels;
     }
     VERIFY_NOT_REACHED();
 }
@@ -98,6 +125,7 @@ public:
         Initial,
         Invalid,
         Length,
+        LinearGradient,
         ListStyle,
         Numeric,
         Overflow,
@@ -111,7 +139,7 @@ public:
         Transformation,
         Unresolved,
         Unset,
-        ValueList,
+        ValueList
     };
 
     Type type() const { return m_type; }
@@ -135,6 +163,7 @@ public:
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
     bool is_length() const { return type() == Type::Length; }
+    bool is_linear_gradient() const { return type() == Type::LinearGradient; }
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
@@ -171,6 +200,7 @@ public:
     InheritStyleValue const& as_inherit() const;
     InitialStyleValue const& as_initial() const;
     LengthStyleValue const& as_length() const;
+    LinearGradientStyleValue const& as_linear_gradient() const;
     ListStyleStyleValue const& as_list_style() const;
     NumericStyleValue const& as_numeric() const;
     OverflowStyleValue const& as_overflow() const;
@@ -205,6 +235,7 @@ public:
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
     InitialStyleValue& as_initial() { return const_cast<InitialStyleValue&>(const_cast<StyleValue const&>(*this).as_initial()); }
     LengthStyleValue& as_length() { return const_cast<LengthStyleValue&>(const_cast<StyleValue const&>(*this).as_length()); }
+    LinearGradientStyleValue& as_linear_gradient() { return const_cast<LinearGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_linear_gradient()); }
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
     NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
@@ -645,15 +676,27 @@ public:
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
 
+    bool resolves_to_angle() const { return m_resolved_type == ResolvedType::Angle; }
     Optional<Angle> resolve_angle() const;
-    Optional<AnglePercentage> resolve_angle_percentage(Angle const& percentage_basis) const;
+    Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
+
+    bool resolves_to_frequency() const { return m_resolved_type == ResolvedType::Frequency; }
     Optional<Frequency> resolve_frequency() const;
-    Optional<FrequencyPercentage> resolve_frequency_percentage(Frequency const& percentage_basis) const;
+    Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
+
+    bool resolves_to_length() const { return m_resolved_type == ResolvedType::Length; }
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
-    Optional<LengthPercentage> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+    Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+
+    bool resolves_to_percentage() const { return m_resolved_type == ResolvedType::Percentage; }
     Optional<Percentage> resolve_percentage() const;
+
+    bool resolves_to_time() const { return m_resolved_type == ResolvedType::Time; }
     Optional<Time> resolve_time() const;
-    Optional<TimePercentage> resolve_time_percentage(Time const& percentage_basis) const;
+    Optional<Time> resolve_time_percentage(Time const& percentage_basis) const;
+
+    bool resolves_to_integer() const { return m_resolved_type == ResolvedType::Integer; }
+    bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
 
@@ -884,6 +927,39 @@ private:
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
+class LinearGradientStyleValue final : public StyleValue {
+public:
+    using GradientDirection = Variant<Angle, SideOrCorner>;
+
+    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list)
+    {
+        VERIFY(color_stop_list.size() >= 2);
+        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list)));
+    }
+
+    virtual String to_string() const override;
+    virtual ~LinearGradientStyleValue() override = default;
+    virtual bool equals(StyleValue const& other) const override;
+
+    Vector<ColorStopListElement> const& color_stop_list() const
+    {
+        return m_color_stop_list;
+    }
+
+    float angle_degrees(Gfx::FloatRect const& gradient_rect) const;
+
+private:
+    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list)
+        : StyleValue(Type::LinearGradient)
+        , m_direction(direction)
+        , m_color_stop_list(move(color_stop_list))
+    {
+    }
+
+    GradientDirection m_direction;
+    Vector<ColorStopListElement> m_color_stop_list;
 };
 
 class InheritStyleValue final : public StyleValue {

@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd"));
 
-    auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper");
+    auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper"sv);
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Mapper");
@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!keyboard_mapper_widget->request_close())
                 return;
 
-            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open", "/res/keymaps/");
+            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open"sv, "/res/keymaps/"sv);
             if (!path.has_value())
                 return;
 

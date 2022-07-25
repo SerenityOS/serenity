@@ -2,6 +2,7 @@
 
 interface HTMLBaseElement : HTMLElement {
 
+    [CEReactions] attribute USVString href;
     [Reflect] attribute DOMString target;
 
 };

@@ -25,7 +25,7 @@ bool is_canonical(StringView path)
         return false;
     if (path.starts_with("./"sv) || path.contains("/./"sv) || path.ends_with("/."sv))
         return false;
-    if (path.starts_with("../"sv) || path.contains("/../"sv) || path.ends_with("/.."))
+    if (path.starts_with("../"sv) || path.contains("/../"sv) || path.ends_with("/.."sv))
         return false;
     if (path.contains("//"sv))
         return false;

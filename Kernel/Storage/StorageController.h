@@ -29,10 +29,17 @@ public:
     virtual RefPtr<StorageDevice> device(u32 index) const = 0;
     virtual size_t devices_count() const = 0;
 
+    u32 controller_id() const { return m_controller_id; }
+
 protected:
     virtual bool reset() = 0;
     virtual bool shutdown() = 0;
 
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) = 0;
+
+    StorageController();
+
+private:
+    u32 const m_controller_id { 0 };
 };
 }

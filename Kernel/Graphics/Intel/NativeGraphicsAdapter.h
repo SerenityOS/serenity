@@ -24,8 +24,6 @@ public:
 
     virtual ~IntelNativeGraphicsAdapter() = default;
 
-    virtual bool vga_compatible() const override { return true; }
-
 private:
     ErrorOr<void> initialize_adapter();
 

@@ -551,10 +551,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         write_cr4(read_cr4() | 0x800);
     }
 
-    if (has_feature(CPUFeature::TSC)) {
-        write_cr4(read_cr4() | 0x4);
-    }
-
     if (has_feature(CPUFeature::XSAVE)) {
         // Turn on CR4.OSXSAVE
         write_cr4(read_cr4() | 0x40000);
@@ -593,6 +589,12 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     constexpr u64 rflags_mask = 0x257fd5u;
     MSR sfmask_msr(MSR_SFMASK);
     sfmask_msr.set(rflags_mask);
+
+    if (has_feature(CPUFeature::FSGSBASE)) {
+        // Turn off CR4.FSGSBASE to ensure the current Processor base kernel address is not leaked via
+        // the RDGSBASE instruction until we implement proper GS swapping at the userspace/kernel boundaries
+        write_cr4(read_cr4() & ~0x10000);
+    }
 #endif
 
     // Query OS-enabled CPUID features again, and set the flags if needed.
@@ -708,7 +710,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor_hyperv(CPUID const& hyperviso
     alignas(sizeof(u32)) char interface_signature_buffer[5];
     *reinterpret_cast<u32*>(interface_signature_buffer) = hypervisor_interface.eax();
     interface_signature_buffer[4] = '\0';
-    StringView hyperv_interface_signature(interface_signature_buffer);
+    StringView hyperv_interface_signature { interface_signature_buffer, strlen(interface_signature_buffer) };
 
     dmesgln("CPU[{}]: Hyper-V interface signature '{}' ({:#x})", current_id(), hyperv_interface_signature, hypervisor_interface.eax());
 

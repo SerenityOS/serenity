@@ -114,16 +114,6 @@ ThrowCompletionOr<DateDurationRecord> create_date_duration_record(GlobalObject& 
 }
 
 // 7.5.7 CreateTimeDurationRecord ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-createtimedurationrecord
-TimeDurationRecord create_time_duration_record(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
-{
-    // 1. If ! IsValidDuration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
-    VERIFY(is_valid_duration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
-
-    // 2. Return the Record { [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
-    return TimeDurationRecord { .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
-}
-
-// 7.5.7 CreateTimeDurationRecord ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-createtimedurationrecord
 ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
 {
     auto& vm = global_object.vm();
@@ -174,50 +164,38 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
         return create_duration_record(duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
     }
 
-    // 3. Let result be a new Duration Record.
+    // 3. Let result be a new Duration Record with each field set to 0.
     auto result = DurationRecord {};
 
-    // 4. Let any be false.
-    auto any = false;
+    // 4. Let partial be ? ToTemporalPartialDurationRecord(temporalDurationLike).
+    auto partial = TRY(to_temporal_partial_duration_record(global_object, temporal_duration_like));
 
-    // 5. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
-        // a. Let prop be the Property Name value of the current row.
+    auto duration_record_fields = temporal_duration_record_fields<DurationRecord, double>(vm);
+    auto partial_duration_record_fields = temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm);
 
-        // b. Let val be ? Get(temporalDurationLike, prop).
-        auto value = TRY(temporal_duration_like.as_object().get(property));
+    // 5. For each row of Table 8, except the header row, in table order, do
+    for (size_t i = 0; i < duration_record_fields.size(); ++i) {
+        // a. Let fieldName be the Field Name value of the current row.
+        auto field_name = duration_record_fields[i].field_name;
+        auto partial_field_name = partial_duration_record_fields[i].field_name;
 
-        // c. If val is undefined, then
-        if (value.is_undefined()) {
-            // i. Set result's field whose name is the Field Name value of the current row to 0.
-            result.*field = 0;
-        }
-        // d. Else,
-        else {
-            // i. Set any to true.
-            any = true;
+        // b. Let value be the value of the field of partial whose name is fieldName.
+        auto value = partial.*partial_field_name;
 
-            // ii. Let val be ? ToIntegerWithoutRounding(val).
-            auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
-
-            // iii. Set result's field whose name is the Field Name value of the current row to val.
-            result.*field = value_integer;
+        // c. If value is not undefined, then
+        if (value.has_value()) {
+            // i. Set the field of result whose name is fieldName to value.
+            result.*field_name = *value;
         }
     }
 
-    // 6. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
-    }
-
-    // 7. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
+    // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
     if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
     }
 
-    // 8. Return result.
+    // 7. Return result.
     return result;
 }
 
@@ -307,8 +285,8 @@ StringView default_temporal_largest_unit(double years, double months, double wee
     return "nanosecond"sv;
 }
 
-// 7.5.13 ToPartialDuration ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialduration
-ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& global_object, Value temporal_duration_like)
+// 7.5.13 ToTemporalPartialDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalpartialdurationrecord
+ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(GlobalObject& global_object, Value temporal_duration_like)
 {
     auto& vm = global_object.vm();
 
@@ -325,7 +303,7 @@ ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& globa
     auto any = false;
 
     // 4. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field, property] : temporal_duration_like_properties<PartialDurationRecord, Optional<double>>(vm)) {
+    for (auto& [field_name, property] : temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm)) {
         // a. Let property be the Property Name value of the current row.
 
         // b. Let value be ? Get(temporalDurationLike, property).
@@ -339,8 +317,9 @@ ThrowCompletionOr<PartialDurationRecord> to_partial_duration(GlobalObject& globa
             // ii. Set value to ? ToIntegerWithoutRounding(value).
             auto value_integer = TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
 
-            // iii. Set result's field whose name is the Field Name value of the current row to value.
-            result.*field = value_integer;
+            // iii. Let fieldName be the Field Name value of the current row.
+            // iv. Set the field of result whose name is fieldName to value.
+            result.*field_name = value_integer;
         }
     }
 
@@ -391,8 +370,8 @@ Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration
     return MUST(create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()));
 }
 
-// 7.5.16 CalculateOffsetShift ( relativeTo, y, mon, w, d, h, min, s, ms, mus, ns ), https://tc39.es/proposal-temporal/#sec-temporal-calculateoffsetshift
-ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Value relative_to_value, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+// 7.5.16 CalculateOffsetShift ( relativeTo, y, mon, w, d ), https://tc39.es/proposal-temporal/#sec-temporal-calculateoffsetshift
+ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Value relative_to_value, double years, double months, double weeks, double days)
 {
     // 1. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, return 0.
     if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object()))
@@ -406,8 +385,8 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Va
     // 3. Let offsetBefore be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instant).
     auto offset_before = TRY(get_offset_nanoseconds_for(global_object, &relative_to.time_zone(), *instant));
 
-    // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, h, min, s, ms, mus, ns).
-    auto* after = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, 0, 0, 0, 0, 0, 0).
+    auto* after = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 5. Let instantAfter be ! CreateTemporalInstant(after).
     auto* instant_after = MUST(create_temporal_instant(global_object, *after));
@@ -586,7 +565,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         VERIFY(largest_unit == "nanosecond"sv);
     }
     // 15. Return ? CreateTimeDurationRecord(days, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
-    return create_time_duration_record(days, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign);
+    return create_time_duration_record(global_object, days, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign);
 }
 
 // 7.5.19 UnbalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-unbalancedurationrelative
@@ -768,8 +747,8 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
         }
     }
 
-    // 12. Return ! CreateDateDurationRecord(years, months, weeks, days).
-    return create_date_duration_record(years, months, weeks, days);
+    // 12. Return ? CreateDateDurationRecord(years, months, weeks, days).
+    return create_date_duration_record(global_object, years, months, weeks, days);
 }
 
 // 7.5.20 BalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-balancedurationrelative
@@ -1083,8 +1062,8 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         return create_duration_record(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
     }
 
-    // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit).
-    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit);
+    // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit, OrdinaryObjectCreate(null)).
+    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(global_object, nullptr));
 }
 
 // 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
@@ -1515,19 +1494,19 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         remainder -= nanoseconds;
     }
 
-    // 19. Let duration be ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-    auto duration = create_duration_record(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+    // 19. Let duration be ? CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    auto duration = TRY(create_duration_record(global_object, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 20. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
     return RoundedDuration { .duration_record = duration, .remainder = remainder };
 }
 
-// 7.5.26 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
+// 7.5.26 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
 ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object)
 {
     auto& vm = global_object.vm();
 
-    // 1. If relativeTo is not present; or Type(relativeTo) is not Object; or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot; or unit is one of "year", "month", "week", or "day"; or unit is "nanosecond" and increment is 1, then
+    // 1. If Type(relativeTo) is not Object; or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot; or unit is one of "year", "month", "week", or "day"; or unit is "nanosecond" and increment is 1, then
     if (relative_to_object == nullptr || !is<ZonedDateTime>(relative_to_object) || unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv) || (unit == "nanosecond"sv && increment == 1)) {
         // a. Return ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         return create_duration_record(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
@@ -1541,7 +1520,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     i32 direction;
 
     // 3. If timeRemainderNs = 0, let direction be 0.
-    if (time_remainder_ns == "0"_bigint)
+    if (time_remainder_ns.is_zero())
         direction = 0;
     // 4. Else if timeRemainderNs < 0, let direction be -1.
     else if (time_remainder_ns.is_negative())

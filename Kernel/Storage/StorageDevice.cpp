@@ -7,24 +7,85 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
+StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
     : BlockDevice(major, minor, sector_size)
     , m_early_storage_device_name(move(device_name))
+    , m_logical_unit_number_address(logical_unit_number_address)
     , m_max_addressable_block(max_addressable_block)
     , m_blocks_per_page(PAGE_SIZE / block_size())
 {
 }
 
+void StorageDevice::after_inserting()
+{
+    after_inserting_add_to_device_management();
+    auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
+    m_sysfs_device_directory = sysfs_storage_device_directory;
+    SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
+    VERIFY(!m_symlink_sysfs_component);
+    auto sys_fs_component = MUST(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
+    m_symlink_sysfs_component = sys_fs_component;
+    after_inserting_add_symlink_to_device_identifier_directory();
+}
+
+void StorageDevice::will_be_destroyed()
+{
+    VERIFY(m_symlink_sysfs_component);
+    before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
+    m_symlink_sysfs_component.clear();
+    SysFSStorageDirectory::the().unplug({}, *m_sysfs_device_directory);
+    before_will_be_destroyed_remove_from_device_management();
+}
+
 StringView StorageDevice::class_name() const
 {
     return "StorageDevice"sv;
+}
+
+StringView StorageDevice::command_set_to_string_view() const
+{
+    switch (command_set()) {
+    case CommandSet::PlainMemory:
+        return "memory"sv;
+    case CommandSet::SCSI:
+        return "scsi"sv;
+    case CommandSet::ATA:
+        return "ata"sv;
+    case CommandSet::NVMe:
+        return "nvme"sv;
+    default:
+        break;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+StringView StorageDevice::interface_type_to_string_view() const
+{
+    switch (interface_type()) {
+    case InterfaceType::PlainMemory:
+        return "memory"sv;
+    case InterfaceType::SCSI:
+        return "scsi"sv;
+    case InterfaceType::ATA:
+        return "ata"sv;
+    case InterfaceType::NVMe:
+        return "nvme"sv;
+    default:
+        break;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)

@@ -26,7 +26,12 @@ struct Route : public RefCounted<Route> {
 
     bool operator==(Route const& other) const
     {
-        return destination == other.destination && gateway == other.gateway && netmask == other.netmask && flags == other.flags && adapter.ptr() == other.adapter.ptr();
+        return destination == other.destination && netmask == other.netmask && flags == other.flags && adapter.ptr() == other.adapter.ptr();
+    }
+
+    bool matches(Route const& other) const
+    {
+        return destination == other.destination && (gateway == other.gateway || other.gateway.is_zero()) && netmask == other.netmask && flags == other.flags && adapter.ptr() == other.adapter.ptr();
     }
 
     const IPv4Address destination;

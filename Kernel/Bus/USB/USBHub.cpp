@@ -5,11 +5,11 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Bus/USB/SysFSUSB.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
@@ -44,6 +44,8 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
 {
     // USBDevice::enumerate_device must be called before this.
     VERIFY(m_address > 0);
+
+    m_sysfs_device_info_node = TRY(SysFSUSBDeviceInformation::create(*this));
 
     if (m_device_descriptor.device_class != USB_CLASS_HUB) {
         dbgln("USB Hub: Trying to enumerate and power on a device that says it isn't a hub.");
@@ -131,7 +133,7 @@ ErrorOr<void> Hub::set_port_feature(u8 port, HubFeatureSelector feature_selector
 void Hub::remove_children_from_sysfs()
 {
     for (auto& child : m_children)
-        SysFSUSBBusDirectory::the().unplug(child);
+        SysFSUSBBusDirectory::the().unplug({}, child.sysfs_device_info_node({}));
 }
 
 void Hub::check_for_port_updates()
@@ -257,10 +259,10 @@ void Hub::check_for_port_updates()
 
                     auto hub = hub_or_error.release_value();
                     m_children.append(hub);
-                    SysFSUSBBusDirectory::the().plug(hub);
+                    SysFSUSBBusDirectory::the().plug({}, hub->sysfs_device_info_node({}));
                 } else {
                     m_children.append(device);
-                    SysFSUSBBusDirectory::the().plug(device);
+                    SysFSUSBBusDirectory::the().plug({}, device->sysfs_device_info_node({}));
                 }
 
             } else {
@@ -275,13 +277,12 @@ void Hub::check_for_port_updates()
                 }
 
                 if (device_to_remove) {
-                    m_children.remove(*device_to_remove);
-                    SysFSUSBBusDirectory::the().unplug(*device_to_remove);
-
+                    SysFSUSBBusDirectory::the().unplug({}, device_to_remove->sysfs_device_info_node({}));
                     if (device_to_remove->device_descriptor().device_class == USB_CLASS_HUB) {
                         auto* hub_child = static_cast<Hub*>(device_to_remove.ptr());
                         hub_child->remove_children_from_sysfs();
                     }
+                    m_children.remove(*device_to_remove);
                 } else {
                     dbgln_if(USB_DEBUG, "USB Hub: No child set up on port {}, ignoring detachment.", port_number);
                 }

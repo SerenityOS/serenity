@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,12 +15,16 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
 
-static constexpr Array<u8, 4> http_whitespace_bytes = { '\t', '\n', '\r', ' ' };
+// https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
+using XMLHttpRequestBodyInit = Variant<NonnullRefPtr<FileAPI::Blob>, JS::Handle<JS::Object>, NonnullRefPtr<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
@@ -51,14 +56,14 @@ public:
     using RefCounted::unref;
 
     ReadyState ready_state() const { return m_ready_state; };
-    unsigned status() const { return m_status; };
+    Fetch::Infrastructure::Status status() const { return m_status; };
     DOM::ExceptionOr<String> response_text() const;
     DOM::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
     DOM::ExceptionOr<void> open(String const& method, String const& url);
     DOM::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    DOM::ExceptionOr<void> send(String body);
+    DOM::ExceptionOr<void> send(Optional<XMLHttpRequestBodyInit> body);
 
     DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
@@ -71,13 +76,16 @@ public:
 
     DOM::ExceptionOr<void> override_mime_type(String const& mime);
 
+    DOM::ExceptionOr<void> set_timeout(u32 timeout);
+    u32 timeout() const;
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void set_ready_state(ReadyState);
-    void set_status(unsigned status) { m_status = status; }
+    void set_status(Fetch::Infrastructure::Status status) { m_status = status; }
     void fire_progress_event(String const&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
@@ -86,16 +94,14 @@ private:
 
     String get_text_response() const;
 
-    Optional<Vector<String>> get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
-    Optional<MimeSniff::MimeType> extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
-
     explicit XMLHttpRequest(HTML::Window&);
 
     NonnullRefPtr<HTML::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
-    unsigned m_status { 0 };
+    Fetch::Infrastructure::Status m_status { 0 };
     bool m_send { false };
+    u32 m_timeout { 0 };
 
     String m_method;
     AK::URL m_url;

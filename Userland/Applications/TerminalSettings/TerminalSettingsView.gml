@@ -7,7 +7,7 @@
 
     @GUI::GroupBox {
         title: "Background Opacity"
-        fixed_height: 70
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -23,7 +23,7 @@
 
     @GUI::GroupBox {
         title: "Terminal Font"
-        fixed_height: 100
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16
@@ -35,20 +35,19 @@
         }
 
         @GUI::Widget {
-            shrink_to_fit: true
+            preferred_height: "fit"
             name: "terminal_font_selection"
             layout: @GUI::HorizontalBoxLayout {
                 spacing: 6
             }
 
-            @GUI::Frame {
+            @GUI::Label {
                 background_role: "Base"
+                shape: "Container"
+                shadow: "Sunken"
+                thickness: 2
                 fill_with_background_color: true
-                layout: @GUI::VerticalBoxLayout {}
-
-                @GUI::Label {
-                    name: "terminal_font_label"
-                }
+                name: "terminal_font_label"
             }
 
             @GUI::Button {
@@ -60,8 +59,36 @@
     }
 
     @GUI::GroupBox {
+        title: "Cursor settings"
+        preferred_height: "fit"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_block"
+            text: "Block cursor"
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_underline"
+            text: "Underline cursor"
+        }
+
+        @GUI::RadioButton {
+            name: "terminal_cursor_bar"
+            text: "Bar cursor"
+        }
+
+        @GUI::CheckBox {
+            name: "terminal_cursor_blinking"
+            text: "Blinking cursor"
+        }
+    }
+
+    @GUI::GroupBox {
         title: "Color Scheme"
-        fixed_height: 70
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

@@ -254,7 +254,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global
     }
     StringBuilder builder;
     if (property_strings.is_empty()) {
-        builder.append("{}");
+        builder.append("{}"sv);
     } else {
         bool first = true;
         builder.append('{');
@@ -306,7 +306,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
     for (size_t i = 0; i < length; ++i) {
         auto serialized_property_string = TRY(serialize_json_property(global_object, state, i, &object));
         if (serialized_property_string.is_null()) {
-            property_strings.append("null");
+            property_strings.append("null"sv);
         } else {
             property_strings.append(serialized_property_string);
         }
@@ -314,7 +314,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
 
     StringBuilder builder;
     if (property_strings.is_empty()) {
-        builder.append("[]");
+        builder.append("[]"sv);
     } else {
         if (state.gap.is_empty()) {
             builder.append('[');
@@ -327,7 +327,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
             }
             builder.append(']');
         } else {
-            builder.append("[\n");
+            builder.append("[\n"sv);
             builder.append(state.indent);
             auto separator = String::formatted(",\n{}", state.indent);
             bool first = true;
@@ -357,25 +357,25 @@ String JSONObject::quote_json_string(String string)
     for (auto code_point : utf_view) {
         switch (code_point) {
         case '\b':
-            builder.append("\\b");
+            builder.append("\\b"sv);
             break;
         case '\t':
-            builder.append("\\t");
+            builder.append("\\t"sv);
             break;
         case '\n':
-            builder.append("\\n");
+            builder.append("\\n"sv);
             break;
         case '\f':
-            builder.append("\\f");
+            builder.append("\\f"sv);
             break;
         case '\r':
-            builder.append("\\r");
+            builder.append("\\r"sv);
             break;
         case '"':
-            builder.append("\\\"");
+            builder.append("\\\""sv);
             break;
         case '\\':
-            builder.append("\\\\");
+            builder.append("\\\\"sv);
             break;
         default:
             if (code_point < 0x20 || Utf16View::is_high_surrogate(code_point) || Utf16View::is_low_surrogate(code_point)) {

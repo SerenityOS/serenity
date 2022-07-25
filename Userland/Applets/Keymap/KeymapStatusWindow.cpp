@@ -6,18 +6,9 @@
  */
 
 #include "KeymapStatusWindow.h"
-#include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
 #include <LibKeyboard/CharacterMap.h>
-
-void KeymapStatusWidget::mousedown_event(GUI::MouseEvent& event)
-{
-    if (event.button() != GUI::MouseButton::Primary)
-        return;
-
-    GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings");
-}
 
 KeymapStatusWindow::KeymapStatusWindow()
 {
@@ -27,8 +18,7 @@ KeymapStatusWindow::KeymapStatusWindow()
 
     auto current_keymap = MUST(Keyboard::CharacterMap::fetch_system_map());
     auto current_keymap_name = current_keymap.character_map_name();
-    m_status_widget->set_tooltip(current_keymap_name);
-    m_status_widget->set_text(current_keymap_name.substring(0, 2));
+    m_status_widget->set_current_keymap(current_keymap_name, ClearBackground::No);
 }
 
 void KeymapStatusWindow::wm_event(GUI::WMEvent& event)
@@ -42,9 +32,5 @@ void KeymapStatusWindow::wm_event(GUI::WMEvent& event)
 
 void KeymapStatusWindow::set_keymap_text(String const& keymap)
 {
-    GUI::Painter painter(*m_status_widget);
-    painter.clear_rect(m_status_widget->rect(), Color::from_argb(0));
-
-    m_status_widget->set_tooltip(keymap);
-    m_status_widget->set_text(keymap.substring(0, 2));
+    m_status_widget->set_current_keymap(keymap);
 }

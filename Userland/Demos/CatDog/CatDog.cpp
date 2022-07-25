@@ -17,13 +17,13 @@ void CatDog::timer_event(Core::TimerEvent&)
         auto proc_info = maybe_proc_info.release_value();
 
         auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {
-            return process.name.equals_ignoring_case("pixelpaint") || process.name.equals_ignoring_case("fonteditor");
+            return process.name.equals_ignoring_case("pixelpaint"sv) || process.name.equals_ignoring_case("fonteditor"sv);
         });
         if (maybe_paint_program.has_value()) {
             m_main_state = MainState::Artist;
         } else {
             auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
-                return process.name.equals_ignoring_case("inspector") || process.name.equals_ignoring_case("systemmonitor") || process.name.equals_ignoring_case("profiler");
+                return process.name.equals_ignoring_case("inspector"sv) || process.name.equals_ignoring_case("systemmonitor"sv) || process.name.equals_ignoring_case("profiler"sv);
             });
 
             if (maybe_inspector_program.has_value())

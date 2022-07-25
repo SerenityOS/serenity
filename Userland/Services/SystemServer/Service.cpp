@@ -411,8 +411,16 @@ ErrorOr<void> Service::determine_account(int fd)
     TRY(Core::System::getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
 
     auto const directory_name = String::formatted("/proc/{}/", creds.pid);
-    auto const stat = TRY(Core::System::stat(directory_name.characters()));
+    auto const stat = TRY(Core::System::stat(directory_name));
 
     m_account = TRY(Core::Account::from_uid(stat.st_uid));
     return {};
+}
+
+Service::~Service()
+{
+    for (auto& socket : m_sockets) {
+        if (auto rc = remove(socket.path.characters()); rc != 0)
+            dbgln("{}", Error::from_errno(errno));
+    }
 }

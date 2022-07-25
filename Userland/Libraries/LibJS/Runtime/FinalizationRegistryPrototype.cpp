@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,18 +50,18 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
     auto* finalization_registry = TRY(typed_this_object(global_object));
 
     auto target = vm.argument(0);
-    if (!target.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
+    if (!can_be_held_weakly(target))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     auto held_value = vm.argument(1);
     if (same_value(target, held_value))
         return vm.throw_completion<TypeError>(global_object, ErrorType::FinalizationRegistrySameTargetAndValue);
 
     auto unregister_token = vm.argument(2);
-    if (!unregister_token.is_object() && !unregister_token.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, unregister_token.to_string_without_side_effects());
+    if (!can_be_held_weakly(unregister_token) && !unregister_token.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
 
-    finalization_registry->add_finalization_record(target.as_cell(), held_value, unregister_token.is_undefined() ? nullptr : &unregister_token.as_object());
+    finalization_registry->add_finalization_record(target.as_cell(), held_value, unregister_token.is_undefined() ? nullptr : &unregister_token.as_cell());
 
     return js_undefined();
 }
@@ -72,10 +72,10 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
     auto* finalization_registry = TRY(typed_this_object(global_object));
 
     auto unregister_token = vm.argument(0);
-    if (!unregister_token.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, unregister_token.to_string_without_side_effects());
+    if (!can_be_held_weakly(unregister_token))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
 
-    return Value(finalization_registry->remove_by_token(unregister_token.as_object()));
+    return Value(finalization_registry->remove_by_token(unregister_token.as_cell()));
 }
 
 }

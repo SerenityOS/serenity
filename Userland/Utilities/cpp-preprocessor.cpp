@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (definition.value.parameters.is_empty())
                 outln("{}: {}", definition.key, definition.value.value);
             else
-                outln("{}({}): {}", definition.key, String::join(",", definition.value.parameters), definition.value.value);
+                outln("{}({}): {}", definition.key, String::join(',', definition.value.parameters), definition.value.value);
         }
         outln("");
     }

@@ -304,6 +304,7 @@ private:
         Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
     };
     Optional<Dimension> parse_dimension(ComponentValue const&);
+    Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
     Optional<Length> parse_length(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
@@ -315,6 +316,8 @@ private:
         Image,
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
+
+    RefPtr<StyleValue> parse_linear_gradient_function(ComponentValue const&);
 
     ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_css_value(ComponentValue const&);

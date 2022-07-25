@@ -117,7 +117,7 @@ void ProjectTemplatesModel::rescan_templates()
 
     while (di.has_next()) {
         auto full_path = LexicalPath(di.next_full_path());
-        if (!full_path.has_extension(".ini"))
+        if (!full_path.has_extension(".ini"sv))
             continue;
 
         auto project_template = ProjectTemplate::load_from_manifest(full_path.string());

@@ -395,6 +395,8 @@ template<>
 struct Formatter<Bytes> : Formatter<ReadonlyBytes> {
 };
 
+// FIXME: Printing raw char pointers is inherently dangerous. Remove this and
+//        its users and prefer StringView over it.
 template<>
 struct Formatter<char const*> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, char const* value)
@@ -403,7 +405,8 @@ struct Formatter<char const*> : Formatter<StringView> {
             Formatter<FlatPtr> formatter { *this };
             return formatter.format(builder, reinterpret_cast<FlatPtr>(value));
         }
-        return Formatter<StringView>::format(builder, value);
+
+        return Formatter<StringView>::format(builder, value != nullptr ? StringView { value, __builtin_strlen(value) } : "(null)"sv);
     }
 };
 template<>
@@ -635,7 +638,7 @@ template<typename T, bool Supported = false>
 struct __FormatIfSupported : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, FormatIfSupported<T> const&)
     {
-        return Formatter<StringView>::format(builder, "?");
+        return Formatter<StringView>::format(builder, "?"sv);
     }
 };
 template<typename T>
@@ -670,15 +673,15 @@ struct Formatter<Error> : Formatter<FormatString> {
     {
 #if defined(__serenity__) && defined(KERNEL)
         if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "Error(errno={})", error.code());
-        return Formatter<FormatString>::format(builder, "Error({})", error.string_literal());
+            return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
+        return Formatter<FormatString>::format(builder, "Error({})"sv, error.string_literal());
 #else
         if (error.is_syscall())
-            return Formatter<FormatString>::format(builder, "{}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
+            return Formatter<FormatString>::format(builder, "{}: {} (errno={})"sv, error.string_literal(), strerror(error.code()), error.code());
         if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "{} (errno={})", strerror(error.code()), error.code());
+            return Formatter<FormatString>::format(builder, "{} (errno={})"sv, strerror(error.code()), error.code());
 
-        return Formatter<FormatString>::format(builder, "{}", error.string_literal());
+        return Formatter<FormatString>::format(builder, "{}"sv, error.string_literal());
 #endif
     }
 };
@@ -688,8 +691,8 @@ struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, ErrorOr<T, ErrorType> const& error_or)
     {
         if (error_or.is_error())
-            return Formatter<FormatString>::format(builder, "{}", error_or.error());
-        return Formatter<FormatString>::format(builder, "{{{}}}", error_or.value());
+            return Formatter<FormatString>::format(builder, "{}"sv, error_or.error());
+        return Formatter<FormatString>::format(builder, "{{{}}}"sv, error_or.value());
     }
 };
 

@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibGfx/PNGShared.h>
 #include <string.h>
 
 #ifdef __serenity__
@@ -19,13 +20,11 @@
 
 namespace Gfx {
 
-static constexpr Array<u8, 8> png_header = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
-
 struct PNG_IHDR {
     NetworkOrdered<u32> width;
     NetworkOrdered<u32> height;
     u8 bit_depth { 0 };
-    u8 color_type { 0 };
+    PNG::ColorType color_type { 0 };
     u8 compression_method { 0 };
     u8 filter_method { 0 };
     u8 interlace_method { 0 };
@@ -34,7 +33,7 @@ struct PNG_IHDR {
 static_assert(AssertSize<PNG_IHDR, 13>());
 
 struct Scanline {
-    u8 filter { 0 };
+    PNG::FilterType filter;
     ReadonlyBytes data {};
 };
 
@@ -88,13 +87,13 @@ struct PNGLoadingContext {
     int width { -1 };
     int height { -1 };
     u8 bit_depth { 0 };
-    u8 color_type { 0 };
+    PNG::ColorType color_type { 0 };
     u8 compression_method { 0 };
     u8 filter_method { 0 };
     u8 interlace_method { 0 };
     u8 channels { 0 };
     bool has_seen_zlib_header { false };
-    bool has_alpha() const { return color_type & 4 || palette_transparency_data.size() > 0; }
+    bool has_alpha() const { return to_underlying(color_type) & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
     RefPtr<Gfx::Bitmap> bitmap;
     ByteBuffer* decompression_buffer { nullptr };
@@ -165,19 +164,6 @@ private:
 
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
-{
-    int p = a + b - c;
-    int pa = abs(p - a);
-    int pb = abs(p - b);
-    int pc = abs(p - c);
-    if (pa <= pb && pa <= pc)
-        return a;
-    if (pb <= pc)
-        return b;
-    return c;
-}
-
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
     u8 v[4];
@@ -190,11 +176,11 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-template<bool has_alpha, u8 filter_type>
+template<bool has_alpha, PNG::FilterType filter_type>
 ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* dummy_scanline_data)
 {
     auto* dummy_scanline = (Pixel const*)dummy_scanline_data;
-    if constexpr (filter_type == 0) {
+    if constexpr (filter_type == PNG::FilterType::None) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
@@ -202,7 +188,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
         }
     }
 
-    if constexpr (filter_type == 1) {
+    if constexpr (filter_type == PNG::FilterType::Sub) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         swap(pixels[0].r, pixels[0].b);
         for (int i = 1; i < bitmap.width(); ++i) {
@@ -217,7 +203,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
         }
         return;
     }
-    if constexpr (filter_type == 2) {
+    if constexpr (filter_type == PNG::FilterType::Up) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
@@ -232,7 +218,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
         }
         return;
     }
-    if constexpr (filter_type == 3) {
+    if constexpr (filter_type == PNG::FilterType::Average) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
@@ -250,7 +236,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
         }
         return;
     }
-    if constexpr (filter_type == 4) {
+    if constexpr (filter_type == PNG::FilterType::Paeth) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
@@ -263,11 +249,11 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* 
                 a = pixels[i - 1];
                 c = pixels_y_minus_1[i - 1];
             }
-            x.v[0] += paeth_predictor(a.v[0], b.v[0], c.v[0]);
-            x.v[1] += paeth_predictor(a.v[1], b.v[1], c.v[1]);
-            x.v[2] += paeth_predictor(a.v[2], b.v[2], c.v[2]);
+            x.v[0] += PNG::paeth_predictor(a.v[0], b.v[0], c.v[0]);
+            x.v[1] += PNG::paeth_predictor(a.v[1], b.v[1], c.v[1]);
+            x.v[2] += PNG::paeth_predictor(a.v[2], b.v[2], c.v[2]);
             if constexpr (has_alpha)
-                x.v[3] += paeth_predictor(a.v[3], b.v[3], c.v[3]);
+                x.v[3] += PNG::paeth_predictor(a.v[3], b.v[3], c.v[3]);
         }
     }
 }
@@ -339,7 +325,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 {
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {
-    case 0:
+    case PNG::ColorType::Greyscale:
         if (context.bit_depth == 8) {
             unpack_grayscale_without_alpha<u8>(context);
         } else if (context.bit_depth == 16) {
@@ -364,7 +350,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
             VERIFY_NOT_REACHED();
         }
         break;
-    case 4:
+    case PNG::ColorType::GreyscaleWithAlpha:
         if (context.bit_depth == 8) {
             unpack_grayscale_with_alpha<u8>(context);
         } else if (context.bit_depth == 16) {
@@ -373,7 +359,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
             VERIFY_NOT_REACHED();
         }
         break;
-    case 2:
+    case PNG::ColorType::Truecolor:
         if (context.palette_transparency_data.size() == 6) {
             if (context.bit_depth == 8) {
                 unpack_triplets_with_transparency_value<u8>(context, Triplet<u8> { context.palette_transparency_data[0], context.palette_transparency_data[2], context.palette_transparency_data[4] });
@@ -394,7 +380,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                 VERIFY_NOT_REACHED();
         }
         break;
-    case 6:
+    case PNG::ColorType::TruecolorWithAlpha:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
                 memcpy(context.bitmap->scanline(y), context.scanlines[y].data.data(), context.scanlines[y].data.size());
@@ -414,14 +400,14 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
             VERIFY_NOT_REACHED();
         }
         break;
-    case 3:
+    case PNG::ColorType::IndexedColor:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
                 auto* palette_index = context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if (palette_index[i] >= context.palette_data.size())
-                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at((int)palette_index[i]);
                     auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
                         ? context.palette_transparency_data.data()[palette_index[i]]
@@ -442,7 +428,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                     auto palette_index = (palette_indices[i / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if ((size_t)palette_index >= context.palette_data.size())
-                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at(palette_index);
                     auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
                         ? context.palette_transparency_data.data()[palette_index]
@@ -467,39 +453,39 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
-        if (filter == 0) {
+        if (filter == PNG::FilterType::None) {
             if (context.has_alpha())
-                unfilter_impl<true, 0>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<true, PNG::FilterType::None>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 0>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<false, PNG::FilterType::None>(*context.bitmap, y, dummy_scanline);
             continue;
         }
-        if (filter == 1) {
+        if (filter == PNG::FilterType::Sub) {
             if (context.has_alpha())
-                unfilter_impl<true, 1>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<true, PNG::FilterType::Sub>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 1>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<false, PNG::FilterType::Sub>(*context.bitmap, y, dummy_scanline);
             continue;
         }
-        if (filter == 2) {
+        if (filter == PNG::FilterType::Up) {
             if (context.has_alpha())
-                unfilter_impl<true, 2>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<true, PNG::FilterType::Up>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 2>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<false, PNG::FilterType::Up>(*context.bitmap, y, dummy_scanline);
             continue;
         }
-        if (filter == 3) {
+        if (filter == PNG::FilterType::Average) {
             if (context.has_alpha())
-                unfilter_impl<true, 3>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<true, PNG::FilterType::Average>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 3>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<false, PNG::FilterType::Average>(*context.bitmap, y, dummy_scanline);
             continue;
         }
-        if (filter == 4) {
+        if (filter == PNG::FilterType::Paeth) {
             if (context.has_alpha())
-                unfilter_impl<true, 4>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<true, PNG::FilterType::Paeth>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 4>(*context.bitmap, y, dummy_scanline);
+                unfilter_impl<false, PNG::FilterType::Paeth>(*context.bitmap, y, dummy_scanline);
             continue;
         }
     }
@@ -512,13 +498,13 @@ static bool decode_png_header(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::HeaderDecoded)
         return true;
 
-    if (!context.data || context.data_size < sizeof(png_header)) {
+    if (!context.data || context.data_size < sizeof(PNG::header)) {
         dbgln_if(PNG_DEBUG, "Missing PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
-    if (memcmp(context.data, png_header.span().data(), sizeof(png_header)) != 0) {
+    if (memcmp(context.data, PNG::header.span().data(), sizeof(PNG::header)) != 0) {
         dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
@@ -538,8 +524,8 @@ static bool decode_png_size(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(png_header);
-    size_t data_remaining = context.data_size - sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(PNG::header);
+    size_t data_remaining = context.data_size - sizeof(PNG::header);
 
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
@@ -566,8 +552,8 @@ static bool decode_png_chunks(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(png_header);
-    int data_remaining = context.data_size - sizeof(png_header);
+    u8 const* data_ptr = context.data + sizeof(PNG::header);
+    int data_remaining = context.data_size - sizeof(PNG::header);
 
     context.compressed_data.ensure_capacity(context.data_size);
 
@@ -589,26 +575,26 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
 
     for (int y = 0; y < context.height; ++y) {
-        u8 filter;
+        PNG::FilterType filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
-        if (filter > 4) {
+        if (to_underlying(filter) > 4) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
         auto row_size = context.compute_row_size_for_width(context.width);
         if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
 
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
 
@@ -684,15 +670,15 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 
     subimage_context.scanlines.clear_with_capacity();
     for (int y = 0; y < subimage_context.height; ++y) {
-        u8 filter;
+        PNG::FilterType filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
-        if (filter > 4) {
+        if (to_underlying(filter) > 4) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
         subimage_context.scanlines.append({ filter });
@@ -700,10 +686,10 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 
         auto row_size = context.compute_row_size_for_width(subimage_context.width);
         if (row_size.has_overflow())
-            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
     }
 
@@ -732,22 +718,22 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
 {
     if (context.state < PNGLoadingContext::State::ChunksDecoded) {
         if (!decode_png_chunks(context))
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
     }
 
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return {};
 
     if (context.width == -1 || context.height == -1)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk."sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk.");
 
-    if (context.color_type == 3 && context.palette_data.is_empty())
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty."sv);
+    if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
 
     auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {
         context.state = PNGLoadingContext::State::Error;
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed");
     }
     context.decompression_buffer = &result.value();
     context.compressed_data.clear();
@@ -762,7 +748,7 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
         break;
     default:
         context.state = PNGLoadingContext::State::Error;
-        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method");
     }
 
     context.decompression_buffer = nullptr;
@@ -811,7 +797,7 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
     context.interlace_method = ihdr.interlace_method;
 
     dbgln_if(PNG_DEBUG, "PNG: {}x{} ({} bpp)", context.width, context.height, context.bit_depth);
-    dbgln_if(PNG_DEBUG, "     Color type: {}", context.color_type);
+    dbgln_if(PNG_DEBUG, "     Color type: {}", to_underlying(context.color_type));
     dbgln_if(PNG_DEBUG, "Compress Method: {}", context.compression_method);
     dbgln_if(PNG_DEBUG, "  Filter Method: {}", context.filter_method);
     dbgln_if(PNG_DEBUG, " Interlace type: {}", context.interlace_method);
@@ -822,27 +808,27 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
     }
 
     switch (context.color_type) {
-    case 0: // Each pixel is a grayscale sample.
+    case PNG::ColorType::Greyscale:
         if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8 && context.bit_depth != 16)
             return false;
         context.channels = 1;
         break;
-    case 4: // Each pixel is a grayscale sample, followed by an alpha sample.
+    case PNG::ColorType::GreyscaleWithAlpha:
         if (context.bit_depth != 8 && context.bit_depth != 16)
             return false;
         context.channels = 2;
         break;
-    case 2: // Each pixel is an RGB sample
+    case PNG::ColorType::Truecolor:
         if (context.bit_depth != 8 && context.bit_depth != 16)
             return false;
         context.channels = 3;
         break;
-    case 3: // Each pixel is a palette index; a PLTE chunk must appear.
+    case PNG::ColorType::IndexedColor:
         if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8)
             return false;
         context.channels = 1;
         break;
-    case 6: // Each pixel is an RGB sample, followed by an alpha sample.
+    case PNG::ColorType::TruecolorWithAlpha:
         if (context.bit_depth != 8 && context.bit_depth != 16)
             return false;
         context.channels = 4;
@@ -868,10 +854,12 @@ static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
 {
     switch (context.color_type) {
-    case 0:
-    case 2:
-    case 3:
+    case PNG::ColorType::Greyscale:
+    case PNG::ColorType::Truecolor:
+    case PNG::ColorType::IndexedColor:
         context.palette_transparency_data.append(data.data(), data.size());
+        break;
+    default:
         break;
     }
     return true;
@@ -972,10 +960,10 @@ size_t PNGImageDecoderPlugin::frame_count()
 ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == PNGLoadingContext::State::Error)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.

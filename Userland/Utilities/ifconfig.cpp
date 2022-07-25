@@ -25,9 +25,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* value_ipv4 = nullptr;
-    char const* value_adapter = nullptr;
-    char const* value_mask = nullptr;
+    StringView value_ipv4 {};
+    StringView value_adapter {};
+    StringView value_mask {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
@@ -36,23 +36,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
     args_parser.parse(arguments);
 
-    if (!value_ipv4 && !value_adapter && !value_mask) {
+    if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty()) {
         auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
         auto json = TRY(JsonValue::from_string(file->read_all()));
 
         json.as_array().for_each([](auto& value) {
             auto& if_object = value.as_object();
 
-            auto name = if_object.get("name").to_string();
-            auto class_name = if_object.get("class_name").to_string();
-            auto mac_address = if_object.get("mac_address").to_string();
-            auto ipv4_address = if_object.get("ipv4_address").to_string();
-            auto netmask = if_object.get("ipv4_netmask").to_string();
-            auto packets_in = if_object.get("packets_in").to_u32();
-            auto bytes_in = if_object.get("bytes_in").to_u32();
-            auto packets_out = if_object.get("packets_out").to_u32();
-            auto bytes_out = if_object.get("bytes_out").to_u32();
-            auto mtu = if_object.get("mtu").to_u32();
+            auto name = if_object.get("name"sv).to_string();
+            auto class_name = if_object.get("class_name"sv).to_string();
+            auto mac_address = if_object.get("mac_address"sv).to_string();
+            auto ipv4_address = if_object.get("ipv4_address"sv).to_string();
+            auto netmask = if_object.get("ipv4_netmask"sv).to_string();
+            auto packets_in = if_object.get("packets_in"sv).to_u32();
+            auto bytes_in = if_object.get("bytes_in"sv).to_u32();
+            auto packets_out = if_object.get("packets_out"sv).to_u32();
+            auto bytes_out = if_object.get("bytes_out"sv).to_u32();
+            auto mtu = if_object.get("mtu"sv).to_u32();
 
             outln("{}:", name);
             outln("\tmac: {}", mac_address);
@@ -66,14 +66,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     } else {
 
-        if (!value_adapter) {
+        if (value_adapter.is_empty()) {
             warnln("No network adapter was specified.");
             return 1;
         }
 
         String ifname = value_adapter;
 
-        if (value_ipv4) {
+        if (!value_ipv4.is_empty()) {
             auto address = IPv4Address::from_string(value_ipv4);
 
             if (!address.has_value()) {
@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        if (value_mask) {
+        if (!value_mask.is_empty()) {
             auto address = IPv4Address::from_string(value_mask);
 
             if (!address.has_value()) {

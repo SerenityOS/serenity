@@ -180,39 +180,39 @@ void Path::close_all_subpaths()
 String Path::to_string() const
 {
     StringBuilder builder;
-    builder.append("Path { ");
+    builder.append("Path { "sv);
     for (auto& segment : m_segments) {
         switch (segment.type()) {
         case Segment::Type::MoveTo:
-            builder.append("MoveTo");
+            builder.append("MoveTo"sv);
             break;
         case Segment::Type::LineTo:
-            builder.append("LineTo");
+            builder.append("LineTo"sv);
             break;
         case Segment::Type::QuadraticBezierCurveTo:
-            builder.append("QuadraticBezierCurveTo");
+            builder.append("QuadraticBezierCurveTo"sv);
             break;
         case Segment::Type::CubicBezierCurveTo:
-            builder.append("CubicBezierCurveTo");
+            builder.append("CubicBezierCurveTo"sv);
             break;
         case Segment::Type::EllipticalArcTo:
-            builder.append("EllipticalArcTo");
+            builder.append("EllipticalArcTo"sv);
             break;
         case Segment::Type::Invalid:
-            builder.append("Invalid");
+            builder.append("Invalid"sv);
             break;
         }
         builder.appendff("({}", segment.point());
 
         switch (segment.type()) {
         case Segment::Type::QuadraticBezierCurveTo:
-            builder.append(", ");
+            builder.append(", "sv);
             builder.append(static_cast<QuadraticBezierCurveSegment const&>(segment).through().to_string());
             break;
         case Segment::Type::CubicBezierCurveTo:
-            builder.append(", ");
+            builder.append(", "sv);
             builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_0().to_string());
-            builder.append(", ");
+            builder.append(", "sv);
             builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_1().to_string());
             break;
         case Segment::Type::EllipticalArcTo: {
@@ -229,9 +229,9 @@ String Path::to_string() const
             break;
         }
 
-        builder.append(") ");
+        builder.append(") "sv);
     }
-    builder.append("}");
+    builder.append('}');
     return builder.to_string();
 }
 

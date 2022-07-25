@@ -52,7 +52,7 @@ public:
     static void indent(StringBuilder& builder, size_t indentation)
     {
         for (size_t i = 0; i < indentation; ++i)
-            builder.append("    ");
+            builder.append("    "sv);
     }
 };
 
@@ -79,7 +79,7 @@ public:
             indent(builder, indentation);
             builder.append(m_text);
         }
-        builder.append("\n");
+        builder.append('\n');
     }
     virtual ~Comment() override = default;
 
@@ -103,7 +103,7 @@ public:
         builder.appendff("{}: ", m_key);
         m_value->format(builder, indentation, true);
         if (!is_inline)
-            builder.append("\n");
+            builder.append('\n');
     }
 
     String key() const { return m_key; }
@@ -132,20 +132,20 @@ public:
         if (is_array()) {
             // custom array serialization as AK's doesn't pretty-print
             // objects and arrays (we only care about arrays (for now))
-            builder.append("[");
+            builder.append('[');
             auto first = true;
             as_array().for_each([&](auto& value) {
                 if (!first)
-                    builder.append(", ");
+                    builder.append(", "sv);
                 first = false;
                 value.serialize(builder);
             });
-            builder.append("]");
+            builder.append(']');
         } else {
             serialize(builder);
         }
         if (!is_inline)
-            builder.append("\n");
+            builder.append('\n');
     }
 };
 
@@ -248,7 +248,7 @@ public:
             indent(builder, indentation);
         builder.append('@');
         builder.append(m_name);
-        builder.append(" {");
+        builder.append(" {"sv);
         if (!m_properties.is_empty() || !m_sub_objects.is_empty()) {
             builder.append('\n');
 

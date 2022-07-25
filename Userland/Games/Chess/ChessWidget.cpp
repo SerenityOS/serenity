@@ -20,7 +20,7 @@
 
 ChessWidget::ChessWidget()
 {
-    set_piece_set("stelar7");
+    set_piece_set("stelar7"sv);
 }
 
 void ChessWidget::paint_event(GUI::PaintEvent& event)
@@ -248,46 +248,46 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
         if (board().game_result() != Chess::Board::Result::NotFinished) {
             bool over = true;
-            String msg;
+            StringView msg;
             switch (board().game_result()) {
             case Chess::Board::Result::CheckMate:
                 if (board().turn() == Chess::Color::White) {
-                    msg = "Black wins by Checkmate.";
+                    msg = "Black wins by Checkmate."sv;
                 } else {
-                    msg = "White wins by Checkmate.";
+                    msg = "White wins by Checkmate."sv;
                 }
                 break;
             case Chess::Board::Result::StaleMate:
-                msg = "Draw by Stalemate.";
+                msg = "Draw by Stalemate."sv;
                 break;
             case Chess::Board::Result::FiftyMoveRule:
                 update();
-                if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?", "Claim Draw?",
+                if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
                     == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by 50 move rule.";
+                    msg = "Draw by 50 move rule."sv;
                 } else {
                     over = false;
                 }
                 break;
             case Chess::Board::Result::SeventyFiveMoveRule:
-                msg = "Draw by 75 move rule.";
+                msg = "Draw by 75 move rule."sv;
                 break;
             case Chess::Board::Result::ThreeFoldRepetition:
                 update();
-                if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?", "Claim Draw?",
+                if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?"sv, "Claim Draw?"sv,
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
                     == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by threefold repetition.";
+                    msg = "Draw by threefold repetition."sv;
                 } else {
                     over = false;
                 }
                 break;
             case Chess::Board::Result::FiveFoldRepetition:
-                msg = "Draw by fivefold repetition.";
+                msg = "Draw by fivefold repetition."sv;
                 break;
             case Chess::Board::Result::InsufficientMaterial:
-                msg = "Draw by insufficient material.";
+                msg = "Draw by insufficient material."sv;
                 break;
             default:
                 VERIFY_NOT_REACHED();
@@ -296,7 +296,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 set_override_cursor(Gfx::StandardCursor::None);
                 set_drag_enabled(false);
                 update();
-                GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+                GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
             }
         } else {
             input_engine_move();
@@ -377,18 +377,18 @@ static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 void ChessWidget::set_piece_set(StringView set)
 {
     m_piece_set = set;
-    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::King }, get_piece(set, "white-king.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"sv));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"sv));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"sv));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"sv));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"sv));
+    m_pieces.set({ Chess::Color::White, Chess::Type::King }, get_piece(set, "white-king.png"sv));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"sv));
 }
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
@@ -436,7 +436,7 @@ void ChessWidget::set_board_theme(StringView name)
     } else if (name == "Blue") {
         m_board_theme = { "Blue", Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) };
     } else {
-        set_board_theme("Beige");
+        set_board_theme("Beige"sv);
     }
 }
 
@@ -555,59 +555,59 @@ bool ChessWidget::import_pgn(StringView import_path)
         token = token.trim_whitespace();
 
         // FIXME: Parse all of these tokens when we start caring about them
-        if (token.ends_with("}")) {
+        if (token.ends_with('}')) {
             skip = false;
             continue;
         }
         if (skip)
             continue;
-        if (token.starts_with("{")) {
-            if (token.ends_with("}"))
+        if (token.starts_with('{')) {
+            if (token.ends_with('}'))
                 continue;
             skip = true;
             continue;
         }
-        if (token.ends_with(")")) {
+        if (token.ends_with(')')) {
             recursive_annotation = false;
             continue;
         }
         if (recursive_annotation)
             continue;
-        if (token.starts_with("(")) {
-            if (token.ends_with(")"))
+        if (token.starts_with('(')) {
+            if (token.ends_with(')'))
                 continue;
             recursive_annotation = true;
             continue;
         }
-        if (token.ends_with(">")) {
+        if (token.ends_with('>')) {
             future_expansion = false;
             continue;
         }
         if (future_expansion)
             continue;
-        if (token.starts_with("<")) {
-            if (token.ends_with(">"))
+        if (token.starts_with('<')) {
+            if (token.ends_with('>'))
                 continue;
             future_expansion = true;
             continue;
         }
-        if (token.starts_with("$"))
+        if (token.starts_with('$'))
             continue;
-        if (token.contains("*"))
+        if (token.contains('*'))
             break;
         // FIXME: When we become able to set more of the game state, fix these end results
-        if (token.contains("1-0")) {
+        if (token.contains("1-0"sv)) {
             m_board.set_resigned(Chess::Color::Black);
             break;
         }
-        if (token.contains("0-1")) {
+        if (token.contains("0-1"sv)) {
             m_board.set_resigned(Chess::Color::White);
             break;
         }
-        if (token.contains("1/2-1/2")) {
+        if (token.contains("1/2-1/2"sv)) {
             break;
         }
-        if (!token.ends_with(".")) {
+        if (!token.ends_with('.')) {
             m_board.apply_move(Chess::Move::from_algebraic(token, turn, m_board));
             turn = Chess::opposing_color(turn);
         }
@@ -633,24 +633,24 @@ bool ChessWidget::export_pgn(StringView export_path) const
     auto& file = *file_or_error.value();
 
     // Tag Pair Section
-    file.write("[Event \"Casual Game\"]\n");
-    file.write("[Site \"SerenityOS Chess\"]\n");
-    file.write(String::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d")));
-    file.write("[Round \"1\"]\n");
+    file.write("[Event \"Casual Game\"]\n"sv);
+    file.write("[Site \"SerenityOS Chess\"]\n"sv);
+    file.write(String::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d"sv)));
+    file.write("[Round \"1\"]\n"sv);
 
     String username(getlogin());
-    const String player1 = (!username.is_empty() ? username : "?");
-    const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine" : "?");
+    const String player1 = (!username.is_empty() ? username.view() : "?"sv);
+    const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);
     file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
     file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
 
     file.write(String::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
-    file.write("[WhiteElo \"?\"]\n");
-    file.write("[BlackElo \"?\"]\n");
-    file.write("[Variant \"Standard\"]\n");
-    file.write("[TimeControl \"-\"]\n");
-    file.write("[Annotator \"SerenityOS Chess\"]\n");
-    file.write("\n");
+    file.write("[WhiteElo \"?\"]\n"sv);
+    file.write("[BlackElo \"?\"]\n"sv);
+    file.write("[Variant \"Standard\"]\n"sv);
+    file.write("[TimeControl \"-\"]\n"sv);
+    file.write("[Annotator \"SerenityOS Chess\"]\n"sv);
+    file.write("\n"sv);
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
@@ -664,11 +664,11 @@ bool ChessWidget::export_pgn(StringView export_path) const
         }
     }
 
-    file.write("{ ");
+    file.write("{ "sv);
     file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()));
-    file.write(" } ");
+    file.write(" } "sv);
     file.write(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
-    file.write("\n");
+    file.write("\n"sv);
 
     file.close();
     return true;
@@ -677,7 +677,7 @@ bool ChessWidget::export_pgn(StringView export_path) const
 void ChessWidget::flip_board()
 {
     if (want_engine_move()) {
-        GUI::MessageBox::show(window(), "You can only flip the board on your turn.", "Flip Board", GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window(), "You can only flip the board on your turn."sv, "Flip Board"sv, GUI::MessageBox::Type::Information);
         return;
     }
     m_side = Chess::opposing_color(m_side);
@@ -688,11 +688,11 @@ void ChessWidget::flip_board()
 int ChessWidget::resign()
 {
     if (want_engine_move()) {
-        GUI::MessageBox::show(window(), "You can only resign on your turn.", "Resign", GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(window(), "You can only resign on your turn."sv, "Resign"sv, GUI::MessageBox::Type::Information);
         return -1;
     }
 
-    auto result = GUI::MessageBox::show(window(), "Are you sure you wish to resign?", "Resign", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+    auto result = GUI::MessageBox::show(window(), "Are you sure you wish to resign?"sv, "Resign"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
     if (result != GUI::MessageBox::ExecResult::Yes)
         return -1;
 
@@ -701,7 +701,7 @@ int ChessWidget::resign()
     set_drag_enabled(false);
     update();
     const String msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
-    GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+    GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;
 }

@@ -38,6 +38,13 @@ ALWAYS_INLINE ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input);
 // decode a single number encoded with exponential golomb encoding of the specified order
 ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBitStream& bit_input);
 
+// Loader for the Free Lossless Audio Codec (FLAC)
+// This loader supports all audio features of FLAC, although audio from more than two channels is discarded.
+// The loader currently supports the STREAMINFO, PADDING, and SEEKTABLE metadata blocks.
+// See: https://xiph.org/flac/documentation_format_overview.html
+//      https://xiph.org/flac/format.html (identical to IETF draft version 2)
+//      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-02 (all section numbers refer to this specification)
+//      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03 (newer IETF draft that uses incompatible numberings and names)
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
     explicit FlacLoaderPlugin(StringView path);

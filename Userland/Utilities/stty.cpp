@@ -49,55 +49,55 @@ struct ControlCharacter {
 };
 
 constexpr TermiosFlag all_iflags[] = {
-    { "ignbrk", IGNBRK, IGNBRK },
-    { "brkint", BRKINT, BRKINT },
-    { "ignpar", IGNPAR, IGNPAR },
-    { "parmer", PARMRK, PARMRK },
-    { "inpck", INPCK, INPCK },
-    { "istrip", ISTRIP, ISTRIP },
-    { "inlcr", INLCR, INLCR },
-    { "igncr", IGNCR, IGNCR },
-    { "icrnl", ICRNL, ICRNL },
-    { "iuclc", IUCLC, IUCLC },
-    { "ixon", IXON, IXON },
-    { "ixany", IXANY, IXANY },
-    { "ixoff", IXOFF, IXOFF },
-    { "imaxbel", IMAXBEL, IMAXBEL },
-    { "iutf8", IUTF8, IUTF8 }
+    { "ignbrk"sv, IGNBRK, IGNBRK },
+    { "brkint"sv, BRKINT, BRKINT },
+    { "ignpar"sv, IGNPAR, IGNPAR },
+    { "parmer"sv, PARMRK, PARMRK },
+    { "inpck"sv, INPCK, INPCK },
+    { "istrip"sv, ISTRIP, ISTRIP },
+    { "inlcr"sv, INLCR, INLCR },
+    { "igncr"sv, IGNCR, IGNCR },
+    { "icrnl"sv, ICRNL, ICRNL },
+    { "iuclc"sv, IUCLC, IUCLC },
+    { "ixon"sv, IXON, IXON },
+    { "ixany"sv, IXANY, IXANY },
+    { "ixoff"sv, IXOFF, IXOFF },
+    { "imaxbel"sv, IMAXBEL, IMAXBEL },
+    { "iutf8"sv, IUTF8, IUTF8 }
 };
 
 constexpr TermiosFlag all_oflags[] = {
-    { "opost", OPOST, OPOST },
-    { "olcuc", OLCUC, OPOST },
-    { "onlcr", ONLCR, ONLCR },
-    { "onlret", ONLRET, ONLRET },
-    { "ofill", OFILL, OFILL },
-    { "ofdel", OFDEL, OFDEL },
+    { "opost"sv, OPOST, OPOST },
+    { "olcuc"sv, OLCUC, OPOST },
+    { "onlcr"sv, ONLCR, ONLCR },
+    { "onlret"sv, ONLRET, ONLRET },
+    { "ofill"sv, OFILL, OFILL },
+    { "ofdel"sv, OFDEL, OFDEL },
 };
 
 constexpr TermiosFlag all_cflags[] = {
-    { "cs5", CS5, CSIZE },
-    { "cs6", CS6, CSIZE },
-    { "cs7", CS7, CSIZE },
-    { "cs8", CS8, CSIZE },
-    { "cstopb", CSTOPB, CSTOPB },
-    { "cread", CREAD, CREAD },
-    { "parenb", PARENB, PARENB },
-    { "parodd", PARODD, PARODD },
-    { "hupcl", HUPCL, HUPCL },
-    { "clocal", CLOCAL, CLOCAL },
+    { "cs5"sv, CS5, CSIZE },
+    { "cs6"sv, CS6, CSIZE },
+    { "cs7"sv, CS7, CSIZE },
+    { "cs8"sv, CS8, CSIZE },
+    { "cstopb"sv, CSTOPB, CSTOPB },
+    { "cread"sv, CREAD, CREAD },
+    { "parenb"sv, PARENB, PARENB },
+    { "parodd"sv, PARODD, PARODD },
+    { "hupcl"sv, HUPCL, HUPCL },
+    { "clocal"sv, CLOCAL, CLOCAL },
 };
 
 constexpr TermiosFlag all_lflags[] = {
-    { "isig", ISIG, ISIG },
-    { "icanon", ICANON, ICANON },
-    { "echo", ECHO, ECHO },
-    { "echoe", ECHOE, ECHOE },
-    { "echok", ECHOK, ECHOK },
-    { "echonl", ECHONL, ECHONL },
-    { "noflsh", NOFLSH, NOFLSH },
-    { "tostop", TOSTOP, TOSTOP },
-    { "iexten", IEXTEN, IEXTEN }
+    { "isig"sv, ISIG, ISIG },
+    { "icanon"sv, ICANON, ICANON },
+    { "echo"sv, ECHO, ECHO },
+    { "echoe"sv, ECHOE, ECHOE },
+    { "echok"sv, ECHOK, ECHOK },
+    { "echonl"sv, ECHONL, ECHONL },
+    { "noflsh"sv, NOFLSH, NOFLSH },
+    { "tostop"sv, TOSTOP, TOSTOP },
+    { "iexten"sv, IEXTEN, IEXTEN }
 };
 
 constexpr BaudRate baud_rates[] = {
@@ -135,22 +135,22 @@ constexpr BaudRate baud_rates[] = {
 };
 
 constexpr ControlCharacter control_characters[] = {
-    { "intr", VINTR },
-    { "quit", VQUIT },
-    { "erase", VERASE },
-    { "kill", VKILL },
-    { "eof", VEOF },
+    { "intr"sv, VINTR },
+    { "quit"sv, VQUIT },
+    { "erase"sv, VERASE },
+    { "kill"sv, VKILL },
+    { "eof"sv, VEOF },
     /* time and min are handled separately */
-    { "swtc", VSWTC },
-    { "start", VSTART },
-    { "stop", VSTOP },
-    { "susp", VSUSP },
-    { "eol", VEOL },
-    { "reprint", VREPRINT },
-    { "discard", VDISCARD },
-    { "werase", VWERASE },
-    { "lnext", VLNEXT },
-    { "eol2", VEOL2 }
+    { "swtc"sv, VSWTC },
+    { "start"sv, VSTART },
+    { "stop"sv, VSTOP },
+    { "susp"sv, VSUSP },
+    { "eol"sv, VEOL },
+    { "reprint"sv, VREPRINT },
+    { "discard"sv, VDISCARD },
+    { "werase"sv, VWERASE },
+    { "lnext"sv, VLNEXT },
+    { "eol2"sv, VEOL2 }
 };
 
 Optional<speed_t> numeric_value_to_speed(unsigned long);
@@ -205,10 +205,10 @@ void print_human_readable(termios const& modes, winsize const& ws, bool verbose_
     auto escape_character = [&](u8 ch) {
         StringBuilder sb;
         if (ch <= 0x20) {
-            sb.append("^");
+            sb.append('^');
             sb.append(ch + 0x40);
         } else if (ch == 0x7f) {
-            sb.append("^?");
+            sb.append("^?"sv);
         } else {
             sb.append(ch);
         }
@@ -295,7 +295,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
     Vector<StringView> parameters;
     parameters.ensure_capacity(parameter_count);
     for (size_t i = 0; i < parameter_count; ++i)
-        parameters.append(StringView(raw_parameters[i]));
+        parameters.append(StringView { raw_parameters[i], strlen(raw_parameters[i]) });
 
     auto parse_baud = [&](size_t idx) -> Optional<speed_t> {
         auto maybe_numeric_value = parameters[idx].to_uint<uint32_t>();
@@ -328,7 +328,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
             return 0;
         } else if (parameters[idx][0] == '^' && parameters[idx].length() == 2) {
             return toupper(parameters[idx][1]) - 0x40;
-        } else if (parameters[idx].starts_with("0x")) {
+        } else if (parameters[idx].starts_with("0x"sv)) {
             cc_t value = 0;
             if (parameters[idx].length() == 2) {
                 warnln("Invalid hexadecimal character code {}", parameters[idx]);
@@ -343,7 +343,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
                 value = 16 * value + (isdigit(ch)) ? (ch - '0') : (ch - 'a');
             }
             return value;
-        } else if (parameters[idx].starts_with("0")) {
+        } else if (parameters[idx].starts_with("0"sv)) {
             cc_t value = 0;
             for (size_t i = 1; i < parameters[idx].length(); ++i) {
                 char ch = parameters[idx][i];

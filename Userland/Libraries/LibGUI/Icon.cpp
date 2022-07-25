@@ -87,8 +87,10 @@ ErrorOr<Icon> Icon::try_create_default_icon(StringView name)
     if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
         bitmap32 = bitmap_or_error.release_value();
 
-    if (!bitmap16 && !bitmap32)
-        return Error::from_string_literal("Default icon not found"sv);
+    if (!bitmap16 && !bitmap32) {
+        dbgln("Default icon not found: {}", name);
+        return Error::from_string_literal("Default icon not found");
+    }
 
     return Icon(move(bitmap16), move(bitmap32));
 }

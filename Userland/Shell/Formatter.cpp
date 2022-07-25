@@ -41,7 +41,7 @@ String Formatter::format()
 
     auto string = current_builder().string_view();
 
-    if (!string.ends_with(" "))
+    if (!string.ends_with(' '))
         current_builder().append(m_trivia);
 
     return current_builder().to_string();
@@ -123,7 +123,7 @@ void Formatter::insert_separator(bool escaped)
 void Formatter::insert_indent()
 {
     for (size_t i = 0; i < m_current_indent; ++i)
-        current_builder().append("  ");
+        current_builder().append("  "sv);
 }
 
 void Formatter::visit(const AST::PathRedirectionNode* node)
@@ -147,7 +147,7 @@ void Formatter::visit(const AST::And* node)
 
         current_builder().append(' ');
         insert_separator(true);
-        current_builder().append("&& ");
+        current_builder().append("&& "sv);
 
         node->right()->visit(*this);
     });
@@ -177,7 +177,7 @@ void Formatter::visit(const AST::Background* node)
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
-    current_builder().append(" &");
+    current_builder().append(" &"sv);
     visited(node);
 }
 
@@ -255,7 +255,7 @@ void Formatter::visit(const AST::Comment* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append("#");
+    current_builder().append("#"sv);
     current_builder().append(node->text());
     visited(node);
 }
@@ -265,9 +265,9 @@ void Formatter::visit(const AST::ContinuationControl* node)
     will_visit(node);
     test_and_update_output_cursor(node);
     if (node->continuation_kind() == AST::ContinuationControl::Break)
-        current_builder().append("break");
+        current_builder().append("break"sv);
     else if (node->continuation_kind() == AST::ContinuationControl::Continue)
-        current_builder().append("continue");
+        current_builder().append("continue"sv);
     else
         VERIFY_NOT_REACHED();
     visited(node);
@@ -289,7 +289,7 @@ void Formatter::visit(const AST::DoubleQuotedString* node)
     test_and_update_output_cursor(node);
     auto not_in_heredoc = m_parent_node->kind() != AST::Node::Kind::Heredoc;
     if (not_in_heredoc)
-        current_builder().append("\"");
+        current_builder().append("\""sv);
 
     TemporaryChange quotes { m_options.in_double_quotes, true };
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -297,7 +297,7 @@ void Formatter::visit(const AST::DoubleQuotedString* node)
     NodeVisitor::visit(node);
 
     if (not_in_heredoc)
-        current_builder().append("\"");
+        current_builder().append("\""sv);
     visited(node);
 }
 
@@ -329,7 +329,7 @@ void Formatter::visit(const AST::FunctionDeclaration* node)
         current_builder().append(arg.name);
     }
 
-    current_builder().append(") ");
+    current_builder().append(") "sv);
 
     in_new_block([&] {
         if (node->block())
@@ -343,18 +343,18 @@ void Formatter::visit(const AST::ForLoop* node)
     will_visit(node);
     test_and_update_output_cursor(node);
     auto is_loop = node->iterated_expression().is_null();
-    current_builder().append(is_loop ? "loop" : "for ");
+    current_builder().append(is_loop ? "loop"sv : "for "sv);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (!is_loop) {
         if (node->index_variable().has_value()) {
-            current_builder().append("index ");
+            current_builder().append("index "sv);
             current_builder().append(node->index_variable()->name);
-            current_builder().append(" ");
+            current_builder().append(" "sv);
         }
         if (node->variable().has_value() && node->variable()->name != "it") {
             current_builder().append(node->variable()->name);
-            current_builder().append(" in ");
+            current_builder().append(" in "sv);
         }
 
         node->iterated_expression()->visit(*this);
@@ -381,7 +381,7 @@ void Formatter::visit(const AST::Heredoc* node)
     will_visit(node);
     test_and_update_output_cursor(node);
 
-    current_builder().append("<<");
+    current_builder().append("<<"sv);
     if (node->deindent())
         current_builder().append('~');
     else
@@ -474,12 +474,12 @@ void Formatter::visit(const AST::Execute* node)
     ScopedValueRollback options_rollback { m_options };
 
     if (node->does_capture_stdout())
-        builder.append("$(");
+        builder.append("$("sv);
 
     NodeVisitor::visit(node);
 
     if (node->does_capture_stdout())
-        builder.append(")");
+        builder.append(")"sv);
 
     visited(node);
 }
@@ -489,7 +489,7 @@ void Formatter::visit(const AST::IfCond* node)
     will_visit(node);
     test_and_update_output_cursor(node);
 
-    current_builder().append("if ");
+    current_builder().append("if "sv);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     node->condition()->visit(*this);
@@ -502,7 +502,7 @@ void Formatter::visit(const AST::IfCond* node)
     });
 
     if (node->false_branch()) {
-        current_builder().append(" else ");
+        current_builder().append(" else "sv);
         if (node->false_branch()->kind() != AST::Node::Kind::IfCond) {
             in_new_block([&] {
                 node->false_branch()->visit(*this);
@@ -511,7 +511,7 @@ void Formatter::visit(const AST::IfCond* node)
             node->false_branch()->visit(*this);
         }
     } else if (node->else_position().has_value()) {
-        current_builder().append(" else ");
+        current_builder().append(" else "sv);
     }
     visited(node);
 }
@@ -521,7 +521,7 @@ void Formatter::visit(const AST::ImmediateExpression* node)
     will_visit(node);
     test_and_update_output_cursor(node);
 
-    current_builder().append("${");
+    current_builder().append("${"sv);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     current_builder().append(node->function_name());
@@ -564,14 +564,14 @@ void Formatter::visit(const AST::MatchExpr* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append("match ");
+    current_builder().append("match "sv);
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     node->matched_expr()->visit(*this);
 
     if (!node->expr_name().is_empty()) {
-        current_builder().append(" as ");
+        current_builder().append(" as "sv);
         current_builder().append(node->expr_name());
     }
 
@@ -587,7 +587,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                 [&](NonnullRefPtrVector<AST::Node> const& patterns) {
                     for (auto& option : patterns) {
                         if (!first)
-                            current_builder().append(" | ");
+                            current_builder().append(" | "sv);
                         first = false;
                         option.visit(*this);
                     }
@@ -595,7 +595,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                 [&](Vector<Regex<ECMA262>> const& patterns) {
                     for (auto& option : patterns) {
                         if (!first)
-                            current_builder().append(" | ");
+                            current_builder().append(" | "sv);
                         first = false;
                         auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, option.pattern_value);
                         node->visit(*this);
@@ -604,7 +604,7 @@ void Formatter::visit(const AST::MatchExpr* node)
 
             current_builder().append(' ');
             if (entry.match_names.has_value() && !entry.match_names.value().is_empty()) {
-                current_builder().append("as (");
+                current_builder().append("as ("sv);
                 auto first = true;
                 for (auto& name : entry.match_names.value()) {
                     if (!first)
@@ -612,7 +612,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                     first = false;
                     current_builder().append(name);
                 }
-                current_builder().append(") ");
+                current_builder().append(") "sv);
             }
             in_new_block([&] {
                 if (entry.body)
@@ -633,9 +633,9 @@ void Formatter::visit(const AST::Or* node)
     with_added_indent(should_indent ? 1 : 0, [&] {
         node->left()->visit(*this);
 
-        current_builder().append(" ");
+        current_builder().append(" "sv);
         insert_separator(true);
-        current_builder().append("|| ");
+        current_builder().append("|| "sv);
 
         node->right()->visit(*this);
     });
@@ -650,11 +650,11 @@ void Formatter::visit(const AST::Pipe* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     node->left()->visit(*this);
-    current_builder().append(" ");
+    current_builder().append(" "sv);
 
     with_added_indent(should_indent ? 1 : 0, [&] {
         insert_separator(true);
-        current_builder().append("| ");
+        current_builder().append("| "sv);
 
         node->right()->visit(*this);
     });
@@ -670,7 +670,7 @@ void Formatter::visit(const AST::Range* node)
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     node->start()->visit(*this);
-    current_builder().append("..");
+    current_builder().append(".."sv);
     node->end()->visit(*this);
 
     if (!m_parent_node || m_parent_node->kind() != AST::Node::Kind::Slice)
@@ -687,7 +687,7 @@ void Formatter::visit(const AST::ReadRedirection* node)
     if (node->fd() != 0)
         current_builder().appendff(" {}<", node->fd());
     else
-        current_builder().append(" <");
+        current_builder().append(" <"sv);
     NodeVisitor::visit(node);
     visited(node);
 }
@@ -701,7 +701,7 @@ void Formatter::visit(const AST::ReadWriteRedirection* node)
     if (node->fd() != 0)
         current_builder().appendff(" {}<>", node->fd());
     else
-        current_builder().append(" <>");
+        current_builder().append(" <>"sv);
     NodeVisitor::visit(node);
     visited(node);
 }
@@ -787,7 +787,7 @@ void Formatter::visit(const AST::StringLiteral* node)
     will_visit(node);
     test_and_update_output_cursor(node);
     if (!m_options.in_double_quotes && !m_options.in_heredoc)
-        current_builder().append("'");
+        current_builder().append("'"sv);
 
     if (m_options.in_double_quotes && !m_options.in_heredoc) {
         for (auto ch : node->text()) {
@@ -798,25 +798,25 @@ void Formatter::visit(const AST::StringLiteral* node)
                 current_builder().append('\\');
                 break;
             case '\n':
-                current_builder().append("\\n");
+                current_builder().append("\\n"sv);
                 continue;
             case '\r':
-                current_builder().append("\\r");
+                current_builder().append("\\r"sv);
                 continue;
             case '\t':
-                current_builder().append("\\t");
+                current_builder().append("\\t"sv);
                 continue;
             case '\v':
-                current_builder().append("\\v");
+                current_builder().append("\\v"sv);
                 continue;
             case '\f':
-                current_builder().append("\\f");
+                current_builder().append("\\f"sv);
                 continue;
             case '\a':
-                current_builder().append("\\a");
+                current_builder().append("\\a"sv);
                 continue;
             case '\e':
-                current_builder().append("\\e");
+                current_builder().append("\\e"sv);
                 continue;
             default:
                 break;
@@ -828,7 +828,7 @@ void Formatter::visit(const AST::StringLiteral* node)
     }
 
     if (!m_options.in_double_quotes && !m_options.in_heredoc)
-        current_builder().append("'");
+        current_builder().append("'"sv);
     visited(node);
 }
 
@@ -892,7 +892,7 @@ void Formatter::visit(const AST::WriteAppendRedirection* node)
     if (node->fd() != 1)
         current_builder().appendff(" {}>>", node->fd());
     else
-        current_builder().append(" >>");
+        current_builder().append(" >>"sv);
     NodeVisitor::visit(node);
     visited(node);
 }
@@ -906,7 +906,7 @@ void Formatter::visit(const AST::WriteRedirection* node)
     if (node->fd() != 1)
         current_builder().appendff(" {}>", node->fd());
     else
-        current_builder().append(" >");
+        current_builder().append(" >"sv);
     NodeVisitor::visit(node);
     visited(node);
 }

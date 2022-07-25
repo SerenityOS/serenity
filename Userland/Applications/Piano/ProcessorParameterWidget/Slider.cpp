@@ -9,7 +9,7 @@
 #include <AK/FixedPoint.h>
 #include <AK/Math.h>
 
-ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibDSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
+ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP::ProcessorRangeParameter& parameter, RefPtr<GUI::Label> value_label)
     : Slider(orientation)
     , WidgetWithLabel(move(value_label))
     , m_parameter(parameter)
@@ -30,13 +30,16 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibD
     m_value_label->set_text(String::formatted("{:.2f}", static_cast<double>(m_parameter)));
 
     on_change = [this](auto value) {
-        LibDSP::ParameterFixedPoint real_value;
+        if (m_currently_setting_from_ui)
+            return;
+        m_currently_setting_from_ui = true;
+        DSP::ParameterFixedPoint real_value;
         real_value.raw() = value;
         if (is_logarithmic())
             // FIXME: Implement exponential for fixed point
-            real_value = exp(static_cast<double>(real_value));
+            real_value = exp2(static_cast<double>(real_value));
 
-        m_parameter.set_value_sneaky(real_value, LibDSP::Detail::ProcessorParameterSetValueTag {});
+        m_parameter.set_value(real_value);
         if (m_value_label) {
             double value = static_cast<double>(m_parameter);
             String label_text = String::formatted("{:.2f}", value);
@@ -47,11 +50,12 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, LibD
             else
                 m_value_label->set_text(label_text);
         }
+        m_currently_setting_from_ui = false;
     };
-    m_parameter.did_change_value = [this](auto value) {
+    m_parameter.register_change_listener([this](auto value) {
         if (!is_logarithmic())
             set_value(value.raw());
         else
             set_value(value.log2().raw());
-    };
+    });
 }

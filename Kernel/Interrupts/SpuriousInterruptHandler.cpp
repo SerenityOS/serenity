@@ -110,7 +110,7 @@ void SpuriousInterruptHandler::disable_interrupt_vector()
 StringView SpuriousInterruptHandler::controller() const
 {
     if (m_responsible_irq_controller->type() == IRQControllerType::i82093AA)
-        return "";
+        return ""sv;
     return m_responsible_irq_controller->model();
 }
 }

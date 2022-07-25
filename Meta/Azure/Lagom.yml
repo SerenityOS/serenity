@@ -12,7 +12,7 @@ jobs:
       value: $(Build.SourcesDirectory)/.ccache
 
     - name: job_pool
-      ${{ if eq(parameters.os, 'Linux') }}:
+      ${{ if or(eq(parameters.os, 'Linux'), eq(parameters.os, 'Android')) }}:
         value: ubuntu-22.04
       ${{ if eq(parameters.os, 'macOS') }}:
         value: macos-11
@@ -22,6 +22,9 @@ jobs:
         value: clang
       ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
         value: gcc
+
+    - name: ndk_version # only relevant for Android
+      value: '24.0.8215888'
 
     pool:
       vmImage: $(job_pool)
@@ -42,13 +45,44 @@ jobs:
           with_remote_data_caches: false
         ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
           with_remote_data_caches: true
+        ${{ if eq(parameters.os, 'Android') }}:
+          with_ndk_cache: true
+          ndk_version: '$(ndk_version)'
 
-    - ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
+    - ${{ if eq(parameters.os, 'Android') }}:
+      - script: |
+          yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "ndk;$(ndk_version)"
+        displayName: "Install NDK $(ndk_version)"
+
+      - script: |
+          cmake -GNinja -B tools-build \
+            -DBUILD_LAGOM=OFF \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DCMAKE_INSTALL_PREFIX=tool-install \
+            -Dpackage=LagomTools
+          ninja -C tools-build install
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_NATIVE_API_LEVEL=30 \
+            -DANDROID_NDK=$ANDROID_SDK_ROOT/ndk/$(ndk_version) \
+            -DANDROID_STL=c++_shared \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/$(ndk_version)/build/cmake/android.toolchain.cmake \
+            -DLagomTools_DIR=$(Build.SourcesDirectory)/Meta/Lagom/tool-install/share/LagomTools
+        displayName: 'Create Build Environment'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
+    - ${{ elseif eq(parameters.fuzzer, 'Fuzz') }}:
       - script: |
           cmake -GNinja -B tools-build \
               -DBUILD_LAGOM=OFF \
               -DENABLE_LAGOM_CCACHE=ON \
-              -DCMAKE_INSTALL_PREFIX=tool-install
+              -DCMAKE_INSTALL_PREFIX=tool-install \
+              -Dpackage=LagomTools
           ninja -C tools-build install
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
@@ -62,7 +96,7 @@ jobs:
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
         env:
           CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
-    - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
+    - ${{ elseif eq(parameters.fuzzer, 'NoFuzz') }}:
       - script: |
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
@@ -86,7 +120,7 @@ jobs:
       env:
         CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
-    - ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
+    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), not(eq(parameters.os, 'Android')) ) }}:
       - script: |
           ninja test
         displayName: 'Test'

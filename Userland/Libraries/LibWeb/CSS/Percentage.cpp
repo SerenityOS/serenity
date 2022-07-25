@@ -9,24 +9,24 @@
 
 namespace Web::CSS {
 
-Angle AnglePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, Angle const& reference_value) const
+Angle AnglePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&, Angle const& reference_value) const
 {
-    return calculated->resolve_angle_percentage(reference_value)->resolved(layout_node, reference_value);
+    return calculated->resolve_angle_percentage(reference_value).value();
 }
 
-Frequency FrequencyPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, Frequency const& reference_value) const
+Frequency FrequencyPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&, Frequency const& reference_value) const
 {
-    return calculated->resolve_frequency_percentage(reference_value)->resolved(layout_node, reference_value);
+    return calculated->resolve_frequency_percentage(reference_value).value();
 }
 
 Length LengthPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, Length const& reference_value) const
 {
-    return calculated->resolve_length_percentage(layout_node, reference_value)->resolved(layout_node, reference_value);
+    return calculated->resolve_length_percentage(layout_node, reference_value).value();
 }
 
-Time TimePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, Time const& reference_value) const
+Time TimePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&, Time const& reference_value) const
 {
-    return calculated->resolve_time_percentage(reference_value)->resolved(layout_node, reference_value);
+    return calculated->resolve_time_percentage(reference_value).value();
 }
 
 }

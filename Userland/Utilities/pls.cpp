@@ -17,8 +17,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> command;
     Core::ArgsParser args_parser;
     uid_t as_user_uid = 0;
+    bool preserve_env = false;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
+    args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E');
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(arguments);
 
@@ -34,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (account.has_password()) {
             auto password = TRY(Core::get_password());
             if (!account.authenticate(password))
-                return Error::from_string_literal("Incorrect or disabled password."sv);
+                return Error::from_string_literal("Incorrect or disabled password.");
         }
     }
 
@@ -45,11 +47,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath exec"));
 
-    Vector<String> exec_environment_strings;
     Vector<StringView> exec_environment;
-    if (auto* term = getenv("TERM")) {
-        exec_environment_strings.append(String::formatted("TERM={}", term));
-        exec_environment.append(exec_environment_strings.last());
+    for (size_t i = 0; environ[i]; ++i) {
+        StringView env_view { environ[i], strlen(environ[i]) };
+        auto maybe_needle = env_view.find('=');
+
+        if (!maybe_needle.has_value())
+            continue;
+
+        // FIXME: Allow a custom selection of variables once ArgsParser supports options with optional parameters.
+        if (!preserve_env && env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
+            continue;
+
+        exec_environment.append(env_view);
     }
 
     Vector<String> exec_arguments;

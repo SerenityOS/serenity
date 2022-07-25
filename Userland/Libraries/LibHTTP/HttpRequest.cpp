@@ -21,6 +21,18 @@ String HttpRequest::method_name() const
         return "HEAD";
     case Method::POST:
         return "POST";
+    case Method::DELETE:
+        return "DELETE";
+    case Method::PATCH:
+        return "PATCH";
+    case Method::OPTIONS:
+        return "OPTIONS";
+    case Method::TRACE:
+        return "TRACE";
+    case Method::CONNECT:
+        return "CONNECT";
+    case Method::PUT:
+        return "PUT";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -39,22 +51,22 @@ ByteBuffer HttpRequest::to_raw_request() const
         builder.append('?');
         builder.append(m_url.query());
     }
-    builder.append(" HTTP/1.1\r\nHost: ");
+    builder.append(" HTTP/1.1\r\nHost: "sv);
     builder.append(m_url.host());
     if (m_url.port().has_value())
         builder.appendff(":{}", *m_url.port());
-    builder.append("\r\n");
+    builder.append("\r\n"sv);
     for (auto& header : m_headers) {
         builder.append(header.name);
-        builder.append(": ");
+        builder.append(": "sv);
         builder.append(header.value);
-        builder.append("\r\n");
+        builder.append("\r\n"sv);
     }
     if (!m_body.is_empty()) {
         builder.appendff("Content-Length: {}\r\n\r\n", m_body.size());
         builder.append((char const*)m_body.data(), m_body.size());
     }
-    builder.append("\r\n");
+    builder.append("\r\n"sv);
     return builder.to_byte_buffer();
 }
 
@@ -155,6 +167,18 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
         request.m_method = Method::HEAD;
     else if (method == "POST")
         request.m_method = Method::POST;
+    else if (method == "DELETE")
+        request.set_method(HTTP::HttpRequest::Method::DELETE);
+    else if (method == "PATCH")
+        request.set_method(HTTP::HttpRequest::Method::PATCH);
+    else if (method == "OPTIONS")
+        request.set_method(HTTP::HttpRequest::Method::OPTIONS);
+    else if (method == "TRACE")
+        request.set_method(HTTP::HttpRequest::Method::TRACE);
+    else if (method == "CONNECT")
+        request.set_method(HTTP::HttpRequest::Method::CONNECT);
+    else if (method == "PUT")
+        request.set_method(HTTP::HttpRequest::Method::PUT);
     else
         return {};
 
@@ -180,14 +204,14 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     builder.append(url.password());
     auto token = encode_base64(builder.to_string().bytes());
     builder.clear();
-    builder.append("Basic ");
+    builder.append("Basic "sv);
     builder.append(token);
     return Header { "Authorization", builder.to_string() };
 }
 
 Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(String const& value)
 {
-    if (!value.starts_with("Basic ", AK::CaseSensitivity::CaseInsensitive))
+    if (!value.starts_with("Basic "sv, AK::CaseSensitivity::CaseInsensitive))
         return {};
     auto token = value.substring_view(6);
     if (token.is_empty())

@@ -77,13 +77,11 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     char const* path;
-    int map_size_limit = 32 * MiB;
     bool quiet { false };
     String output_directory_path;
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
@@ -97,13 +95,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Map file chunk-by-chunk once we have mmap() with offset.
     //        This will require mapping some parts then unmapping them repeatedly,
     //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
-    if (st.st_size >= map_size_limit) {
-        warnln("unzip warning: Refusing to map file since it is larger than {}, pass '--map-size-limit {}' to get around this",
-            human_readable_size(map_size_limit),
-            round_up_to_power_of_two(st.st_size, 16));
-        return 1;
-    }
-
     RefPtr<Core::MappedFile> mapped_file;
     ReadonlyBytes input_bytes;
     if (st.st_size > 0) {
@@ -131,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!file_filters.is_empty()) {
             for (auto& filter : file_filters) {
                 // Convert underscore wildcards (usual unzip convention) to question marks (as used by StringUtils)
-                auto string_filter = filter.replace("_", "?", true);
+                auto string_filter = filter.replace("_"sv, "?"sv, ReplaceMode::All);
                 if (zip_member.name.matches(string_filter, CaseSensitivity::CaseSensitive)) {
                     keep_file = true;
                     break;

@@ -41,7 +41,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     window->m_tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
 
     auto button_container = TRY(main_widget->try_add<GUI::Widget>());
-    button_container->set_shrink_to_fit(true);
+    button_container->set_preferred_size({ SpecialDimension::Grow, SpecialDimension::Fit });
     (void)TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
     button_container->layout()->set_spacing(6);
 
@@ -75,7 +75,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
         if (!window->is_modified())
             return Window::CloseRequestDecision::Close;
 
-        auto result = MessageBox::show(window, "Apply these settings before closing?", "Unsaved changes", MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
+        auto result = MessageBox::show(window, "Apply these settings before closing?"sv, "Unsaved changes"sv, MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
         switch (result) {
         case MessageBox::ExecResult::Yes:
             window->apply_settings();

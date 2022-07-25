@@ -153,9 +153,9 @@ struct ParsedDHCPv4Options {
     String to_string() const
     {
         StringBuilder builder;
-        builder.append("DHCP Options (");
+        builder.append("DHCP Options ("sv);
         builder.appendff("{}", options.size());
-        builder.append(" entries)\n");
+        builder.append(" entries)\n"sv);
         for (auto& opt : options) {
             builder.appendff("\toption {} ({} bytes):", (u8)opt.key, (u8)opt.value.length);
             for (auto i = 0; i < opt.value.length; ++i)
@@ -214,8 +214,17 @@ public:
     MACAddress const& chaddr() const { return *(MACAddress const*)&m_chaddr[0]; }
     void set_chaddr(MACAddress const& mac) { *(MACAddress*)&m_chaddr[0] = mac; }
 
-    StringView sname() const { return { (char const*)&m_sname[0] }; }
-    StringView file() const { return { (char const*)&m_file[0] }; }
+    StringView sname() const
+    {
+        char const* sname_ptr = reinterpret_cast<char const*>(&m_sname[0]);
+        return { sname_ptr, strlen(sname_ptr) };
+    }
+
+    StringView file() const
+    {
+        char const* file_ptr = reinterpret_cast<char const*>(&m_file[0]);
+        return { file_ptr, strlen(file_ptr) };
+    }
 
 private:
     NetworkOrdered<u8> m_op;

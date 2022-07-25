@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stack.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/StdLib.h>
@@ -30,7 +31,7 @@ class UHCIDescriptorPool {
 public:
     static ErrorOr<NonnullOwnPtr<UHCIDescriptorPool<T>>> try_create(StringView name)
     {
-        auto pool_memory_block = TRY(MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool", Memory::Region::Access::ReadWrite));
+        auto pool_memory_block = TRY(MM.allocate_kernel_region(PAGE_SIZE, "UHCI Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
         return adopt_nonnull_own_or_enomem(new (nothrow) UHCIDescriptorPool(move(pool_memory_block), name));
     }
 
@@ -38,6 +39,8 @@ public:
 
     [[nodiscard]] T* try_take_free_descriptor()
     {
+        SpinlockLocker locker(m_pool_lock);
+
         // We're out of descriptors!
         if (m_free_descriptor_stack.is_empty())
             return nullptr;
@@ -51,6 +54,8 @@ public:
 
     void release_to_pool(T* ptr)
     {
+        SpinlockLocker locker(m_pool_lock);
+
         dbgln_if(UHCI_VERBOSE_DEBUG, "Returning descriptor @ {} to pool {}", ptr, m_pool_name);
         if (!m_free_descriptor_stack.push(ptr))
             dbgln("Failed to return descriptor to pool {}. Stack overflow!", m_pool_name);
@@ -78,5 +83,7 @@ private:
     StringView m_pool_name;                                   // Name of this pool
     NonnullOwnPtr<Memory::Region> m_pool_region;              // Memory region where descriptors actually reside
     Stack<T*, PAGE_SIZE / sizeof(T)> m_free_descriptor_stack; // Stack of currently free descriptor pointers
+    Spinlock m_pool_lock;
 };
+
 }

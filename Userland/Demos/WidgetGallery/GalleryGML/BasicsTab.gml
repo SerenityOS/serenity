@@ -5,7 +5,7 @@
     }
 
     @GUI::GroupBox {
-        fixed_height: 95
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }
@@ -27,11 +27,13 @@
                 @GUI::Label {
                     name: "enabled_label"
                     text: "Label"
+                    min_height: 16
                 }
 
                 @GUI::Label {
                     name: "disabled_label"
                     text: "Disabled"
+                    min_height: 16
                     enabled: false
                 }
             }

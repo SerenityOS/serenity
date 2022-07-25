@@ -15,8 +15,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    char const* pid_argument = nullptr;
-    char const* cmd_argument = nullptr;
+    StringView pid_argument {};
+    StringView cmd_argument {};
     bool wait = false;
     bool free = false;
     bool enable = false;
@@ -35,7 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
     args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
     args_parser.add_option(Core::ArgsParser::Option {
-        true, "Enable tracking specific event type", nullptr, 't', "event_type",
+        Core::ArgsParser::OptionArgumentMode::Required,
+        "Enable tracking specific event type", nullptr, 't', "event_type",
         [&](String event_type) {
             seen_event_type_arg = true;
             if (event_type == "sample")
@@ -69,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(0);
     }
 
-    if (!pid_argument && !cmd_argument && !all_processes) {
+    if (pid_argument.is_empty() && cmd_argument.is_empty() && !all_processes) {
         args_parser.print_usage(stdout, arguments.argv[0]);
         print_types();
         return 0;
@@ -78,13 +79,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!seen_event_type_arg)
         event_mask |= PERF_EVENT_SAMPLE;
 
-    if (pid_argument || all_processes) {
+    if (!pid_argument.is_empty() || all_processes) {
         if (!(enable ^ disable ^ wait ^ free)) {
             warnln("-p <PID> requires -e xor -d xor -w xor -f.");
             return 1;
         }
 
-        pid_t pid = all_processes ? -1 : atoi(pid_argument);
+        // FIXME: Handle error case.
+        pid_t pid = all_processes ? -1 : pid_argument.to_int().release_value();
 
         if (wait || enable) {
             TRY(Core::System::profiling_enable(pid, event_mask));

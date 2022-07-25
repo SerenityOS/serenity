@@ -55,16 +55,16 @@ Configuration Configuration::from_config(StringView libname)
 
     configuration.set(flags);
 
-    if (refresh.equals_ignoring_case("lazy"))
+    if (refresh.equals_ignoring_case("lazy"sv))
         configuration.set(Configuration::Lazy);
-    else if (refresh.equals_ignoring_case("eager"))
+    else if (refresh.equals_ignoring_case("eager"sv))
         configuration.set(Configuration::Eager);
 
-    if (operation.equals_ignoring_case("full"))
+    if (operation.equals_ignoring_case("full"sv))
         configuration.set(Configuration::OperationMode::Full);
-    else if (operation.equals_ignoring_case("noescapesequences"))
+    else if (operation.equals_ignoring_case("noescapesequences"sv))
         configuration.set(Configuration::OperationMode::NoEscapeSequences);
-    else if (operation.equals_ignoring_case("noninteractive"))
+    else if (operation.equals_ignoring_case("noninteractive"sv))
         configuration.set(Configuration::OperationMode::NonInteractive);
     else
         configuration.set(Configuration::OperationMode::Unset);
@@ -125,7 +125,7 @@ Configuration Configuration::from_config(StringView libname)
         while (!value_lexer.is_eof())
             value_builder.append(value_lexer.consume_escaped_character());
         auto value = value_builder.string_view();
-        if (value.starts_with("internal:")) {
+        if (value.starts_with("internal:"sv)) {
             configuration.set(KeyBinding {
                 keys,
                 KeyBinding::Kind::InternalFunction,
@@ -258,8 +258,8 @@ bool Editor::load_history(String const& path)
         return false;
     auto data = history_file->read_all();
     auto hist = StringView { data.data(), data.size() };
-    for (auto& str : hist.split_view("\n\n")) {
-        auto it = str.find("::").value_or(0);
+    for (auto& str : hist.split_view("\n\n"sv)) {
+        auto it = str.find("::"sv).value_or(0);
         auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
         auto string = str.substring_view(it == 0 ? it : it + 2);
         m_history.append({ string, time });
@@ -320,7 +320,7 @@ bool Editor::save_history(String const& path)
         merge(
             file->line_begin(), file->line_end(), m_history.begin(), m_history.end(), final_history,
             [](StringView str) {
-                auto it = str.find("::").value_or(0);
+                auto it = str.find("::"sv).value_or(0);
                 auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
                 auto string = str.substring_view(it == 0 ? it : it + 2);
                 return HistoryEntry { string, time };
@@ -463,6 +463,8 @@ Editor::CodepointRange Editor::byte_offset_range_to_code_point_offset_range(size
 
 void Editor::stylize(Span const& span, Style const& style)
 {
+    if (!span.is_empty())
+        return;
     if (style.is_empty())
         return;
 
@@ -544,7 +546,7 @@ void Editor::initialize()
             m_configuration.set(Configuration::NonInteractive);
         } else {
             auto* term = getenv("TERM");
-            if (StringView { term }.starts_with("xterm"))
+            if (term != NULL && StringView { term, strlen(term) }.starts_with("xterm"sv))
                 m_configuration.set(Configuration::Full);
             else
                 m_configuration.set(Configuration::NoEscapeSequences);
@@ -1296,9 +1298,8 @@ void Editor::cleanup()
 {
     auto current_buffer_metrics = actual_rendered_string_metrics(buffer_view(), m_current_masks);
     auto new_lines = current_prompt_metrics().lines_with_addition(current_buffer_metrics, m_num_columns);
-    auto shown_lines = num_lines();
-    if (new_lines < shown_lines)
-        m_extra_forward_lines = max(shown_lines - new_lines, m_extra_forward_lines);
+    if (new_lines < m_shown_lines)
+        m_extra_forward_lines = max(m_shown_lines - new_lines, m_extra_forward_lines);
 
     OutputFileStream stderr_stream { stderr };
     reposition_cursor(stderr_stream, true);
@@ -1313,6 +1314,8 @@ void Editor::refresh_display()
     DuplexMemoryStream output_stream;
     ScopeGuard flush_stream {
         [&] {
+            m_shown_lines = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
+
             auto buffer = output_stream.copy_into_contiguous_buffer();
             if (buffer.is_empty())
                 return;
@@ -1675,36 +1678,36 @@ void Style::unify_with(Style const& other, bool prefer_other)
 String Style::to_string() const
 {
     StringBuilder builder;
-    builder.append("Style { ");
+    builder.append("Style { "sv);
 
     if (!m_foreground.is_default()) {
-        builder.append("Foreground(");
+        builder.append("Foreground("sv);
         if (m_foreground.m_is_rgb) {
-            builder.join(", ", m_foreground.m_rgb_color);
+            builder.join(", "sv, m_foreground.m_rgb_color);
         } else {
             builder.appendff("(XtermColor) {}", (int)m_foreground.m_xterm_color);
         }
-        builder.append("), ");
+        builder.append("), "sv);
     }
 
     if (!m_background.is_default()) {
-        builder.append("Background(");
+        builder.append("Background("sv);
         if (m_background.m_is_rgb) {
             builder.join(' ', m_background.m_rgb_color);
         } else {
             builder.appendff("(XtermColor) {}", (int)m_background.m_xterm_color);
         }
-        builder.append("), ");
+        builder.append("), "sv);
     }
 
     if (bold())
-        builder.append("Bold, ");
+        builder.append("Bold, "sv);
 
     if (underline())
-        builder.append("Underline, ");
+        builder.append("Underline, "sv);
 
     if (italic())
-        builder.append("Italic, ");
+        builder.append("Italic, "sv);
 
     if (!m_hyperlink.is_empty())
         builder.appendff("Hyperlink(\"{}\"), ", m_hyperlink.m_link);
@@ -1717,7 +1720,7 @@ String Style::to_string() const
                 : "ReplaceEachCodePointInSelection");
     }
 
-    builder.append("}");
+    builder.append('}');
 
     return builder.build();
 }

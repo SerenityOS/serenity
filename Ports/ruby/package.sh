@@ -2,6 +2,8 @@
 
 source version.sh
 
+export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/ruby/bin:${PATH}"
+
 port=ruby
 version=${RUBY_VERSION}
 useconfigure="true"
@@ -16,7 +18,21 @@ launcher_command="/usr/local/bin/ruby /usr/local/bin/irb --legacy"
 launcher_run_in_terminal="true"
 icon_file="../ruby-kit/ruby.png"
 
-configopts=("--with-coroutine=x86" "--disable-install-doc")
+configopts=(
+    "--disable-install-doc"
+)
+
+case "${SERENITY_ARCH}" in
+    x86_64)
+        configopts+=("--with-coroutine=amd64")
+        ;;
+    i686)
+        configopts+=("--with-coroutine=x86")
+        ;;
+    *)
+        echo "Error: Architecture ${SERENITY_ARCH} is not supported for this port"
+        exit 1
+esac
 
 export CFLAGS="-DNGROUPS_MAX=65536"
 

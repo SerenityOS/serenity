@@ -19,7 +19,7 @@ Or right clicking on a folder in the TreeView and using
 ## See also
 
 -   [gml-format(1)](help://man/1/gml-format) formats your GML files.
--   [GML Playground(1)](help://man/1/Playground) is an interactive GML creation tool.
+-   [GML Playground(1)](help://man/1/GMLPlayground) is an interactive GML creation tool.
 
 ### List of GML manpages
 
@@ -30,6 +30,7 @@ Or right clicking on a folder in the TreeView and using
     -   [Define widgets](help://man/5/GML-Define-widget)
 -   GML object and property reference
     -   [Core::Object](help://man/5/GML-CoreObject)
+    -   [UI Dimensions](help://man/5/GML-UI-Dimensions)
     -   Layouts
         -   [HorizontalBoxLayout](help://man/5/GML-Layout-HorizontalBoxLayout)
         -   [VerticalBoxLayout](help://man/5/GML-Layout-VerticalBoxLayout)
@@ -76,3 +77,4 @@ Or right clicking on a folder in the TreeView and using
         -   [VerticalSlider](help://man/5/GML-Widget-VerticalSlider)
         -   [VerticalSplitter](help://man/5/GML-Widget-VerticalSplitter)
         -   [Widget](help://man/5/GML-Widget)
+

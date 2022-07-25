@@ -10,7 +10,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Queue.h>
 #include <AK/Vector.h>
-#include <LibAudio/ConnectionFromClient.h>
+#include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/Sample.h>
@@ -18,7 +18,7 @@
 
 class PlaybackManager final {
 public:
-    PlaybackManager(NonnullRefPtr<Audio::ConnectionFromClient>);
+    PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer>);
     ~PlaybackManager() = default;
 
     void play();
@@ -36,7 +36,7 @@ public:
     float total_length() const { return m_total_length; }
     FixedArray<Audio::Sample> const& current_buffer() const { return m_current_buffer; }
 
-    NonnullRefPtr<Audio::ConnectionFromClient> connection() const { return m_connection; }
+    NonnullRefPtr<Audio::ConnectionToServer> connection() const { return m_connection; }
 
     Function<void()> on_update;
     Function<void()> on_finished_playing;
@@ -56,7 +56,7 @@ private:
     size_t m_device_samples_per_buffer { 0 };
     size_t m_samples_to_load_per_buffer { 0 };
     RefPtr<Audio::Loader> m_loader { nullptr };
-    NonnullRefPtr<Audio::ConnectionFromClient> m_connection;
+    NonnullRefPtr<Audio::ConnectionToServer> m_connection;
     FixedArray<Audio::Sample> m_current_buffer;
     Optional<Audio::ResampleHelper<Audio::Sample>> m_resampler;
     RefPtr<Core::Timer> m_timer;

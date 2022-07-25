@@ -47,7 +47,7 @@ interface CanvasRenderingContext2D {
     undefined reset();
     boolean isContextLost();
 
-    readonly attribute HTMLCanvasElement canvas;
+    [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 
     TextMetrics measureText(DOMString text);
 

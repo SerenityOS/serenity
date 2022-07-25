@@ -24,7 +24,7 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     m_starting_aspect_ratio = m_desired_size.width() / static_cast<float>(m_desired_size.height());
 
     set_title("Resize Image");
-    resize(260, 210);
+    resize(260, 228);
     set_icon(parent_window->icon());
 
     auto& main_widget = set_main_widget<GUI::Widget>();
@@ -68,9 +68,11 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     };
 
     auto nearest_neighbor_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("nearest_neighbor_radio");
+    auto smooth_pixels_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("smooth_pixels_radio");
     auto bilinear_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("bilinear_radio");
 
     VERIFY(nearest_neighbor_radio);
+    VERIFY(smooth_pixels_radio);
     VERIFY(bilinear_radio);
 
     m_scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
@@ -81,6 +83,10 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     nearest_neighbor_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
             m_scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
+    };
+    smooth_pixels_radio->on_checked = [this](bool is_checked) {
+        if (is_checked)
+            m_scaling_mode = Gfx::Painter::ScalingMode::SmoothPixels;
     };
     bilinear_radio->on_checked = [this](bool is_checked) {
         if (is_checked)

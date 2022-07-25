@@ -135,30 +135,36 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
     // 3. Set dateTime to ? ToTemporalDateTime(dateTime).
     auto* date_time = TRY(to_temporal_date_time(global_object, vm.argument(0)));
 
+    auto possible_epoch_nanoseconds = MarkedVector<BigInt*> { vm.heap() };
+
     // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, then
     if (time_zone->offset_nanoseconds().has_value()) {
         // a. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
-        // b. Let instant be ! CreateTemporalInstant(epochNanoseconds - ℤ(timeZone.[[OffsetNanoseconds]])).
-        auto* instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds())))));
-
-        // c. Return CreateArrayFromList(« instant »).
-        return Array::create_from(global_object, { instant });
+        // b. Let possibleEpochNanoseconds be « epochNanoseconds - ℤ(timeZone.[[OffsetNanoseconds]]) ».
+        // FIXME: Narrowing conversion from 'double' to 'i64'
+        possible_epoch_nanoseconds.append(js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds()))));
     }
-
-    // 5. Let possibleEpochNanoseconds be GetIANATimeZoneEpochValue(timeZone.[[Identifier]], dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
-    auto possible_epoch_nanoseconds = get_iana_time_zone_epoch_value(global_object, time_zone->identifier(), date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
+    // 5. Else,
+    else {
+        // a. Let possibleEpochNanoseconds be GetIANATimeZoneEpochValue(timeZone.[[Identifier]], dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+        possible_epoch_nanoseconds = get_iana_time_zone_epoch_value(global_object, time_zone->identifier(), date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
+    }
 
     // 6. Let possibleInstants be a new empty List.
     auto possible_instants = MarkedVector<Value> { vm.heap() };
 
     // 7. For each value epochNanoseconds in possibleEpochNanoseconds, do
     for (auto& epoch_nanoseconds : possible_epoch_nanoseconds) {
-        // a. Let instant be ! CreateTemporalInstant(epochNanoseconds).
+        // a. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+        if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+
+        // b. Let instant be ! CreateTemporalInstant(epochNanoseconds).
         auto* instant = MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
 
-        // b. Append instant to possibleInstants.
+        // c. Append instant to possibleInstants.
         possible_instants.append(instant);
     }
 

@@ -105,7 +105,7 @@ ErrorOr<void> UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist", Memory::Region::Access::Write));
+    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist"sv, Memory::Region::Access::Write));
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
@@ -139,7 +139,7 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
     // Now the Transfer Descriptor pool
     m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
-    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite));
+    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
 
     // Set up the Isochronous Transfer Descriptor list
     m_iso_td_list.resize(UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
@@ -213,8 +213,10 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     piix4_td_hack->set_max_len(0x7ff); // Null data packet
     piix4_td_hack->set_device_address(0x7f);
     piix4_td_hack->set_packet_id(PacketID::IN);
-    m_dummy_qh->terminate_with_stray_descriptor(piix4_td_hack);
-    m_dummy_qh->terminate_element_link_ptr();
+    m_dummy_qh->attach_transfer_descriptor_chain(piix4_td_hack);
+    // Cyclically link to the full speed control QH to allow for full speed
+    // bandwidth reclamation during frame idle time
+    m_dummy_qh->link_next_queue_head(m_fullspeed_control_qh);
 
     u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
     for (int frame = 0; frame < UHCI_NUMBER_OF_FRAMES; frame++) {
@@ -411,7 +413,7 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     QueueHead* transfer_queue = allocate_queue_head();
     if (!transfer_queue) {
         free_descriptor_chain(data_descriptor_chain);
-        return 0;
+        return ENOMEM;
     }
 
     transfer_queue->attach_transfer_descriptor_chain(setup_td);
@@ -453,7 +455,7 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
     QueueHead* transfer_queue = allocate_queue_head();
     if (!transfer_queue) {
         free_descriptor_chain(data_descriptor_chain);
-        return 0;
+        return ENOMEM;
     }
 
     transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
@@ -509,7 +511,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 ErrorOr<void> UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task")), [&] {
+    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();

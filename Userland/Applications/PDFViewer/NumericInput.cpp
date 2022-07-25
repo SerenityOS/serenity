@@ -9,7 +9,7 @@
 
 NumericInput::NumericInput()
 {
-    set_text("0");
+    set_text("0"sv);
 
     on_change = [&] {
         auto number_opt = text().to_int();

@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
@@ -18,6 +19,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/GML/AST.h>
 #include <LibGUI/Margins.h>
+#include <LibGUI/UIDimensions.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -30,12 +32,12 @@ extern Core::ObjectClassRegistration registration_Widget;
 }
 }
 
-#define REGISTER_WIDGET(namespace_, class_name)                                                                                                   \
-    namespace Core {                                                                                                                              \
-    namespace Registration {                                                                                                                      \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                      \
-        #namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
-    }                                                                                                                                             \
+#define REGISTER_WIDGET(namespace_, class_name)                                                                                                       \
+    namespace Core {                                                                                                                                  \
+    namespace Registration {                                                                                                                          \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                          \
+        #namespace_ "::" #class_name##sv, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
+    }                                                                                                                                                 \
     }
 
 namespace GUI {
@@ -49,6 +51,22 @@ enum class VerticalDirection {
     Up,
     Down
 };
+
+constexpr VerticalDirection operator!(VerticalDirection const& other)
+{
+    if (other == VerticalDirection::Up)
+        return VerticalDirection::Down;
+    return VerticalDirection::Up;
+}
+
+constexpr VerticalDirection key_code_to_vertical_direction(KeyCode const& key)
+{
+    if (key == Key_Up)
+        return VerticalDirection::Up;
+    if (key == Key_Down)
+        return VerticalDirection::Down;
+    VERIFY_NOT_REACHED();
+}
 
 enum class AllowCallback {
     No,
@@ -80,40 +98,73 @@ public:
         return layout;
     }
 
-    Gfx::IntSize min_size() const { return m_min_size; }
-    void set_min_size(Gfx::IntSize const&);
-    void set_min_size(int width, int height) { set_min_size({ width, height }); }
+    UISize min_size() const { return m_min_size; }
+    void set_min_size(UISize const&);
+    void set_min_size(UIDimension width, UIDimension height) { set_min_size({ width, height }); }
 
-    int min_width() const { return m_min_size.width(); }
-    int min_height() const { return m_min_size.height(); }
-    void set_min_width(int width) { set_min_size(width, min_height()); }
-    void set_min_height(int height) { set_min_size(min_width(), height); }
+    UIDimension min_width() const { return m_min_size.width(); }
+    UIDimension min_height() const { return m_min_size.height(); }
+    void set_min_width(UIDimension width) { set_min_size(width, min_height()); }
+    void set_min_height(UIDimension height) { set_min_size(min_width(), height); }
 
-    Gfx::IntSize max_size() const { return m_max_size; }
-    void set_max_size(Gfx::IntSize const&);
-    void set_max_size(int width, int height) { set_max_size({ width, height }); }
+    UISize max_size() const { return m_max_size; }
+    void set_max_size(UISize const&);
+    void set_max_size(UIDimension width, UIDimension height) { set_max_size({ width, height }); }
 
-    int max_width() const { return m_max_size.width(); }
-    int max_height() const { return m_max_size.height(); }
-    void set_max_width(int width) { set_max_size(width, max_height()); }
-    void set_max_height(int height) { set_max_size(max_width(), height); }
+    UIDimension max_width() const { return m_max_size.width(); }
+    UIDimension max_height() const { return m_max_size.height(); }
+    void set_max_width(UIDimension width) { set_max_size(width, max_height()); }
+    void set_max_height(UIDimension height) { set_max_size(max_width(), height); }
 
-    void set_fixed_size(Gfx::IntSize const& size)
+    UISize preferred_size() const { return m_preferred_size; }
+    void set_preferred_size(UISize const&);
+    void set_preferred_size(UIDimension width, UIDimension height) { set_preferred_size({ width, height }); }
+
+    UIDimension preferred_width() const { return m_preferred_size.width(); }
+    UIDimension preferred_height() const { return m_preferred_size.height(); }
+    void set_preferred_width(UIDimension width) { set_preferred_size(width, preferred_height()); }
+    void set_preferred_height(UIDimension height) { set_preferred_size(preferred_width(), height); }
+
+    virtual Optional<UISize> calculated_preferred_size() const;
+    virtual Optional<UISize> calculated_min_size() const;
+
+    UISize effective_preferred_size() const
     {
+        auto effective_preferred_size = preferred_size();
+        if (effective_preferred_size.either_is(SpecialDimension::Shrink))
+            effective_preferred_size.replace_component_if_matching_with(SpecialDimension::Shrink, effective_min_size());
+        if (effective_preferred_size.either_is(SpecialDimension::Fit) && calculated_preferred_size().has_value())
+            effective_preferred_size.replace_component_if_matching_with(SpecialDimension::Fit, calculated_preferred_size().value());
+        return effective_preferred_size;
+    }
+
+    UISize effective_min_size() const
+    {
+        auto effective_min_size = min_size();
+        if (effective_min_size.either_is(SpecialDimension::Shrink) && calculated_min_size().has_value())
+            effective_min_size.replace_component_if_matching_with(SpecialDimension::Shrink, calculated_min_size().value());
+        return effective_min_size;
+    }
+
+    void set_fixed_size(UISize const& size)
+    {
+        VERIFY(size.has_only_int_values());
         set_min_size(size);
         set_max_size(size);
     }
 
-    void set_fixed_size(int width, int height) { set_fixed_size({ width, height }); }
+    void set_fixed_size(UIDimension width, UIDimension height) { set_fixed_size({ width, height }); }
 
-    void set_fixed_width(int width)
+    void set_fixed_width(UIDimension width)
     {
+        VERIFY(width.is_int());
         set_min_width(width);
         set_max_width(width);
     }
 
-    void set_fixed_height(int height)
+    void set_fixed_height(UIDimension height)
     {
+        VERIFY(height.is_int());
         set_min_height(height);
         set_max_height(height);
     }
@@ -300,8 +351,9 @@ public:
     bool load_from_gml(StringView);
     bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
 
+    // FIXME: remove this when all uses of shrink_to_fit are eliminated
     void set_shrink_to_fit(bool);
-    bool is_shrink_to_fit() const { return m_shrink_to_fit; }
+    bool is_shrink_to_fit() const { return preferred_width().is_shrink() || preferred_height().is_shrink(); }
 
     bool has_pending_drop() const;
 
@@ -316,6 +368,7 @@ protected:
     // This is called after children have been painted.
     virtual void second_paint_event(PaintEvent&);
 
+    virtual void layout_relevant_change_occured();
     virtual void custom_layout() { }
     virtual void did_change_font() { }
     virtual void did_layout() { }
@@ -377,8 +430,9 @@ private:
     NonnullRefPtr<Gfx::Font> m_font;
     String m_tooltip;
 
-    Gfx::IntSize m_min_size { -1, -1 };
-    Gfx::IntSize m_max_size { -1, -1 };
+    UISize m_min_size { SpecialDimension::Shrink };
+    UISize m_max_size { SpecialDimension::Grow };
+    UISize m_preferred_size { SpecialDimension::Grow };
     Margins m_grabbable_margins;
 
     bool m_fill_with_background_color { false };
@@ -389,7 +443,6 @@ private:
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
     bool m_accepts_command_palette { true };
-    bool m_shrink_to_fit { false };
     bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;

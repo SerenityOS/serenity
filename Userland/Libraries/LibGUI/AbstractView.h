@@ -156,6 +156,7 @@ protected:
     virtual void add_selection(ModelIndex const&);
     virtual void remove_selection(ModelIndex const&);
     virtual void toggle_selection(ModelIndex const&);
+    virtual void select_range(ModelIndex const&);
     virtual void did_change_hovered_index([[maybe_unused]] ModelIndex const& old_index, [[maybe_unused]] ModelIndex const& new_index) { }
     virtual void did_change_cursor_index([[maybe_unused]] ModelIndex const& old_index, [[maybe_unused]] ModelIndex const& new_index) { }
     virtual void editing_widget_did_change([[maybe_unused]] ModelIndex const& index) { }

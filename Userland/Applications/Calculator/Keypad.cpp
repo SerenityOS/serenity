@@ -121,7 +121,7 @@ String Keypad::to_string() const
 {
     StringBuilder builder;
     if (m_negative)
-        builder.append("-");
+        builder.append('-');
     builder.appendff("{}", m_int_value.value());
 
     // NOTE: This is so the decimal point appears on screen as soon as you type it.

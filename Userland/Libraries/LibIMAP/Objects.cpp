@@ -29,18 +29,18 @@ String FetchCommand::DataItem::Section::serialize() const
     case SectionType::HeaderFields:
     case SectionType::HeaderFieldsNot: {
         if (type == SectionType::HeaderFields)
-            headers_builder.append("HEADER.FIELDS (");
+            headers_builder.append("HEADER.FIELDS ("sv);
         else
-            headers_builder.append("HEADERS.FIELDS.NOT (");
+            headers_builder.append("HEADERS.FIELDS.NOT ("sv);
 
         bool first = true;
         for (auto& field : headers.value()) {
             if (!first)
-                headers_builder.append(" ");
+                headers_builder.append(' ');
             headers_builder.append(field);
             first = false;
         }
-        headers_builder.append(")");
+        headers_builder.append(')');
         return headers_builder.build();
     }
     case SectionType::Text:
@@ -50,12 +50,12 @@ String FetchCommand::DataItem::Section::serialize() const
         bool first = true;
         for (int part : parts.value()) {
             if (!first)
-                sb.append(".");
+                sb.append('.');
             sb.appendff("{}", part);
             first = false;
         }
         if (ends_with_mime) {
-            sb.append(".MIME");
+            sb.append(".MIME"sv);
         }
         return sb.build();
     }
@@ -95,7 +95,7 @@ String FetchCommand::serialize()
     bool first = true;
     for (auto& sequence : sequence_set) {
         if (!first) {
-            sequence_builder.append(",");
+            sequence_builder.append(',');
         }
         sequence_builder.append(sequence.serialize());
         first = false;
@@ -105,7 +105,7 @@ String FetchCommand::serialize()
     first = true;
     for (auto& data_item : data_items) {
         if (!first) {
-            data_items_builder.append(" ");
+            data_items_builder.append(' ');
         }
         data_items_builder.append(data_item.serialize());
         first = false;
@@ -128,7 +128,7 @@ String serialize_astring(StringView string)
     // Try to quote
     auto can_be_quoted = !(string.contains('\n') || string.contains('\r'));
     if (can_be_quoted) {
-        auto escaped_str = string.replace("\\", "\\\\").replace("\"", "\\\"");
+        auto escaped_str = string.replace("\\"sv, "\\\\"sv, ReplaceMode::All).replace("\""sv, "\\\""sv, ReplaceMode::All);
         return String::formatted("\"{}\"", escaped_str);
     }
 
@@ -151,27 +151,27 @@ String SearchKey::serialize() const
         [&](New const&) { return String("NEW"); },
         [&](Not const& x) { return String::formatted("NOT {}", x.operand->serialize()); },
         [&](Old const&) { return String("OLD"); },
-        [&](On const& x) { return String::formatted("ON {}", x.date.to_string("%d-%b-%Y")); },
+        [&](On const& x) { return String::formatted("ON {}", x.date.to_string("%d-%b-%Y"sv)); },
         [&](Or const& x) { return String::formatted("OR {} {}", x.lhs->serialize(), x.rhs->serialize()); },
         [&](Recent const&) { return String("RECENT"); },
         [&](SearchKeys const& x) {
             StringBuilder sb;
-            sb.append("(");
+            sb.append('(');
             bool first = true;
             for (const auto& item : x.keys) {
                 if (!first)
-                    sb.append(", ");
+                    sb.append(", "sv);
                 sb.append(item->serialize());
                 first = false;
             }
             return sb.build();
         },
         [&](Seen const&) { return String("SEEN"); },
-        [&](SentBefore const& x) { return String::formatted("SENTBEFORE {}", x.date.to_string("%d-%b-%Y")); },
-        [&](SentOn const& x) { return String::formatted("SENTON {}", x.date.to_string("%d-%b-%Y")); },
-        [&](SentSince const& x) { return String::formatted("SENTSINCE {}", x.date.to_string("%d-%b-%Y")); },
+        [&](SentBefore const& x) { return String::formatted("SENTBEFORE {}", x.date.to_string("%d-%b-%Y"sv)); },
+        [&](SentOn const& x) { return String::formatted("SENTON {}", x.date.to_string("%d-%b-%Y"sv)); },
+        [&](SentSince const& x) { return String::formatted("SENTSINCE {}", x.date.to_string("%d-%b-%Y"sv)); },
         [&](SequenceSet const& x) { return x.sequence.serialize(); },
-        [&](Since const& x) { return String::formatted("SINCE {}", x.date.to_string("%d-%b-%Y")); },
+        [&](Since const& x) { return String::formatted("SINCE {}", x.date.to_string("%d-%b-%Y"sv)); },
         [&](Smaller const& x) { return String::formatted("SMALLER {}", x.number); },
         [&](Subject const& x) { return String::formatted("SUBJECT {}", serialize_astring(x.subject)); },
         [&](Text const& x) { return String::formatted("TEXT {}", serialize_astring(x.text)); },

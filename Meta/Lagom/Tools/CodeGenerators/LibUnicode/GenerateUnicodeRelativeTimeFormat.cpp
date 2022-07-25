@@ -58,7 +58,7 @@ struct AK::Formatter<RelativeTimeFormat> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, RelativeTimeFormat const& format)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ TimeUnit::{}, Style::{}, RelativeTimeFormat::Plurality::{}, {}, {} }}",
+            "{{ TimeUnit::{}, Style::{}, PluralCategory::{}, {}, {} }}"sv,
             format.time_unit,
             format.style,
             format.plurality,
@@ -203,6 +203,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/PluralRules.h>
 #include <LibUnicode/RelativeTimeFormat.h>
 #include <LibUnicode/UnicodeRelativeTimeFormat.h>
 
@@ -224,7 +225,7 @@ struct RelativeTimeFormatImpl {
 
     TimeUnit time_unit;
     Style style;
-    RelativeTimeFormat::Plurality plurality;
+    PluralCategory plurality;
     @string_index_type@ tense_or_number { 0 };
     @string_index_type@ pattern { 0 };
 };
@@ -241,7 +242,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
 
         bool first = true;
         for (auto index : list) {
-            generator.append(first ? " " : ", ");
+            generator.append(first ? " "sv : ", "sv);
             generator.append(String::number(index));
             first = false;
         }
@@ -249,7 +250,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
         generator.append(" } };");
     };
 
-    generate_mapping(generator, locale_data.locales, s_relative_time_format_index_type, "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}", nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
+    generate_mapping(generator, locale_data.locales, s_relative_time_format_index_type, "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
 
     generator.append(R"~~~(
 Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)

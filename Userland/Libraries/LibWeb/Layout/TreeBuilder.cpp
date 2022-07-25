@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,10 +13,12 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/Progress.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
@@ -60,6 +63,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
 
     if (layout_parent.computed_values().display().is_flex_inside()) {
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
+        return *layout_parent.last_child();
     }
 
     if (!has_in_flow_block_children(layout_parent) || layout_parent.children_are_inline())
@@ -251,6 +255,22 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
         element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
         layout_node->append_child(move(list_item_marker));
+    }
+
+    if (is<HTML::HTMLProgressElement>(dom_node)) {
+        auto& progress = static_cast<HTML::HTMLProgressElement&>(dom_node);
+        if (!progress.using_system_appearance()) {
+            auto bar_style = style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressBar);
+            auto value_style = style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressValue);
+            auto position = progress.position();
+            value_style->set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage(position >= 0 ? round_to<int>(100 * position) : 0)));
+            auto progress_bar = adopt_ref(*new Layout::BlockContainer(document, nullptr, bar_style));
+            auto progress_value = adopt_ref(*new Layout::BlockContainer(document, nullptr, value_style));
+            progress_bar->append_child(*progress_value);
+            layout_node->append_child(*progress_bar);
+            progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressBar, progress_bar);
+            progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressValue, progress_value);
+        }
     }
 }
 

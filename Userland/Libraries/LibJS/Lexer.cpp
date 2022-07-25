@@ -23,7 +23,7 @@ HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
     : m_source(source)
-    , m_current_token(TokenType::Eof, {}, StringView(nullptr), StringView(nullptr), filename, 0, 0, 0)
+    , m_current_token(TokenType::Eof, {}, {}, {}, filename, 0, 0, 0)
     , m_filename(filename)
     , m_line_number(line_number)
     , m_line_column(line_column)
@@ -830,7 +830,7 @@ Token Lexer::next()
     if (m_hit_invalid_unicode.has_value()) {
         value_start = m_hit_invalid_unicode.value() - 1;
         m_current_token = Token(TokenType::Invalid, "Invalid unicode codepoint in source",
-            "", // Since the invalid unicode can occur anywhere in the current token the trivia is not correct
+            ""sv, // Since the invalid unicode can occur anywhere in the current token the trivia is not correct
             m_source.substring_view(value_start + 1, min(4u, m_source.length() - value_start - 2)),
             m_filename,
             m_line_number,

@@ -14,13 +14,13 @@
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(String const& path)
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(StringView path)
 {
     auto fd = TRY(Core::System::open(path, O_RDONLY | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path);
 }
 
-ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] String const& path)
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path)
 {
     TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 

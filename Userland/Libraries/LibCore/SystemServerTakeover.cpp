@@ -23,7 +23,7 @@ static void parse_sockets_from_system_server()
         return;
     }
 
-    for (auto& socket : StringView(sockets).split_view(' ')) {
+    for (auto& socket : StringView { sockets, strlen(sockets) }.split_view(' ')) {
         auto params = socket.split_view(':');
         s_overtaken_sockets.set(params[0].to_string(), strtol(params[1].to_string().characters(), nullptr, 10));
     }
@@ -47,7 +47,7 @@ ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_s
     } else {
         auto it = s_overtaken_sockets.find(socket_path);
         if (it == s_overtaken_sockets.end())
-            return Error::from_string_literal("Non-existent socket requested"sv);
+            return Error::from_string_literal("Non-existent socket requested");
         fd = it->value;
     }
 
@@ -55,7 +55,7 @@ ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_s
     auto stat = TRY(Core::System::fstat(fd));
 
     if (!S_ISSOCK(stat.st_mode))
-        return Error::from_string_literal("The fd we got from SystemServer is not a socket"sv);
+        return Error::from_string_literal("The fd we got from SystemServer is not a socket");
 
     auto socket = TRY(Core::Stream::LocalSocket::adopt_fd(fd));
     // It had to be !CLOEXEC for obvious reasons, but we

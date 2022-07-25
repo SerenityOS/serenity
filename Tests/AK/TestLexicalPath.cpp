@@ -12,13 +12,13 @@
 
 TEST_CASE(relative_path)
 {
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp"), "abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp/"), "abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/"), "tmp/abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/usr"), "/tmp/abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/tmp"sv), "abc.txt"sv);
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/tmp/"sv), "abc.txt"sv);
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/"sv), "tmp/abc.txt"sv);
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt"sv, "/usr"sv), "/tmp/abc.txt"sv);
 
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
-    EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt"sv, "tmp"sv), ""sv);
+    EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt"sv, "/tmp"sv), ""sv);
 }
 
 TEST_CASE(regular_absolute_path)
@@ -29,9 +29,9 @@ TEST_CASE(regular_absolute_path)
     EXPECT_EQ(path.basename(), "foo.txt");
     EXPECT_EQ(path.title(), "foo");
     EXPECT_EQ(path.extension(), "txt");
-    EXPECT(path.has_extension(".txt"));
-    EXPECT(path.has_extension("txt"));
-    EXPECT(!path.has_extension("txxt"));
+    EXPECT(path.has_extension(".txt"sv));
+    EXPECT(path.has_extension("txt"sv));
+    EXPECT(!path.has_extension("txxt"sv));
     EXPECT_EQ(path.parts_view().size(), 3u);
     EXPECT_EQ(path.parts_view()[0], "home");
     EXPECT_EQ(path.parts_view()[1], "anon");
@@ -145,41 +145,41 @@ TEST_CASE(has_extension)
 {
     {
         LexicalPath path("/tmp/simple.png");
-        EXPECT(path.has_extension(".png"));
-        EXPECT(path.has_extension(".pnG"));
-        EXPECT(path.has_extension(".PNG"));
+        EXPECT(path.has_extension(".png"sv));
+        EXPECT(path.has_extension(".pnG"sv));
+        EXPECT(path.has_extension(".PNG"sv));
     }
 
     {
         LexicalPath path("/TMP/SIMPLE.PNG");
-        EXPECT(path.has_extension(".png"));
-        EXPECT(path.has_extension(".pnG"));
-        EXPECT(path.has_extension(".PNG"));
+        EXPECT(path.has_extension(".png"sv));
+        EXPECT(path.has_extension(".pnG"sv));
+        EXPECT(path.has_extension(".PNG"sv));
     }
 
     {
         LexicalPath path(".png");
-        EXPECT(path.has_extension(".png"));
+        EXPECT(path.has_extension(".png"sv));
     }
 
     {
         LexicalPath path("png");
-        EXPECT_EQ(path.has_extension(".png"), false);
+        EXPECT_EQ(path.has_extension(".png"sv), false);
     }
 }
 
 TEST_CASE(join)
 {
-    EXPECT_EQ(LexicalPath::join("anon", "foo.txt").string(), "anon/foo.txt");
-    EXPECT_EQ(LexicalPath::join("/home", "anon/foo.txt").string(), "/home/anon/foo.txt");
-    EXPECT_EQ(LexicalPath::join("/", "foo.txt").string(), "/foo.txt");
-    EXPECT_EQ(LexicalPath::join("/home", "anon", "foo.txt").string(), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::join("anon"sv, "foo.txt"sv).string(), "anon/foo.txt"sv);
+    EXPECT_EQ(LexicalPath::join("/home"sv, "anon/foo.txt"sv).string(), "/home/anon/foo.txt"sv);
+    EXPECT_EQ(LexicalPath::join("/"sv, "foo.txt"sv).string(), "/foo.txt"sv);
+    EXPECT_EQ(LexicalPath::join("/home"sv, "anon"sv, "foo.txt"sv).string(), "/home/anon/foo.txt"sv);
 }
 
 TEST_CASE(append)
 {
     LexicalPath path("/home/anon/");
-    auto new_path = path.append("foo.txt");
+    auto new_path = path.append("foo.txt"sv);
     EXPECT_EQ(new_path.string(), "/home/anon/foo.txt");
 }
 

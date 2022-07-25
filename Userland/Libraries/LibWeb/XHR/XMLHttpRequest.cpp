@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -15,6 +17,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -22,12 +25,15 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/Fetch/AbstractOperations.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/XHR/EventNames.h>
 #include <LibWeb/XHR/ProgressEvent.h>
@@ -114,8 +120,9 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        // FIXME: Implement this once we have 'Blob'.
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "XHR Blob type not implemented" };
+        auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
+        auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
+        m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(global_object)));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
@@ -160,7 +167,7 @@ String XMLHttpRequest::get_text_response() const
         if (mime_type.essence().is_one_of("text/xml"sv, "application/xml"sv))
             return true;
 
-        return mime_type.subtype().ends_with("+xml");
+        return mime_type.subtype().ends_with("+xml"sv);
     };
 
     // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
@@ -170,7 +177,7 @@ String XMLHttpRequest::get_text_response() const
 
     // 4. If charset is null, then set charset to UTF-8.
     if (!charset.has_value())
-        charset = "UTF-8";
+        charset = "UTF-8"sv;
 
     // 5. Return the result of running decode on xhr’s received bytes using fallback encoding charset.
     auto* decoder = TextCodec::decoder_for(charset.value());
@@ -195,8 +202,18 @@ MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
 // https://xhr.spec.whatwg.org/#response-mime-type
 MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
+    // FIXME: Use an actual HeaderList for XHR headers.
+    Fetch::Infrastructure::HeaderList header_list;
+    for (auto const& entry : m_response_headers) {
+        auto header = Fetch::Infrastructure::Header {
+            .name = MUST(ByteBuffer::copy(entry.key.bytes())),
+            .value = MUST(ByteBuffer::copy(entry.value.bytes())),
+        };
+        MUST(header_list.append(move(header)));
+    }
+
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
-    auto mime_type = extract_mime_type(m_response_headers);
+    auto mime_type = header_list.extract_mime_type();
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
@@ -239,196 +256,70 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
     return encoding;
 }
 
-// https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
-// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<Vector<String>> XMLHttpRequest::get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
+// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+// FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
+static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestBodyInit const& body_init)
 {
-    // 1. Let initialValue be the result of getting name from list.
-    auto initial_value_iterator = header_list.find(header_name);
+    // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
+    Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
+    // FIXME: 2. Let action be null.
+    // 3. Let source be null.
+    Fetch::Infrastructure::Body::SourceType source {};
+    // 4. Let length be null.
+    Optional<u64> length {};
+    // 5. Let type be null.
+    Optional<ByteBuffer> type {};
 
-    // 2. If initialValue is null, then return null.
-    if (initial_value_iterator == header_list.end())
-        return {};
+    // 6. Switch on object.
+    // FIXME: Still need to support BufferSource and FormData
+    TRY(body_init.visit(
+        [&](NonnullRefPtr<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+            // FIXME: Set action to this step: read object.
+            // Set source to object.
+            source = blob;
+            // Set length to object’s size.
+            length = blob->size();
+            // If object’s type attribute is not the empty byte sequence, set type to its value.
+            if (!blob->type().is_empty())
+                type = blob->type().to_byte_buffer();
+            return {};
+        },
+        [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+            // Set source to a copy of the bytes held by object.
+            source = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+            return {};
+        },
+        [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
+            // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
+            source = url_search_params->to_string().to_byte_buffer();
+            // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
+            type = TRY(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
+            return {};
+        },
+        [&](String const& scalar_value_string) -> ErrorOr<void> {
+            // NOTE: AK::String is always UTF-8.
+            // Set source to the UTF-8 encoding of object.
+            source = scalar_value_string.to_byte_buffer();
+            // Set type to `text/plain;charset=UTF-8`.
+            type = TRY(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
+            return {};
+        }));
 
-    auto& initial_value = initial_value_iterator->value;
+    // FIXME: 7. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
+    // FIXME: 8. If action is non-null, then run these steps in in parallel:
 
-    // FIXME: 3. Let input be the result of isomorphic decoding initialValue.
-    // NOTE: We don't store raw byte sequences in the header list as per the spec, so we can't do this step.
-    //       The spec no longer uses initialValue after this step. For our purposes, treat any reference to `input` in the spec comments to initial_value.
-
-    // 4. Let position be a position variable for input, initially pointing at the start of input.
-    GenericLexer lexer(initial_value);
-
-    // 5. Let values be a list of strings, initially empty.
-    Vector<String> values;
-
-    // 6. Let value be the empty string.
-    StringBuilder value;
-
-    // 7. While position is not past the end of input:
-    while (!lexer.is_eof()) {
-        // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to value.
-        auto value_part = lexer.consume_until([](char ch) {
-            return ch == '"' || ch == ',';
-        });
-        value.append(value_part);
-
-        // 2. If position is not past the end of input, then:
-        if (!lexer.is_eof()) {
-            // 1. If the code point at position within input is U+0022 ("), then:
-            if (lexer.peek() == '"') {
-                // 1. Append the result of collecting an HTTP quoted string from input, given position, to value.
-                auto quoted_value_part = Fetch::collect_an_http_quoted_string(lexer, Fetch::HttpQuotedStringExtractValue::No);
-                value.append(quoted_value_part);
-
-                // 2. If position is not past the end of input, then continue.
-                if (!lexer.is_eof())
-                    continue;
-            }
-
-            // 2. Otherwise:
-            else {
-                // 1. Assert: the code point at position within input is U+002C (,).
-                VERIFY(lexer.peek() == ',');
-
-                // 2. Advance position by 1.
-                lexer.ignore(1);
-            }
-        }
-
-        // 3. Remove all HTTP tab or space from the start and end of value.
-        // https://fetch.spec.whatwg.org/#http-tab-or-space
-        // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-        auto trimmed_value = value.to_string().trim("\t ", TrimMode::Both);
-
-        // 4. Append value to values.
-        values.append(move(trimmed_value));
-
-        // 5. Set value to the empty string.
-        value.clear();
-    }
-
-    // 8. Return values.
-    return values;
-}
-
-// https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
-// FIXME: This is not only used by XHR, it is also used for multiple things in Fetch.
-Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const
-{
-    // 1. Let charset be null.
-    Optional<String> charset;
-
-    // 2. Let essence be null.
-    Optional<String> essence;
-
-    // 3. Let mimeType be null.
-    Optional<MimeSniff::MimeType> mime_type;
-
-    // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
-    auto potentially_values = get_decode_and_split("Content-Type"sv, header_list);
-
-    // 5. If values is null, then return failure.
-    if (!potentially_values.has_value())
-        return {};
-
-    auto values = potentially_values.release_value();
-
-    // 6. For each value of values:
-    for (auto& value : values) {
-        // 1. Let temporaryMimeType be the result of parsing value.
-        auto temporary_mime_type = MimeSniff::MimeType::from_string(value);
-
-        // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
-        if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
-            continue;
-
-        // 3. Set mimeType to temporaryMimeType.
-        mime_type = temporary_mime_type;
-
-        // 4. If mimeType’s essence is not essence, then:
-        if (mime_type->essence() != essence) {
-            // 1. Set charset to null.
-            charset = {};
-
-            // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
-            auto charset_it = mime_type->parameters().find("charset"sv);
-            if (charset_it != mime_type->parameters().end())
-                charset = charset_it->value;
-
-            // 3. Set essence to mimeType’s essence.
-            essence = mime_type->essence();
-        } else {
-            // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
-            if (!mime_type->parameters().contains("charset"sv) && charset.has_value())
-                mime_type->set_parameter("charset"sv, charset.value());
-        }
-    }
-
-    // 7. If mimeType is null, then return failure.
-    // 8. Return mimeType.
-    return mime_type;
-}
-
-// https://fetch.spec.whatwg.org/#forbidden-header-name
-static bool is_forbidden_header_name(String const& header_name)
-{
-    if (header_name.starts_with("Proxy-", CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-", CaseSensitivity::CaseInsensitive))
-        return true;
-
-    auto lowercase_header_name = header_name.to_lowercase();
-    return lowercase_header_name.is_one_of("accept-charset", "accept-encoding", "access-control-request-headers", "access-control-request-method", "connection", "content-length", "cookie", "cookie2", "date", "dnt", "expect", "host", "keep-alive", "origin", "referer", "te", "trailer", "transfer-encoding", "upgrade", "via");
-}
-
-// https://fetch.spec.whatwg.org/#forbidden-method
-static bool is_forbidden_method(String const& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    return lowercase_method.is_one_of("connect", "trace", "track");
-}
-
-// https://fetch.spec.whatwg.org/#concept-method
-static bool is_method(String const& method)
-{
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
-    return regex.has_match(method);
-}
-
-// https://fetch.spec.whatwg.org/#header-name
-static bool is_header_name(String const& header_name)
-{
-    Regex<ECMA262Parser> regex { R"~~~(^[A-Za-z0-9!#$%&'*+-.^_`|~]+$)~~~" };
-    return regex.has_match(header_name);
-}
-
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-static String normalize_method(String const& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    if (lowercase_method.is_one_of("delete", "get", "head", "options", "post", "put"))
-        return method.to_uppercase();
-    return method;
-}
-
-// https://fetch.spec.whatwg.org/#concept-header-value-normalize
-static String normalize_header_value(String const& header_value)
-{
-    return header_value.trim(StringView { http_whitespace_bytes });
-}
-
-// https://fetch.spec.whatwg.org/#header-value
-static bool is_header_value(String const& header_value)
-{
-    for (auto const& character : header_value.view()) {
-        if (character == '\0' || character == '\n' || character == '\r')
-            return false;
-    }
-    return true;
+    // 9. Let body be a body whose stream is stream, source is source, and length is length.
+    auto body = Fetch::Infrastructure::Body { move(stream), move(source), move(length) };
+    // 10. Return (body, type).
+    return Fetch::Infrastructure::BodyWithType { .body = move(body), .type = move(type) };
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, String const& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_string, String const& value_string)
 {
+    auto name = name_string.to_byte_buffer();
+    auto value = value_string.to_byte_buffer();
+
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -438,42 +329,45 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, St
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // 3. Normalize value.
-    auto normalized_value = normalize_header_value(value);
+    value = MUST(Fetch::Infrastructure::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
-    if (!is_header_name(name))
+    if (!Fetch::Infrastructure::is_header_name(name))
         return DOM::SyntaxError::create("Header name contains invalid characters.");
-    if (!is_header_value(value))
+    if (!Fetch::Infrastructure::is_header_value(value))
         return DOM::SyntaxError::create("Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
-    if (is_forbidden_header_name(name))
+    if (Fetch::Infrastructure::is_forbidden_header_name(name))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
     // FIXME: The header name look-up should be case-insensitive.
-    if (m_request_headers.contains(name)) {
+    // FIXME: Headers should be stored as raw byte sequences, not Strings.
+    if (m_request_headers.contains(StringView { name })) {
         // 1. If list contains name, then set the value of the first such header to its value,
         //    followed by 0x2C 0x20, followed by value.
-        auto maybe_header_value = m_request_headers.get(name);
-        m_request_headers.set(name, String::formatted("{}, {}", maybe_header_value.release_value(), normalized_value));
+        auto maybe_header_value = m_request_headers.get(StringView { name });
+        m_request_headers.set(StringView { name }, String::formatted("{}, {}", maybe_header_value.release_value(), StringView { name }));
     } else {
         // 2. Otherwise, append (name, value) to list.
-        m_request_headers.set(name, normalized_value);
+        m_request_headers.set(StringView { name }, StringView { value });
     }
 
     return {};
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
-DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String const& url)
 {
     // 8. If the async argument is omitted, set async to true, and set username and password to null.
-    return open(method, url, true, {}, {});
+    return open(method_string, url, true, {}, {});
 }
 
-DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url, bool async, String const& username, String const& password)
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String const& url, bool async, String const& username, String const& password)
 {
+    auto method = method_string.to_byte_buffer();
+
     // 1. Let settingsObject be this’s relevant settings object.
     auto& settings_object = m_window->associated_document().relevant_settings_object();
 
@@ -482,18 +376,18 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
         return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
-    if (!is_method(method))
+    if (!Fetch::Infrastructure::is_method(method))
         return DOM::SyntaxError::create("An invalid or illegal string was specified.");
 
     // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
-    if (is_forbidden_method(method))
+    if (Fetch::Infrastructure::is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     // 5. Normalize method.
-    auto normalized_method = normalize_method(method);
+    method = MUST(Fetch::Infrastructure::normalize_method(method));
 
     // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
-    auto parsed_url = settings_object.responsible_document()->parse_url(url);
+    auto parsed_url = settings_object.api_base_url().complete_url(url);
 
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
@@ -523,7 +417,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
     // Unset this’s upload listener flag.
     m_upload_listener = false;
     // Set this’s request method to method.
-    m_method = normalized_method;
+    m_method = move(method);
     // Set this’s request URL to parsedURL.
     m_url = parsed_url;
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
@@ -547,7 +441,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
+DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> body)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
@@ -559,11 +453,13 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
+    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
-    Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port_or_default());
+    auto request_url_origin = HTML::Origin(request_url.protocol(), request_url.host(), request_url.port_or_default());
 
     bool should_enforce_same_origin_policy = true;
     if (auto* page = m_window->page())
@@ -578,8 +474,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
-    if (!body.is_null())
-        request.set_body(body.to_byte_buffer());
+    if (body_with_type.has_value()) {
+        body_with_type->body.source().visit(
+            [&](ByteBuffer const& buffer) { request.set_body(buffer); },
+            [&](NonnullRefPtr<FileAPI::Blob> const& blob) { request.set_body(blob->m_byte_buffer); },
+            [](auto&) {});
+        if (body_with_type->type.has_value())
+            request.set_header("Content-Type", String { body_with_type->type->span() });
+    }
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
 
@@ -602,6 +504,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
 
         // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
+        // FIXME: In the Fetch spec, which XHR gets its definition of `status` from, the status code is 0-999.
+        //        We could clamp, wrap around (current browser behavior!), or error out.
+        //        See: https://github.com/whatwg/fetch/issues/1142
         ResourceLoader::the().load(
             request,
             [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
@@ -637,6 +542,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
                 xhr.set_ready_state(ReadyState::Done);
                 xhr.set_status(status_code.value_or(0));
                 xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            },
+            m_timeout,
+            [weak_this = make_weak_ptr()] {
+                auto strong_this = weak_this.strong_ref();
+                if (!strong_this)
+                    return;
+                auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
+                xhr.dispatch_event(DOM::Event::create(EventNames::timeout));
             });
     } else {
         TODO();
@@ -670,9 +583,9 @@ String XMLHttpRequest::get_all_response_headers() const
 
     for (auto& key : keys) {
         builder.append(key);
-        builder.append(": ");
+        builder.append(": "sv);
         builder.append(m_response_headers.get(key).value());
-        builder.append("\r\n");
+        builder.append("\r\n"sv);
     }
     return builder.to_string();
 }
@@ -693,4 +606,23 @@ DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 
     return {};
 }
+
+// https://xhr.spec.whatwg.org/#ref-for-dom-xmlhttprequest-timeout%E2%91%A2
+DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
+{
+    // 1. If the current global object is a Window object and this’s synchronous flag is set,
+    //    then throw an "InvalidAccessError" DOMException.
+    auto& global_object = wrapper()->global_object();
+    if (global_object.class_name() == "WindowObject" && m_synchronous)
+        return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
+
+    // 2. Set this’s timeout to the given value.
+    m_timeout = timeout;
+
+    return {};
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-timeout
+u32 XMLHttpRequest::timeout() const { return m_timeout; }
+
 }

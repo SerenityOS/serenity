@@ -8,6 +8,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
+#include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
@@ -23,6 +24,10 @@ template<FloatingPoint T>
 constexpr T Pi = 3.141592653589793238462643383279502884L;
 template<FloatingPoint T>
 constexpr T E = 2.718281828459045235360287471352662498L;
+template<FloatingPoint T>
+constexpr T Sqrt2 = 1.414213562373095048801688724209698079L;
+template<FloatingPoint T>
+constexpr T Sqrt1_2 = 0.707106781186547524400844362104849039L;
 
 namespace Details {
 template<size_t>
@@ -659,6 +664,19 @@ constexpr T pow(T x, T y)
     }
 
     return exp2<T>(y * log2<T>(x));
+}
+
+template<FloatingPoint T>
+constexpr T ceil(T num)
+{
+    if (is_constant_evaluated()) {
+        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+            return num;
+        return (static_cast<double>(static_cast<i64>(num)) == num)
+            ? static_cast<i64>(num)
+            : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
+    }
+    return __builtin_ceil(num);
 }
 
 #undef CONSTEXPR_STATE

@@ -91,7 +91,7 @@ struct Configuration {
         enable_bracketed_paste = flags & Flags::BracketedPaste;
     }
 
-    static Configuration from_config(StringView libname = "line");
+    static Configuration from_config(StringView libname = "line"sv);
 
     RefreshBehavior refresh_behavior { RefreshBehavior::Lazy };
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
@@ -432,6 +432,7 @@ private:
     size_t m_num_lines { 1 };
     size_t m_previous_num_columns { 0 };
     size_t m_extra_forward_lines { 0 };
+    size_t m_shown_lines { 0 };
     StringMetrics m_cached_prompt_metrics;
     StringMetrics m_old_prompt_metrics;
     StringMetrics m_cached_buffer_metrics;

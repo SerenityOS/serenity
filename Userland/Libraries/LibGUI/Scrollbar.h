@@ -40,6 +40,9 @@ public:
     virtual void increase_slider_by_steps(int steps) override { set_target_value(m_target_value + step() * steps); }
     virtual void decrease_slider_by_steps(int steps) override { set_target_value(m_target_value - step() * steps); }
 
+    virtual Optional<UISize> calculated_min_size() const override;
+    virtual Optional<UISize> calculated_preferred_size() const override;
+
     enum Component {
         None,
         DecrementButton,

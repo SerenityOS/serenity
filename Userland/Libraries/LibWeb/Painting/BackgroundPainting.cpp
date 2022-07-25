@@ -1,64 +1,111 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
+#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
+#include <LibWeb/Painting/GradientPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
     auto& painter = context.painter();
 
-    auto get_box = [&](CSS::BackgroundBox box) {
-        auto box_rect = border_rect;
-        switch (box) {
+    struct BackgroundBox {
+        Gfx::FloatRect rect;
+        BorderRadiiData radii;
+
+        inline void shrink(float top, float right, float bottom, float left)
+        {
+            rect.shrink(top, right, bottom, left);
+            radii.shrink(top, right, bottom, left);
+        }
+    };
+
+    BackgroundBox border_box {
+        border_rect,
+        border_radii
+    };
+
+    auto get_box = [&](CSS::BackgroundBox box_clip) {
+        auto box = border_box;
+        switch (box_clip) {
         case CSS::BackgroundBox::ContentBox: {
             auto& padding = layout_node.box_model().padding;
-            box_rect.shrink(padding.top, padding.right, padding.bottom, padding.left);
+            box.shrink(padding.top, padding.right, padding.bottom, padding.left);
             [[fallthrough]];
         }
         case CSS::BackgroundBox::PaddingBox: {
             auto& border = layout_node.box_model().border;
-            box_rect.shrink(border.top, border.right, border.bottom, border.left);
+            box.shrink(border.top, border.right, border.bottom, border.left);
             [[fallthrough]];
         }
         case CSS::BackgroundBox::BorderBox:
         default:
-            return box_rect;
+            return box;
         }
     };
 
-    auto color_rect = border_rect;
+    auto color_box = border_box;
     if (background_layers && !background_layers->is_empty())
-        color_rect = get_box(background_layers->last().clip);
-    // FIXME: Support elliptical corners
-    painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(), background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
+        color_box = get_box(background_layers->last().clip);
 
-    if (!background_layers)
+    auto layer_is_paintable = [&](auto& layer) {
+        return (layer.background_image
+            && ((layer.background_image->is_image() && layer.background_image->as_image().bitmap())
+                || layer.background_image->is_linear_gradient()));
+    };
+
+    bool has_paintable_layers = false;
+    if (background_layers) {
+        for (auto& layer : *background_layers) {
+            if (layer_is_paintable(layer)) {
+                has_paintable_layers = true;
+                break;
+            }
+        }
+    }
+
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    aa_painter.fill_rect_with_rounded_corners(color_box.rect.to_rounded<int>(),
+        background_color, color_box.radii.top_left.as_corner(), color_box.radii.top_right.as_corner(), color_box.radii.bottom_right.as_corner(), color_box.radii.bottom_left.as_corner());
+
+    if (!has_paintable_layers)
         return;
 
     // Note: Background layers are ordered front-to-back, so we paint them in reverse
-    for (int layer_index = background_layers->size() - 1; layer_index >= 0; layer_index--) {
-        auto& layer = background_layers->at(layer_index);
+    for (auto& layer : background_layers->in_reverse()) {
         // TODO: Gradients!
-        if (!layer.image || !layer.image->bitmap())
+        if (!layer_is_paintable(layer))
             continue;
-        auto& image = *layer.image->bitmap();
+        Gfx::PainterStateSaver state { painter };
 
         // Clip
-        auto clip_rect = get_box(layer.clip);
-        painter.save();
-        painter.add_clip_rect(clip_rect.to_rounded<int>());
+        auto clip_box = get_box(layer.clip);
+        auto clip_rect = clip_box.rect.to_rounded<int>();
+        painter.add_clip_rect(clip_rect);
+        ScopedCornerRadiusClip corner_clip { painter, clip_rect, clip_box.radii };
 
+        if (layer.background_image->is_linear_gradient()) {
+            // FIXME: Support sizing and positioning rules with gradients.
+            auto& linear_gradient = layer.background_image->as_linear_gradient();
+            auto data = resolve_linear_gradient_data(layout_node, border_box.rect, linear_gradient);
+            paint_linear_gradient(context, border_box.rect.to_rounded<int>(), data);
+            continue;
+        }
+
+        auto& image = *layer.background_image->as_image().bitmap();
         Gfx::FloatRect background_positioning_area;
 
         // Attachment and Origin
@@ -68,7 +115,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         case CSS::BackgroundAttachment::Local:
         case CSS::BackgroundAttachment::Scroll:
-            background_positioning_area = get_box(layer.origin);
+            background_positioning_area = get_box(layer.origin).rect;
             break;
         }
 
@@ -122,10 +169,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // where round() is a function that returns the nearest natural number
             // (integer greater than zero).
             if (layer.repeat_x == CSS::Repeat::Round) {
-                image_rect.set_width(background_positioning_area.width() / background_positioning_area.width() / image_rect.width());
+                image_rect.set_width(background_positioning_area.width() / roundf(background_positioning_area.width() / image_rect.width()));
             }
             if (layer.repeat_y == CSS::Repeat::Round) {
-                image_rect.set_height(background_positioning_area.height() / background_positioning_area.height() / image_rect.height());
+                image_rect.set_height(background_positioning_area.height() / roundf(background_positioning_area.height() / image_rect.height()));
             }
 
             // If background-repeat is round for one dimension only and if background-size is auto
@@ -227,16 +274,20 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             image_rect.set_y(image_rect.y() - y_delta);
         }
 
-        // FIXME: Handle rounded corners
         float initial_image_x = image_rect.x();
         float image_y = image_rect.y();
+        Optional<Gfx::IntRect> last_int_image_rect;
+
         while (image_y < clip_rect.bottom()) {
             image_rect.set_y(image_y);
 
             float image_x = initial_image_x;
             while (image_x < clip_rect.right()) {
                 image_rect.set_x(image_x);
-                painter.draw_scaled_bitmap(image_rect.to_rounded<int>(), image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                auto int_image_rect = image_rect.to_rounded<int>();
+                if (int_image_rect != last_int_image_rect)
+                    painter.draw_scaled_bitmap(int_image_rect, image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                last_int_image_rect = int_image_rect;
                 if (!repeat_x)
                     break;
                 image_x += x_step;
@@ -246,8 +297,6 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 break;
             image_y += y_step;
         }
-
-        painter.restore();
     }
 }
 

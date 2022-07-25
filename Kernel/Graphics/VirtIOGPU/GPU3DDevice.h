@@ -106,7 +106,7 @@ private:
         {
             auto region_result = TRY(MM.allocate_kernel_region(
                 NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
-                "VIRGL3D userspace upload buffer",
+                "VIRGL3D userspace upload buffer"sv,
                 Memory::Region::Access::ReadWrite,
                 AllocationStrategy::AllocateNow));
             return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
@@ -125,7 +125,7 @@ private:
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return ENOTSUP; }
-    virtual StringView class_name() const override { return "virgl3d"; }
+    virtual StringView class_name() const override { return "virgl3d"sv; }
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual void detach(OpenFileDescription&) override;

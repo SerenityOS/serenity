@@ -29,6 +29,10 @@ namespace AudioServer {
 // Headroom, i.e. fixed attenuation for all audio streams.
 // This is to prevent clipping when two streams with low headroom (e.g. normalized & compressed) are playing.
 constexpr double SAMPLE_HEADROOM = 0.95;
+// The size of the buffer in samples that the hardware receives through write() calls to the audio device.
+constexpr size_t HARDWARE_BUFFER_SIZE = 512;
+// The hardware buffer size in bytes; there's two channels of 16-bit samples.
+constexpr size_t HARDWARE_BUFFER_SIZE_BYTES = HARDWARE_BUFFER_SIZE * 2 * sizeof(i16);
 
 class ConnectionFromClient;
 
@@ -129,7 +133,7 @@ private:
     NonnullRefPtr<Core::ConfigFile> m_config;
     RefPtr<Core::Timer> m_config_write_timer;
 
-    static u8 m_zero_filled_buffer[4096];
+    Array<u8, HARDWARE_BUFFER_SIZE_BYTES> m_zero_filled_buffer;
 
     void mix();
 };

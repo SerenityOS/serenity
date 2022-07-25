@@ -21,6 +21,6 @@ describe("errors", () => {
         const calendar = new Temporal.Calendar("iso8601");
         expect(() => {
             calendar.era({});
-        }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
+        }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
     });
 });

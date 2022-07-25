@@ -34,17 +34,17 @@ String CSSSupportsRule::serialized() const
 
     StringBuilder builder;
 
-    builder.append("@supports ");
+    builder.append("@supports "sv);
     builder.append(condition_text());
-    builder.append(" {\n");
+    builder.append(" {\n"sv);
     for (size_t i = 0; i < css_rules().length(); i++) {
         auto rule = css_rules().item(i);
         if (i != 0)
-            builder.append("\n");
-        builder.append("  ");
+            builder.append("\n"sv);
+        builder.append("  "sv);
         builder.append(rule->css_text());
     }
-    builder.append("\n}");
+    builder.append("\n}"sv);
 
     return builder.to_string();
 }

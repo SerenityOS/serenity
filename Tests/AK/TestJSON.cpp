@@ -40,15 +40,15 @@ TEST_CASE(load_form)
 
     EXPECT(form_json.is_object());
 
-    auto name = form_json.as_object().get("name").to_string();
+    auto name = form_json.as_object().get("name"sv).to_string();
 
     EXPECT_EQ(name, "Form1");
 
-    auto widgets = form_json.as_object().get("widgets").as_array();
+    auto widgets = form_json.as_object().get("widgets"sv).as_array();
 
     widgets.for_each([&](JsonValue const& widget_value) {
         auto& widget_object = widget_value.as_object();
-        auto widget_class = widget_object.get("class").as_string();
+        auto widget_class = widget_object.get("class"sv).as_string();
         widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
         });
     });
@@ -56,7 +56,7 @@ TEST_CASE(load_form)
 
 TEST_CASE(json_empty_string)
 {
-    auto json = JsonValue::from_string("\"\"").value();
+    auto json = JsonValue::from_string("\"\""sv).value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().is_empty(), true);
@@ -64,7 +64,7 @@ TEST_CASE(json_empty_string)
 
 TEST_CASE(json_string)
 {
-    auto json = JsonValue::from_string("\"A\"").value();
+    auto json = JsonValue::from_string("\"A\""sv).value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 1 });
@@ -73,7 +73,7 @@ TEST_CASE(json_string)
 
 TEST_CASE(json_utf8_character)
 {
-    auto json = JsonValue::from_string("\"\\u0041\"").value();
+    auto json = JsonValue::from_string("\"\\u0041\""sv).value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
     EXPECT_EQ(json.as_string().length(), size_t { 1 });
@@ -125,12 +125,12 @@ TEST_CASE(json_u64_roundtrip)
 
 TEST_CASE(json_parse_empty_string)
 {
-    auto value = JsonValue::from_string("");
-    EXPECT_EQ(value.value().is_null(), true);
+    auto value = JsonValue::from_string(""sv);
+    EXPECT_EQ(value.is_error(), true);
 }
 
 TEST_CASE(json_parse_long_decimals)
 {
-    auto value = JsonValue::from_string("1644452550.6489999294281");
+    auto value = JsonValue::from_string("1644452550.6489999294281"sv);
     EXPECT_EQ(value.value().as_double(), 1644452550.6489999294281);
 }

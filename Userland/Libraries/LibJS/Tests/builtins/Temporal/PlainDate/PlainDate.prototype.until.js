@@ -226,7 +226,7 @@ describe("errors", () => {
                 };
                 const pluralSmallestPluralDisallowedOptions = {
                     smallestUnit: pluralSmallestUnit,
-                    largestUnit: disallowedUnit,
+                    largestUnit: pluralDisallowedUnit,
                 };
 
                 expect(() => {
