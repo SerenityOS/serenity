@@ -32,7 +32,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         auto canvas_rect = absolute_rect().to_rounded<int>();
-        ScopedCornerRadiusClip corner_clip { context.painter(), canvas_rect, normalized_border_radii_data() };
+        ScopedCornerRadiusClip corner_clip { context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!
         if (!context.viewport_rect().intersects(canvas_rect))

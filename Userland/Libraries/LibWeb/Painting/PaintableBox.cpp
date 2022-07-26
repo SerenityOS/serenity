@@ -234,13 +234,16 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     Painting::paint_box_shadow(context, absolute_border_box_rect().to_rounded<int>(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
-BorderRadiiData PaintableBox::normalized_border_radii_data() const
+BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
 {
-    return Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
+    auto border_radius_data = Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
         computed_values().border_bottom_left_radius());
+    if (shrink == ShrinkRadiiForBorders::Yes)
+        border_radius_data.shrink(computed_values().border_top().width, computed_values().border_right().width, computed_values().border_bottom().width, computed_values().border_left().width);
+    return border_radius_data;
 }
 
 void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
@@ -265,9 +268,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
         clip_overflow();
     }
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
-        auto border_radii_data = normalized_border_radii_data();
-        auto const& border = box_model().border;
-        border_radii_data.shrink(border.top, border.right, border.bottom, border.left);
+        auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
             auto corner_clipper = BorderRadiusCornerClipper::create(clip_rect, border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
@@ -464,7 +465,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         auto scroll_offset = static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset();
         context.painter().translate(-scroll_offset.to_type<int>());
 
-        auto border_radii = normalized_border_radii_data();
+        auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii.has_any_radius()) {
             auto clipper = BorderRadiusCornerClipper::create(clip_box, border_radii);
             if (!clipper.is_error()) {

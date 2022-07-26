@@ -123,7 +123,12 @@ protected:
 
     virtual Gfx::FloatRect compute_absolute_rect() const;
 
-    Painting::BorderRadiiData normalized_border_radii_data() const;
+    enum class ShrinkRadiiForBorders {
+        Yes,
+        No
+    };
+
+    Painting::BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
 private:
     Optional<OverflowData> m_overflow_data;
