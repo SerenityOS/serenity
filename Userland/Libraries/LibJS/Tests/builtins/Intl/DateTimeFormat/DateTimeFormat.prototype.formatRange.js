@@ -36,12 +36,6 @@ describe("errors", () => {
             }).toThrowWithMessage(RangeError, "Time value must be between -8.64E15 and 8.64E15");
         });
     });
-
-    test("called with values in bad order", () => {
-        expect(() => {
-            Intl.DateTimeFormat().formatRange(new Date(2021), new Date(1989));
-        }).toThrowWithMessage(RangeError, "Start time 2021 is after end time 1989");
-    });
 });
 
 const d0 = Date.UTC(1989, 0, 23, 7, 8, 9, 45);
@@ -156,6 +150,14 @@ describe("dateStyle", () => {
             const ja = new Intl.DateTimeFormat("ja", { dateStyle: d.date, timeZone: "UTC" });
             expect(ja.formatRange(d0, d1)).toBe(d.ja);
         });
+    });
+
+    test("dates in reverse order", () => {
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" });
+        expect(en.formatRange(d1, d0)).toBe("Tuesday, December 7, 2021 – Monday, January 23, 1989");
+
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "full", timeZone: "UTC" });
+        expect(ja.formatRange(d1, d0)).toBe("2021年12月7日火曜日～1989年1月23日月曜日");
     });
 });
 
