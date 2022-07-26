@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>NSPrincipalClass</key>
+        <string>NSApplication</string>
+        <key>CFBundleIconFile</key>
+        <string></string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+        <key>CFBundleGetInfoString</key>
+        <string>Ladybird</string>
+        <key>CFBundleSignature</key>
+        <string></string>
+        <key>CFBundleExecutable</key>
+        <string>Ladybird</string>
+        <key>CFBundleIdentifier</key>
+        <string>com.serenity.Ladybird</string>
+        <key>NSPrincipalClass</key>
+        <string>NSApplication</string>
+        <key>NSHighResolutionCapable</key>
+        <string>True</string>
+    </dict>
+</plist>
