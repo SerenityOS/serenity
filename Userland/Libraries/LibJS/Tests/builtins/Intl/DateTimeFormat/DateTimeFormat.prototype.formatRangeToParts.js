@@ -36,12 +36,6 @@ describe("errors", () => {
             }).toThrowWithMessage(RangeError, "Time value must be between -8.64E15 and 8.64E15");
         });
     });
-
-    test("called with values in bad order", () => {
-        expect(() => {
-            Intl.DateTimeFormat().formatRangeToParts(new Date(2021), new Date(1989));
-        }).toThrowWithMessage(RangeError, "Start time 2021 is after end time 1989");
-    });
 });
 
 const d0 = Date.UTC(1989, 0, 23, 7, 8, 9, 45);
@@ -341,6 +335,46 @@ describe("dateStyle", () => {
             { type: "month", value: "12", source: "endRange" },
             { type: "literal", value: "/", source: "endRange" },
             { type: "day", value: "07", source: "endRange" },
+        ]);
+    });
+
+    test("dates in reverse order", () => {
+        const en = new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" });
+        expect(en.formatRangeToParts(d1, d0)).toEqual([
+            { type: "weekday", value: "Tuesday", source: "startRange" },
+            { type: "literal", value: ", ", source: "startRange" },
+            { type: "month", value: "December", source: "startRange" },
+            { type: "literal", value: " ", source: "startRange" },
+            { type: "day", value: "7", source: "startRange" },
+            { type: "literal", value: ", ", source: "startRange" },
+            { type: "year", value: "2021", source: "startRange" },
+            { type: "literal", value: " – ", source: "shared" },
+            { type: "weekday", value: "Monday", source: "endRange" },
+            { type: "literal", value: ", ", source: "endRange" },
+            { type: "month", value: "January", source: "endRange" },
+            { type: "literal", value: " ", source: "endRange" },
+            { type: "day", value: "23", source: "endRange" },
+            { type: "literal", value: ", ", source: "endRange" },
+            { type: "year", value: "1989", source: "endRange" },
+        ]);
+
+        const ja = new Intl.DateTimeFormat("ja", { dateStyle: "full", timeZone: "UTC" });
+        expect(ja.formatRangeToParts(d1, d0)).toEqual([
+            { type: "year", value: "2021", source: "startRange" },
+            { type: "literal", value: "年", source: "startRange" },
+            { type: "month", value: "12", source: "startRange" },
+            { type: "literal", value: "月", source: "startRange" },
+            { type: "day", value: "7", source: "startRange" },
+            { type: "literal", value: "日", source: "startRange" },
+            { type: "weekday", value: "火曜日", source: "startRange" },
+            { type: "literal", value: "～", source: "shared" },
+            { type: "year", value: "1989", source: "endRange" },
+            { type: "literal", value: "年", source: "endRange" },
+            { type: "month", value: "1", source: "endRange" },
+            { type: "literal", value: "月", source: "endRange" },
+            { type: "day", value: "23", source: "endRange" },
+            { type: "literal", value: "日", source: "endRange" },
+            { type: "weekday", value: "月曜日", source: "endRange" },
         ]);
     });
 });

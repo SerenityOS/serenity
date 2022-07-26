@@ -934,29 +934,25 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     if (isnan(end))
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
 
-    // 5. If x is greater than y, throw a RangeError exception.
-    if (start > end)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlStartTimeAfterEndTime, start, end);
-
-    // 6. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    // 5. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
     auto start_local_time = TRY(to_local_time(global_object, start, date_time_format.calendar(), date_time_format.time_zone()));
 
-    // 7. Let tm2 be ToLocalTime(y, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    // 6. Let tm2 be ToLocalTime(y, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
     auto end_local_time = TRY(to_local_time(global_object, end, date_time_format.calendar(), date_time_format.time_zone()));
 
-    // 8. Let rangePatterns be dateTimeFormat.[[RangePatterns]].
+    // 7. Let rangePatterns be dateTimeFormat.[[RangePatterns]].
     auto range_patterns = date_time_format.range_patterns();
 
-    // 9. Let rangePattern be undefined.
+    // 8. Let rangePattern be undefined.
     Optional<Unicode::CalendarRangePattern> range_pattern;
 
-    // 10. Let dateFieldsPracticallyEqual be true.
+    // 9. Let dateFieldsPracticallyEqual be true.
     bool date_fields_practically_equal = true;
 
-    // 11. Let patternContainsLargerDateField be false.
+    // 10. Let patternContainsLargerDateField be false.
     bool pattern_contains_larger_date_field = false;
 
-    // 12. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 4 in order, except the header row:
+    // 11. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 4 in order, except the header row:
     for_each_range_pattern_field(start_local_time, end_local_time, [&](auto start_value, auto end_value, auto field_name) {
         // a. Let fieldName be the name given in the Range Pattern Field column of the row.
 
@@ -1061,7 +1057,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         return IterationDecision::Break;
     });
 
-    // 13. If dateFieldsPracticallyEqual is true, then
+    // 12. If dateFieldsPracticallyEqual is true, then
     if (date_fields_practically_equal) {
         // a. Let pattern be dateTimeFormat.[[Pattern]].
         auto const& pattern = date_time_format.pattern();
@@ -1083,10 +1079,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         return result;
     }
 
-    // 14. Let result be a new empty List.
+    // 13. Let result be a new empty List.
     Vector<PatternPartitionWithSource> result;
 
-    // 15. If rangePattern is undefined, then
+    // 14. If rangePattern is undefined, then
     if (!range_pattern.has_value()) {
         // a. Let rangePattern be rangePatterns.[[Default]].
         range_pattern = Unicode::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar());
@@ -1112,7 +1108,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         //        step 3 here: https://unicode.org/reports/tr35/tr35-dates.html#intervalFormats
     }
 
-    // 16. For each Record { [[Pattern]], [[Source]] } rangePatternPart in rangePattern.[[PatternParts]], do
+    // 15. For each Record { [[Pattern]], [[Source]] } rangePatternPart in rangePattern.[[PatternParts]], do
     TRY(for_each_range_pattern_with_source(*range_pattern, [&](auto const& pattern, auto source) -> ThrowCompletionOr<void> {
         // a. Let pattern be rangePatternPart.[[Pattern]].
         // b. Let source be rangePatternPart.[[Source]].
@@ -1141,7 +1137,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         return {};
     }));
 
-    // 17. Return result.
+    // 16. Return result.
     return result;
 }
 
