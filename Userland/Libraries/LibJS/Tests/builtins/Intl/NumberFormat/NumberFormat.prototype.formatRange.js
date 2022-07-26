@@ -33,41 +33,6 @@ describe("errors", () => {
         expect(() => {
             new Intl.NumberFormat().formatRange(1, NaN);
         }).toThrowWithMessage(RangeError, "end must not be NaN");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(1, 0);
-        }).toThrowWithMessage(
-            RangeError,
-            "start is a mathematical value, end is a mathematical value and end < start"
-        );
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(1, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is a mathematical value, end is -∞");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(1, -0);
-        }).toThrowWithMessage(RangeError, "start is a mathematical value, end is -0 and start ≥ 0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(Infinity, 0);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is a mathematical value");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(Infinity, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is -∞");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(Infinity, -0);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is -0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(-0, -1);
-        }).toThrowWithMessage(RangeError, "start is -0, end is a mathematical value and end < 0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRange(-0, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is -0, end is -∞");
     });
 });
 
@@ -136,5 +101,27 @@ describe("correct behavior", () => {
             maximumFractionDigits: 0,
         });
         expect(ja2.formatRange(3, 5)).toBe("￥3 ～ ￥5");
+    });
+
+    test("numbers in reverse order", () => {
+        const en = new Intl.NumberFormat("en");
+        expect(en.formatRange(1, 0)).toBe("1–0");
+        expect(en.formatRange(1, -Infinity)).toBe("1 – -∞");
+        expect(en.formatRange(1, -0)).toBe("1 – -0");
+        expect(en.formatRange(Infinity, 0)).toBe("∞ – 0");
+        expect(en.formatRange(Infinity, -Infinity)).toBe("∞ – -∞");
+        expect(en.formatRange(Infinity, -0)).toBe("∞ – -0");
+        expect(en.formatRange(-0, -1)).toBe("-0 – -1");
+        expect(en.formatRange(-0, -Infinity)).toBe("-0 – -∞");
+
+        const ja = new Intl.NumberFormat("ja");
+        expect(ja.formatRange(1, 0)).toBe("1～0");
+        expect(ja.formatRange(1, -Infinity)).toBe("1 ～ -∞");
+        expect(ja.formatRange(1, -0)).toBe("1 ～ -0");
+        expect(ja.formatRange(Infinity, 0)).toBe("∞ ～ 0");
+        expect(ja.formatRange(Infinity, -Infinity)).toBe("∞ ～ -∞");
+        expect(ja.formatRange(Infinity, -0)).toBe("∞ ～ -0");
+        expect(ja.formatRange(-0, -1)).toBe("-0 ～ -1");
+        expect(ja.formatRange(-0, -Infinity)).toBe("-0 ～ -∞");
     });
 });

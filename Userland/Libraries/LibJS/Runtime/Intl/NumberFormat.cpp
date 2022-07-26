@@ -1729,90 +1729,51 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     if (end.is_nan())
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "end"sv);
 
-    // 2. If x is a mathematical value, then
-    if (start.is_mathematical_value()) {
-        // a. If y is a mathematical value and y < x, throw a RangeError exception.
-        if (end.is_mathematical_value() && end.is_less_than(start))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is a mathematical value and end < start"sv);
-
-        // b. Else if y is -∞, throw a RangeError exception.
-        if (end.is_negative_infinity())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is -∞"sv);
-
-        // c. Else if y is -0𝔽 and x ≥ 0, throw a RangeError exception.
-        if (end.is_negative_zero() && (start.is_zero() || start.is_positive()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is a mathematical value, end is -0 and start ≥ 0"sv);
-    }
-    // 3. Else if x is +∞, then
-    else if (start.is_positive_infinity()) {
-        // a. If y is a mathematical value, throw a RangeError exception.
-        if (end.is_mathematical_value())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is a mathematical value"sv);
-
-        // b. Else if y is -∞, throw a RangeError exception.
-        if (end.is_negative_infinity())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is -∞"sv);
-
-        // c. Else if y is -0𝔽, throw a RangeError exception.
-        if (end.is_negative_zero())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is +∞, end is -0"sv);
-    }
-    // 4. Else if x is -0𝔽, then
-    else if (start.is_negative_zero()) {
-        // a. If y is a mathematical value and y < 0, throw a RangeError exception.
-        if (end.is_mathematical_value() && end.is_negative())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is -0, end is a mathematical value and end < 0"sv);
-
-        // b. Else if y is -∞, throw a RangeError exception.
-        if (end.is_negative_infinity())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberRangeIsInvalid, "start is -0, end is -∞"sv);
-    }
-
-    // 5. Let result be a new empty List.
+    // 2. Let result be a new empty List.
     Vector<PatternPartitionWithSource> result;
 
-    // 6. Let xResult be ? PartitionNumberPattern(numberFormat, x).
+    // 3. Let xResult be ? PartitionNumberPattern(numberFormat, x).
     auto raw_start_result = partition_number_pattern(global_object, number_format, move(start));
     auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
 
-    // 7. Let yResult be ? PartitionNumberPattern(numberFormat, y).
+    // 4. Let yResult be ? PartitionNumberPattern(numberFormat, y).
     auto raw_end_result = partition_number_pattern(global_object, number_format, move(end));
     auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
 
-    // 8. If xResult is equal to yResult, return FormatApproximately(numberFormat, xResult).
+    // 5. If xResult is equal to yResult, return FormatApproximately(numberFormat, xResult).
     if (start_result == end_result)
         return format_approximately(number_format, move(start_result));
 
-    // 9. For each r in xResult, do
+    // 6. For each r in xResult, do
     for (auto& part : start_result) {
         // i. Set r.[[Source]] to "startRange".
         part.source = "startRange"sv;
     }
 
-    // 10. Add all elements in xResult to result in order.
+    // 7. Add all elements in xResult to result in order.
     result = move(start_result);
 
-    // 11. Let rangeSeparator be an ILND String value used to separate two numbers.
+    // 8. Let rangeSeparator be an ILND String value used to separate two numbers.
     auto range_separator_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::RangeSeparator).value_or("-"sv);
     auto range_separator = Unicode::augment_range_pattern(range_separator_symbol, result.last().value, end_result[0].value);
 
-    // 12. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
+    // 9. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
     PatternPartitionWithSource part;
     part.type = "literal"sv;
     part.value = range_separator.value_or(range_separator_symbol);
     part.source = "shared"sv;
     result.append(move(part));
 
-    // 13. For each r in yResult, do
+    // 10. For each r in yResult, do
     for (auto& part : end_result) {
         // a. Set r.[[Source]] to "endRange".
         part.source = "endRange"sv;
     }
 
-    // 14. Add all elements in yResult to result in order.
+    // 11. Add all elements in yResult to result in order.
     result.extend(move(end_result));
 
-    // 15. Return ! CollapseNumberRange(result).
+    // 12. Return ! CollapseNumberRange(result).
     return collapse_number_range(move(result));
 }
 

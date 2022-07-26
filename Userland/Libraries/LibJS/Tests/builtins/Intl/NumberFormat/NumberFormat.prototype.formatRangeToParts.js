@@ -33,41 +33,6 @@ describe("errors", () => {
         expect(() => {
             new Intl.NumberFormat().formatRangeToParts(1, NaN);
         }).toThrowWithMessage(RangeError, "end must not be NaN");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(1, 0);
-        }).toThrowWithMessage(
-            RangeError,
-            "start is a mathematical value, end is a mathematical value and end < start"
-        );
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(1, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is a mathematical value, end is -∞");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(1, -0);
-        }).toThrowWithMessage(RangeError, "start is a mathematical value, end is -0 and start ≥ 0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(Infinity, 0);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is a mathematical value");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(Infinity, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is -∞");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(Infinity, -0);
-        }).toThrowWithMessage(RangeError, "start is +∞, end is -0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(-0, -1);
-        }).toThrowWithMessage(RangeError, "start is -0, end is a mathematical value and end < 0");
-
-        expect(() => {
-            new Intl.NumberFormat().formatRangeToParts(-0, -Infinity);
-        }).toThrowWithMessage(RangeError, "start is -0, end is -∞");
     });
 });
 
@@ -163,6 +128,50 @@ describe("correct behavior", () => {
             { type: "literal", value: " ～ ", source: "shared" },
             { type: "currency", value: "￥", source: "endRange" },
             { type: "integer", value: "5", source: "endRange" },
+        ]);
+    });
+
+    test("numbers in reverse order", () => {
+        const en = new Intl.NumberFormat("en");
+        expect(en.formatRangeToParts(1, -Infinity)).toEqual([
+            { type: "integer", value: "1", source: "startRange" },
+            { type: "literal", value: " – ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
+        ]);
+        expect(en.formatRangeToParts(Infinity, -Infinity)).toEqual([
+            { type: "infinity", value: "∞", source: "startRange" },
+            { type: "literal", value: " – ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
+        ]);
+        expect(en.formatRangeToParts(-0, -Infinity)).toEqual([
+            { type: "minusSign", value: "-", source: "startRange" },
+            { type: "integer", value: "0", source: "startRange" },
+            { type: "literal", value: " – ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
+        ]);
+
+        const ja = new Intl.NumberFormat("ja");
+        expect(ja.formatRangeToParts(1, -Infinity)).toEqual([
+            { type: "integer", value: "1", source: "startRange" },
+            { type: "literal", value: " ～ ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
+        ]);
+        expect(ja.formatRangeToParts(Infinity, -Infinity)).toEqual([
+            { type: "infinity", value: "∞", source: "startRange" },
+            { type: "literal", value: " ～ ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
+        ]);
+        expect(ja.formatRangeToParts(-0, -Infinity)).toEqual([
+            { type: "minusSign", value: "-", source: "startRange" },
+            { type: "integer", value: "0", source: "startRange" },
+            { type: "literal", value: " ～ ", source: "shared" },
+            { type: "minusSign", value: "-", source: "endRange" },
+            { type: "infinity", value: "∞", source: "endRange" },
         ]);
     });
 });
