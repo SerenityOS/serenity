@@ -34,7 +34,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
 
     if (phase == PaintPhase::Foreground) {
         auto clip_rect = absolute_rect().to_rounded<int>();
-        ScopedCornerRadiusClip corner_clip { context.painter(), clip_rect, normalized_border_radii_data() };
+        ScopedCornerRadiusClip corner_clip { context.painter(), clip_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         auto* hosted_document = layout_box().dom_node().content_document_without_origin_check();
         if (!hosted_document)
