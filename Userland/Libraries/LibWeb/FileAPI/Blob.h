@@ -41,7 +41,7 @@ public:
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 
     u64 size() const { return m_byte_buffer.size(); }
-    String type() const& { return m_type; }
+    String const& type() const { return m_type; }
 
     DOM::ExceptionOr<NonnullRefPtr<Blob>> slice(Optional<i64> start = {}, Optional<i64> end = {}, Optional<String> const& content_type = {});
 
