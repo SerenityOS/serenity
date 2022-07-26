@@ -201,7 +201,7 @@ ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(Big
 
 MaybeLoaderError FlacLoaderPlugin::reset()
 {
-    TRY(seek(m_data_start_location));
+    TRY(seek(0));
     m_current_frame.clear();
     return {};
 }
