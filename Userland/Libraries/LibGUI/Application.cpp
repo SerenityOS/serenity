@@ -224,7 +224,7 @@ void Application::request_tooltip_show()
     int const margin = 30;
     Gfx::IntPoint adjusted_pos = ConnectionToWindowServer::the().get_global_cursor_position();
 
-    adjusted_pos.translate_by(0, 18);
+    adjusted_pos.translate_by(0, 14);
 
     if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
         adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
