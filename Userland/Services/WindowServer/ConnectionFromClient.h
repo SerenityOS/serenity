@@ -80,6 +80,8 @@ public:
 
     void notify_display_link(Badge<Compositor>);
 
+    void notify_about_theme_change();
+
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
