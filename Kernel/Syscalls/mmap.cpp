@@ -141,7 +141,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         TRY(require_promise(Pledge::prot_exec));
     }
 
-    if (prot & MAP_FIXED || prot & MAP_FIXED_NOREPLACE) {
+    if (flags & MAP_FIXED || flags & MAP_FIXED_NOREPLACE) {
         TRY(require_promise(Pledge::map_fixed));
     }
 
