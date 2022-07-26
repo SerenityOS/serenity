@@ -2099,7 +2099,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
         return IterationDecision::Continue;
     });
     ConnectionFromClient::for_each_client([&](ConnectionFromClient& client) {
-        client.async_update_system_theme(Gfx::current_system_theme_buffer());
+        client.notify_about_theme_change();
     });
     MenuManager::the().did_change_theme();
     AppletManager::the().did_change_theme();
