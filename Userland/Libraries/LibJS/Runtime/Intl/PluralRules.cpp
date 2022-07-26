@@ -152,23 +152,19 @@ ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& gl
     if (end.is_nan())
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "end"sv);
 
-    // 6. If x > y, throw a RangeError exception.
-    if (start.as_double() > end.as_double())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlStartRangeAfterEndRange, start, end);
-
-    // 7. Let xp be ! ResolvePlural(pluralRules, x).
+    // 6. Let xp be ! ResolvePlural(pluralRules, x).
     auto start_plurality = resolve_plural(plural_rules, start);
 
-    // 8. Let yp be ! ResolvePlural(pluralRules, y).
+    // 7. Let yp be ! ResolvePlural(pluralRules, y).
     auto end_plurality = resolve_plural(plural_rules, end);
 
-    // 9. Let locale be pluralRules.[[Locale]].
+    // 8. Let locale be pluralRules.[[Locale]].
     auto const& locale = plural_rules.locale();
 
-    // 10. Let type be pluralRules.[[Type]].
+    // 9. Let type be pluralRules.[[Type]].
     auto type = plural_rules.type();
 
-    // 11. Return ! PluralRuleSelectRange(locale, type, xp, yp).
+    // 10. Return ! PluralRuleSelectRange(locale, type, xp, yp).
     return plural_rule_select_range(locale, type, start_plurality, end_plurality);
 }
 

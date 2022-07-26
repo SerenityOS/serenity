@@ -48,7 +48,6 @@
     M(IntlInvalidRoundingIncrementForRoundingType, "{} is not a valid rounding increment for rounding type {}")                         \
     M(IntlInvalidTime, "Time value must be between -8.64E15 and 8.64E15")                                                               \
     M(IntlInvalidUnit, "Unit {} is not a valid time unit")                                                                              \
-    M(IntlStartRangeAfterEndRange, "Range start {} is greater than range end {}")                                                       \
     M(IntlMinimumExceedsMaximum, "Minimum value {} is larger than maximum value {}")                                                    \
     M(IntlNumberIsNaN, "{} must not be NaN")                                                                                            \
     M(IntlNumberIsNaNOrInfinity, "Number must not be NaN or Infinity")                                                                  \

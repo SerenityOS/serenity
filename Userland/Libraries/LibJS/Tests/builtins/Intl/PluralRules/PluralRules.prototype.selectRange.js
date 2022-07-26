@@ -33,10 +33,6 @@ describe("errors", () => {
         expect(() => {
             new Intl.PluralRules().selectRange(1, NaN);
         }).toThrowWithMessage(RangeError, "end must not be NaN");
-
-        expect(() => {
-            new Intl.PluralRules().selectRange(1, 0);
-        }).toThrowWithMessage(RangeError, "Range start 1 is greater than range end 0");
     });
 });
 
@@ -69,5 +65,17 @@ describe("correct behavior", () => {
         const so = new Intl.PluralRules("so");
         expect(so.selectRange(0, 1)).toBe("one");
         expect(so.selectRange(1, 2)).toBe("other");
+    });
+
+    test("numbers in reverse order", () => {
+        const en = new Intl.PluralRules("en");
+        expect(en.selectRange(1, -Infinity)).toBe("other");
+        expect(en.selectRange(Infinity, -Infinity)).toBe("other");
+        expect(en.selectRange(-0, -Infinity)).toBe("other");
+
+        const ja = new Intl.PluralRules("ja");
+        expect(ja.selectRange(1, -Infinity)).toBe("other");
+        expect(ja.selectRange(Infinity, -Infinity)).toBe("other");
+        expect(ja.selectRange(-0, -Infinity)).toBe("other");
     });
 });
