@@ -833,6 +833,59 @@ void WebView::resizeEvent(QResizeEvent* event)
     m_page_client->set_viewport_rect(rect);
 }
 
+static Optional<Web::ImageDecoding::DecodedImage> decode_image_with_qt(ReadonlyBytes data)
+{
+    auto image = QImage::fromData(data.data(), static_cast<int>(data.size()));
+    if (image.isNull())
+        return {};
+    image = image.convertToFormat(QImage::Format::Format_ARGB32);
+    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(image.width(), image.height())));
+    for (int y = 0; y < image.height(); ++y) {
+        memcpy(bitmap->scanline_u8(y), image.scanLine(y), image.width() * 4);
+    }
+    Vector<Web::ImageDecoding::Frame> frames;
+
+    frames.append(Web::ImageDecoding::Frame {
+        bitmap,
+    });
+    return Web::ImageDecoding::DecodedImage {
+        false,
+        0,
+        move(frames),
+    };
+}
+
+static Optional<Web::ImageDecoding::DecodedImage> decode_image_with_libgfx(ReadonlyBytes data)
+{
+    auto decoder = Gfx::ImageDecoder::try_create(data);
+
+    if (!decoder || !decoder->frame_count()) {
+        return {};
+    }
+
+    bool had_errors = false;
+    Vector<Web::ImageDecoding::Frame> frames;
+    for (size_t i = 0; i < decoder->frame_count(); ++i) {
+        auto frame_or_error = decoder->frame(i);
+        if (frame_or_error.is_error()) {
+            frames.append({ {}, 0 });
+            had_errors = true;
+        } else {
+            auto frame = frame_or_error.release_value();
+            frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
+        }
+    }
+
+    if (had_errors)
+        return {};
+
+    return Web::ImageDecoding::DecodedImage {
+        decoder->is_animated(),
+        static_cast<u32>(decoder->loop_count()),
+        move(frames),
+    };
+}
+
 class HeadlessImageDecoderClient : public Web::ImageDecoding::Decoder {
 public:
     static NonnullRefPtr<HeadlessImageDecoderClient> create()
@@ -844,30 +897,10 @@ public:
 
     virtual Optional<Web::ImageDecoding::DecodedImage> decode_image(ReadonlyBytes data) override
     {
-        auto decoder = Gfx::ImageDecoder::try_create(data);
-
-        if (!decoder)
-            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
-
-        if (!decoder->frame_count())
-            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
-
-        Vector<Web::ImageDecoding::Frame> frames;
-        for (size_t i = 0; i < decoder->frame_count(); ++i) {
-            auto frame_or_error = decoder->frame(i);
-            if (frame_or_error.is_error()) {
-                frames.append({ {}, 0 });
-            } else {
-                auto frame = frame_or_error.release_value();
-                frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
-            }
-        }
-
-        return Web::ImageDecoding::DecodedImage {
-            decoder->is_animated(),
-            static_cast<u32>(decoder->loop_count()),
-            frames,
-        };
+        auto image = decode_image_with_libgfx(data);
+        if (image.has_value())
+            return image;
+        return decode_image_with_qt(data);
     }
 
 private:
