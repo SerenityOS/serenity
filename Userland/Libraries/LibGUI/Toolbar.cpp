@@ -26,6 +26,8 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     : m_orientation(orientation)
     , m_button_size(button_size)
 {
+    REGISTER_BOOL_PROPERTY("collapsible", is_collapsible, set_collapsible);
+
     if (m_orientation == Orientation::Horizontal)
         set_fixed_height(button_size);
     else
@@ -95,11 +97,11 @@ ErrorOr<NonnullRefPtr<GUI::Button>> Toolbar::try_add_action(Action& action)
     //       This avoids having to untangle the child widget in case of allocation failure.
     TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
-    auto button = TRY(try_add<ToolbarButton>(action));
-    button->set_fixed_size(m_button_size, m_button_size);
+    item->widget = TRY(try_add<ToolbarButton>(action));
+    item->widget->set_fixed_size(m_button_size, m_button_size);
 
     m_items.unchecked_append(move(item));
-    return button;
+    return *static_cast<Button*>(m_items.last().widget.ptr());
 }
 
 GUI::Button& Toolbar::add_action(Action& action)
@@ -115,7 +117,7 @@ ErrorOr<void> Toolbar::try_add_separator()
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
     item->type = Item::Type::Separator;
-    (void)TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
+    item->widget = TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
     m_items.unchecked_append(move(item));
     return {};
 }
@@ -140,6 +142,101 @@ Optional<UISize> Toolbar::calculated_preferred_size() const
     else
         return { { SpecialDimension::Fit, SpecialDimension::Grow } };
     VERIFY_NOT_REACHED();
+}
+
+Optional<UISize> Toolbar::calculated_min_size() const
+{
+    if (m_collapsible) {
+        if (m_orientation == Gfx::Orientation::Horizontal)
+            return UISize(m_button_size, SpecialDimension::Shrink);
+        else
+            return UISize(SpecialDimension::Shrink, m_button_size);
+    }
+    VERIFY(layout());
+    return { layout()->min_size() };
+}
+
+ErrorOr<void> Toolbar::create_overflow_objects()
+{
+    m_overflow_action = Action::create("Overflow Menu", { Mod_Ctrl | Mod_Shift, Key_O }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/overflow-menu.png"sv)), [&](auto&) {
+        m_overflow_menu->popup(m_overflow_button->screen_relative_rect().bottom_left());
+    });
+    m_overflow_action->set_status_tip("Show hidden toolbar actions");
+    m_overflow_action->set_enabled(false);
+
+    TRY(layout()->try_add_spacer());
+
+    m_overflow_button = TRY(try_add_action(*m_overflow_action));
+    m_overflow_button->set_visible(false);
+    m_overflow_button->set_menu_position(Button::MenuPosition::BottomLeft);
+
+    return {};
+}
+
+ErrorOr<void> Toolbar::update_overflow_menu()
+{
+    if (!m_collapsible)
+        return {};
+
+    Optional<size_t> marginal_index {};
+    auto position { 0 };
+    auto is_horizontal { m_orientation == Gfx::Orientation::Horizontal };
+    auto margin { is_horizontal ? layout()->margins().right() : layout()->margins().bottom() };
+    auto toolbar_size { is_horizontal ? width() : height() };
+
+    for (size_t i = 0; i < m_items.size() - 1; ++i) {
+        auto& item = m_items.at(i);
+        auto item_size = is_horizontal ? item.widget->width() : item.widget->height();
+        if (position + item_size + m_button_size + margin > toolbar_size) {
+            marginal_index = i;
+            break;
+        }
+        item.widget->set_visible(true);
+        position += item_size;
+    }
+
+    if (!marginal_index.has_value()) {
+        if (m_overflow_action) {
+            m_overflow_action->set_enabled(false);
+            m_overflow_button->set_visible(false);
+        }
+        return {};
+    }
+
+    if (!m_overflow_action)
+        TRY(create_overflow_objects());
+    m_overflow_action->set_enabled(true);
+    m_overflow_button->set_visible(true);
+
+    m_overflow_menu = TRY(Menu::try_create());
+    m_overflow_button->set_menu(m_overflow_menu);
+
+    for (size_t i = marginal_index.value(); i < m_items.size(); ++i) {
+        auto& item = m_items.at(i);
+        Item* peek_item;
+        if (i > 0) {
+            peek_item = &m_items.at(i - 1);
+            if (peek_item->type == Item::Type::Separator)
+                peek_item->widget->set_visible(false);
+        }
+        if (i < m_items.size() - 1) {
+            item.widget->set_visible(false);
+            peek_item = &m_items.at(i + 1);
+            if (item.action)
+                TRY(m_overflow_menu->try_add_action(*item.action));
+        }
+        if (item.action && peek_item->type == Item::Type::Separator)
+            TRY(m_overflow_menu->try_add_separator());
+    }
+
+    return {};
+}
+
+void Toolbar::resize_event(GUI::ResizeEvent& event)
+{
+    Widget::resize_event(event);
+    if (auto result = update_overflow_menu(); result.is_error())
+        warnln("Failed to update overflow menu");
 }
 
 }
