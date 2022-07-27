@@ -21,6 +21,8 @@ class GlyphMapWidget final : public AbstractScrollableWidget {
 public:
     virtual ~GlyphMapWidget() override = default;
 
+    void set_font(Gfx::Font const&);
+
     class Selection {
     public:
         Selection() = default;
@@ -60,6 +62,10 @@ public:
     void scroll_to_glyph(int);
     void update_glyph(int);
 
+    void set_highlight_modifications(bool);
+    void set_glyph_modified(u32 glyph, bool modified);
+    bool glyph_is_modified(u32 glyph);
+
     void select_previous_existing_glyph();
     void select_next_existing_glyph();
 
@@ -88,6 +94,7 @@ private:
 
     void recalculate_content_size();
 
+    RefPtr<Gfx::Font> m_original_font;
     int m_glyph_count { 0x110000 };
     int m_columns { 0 };
     int m_rows { 0 };
@@ -97,6 +104,8 @@ private:
     int m_active_glyph { 0 };
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
+    bool m_highlight_modifications { false };
+    HashTable<u32> m_modified_glyphs;
     Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     Gfx::IntPoint m_last_mousemove_position;
