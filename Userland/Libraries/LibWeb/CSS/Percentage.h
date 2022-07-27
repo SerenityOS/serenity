@@ -98,6 +98,8 @@ public:
     {
         return m_value.visit(
             [&](T const& t) {
+                if (t.is_calculated())
+                    return resolve_calculated(t.calculated_style_value(), layout_node, reference_value);
                 return t;
             },
             [&](Percentage const& percentage) {

@@ -76,6 +76,7 @@ public:
     }
 
     float raw_value() const { return m_value; }
+    NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
     float to_px(Layout::Node const&) const;
 
