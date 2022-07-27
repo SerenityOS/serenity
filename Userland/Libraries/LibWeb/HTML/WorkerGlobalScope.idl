@@ -1,8 +1,10 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <HTML/WindowOrWorkerGlobalScope.idl>
 #import <HTML/WorkerLocation.idl>
 #import <HTML/WorkerNavigator.idl>
 
+// https://html.spec.whatwg.org/multipage/workers.html#workerglobalscope
 [Exposed=Worker]
 interface WorkerGlobalScope : EventTarget {
     readonly attribute WorkerGlobalScope self;
@@ -16,13 +18,6 @@ interface WorkerGlobalScope : EventTarget {
     attribute EventHandler ononline;
     attribute EventHandler onrejectionhandled;
     attribute EventHandler onunhandledrejection;
-
-    // FIXME: These should all come from a WindowOrWorkerGlobalScope mixin
-    [Replaceable] readonly attribute USVString origin;
-    readonly attribute boolean isSecureContext;
-    readonly attribute boolean crossOriginIsolated;
-
-    // base64 utility methods
-    DOMString btoa(DOMString data);
-    ByteString atob(DOMString data);
 };
+
+WorkerGlobalScope includes WindowOrWorkerGlobalScope;
