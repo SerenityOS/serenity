@@ -1,15 +1,9 @@
+#import <DOM/ChildNode.idl>
 #import <DOM/Node.idl>
 
+// https://dom.spec.whatwg.org/#documenttype
 interface DocumentType : Node {
-
     readonly attribute DOMString name;
     readonly attribute DOMString publicId;
     readonly attribute DOMString systemId;
-
-    // FIXME: These should come from a ChildNode mixin
-    [CEReactions, Unscopable] undefined before((Node or DOMString)... nodes);
-    [CEReactions, Unscopable] undefined after((Node or DOMString)... nodes);
-    [CEReactions, Unscopable] undefined replaceWith((Node or DOMString)... nodes);
-    [CEReactions, Unscopable, ImplementedAs=remove_binding] undefined remove();
-
 };
