@@ -26,6 +26,8 @@ public:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
 private:
+    virtual bool is_html_base_element() const override { return true; }
+
     // https://html.spec.whatwg.org/multipage/semantics.html#frozen-base-url
     // A base element that is the first base element with an href content attribute in a document tree has a frozen base URL.
     AK::URL m_frozen_base_url;
@@ -33,4 +35,9 @@ private:
     void set_the_frozen_base_url();
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLBaseElement>() const { return is_html_base_element(); }
 }
