@@ -1,13 +1,17 @@
 #import <CSS/CSSStyleSheet.idl>
+#import <CSS/LinkStyle.idl>
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlstyleelement
 interface HTMLStyleElement : HTMLElement {
+    // FIXME: [HTMLConstructor] constructor();
 
+    // FIXME: attribute boolean disabled;
     [Reflect] attribute DOMString media;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList blocking;
 
+    // Obsolete
     [Reflect] attribute DOMString type;
-
-    // FIXME: This should come from a LinkStyle mixin
-    readonly attribute CSSStyleSheet? sheet;
-
 };
+
+HTMLStyleElement includes LinkStyle;
