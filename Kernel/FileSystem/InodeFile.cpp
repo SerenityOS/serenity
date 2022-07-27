@@ -42,7 +42,12 @@ ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, U
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    auto nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
+    size_t nwritten = 0;
+    {
+        MutexLocker locker(m_inode->m_inode_lock);
+        TRY(m_inode->prepare_to_write_data());
+        nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
+    }
     if (nwritten > 0) {
         auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);

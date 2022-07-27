@@ -253,9 +253,7 @@ void Inode::did_delete_self()
 
 ErrorOr<void> Inode::prepare_to_write_data()
 {
-    // FIXME: It's a poor design that filesystems are expected to call this before writing out data.
-    //        We should funnel everything through an interface at the VirtualFileSystem layer so this can happen from a single place.
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     if (fs().is_readonly())
         return EROFS;
     auto metadata = this->metadata();

@@ -693,6 +693,8 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
     auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid()));
 
     auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()));
+    MutexLocker locker(inode->m_inode_lock);
+    TRY(inode->prepare_to_write_data());
     TRY(inode->write_bytes(0, target.length(), target_buffer, nullptr));
     return {};
 }

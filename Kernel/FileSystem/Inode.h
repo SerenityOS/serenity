@@ -31,6 +31,7 @@ class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     , public Weakable<Inode> {
     friend class VirtualFileSystem;
     friend class FileSystem;
+    friend class InodeFile;
 
 public:
     virtual ~Inode();
