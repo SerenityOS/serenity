@@ -9,6 +9,7 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -24,13 +25,20 @@ public:
     GUI::Button& add_action(GUI::Action&);
     void add_separator();
 
+    bool is_collapsible() const { return m_collapsible; }
+    void set_collapsible(bool b) { m_collapsible = b; }
 
     virtual Optional<UISize> calculated_preferred_size() const override;
+    virtual Optional<UISize> calculated_min_size() const override;
 
 protected:
     explicit Toolbar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 24);
 
     virtual void paint_event(PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
+
+    ErrorOr<void> update_overflow_menu();
+    ErrorOr<void> create_overflow_objects();
 
 private:
     struct Item {
@@ -41,10 +49,15 @@ private:
         };
         Type type { Type::Invalid };
         RefPtr<Action> action;
+        RefPtr<Widget> widget;
     };
     NonnullOwnPtrVector<Item> m_items;
+    RefPtr<Menu> m_overflow_menu;
+    RefPtr<Action> m_overflow_action;
+    RefPtr<Button> m_overflow_button;
     const Gfx::Orientation m_orientation;
     int m_button_size { 24 };
+    bool m_collapsible { false };
 };
 
 }
