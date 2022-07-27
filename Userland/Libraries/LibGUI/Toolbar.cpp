@@ -26,11 +26,11 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     : m_orientation(orientation)
     , m_button_size(button_size)
 {
-    if (m_orientation == Orientation::Horizontal) {
-        set_fixed_height(button_size + 8);
-    } else {
-        set_fixed_width(button_size + 8);
-    }
+    if (m_orientation == Orientation::Horizontal)
+        set_fixed_height(button_size);
+    else
+        set_fixed_width(button_size);
+
     set_layout<BoxLayout>(orientation);
     layout()->set_spacing(0);
     layout()->set_margins({ 2, 2, 2, 2 });
@@ -96,7 +96,7 @@ ErrorOr<NonnullRefPtr<GUI::Button>> Toolbar::try_add_action(Action& action)
     TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
     auto button = TRY(try_add<ToolbarButton>(action));
-    button->set_fixed_size(m_button_size + 8, m_button_size + 8);
+    button->set_fixed_size(m_button_size, m_button_size);
 
     m_items.unchecked_append(move(item));
     return button;
