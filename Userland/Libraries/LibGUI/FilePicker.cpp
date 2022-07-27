@@ -89,7 +89,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         VERIFY_NOT_REACHED();
 
     auto& toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
-    toolbar.set_has_frame(false);
 
     m_location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
     m_location_textbox->set_text(path);
