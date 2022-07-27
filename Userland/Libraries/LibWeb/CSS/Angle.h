@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -55,3 +56,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Web::CSS::Angle> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Angle const& angle)
+    {
+        return Formatter<StringView>::format(builder, angle.to_string());
+    }
+};
