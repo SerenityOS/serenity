@@ -669,6 +669,9 @@ Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& perc
         [&](Angle const& angle) -> Optional<Angle> {
             return angle;
         },
+        [&](Percentage const& percentage) -> Optional<Angle> {
+            return percentage_basis.percentage_of(percentage);
+        },
         [&](auto const&) -> Optional<Angle> {
             return {};
         });
@@ -691,6 +694,9 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency
         [&](Frequency const& frequency) -> Optional<Frequency> {
             return frequency;
         },
+        [&](Percentage const& percentage) -> Optional<Frequency> {
+            return percentage_basis.percentage_of(percentage);
+        },
         [&](auto const&) -> Optional<Frequency> {
             return {};
         });
@@ -712,6 +718,9 @@ Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node co
     return result.value().visit(
         [&](Length const& length) -> Optional<Length> {
             return length;
+        },
+        [&](Percentage const& percentage) -> Optional<Length> {
+            return percentage_basis.percentage_of(percentage);
         },
         [&](auto const&) -> Optional<Length> {
             return {};
