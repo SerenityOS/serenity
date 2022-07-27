@@ -114,4 +114,4 @@ interface Document : Node {
 
 };
 
-HTMLElement includes GlobalEventHandlers;
+Document includes GlobalEventHandlers;
