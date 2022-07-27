@@ -211,15 +211,15 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
         return matches_lang_pseudo_class(element, pseudo_class.languages);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
-        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
+        if (!is<HTML::HTMLInputElement>(element))
             return false;
-        if (!element.has_attribute("disabled"))
+        if (!element.has_attribute(HTML::AttributeNames::disabled))
             return false;
         return true;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
-        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
+        if (!is<HTML::HTMLInputElement>(element))
             return false;
-        if (element.has_attribute("disabled"))
+        if (element.has_attribute(HTML::AttributeNames::disabled))
             return false;
         return true;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
