@@ -152,7 +152,6 @@ public:
     virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     static NonnullRefPtr<ProcFSRootDirectory> must_create();
 
-    void add_pci_node(Badge<PCI::Access>);
     virtual ~ProcFSRootDirectory();
 
 private:
