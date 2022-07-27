@@ -108,11 +108,9 @@ ErrorOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBu
 
 ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
-
-    TRY(prepare_to_write_data());
 
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;

@@ -937,14 +937,11 @@ ErrorOr<void> Ext2FSInode::resize(u64 new_size)
 
 ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription* description)
 {
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(offset >= 0);
 
     if (count == 0)
         return 0;
-
-    MutexLocker inode_locker(m_inode_lock);
-
-    TRY(prepare_to_write_data());
 
     if (is_symlink()) {
         VERIFY(offset == 0);
