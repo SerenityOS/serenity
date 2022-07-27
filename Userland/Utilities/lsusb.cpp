@@ -21,22 +21,28 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/sys/bus/usb", "r"));
-    TRY(Core::System::unveil("/res/usb.ids", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
-
     bool print_verbose;
+    bool flag_show_numerical = false;
     Core::ArgsParser args;
     args.set_general_help("List USB devices.");
     args.add_option(print_verbose, "Print all device descriptors", "verbose", 'v');
+    args.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
     args.parse(arguments);
+
+    if (!flag_show_numerical)
+        TRY(Core::System::unveil("/res/usb.ids", "r"));
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/sys/bus/usb", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::DirIterator usb_devices("/sys/bus/usb", Core::DirIterator::SkipDots);
 
-    RefPtr<USBDB::Database> usb_db = USBDB::Database::open();
-    if (!usb_db) {
-        warnln("Failed to open usb.ids");
+    RefPtr<USBDB::Database> usb_db;
+    if (!flag_show_numerical) {
+        usb_db = USBDB::Database::open();
+        if (!usb_db) {
+            warnln("Failed to open usb.ids");
+        }
     }
 
     while (usb_devices.has_next()) {
@@ -63,12 +69,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto vendor_id = device_descriptor.get("vendor_id"sv).to_u32();
             auto product_id = device_descriptor.get("product_id"sv).to_u32();
 
-            StringView vendor_string = usb_db->get_vendor(vendor_id);
-            StringView device_string = usb_db->get_device(vendor_id, product_id);
-            if (device_string.is_empty())
-                device_string = "Unknown Device"sv;
+            if (usb_db) {
+                StringView vendor_string = usb_db->get_vendor(vendor_id);
+                StringView device_string = usb_db->get_device(vendor_id, product_id);
+                if (device_string.is_empty())
+                    device_string = "Unknown Device"sv;
 
-            outln("Device {}: ID {:04x}:{:04x} {} {}", device_address, vendor_id, product_id, vendor_string, device_string);
+                outln("Device {}: ID {:04x}:{:04x} {} {}", device_address, vendor_id, product_id, vendor_string, device_string);
+            } else {
+                outln("Device {}: ID {:04x}:{:04x}", device_address, vendor_id, product_id);
+            }
 
             if (print_verbose) {
                 outln("Device Descriptor");
@@ -79,8 +89,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("  bDeviceSubClass    {}", device_descriptor.get("device_sub_class"sv).to_u32());
                 outln("  bDeviceProtocol    {}", device_descriptor.get("device_protocol"sv).to_u32());
                 outln("  bMaxPacketSize     {}", device_descriptor.get("max_packet_size"sv).to_u32());
-                outln("  idVendor           0x{:04x} {}", device_descriptor.get("vendor_id"sv).to_u32(), vendor_string);
-                outln("  idProduct          0x{:04x} {}", device_descriptor.get("product_id"sv).to_u32(), device_string);
+                if (usb_db) {
+                    StringView vendor_string = usb_db->get_vendor(vendor_id);
+                    StringView device_string = usb_db->get_device(vendor_id, product_id);
+                    outln("  idVendor           0x{:04x} {}", device_descriptor.get("vendor_id"sv).to_u32(), vendor_string);
+                    outln("  idProduct          0x{:04x} {}", device_descriptor.get("product_id"sv).to_u32(), device_string);
+                } else {
+                    outln("  idVendor           0x{:04x}", device_descriptor.get("vendor_id"sv).to_u32());
+                    outln("  idProduct          0x{:04x}", device_descriptor.get("product_id"sv).to_u32());
+                }
                 outln("  bcdDevice          {}", device_descriptor.get("device_release_bcd"sv).to_u32());
                 outln("  iManufacturer      {}", device_descriptor.get("manufacturer_id_descriptor_index"sv).to_u32());
                 outln("  iProduct           {}", device_descriptor.get("product_string_descriptor_index"sv).to_u32());
@@ -104,9 +121,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         auto const interface_class_code = interface_descriptor.get("interface_class_code"sv).to_u32();
                         auto const interface_subclass_code = interface_descriptor.get("interface_sub_class_code"sv).to_u32();
                         auto const interface_protocol_code = interface_descriptor.get("interface_protocol"sv).to_u32();
-                        auto const interface_class = usb_db->get_class(interface_class_code);
-                        auto const interface_subclass = usb_db->get_subclass(interface_class_code, interface_subclass_code);
-                        auto const interface_protocol = usb_db->get_protocol(interface_class_code, interface_subclass_code, interface_protocol_code);
 
                         outln("    Interface Descriptor:");
                         outln("      bLength            {}", interface_descriptor.get("length"sv).to_u32());
@@ -114,9 +128,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         outln("      bInterfaceNumber   {}", interface_descriptor.get("interface_number"sv).to_u32());
                         outln("      bAlternateSetting  {}", interface_descriptor.get("alternate_setting"sv).to_u32());
                         outln("      bNumEndpoints      {}", interface_descriptor.get("num_endpoints"sv).to_u32());
-                        outln("      bInterfaceClass    {} {}", interface_class_code, interface_class);
-                        outln("      bInterfaceSubClass {} {}", interface_subclass_code, interface_subclass);
-                        outln("      bInterfaceProtocol {} {}", interface_protocol_code, interface_protocol);
+                        if (usb_db) {
+                            auto const interface_class = usb_db->get_class(interface_class_code);
+                            auto const interface_subclass = usb_db->get_subclass(interface_class_code, interface_subclass_code);
+                            auto const interface_protocol = usb_db->get_protocol(interface_class_code, interface_subclass_code, interface_protocol_code);
+                            outln("      bInterfaceClass    {} {}", interface_class_code, interface_class);
+                            outln("      bInterfaceSubClass {} {}", interface_subclass_code, interface_subclass);
+                            outln("      bInterfaceProtocol {} {}", interface_protocol_code, interface_protocol);
+                        } else {
+                            outln("      bInterfaceClass    {}", interface_class_code);
+                            outln("      bInterfaceSubClass {}", interface_subclass_code);
+                            outln("      bInterfaceProtocol {}", interface_protocol_code);
+                        }
                         outln("      iInterface         {}", interface_descriptor.get("interface_string_desc_index"sv).to_u32());
 
                         auto const& endpoint_descriptors = interface_value.as_object().get("endpoints"sv);
