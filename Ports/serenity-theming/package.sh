@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=serenity-theming
-version=f6d93060b5f950a213bbc72c5aa76637b566626c
+version=5d626d9d8395b5544015b9859beaa9b24ff91cf1
 workdir="theming-${version}"
-files="https://github.com/SerenityOS/theming/archive/${version}.zip serenity-theming-${version}.zip 3a891e6ccdfd783ef92813d394ec73a0c381acb15ea0e1ca080b7a9a7ce697d2"
+files="https://github.com/SerenityOS/theming/archive/${version}.zip serenity-theming-${version}.zip 24ddd5e7ebf5a429e2f8304f45cd9baf0d2c1618faae690bc4c6171ec89adc1b"
 auth_type="sha256"
 
 build() {
