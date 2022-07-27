@@ -332,7 +332,7 @@ private:
 
     size_t render_status_line(StringView prompt, size_t off = 0, char end = '\0', bool ignored = false)
     {
-        for (; prompt[off] != end && off < prompt.length(); ++off) {
+        for (; off < prompt.length() && prompt[off] != end; ++off) {
             if (ignored)
                 continue;
 
