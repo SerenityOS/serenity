@@ -20,6 +20,8 @@ ErrorOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controlle
 {
     auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
     auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(pipe))));
+    auto sysfs_node = TRY(SysFSUSBDeviceInformation::create(*device));
+    device->m_sysfs_device_info_node = move(sysfs_node);
     TRY(device->enumerate_device());
     return device;
 }
