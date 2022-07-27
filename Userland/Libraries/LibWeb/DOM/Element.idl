@@ -1,11 +1,13 @@
+#import <CSS/CSSStyleDeclaration.idl>
+#import <DOM/ChildNode.idl>
 #import <DOM/DOMTokenList.idl>
 #import <DOM/NamedNodeMap.idl>
 #import <DOM/Node.idl>
 #import <DOM/NodeList.idl>
 #import <Geometry/DOMRect.idl>
 #import <Geometry/DOMRectList.idl>
-#import <CSS/CSSStyleDeclaration.idl>
 
+// https://dom.spec.whatwg.org/#element
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString? prefix;
@@ -65,11 +67,4 @@ interface Element : Node {
     readonly attribute long clientLeft;
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
-
-    // FIXME: These should come from a ChildNode mixin
-    [CEReactions, Unscopable] undefined before((Node or DOMString)... nodes);
-    [CEReactions, Unscopable] undefined after((Node or DOMString)... nodes);
-    [CEReactions, Unscopable] undefined replaceWith((Node or DOMString)... nodes);
-    [CEReactions, Unscopable, ImplementedAs=remove_binding] undefined remove();
-
 };
