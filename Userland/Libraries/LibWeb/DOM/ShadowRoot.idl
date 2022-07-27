@@ -1,11 +1,15 @@
 #import <DOM/DocumentFragment.idl>
+#import <DOM/InnerHTML.idl>
 
+// https://dom.spec.whatwg.org/#shadowroot
 interface ShadowRoot : DocumentFragment {
-
+    // FIXME: mode should return a ShadowRootMode
     readonly attribute DOMString mode;
+    // FIXME: readonly attribute boolean delegatesFocus;
+    // FIXME: readonly attribute SlotAssignmentMode slotAssignment;
     readonly attribute Element host;
-
-    // FIXME: This should come from a InnerHTML mixin.
-    [LegacyNullToEmptyString] attribute DOMString innerHTML;
-
+    // FIXME: attribute EventHandler onslotchange;
 };
+
+enum ShadowRootMode { "open", "closed" };
+enum SlotAssignmentMode { "manual", "named" };
