@@ -1582,21 +1582,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 
     // 9. Repeat, while j < itemCount,
     for (; j < item_count; ++j) {
-        // a. Perform ? CreateDataPropertyOrThrow(obj, ! ToString(𝔽(j)), sortedList[j]).
-
-        // FIXME: Spec issue: The above step should likely be:
-        //
-        //    Perform ? Set(obj, ! ToString(𝔽(j)), items[j], true).
-        //
-        // That is the behavior of SortIndexedProperties in ECMA-262, and about a dozen test262
-        // tests will failed if CreateDataPropertyOrThrow is used instead. For example,
-        // test/built-ins/Array/prototype/sort/precise-getter-appends-elements.js fails in
-        // CreateDataPropertyOrThrow because the Array object is configurable but the property
-        // created by Object.defineProperty is not.
-        //
-        // See: https://github.com/tc39/proposal-change-array-by-copy/issues/97
+        // a. Perform ? Set(obj, ! ToString(𝔽(j)), sortedList[j], true).
         TRY(object->set(j, sorted_list[j], Object::ShouldThrowExceptions::Yes));
-
         // b. Set j to j + 1.
     }
 
