@@ -43,6 +43,7 @@ ToolboxWidget::ToolboxWidget()
     m_action_group.set_unchecking_allowed(false);
 
     m_toolbar = add<GUI::Toolbar>(Gfx::Orientation::Vertical);
+    m_toolbar->set_collapsible(true);
     setup_tools();
 }
 

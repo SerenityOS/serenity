@@ -9,6 +9,7 @@
 
         @GUI::Toolbar {
             name: "main_toolbar"
+            collapsible: true
         }
 
         @GUI::Toolbar {
