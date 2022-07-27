@@ -28,7 +28,7 @@ public:
     virtual Optional<UISize> calculated_preferred_size() const override;
 
 protected:
-    explicit Toolbar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 16);
+    explicit Toolbar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 24);
 
     virtual void paint_event(PaintEvent&) override;
 
@@ -44,7 +44,7 @@ private:
     };
     NonnullOwnPtrVector<Item> m_items;
     const Gfx::Orientation m_orientation;
-    int m_button_size { 16 };
+    int m_button_size { 24 };
 };
 
 }
