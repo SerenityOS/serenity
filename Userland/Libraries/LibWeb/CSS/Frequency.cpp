@@ -83,4 +83,10 @@ Optional<Frequency::Type> Frequency::unit_from_name(StringView name)
     return {};
 }
 
+NonnullRefPtr<CalculatedStyleValue> Frequency::calculated_style_value() const
+{
+    VERIFY(!m_calculated_style.is_null());
+    return *m_calculated_style;
+}
+
 }

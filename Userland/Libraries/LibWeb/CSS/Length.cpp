@@ -198,4 +198,10 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
     return {};
 }
 
+NonnullRefPtr<CalculatedStyleValue> Length::calculated_style_value() const
+{
+    VERIFY(!m_calculated_style.is_null());
+    return *m_calculated_style;
+}
+
 }

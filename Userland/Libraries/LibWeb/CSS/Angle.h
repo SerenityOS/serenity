@@ -31,6 +31,7 @@ public:
     Angle percentage_of(Percentage const&) const;
 
     bool is_calculated() const { return m_type == Type::Calculated; }
+    NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
     String to_string() const;
     float to_degrees() const;
