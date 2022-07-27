@@ -50,7 +50,6 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibPCIDB/Database.h>
 #include <LibThreading/BackgroundAction.h>
 #include <serenity.h>
 #include <signal.h>
@@ -112,102 +111,6 @@ private:
     }
 
     String m_text;
-};
-
-class HardwareTabWidget final : public GUI::LazyWidget {
-    C_OBJECT(HardwareTabWidget)
-
-public:
-    HardwareTabWidget()
-    {
-        auto db_creator = Threading::BackgroundAction<int>::construct([this](auto&) {
-            auto db = PCIDB::Database::open();
-            if (!db)
-                warnln("Couldn't open PCI ID database!");
-            m_db = db;
-            m_loader_complete.store(true);
-            return 0;
-        },
-            nullptr);
-
-        this->on_first_show = [this](GUI::LazyWidget& self) {
-            {
-                Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
-                processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
-                processors_field.empend("vendor_id", "Vendor ID", Gfx::TextAlignment::CenterLeft);
-                processors_field.empend("brand", "Brand", Gfx::TextAlignment::CenterLeft);
-                processors_field.empend("Features", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-                    StringBuilder builder;
-                    auto features = object.get("features"sv).as_array();
-                    for (auto& feature : features.values()) {
-                        builder.append(feature.to_string());
-                        builder.append(' ');
-                    }
-                    return GUI::Variant(builder.to_string());
-                });
-                processors_field.empend("family", "Family", Gfx::TextAlignment::CenterRight);
-                processors_field.empend("model", "Model", Gfx::TextAlignment::CenterRight);
-                processors_field.empend("stepping", "Stepping", Gfx::TextAlignment::CenterRight);
-                processors_field.empend("type", "Type", Gfx::TextAlignment::CenterRight);
-
-                auto& processors_table_view = *self.find_descendant_of_type_named<GUI::TableView>("cpus_table");
-                auto json_model = GUI::JsonArrayModel::create("/proc/cpuinfo", move(processors_field));
-                processors_table_view.set_model(json_model);
-                json_model->invalidate();
-            }
-
-            {
-                while (!m_loader_complete.load())
-                    ;
-                Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
-                pci_fields.empend(
-                    "Address", Gfx::TextAlignment::CenterLeft,
-                    [](const JsonObject& object) {
-                        auto seg = object.get("seg"sv).to_u32();
-                        auto bus = object.get("bus"sv).to_u32();
-                        auto device = object.get("device"sv).to_u32();
-                        auto function = object.get("function"sv).to_u32();
-                        return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, device, function);
-                    });
-                pci_fields.empend(
-                    "Class", Gfx::TextAlignment::CenterLeft,
-                    [this](const JsonObject& object) {
-                        auto class_id = object.get("class"sv).to_u32();
-                        String class_name = m_db ? m_db->get_class(class_id) : StringView {};
-                        return class_name.is_empty() ? String::formatted("Unknown class: {:04x}", class_id) : class_name;
-                    });
-                pci_fields.empend(
-                    "Vendor", Gfx::TextAlignment::CenterLeft,
-                    [this](const JsonObject& object) {
-                        auto vendor_id = object.get("vendor_id"sv).to_u32();
-                        String vendor_name = m_db ? m_db->get_vendor(vendor_id) : StringView {};
-                        return vendor_name.is_empty() ? String::formatted("Unknown vendor: {:02x}", vendor_id) : vendor_name;
-                    });
-                pci_fields.empend(
-                    "Device", Gfx::TextAlignment::CenterLeft,
-                    [this](const JsonObject& object) {
-                        auto vendor_id = object.get("vendor_id"sv).to_u32();
-                        auto device_id = object.get("device_id"sv).to_u32();
-                        String device_name = m_db ? m_db->get_device(vendor_id, device_id) : StringView {};
-                        return device_name.is_empty() ? String::formatted("Unknown device: {:02x}", device_id) : device_name;
-                    });
-                pci_fields.empend(
-                    "Revision", Gfx::TextAlignment::CenterRight,
-                    [](const JsonObject& object) {
-                        auto revision_id = object.get("revision_id"sv).to_u32();
-                        return String::formatted("{:02x}", revision_id);
-                    });
-
-                auto& pci_table_view = *self.find_descendant_of_type_named<GUI::TableView>("pci_dev_table");
-                pci_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields)))));
-                pci_table_view.model()->invalidate();
-            }
-        };
-    }
-
-private:
-    RefPtr<PCIDB::Database> m_db;
-    Atomic<bool> m_loader_complete { false };
 };
 
 class StorageTabWidget final : public GUI::LazyWidget {
@@ -309,7 +212,6 @@ public:
 
 }
 
-REGISTER_WIDGET(SystemMonitor, HardwareTabWidget)
 REGISTER_WIDGET(SystemMonitor, StorageTabWidget)
 REGISTER_WIDGET(SystemMonitor, UnavailableProcessWidget)
 
@@ -583,8 +485,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         tabwidget.set_active_widget(&performance_widget);
     else if (args_tab_view == "fs")
         tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<SystemMonitor::StorageTabWidget>("storage"));
-    else if (args_tab_view == "hardware")
-        tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<SystemMonitor::HardwareTabWidget>("hardware"));
     else if (args_tab_view == "network")
         tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<GUI::Widget>("network"));
 
