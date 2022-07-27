@@ -215,10 +215,22 @@ void Button::set_menu(RefPtr<GUI::Menu> menu)
 void Button::mousedown_event(MouseEvent& event)
 {
     if (m_menu) {
-        if (button_style() == Gfx::ButtonStyle::Tray)
-            m_menu->popup(screen_relative_rect().top_right());
-        else
+        switch (m_menu_position) {
+        case TopLeft:
             m_menu->popup(screen_relative_rect().top_left());
+            break;
+        case TopRight:
+            m_menu->popup(screen_relative_rect().top_right());
+            break;
+        case BottomLeft:
+            m_menu->popup(screen_relative_rect().bottom_left());
+            break;
+        case BottomRight:
+            m_menu->popup(screen_relative_rect().bottom_right());
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
         update();
         return;
     }
