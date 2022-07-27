@@ -113,6 +113,7 @@ Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
 
 void GlyphMapWidget::update_glyph(int glyph)
 {
+    set_glyph_modified(glyph, true);
     update(get_outer_rect(glyph));
 }
 
@@ -146,13 +147,38 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
             else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph))
                 painter.draw_emoji(inner_rect.location(), *emoji, font());
         } else if (font().contains_glyph(glyph)) {
-            painter.fill_rect(outer_rect, palette().base());
+            if (m_highlight_modifications && m_modified_glyphs.contains(glyph)) {
+                if (m_original_font->contains_glyph(glyph)) {
+                    // Modified
+                    if (palette().is_dark())
+                        painter.fill_rect(outer_rect, Gfx::Color { 0, 65, 159 });
+                    else
+                        painter.fill_rect(outer_rect, Gfx::Color { 138, 185, 252 });
+                } else {
+                    // Newly created
+                    if (palette().is_dark())
+                        painter.fill_rect(outer_rect, Gfx::Color { 8, 127, 0 });
+                    else
+                        painter.fill_rect(outer_rect, Gfx::Color { 133, 251, 116 });
+                }
+            } else {
+                painter.fill_rect(outer_rect, palette().base());
+            }
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph)) {
             painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
             painter.draw_emoji(inner_rect.location(), *emoji, font());
-        } else
-            painter.fill_rect(outer_rect, palette().window());
+        } else {
+            if (m_highlight_modifications && m_original_font->contains_glyph(glyph)) {
+                // Deleted
+                if (palette().is_dark())
+                    painter.fill_rect(outer_rect, Gfx::Color { 127, 0, 0 });
+                else
+                    painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
+            } else {
+                painter.fill_rect(outer_rect, palette().window());
+            }
+        }
     }
     painter.draw_focus_rect(get_outer_rect(m_active_glyph), palette().focus_outline());
 }
@@ -399,6 +425,35 @@ void GlyphMapWidget::set_active_range(Unicode::CodePointRange range)
     set_active_glyph(range.first);
     recalculate_content_size();
     update();
+}
+
+void GlyphMapWidget::set_highlight_modifications(bool highlight_modifications)
+{
+    if (m_highlight_modifications == highlight_modifications)
+        return;
+
+    m_highlight_modifications = highlight_modifications;
+    update();
+}
+
+void GlyphMapWidget::set_glyph_modified(u32 glyph, bool modified)
+{
+    if (modified)
+        m_modified_glyphs.set(glyph);
+    else
+        m_modified_glyphs.remove(glyph);
+}
+
+bool GlyphMapWidget::glyph_is_modified(u32 glyph)
+{
+    return m_modified_glyphs.contains(glyph);
+}
+
+void GlyphMapWidget::set_font(Gfx::Font const& font)
+{
+    AbstractScrollableWidget::set_font(font);
+    m_original_font = font.clone();
+    m_modified_glyphs.clear();
 }
 
 }
