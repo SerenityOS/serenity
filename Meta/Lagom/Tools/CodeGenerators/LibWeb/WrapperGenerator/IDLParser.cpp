@@ -761,6 +761,8 @@ void Parser::parse_callback_function(HashMap<String, String>& extended_attribute
 
 void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
+    consume_whitespace();
+
     while (!lexer.is_eof()) {
         HashMap<String, String> extended_attributes;
         if (lexer.consume_specific('['))
@@ -794,6 +796,8 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
             break;
         }
     }
+
+    consume_whitespace();
 }
 
 void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
