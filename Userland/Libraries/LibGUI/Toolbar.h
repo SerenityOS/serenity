@@ -24,8 +24,6 @@ public:
     GUI::Button& add_action(GUI::Action&);
     void add_separator();
 
-    bool has_frame() const { return m_has_frame; }
-    void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
 
     virtual Optional<UISize> calculated_preferred_size() const override;
 
@@ -47,7 +45,6 @@ private:
     NonnullOwnPtrVector<Item> m_items;
     const Gfx::Orientation m_orientation;
     int m_button_size { 16 };
-    bool m_has_frame { true };
 };
 
 }
