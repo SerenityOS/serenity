@@ -1,31 +1,24 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/HTMLHyperlinkElementUtils.idl>
 
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement
 interface HTMLAnchorElement : HTMLElement {
+    // FIXME: [HTMLConstructor] constructor();
 
     [Reflect] attribute DOMString target;
     [Reflect] attribute DOMString download;
     [Reflect] attribute DOMString ping;
     [Reflect] attribute DOMString rel;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
     [Reflect] attribute DOMString hreflang;
     [Reflect] attribute DOMString type;
 
+    // Obsolete
     [Reflect] attribute DOMString coords;
     [Reflect] attribute DOMString charset;
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString rev;
     [Reflect] attribute DOMString shape;
-
-    // FIXME: This should come from a HTMLHyperlinkElementUtils mixin
-    [CEReactions] stringifier attribute USVString href;
-    readonly attribute USVString origin;
-    [CEReactions] attribute USVString protocol;
-    [CEReactions] attribute USVString username;
-    [CEReactions] attribute USVString password;
-    [CEReactions] attribute USVString host;
-    [CEReactions] attribute USVString hostname;
-    [CEReactions] attribute USVString port;
-    [CEReactions] attribute USVString pathname;
-    [CEReactions] attribute USVString search;
-    [CEReactions] attribute USVString hash;
-
 };
+
+HTMLAnchorElement includes HTMLHyperlinkElementUtils;

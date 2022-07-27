@@ -1,20 +1,22 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/HTMLHyperlinkElementUtils.idl>
 
+// https://html.spec.whatwg.org/multipage/image-maps.html#htmlareaelement
 interface HTMLAreaElement : HTMLElement {
+    // FIXME: [HTMLConstructor] constructor();
 
+    // FIXME: [CEReactions] attribute DOMString alt;
+    // FIXME: [CEReactions] attribute DOMString coords;
+    // FIXME: [CEReactions] attribute DOMString shape;
+    // FIXME: [CEReactions] attribute DOMString target;
+    // FIXME: [CEReactions] attribute DOMString download;
+    // FIXME: [CEReactions] attribute USVString ping;
+    // FIXME: [CEReactions] attribute DOMString rel;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+    // FIXME: [CEReactions] attribute DOMString referrerPolicy;
+
+    // Obsolete
     [Reflect=nohref] attribute boolean noHref;
-
-    // FIXME: This should come from a HTMLHyperlinkElementUtils mixin
-    [CEReactions] stringifier attribute USVString href;
-    readonly attribute USVString origin;
-    [CEReactions] attribute USVString protocol;
-    [CEReactions] attribute USVString username;
-    [CEReactions] attribute USVString password;
-    [CEReactions] attribute USVString host;
-    [CEReactions] attribute USVString hostname;
-    [CEReactions] attribute USVString port;
-    [CEReactions] attribute USVString pathname;
-    [CEReactions] attribute USVString search;
-    [CEReactions] attribute USVString hash;
-
 };
+
+HTMLAreaElement includes HTMLHyperlinkElementUtils;
