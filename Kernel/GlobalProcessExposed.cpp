@@ -728,43 +728,6 @@ private:
     }
 };
 
-// FIXME: Remove this after we enumerate the SysFS from lspci and SystemMonitor
-class ProcFSPCI final : public ProcFSGlobalInformation {
-public:
-    static NonnullRefPtr<ProcFSPCI> must_create();
-
-private:
-    ProcFSPCI();
-    virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
-    {
-        auto array = TRY(JsonArraySerializer<>::try_create(builder));
-        ErrorOr<void> result; // FIXME: Make this nicer
-        TRY(PCI::enumerate([&array, &result](PCI::DeviceIdentifier const& device_identifier) {
-            if (result.is_error())
-                return;
-            result = ([&]() -> ErrorOr<void> {
-                auto obj = TRY(array.add_object());
-                TRY(obj.add("domain"sv, device_identifier.address().domain()));
-                TRY(obj.add("bus"sv, device_identifier.address().bus()));
-                TRY(obj.add("device"sv, device_identifier.address().device()));
-                TRY(obj.add("function"sv, device_identifier.address().function()));
-                TRY(obj.add("vendor_id"sv, device_identifier.hardware_id().vendor_id));
-                TRY(obj.add("device_id"sv, device_identifier.hardware_id().device_id));
-                TRY(obj.add("revision_id"sv, device_identifier.revision_id().value()));
-                TRY(obj.add("subclass"sv, device_identifier.subclass_code().value()));
-                TRY(obj.add("class"sv, device_identifier.class_code().value()));
-                TRY(obj.add("subsystem_id"sv, device_identifier.subsystem_id().value()));
-                TRY(obj.add("subsystem_vendor_id"sv, device_identifier.subsystem_vendor_id().value()));
-                TRY(obj.finish());
-                return {};
-            })();
-        }));
-        TRY(result);
-        TRY(array.finish());
-        return {};
-    }
-};
-
 class ProcFSDevices final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSDevices> must_create();
@@ -901,10 +864,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSKeymap> ProcFSKeymap::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSKeymap).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSPCI> ProcFSPCI::must_create()
-{
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSPCI).release_nonnull();
-}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDevices> ProcFSDevices::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSDevices).release_nonnull();
@@ -967,10 +926,6 @@ UNMAP_AFTER_INIT ProcFSKeymap::ProcFSKeymap()
     : ProcFSGlobalInformation("keymap"sv)
 {
 }
-UNMAP_AFTER_INIT ProcFSPCI::ProcFSPCI()
-    : ProcFSGlobalInformation("pci"sv)
-{
-}
 UNMAP_AFTER_INIT ProcFSDevices::ProcFSDevices()
     : ProcFSGlobalInformation("devices"sv)
 {
@@ -1009,11 +964,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::mus
 UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(ProcFSRootDirectory const& parent_directory)
     : ProcFSExposedDirectory("sys"sv, parent_directory)
 {
-}
-
-UNMAP_AFTER_INIT void ProcFSRootDirectory::add_pci_node(Badge<PCI::Access>)
-{
-    m_components.append(ProcFSPCI::must_create());
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
