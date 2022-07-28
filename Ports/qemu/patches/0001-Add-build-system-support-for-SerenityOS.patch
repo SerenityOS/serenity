@@ -8,7 +8,7 @@ Subject: [PATCH] Add build system support for SerenityOS
  1 file changed, 6 insertions(+)
 
 diff --git a/configure b/configure
-index 7c08c18..3177605 100755
+index 7c08c18358becf49779c876b0f3d17329df053c6..3177605054876b387cd2b93463025ee3203991e7 100755
 --- a/configure
 +++ b/configure
 @@ -496,6 +496,8 @@ elif check_define __NetBSD__; then
