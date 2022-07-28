@@ -49,14 +49,9 @@ HexEditor::HexEditor()
     m_blink_timer->start();
 }
 
-bool HexEditor::open_new_file(size_t size)
+ErrorOr<void> HexEditor::open_new_file(size_t size)
 {
-    auto maybe_buffer = ByteBuffer::create_zeroed(size);
-    if (maybe_buffer.is_error()) {
-        return false;
-    }
-
-    m_document = make<HexDocumentMemory>(maybe_buffer.release_value());
+    m_document = make<HexDocumentMemory>(TRY(ByteBuffer::create_zeroed(size)));
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
@@ -66,7 +61,7 @@ bool HexEditor::open_new_file(size_t size)
     update();
     update_status();
 
-    return true;
+    return {};
 }
 
 void HexEditor::open_file(NonnullRefPtr<Core::File> file)
