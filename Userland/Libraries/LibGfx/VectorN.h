@@ -19,7 +19,7 @@
 #define LOOP_UNROLL_N 4
 
 #define STRINGIFY_HELPER(x) #x
-#define STRINGIFY(x) STRINGIFY_HELPER(x)
+#define STRINGIFY(x)        STRINGIFY_HELPER(x)
 
 #ifdef __clang__
 #    define UNROLL_LOOP _Pragma(STRINGIFY(unroll))

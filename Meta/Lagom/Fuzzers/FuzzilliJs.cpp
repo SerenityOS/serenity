@@ -28,13 +28,13 @@
 // BEGIN FUZZING CODE
 //
 
-#define REPRL_CRFD 100
-#define REPRL_CWFD 101
-#define REPRL_DRFD 102
-#define REPRL_DWFD 103
+#define REPRL_CRFD          100
+#define REPRL_CWFD          101
+#define REPRL_DRFD          102
+#define REPRL_DWFD          103
 #define REPRL_MAX_DATA_SIZE (16 * 1024 * 1024)
 
-#define SHM_SIZE 0x100000
+#define SHM_SIZE  0x100000
 #define MAX_EDGES ((SHM_SIZE - 4) * 8)
 
 #define CHECK(cond)                                \

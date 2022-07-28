@@ -128,7 +128,7 @@ TEST_CASE(spans)
 }
 
 #define INIT_ITERATIONS (1'000'000)
-#define ITERATIONS (100)
+#define ITERATIONS      (100)
 
 static DisjointChunks<int> basic_really_empty_chunks;
 

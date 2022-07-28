@@ -59,7 +59,7 @@ protected:
     Cell() = default;
 
 private:
-    bool m_mark : 1 { false };
+    bool m_mark   : 1 { false };
     State m_state : 7 { State::Live };
 };
 

@@ -115,8 +115,8 @@ union Extractor {
     }
     struct {
         unsigned long long mantissa : 52;
-        unsigned exponent : 11;
-        unsigned sign : 1;
+        unsigned exponent           : 11;
+        unsigned sign               : 1;
     };
     double d;
 

@@ -91,11 +91,11 @@ enum __RegexAllFlags {
 };
 
 // Values for the cflags parameter to the regcomp() function:
-#define REG_EXTENDED __Regex_Extended                // Use Extended Regular Expressions.
-#define REG_ICASE __Regex_Insensitive                // Ignore case in match.
-#define REG_NOSUB __Regex_SkipSubExprResults         // Report only success or fail in regexec().
-#define REG_GLOBAL __Regex_Global                    // Don't stop searching for more match
-#define REG_NEWLINE (__Regex_Multiline | REG_GLOBAL) // Change the handling of newline.
+#define REG_EXTENDED __Regex_Extended                 // Use Extended Regular Expressions.
+#define REG_ICASE    __Regex_Insensitive              // Ignore case in match.
+#define REG_NOSUB    __Regex_SkipSubExprResults       // Report only success or fail in regexec().
+#define REG_GLOBAL   __Regex_Global                   // Don't stop searching for more match
+#define REG_NEWLINE  (__Regex_Multiline | REG_GLOBAL) // Change the handling of newline.
 
 // Values for the eflags parameter to the regexec() function:
 #define REG_NOTBOL __Regex_MatchNotBeginOfLine // The circumflex character (^), when taken as a special character, will not match the beginning of string.

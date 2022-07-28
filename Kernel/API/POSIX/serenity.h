@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define PURGE_ALL_VOLATILE 0x1
+#define PURGE_ALL_VOLATILE    0x1
 #define PURGE_ALL_CLEAN_INODE 0x2
 
 enum {
@@ -37,11 +37,11 @@ enum {
 
 #define PERF_EVENT_MASK_ALL (~0ull)
 
-#define THREAD_PRIORITY_MIN 1
-#define THREAD_PRIORITY_LOW 10
+#define THREAD_PRIORITY_MIN    1
+#define THREAD_PRIORITY_LOW    10
 #define THREAD_PRIORITY_NORMAL 30
-#define THREAD_PRIORITY_HIGH 50
-#define THREAD_PRIORITY_MAX 99
+#define THREAD_PRIORITY_HIGH   50
+#define THREAD_PRIORITY_MAX    99
 
 #ifdef __cplusplus
 }

@@ -7,4 +7,4 @@
 #pragma once
 
 #define TCP_NODELAY 10
-#define TCP_MAXSEG 11
+#define TCP_MAXSEG  11

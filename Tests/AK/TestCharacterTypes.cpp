@@ -9,7 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <ctype.h>
 
-#define ASCII 0x80
+#define ASCII   0x80
 #define UNICODE 0x10FFFF + 100
 
 void compare_bool_output_over(u32 range, auto& old_function, auto& new_function)

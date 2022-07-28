@@ -25,35 +25,35 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Time/APICTimer.h>
 
-#define IRQ_APIC_TIMER (0xfc - IRQ_VECTOR_BASE)
-#define IRQ_APIC_IPI (0xfd - IRQ_VECTOR_BASE)
-#define IRQ_APIC_ERR (0xfe - IRQ_VECTOR_BASE)
+#define IRQ_APIC_TIMER    (0xfc - IRQ_VECTOR_BASE)
+#define IRQ_APIC_IPI      (0xfd - IRQ_VECTOR_BASE)
+#define IRQ_APIC_ERR      (0xfe - IRQ_VECTOR_BASE)
 #define IRQ_APIC_SPURIOUS (0xff - IRQ_VECTOR_BASE)
 
 #define APIC_ICR_DELIVERY_PENDING (1 << 12)
 
 #define APIC_ENABLED (1 << 8)
 
-#define APIC_BASE_MSR 0x1b
+#define APIC_BASE_MSR      0x1b
 #define APIC_REGS_MSR_BASE 0x800
 
-#define APIC_REG_ID 0x20
-#define APIC_REG_EOI 0xb0
-#define APIC_REG_LD 0xd0
-#define APIC_REG_DF 0xe0
-#define APIC_REG_SIV 0xf0
-#define APIC_REG_TPR 0x80
-#define APIC_REG_ICR_LOW 0x300
-#define APIC_REG_ICR_HIGH 0x310
-#define APIC_REG_LVT_TIMER 0x320
-#define APIC_REG_LVT_THERMAL 0x330
+#define APIC_REG_ID                      0x20
+#define APIC_REG_EOI                     0xb0
+#define APIC_REG_LD                      0xd0
+#define APIC_REG_DF                      0xe0
+#define APIC_REG_SIV                     0xf0
+#define APIC_REG_TPR                     0x80
+#define APIC_REG_ICR_LOW                 0x300
+#define APIC_REG_ICR_HIGH                0x310
+#define APIC_REG_LVT_TIMER               0x320
+#define APIC_REG_LVT_THERMAL             0x330
 #define APIC_REG_LVT_PERFORMANCE_COUNTER 0x340
-#define APIC_REG_LVT_LINT0 0x350
-#define APIC_REG_LVT_LINT1 0x360
-#define APIC_REG_LVT_ERR 0x370
-#define APIC_REG_TIMER_INITIAL_COUNT 0x380
-#define APIC_REG_TIMER_CURRENT_COUNT 0x390
-#define APIC_REG_TIMER_CONFIGURATION 0x3e0
+#define APIC_REG_LVT_LINT0               0x350
+#define APIC_REG_LVT_LINT1               0x360
+#define APIC_REG_LVT_ERR                 0x370
+#define APIC_REG_TIMER_INITIAL_COUNT     0x380
+#define APIC_REG_TIMER_CURRENT_COUNT     0x390
+#define APIC_REG_TIMER_CONFIGURATION     0x3e0
 
 namespace Kernel {
 
@@ -201,13 +201,13 @@ void APIC::write_icr(ICRReg const& icr)
     }
 }
 
-#define APIC_LVT_TIMER_ONESHOT 0
-#define APIC_LVT_TIMER_PERIODIC (1 << 17)
+#define APIC_LVT_TIMER_ONESHOT     0
+#define APIC_LVT_TIMER_PERIODIC    (1 << 17)
 #define APIC_LVT_TIMER_TSCDEADLINE (1 << 18)
 
-#define APIC_LVT_MASKED (1 << 16)
+#define APIC_LVT_MASKED        (1 << 16)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
-#define APIC_LVT(iv, dm) (((iv)&0xff) | (((dm)&0x7) << 8))
+#define APIC_LVT(iv, dm)       (((iv)&0xff) | (((dm)&0x7) << 8))
 
 extern "C" void apic_ap_start(void);
 extern "C" u16 apic_ap_start_size;

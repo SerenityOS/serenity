@@ -12,7 +12,7 @@
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
-#define IRQ_TIMER 8
+#define IRQ_TIMER     8
 #define MAX_FREQUENCY 8000
 
 NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(RegisterState const&)> callback)

@@ -75,7 +75,7 @@ private:
     u16 m_minimum_tick;
     u64 m_frequency;
     u8 m_revision_id;
-    bool m_main_counter_64bits : 1;
+    bool m_main_counter_64bits            : 1;
     bool legacy_replacement_route_capable : 1;
 
     NonnullRefPtrVector<HPETComparator> m_comparators;

@@ -54,10 +54,10 @@ private:
     CompilationUnitHeader m_header;
     AbbreviationsMap m_abbreviations;
     NonnullOwnPtr<LineProgram> m_line_program;
-    mutable bool m_has_cached_base_address : 1 { false };
-    mutable bool m_has_cached_address_table_base : 1 { false };
+    mutable bool m_has_cached_base_address        : 1 { false };
+    mutable bool m_has_cached_address_table_base  : 1 { false };
     mutable bool m_has_cached_string_offsets_base : 1 { false };
-    mutable bool m_has_cached_range_lists_base : 1 { false };
+    mutable bool m_has_cached_range_lists_base    : 1 { false };
     mutable Optional<FlatPtr> m_cached_base_address;
     mutable u64 m_cached_address_table_base { 0 };
     mutable u64 m_cached_string_offsets_base { 0 };

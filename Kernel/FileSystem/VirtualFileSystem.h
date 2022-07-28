@@ -25,7 +25,7 @@ namespace Kernel {
 
 // Kernel internal options.
 #define O_NOFOLLOW_NOERROR (1 << 29)
-#define O_UNLINK_INTERNAL (1 << 30)
+#define O_UNLINK_INTERNAL  (1 << 30)
 
 struct UidAndGid {
     UserID uid;

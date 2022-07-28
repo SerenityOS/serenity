@@ -56,15 +56,15 @@
 #define JPG_DHP 0xFFDE
 #define JPG_EXP 0xFFDF
 
-#define JPG_DHT 0XFFC4
-#define JPG_DQT 0XFFDB
-#define JPG_EOI 0xFFD9
-#define JPG_RST 0XFFDD
+#define JPG_DHT  0XFFC4
+#define JPG_DQT  0XFFDB
+#define JPG_EOI  0xFFD9
+#define JPG_RST  0XFFDD
 #define JPG_SOF0 0XFFC0
 #define JPG_SOF2 0xFFC2
-#define JPG_SOI 0XFFD8
-#define JPG_SOS 0XFFDA
-#define JPG_COM 0xFFFE
+#define JPG_SOI  0XFFD8
+#define JPG_SOS  0XFFDA
+#define JPG_COM  0xFFFE
 
 namespace Gfx {
 

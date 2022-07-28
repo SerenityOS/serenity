@@ -14,121 +14,121 @@
 
 namespace Kernel {
 
-#define REG_MAC 0x00
-#define REG_MAR4 0x0B
-#define REG_MAR0 0x0F
-#define REG_EEE_LED 0x1B
-#define REG_TXADDR 0x20
-#define REG_COMMAND 0x37
-#define REG_TXSTART 0x38
-#define REG_IMR 0x3C
-#define REG_ISR 0x3E
-#define REG_TXCFG 0x40
-#define REG_RXCFG 0x44
-#define REG_MPC 0x4C
-#define REG_CFG9346 0x50
-#define REG_CONFIG1 0x52
-#define REG_CONFIG2 0x53
-#define REG_CONFIG3 0x54
-#define REG_CONFIG4 0x55
-#define REG_CONFIG5 0x56
-#define REG_MULTIINTR 0x5C
-#define REG_PHYACCESS 0x60
-#define REG_CSI_DATA 0x64
-#define REG_CSI_ADDR 0x68
-#define REG_PHYSTATUS 0x6C
-#define REG_PMCH 0x6F
-#define REG_ERI_DATA 0x70
-#define REG_ERI_ADDR 0x74
-#define REG_EPHYACCESS 0x80
-#define REG_OCP_DATA 0xB0
-#define REG_OCP_ADDR 0xB4
-#define REG_GPHY_OCP 0xB8
-#define REG_DLLPR 0xD0
-#define REG_MCU 0xD3
-#define REG_RMS 0xDA
+#define REG_MAC           0x00
+#define REG_MAR4          0x0B
+#define REG_MAR0          0x0F
+#define REG_EEE_LED       0x1B
+#define REG_TXADDR        0x20
+#define REG_COMMAND       0x37
+#define REG_TXSTART       0x38
+#define REG_IMR           0x3C
+#define REG_ISR           0x3E
+#define REG_TXCFG         0x40
+#define REG_RXCFG         0x44
+#define REG_MPC           0x4C
+#define REG_CFG9346       0x50
+#define REG_CONFIG1       0x52
+#define REG_CONFIG2       0x53
+#define REG_CONFIG3       0x54
+#define REG_CONFIG4       0x55
+#define REG_CONFIG5       0x56
+#define REG_MULTIINTR     0x5C
+#define REG_PHYACCESS     0x60
+#define REG_CSI_DATA      0x64
+#define REG_CSI_ADDR      0x68
+#define REG_PHYSTATUS     0x6C
+#define REG_PMCH          0x6F
+#define REG_ERI_DATA      0x70
+#define REG_ERI_ADDR      0x74
+#define REG_EPHYACCESS    0x80
+#define REG_OCP_DATA      0xB0
+#define REG_OCP_ADDR      0xB4
+#define REG_GPHY_OCP      0xB8
+#define REG_DLLPR         0xD0
+#define REG_MCU           0xD3
+#define REG_RMS           0xDA
 #define REG_CPLUS_COMMAND 0xE0
-#define REG_INT_MOD 0xE2
-#define REG_RXADDR 0xE4
-#define REG_MTPS 0xEC
-#define REG_MISC 0xF0
-#define REG_MISC2 0xF2
-#define REG_IBCR0 0xF8
-#define REG_IBCR2 0xF9
-#define REG_IBISR0 0xFB
+#define REG_INT_MOD       0xE2
+#define REG_RXADDR        0xE4
+#define REG_MTPS          0xEC
+#define REG_MISC          0xF0
+#define REG_MISC2         0xF2
+#define REG_IBCR0         0xF8
+#define REG_IBCR2         0xF9
+#define REG_IBISR0        0xFB
 
 #define COMMAND_TX_ENABLE 0x4
 #define COMMAND_RX_ENABLE 0x8
-#define COMMAND_RESET 0x10
+#define COMMAND_RESET     0x10
 
-#define CPLUS_COMMAND_VERIFY_CHECKSUM 0x20
-#define CPLUS_COMMAND_VLAN_STRIP 0x40
-#define CPLUS_COMMAND_MAC_DBGO_SEL 0x1C
+#define CPLUS_COMMAND_VERIFY_CHECKSUM        0x20
+#define CPLUS_COMMAND_VLAN_STRIP             0x40
+#define CPLUS_COMMAND_MAC_DBGO_SEL           0x1C
 #define CPLUS_COMMAND_PACKET_CONTROL_DISABLE 0x80
-#define CPLUS_COMMAND_ASF 0x100
-#define CPLUS_COMMAND_CXPL_DBG_SEL 0x200
-#define CPLUS_COMMAND_FORCE_TXFLOW_ENABLE 0x400
-#define CPLUS_COMMAND_FORCE_RXFLOW_ENABLE 0x800
-#define CPLUS_COMMAND_FORCE_HALF_DUP 0x1000
-#define CPLUS_COMMAND_MAC_DBGO_OE 0x4000
-#define CPLUS_COMMAND_ENABLE_BIST 0x8000
+#define CPLUS_COMMAND_ASF                    0x100
+#define CPLUS_COMMAND_CXPL_DBG_SEL           0x200
+#define CPLUS_COMMAND_FORCE_TXFLOW_ENABLE    0x400
+#define CPLUS_COMMAND_FORCE_RXFLOW_ENABLE    0x800
+#define CPLUS_COMMAND_FORCE_HALF_DUP         0x1000
+#define CPLUS_COMMAND_MAC_DBGO_OE            0x4000
+#define CPLUS_COMMAND_ENABLE_BIST            0x8000
 
-#define INT_RXOK 0x1
-#define INT_RXERR 0x2
-#define INT_TXOK 0x4
-#define INT_TXERR 0x8
-#define INT_RX_OVERFLOW 0x10
-#define INT_LINK_CHANGE 0x20
+#define INT_RXOK             0x1
+#define INT_RXERR            0x2
+#define INT_TXOK             0x4
+#define INT_TXERR            0x8
+#define INT_RX_OVERFLOW      0x10
+#define INT_LINK_CHANGE      0x20
 #define INT_RX_FIFO_OVERFLOW 0x40
-#define INT_SYS_ERR 0x8000
+#define INT_SYS_ERR          0x8000
 
-#define CFG9346_NONE 0x00
-#define CFG9346_EEM0 0x40
-#define CFG9346_EEM1 0x80
+#define CFG9346_NONE   0x00
+#define CFG9346_EEM0   0x40
+#define CFG9346_EEM1   0x80
 #define CFG9346_UNLOCK (CFG9346_EEM0 | CFG9346_EEM1)
 
-#define TXCFG_AUTO_FIFO 0x80
+#define TXCFG_AUTO_FIFO         0x80
 #define TXCFG_MAX_DMA_UNLIMITED 0x700
-#define TXCFG_EMPTY 0x800
-#define TXCFG_IFG011 0x3000000
+#define TXCFG_EMPTY             0x800
+#define TXCFG_IFG011            0x3000000
 
 #define RXCFG_READ_MASK 0x3F
 
-#define RXCFG_APM 0x2
-#define RXCFG_AM 0x4
-#define RXCFG_AB 0x8
+#define RXCFG_APM               0x2
+#define RXCFG_AM                0x4
+#define RXCFG_AB                0x8
 #define RXCFG_MAX_DMA_UNLIMITED 0x700
-#define RXCFG_EARLY_OFF_V2 0x800
-#define RXCFG_FTH_NONE 0xE000
-#define RXCFG_MULTI_ENABLE 0x4000
-#define RXCFG_128INT_ENABLE 0x8000
+#define RXCFG_EARLY_OFF_V2      0x800
+#define RXCFG_FTH_NONE          0xE000
+#define RXCFG_MULTI_ENABLE      0x4000
+#define RXCFG_128INT_ENABLE     0x8000
 
 #define CFG2_CLOCK_REQUEST_ENABLE 0x80
 
 #define CFG3_BEACON_ENABLE 0x1
-#define CFG3_READY_TO_L23 0x2
+#define CFG3_READY_TO_L23  0x2
 
 #define CFG5_ASPM_ENABLE 0x1
-#define CFG5_SPI_ENABLE 0x8
+#define CFG5_SPI_ENABLE  0x8
 
 #define PHY_LINK_STATUS 0x2
 
-#define PHY_FLAG 0x80000000
+#define PHY_FLAG     0x80000000
 #define PHY_REG_BMCR 0x00
 #define PHY_REG_ANAR 0x4
 #define PHY_REG_GBCR 0x9
 
-#define CSI_FLAG 0x80000000
+#define CSI_FLAG        0x80000000
 #define CSI_BYTE_ENABLE 0xF000
-#define CSI_FUNC_NIC 0x20000
-#define CSI_FUNC_NIC2 0x10000
+#define CSI_FUNC_NIC    0x20000
+#define CSI_FUNC_NIC2   0x10000
 
 #define CSI_ACCESS_1 0x17000000
 #define CSI_ACCESS_2 0x27000000
 
 #define EPHY_FLAG 0x80000000
 
-#define ERI_FLAG 0x80000000
+#define ERI_FLAG      0x80000000
 #define ERI_MASK_0001 0x1000
 #define ERI_MASK_0011 0x3000
 #define ERI_MASK_0100 0x4000
@@ -137,47 +137,47 @@ namespace Kernel {
 
 #define ERI_EXGMAC 0x0
 
-#define OCP_FLAG 0x80000000
+#define OCP_FLAG              0x80000000
 #define OCP_STANDARD_PHY_BASE 0xa400
 
 #define TXSTART_START 0x40
 
-#define BMCR_RESET 0x8000
-#define BMCR_SPEED_0 0x2000
-#define BMCR_AUTO_NEGOTIATE 0x1000
+#define BMCR_RESET                  0x8000
+#define BMCR_SPEED_0                0x2000
+#define BMCR_AUTO_NEGOTIATE         0x1000
 #define BMCR_RESTART_AUTO_NEGOTIATE 0x200
-#define BMCR_DUPLEX 0x100
-#define BMCR_SPEED_1 0x40
+#define BMCR_DUPLEX                 0x100
+#define BMCR_SPEED_1                0x40
 
-#define ADVERTISE_10_HALF 0x20
-#define ADVERTISE_10_FULL 0x40
-#define ADVERTISE_100_HALF 0x80
-#define ADVERTISE_100_FULL 0x100
-#define ADVERTISE_PAUSE_CAP 0x400
+#define ADVERTISE_10_HALF    0x20
+#define ADVERTISE_10_FULL    0x40
+#define ADVERTISE_100_HALF   0x80
+#define ADVERTISE_100_FULL   0x100
+#define ADVERTISE_PAUSE_CAP  0x400
 #define ADVERTISE_PAUSE_ASYM 0x800
 
 #define ADVERTISE_1000_HALF 0x100
 #define ADVERTISE_1000_FULL 0x200
 
-#define DLLPR_PFM_ENABLE 0x40
+#define DLLPR_PFM_ENABLE       0x40
 #define DLLPR_TX_10M_PS_ENABLE 0x80
 
 #define MCU_LINK_LIST_READY 0x2
-#define MCU_RX_EMPTY 0x10
-#define MCU_TX_EMPTY 0x20
-#define MCU_NOW_IS_OOB 0x80
+#define MCU_RX_EMPTY        0x10
+#define MCU_TX_EMPTY        0x20
+#define MCU_NOW_IS_OOB      0x80
 
 #define MTPS_JUMBO 0x3F
 
 #define MISC_RXDV_GATE_ENABLE 0x80000
-#define MISC_PWM_ENABLE 0x400000
+#define MISC_PWM_ENABLE       0x400000
 
 #define MISC2_PFM_D3COLD_ENABLE 0x40
 
 #define PHYSTATUS_FULLDUP 0x01
-#define PHYSTATUS_1000MF 0x10
-#define PHYSTATUS_100M 0x08
-#define PHYSTATUS_10M 0x04
+#define PHYSTATUS_1000MF  0x10
+#define PHYSTATUS_100M    0x08
+#define PHYSTATUS_10M     0x04
 
 #define TX_BUFFER_SIZE 0x1FF8
 #define RX_BUFFER_SIZE 0x1FF8 // FIXME: this should be increased (0x3FFF)

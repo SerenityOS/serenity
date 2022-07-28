@@ -32,15 +32,15 @@ struct ProcessorMessage;
 struct ProcessorMessageEntry;
 
 #if ARCH(X86_64)
-#    define MSR_EFER 0xc0000080
-#    define MSR_STAR 0xc0000081
-#    define MSR_LSTAR 0xc0000082
-#    define MSR_SFMASK 0xc0000084
+#    define MSR_EFER    0xc0000080
+#    define MSR_STAR    0xc0000081
+#    define MSR_LSTAR   0xc0000082
+#    define MSR_SFMASK  0xc0000084
 #    define MSR_FS_BASE 0xc0000100
 #    define MSR_GS_BASE 0xc0000101
 #endif
 #define MSR_IA32_EFER 0xc0000080
-#define MSR_IA32_PAT 0x277
+#define MSR_IA32_PAT  0x277
 
 // FIXME: Find a better place for these
 extern "C" void thread_context_first_enter(void);

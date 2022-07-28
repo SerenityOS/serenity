@@ -15,11 +15,11 @@ namespace Kernel::VirtIO {
 class Device;
 class QueueChain;
 
-#define VIRTQ_DESC_F_NEXT 1
+#define VIRTQ_DESC_F_NEXT     1
 #define VIRTQ_DESC_F_INDIRECT 4
 
 #define VIRTQ_AVAIL_F_NO_INTERRUPT 1
-#define VIRTQ_USED_F_NO_NOTIFY 1
+#define VIRTQ_USED_F_NO_NOTIFY     1
 
 enum class BufferType {
     DeviceReadable = 0,

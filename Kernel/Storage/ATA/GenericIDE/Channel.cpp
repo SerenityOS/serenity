@@ -20,7 +20,7 @@
 
 namespace Kernel {
 
-#define PATA_PRIMARY_IRQ 14
+#define PATA_PRIMARY_IRQ   14
 #define PATA_SECONDARY_IRQ 15
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, IOAddressGroup io_group, ChannelType type)

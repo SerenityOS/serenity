@@ -9,8 +9,8 @@
 
 namespace Partition {
 
-#define MBR_SIGNATURE 0xaa55
-#define MBR_PROTECTIVE 0xEE
+#define MBR_SIGNATURE     0xaa55
+#define MBR_PROTECTIVE    0xEE
 #define EBR_CHS_CONTAINER 0x05
 #define EBR_LBA_CONTAINER 0x0F
 

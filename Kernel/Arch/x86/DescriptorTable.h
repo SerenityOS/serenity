@@ -19,9 +19,9 @@ VALIDATE_IS_X86()
 #    define GDT_SELECTOR_DATA0 0x10
 #    define GDT_SELECTOR_CODE3 0x18
 #    define GDT_SELECTOR_DATA3 0x20
-#    define GDT_SELECTOR_TLS 0x28
-#    define GDT_SELECTOR_PROC 0x30
-#    define GDT_SELECTOR_TSS 0x38
+#    define GDT_SELECTOR_TLS   0x28
+#    define GDT_SELECTOR_PROC  0x30
+#    define GDT_SELECTOR_TSS   0x38
 
 // SYSENTER makes certain assumptions on how the GDT is structured:
 static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
@@ -30,11 +30,11 @@ static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
 static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
 static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
 #else
-#    define GDT_SELECTOR_CODE0 0x08
-#    define GDT_SELECTOR_DATA0 0x10
-#    define GDT_SELECTOR_DATA3 0x18
-#    define GDT_SELECTOR_CODE3 0x20
-#    define GDT_SELECTOR_TSS 0x28
+#    define GDT_SELECTOR_CODE0     0x08
+#    define GDT_SELECTOR_DATA0     0x10
+#    define GDT_SELECTOR_DATA3     0x18
+#    define GDT_SELECTOR_CODE3     0x20
+#    define GDT_SELECTOR_TSS       0x28
 #    define GDT_SELECTOR_TSS_PART2 0x30
 #endif
 
@@ -50,15 +50,15 @@ union [[gnu::packed]] Descriptor {
         u16 limit_lo;
         u16 base_lo;
         u8 base_hi;
-        u8 type : 4;
-        u8 descriptor_type : 1;
-        u8 dpl : 2;
-        u8 segment_present : 1;
-        u8 limit_hi : 4;
-        u8 : 1;
+        u8 type             : 4;
+        u8 descriptor_type  : 1;
+        u8 dpl              : 2;
+        u8 segment_present  : 1;
+        u8 limit_hi         : 4;
+        u8                  : 1;
         u8 operation_size64 : 1;
         u8 operation_size32 : 1;
-        u8 granularity : 1;
+        u8 granularity      : 1;
         u8 base_hi2;
     };
     struct {

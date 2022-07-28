@@ -108,7 +108,7 @@ private:
 
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type : 6 { TransitionType::Invalid };
-    bool m_unique : 1 { false };
+    bool m_unique                    : 1 { false };
 };
 
 }

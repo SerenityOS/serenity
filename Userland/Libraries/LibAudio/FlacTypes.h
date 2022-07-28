@@ -16,11 +16,11 @@ namespace Audio {
 
 // These are not the actual values stored in the file! They are marker constants instead, only used temporarily in the decoder.
 // 11.22.3. INTERCHANNEL SAMPLE BLOCK SIZE
-#define FLAC_BLOCKSIZE_AT_END_OF_HEADER_8 0xffffffff
+#define FLAC_BLOCKSIZE_AT_END_OF_HEADER_8  0xffffffff
 #define FLAC_BLOCKSIZE_AT_END_OF_HEADER_16 0xfffffffe
 // 11.22.4. SAMPLE RATE
-#define FLAC_SAMPLERATE_AT_END_OF_HEADER_8 0xffffffff
-#define FLAC_SAMPLERATE_AT_END_OF_HEADER_16 0xfffffffe
+#define FLAC_SAMPLERATE_AT_END_OF_HEADER_8     0xffffffff
+#define FLAC_SAMPLERATE_AT_END_OF_HEADER_16    0xfffffffe
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10 0xfffffffd
 
 // 11.8 BLOCK_TYPE (7 bits)

@@ -14,52 +14,52 @@
 extern "C" {
 #endif
 
-#define AF_MASK 0xff
+#define AF_MASK   0xff
 #define AF_UNSPEC 0
-#define AF_LOCAL 1
-#define AF_UNIX AF_LOCAL
-#define AF_INET 2
-#define AF_INET6 3
-#define AF_MAX 4
-#define PF_LOCAL AF_LOCAL
-#define PF_UNIX PF_LOCAL
-#define PF_INET AF_INET
-#define PF_INET6 AF_INET6
+#define AF_LOCAL  1
+#define AF_UNIX   AF_LOCAL
+#define AF_INET   2
+#define AF_INET6  3
+#define AF_MAX    4
+#define PF_LOCAL  AF_LOCAL
+#define PF_UNIX   PF_LOCAL
+#define PF_INET   AF_INET
+#define PF_INET6  AF_INET6
 #define PF_UNSPEC AF_UNSPEC
-#define PF_MAX AF_MAX
+#define PF_MAX    AF_MAX
 
 #define SOCK_TYPE_MASK 0xff
-#define SOCK_STREAM 1
-#define SOCK_DGRAM 2
-#define SOCK_RAW 3
-#define SOCK_RDM 4
+#define SOCK_STREAM    1
+#define SOCK_DGRAM     2
+#define SOCK_RAW       3
+#define SOCK_RDM       4
 #define SOCK_SEQPACKET 5
-#define SOCK_NONBLOCK 04000
-#define SOCK_CLOEXEC 02000000
+#define SOCK_NONBLOCK  04000
+#define SOCK_CLOEXEC   02000000
 
-#define SHUT_RD 0
-#define SHUT_WR 1
+#define SHUT_RD   0
+#define SHUT_WR   1
 #define SHUT_RDWR 2
 
-#define IPPROTO_IP 0
-#define IPPROTO_ICMP 1
-#define IPPROTO_IGMP 2
-#define IPPROTO_IPIP 4
-#define IPPROTO_TCP 6
-#define IPPROTO_UDP 17
-#define IPPROTO_IPV6 41
-#define IPPROTO_ESP 50
-#define IPPROTO_AH 51
+#define IPPROTO_IP     0
+#define IPPROTO_ICMP   1
+#define IPPROTO_IGMP   2
+#define IPPROTO_IPIP   4
+#define IPPROTO_TCP    6
+#define IPPROTO_UDP    17
+#define IPPROTO_IPV6   41
+#define IPPROTO_ESP    50
+#define IPPROTO_AH     51
 #define IPPROTO_ICMPV6 58
-#define IPPROTO_RAW 255
+#define IPPROTO_RAW    255
 
-#define MSG_TRUNC 0x1
-#define MSG_CTRUNC 0x2
-#define MSG_PEEK 0x4
-#define MSG_OOB 0x8
+#define MSG_TRUNC     0x1
+#define MSG_CTRUNC    0x2
+#define MSG_PEEK      0x4
+#define MSG_OOB       0x8
 #define MSG_DONTROUTE 0x10
-#define MSG_WAITALL 0x20
-#define MSG_DONTWAIT 0x40
+#define MSG_WAITALL   0x20
+#define MSG_DONTWAIT  0x40
 
 typedef uint16_t sa_family_t;
 
@@ -96,7 +96,7 @@ struct linger {
 };
 
 #define SOL_SOCKET 1
-#define SOMAXCONN 128
+#define SOMAXCONN  128
 
 enum {
     SO_RCVTIMEO,
@@ -117,30 +117,30 @@ enum {
     SO_DONTROUTE,
     SO_OOBINLINE,
 };
-#define SO_RCVTIMEO SO_RCVTIMEO
-#define SO_SNDTIMEO SO_SNDTIMEO
-#define SO_TYPE SO_TYPE
-#define SO_ERROR SO_ERROR
-#define SO_PEERCRED SO_PEERCRED
-#define SO_DEBUG SO_DEBUG
-#define SO_REUSEADDR SO_REUSEADDR
+#define SO_RCVTIMEO     SO_RCVTIMEO
+#define SO_SNDTIMEO     SO_SNDTIMEO
+#define SO_TYPE         SO_TYPE
+#define SO_ERROR        SO_ERROR
+#define SO_PEERCRED     SO_PEERCRED
+#define SO_DEBUG        SO_DEBUG
+#define SO_REUSEADDR    SO_REUSEADDR
 #define SO_BINDTODEVICE SO_BINDTODEVICE
-#define SO_KEEPALIVE SO_KEEPALIVE
-#define SO_TIMESTAMP SO_TIMESTAMP
-#define SO_BROADCAST SO_BROADCAST
-#define SO_SNDBUF SO_SNDBUF
-#define SO_RCVBUF SO_RCVBUF
-#define SO_LINGER SO_LINGER
-#define SO_ACCEPTCONN SO_ACCEPTCONN
-#define SO_DONTROUTE SO_DONTROUTE
-#define SO_OOBINLINE SO_OOBINLINE
+#define SO_KEEPALIVE    SO_KEEPALIVE
+#define SO_TIMESTAMP    SO_TIMESTAMP
+#define SO_BROADCAST    SO_BROADCAST
+#define SO_SNDBUF       SO_SNDBUF
+#define SO_RCVBUF       SO_RCVBUF
+#define SO_LINGER       SO_LINGER
+#define SO_ACCEPTCONN   SO_ACCEPTCONN
+#define SO_DONTROUTE    SO_DONTROUTE
+#define SO_OOBINLINE    SO_OOBINLINE
 
 enum {
     SCM_TIMESTAMP,
     SCM_RIGHTS,
 };
 #define SCM_TIMESTAMP SCM_TIMESTAMP
-#define SCM_RIGHTS SCM_RIGHTS
+#define SCM_RIGHTS    SCM_RIGHTS
 
 struct sockaddr_storage {
     sa_family_t ss_family;

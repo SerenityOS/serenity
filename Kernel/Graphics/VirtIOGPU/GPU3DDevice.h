@@ -72,16 +72,16 @@ enum class VirGLCommand : u32 {
 
 union ClearType {
     struct {
-        u32 depth : 1;
+        u32 depth   : 1;
         u32 stencil : 1;
-        u32 color0 : 1;
-        u32 color1 : 1;
-        u32 color2 : 1;
-        u32 color3 : 1;
-        u32 color4 : 1;
-        u32 color5 : 1;
-        u32 color6 : 1;
-        u32 color7 : 1;
+        u32 color0  : 1;
+        u32 color1  : 1;
+        u32 color2  : 1;
+        u32 color3  : 1;
+        u32 color4  : 1;
+        u32 color5  : 1;
+        u32 color6  : 1;
+        u32 color7  : 1;
     } flags;
     u32 value;
 };

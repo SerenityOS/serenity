@@ -12,7 +12,7 @@
 __BEGIN_DECLS
 
 #define MOUNTED "/etc/mtab"
-#define MNTTAB "/etc/fstab"
+#define MNTTAB  "/etc/fstab"
 
 struct mntent {
     char* mnt_fsname;

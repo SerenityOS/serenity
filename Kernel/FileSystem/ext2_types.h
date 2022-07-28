@@ -14,8 +14,8 @@
 #if (!defined(_LINUX_TYPES_H) && !defined(_BLKID_TYPES_H) && !defined(_EXT2_TYPES_H))
 #    define _EXT2_TYPES_H
 
-#    define __S8_TYPEDEF __signed__ char
-#    define __U8_TYPEDEF unsigned char
+#    define __S8_TYPEDEF  __signed__ char
+#    define __U8_TYPEDEF  unsigned char
 #    define __S16_TYPEDEF __signed__ short
 #    define __U16_TYPEDEF unsigned short
 #    define __S32_TYPEDEF __signed__ int

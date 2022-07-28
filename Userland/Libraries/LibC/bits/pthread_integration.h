@@ -24,7 +24,7 @@ typedef void (*KeyDestructor)(void*);
 
 void __pthread_key_destroy_for_current_thread(void);
 
-#define __PTHREAD_MUTEX_NORMAL 0
+#define __PTHREAD_MUTEX_NORMAL    0
 #define __PTHREAD_MUTEX_RECURSIVE 1
 #define __PTHREAD_MUTEX_INITIALIZER     \
     {                                   \

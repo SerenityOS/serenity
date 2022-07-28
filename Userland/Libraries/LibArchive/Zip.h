@@ -85,17 +85,17 @@ enum class ZipCompressionMethod : u16 {
 union ZipGeneralPurposeFlags {
     u16 flags;
     struct {
-        u16 encrypted : 1;
-        u16 compression_options : 2;
-        u16 data_descriptor : 1;
-        u16 enhanced_deflation : 1;
+        u16 encrypted               : 1;
+        u16 compression_options     : 2;
+        u16 data_descriptor         : 1;
+        u16 enhanced_deflation      : 1;
         u16 compressed_patched_data : 1;
-        u16 strong_encryption : 1;
-        u16 : 4;
-        u16 language_encoding : 1;
-        u16 : 1;
-        u16 masked_data_values : 1;
-        u16 : 2;
+        u16 strong_encryption       : 1;
+        u16                         : 4;
+        u16 language_encoding       : 1;
+        u16                         : 1;
+        u16 masked_data_values      : 1;
+        u16                         : 2;
     };
 };
 static_assert(sizeof(ZipGeneralPurposeFlags) == sizeof(u16));

@@ -53,6 +53,6 @@ struct utmp {
 #    define ut_time ut_tv.tv_sec
 #endif
 #define ut_xtime ut_tv.tv_sec
-#define ut_addr ut_addr_v6[0]
+#define ut_addr  ut_addr_v6[0]
 
 __END_DECLS

@@ -18,7 +18,7 @@
 namespace Kernel {
 
 #define SMBIOS_BASE_SEARCH_ADDR 0xf0000
-#define SMBIOS_END_SEARCH_ADDR 0xfffff
+#define SMBIOS_END_SEARCH_ADDR  0xfffff
 #define SMBIOS_SEARCH_AREA_SIZE (SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR)
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_64_bit_entry_initialization_values()

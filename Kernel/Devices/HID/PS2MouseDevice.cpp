@@ -16,7 +16,7 @@ namespace Kernel {
 
 #define IRQ_MOUSE 12
 
-#define PS2MOUSE_INTELLIMOUSE_ID 0x03
+#define PS2MOUSE_INTELLIMOUSE_ID          0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
 UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller)

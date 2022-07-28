@@ -19,35 +19,35 @@ struct syslog_data {
 };
 
 /* The severity of the message. This is ordered. */
-#define LOG_EMERG 0
-#define LOG_ALERT 1
-#define LOG_CRIT 2
-#define LOG_ERR 3
+#define LOG_EMERG   0
+#define LOG_ALERT   1
+#define LOG_CRIT    2
+#define LOG_ERR     3
 #define LOG_WARNING 4
-#define LOG_NOTICE 5
-#define LOG_INFO 6
-#define LOG_DEBUG 7
+#define LOG_NOTICE  5
+#define LOG_INFO    6
+#define LOG_DEBUG   7
 
 /* Macros for masking out the priority of a combined priority */
-#define LOG_PRIMASK (7)
+#define LOG_PRIMASK       (7)
 #define LOG_PRI(priority) ((priority)&LOG_PRIMASK)
 
 /*
  * Many of these facilities don't really make sense anymore, but we keep them
  * for compatibility purposes.
  */
-#define LOG_KERN (0 << 3)
-#define LOG_USER (1 << 3)
-#define LOG_MAIL (2 << 3)
-#define LOG_DAEMON (3 << 3)
-#define LOG_AUTH (4 << 3)
-#define LOG_SYSLOG (5 << 3)
-#define LOG_LPR (6 << 3)
-#define LOG_NEWS (7 << 3)
-#define LOG_UUCP (8 << 3)
-#define LOG_CRON (9 << 3)
+#define LOG_KERN     (0 << 3)
+#define LOG_USER     (1 << 3)
+#define LOG_MAIL     (2 << 3)
+#define LOG_DAEMON   (3 << 3)
+#define LOG_AUTH     (4 << 3)
+#define LOG_SYSLOG   (5 << 3)
+#define LOG_LPR      (6 << 3)
+#define LOG_NEWS     (7 << 3)
+#define LOG_UUCP     (8 << 3)
+#define LOG_CRON     (9 << 3)
 #define LOG_AUTHPRIV (10 << 3)
-#define LOG_FTP (11 << 3)
+#define LOG_FTP      (11 << 3)
 /* glibc and OpenBSD reserve 12..15 for future system usage, we will too */
 #define LOG_LOCAL0 (16 << 3)
 #define LOG_LOCAL1 (17 << 3)
@@ -61,7 +61,7 @@ struct syslog_data {
 #define LOG_NFACILITIES 24
 
 /* Macros to get the facility from a combined priority. */
-#define LOG_FACMASK (~7)
+#define LOG_FACMASK       (~7)
 #define LOG_FAC(priority) (((priority)&LOG_FACMASK) >> 3)
 
 /* For masking logs, we use these macros with just the priority. */
@@ -88,7 +88,7 @@ struct syslog_data {
 #ifdef SYSLOG_NAMES
 /* Used for marking the fallback; some applications check for these defines. */
 #    define INTERNAL_NOPRI 0x10
-#    define INTERNAL_MARK LOG_MAKEPRI(LOG_NFACILITIES << 3, 0)
+#    define INTERNAL_MARK  LOG_MAKEPRI(LOG_NFACILITIES << 3, 0)
 
 typedef struct _code {
     /*

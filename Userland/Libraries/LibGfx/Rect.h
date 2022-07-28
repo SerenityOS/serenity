@@ -506,13 +506,13 @@ public:
         bool anywhere_right() const { return m_top_right || m_right || m_bottom_right; }
 
     private:
-        bool m_top_left : 1 { false };
-        bool m_top : 1 { false };
-        bool m_top_right : 1 { false };
-        bool m_left : 1 { false };
-        bool m_right : 1 { false };
-        bool m_bottom_left : 1 { false };
-        bool m_bottom : 1 { false };
+        bool m_top_left     : 1 { false };
+        bool m_top          : 1 { false };
+        bool m_top_right    : 1 { false };
+        bool m_left         : 1 { false };
+        bool m_right        : 1 { false };
+        bool m_bottom_left  : 1 { false };
+        bool m_bottom       : 1 { false };
         bool m_bottom_right : 1 { false };
     };
     [[nodiscard]] RelativeLocation relative_location_to(Rect<T> const& other) const

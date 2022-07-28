@@ -171,14 +171,14 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 
 #define ABOVE_FRAME_0 m_decoder.m_above_ref_frame[0]
 #define ABOVE_FRAME_1 m_decoder.m_above_ref_frame[1]
-#define LEFT_FRAME_0 m_decoder.m_left_ref_frame[0]
-#define LEFT_FRAME_1 m_decoder.m_left_ref_frame[1]
-#define AVAIL_U m_decoder.m_available_u
-#define AVAIL_L m_decoder.m_available_l
-#define ABOVE_INTRA m_decoder.m_above_intra
-#define LEFT_INTRA m_decoder.m_left_intra
-#define ABOVE_SINGLE m_decoder.m_above_single
-#define LEFT_SINGLE m_decoder.m_left_single
+#define LEFT_FRAME_0  m_decoder.m_left_ref_frame[0]
+#define LEFT_FRAME_1  m_decoder.m_left_ref_frame[1]
+#define AVAIL_U       m_decoder.m_available_u
+#define AVAIL_L       m_decoder.m_available_l
+#define ABOVE_INTRA   m_decoder.m_above_intra
+#define LEFT_INTRA    m_decoder.m_left_intra
+#define ABOVE_SINGLE  m_decoder.m_above_single
+#define LEFT_SINGLE   m_decoder.m_left_single
 
 u8 TreeParser::calculate_partition_probability(u8 node)
 {

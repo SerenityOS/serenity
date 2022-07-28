@@ -22,9 +22,9 @@ struct rtentry {
     /* FIXME: complete the struct */
 };
 
-#define RTF_UP 0x1      /* do not delete the route */
+#define RTF_UP      0x1 /* do not delete the route */
 #define RTF_GATEWAY 0x2 /* the route is a gateway and not an end host */
-#define RTF_HOST 0x4    /* host entry (net otherwise) */
+#define RTF_HOST    0x4 /* host entry (net otherwise) */
 
 #ifdef __cplusplus
 }

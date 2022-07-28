@@ -102,12 +102,12 @@ public:
 
     private:
         void forbid_tokens(std::initializer_list<TokenType> const& forbidden);
-        bool m_forbid_in_token : 1 { false };
-        bool m_forbid_logical_tokens : 1 { false };
-        bool m_forbid_coalesce_token : 1 { false };
-        bool m_forbid_paren_open : 1 { false };
+        bool m_forbid_in_token             : 1 { false };
+        bool m_forbid_logical_tokens       : 1 { false };
+        bool m_forbid_coalesce_token       : 1 { false };
+        bool m_forbid_paren_open           : 1 { false };
         bool m_forbid_question_mark_period : 1 { false };
-        bool m_forbid_equals : 1 { false };
+        bool m_forbid_equals               : 1 { false };
     };
 
     struct ExpressionResult {

@@ -13,7 +13,7 @@ namespace Kernel {
 
 // Note: These need to be kept in sync with Userland/Libraries/LibC/sys/kcov.h
 typedef volatile u64 kcov_pc_t;
-#define KCOV_ENTRY_SIZE sizeof(kcov_pc_t)
+#define KCOV_ENTRY_SIZE  sizeof(kcov_pc_t)
 #define KCOV_MAX_ENTRIES (10 * 1024 * 1024)
 
 /*

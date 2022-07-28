@@ -17,8 +17,8 @@
 namespace Kernel {
 
 #define ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD 0x05F5E100
-#define NANOSECOND_PERIOD_TO_HERTZ(x) 1000000000 / x
-#define HERTZ_TO_MEGAHERTZ(x) (x / 1000000)
+#define NANOSECOND_PERIOD_TO_HERTZ(x)        1000000000 / x
+#define HERTZ_TO_MEGAHERTZ(x)                (x / 1000000)
 
 namespace HPETFlags {
 enum class Attributes {

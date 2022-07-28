@@ -16,11 +16,11 @@ __BEGIN_DECLS
 
 struct ip {
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    uint8_t ip_v : 4;
+    uint8_t ip_v  : 4;
     uint8_t ip_hl : 4;
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     uint8_t ip_hl : 4;
-    uint8_t ip_v : 4;
+    uint8_t ip_v  : 4;
 #endif
     uint8_t ip_tos;
     uint16_t ip_len;

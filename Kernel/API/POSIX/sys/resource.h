@@ -32,7 +32,7 @@ struct rusage {
     long ru_nivcsw;
 };
 
-#define RUSAGE_SELF 1
+#define RUSAGE_SELF     1
 #define RUSAGE_CHILDREN 2
 
 #ifdef __cplusplus

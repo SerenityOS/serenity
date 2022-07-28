@@ -50,7 +50,7 @@ int pthread_attr_setstack(pthread_attr_t* attr, void*, size_t);
 int pthread_attr_getstacksize(pthread_attr_t const*, size_t*);
 int pthread_attr_setstacksize(pthread_attr_t*, size_t);
 
-#define PTHREAD_SCOPE_SYSTEM 0
+#define PTHREAD_SCOPE_SYSTEM  0
 #define PTHREAD_SCOPE_PROCESS 1
 
 int pthread_attr_getscope(pthread_attr_t const*, int*);
@@ -64,14 +64,14 @@ int pthread_setspecific(pthread_key_t key, void const* value);
 int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param);
 int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param);
 
-#define PTHREAD_MUTEX_NORMAL __PTHREAD_MUTEX_NORMAL
-#define PTHREAD_MUTEX_RECURSIVE __PTHREAD_MUTEX_RECURSIVE
-#define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL
-#define PTHREAD_MUTEX_INITIALIZER __PTHREAD_MUTEX_INITIALIZER
+#define PTHREAD_MUTEX_NORMAL                   __PTHREAD_MUTEX_NORMAL
+#define PTHREAD_MUTEX_RECURSIVE                __PTHREAD_MUTEX_RECURSIVE
+#define PTHREAD_MUTEX_DEFAULT                  PTHREAD_MUTEX_NORMAL
+#define PTHREAD_MUTEX_INITIALIZER              __PTHREAD_MUTEX_INITIALIZER
 #define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP __PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 
 #define PTHREAD_PROCESS_PRIVATE 1
-#define PTHREAD_PROCESS_SHARED 2
+#define PTHREAD_PROCESS_SHARED  2
 
 #define PTHREAD_COND_INITIALIZER     \
     {                                \
@@ -82,7 +82,7 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 #define PTHREAD_RWLOCK_INITIALIZER \
     NULL
 
-#define PTHREAD_KEYS_MAX 64
+#define PTHREAD_KEYS_MAX              64
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
@@ -98,10 +98,10 @@ int pthread_condattr_destroy(pthread_condattr_t*);
 int pthread_cond_destroy(pthread_cond_t*);
 int pthread_cond_timedwait(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
 
-#define PTHREAD_CANCEL_ENABLE 1
+#define PTHREAD_CANCEL_ENABLE  1
 #define PTHREAD_CANCEL_DISABLE 2
 
-#define PTHREAD_CANCEL_DEFERRED 1
+#define PTHREAD_CANCEL_DEFERRED     1
 #define PTHREAD_CANCEL_ASYNCHRONOUS 2
 
 int pthread_cancel(pthread_t);

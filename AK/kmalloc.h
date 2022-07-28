@@ -15,8 +15,8 @@
 #    include <new>
 #    include <stdlib.h>
 
-#    define kcalloc calloc
-#    define kmalloc malloc
+#    define kcalloc           calloc
+#    define kmalloc           malloc
 #    define kmalloc_good_size malloc_good_size
 
 inline void kfree_sized(void* ptr, size_t)

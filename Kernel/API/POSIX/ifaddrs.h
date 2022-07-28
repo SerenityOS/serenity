@@ -21,7 +21,7 @@ struct ifaddrs {
         struct sockaddr* ifu_dstaddr;
     } ifa_ifu;
 #define ifa_broadaddr ifa_ifu.ifu_broadaddr
-#define ifa_dstaddr ifa_ifu.ifu_dstaddr
+#define ifa_dstaddr   ifa_ifu.ifu_dstaddr
     void* ifa_data;
 };
 

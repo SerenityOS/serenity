@@ -11,22 +11,22 @@
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ObjectHandle);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
 
-#define VIRGL_BIND_DEPTH_STENCIL (1 << 0)
-#define VIRGL_BIND_RENDER_TARGET (1 << 1)
-#define VIRGL_BIND_SAMPLER_VIEW (1 << 3)
-#define VIRGL_BIND_VERTEX_BUFFER (1 << 4)
-#define VIRGL_BIND_INDEX_BUFFER (1 << 5)
+#define VIRGL_BIND_DEPTH_STENCIL   (1 << 0)
+#define VIRGL_BIND_RENDER_TARGET   (1 << 1)
+#define VIRGL_BIND_SAMPLER_VIEW    (1 << 3)
+#define VIRGL_BIND_VERTEX_BUFFER   (1 << 4)
+#define VIRGL_BIND_INDEX_BUFFER    (1 << 5)
 #define VIRGL_BIND_CONSTANT_BUFFER (1 << 6)
-#define VIRGL_BIND_DISPLAY_TARGET (1 << 7)
-#define VIRGL_BIND_COMMAND_ARGS (1 << 8)
-#define VIRGL_BIND_STREAM_OUTPUT (1 << 11)
-#define VIRGL_BIND_SHADER_BUFFER (1 << 14)
-#define VIRGL_BIND_QUERY_BUFFER (1 << 15)
-#define VIRGL_BIND_CURSOR (1 << 16)
-#define VIRGL_BIND_CUSTOM (1 << 17)
-#define VIRGL_BIND_SCANOUT (1 << 18)
-#define VIRGL_BIND_STAGING (1 << 19)
-#define VIRGL_BIND_SHARED (1 << 20)
+#define VIRGL_BIND_DISPLAY_TARGET  (1 << 7)
+#define VIRGL_BIND_COMMAND_ARGS    (1 << 8)
+#define VIRGL_BIND_STREAM_OUTPUT   (1 << 11)
+#define VIRGL_BIND_SHADER_BUFFER   (1 << 14)
+#define VIRGL_BIND_QUERY_BUFFER    (1 << 15)
+#define VIRGL_BIND_CURSOR          (1 << 16)
+#define VIRGL_BIND_CUSTOM          (1 << 17)
+#define VIRGL_BIND_SCANOUT         (1 << 18)
+#define VIRGL_BIND_STAGING         (1 << 19)
+#define VIRGL_BIND_SHARED          (1 << 20)
 
 namespace Protocol {
 
@@ -118,16 +118,16 @@ enum class VirGLCommand : u32 {
 
 union ClearType {
     struct {
-        u32 depth : 1;
+        u32 depth   : 1;
         u32 stencil : 1;
-        u32 color0 : 1;
-        u32 color1 : 1;
-        u32 color2 : 1;
-        u32 color3 : 1;
-        u32 color4 : 1;
-        u32 color5 : 1;
-        u32 color6 : 1;
-        u32 color7 : 1;
+        u32 color0  : 1;
+        u32 color1  : 1;
+        u32 color2  : 1;
+        u32 color3  : 1;
+        u32 color4  : 1;
+        u32 color5  : 1;
+        u32 color6  : 1;
+        u32 color7  : 1;
     } flags;
     u32 value;
 };

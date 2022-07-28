@@ -12,16 +12,16 @@
 extern "C" {
 #endif
 
-#define POLLIN (1u << 0)
+#define POLLIN     (1u << 0)
 #define POLLRDNORM POLLIN
-#define POLLPRI (1u << 1)
-#define POLLOUT (1u << 2)
+#define POLLPRI    (1u << 1)
+#define POLLOUT    (1u << 2)
 #define POLLWRNORM POLLOUT
-#define POLLERR (1u << 3)
-#define POLLHUP (1u << 4)
-#define POLLNVAL (1u << 5)
+#define POLLERR    (1u << 3)
+#define POLLHUP    (1u << 4)
+#define POLLNVAL   (1u << 5)
 #define POLLWRBAND (1u << 12)
-#define POLLRDHUP (1u << 13)
+#define POLLRDHUP  (1u << 13)
 
 struct pollfd {
     int fd;

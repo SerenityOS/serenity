@@ -222,12 +222,12 @@ private:
     RefPtr<VMObject> m_vmobject;
     OwnPtr<KString> m_name;
     u8 m_access { Region::None };
-    bool m_shared : 1 { false };
-    bool m_cacheable : 1 { false };
-    bool m_stack : 1 { false };
-    bool m_mmap : 1 { false };
+    bool m_shared         : 1 { false };
+    bool m_cacheable      : 1 { false };
+    bool m_stack          : 1 { false };
+    bool m_mmap           : 1 { false };
     bool m_syscall_region : 1 { false };
-    bool m_write_combine : 1 { false };
+    bool m_write_combine  : 1 { false };
 
     IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;

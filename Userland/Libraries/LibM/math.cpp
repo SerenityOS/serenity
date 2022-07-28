@@ -74,7 +74,7 @@ union FloatExtractor<long double> {
     struct {
         unsigned long long mantissa;
         unsigned exponent : 15;
-        unsigned sign : 1;
+        unsigned sign     : 1;
     };
     long double d;
 };
@@ -89,8 +89,8 @@ union FloatExtractor<double> {
     static constexpr unsigned exponent_max = 2047;
     struct {
         unsigned long long mantissa : 52;
-        unsigned exponent : 11;
-        unsigned sign : 1;
+        unsigned exponent           : 11;
+        unsigned sign               : 1;
     };
     double d;
 };
@@ -104,8 +104,8 @@ union FloatExtractor<float> {
     static constexpr unsigned exponent_max = 255;
     struct {
         unsigned long long mantissa : 23;
-        unsigned exponent : 8;
-        unsigned sign : 1;
+        unsigned exponent           : 8;
+        unsigned sign               : 1;
     };
     float d;
 };

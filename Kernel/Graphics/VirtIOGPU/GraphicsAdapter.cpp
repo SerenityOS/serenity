@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-#define DEVICE_EVENTS_READ 0x0
+#define DEVICE_EVENTS_READ  0x0
 #define DEVICE_EVENTS_CLEAR 0x4
 #define DEVICE_NUM_SCANOUTS 0x8
 

@@ -9,5 +9,5 @@
 #include <Kernel/API/Device.h>
 
 #define makedev(major, minor) serenity_dev_makedev((major), (minor))
-#define major(dev) serenity_dev_major(dev)
-#define minor(dev) serenity_dev_minor(dev)
+#define major(dev)            serenity_dev_major(dev)
+#define minor(dev)            serenity_dev_minor(dev)

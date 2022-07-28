@@ -10,7 +10,7 @@
 namespace Partition {
 
 #define GPT_SIGNATURE2 0x54524150
-#define GPT_SIGNATURE 0x20494645
+#define GPT_SIGNATURE  0x20494645
 
 struct [[gnu::packed]] GPTPartitionEntry {
     u8 partition_guid[16];

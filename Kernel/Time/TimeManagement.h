@@ -18,7 +18,7 @@
 
 namespace Kernel {
 
-#define OPTIMAL_TICKS_PER_SECOND_RATE 250
+#define OPTIMAL_TICKS_PER_SECOND_RATE         250
 #define OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE 1000
 
 class HardwareTimerBase;

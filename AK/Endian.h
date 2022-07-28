@@ -29,9 +29,9 @@
 #    define be64toh(x) OSSwapBigToHostInt64(x)
 #    define le64toh(x) OSSwapLittleToHostInt64(x)
 
-#    define __BIG_ENDIAN BIG_ENDIAN
+#    define __BIG_ENDIAN    BIG_ENDIAN
 #    define __LITTLE_ENDIAN LITTLE_ENDIAN
-#    define __BYTE_ORDER BYTE_ORDER
+#    define __BYTE_ORDER    BYTE_ORDER
 #endif
 
 namespace AK {

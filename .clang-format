@@ -1,14 +1,17 @@
 ---
 Language: Cpp
 BasedOnStyle: WebKit
-SpaceAfterTemplateKeyword: false
+
+AlignConsecutiveBitFields: true
+AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
+BraceWrapping:
+    AfterFunction: true
+BreakBeforeBraces: Custom
 BreakBeforeInheritanceComma: true
 BreakConstructorInitializers: BeforeComma
 IndentPPDirectives: AfterHash
-BreakBeforeBraces: Custom
-BraceWrapping:
-    AfterFunction: true
 NamespaceIndentation: None
 QualifierAlignment: Right
+SpaceAfterTemplateKeyword: false

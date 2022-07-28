@@ -491,7 +491,7 @@ private:
     u8 m_sib { 0 };
     u8 m_displacement_bytes { 0 };
     u8 m_register_index : 7 { 0x7f };
-    bool m_has_sib : 1 { false };
+    bool m_has_sib      : 1 { false };
 };
 
 class Instruction {
@@ -580,9 +580,9 @@ private:
     u8 m_sub_op { 0 };
     u8 m_extra_bytes { 0 };
     u8 m_rep_prefix { 0 };
-    bool m_a32 : 1 { false };
-    bool m_o32 : 1 { false };
-    bool m_has_lock_prefix : 1 { false };
+    bool m_a32                              : 1 { false };
+    bool m_o32                              : 1 { false };
+    bool m_has_lock_prefix                  : 1 { false };
     bool m_has_operand_size_override_prefix : 1 { false };
     bool m_has_address_size_override_prefix : 1 { false };
 };

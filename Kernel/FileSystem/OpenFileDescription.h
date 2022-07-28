@@ -146,12 +146,12 @@ private:
         OwnPtr<OpenFileDescriptionData> data;
         off_t current_offset { 0 };
         u32 file_flags { 0 };
-        bool readable : 1 { false };
-        bool writable : 1 { false };
-        bool is_blocking : 1 { true };
-        bool is_directory : 1 { false };
-        bool should_append : 1 { false };
-        bool direct : 1 { false };
+        bool readable                  : 1 { false };
+        bool writable                  : 1 { false };
+        bool is_blocking               : 1 { true };
+        bool is_directory              : 1 { false };
+        bool should_append             : 1 { false };
+        bool direct                    : 1 { false };
         FIFO::Direction fifo_direction : 2 { FIFO::Direction::Neither };
     };
 

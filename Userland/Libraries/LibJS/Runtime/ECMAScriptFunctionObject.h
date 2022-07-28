@@ -122,15 +122,15 @@ private:
     Vector<PrivateElement> m_private_methods;                                // [[PrivateMethods]]
     Variant<PropertyKey, PrivateName, Empty> m_class_field_initializer_name; // [[ClassFieldInitializerName]]
     ConstructorKind m_constructor_kind : 1 { ConstructorKind::Base };        // [[ConstructorKind]]
-    bool m_strict : 1 { false };                                             // [[Strict]]
-    bool m_is_class_constructor : 1 { false };                               // [[IsClassConstructor]]
-    ThisMode m_this_mode : 2 { ThisMode::Global };                           // [[ThisMode]]
+    bool m_strict                      : 1 { false };                        // [[Strict]]
+    bool m_is_class_constructor        : 1 { false };                        // [[IsClassConstructor]]
+    ThisMode m_this_mode               : 2 { ThisMode::Global };             // [[ThisMode]]
 
-    bool m_might_need_arguments_object : 1 { true };
+    bool m_might_need_arguments_object  : 1 { true };
     bool m_contains_direct_call_to_eval : 1 { true };
-    bool m_is_arrow_function : 1 { false };
-    bool m_has_simple_parameter_list : 1 { false };
-    FunctionKind m_kind : 3 { FunctionKind::Normal };
+    bool m_is_arrow_function            : 1 { false };
+    bool m_has_simple_parameter_list    : 1 { false };
+    FunctionKind m_kind                 : 3 { FunctionKind::Normal };
 };
 
 template<>

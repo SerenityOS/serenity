@@ -23,17 +23,17 @@ enum class RoundingMode : u8 {
 union X87ControlWord {
     u16 cw;
     struct {
-        u16 mask_invalid : 1;              // IM
-        u16 mask_denorm : 1;               // DM
-        u16 mask_zero_div : 1;             // ZM
-        u16 mask_overflow : 1;             // OM
-        u16 mask_underflow : 1;            // UM
-        u16 mask_precision : 1;            // PM
-        u16 : 2;                           // unused
-        u16 precision : 2;                 // PC
+        u16 mask_invalid              : 1; // IM
+        u16 mask_denorm               : 1; // DM
+        u16 mask_zero_div             : 1; // ZM
+        u16 mask_overflow             : 1; // OM
+        u16 mask_underflow            : 1; // UM
+        u16 mask_precision            : 1; // PM
+        u16                           : 2; // unused
+        u16 precision                 : 2; // PC
         RoundingMode rounding_control : 2; // RC
-        u16 infinity_control : 1;          // X
-        u16 : 3;                           // unused
+        u16 infinity_control          : 1; // X
+        u16                           : 3; // unused
     };
 };
 static_assert(sizeof(X87ControlWord) == sizeof(u16));
@@ -41,22 +41,22 @@ static_assert(sizeof(X87ControlWord) == sizeof(u16));
 union MXCSR {
     u32 mxcsr;
     struct {
-        u32 invalid_operation_flag : 1;    // IE
-        u32 denormal_operation_flag : 1;   // DE
-        u32 divide_by_zero_flag : 1;       // ZE
-        u32 overflow_flag : 1;             // OE
-        u32 underflow_flag : 1;            // UE
-        u32 precision_flag : 1;            // PE
-        u32 denormals_are_zero : 1;        // DAZ
-        u32 invalid_operation_mask : 1;    // IM
-        u32 denormal_operation_mask : 1;   // DM
-        u32 divide_by_zero_mask : 1;       // ZM
-        u32 overflow_mask : 1;             // OM
-        u32 underflow_mask : 1;            // UM
-        u32 precision_mask : 1;            // PM
+        u32 invalid_operation_flag    : 1; // IE
+        u32 denormal_operation_flag   : 1; // DE
+        u32 divide_by_zero_flag       : 1; // ZE
+        u32 overflow_flag             : 1; // OE
+        u32 underflow_flag            : 1; // UE
+        u32 precision_flag            : 1; // PE
+        u32 denormals_are_zero        : 1; // DAZ
+        u32 invalid_operation_mask    : 1; // IM
+        u32 denormal_operation_mask   : 1; // DM
+        u32 divide_by_zero_mask       : 1; // ZM
+        u32 overflow_mask             : 1; // OM
+        u32 underflow_mask            : 1; // UM
+        u32 precision_mask            : 1; // PM
         RoundingMode rounding_control : 2; // RC
-        u32 flush_to_zero : 1;             // FTZ
-        u32 __reserved : 16;
+        u32 flush_to_zero             : 1; // FTZ
+        u32 __reserved                : 16;
     };
 };
 static_assert(sizeof(MXCSR) == sizeof(u32));

@@ -51,8 +51,8 @@ static inline int timerisset(const struct timeval* tv)
     return tv->tv_sec || tv->tv_usec;
 }
 
-#define timeradd timeradd
-#define timersub timersub
+#define timeradd   timeradd
+#define timersub   timersub
 #define timerclear timerclear
 #define timerisset timerisset
 #define timercmp(tvp, uvp, cmp) \
@@ -100,8 +100,8 @@ static inline void TIMESPEC_TO_TIMEVAL(struct timeval* tv, const struct timespec
     tv->tv_usec = ts->tv_nsec / 1000;
 }
 
-#define timespecadd timespecadd
-#define timespecsub timespecsub
+#define timespecadd   timespecadd
+#define timespecsub   timespecsub
 #define timespecclear timespecclear
 #define timespecisset timespecisset
 #define timespeccmp(ts, us, cmp) \

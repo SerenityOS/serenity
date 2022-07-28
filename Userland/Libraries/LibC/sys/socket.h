@@ -35,7 +35,7 @@ int recvfd(int sockfd, int options);
 // These three are non-POSIX, but common:
 #define CMSG_ALIGN(x) (((x) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 #define CMSG_SPACE(x) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(x))
-#define CMSG_LEN(x) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (x))
+#define CMSG_LEN(x)   (CMSG_ALIGN(sizeof(struct cmsghdr)) + (x))
 
 static inline struct cmsghdr* CMSG_FIRSTHDR(struct msghdr* msg)
 {

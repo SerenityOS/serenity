@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/NumberObject.h>
 
 #ifdef __clang__
-#    define EPSILON_VALUE AK::exp2(-52.)
+#    define EPSILON_VALUE          AK::exp2(-52.)
 #    define MAX_SAFE_INTEGER_VALUE AK::exp2(53.) - 1
 #    define MIN_SAFE_INTEGER_VALUE -(AK::exp2(53.) - 1)
 #else

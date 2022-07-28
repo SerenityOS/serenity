@@ -13,7 +13,7 @@
 #endif
 
 #define MAX_KERNEL_SIZE 0x4000000
-#define KERNEL_PD_SIZE 0x31000000
+#define KERNEL_PD_SIZE  0x31000000
 
 #ifdef __cplusplus
 namespace Kernel {

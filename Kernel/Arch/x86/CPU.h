@@ -16,9 +16,9 @@
 VALIDATE_IS_X86()
 
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
-#define IRQ_VECTOR_BASE 0x50
+#define IRQ_VECTOR_BASE                  0x50
 #define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
-#define PAGE_MASK (~(FlatPtr)0xfffu)
+#define PAGE_MASK                        (~(FlatPtr)0xfffu)
 
 namespace Kernel {
 

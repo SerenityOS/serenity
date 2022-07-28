@@ -100,7 +100,7 @@
 
 #if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 #    define HAS_ADDRESS_SANITIZER
-#    define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region(addr, size)
+#    define ASAN_POISON_MEMORY_REGION(addr, size)   __asan_poison_memory_region(addr, size)
 #    define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region(addr, size)
 #else
 #    define ASAN_POISON_MEMORY_REGION(addr, size)
@@ -123,7 +123,7 @@ extern "C" {
 
 #ifdef AK_OS_BSD_GENERIC
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
-#    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
+#    define CLOCK_REALTIME_COARSE  CLOCK_REALTIME
 #endif
 
 #ifndef SYSTEM_CACHE_ALIGNMENT_SIZE

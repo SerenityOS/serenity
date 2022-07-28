@@ -48,7 +48,7 @@ struct Piece {
     {
     }
     Color color : 4;
-    Type type : 4;
+    Type type   : 4;
     bool operator==(Piece const& other) const { return color == other.color && type == other.type; }
 };
 
@@ -95,9 +95,9 @@ struct Move {
     Square to;
     Type promote_to;
     Piece piece;
-    bool is_check : 1 = false;
-    bool is_mate : 1 = false;
-    bool is_capture : 1 = false;
+    bool is_check     : 1 = false;
+    bool is_mate      : 1 = false;
+    bool is_capture   : 1 = false;
     bool is_ambiguous : 1 = false;
     Square ambiguous { 50, 50 };
     Move(StringView long_algebraic);
@@ -172,12 +172,12 @@ private:
     short m_moves_since_capture { 0 };
     short m_moves_since_pawn_advance { 0 };
 
-    Color m_turn : 2 { Color::White };
+    Color m_turn     : 2 { Color::White };
     Color m_resigned : 2 { Color::None };
 
-    bool m_white_can_castle_kingside : 1 { true };
+    bool m_white_can_castle_kingside  : 1 { true };
     bool m_white_can_castle_queenside : 1 { true };
-    bool m_black_can_castle_kingside : 1 { true };
+    bool m_black_can_castle_kingside  : 1 { true };
     bool m_black_can_castle_queenside : 1 { true };
 
     // We trust that hash collisions will not happen to save lots of memory and time.

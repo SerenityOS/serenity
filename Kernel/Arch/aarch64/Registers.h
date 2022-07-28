@@ -15,21 +15,21 @@ namespace Kernel::Aarch64 {
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // Memory Model Feature Register 0
 struct alignas(u64) ID_AA64MMFR0_EL1 {
-    int PARange : 4;
-    int ASIDBits : 4;
-    int BigEnd : 4;
-    int SNSMem : 4;
+    int PARange   : 4;
+    int ASIDBits  : 4;
+    int BigEnd    : 4;
+    int SNSMem    : 4;
     int BigEndEL0 : 4;
-    int TGran16 : 4;
-    int TGran64 : 4;
-    int TGran4 : 4;
+    int TGran16   : 4;
+    int TGran64   : 4;
+    int TGran4    : 4;
     int TGran16_2 : 4;
     int TGran64_2 : 4;
-    int TGran4_2 : 4;
-    int ExS : 4;
-    int RES0 : 8;
-    int FGT : 4;
-    int ECV : 4;
+    int TGran4_2  : 4;
+    int ExS       : 4;
+    int RES0      : 8;
+    int FGT       : 4;
+    int ECV       : 4;
 
     static inline ID_AA64MMFR0_EL1 read()
     {
@@ -85,31 +85,31 @@ struct alignas(u64) TCR_EL1 {
         Size_16KB = 0b10,
     };
 
-    int T0SZ : 6;
-    int RES0_0 : 1;
-    int EPD0 : 1;
+    int T0SZ                : 6;
+    int RES0_0              : 1;
+    int EPD0                : 1;
     InnerCacheability IRGN0 : 2;
     OuterCacheability ORGN0 : 2;
-    Shareability SH0 : 2;
-    TG0GranuleSize TG0 : 2;
+    Shareability SH0        : 2;
+    TG0GranuleSize TG0      : 2;
 
-    int T1SZ : 6;
-    int A1 : 1;
-    int EPD1 : 1;
+    int T1SZ                : 6;
+    int A1                  : 1;
+    int EPD1                : 1;
     InnerCacheability IRGN1 : 2;
     OuterCacheability ORGN1 : 2;
-    Shareability SH1 : 2;
-    TG1GranuleSize TG1 : 2;
+    Shareability SH1        : 2;
+    TG1GranuleSize TG1      : 2;
 
-    int IPS : 3;
+    int IPS    : 3;
     int RES0_1 : 1;
-    int AS : 1;
-    int TBI0 : 1;
-    int TBI1 : 1;
-    int HA : 1;
-    int HD : 1;
-    int HPD0 : 1;
-    int HPD1 : 1;
+    int AS     : 1;
+    int TBI0   : 1;
+    int TBI1   : 1;
+    int HA     : 1;
+    int HD     : 1;
+    int HPD0   : 1;
+    int HPD1   : 1;
     int HWU059 : 1;
     int HWU060 : 1;
     int HWU061 : 1;
@@ -122,14 +122,14 @@ struct alignas(u64) TCR_EL1 {
 
     int TBID0 : 1;
     int TBID1 : 1;
-    int NFD0 : 1;
-    int NFD1 : 1;
+    int NFD0  : 1;
+    int NFD1  : 1;
 
-    int E0PD0 : 1;
-    int E0PD1 : 1;
-    int TCMA0 : 1;
-    int TCMA1 : 1;
-    int DS : 1;
+    int E0PD0  : 1;
+    int E0PD1  : 1;
+    int TCMA0  : 1;
+    int TCMA1  : 1;
+    int DS     : 1;
     int RES0_2 : 4;
 
     static inline void write(TCR_EL1 tcr_el1)
@@ -157,54 +157,54 @@ static_assert(sizeof(TCR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
 // System Control Register
 struct alignas(u64) SCTLR_EL1 {
-    int M : 1;
-    int A : 1;
-    int C : 1;
-    int SA : 1;
-    int SA0 : 1;
-    int CP15BEN : 1;
-    int _reserved6 : 1 = 0;
-    int ITD : 1;
-    int SED : 1;
-    int UMA : 1;
+    int M           : 1;
+    int A           : 1;
+    int C           : 1;
+    int SA          : 1;
+    int SA0         : 1;
+    int CP15BEN     : 1;
+    int _reserved6  : 1 = 0;
+    int ITD         : 1;
+    int SED         : 1;
+    int UMA         : 1;
     int _reserved10 : 1 = 0;
     int _reserved11 : 1 = 1;
-    int I : 1;
-    int EnDB : 1;
-    int DZE : 1;
-    int UCT : 1;
-    int nTWI : 1;
+    int I           : 1;
+    int EnDB        : 1;
+    int DZE         : 1;
+    int UCT         : 1;
+    int nTWI        : 1;
     int _reserved17 : 1 = 0;
-    int nTWE : 1;
-    int WXN : 1;
+    int nTWE        : 1;
+    int WXN         : 1;
     int _reserved20 : 1 = 1;
-    int IESB : 1;
+    int IESB        : 1;
     int _reserved22 : 1 = 1;
-    int SPAN : 1;
-    int E0E : 1;
-    int EE : 1;
-    int UCI : 1;
-    int EnDA : 1;
-    int nTLSMD : 1;
-    int LSMAOE : 1;
-    int EnIB : 1;
-    int EnIA : 1;
+    int SPAN        : 1;
+    int E0E         : 1;
+    int EE          : 1;
+    int UCI         : 1;
+    int EnDA        : 1;
+    int nTLSMD      : 1;
+    int LSMAOE      : 1;
+    int EnIB        : 1;
+    int EnIA        : 1;
     int _reserved32 : 3 = 0;
-    int BT0 : 1;
-    int BT1 : 1;
-    int ITFSB : 1;
-    int TCF0 : 2;
-    int TCF : 2;
-    int ATA0 : 1;
-    int ATA : 1;
-    int DSSBS : 1;
-    int TWEDEn : 1;
-    int TWEDEL : 4;
+    int BT0         : 1;
+    int BT1         : 1;
+    int ITFSB       : 1;
+    int TCF0        : 2;
+    int TCF         : 2;
+    int ATA0        : 1;
+    int ATA         : 1;
+    int DSSBS       : 1;
+    int TWEDEn      : 1;
+    int TWEDEL      : 4;
     int _reserved50 : 4 = 0;
-    int EnASR : 1;
-    int EnAS0 : 1;
-    int EnALS : 1;
-    int EPAN : 1;
+    int EnASR       : 1;
+    int EnAS0       : 1;
+    int EnALS       : 1;
+    int EPAN        : 1;
     int _reserved58 : 6 = 0;
 
     static inline void write(SCTLR_EL1 sctlr_el1)
@@ -237,49 +237,49 @@ static_assert(sizeof(SCTLR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register
 struct alignas(u64) HCR_EL2 {
-    int VM : 1;
-    int SWIO : 1;
-    int PTW : 1;
-    int FMO : 1;
-    int IMO : 1;
-    int AMO : 1;
-    int VF : 1;
-    int VI : 1;
-    int VSE : 1;
-    int FB : 1;
-    int BSU : 2;
-    int DC : 1;
-    int TWI : 1;
-    int TWE : 1;
-    int TID0 : 1;
-    int TID1 : 1;
-    int TID2 : 1;
-    int TID3 : 1;
-    int TSC : 1;
-    int TIPDCP : 1;
-    int TACR : 1;
-    int TSW : 1;
-    int TPCF : 1;
-    int TPU : 1;
-    int TTLB : 1;
-    int TVM : 1;
-    int TGE : 1;
-    int TDZ : 1;
-    int HCD : 1;
-    int TRVM : 1;
-    int RW : 1;
-    int CD : 1;
-    int ID : 1;
-    int E2H : 1;
-    int TLOR : 1;
-    int TERR : 1;
-    int MIOCNCE : 1;
+    int VM          : 1;
+    int SWIO        : 1;
+    int PTW         : 1;
+    int FMO         : 1;
+    int IMO         : 1;
+    int AMO         : 1;
+    int VF          : 1;
+    int VI          : 1;
+    int VSE         : 1;
+    int FB          : 1;
+    int BSU         : 2;
+    int DC          : 1;
+    int TWI         : 1;
+    int TWE         : 1;
+    int TID0        : 1;
+    int TID1        : 1;
+    int TID2        : 1;
+    int TID3        : 1;
+    int TSC         : 1;
+    int TIPDCP      : 1;
+    int TACR        : 1;
+    int TSW         : 1;
+    int TPCF        : 1;
+    int TPU         : 1;
+    int TTLB        : 1;
+    int TVM         : 1;
+    int TGE         : 1;
+    int TDZ         : 1;
+    int HCD         : 1;
+    int TRVM        : 1;
+    int RW          : 1;
+    int CD          : 1;
+    int ID          : 1;
+    int E2H         : 1;
+    int TLOR        : 1;
+    int TERR        : 1;
+    int MIOCNCE     : 1;
     int _reserved39 : 1 = 0;
-    int APK : 1 = 0;
-    int API : 1 = 0;
-    int NV : 1 = 0;
-    int NV1 : 1 = 0;
-    int AT : 1 = 0;
+    int APK         : 1 = 0;
+    int API         : 1 = 0;
+    int NV          : 1 = 0;
+    int NV1         : 1 = 0;
+    int AT          : 1 = 0;
     int _reserved45 : 18 = 0;
 
     static inline void write(HCR_EL2 hcr_el2)
@@ -302,40 +302,40 @@ static_assert(sizeof(HCR_EL2) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
 // Secure Configuration Register
 struct alignas(u64) SCR_EL3 {
-    int NS : 1;
-    int IRQ : 1;
-    int FIQ : 1;
-    int EA : 1;
-    int _reserved4 : 1 = 1;
-    int _reserved5 : 1 = 1;
-    int _reserved6 : 1 = 0;
-    int SMD : 1;
-    int HCE : 1;
-    int SIF : 1;
-    int RW : 1;
-    int ST : 1;
-    int TWI : 1;
-    int TWE : 1;
-    int TLOR : 1;
-    int TERR : 1;
-    int APK : 1;
-    int API : 1;
-    int EEL2 : 1;
-    int EASE : 1;
-    int NMEA : 1;
-    int FIEN : 1;
+    int NS          : 1;
+    int IRQ         : 1;
+    int FIQ         : 1;
+    int EA          : 1;
+    int _reserved4  : 1 = 1;
+    int _reserved5  : 1 = 1;
+    int _reserved6  : 1 = 0;
+    int SMD         : 1;
+    int HCE         : 1;
+    int SIF         : 1;
+    int RW          : 1;
+    int ST          : 1;
+    int TWI         : 1;
+    int TWE         : 1;
+    int TLOR        : 1;
+    int TERR        : 1;
+    int APK         : 1;
+    int API         : 1;
+    int EEL2        : 1;
+    int EASE        : 1;
+    int NMEA        : 1;
+    int FIEN        : 1;
     int _reserved22 : 3 = 0;
-    int EnSCXT : 1;
-    int ATA : 1;
-    int FGTEn : 1;
-    int ECVEn : 1;
-    int TWEDEn : 1;
-    int TWEDEL : 4;
+    int EnSCXT      : 1;
+    int ATA         : 1;
+    int FGTEn       : 1;
+    int ECVEn       : 1;
+    int TWEDEn      : 1;
+    int TWEDEL      : 4;
     int _reserved34 : 1 = 0;
-    int AMVOFFEN : 1;
-    int EnAS0 : 1;
-    int ADEn : 1;
-    int HXEn : 1;
+    int AMVOFFEN    : 1;
+    int EnAS0       : 1;
+    int ADEn        : 1;
+    int HXEn        : 1;
     int _reserved39 : 14 = 0;
 
     static inline void write(SCR_EL3 scr_el3)
@@ -364,27 +364,27 @@ struct alignas(u64) SPSR_EL2 {
         EL2h = 0b1001
     };
 
-    Mode M : 4;
-    int M_4 : 1 = 0;
-    int _reserved5 : 1 = 0;
-    int F : 1;
-    int I : 1;
-    int A : 1;
-    int D : 1;
-    int BTYPE : 2;
-    int SSBS : 1;
+    Mode M          : 4;
+    int M_4         : 1 = 0;
+    int _reserved5  : 1 = 0;
+    int F           : 1;
+    int I           : 1;
+    int A           : 1;
+    int D           : 1;
+    int BTYPE       : 2;
+    int SSBS        : 1;
     int _reserved13 : 7 = 0;
-    int IL : 1;
-    int SS : 1;
-    int PAN : 1;
-    int UA0 : 1;
-    int DIT : 1;
-    int TCO : 1;
+    int IL          : 1;
+    int SS          : 1;
+    int PAN         : 1;
+    int UA0         : 1;
+    int DIT         : 1;
+    int TCO         : 1;
     int _reserved26 : 2 = 0;
-    int V : 1;
-    int C : 1;
-    int Z : 1;
-    int N : 1;
+    int V           : 1;
+    int C           : 1;
+    int Z           : 1;
+    int N           : 1;
     int _reserved32 : 32 = 0;
 
     static inline void write(SPSR_EL2 spsr_el2)
@@ -417,23 +417,23 @@ struct alignas(u64) SPSR_EL3 {
         EL3h = 0b1101
     };
 
-    Mode M : 4;
-    int M_4 : 1 = 0;
-    int _reserved5 : 1 = 0;
-    int F : 1;
-    int I : 1;
-    int A : 1;
-    int D : 1;
+    Mode M          : 4;
+    int M_4         : 1 = 0;
+    int _reserved5  : 1 = 0;
+    int F           : 1;
+    int I           : 1;
+    int A           : 1;
+    int D           : 1;
     int _reserved10 : 10 = 0;
-    int IL : 1;
-    int SS : 1;
-    int PAN : 1;
-    int UA0 : 1;
+    int IL          : 1;
+    int SS          : 1;
+    int PAN         : 1;
+    int UA0         : 1;
     int _reserved24 : 4 = 0;
-    int V : 1;
-    int C : 1;
-    int Z : 1;
-    int N : 1;
+    int V           : 1;
+    int C           : 1;
+    int Z           : 1;
+    int N           : 1;
     int _reserved32 : 32 = 0;
 
     static inline void write(SPSR_EL3 spsr_el3)
@@ -469,11 +469,11 @@ static_assert(sizeof(MAIR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ESR-EL1--Exception-Syndrome-Register--EL1-
 // Exception Syndrome Register (EL1)
 struct ESR_EL1 {
-    u64 ISS : 25;
-    u64 IL : 1;
-    u64 EC : 6;
+    u64 ISS  : 25;
+    u64 IL   : 1;
+    u64 EC   : 6;
     u64 ISS2 : 5;
-    u64 : 27;
+    u64      : 27;
 
     static inline ESR_EL1 read()
     {
@@ -490,12 +490,12 @@ static_assert(sizeof(ESR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2020-12/AArch64-Registers/DAIF--Interrupt-Mask-Bits?lang=en
 // DAIF, Interrupt Mask Bits
 struct DAIF {
-    u64 : 6;
+    u64   : 6;
     u64 F : 1;
     u64 I : 1;
     u64 A : 1;
     u64 D : 1;
-    u64 : 54;
+    u64   : 54;
 
     static inline DAIF read()
     {

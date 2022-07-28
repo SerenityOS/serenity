@@ -13,9 +13,9 @@
 namespace Kernel {
 
 #define VMMOUSE_GETVERSION 10
-#define VMMOUSE_DATA 39
-#define VMMOUSE_STATUS 40
-#define VMMOUSE_COMMAND 41
+#define VMMOUSE_DATA       39
+#define VMMOUSE_STATUS     40
+#define VMMOUSE_COMMAND    41
 
 struct VMWareCommand {
     union {

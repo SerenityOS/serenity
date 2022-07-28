@@ -13,7 +13,7 @@
 
 __BEGIN_DECLS
 
-#define INET_ADDRSTRLEN 16
+#define INET_ADDRSTRLEN  16
 #define INET6_ADDRSTRLEN 46
 
 char const* inet_ntop(int af, void const* src, char* dst, socklen_t);

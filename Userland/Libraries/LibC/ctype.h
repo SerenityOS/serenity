@@ -139,21 +139,21 @@ int toupper(int c);
 #ifdef __cplusplus
 }
 #endif
-#define isalnum __inline_isalnum
-#define isalpha __inline_isalpha
-#define isascii __inline_isascii
-#define iscntrl __inline_iscntrl
-#define isdigit __inline_isdigit
+#define isalnum  __inline_isalnum
+#define isalpha  __inline_isalpha
+#define isascii  __inline_isascii
+#define iscntrl  __inline_iscntrl
+#define isdigit  __inline_isdigit
 #define isxdigit __inline_isxdigit
-#define isspace __inline_isspace
-#define ispunct __inline_ispunct
-#define isprint __inline_isprint
-#define isgraph __inline_isgraph
-#define islower __inline_islower
-#define isupper __inline_isupper
-#define isblank __inline_isblank
-#define toascii __inline_toascii
-#define tolower __inline_tolower
-#define toupper __inline_toupper
+#define isspace  __inline_isspace
+#define ispunct  __inline_ispunct
+#define isprint  __inline_isprint
+#define isgraph  __inline_isgraph
+#define islower  __inline_islower
+#define isupper  __inline_isupper
+#define isblank  __inline_isblank
+#define toascii  __inline_toascii
+#define tolower  __inline_tolower
+#define toupper  __inline_toupper
 
 __END_DECLS

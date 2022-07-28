@@ -41,9 +41,9 @@
 #    include <serenity.h>
 #endif
 
-#define STRCAT(x, y) __STRCAT(x, y)
-#define STRSTRCAT(x, y) __STRSTRCAT(x, y)
-#define __STRCAT(x, y) x #y
+#define STRCAT(x, y)      __STRCAT(x, y)
+#define STRSTRCAT(x, y)   __STRSTRCAT(x, y)
+#define __STRCAT(x, y)    x #y
 #define __STRSTRCAT(x, y) x y
 
 // Note: This is a little weird, so here's an explanation:

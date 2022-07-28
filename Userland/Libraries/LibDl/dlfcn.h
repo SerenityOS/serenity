@@ -11,10 +11,10 @@
 __BEGIN_DECLS
 
 #define RTLD_DEFAULT 0
-#define RTLD_LAZY 2
-#define RTLD_NOW 4
-#define RTLD_GLOBAL 8
-#define RTLD_LOCAL 16
+#define RTLD_LAZY    2
+#define RTLD_NOW     4
+#define RTLD_GLOBAL  8
+#define RTLD_LOCAL   16
 
 typedef struct __Dl_info {
     char const* dli_fname;

@@ -46,6 +46,6 @@ private:
     int m_simulations { 0 };
     OwnPtr<Chess::Board> m_board;
     Optional<Chess::Move> m_last_move;
-    Chess::Color m_turn : 2;
+    Chess::Color m_turn    : 2;
     bool m_moves_generated : 1 { false };
 };

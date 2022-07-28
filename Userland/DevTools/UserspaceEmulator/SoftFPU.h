@@ -293,20 +293,20 @@ private:
     union {
         u16 m_fpu_sw { 0 };
         struct {
-            u16 m_fpu_error_invalid : 1;    // pre | IE -> #I (#IS, #IA)
-            u16 m_fpu_error_denorm : 1;     // pre | DE -> #D
-            u16 m_fpu_error_zero_div : 1;   // pre | ZE -> #Z
-            u16 m_fpu_error_overflow : 1;   // post| OE -> #O
-            u16 m_fpu_error_underflow : 1;  // post| UE -> #U
-            u16 m_fpu_error_precision : 1;  // post| PE -> #P
+            u16 m_fpu_error_invalid    : 1; // pre | IE -> #I (#IS, #IA)
+            u16 m_fpu_error_denorm     : 1; // pre | DE -> #D
+            u16 m_fpu_error_zero_div   : 1; // pre | ZE -> #Z
+            u16 m_fpu_error_overflow   : 1; // post| OE -> #O
+            u16 m_fpu_error_underflow  : 1; // post| UE -> #U
+            u16 m_fpu_error_precision  : 1; // post| PE -> #P
             u16 m_fpu_error_stackfault : 1; // SF
-            u16 m_fpu_error_summary : 1;
-            u16 m_fpu_c0 : 1;
-            u16 m_fpu_c1 : 1;
-            u16 m_fpu_c2 : 1;
-            u16 m_fpu_stack_top : 3;
-            u16 m_fpu_c3 : 1;
-            u16 m_fpu_busy : 1;
+            u16 m_fpu_error_summary    : 1;
+            u16 m_fpu_c0               : 1;
+            u16 m_fpu_c1               : 1;
+            u16 m_fpu_c2               : 1;
+            u16 m_fpu_stack_top        : 3;
+            u16 m_fpu_c3               : 1;
+            u16 m_fpu_busy             : 1;
         };
     };
 

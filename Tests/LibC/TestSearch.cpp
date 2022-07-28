@@ -11,10 +11,10 @@
 #include <search.h>
 #include <string.h>
 
-#define NODE(node) static_cast<struct search_tree_node*>(node)
+#define NODE(node)  static_cast<struct search_tree_node*>(node)
 #define ROOTP(root) reinterpret_cast<void**>(root)
-#define COMP(func) reinterpret_cast<int (*)(void const*, void const*)>(func)
-#define U8(value) static_cast<u8>(value)
+#define COMP(func)  reinterpret_cast<int (*)(void const*, void const*)>(func)
+#define U8(value)   static_cast<u8>(value)
 
 struct twalk_test_entry {
     void const* node;
@@ -22,8 +22,8 @@ struct twalk_test_entry {
     int depth;
 };
 
-#define TWALK_SET_DATA (-2)
-#define TWALK_CHECK_END (-3)
+#define TWALK_SET_DATA   (-2)
+#define TWALK_CHECK_END  (-3)
 #define TWALK_END_MARKER (-4)
 
 TEST_CASE(tsearch)

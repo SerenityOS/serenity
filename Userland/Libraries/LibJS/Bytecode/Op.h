@@ -334,7 +334,7 @@ private:
     IdentifierTableIndex m_identifier;
     EnvironmentMode m_mode;
     bool m_is_immutable : 4 { false };
-    bool m_is_global : 4 { false };
+    bool m_is_global    : 4 { false };
 };
 
 class SetVariable final : public Instruction {

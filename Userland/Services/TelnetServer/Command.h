@@ -10,11 +10,11 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
-#define CMD_WILL 0xfb
-#define CMD_WONT 0xfc
-#define CMD_DO 0xfd
-#define CMD_DONT 0xfe
-#define SUB_ECHO 0x01
+#define CMD_WILL              0xfb
+#define CMD_WONT              0xfc
+#define CMD_DO                0xfd
+#define CMD_DONT              0xfe
+#define SUB_ECHO              0x01
 #define SUB_SUPPRESS_GO_AHEAD 0x03
 
 struct Command {
