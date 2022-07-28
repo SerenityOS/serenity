@@ -10,7 +10,7 @@ sets, so extend them into a full list manually.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/chardev/char.c b/chardev/char.c
-index 0169d8d..03ce487 100644
+index 0169d8dde4b533c9cf851831b03c8adcac24cff5..03ce487a23c92b70981643bd213930f5d074afdb 100644
 --- a/chardev/char.c
 +++ b/chardev/char.c
 @@ -382,11 +382,11 @@ QemuOpts *qemu_chr_parse_compat(const char *label, const char *filename,
