@@ -116,13 +116,13 @@ void HexEditor::set_selection(size_t position, size_t length)
 bool HexEditor::save_as(NonnullRefPtr<Core::File> new_file)
 {
     if (m_document->type() == HexDocument::Type::File) {
-        HexDocumentFile* fileDocument = static_cast<HexDocumentFile*>(m_document.ptr());
-        if (!fileDocument->write_to_file(new_file))
+        auto& file_document = static_cast<HexDocumentFile&>(*m_document);
+        if (!file_document.write_to_file(new_file))
             return false;
-        fileDocument->set_file(new_file);
+        file_document.set_file(new_file);
     } else {
-        HexDocumentMemory* memoryDocument = static_cast<HexDocumentMemory*>(m_document.ptr());
-        if (!memoryDocument->write_to_file(new_file))
+        auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
+        if (!memory_document.write_to_file(new_file))
             return false;
         m_document = make<HexDocumentFile>(new_file);
     }
