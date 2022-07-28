@@ -72,7 +72,7 @@ mkdir -p "$DIR/Tarballs"
 
 LLVM_VERSION="14.0.1"
 LLVM_MD5SUM="47a50c31659488a6ae562475b41d2c32"
-LLVM_NAME="llvm-project-$LLVM_VERSION.src"
+LLVM_NAME="llvm-project"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
 
@@ -201,18 +201,20 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
-    md5=""
-    if [ -e "$LLVM_PKG" ]; then
-        md5="$($MD5SUM ${LLVM_PKG} | cut -f1 -d' ')"
-        echo "llvm md5='$md5'"
-    fi
 
-    if [ "$md5" != "$LLVM_MD5SUM" ] ; then
-        rm -f "$LLVM_PKG"
-        curl -LO "$LLVM_URL"
-    else
-        echo "Skipped downloading LLVM"
-    fi
+#    md5=""
+#    if [ -e "$LLVM_PKG" ]; then
+#        md5="$($MD5SUM ${LLVM_PKG} | cut -f1 -d' ')"
+#        echo "llvm md5='$md5'"
+#    fi
+#
+#    if [ "$md5" != "$LLVM_MD5SUM" ] ; then
+#        rm -f "$LLVM_PKG"
+#        curl -LO "$LLVM_URL"
+#    else
+#        echo "Skipped downloading LLVM"
+#    fi
+
 
     patch_md5="$($MD5SUM "$DIR"/Patches/llvm/*.patch)"
 
@@ -224,23 +226,26 @@ pushd "$DIR/Tarballs"
 
         rm -rf "$DIR/Build/clang"
 
-        echo "Extracting LLVM..."
-        tar -xJf "$LLVM_PKG"
+        git clone https://github.com/llvm/llvm-project.git --branch release/15.x --depth=1
+#        echo "Extracting LLVM..."
+#        tar -xJf "$LLVM_PKG"
 
         pushd "$LLVM_NAME"
             if [ "$dev" = "1" ]; then
-                git init > /dev/null
-                git add . > /dev/null
-                git commit -am "BASE" > /dev/null
-                git am --keep-non-patch "$DIR"/Patches/llvm/*.patch > /dev/null
+#                git init > /dev/null
+#                git add . > /dev/null
+#                git commit -am "BASE" > /dev/null
+                git am -3 --keep-non-patch "$DIR"/Patches/llvm/*.patch > /dev/null
             else
                 for patch in "$DIR"/Patches/llvm/*.patch; do
                     patch -p1 < "$patch" > /dev/null
                 done
             fi
             echo "$patch_md5" > .patch.applied
+	    git add .patch.applied
         popd
     else
+        git -C "$LLVM_NAME" pull --rebase origin release/15.x
         echo "Using existing LLVM source directory"
     fi
 popd

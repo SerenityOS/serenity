@@ -14,7 +14,7 @@ process's resource usage information.
  3 files changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/llvm/include/llvm/Support/SwapByteOrder.h b/llvm/include/llvm/Support/SwapByteOrder.h
-index e8612ba66..f0109f4b3 100644
+index e8612ba665..f0109f4b30 100644
 --- a/llvm/include/llvm/Support/SwapByteOrder.h
 +++ b/llvm/include/llvm/Support/SwapByteOrder.h
 @@ -22,7 +22,7 @@
@@ -27,7 +27,7 @@ index e8612ba66..f0109f4b3 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 788460d65..566628935 100644
+index 2ae7c6dc47..bf173117bb 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -112,7 +112,7 @@ typedef uint_t uint;
@@ -50,7 +50,7 @@ index 788460d65..566628935 100644
    // statvfs::f_basetype contains a null-terminated FSType name of the mounted target
    StringRef fstype(Vfs.f_basetype);
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 089342030..3ffe064e5 100644
+index 089342030b..3ffe064e5f 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
 @@ -336,7 +336,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,

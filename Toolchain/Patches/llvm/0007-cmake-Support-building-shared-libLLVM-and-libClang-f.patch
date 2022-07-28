@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Thu, 28 Jul 2022 11:50:18 +0200
+Subject: [PATCH] [cmake] Support building shared libLLVM and libClang for
+ SerenityOS
+
+This patch tells CMake that the --whole-archive linker option should be
+used for specifying the archives whose members will constitute these
+shared libraries.
+---
+ llvm/tools/llvm-shlib/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
+index 8e2b78f1b8..c1ae1c849d 100644
+--- a/llvm/tools/llvm-shlib/CMakeLists.txt
++++ b/llvm/tools/llvm-shlib/CMakeLists.txt
+@@ -39,6 +39,7 @@ if(LLVM_BUILD_LLVM_DYLIB)
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "Fuchsia")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "DragonFly")
++     OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "SerenityOS")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "SunOS")) # FIXME: It should be "GNU ld for elf"
+     configure_file(
+     ${CMAKE_CURRENT_SOURCE_DIR}/simple_version_script.map.in
