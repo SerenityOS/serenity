@@ -49,13 +49,6 @@ HexEditor::HexEditor()
     m_blink_timer->start();
 }
 
-void HexEditor::set_readonly(bool readonly)
-{
-    if (m_readonly == readonly)
-        return;
-    m_readonly = readonly;
-}
-
 bool HexEditor::open_new_file(size_t size)
 {
     auto maybe_buffer = ByteBuffer::create_zeroed(size);
@@ -460,7 +453,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty()) {
+    if (!event.ctrl() && !event.alt() && !event.text().is_empty()) {
         if (m_edit_mode == EditMode::Hex) {
             hex_mode_keydown_event(event);
         } else {
