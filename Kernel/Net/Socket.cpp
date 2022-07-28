@@ -125,6 +125,9 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<void const*> u
         m_routing_disabled = TRY(copy_typed_from_user(static_ptr_cast<int const*>(user_value))) != 0;
         return {};
     }
+    case SO_REUSEADDR:
+        dbgln("FIXME: SO_REUSEADDR requested, but not implemented.");
+        return {};
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
