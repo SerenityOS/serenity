@@ -33,7 +33,7 @@ public:
     virtual ~HexEditor() override = default;
 
     size_t buffer_size() const { return m_document->size(); }
-    bool open_new_file(size_t size);
+    ErrorOr<void> open_new_file(size_t size);
     void open_file(NonnullRefPtr<Core::File> file);
     void fill_selection(u8 fill_byte);
     Optional<u8> get_byte(size_t position);

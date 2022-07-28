@@ -95,17 +95,19 @@ HexEditorWidget::HexEditorWidget()
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String value;
         if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
-            auto file_size = value.to_int();
-            if (file_size.has_value() && file_size.value() > 0) {
-                window()->set_modified(false);
-                if (!m_editor->open_new_file(file_size.value())) {
-                    GUI::MessageBox::show(window(), "Entered file size is too large."sv, "Error"sv, GUI::MessageBox::Type::Error);
-                    return;
-                }
-                set_path({});
-            } else {
+            auto file_size = value.to_uint();
+            if (!file_size.has_value()) {
                 GUI::MessageBox::show(window(), "Invalid file size entered."sv, "Error"sv, GUI::MessageBox::Type::Error);
+                return;
             }
+
+            if (auto error = m_editor->open_new_file(file_size.value()); error.is_error()) {
+                GUI::MessageBox::show(window(), String::formatted("Unable to open new file: {}"sv, error.error()), "Error"sv, GUI::MessageBox::Type::Error);
+                return;
+            }
+
+            set_path({});
+            window()->set_modified(false);
         }
     });
 
