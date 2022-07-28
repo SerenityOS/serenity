@@ -776,10 +776,8 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
             }
             builder.append(c);
         } else {
-            if (builder.length() >= min_length) {
-                dbgln("find_all_strings: relative_offset={} string={}", offset, builder.to_string());
+            if (builder.length() >= min_length)
                 matches.append({ offset, builder.to_string() });
-            }
             builder.clear();
             found_string = false;
         }
