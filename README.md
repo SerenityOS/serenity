@@ -114,6 +114,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Maciej** - [sppmacd](https://github.com/sppmacd)
 * **Sahan Fernando** - [ccapitalK](https://github.com/ccapitalK)
 * **Benjamin Maxwell** - [MacDue](https://github.com/MacDue)
+* **Dennis Esternon** - [djwisdom](https://github.com/djwisdom)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
