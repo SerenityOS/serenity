@@ -182,8 +182,18 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     else
         return {};
 
-    request.m_resource = URL::percent_decode(resource);
     request.m_headers = move(headers);
+    auto url_parts = resource.split_limit('?', 2, true);
+
+    request.m_url.set_cannot_be_a_base_url(true);
+    if (url_parts.size() == 2) {
+        request.m_resource = url_parts[0];
+        request.m_url.set_paths({ url_parts[0] });
+        request.m_url.set_query(url_parts[1]);
+    } else {
+        request.m_resource = resource;
+        request.m_url.set_paths({ resource });
+    }
 
     return request;
 }

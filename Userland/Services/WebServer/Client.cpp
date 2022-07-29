@@ -98,6 +98,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     if (!request_or_error.has_value())
         return false;
     auto& request = request_or_error.value();
+    auto resource_decoded = URL::percent_decode(request.resource());
 
     if constexpr (WEBSERVER_DEBUG) {
         dbgln("Got HTTP request: {} {}", request.method_name(), request.resource());
@@ -120,7 +121,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         }
     }
 
-    auto requested_path = LexicalPath::join("/"sv, request.resource()).string();
+    auto requested_path = LexicalPath::join("/"sv, resource_decoded).string();
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
@@ -130,7 +131,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     if (Core::File::is_directory(real_path)) {
 
-        if (!request.resource().ends_with('/')) {
+        if (!resource_decoded.ends_with('/')) {
             StringBuilder red;
 
             red.append(requested_path);
@@ -362,7 +363,7 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
 
 void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
-    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.resource());
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.url().serialize().substring(1));
 }
 
 bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)
