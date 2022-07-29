@@ -25,8 +25,6 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> save_color_palette { nullptr };
     RefPtr<Gfx::Bitmap> add_guide { nullptr };
     RefPtr<Gfx::Bitmap> clear_guides { nullptr };
-    RefPtr<Gfx::Bitmap> edit_flip_vertical { nullptr };
-    RefPtr<Gfx::Bitmap> edit_flip_horizontal { nullptr };
     RefPtr<Gfx::Bitmap> resize_image { nullptr };
     RefPtr<Gfx::Bitmap> crop { nullptr };
     RefPtr<Gfx::Bitmap> new_layer { nullptr };

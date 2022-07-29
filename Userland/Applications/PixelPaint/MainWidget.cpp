@@ -473,18 +473,18 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_image_menu = window.add_menu("&Image");
-    m_image_menu->add_action(GUI::Action::create(
-        "Flip &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
+    m_image_menu->add_action(MUST(GUI::CommonActions::make_flip_vertically_action(
+        [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Vertical);
-        }));
-    m_image_menu->add_action(GUI::Action::create(
-        "Flip &Horizontally", g_icon_bag.edit_flip_horizontal, [&](auto&) {
+        })));
+    m_image_menu->add_action(MUST(GUI::CommonActions::make_flip_horizontally_action(
+        [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Horizontal);
-        }));
+        })));
     m_image_menu->add_separator();
 
     m_image_menu->add_action(GUI::CommonActions::make_rotate_counterclockwise_action(

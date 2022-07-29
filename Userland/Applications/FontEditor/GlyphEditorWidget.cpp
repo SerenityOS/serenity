@@ -214,7 +214,7 @@ void GlyphEditorWidget::rotate_90(Direction direction)
     update();
 }
 
-void GlyphEditorWidget::flip_vertically()
+void GlyphEditorWidget::flip(Gfx::Orientation orientation)
 {
     if (on_undo_event)
         on_undo_event();
@@ -224,30 +224,8 @@ void GlyphEditorWidget::flip_vertically()
 
     for (int y = 0; y < bitmap.height(); y++) {
         for (int x = 0; x < bitmap.width(); x++) {
-            int source_x = x;
-            int source_y = bitmap.height() - 1 - y;
-            bool value = matrix[source_y][source_x];
-            bitmap.set_bit_at(x, y, value);
-        }
-    }
-
-    if (on_glyph_altered)
-        on_glyph_altered(m_glyph);
-    update();
-}
-
-void GlyphEditorWidget::flip_horizontally()
-{
-    if (on_undo_event)
-        on_undo_event();
-
-    auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
-    auto matrix = glyph_as_matrix(bitmap);
-
-    for (int y = 0; y < bitmap.height(); y++) {
-        for (int x = 0; x < bitmap.width(); x++) {
-            int source_x = bitmap.width() - 1 - x;
-            int source_y = y;
+            int source_x = (orientation == Gfx::Orientation::Vertical) ? x : bitmap.width() - 1 - x;
+            int source_y = (orientation == Gfx::Orientation::Vertical) ? bitmap.height() - 1 - y : y;
             bool value = matrix[source_y][source_x];
             bitmap.set_bit_at(x, y, value);
         }

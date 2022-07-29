@@ -24,8 +24,6 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.save_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/save-color-palette.png"sv));
     icon_bag.add_guide = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/add-guide.png"sv));
     icon_bag.clear_guides = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/clear-guides.png"sv));
-    icon_bag.edit_flip_vertical = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv));
-    icon_bag.edit_flip_horizontal = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv));
     icon_bag.resize_image = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"sv));
     icon_bag.crop = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/crop.png"sv));
     icon_bag.new_layer = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png"sv));
