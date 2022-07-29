@@ -23,6 +23,7 @@
 namespace GUI {
 
 namespace CommonActions {
+
 NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent = nullptr);
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::Object* parent = nullptr);
@@ -51,6 +52,8 @@ NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)>, Core::Object
 NonnullRefPtr<Action> make_reset_zoom_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+ErrorOr<NonnullRefPtr<Action>> make_flip_horizontally_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+ErrorOr<NonnullRefPtr<Action>> make_flip_vertically_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 
 };
 
@@ -68,6 +71,7 @@ public:
     static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
+    static ErrorOr<NonnullRefPtr<Action>> try_create(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(String text, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);

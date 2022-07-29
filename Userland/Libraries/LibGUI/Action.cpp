@@ -38,6 +38,11 @@ NonnullRefPtr<Action> Action::create(String text, Shortcut const& shortcut, RefP
     return adopt_ref(*new Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent));
 }
 
+ErrorOr<NonnullRefPtr<Action>> Action::try_create(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent));
+}
+
 NonnullRefPtr<Action> Action::create(String text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), shortcut, alternate_shortcut, move(icon), move(callback), parent));

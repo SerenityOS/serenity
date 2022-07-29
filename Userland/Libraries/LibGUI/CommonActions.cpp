@@ -189,6 +189,16 @@ NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)
     return GUI::Action::create("Rotate &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
+ErrorOr<NonnullRefPtr<Action>> make_flip_horizontally_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return GUI::Action::try_create("F&lip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), move(callback), parent);
+}
+
+ErrorOr<NonnullRefPtr<Action>> make_flip_vertically_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return GUI::Action::try_create("Flip &Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)), move(callback), parent);
+}
+
 }
 
 }
