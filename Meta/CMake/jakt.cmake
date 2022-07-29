@@ -4,14 +4,6 @@
 
 include(FetchContent)
 
-FetchContent_Declare(
-  Corrosion
-  GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-  GIT_TAG v0.2.1
-)
-
-FetchContent_MakeAvailable(Corrosion)
-
 FetchContent_Declare(jakt
     GIT_REPOSITORY https://github.com/SerenityOS/jakt.git
     GIT_TAG main
@@ -24,17 +16,69 @@ if (JAKT_SOURCE_DIR)
     message(STATUS "Using pre-existing JAKT_SOURCE_DIR: ${JAKT_SOURCE_DIR}")
 endif()
 
+macro(add_jakt_compiler_flags target)
+  target_compile_options("${target}" PRIVATE
+    -Wno-unused-local-typedefs
+    -Wno-unused-function
+    -Wno-unknown-warning-option
+    -Wno-trigraphs
+    -Wno-parentheses-equality
+    -Wno-unqualified-std-cast-call
+    -Wno-user-defined-literals
+    -Wno-deprecated-declarations
+    -Wno-unused-variable
+    -Wno-unused-result
+    -Wno-unused-parameter
+    -Wno-return-type
+    -Wno-unused-but-set-variable
+  )
+  target_compile_features("${target}" PRIVATE cxx_std_20)
+endmacro()
+
 FetchContent_GetProperties(jakt)
 if (NOT jakt_POPULATED)
     FetchContent_Populate(jakt)
-    corrosion_import_crate(MANIFEST_PATH "${jakt_SOURCE_DIR}/Cargo.toml")
-    corrosion_set_hostbuild(jakt)
-    add_executable(Lagom::jakt ALIAS jakt)
-    corrosion_install(TARGETS jakt RUNTIME COMPONENT Lagom_Runtime)
-    # NOTE: See lagom-install-config.cmake for hax required to get Lagom::jakt to show up on install
-    install(DIRECTORY "${jakt_SOURCE_DIR}/runtime"
+
+    if (NOT JAKT_SOURCE_DIR)
+        set(JAKT_SOURCE_DIR ${jakt_SOURCE_DIR})
+    endif()
+
+    add_executable(jakt ${JAKT_SOURCE_DIR}/bootstrap/stage0/jakt.cpp)
+
+    add_jakt_compiler_flags(jakt)
+    target_include_directories(jakt
+      PUBLIC
+        $<BUILD_INTERFACE:${JAKT_SOURCE_DIR}/bootstrap/stage0/runtime>
+        $<INSTALL_INTERFACE:runtime>
+    )
+    
+    # NOTE: See lagom-install-config.cmake for hax required to get Lagom::jakt to show up on install    
+    install(
+        TARGETS jakt
+        EXPORT JaktTargets
+        RUNTIME #
+            DESTINATION "${CMAKE_INSTALL_BINDIR}"
+            COMPONENT Jakt_Runtime
+        LIBRARY #
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/jakt"
+            COMPONENT Jakt_Runtime
+            NAMELINK_COMPONENT Jakt_Development
+        ARCHIVE #
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/jakt"
+            COMPONENT Jakt_Development
+    )
+
+    install(DIRECTORY "${JAKT_SOURCE_DIR}/runtime"
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jakt
             FILES_MATCHING PATTERN "*.h"
                            PATTERN "*.cpp"
                            PATTERN "utility")
+
+    install(
+        EXPORT JaktTargets
+        NAMESPACE Jakt::
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/jakt"
+        COMPONENT Jakt_Development
+    )
 endif()
+
