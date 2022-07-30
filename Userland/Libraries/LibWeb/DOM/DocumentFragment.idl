@@ -10,3 +10,5 @@ interface DocumentFragment : Node {
 
     Element? getElementById(DOMString id);
 };
+
+DocumentFragment includes ParentNode;

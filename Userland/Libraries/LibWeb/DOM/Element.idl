@@ -53,3 +53,7 @@ interface Element : Node {
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
 };
+
+Element includes ParentNode;
+Element includes ChildNode;
+Element includes InnerHTML;
