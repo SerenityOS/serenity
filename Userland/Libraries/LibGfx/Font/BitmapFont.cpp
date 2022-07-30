@@ -39,40 +39,68 @@ static constexpr size_t s_max_range_mask_size = s_max_glyph_count / (256 * 8);
 
 NonnullRefPtr<Font> BitmapFont::clone() const
 {
+    return MUST(try_clone());
+}
+
+ErrorOr<NonnullRefPtr<Font>> BitmapFont::try_clone() const
+{
     auto* new_range_mask = static_cast<u8*>(malloc(m_range_mask_size));
+    if (!new_range_mask)
+        return Error::from_errno(errno);
     memcpy(new_range_mask, m_range_mask, m_range_mask_size);
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
     auto* new_rows = static_cast<u8*>(kmalloc_array(m_glyph_count, bytes_per_glyph));
+    if (!new_rows)
+        return Error::from_errno(errno);
     memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
     auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
+    if (!new_widths)
+        return Error::from_errno(errno);
     memcpy(new_widths, m_glyph_widths, m_glyph_count);
-    return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true)));
 }
 
 NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
+{
+    return MUST(try_create(glyph_height, glyph_width, fixed, glyph_count));
+}
+
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
 {
     glyph_count += 256 - (glyph_count % 256);
     glyph_count = min(glyph_count, s_max_glyph_count);
     size_t glyphs_per_range = 8 * 256;
     u16 range_mask_size = ceil_div(glyph_count, glyphs_per_range);
     auto* new_range_mask = static_cast<u8*>(calloc(range_mask_size, 1));
+    if (!new_range_mask)
+        return Error::from_errno(errno);
     for (size_t i = 0; i < glyph_count; i += 256) {
         new_range_mask[i / 256 / 8] |= 1 << (i / 256 % 8);
     }
     size_t bytes_per_glyph = sizeof(u32) * glyph_height;
     auto* new_rows = static_cast<u8*>(calloc(glyph_count, bytes_per_glyph));
+    if (!new_rows)
+        return Error::from_errno(errno);
     auto* new_widths = static_cast<u8*>(calloc(glyph_count, 1));
-    return adopt_ref(*new BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask, 0, 0, 0, 400, 0, true));
+    if (!new_widths)
+        return Error::from_errno(errno);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask, 0, 0, 0, 400, 0, true));
 }
 
-NonnullRefPtr<BitmapFont> BitmapFont::unmasked_character_set() const
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::unmasked_character_set() const
 {
     auto* new_range_mask = static_cast<u8*>(malloc(s_max_range_mask_size));
+    if (!new_range_mask)
+        return Error::from_errno(errno);
     constexpr u8 max_bits { 0b1111'1111 };
     memset(new_range_mask, max_bits, s_max_range_mask_size);
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
     auto* new_rows = static_cast<u8*>(kmalloc_array(s_max_glyph_count, bytes_per_glyph));
+    if (!new_rows)
+        return Error::from_errno(errno);
     auto* new_widths = static_cast<u8*>(calloc(s_max_glyph_count, 1));
+    if (!new_widths)
+        return Error::from_errno(errno);
     for (size_t code_point = 0; code_point < s_max_glyph_count; ++code_point) {
         auto index = glyph_index(code_point);
         if (index.has_value()) {
@@ -80,12 +108,14 @@ NonnullRefPtr<BitmapFont> BitmapFont::unmasked_character_set() const
             memcpy(&new_rows[code_point * bytes_per_glyph], &m_rows[index.value() * bytes_per_glyph], bytes_per_glyph);
         }
     }
-    return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, s_max_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, s_max_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
-NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
 {
     auto* new_range_mask = static_cast<u8*>(calloc(s_max_range_mask_size, 1));
+    if (!new_range_mask)
+        return Error::from_errno(errno);
     u16 new_range_mask_size { 0 };
     for (size_t i = 0; i < s_max_glyph_count; ++i) {
         if (m_glyph_widths[i] > 0) {
@@ -100,7 +130,11 @@ NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
     }
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     auto* new_rows = static_cast<u8*>(calloc(new_glyph_count, bytes_per_glyph));
+    if (!new_rows)
+        return Error::from_errno(errno);
     auto* new_widths = static_cast<u8*>(calloc(new_glyph_count, 1));
+    if (!new_widths)
+        return Error::from_errno(errno);
     for (size_t i = 0, j = 0; i < s_max_glyph_count; ++i) {
         if (!(new_range_mask[i / 256 / 8] & 1 << (i / 256 % 8))) {
             j++;
@@ -110,7 +144,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
         memcpy(&new_widths[i - j * 256], &m_glyph_widths[i], 1);
         memcpy(&new_rows[(i - j * 256) * bytes_per_glyph], &m_rows[i * bytes_per_glyph], bytes_per_glyph);
     }
-    return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
 BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
@@ -171,22 +205,15 @@ BitmapFont::~BitmapFont()
     }
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
 {
     auto const& header = *reinterpret_cast<FontFileHeader const*>(data);
-    if (memcmp(header.magic, "!Fnt", 4)) {
-        dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
-        return nullptr;
-    }
-    if (header.name[sizeof(header.name) - 1] != '\0') {
-        dbgln("Font name not fully null-terminated");
-        return nullptr;
-    }
-
-    if (header.family[sizeof(header.family) - 1] != '\0') {
-        dbgln("Font family not fully null-terminated");
-        return nullptr;
-    }
+    if (memcmp(header.magic, "!Fnt", 4))
+        return Error::from_string_literal("Gfx::BitmapFont::load_from_memory: Incompatible header");
+    if (header.name[sizeof(header.name) - 1] != '\0')
+        return Error::from_string_literal("Gfx::BitmapFont::load_from_memory: Nonnull-terminated name");
+    if (header.family[sizeof(header.family) - 1] != '\0')
+        return Error::from_string_literal("Gfx::BitmapFont::load_from_memory: Nonnull-terminated family");
 
     size_t bytes_per_glyph = sizeof(u32) * header.glyph_height;
     size_t glyph_count { 0 };
@@ -195,27 +222,23 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
         glyph_count += 256 * popcount(range_mask[i]);
     u8* rows = range_mask + header.range_mask_size;
     u8* widths = (u8*)(rows) + glyph_count * bytes_per_glyph;
-    return adopt_ref(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
 }
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
 {
-    if (Core::File::is_device(path))
-        return nullptr;
+    return MUST(try_load_from_file(move(path)));
+}
 
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-
-    auto font = load_from_memory((u8 const*)file_or_error.value()->data());
-    if (!font)
-        return nullptr;
-
-    font->m_mapped_file = file_or_error.release_value();
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(String const& path)
+{
+    auto file = TRY(Core::MappedFile::map(path));
+    auto font = TRY(load_from_memory((u8 const*)file->data()));
+    font->m_mapped_file = file;
     return font;
 }
 
-bool BitmapFont::write_to_file(String const& path)
+ErrorOr<void> BitmapFont::write_to_file(String const& path)
 {
     FontFileHeader header;
     memset(&header, 0, sizeof(FontFileHeader));
@@ -233,11 +256,7 @@ bool BitmapFont::write_to_file(String const& path)
     memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
     memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
 
-    auto stream_result = Core::OutputFileStream::open_buffered(path);
-    if (stream_result.is_error())
-        return false;
-    auto& stream = stream_result.value();
-
+    auto stream = TRY(Core::OutputFileStream::open_buffered(path));
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     stream << ReadonlyBytes { &header, sizeof(header) };
     stream << ReadonlyBytes { m_range_mask, m_range_mask_size };
@@ -245,7 +264,9 @@ bool BitmapFont::write_to_file(String const& path)
     stream << ReadonlyBytes { m_glyph_widths, m_glyph_count };
 
     stream.flush();
-    return !stream.handle_any_error();
+    TRY(stream.try_handle_any_error());
+
+    return {};
 }
 
 Glyph BitmapFont::glyph(u32 code_point) const
