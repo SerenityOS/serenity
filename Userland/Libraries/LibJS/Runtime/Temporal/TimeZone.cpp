@@ -200,7 +200,7 @@ i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, Strin
 BigInt* get_iana_time_zone_next_transition(GlobalObject&, [[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] StringView time_zone_identifier)
 {
     // The implementation-defined abstract operation GetIANATimeZoneNextTransition takes arguments epochNanoseconds (a BigInt) and timeZoneIdentifier (a String) and returns a BigInt or null.
-    // The returned value represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the first time zone transition after epochNanoseconds in the IANA time zone identified by timeZoneIdentifier, or null if no such transition exists.
+    // The returned value t represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the first time zone transition after epochNanoseconds in the IANA time zone identified by timeZoneIdentifier. The operation returns null if no such transition exists for which t ≤ ℤ(nsMaxInstant).
     // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
 
     // TODO: Implement this
@@ -211,7 +211,7 @@ BigInt* get_iana_time_zone_next_transition(GlobalObject&, [[maybe_unused]] BigIn
 BigInt* get_iana_time_zone_previous_transition(GlobalObject&, [[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] StringView time_zone_identifier)
 {
     // The implementation-defined abstract operation GetIANATimeZonePreviousTransition takes arguments epochNanoseconds (a BigInt) and timeZoneIdentifier (a String) and returns a BigInt or null.
-    // The returned value represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the last time zone transition before epochNanoseconds in the IANA time zone identified by timeZoneIdentifier, or null if no such transition exists.
+    // The returned value t represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the last time zone transition before epochNanoseconds in the IANA time zone identified by timeZoneIdentifier. The operation returns null if no such transition exists for which t ≥ ℤ(nsMinInstant).
     // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
 
     // TODO: Implement this
