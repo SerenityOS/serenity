@@ -20,16 +20,19 @@ namespace Gfx {
 
 class BitmapFont final : public Font {
 public:
-    NonnullRefPtr<Font> clone() const override;
+    virtual NonnullRefPtr<Font> clone() const override;
+    ErrorOr<NonnullRefPtr<Font>> try_clone() const;
     static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
 
     virtual FontPixelMetrics pixel_metrics() const override;
 
-    NonnullRefPtr<BitmapFont> masked_character_set() const;
-    NonnullRefPtr<BitmapFont> unmasked_character_set() const;
+    ErrorOr<NonnullRefPtr<BitmapFont>> masked_character_set() const;
+    ErrorOr<NonnullRefPtr<BitmapFont>> unmasked_character_set() const;
 
     static RefPtr<BitmapFont> load_from_file(String const& path);
-    bool write_to_file(String const& path);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(String const& path);
+    ErrorOr<void> write_to_file(String const& path);
 
     ~BitmapFont();
 
@@ -122,7 +125,7 @@ private:
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
-    static RefPtr<BitmapFont> load_from_memory(u8 const*);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> load_from_memory(u8 const*);
 
     template<typename T>
     int unicode_view_width(T const& view) const;
