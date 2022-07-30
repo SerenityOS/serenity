@@ -118,14 +118,15 @@ ErrorOr<void> MainWidget::create_actions()
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
         if (!open_path.has_value())
             return;
-        open_file(open_path.value());
+        if (auto result = open_file(open_path.value()); result.is_error())
+            show_error("Failed to open font"sv, result.error());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
-            m_save_as_action->activate();
-        else
-            save_file(m_path);
+            return m_save_as_action->activate();
+        if (auto result = save_file(m_path); result.is_error())
+            show_error("Failed to save font"sv, result.error());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -133,15 +134,18 @@ ErrorOr<void> MainWidget::create_actions()
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
         if (!save_path.has_value())
             return;
-        save_file(save_path.value());
+        if (auto result = save_file(save_path.value()); result.is_error())
+            show_error("Failed to save font"sv, result.error());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
-        cut_selected_glyphs();
+        if (auto result = cut_selected_glyphs(); result.is_error())
+            show_error("Failed to cut selection"sv, result.error());
     });
 
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
-        copy_selected_glyphs();
+        if (auto result = copy_selected_glyphs(); result.is_error())
+            show_error("Failed to copy selection"sv, result.error());
     });
 
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
@@ -667,19 +671,15 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
-bool MainWidget::save_file(String const& path)
+ErrorOr<void> MainWidget::save_file(String const& path)
 {
-    auto saved_font = m_edited_font->masked_character_set();
-    auto ret_val = saved_font->write_to_file(path);
-    if (!ret_val) {
-        GUI::MessageBox::show(window(), "The font file could not be saved."sv, "Save failed"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
+    auto masked_font = TRY(m_edited_font->masked_character_set());
+    TRY(masked_font->write_to_file(path));
     m_path = path;
     m_undo_stack->set_current_unmodified();
     window()->set_modified(false);
     update_title();
-    return true;
+    return {};
 }
 
 void MainWidget::set_show_font_metadata(bool show)
@@ -698,18 +698,11 @@ void MainWidget::set_show_unicode_blocks(bool show)
     m_unicode_block_container->set_visible(m_unicode_blocks);
 }
 
-bool MainWidget::open_file(String const& path)
+ErrorOr<void> MainWidget::open_file(String const& path)
 {
-    auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
-    if (!bitmap_font) {
-        String message = String::formatted("Couldn't load font: {}\n", path);
-        GUI::MessageBox::show(window(), message, "Font Editor"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-    auto new_font = bitmap_font->unmasked_character_set();
-    window()->set_modified(false);
-    MUST(initialize(path, move(new_font)));
-    return true;
+    auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file(path))->unmasked_character_set());
+    TRY(initialize(path, move(unmasked_font)));
+    return {};
 }
 
 void MainWidget::push_undo()
@@ -880,7 +873,8 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (!request_close())
             return;
 
-        open_file(urls.first().path());
+        if (auto result = open_file(urls.first().path()); result.is_error())
+            show_error("Failed to load font"sv, result.error());
     }
 }
 
@@ -896,7 +890,7 @@ void MainWidget::set_scale_and_save(i32 scale)
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 }
 
-void MainWidget::copy_selected_glyphs()
+ErrorOr<void> MainWidget::copy_selected_glyphs()
 {
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
     auto selection = m_glyph_map_widget->selection().normalized();
@@ -904,8 +898,8 @@ void MainWidget::copy_selected_glyphs()
     auto* widths = m_edited_font->widths() + selection.start();
 
     ByteBuffer buffer;
-    buffer.append(rows, bytes_per_glyph * selection.size());
-    buffer.append(widths, selection.size());
+    TRY(buffer.try_append(rows, bytes_per_glyph * selection.size()));
+    TRY(buffer.try_append(widths, selection.size()));
 
     HashMap<String, String> metadata;
     metadata.set("start", String::number(selection.start()));
@@ -913,12 +907,15 @@ void MainWidget::copy_selected_glyphs()
     metadata.set("width", String::number(edited_font().max_glyph_width()));
     metadata.set("height", String::number(edited_font().glyph_height()));
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
+
+    return {};
 }
 
-void MainWidget::cut_selected_glyphs()
+ErrorOr<void> MainWidget::cut_selected_glyphs()
 {
-    copy_selected_glyphs();
+    TRY(copy_selected_glyphs());
     delete_selected_glyphs();
+    return {};
 }
 
 void MainWidget::paste_glyphs()

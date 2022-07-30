@@ -37,8 +37,8 @@ public:
     ErrorOr<void> initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
-    bool open_file(String const&);
-    bool save_file(String const&);
+    ErrorOr<void> open_file(String const&);
+    ErrorOr<void> save_file(String const&);
     bool request_close();
     void update_title();
 
@@ -70,8 +70,8 @@ private:
     void set_scale(i32);
     void set_scale_and_save(i32);
 
-    void copy_selected_glyphs();
-    void cut_selected_glyphs();
+    ErrorOr<void> copy_selected_glyphs();
+    ErrorOr<void> cut_selected_glyphs();
     void paste_glyphs();
     void delete_selected_glyphs();
 
