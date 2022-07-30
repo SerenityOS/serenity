@@ -187,6 +187,10 @@ th {
     display: table-cell;
 }
 
+th {
+    font-weight: bold;
+}
+
 col {
     display: table-column;
 }
