@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>CSS Clip test</title>
+    <style>
+        .box1 {
+          background-color: red;
+          height: 300px;
+          width: 400px;
+          position: absolute;
+        }
+        .box2 {
+          background-color: blue;
+          height: 300px;
+          width: 400px;
+          position: absolute;
+          clip: rect(auto, 150px, 8em, -5px);
+          color: white;
+        }
+        .box3 {
+          background-color: purple;
+          height: 300px;
+          width: 400px;
+          position: absolute;
+          clip: rect(0em, 0px, 0px, 0px);
+          top: 350px;
+          color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clip with rect</h1>
+
+    <h2>Clip should look kind of like the American flag</h2>
+    <div class="box1">
+      <div class="box2">
+        <p>Hello this is some text</p>
+        <p>Hello this is some text</p>
+        <p>Hello this is some text</p>
+        <p>Hello this is some text</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 350px;">Clip should not be visible</h2>
+    <div class="box3">
+      <p>Hello this is some text</p>
+      <p>Hello this is some text</p>
+      <p>Hello this is some text</p>
+      <p>Hello this is some text</p>
+    </div>
+</body>
