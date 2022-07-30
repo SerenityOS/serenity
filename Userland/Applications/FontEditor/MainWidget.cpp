@@ -96,19 +96,14 @@ ErrorOr<void> MainWidget::create_actions()
         if (!request_close())
             return;
         auto new_font_wizard = NewFontDialog::construct(window());
-        if (new_font_wizard->exec() == GUI::Dialog::ExecResult::OK) {
-            auto metadata = new_font_wizard->new_font_metadata();
-            auto new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, 0x110000);
-            new_font->set_name(metadata.name);
-            new_font->set_family(metadata.family);
-            new_font->set_presentation_size(metadata.presentation_size);
-            new_font->set_weight(metadata.weight);
-            new_font->set_slope(metadata.slope);
-            new_font->set_baseline(metadata.baseline);
-            new_font->set_mean_line(metadata.mean_line);
-            window()->set_modified(true);
-            MUST(initialize({}, move(new_font)));
-        }
+        if (new_font_wizard->exec() != GUI::Dialog::ExecResult::OK)
+            return;
+        new_font_wizard->hide();
+        auto maybe_font = new_font_wizard->create_font();
+        if (maybe_font.is_error())
+            return show_error("Failed to create new font"sv, maybe_font.error());
+        if (auto result = initialize({}, move(maybe_font.value())); result.is_error())
+            show_error("Failed to initialize font"sv, result.error());
     });
     m_new_action->set_status_tip("Create a new font");
 

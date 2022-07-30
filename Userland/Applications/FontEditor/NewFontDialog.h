@@ -9,16 +9,13 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
+#include <LibGfx/Font/BitmapFont.h>
 
 class NewFontDialog final : public GUI::WizardDialog {
     C_OBJECT(NewFontDialog);
 
 public:
-    auto new_font_metadata()
-    {
-        save_metadata();
-        return m_new_font_metadata;
-    }
+    ErrorOr<NonnullRefPtr<Gfx::BitmapFont>> create_font();
 
 private:
     NewFontDialog(GUI::Window* parent_window);

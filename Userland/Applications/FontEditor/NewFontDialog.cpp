@@ -214,3 +214,20 @@ void NewFontDialog::save_metadata()
     m_new_font_metadata.glyph_spacing = m_spacing_spinbox->value();
     m_new_font_metadata.is_fixed_width = m_fixed_width_checkbox->is_checked();
 }
+
+ErrorOr<NonnullRefPtr<Gfx::BitmapFont>> NewFontDialog::create_font()
+{
+    save_metadata();
+
+    auto font = TRY(Gfx::BitmapFont::try_create(m_new_font_metadata.glyph_height, m_new_font_metadata.glyph_width, m_new_font_metadata.is_fixed_width, 0x110000));
+    font->set_name(m_new_font_metadata.name);
+    font->set_family(m_new_font_metadata.family);
+    font->set_presentation_size(m_new_font_metadata.presentation_size);
+    font->set_weight(m_new_font_metadata.weight);
+    font->set_slope(m_new_font_metadata.slope);
+    font->set_baseline(m_new_font_metadata.baseline);
+    font->set_mean_line(m_new_font_metadata.mean_line);
+    font->set_glyph_spacing(m_new_font_metadata.glyph_spacing);
+
+    return font;
+}
