@@ -18,6 +18,9 @@ describe("normal behavior", () => {
             ["GMT", "UTC"],
             ["Etc/UTC", "UTC"],
             ["Etc/GMT", "UTC"],
+            ["Etc/GMT0", "UTC"], // IANA legacy name
+            ["Etc/GMT+0", "UTC"], // IANA legacy name
+            ["Etc/GMT-0", "UTC"], // IANA legacy name
             ["Etc/GMT+6", "Etc/GMT+6"],
             ["Etc/GMT-6", "Etc/GMT-6"],
             ["Etc/GMT+12", "Etc/GMT+12"],

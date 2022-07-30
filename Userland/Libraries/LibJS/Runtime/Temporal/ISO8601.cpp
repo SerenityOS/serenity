@@ -895,12 +895,37 @@ bool ISO8601Parser::parse_time_zone_iana_name_tail()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-TimeZoneIANALegacyName
+bool ISO8601Parser::parse_time_zone_iana_legacy_name()
+{
+    // TimeZoneIANALegacyName :
+    //     Etc/GMT0
+    //     GMT0
+    //     GMT-0
+    //     GMT+0
+    //     EST5EDT
+    //     CST6CDT
+    //     MST7MDT
+    //     PST8PDT
+    return m_state.lexer.consume_specific("Etc/GMT0"sv)
+        || m_state.lexer.consume_specific("GMT0"sv)
+        || m_state.lexer.consume_specific("GMT-0"sv)
+        || m_state.lexer.consume_specific("GMT+0"sv)
+        || m_state.lexer.consume_specific("EST5EDT"sv)
+        || m_state.lexer.consume_specific("CST6CDT"sv)
+        || m_state.lexer.consume_specific("MST7MDT"sv)
+        || m_state.lexer.consume_specific("PST8PDT"sv);
+}
+
 // https://tc39.es/proposal-temporal/#prod-TimeZoneIANAName
 bool ISO8601Parser::parse_time_zone_iana_name()
 {
     // TimeZoneIANAName :
     //     Etc/GMT ASCIISign UnpaddedHour
     //     TimeZoneIANANameTail but not Etc/GMT ASCIISign UnpaddedHour
+    //     TimeZoneIANALegacyName
+    // NOTE: Reverse order here because `TimeZoneIANANameTail` can be a subset of `TimeZoneIANALegacyName`,
+    // so we'd not attempt to parse that but may not exhaust the input string.
     auto parse_etc_gmt_with_offset = [this] {
         StateTransaction transaction { *this };
         if (!m_state.lexer.consume_specific("Etc/GMT"sv))
@@ -913,6 +938,7 @@ bool ISO8601Parser::parse_time_zone_iana_name()
         return true;
     };
     return parse_etc_gmt_with_offset()
+        || parse_time_zone_iana_legacy_name()
         || parse_time_zone_iana_name_tail();
 }
 
