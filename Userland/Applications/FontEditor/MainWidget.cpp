@@ -546,6 +546,11 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
 {
     if (m_edited_font == edited_font)
         return {};
+
+    auto selection = m_glyph_map_widget->selection().normalized();
+    m_undo_selection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font)));
+    m_undo_stack->clear();
+
     m_path = path;
     m_edited_font = edited_font;
 
@@ -592,10 +597,6 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
         i++;
     }
 
-    auto selection = m_glyph_map_widget->selection().normalized();
-    m_undo_selection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *m_edited_font)));
-    m_undo_stack->clear();
-
     update_statusbar();
 
     deferred_invoke([this] {
@@ -603,6 +604,9 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
         m_glyph_map_widget->set_focus(true);
         m_glyph_map_widget->scroll_to_glyph(glyph);
         m_glyph_editor_widget->set_glyph(glyph);
+
+        VERIFY(window());
+        window()->set_modified(false);
         update_title();
     });
 
