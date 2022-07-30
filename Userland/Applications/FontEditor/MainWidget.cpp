@@ -178,7 +178,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
         if (!m_font_preview_window) {
             if (auto maybe_window = create_preview_window(); maybe_window.is_error())
-                warnln("Failed to create preview window: {}", maybe_window.error());
+                show_error("Failed to create preview window"sv, maybe_window.error());
             else
                 m_font_preview_window = maybe_window.release_value();
         }
@@ -715,19 +715,13 @@ bool MainWidget::open_file(String const& path)
 void MainWidget::push_undo()
 {
     auto maybe_state = m_undo_selection->save_state();
-    if (maybe_state.is_error()) {
-        warnln("Failed to save undo state: {}", maybe_state.error());
-        return;
-    }
-    auto state = maybe_state.release_value();
-    auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(state));
-    if (maybe_command.is_error()) {
-        warnln("Failed to make undo command: {}", maybe_command.error());
-        return;
-    }
-    auto command = maybe_command.release_value();
-    if (auto maybe_push = m_undo_stack->try_push(move(command)); maybe_push.is_error())
-        warnln("Failed to push undo stack: {}", maybe_push.error());
+    if (maybe_state.is_error())
+        return show_error("Failed to save undo state"sv, maybe_state.error());
+    auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(maybe_state.value()));
+    if (maybe_command.is_error())
+        return show_error("Failed to make undo command"sv, maybe_command.error());
+    if (auto maybe_push = m_undo_stack->try_push(move(maybe_command.value())); maybe_push.is_error())
+        show_error("Failed to push undo stack"sv, maybe_push.error());
 }
 
 void MainWidget::reset_selection_and_push_undo()
@@ -991,6 +985,13 @@ void MainWidget::delete_selected_glyphs()
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
     update_statusbar();
+}
+
+void MainWidget::show_error(StringView preface, Error error)
+{
+    auto formatted_error = String::formatted("{}: {}", preface, error);
+    GUI::MessageBox::show_error(window(), formatted_error);
+    warnln(formatted_error);
 }
 
 }

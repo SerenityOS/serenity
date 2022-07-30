@@ -78,6 +78,8 @@ private:
     void push_undo();
     void reset_selection_and_push_undo();
 
+    void show_error(StringView preface, Error);
+
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
