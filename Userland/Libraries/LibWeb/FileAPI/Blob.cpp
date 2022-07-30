@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericLexer.h>
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
@@ -11,6 +12,53 @@
 #include <LibWeb/FileAPI/Blob.h>
 
 namespace Web::FileAPI {
+
+// https://w3c.github.io/FileAPI/#convert-line-endings-to-native
+ErrorOr<String> convert_line_endings_to_native(String const& string)
+{
+    // 1. Let native line ending be be the code point U+000A LF.
+    auto native_line_ending = "\n"sv;
+
+    // 2. If the underlying platform’s conventions are to represent newlines as a carriage return and line feed sequence, set native line ending to the code point U+000D CR followed by the code point U+000A LF.
+    // NOTE: this step is a no-op since LibWeb does not compile on Windows, which is the only platform we know of that that uses a carriage return and line feed sequence for line endings.
+
+    // 3. Set result to the empty string.
+    StringBuilder result;
+
+    // 4. Let position be a position variable for s, initially pointing at the start of s.
+    auto lexer = GenericLexer { string.view() };
+
+    // 5. Let token be the result of collecting a sequence of code points that are not equal to U+000A LF or U+000D CR from s given position.
+    // 6. Append token to result.
+    TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
+
+    // 7. While position is not past the end of s:
+    while (!lexer.is_eof()) {
+        // 1. If the code point at position within s equals U+000D CR:
+        if (lexer.peek() == '\r') {
+            // 1. Append native line ending to result.
+            TRY(result.try_append(native_line_ending));
+
+            // 2. Advance position by 1.
+            lexer.ignore(1);
+
+            // 3. If position is not past the end of s and the code point at position within s equals U+000A LF advance position by 1.
+            if (!lexer.is_eof() && lexer.peek() == '\n')
+                lexer.ignore(1);
+        }
+        // 2. Otherwise if the code point at position within s equals U+000A LF, advance position by 1 and append native line ending to result.
+        else if (lexer.peek() == '\n') {
+            lexer.ignore(1);
+            TRY(result.try_append(native_line_ending));
+        }
+
+        // 3. Let token be the result of collecting a sequence of code points that are not equal to U+000A LF or U+000D CR from s given position.
+        // 4. Append token to result.
+        TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
+    }
+    // 5. Return result.
+    return result.to_string();
+}
 
 // https://w3c.github.io/FileAPI/#process-blob-parts
 ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts)
