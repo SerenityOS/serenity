@@ -61,7 +61,7 @@ ErrorOr<String> convert_line_endings_to_native(String const& string)
 }
 
 // https://w3c.github.io/FileAPI/#process-blob-parts
-ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts)
+ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     // 1. Let bytes be an empty sequence of bytes.
     ByteBuffer bytes {};
@@ -71,14 +71,16 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts)
         TRY(blob_part.visit(
             // 1. If element is a USVString, run the following sub-steps:
             [&](String const& string) -> ErrorOr<void> {
-                // NOTE: This step is handled by the lambda expression.
                 // 1. Let s be element.
+                auto s = string;
 
-                // FIXME: 2. If the endings member of options is "native", set s to the result of converting line endings to native of element.
+                // 2. If the endings member of options is "native", set s to the result of converting line endings to native of element.
+                if (options.has_value() && options->endings == Bindings::EndingType::Native)
+                    s = TRY(convert_line_endings_to_native(s));
 
                 // NOTE: The AK::String is always UTF-8.
                 // 3. Append the result of UTF-8 encoding s to bytes.
-                return bytes.try_append(string.to_byte_buffer());
+                return bytes.try_append(s.to_byte_buffer());
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
             [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
@@ -115,7 +117,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     ByteBuffer byte_buffer {};
     // 2. Let bytes be the result of processing blob parts given blobParts and options.
     if (blob_parts.has_value()) {
-        byte_buffer = TRY_OR_RETURN_OOM(process_blob_parts(blob_parts.value()));
+        byte_buffer = TRY_OR_RETURN_OOM(process_blob_parts(blob_parts.value(), options));
     }
 
     String type = String::empty();

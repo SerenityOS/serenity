@@ -27,7 +27,7 @@ struct BlobPropertyBag {
 };
 
 [[nodiscard]] ErrorOr<String> convert_line_endings_to_native(String const& string);
-[[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
+[[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optional<BlobPropertyBag> const& options = {});
 
 class Blob
     : public RefCounted<Blob>
