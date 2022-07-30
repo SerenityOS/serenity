@@ -11,29 +11,23 @@ sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
-#### GCC 11
+#### GCC 12
 
-On Ubuntu gcc-11 is available in the repositories of 21.04 (Hirsuite) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
+On Ubuntu gcc-12 is available in the repositories of 22.04 (Jammy) and later with 
 
 ```console
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt install gcc-12 g++-12
 ```
 
-Next, update your local package information from this repository:
+However, older versions will either need to either compile from source or install via brew.
 
 ```console
-sudo apt update
-```
-
-Now on Ubuntu or Debian you can install gcc-11 with apt like this:
-
-```console
-sudo apt install gcc-11 g++-11
+brew install gcc@12
 ```
 
 #### QEMU 6.2 or later
 
-Version 6.2 of QEMU is available in Ubuntu 22.04. On earlier versions of Ubuntu,
+Version 6.2 of QEMU is available in Ubuntu 22.04 (Jammy). On earlier versions of Ubuntu,
 you can build the recommended version of QEMU as provided by the toolchain by running
 `Toolchain/BuildQemu.sh`.
 Note that you might need additional dev packages in order to build QEMU on your machine:
