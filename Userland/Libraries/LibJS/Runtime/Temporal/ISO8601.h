@@ -136,6 +136,7 @@ public:
     [[nodiscard]] bool parse_tz_char();
     [[nodiscard]] bool parse_time_zone_iana_component();
     [[nodiscard]] bool parse_time_zone_iana_name_tail();
+    [[nodiscard]] bool parse_time_zone_iana_legacy_name();
     [[nodiscard]] bool parse_time_zone_iana_name();
     [[nodiscard]] bool parse_time_zone_identifier();
     [[nodiscard]] bool parse_time_zone_bracketed_annotation();
