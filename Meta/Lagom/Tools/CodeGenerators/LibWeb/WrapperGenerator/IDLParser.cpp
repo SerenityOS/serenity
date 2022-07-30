@@ -910,6 +910,9 @@ Interface& Parser::parse()
                 interface.stringifier_attribute = mixin->stringifier_attribute;
                 interface.has_stringifier = true;
             }
+
+            if (mixin->has_unscopable_member)
+                interface.has_unscopable_member = true;
         }
     }
 
