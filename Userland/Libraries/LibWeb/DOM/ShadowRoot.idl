@@ -11,5 +11,7 @@ interface ShadowRoot : DocumentFragment {
     // FIXME: attribute EventHandler onslotchange;
 };
 
+ShadowRoot includes InnerHTML;
+
 enum ShadowRootMode { "open", "closed" };
 enum SlotAssignmentMode { "manual", "named" };

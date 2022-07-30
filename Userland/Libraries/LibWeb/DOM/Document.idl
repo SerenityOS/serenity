@@ -100,4 +100,5 @@ interface Document : Node {
     [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
 };
 
+Document includes ParentNode;
 Document includes GlobalEventHandlers;

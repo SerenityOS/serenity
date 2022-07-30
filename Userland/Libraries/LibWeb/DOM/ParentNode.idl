@@ -1,4 +1,3 @@
-#import <DOM/Element.idl>
 #import <DOM/HTMLCollection.idl>
 #import <DOM/Node.idl>
 
@@ -16,7 +15,3 @@ interface mixin ParentNode {
     Element? querySelector(DOMString selectors);
     [NewObject] NodeList querySelectorAll(DOMString selectors);
 };
-
-Document includes ParentNode;
-DocumentFragment includes ParentNode;
-Element includes ParentNode;

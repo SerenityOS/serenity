@@ -2,6 +2,3 @@
 interface mixin InnerHTML {
     [LegacyNullToEmptyString, CEReactions] attribute DOMString innerHTML;
 };
-
-Element includes InnerHTML;
-ShadowRoot includes InnerHTML;
