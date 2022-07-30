@@ -26,6 +26,7 @@ struct BlobPropertyBag {
     Bindings::EndingType endings;
 };
 
+[[nodiscard]] ErrorOr<String> convert_line_endings_to_native(String const& string);
 [[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts);
 
 class Blob
