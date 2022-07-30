@@ -7,3 +7,5 @@ set(TEST_SOURCES
 foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibGfx LIBS LibGUI)
 endforeach()
+
+install(FILES TestFont.font DESTINATION usr/Tests/LibGfx)
