@@ -351,40 +351,40 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     if (smallest_unit == "hour"sv)
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
 
-    // 2. If smallestUnit is "minute", then
+    // 3. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
         // a. Return the Record { [[Precision]]: "minute", [[Unit]]: "minute", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = "minute"sv, .unit = "minute"sv, .increment = 1 };
     }
 
-    // 3. If smallestUnit is "second", then
+    // 4. If smallestUnit is "second", then
     if (smallest_unit == "second"sv) {
         // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
     }
 
-    // 4. If smallestUnit is "millisecond", then
+    // 5. If smallestUnit is "millisecond", then
     if (smallest_unit == "millisecond"sv) {
         // a. Return the Record { [[Precision]]: 3, [[Unit]]: "millisecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 3, .unit = "millisecond"sv, .increment = 1 };
     }
 
-    // 5. If smallestUnit is "microsecond", then
+    // 6. If smallestUnit is "microsecond", then
     if (smallest_unit == "microsecond"sv) {
         // a. Return the Record { [[Precision]]: 6, [[Unit]]: "microsecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 6, .unit = "microsecond"sv, .increment = 1 };
     }
 
-    // 6. If smallestUnit is "nanosecond", then
+    // 7. If smallestUnit is "nanosecond", then
     if (smallest_unit == "nanosecond"sv) {
         // a. Return the Record { [[Precision]]: 9, [[Unit]]: "nanosecond", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 9, .unit = "nanosecond"sv, .increment = 1 };
     }
 
-    // 7. Assert: smallestUnit is undefined.
+    // 8. Assert: smallestUnit is undefined.
     VERIFY(!smallest_unit.has_value());
 
-    // 8. Let fractionalDigitsVal be ? Get(normalizedOptions, "fractionalSecondDigits").
+    // 9. Let fractionalDigitsVal be ? Get(normalizedOptions, "fractionalSecondDigits").
     auto fractional_digits_value = TRY(normalized_options.get(vm.names.fractionalSecondDigits));
 
     // 10. If Type(fractionalDigitsVal) is not Number, then
@@ -404,35 +404,37 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
     if (fractional_digits_value.is_nan() || fractional_digits_value.is_infinity())
         return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
-    // 12. If ℝ(fractionalDigitsVal) < 0 or ℝ(fractionalDigitsVal) > 9, throw a RangeError exception.
-    if (fractional_digits_value.as_double() < 0 || fractional_digits_value.as_double() > 9)
+    // 12. Let fractionalDigitCount be RoundTowardsZero(ℝ(fractionalDigitsVal)).
+    auto fractional_digit_count_unchecked = trunc(fractional_digits_value.as_double());
+
+    // 13. If fractionalDigitCount < 0 or fractionalDigitCount > 9, throw a RangeError exception.
+    if (fractional_digit_count_unchecked < 0 || fractional_digit_count_unchecked > 9)
         return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
-    // 13. Let fractionalDigitCount be floor(ℝ(fractionalDigitsVal)).
-    auto fractional_digit_count = static_cast<u8>(floor(fractional_digits_value.as_double()));
+    auto fractional_digit_count = static_cast<u8>(fractional_digit_count_unchecked);
 
-    // 10. If fractionalDigitCount is 0, then
+    // 14. If fractionalDigitCount is 0, then
     if (fractional_digit_count == 0) {
         // a. Return the Record { [[Precision]]: 0, [[Unit]]: "second", [[Increment]]: 1 }.
         return SecondsStringPrecision { .precision = 0, .unit = "second"sv, .increment = 1 };
     }
 
-    // 11. If fractionalDigitCount is 1, 2, or 3, then
+    // 15. If fractionalDigitCount is 1, 2, or 3, then
     if (fractional_digit_count == 1 || fractional_digit_count == 2 || fractional_digit_count == 3) {
         // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "millisecond", [[Increment]]: 10^(3 - fractionalDigitCount) }.
         return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "millisecond"sv, .increment = (u32)pow(10, 3 - fractional_digit_count) };
     }
 
-    // 12. If fractionalDigitCount is 4, 5, or 6, then
+    // 16. If fractionalDigitCount is 4, 5, or 6, then
     if (fractional_digit_count == 4 || fractional_digit_count == 5 || fractional_digit_count == 6) {
         // a. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "microsecond", [[Increment]]: 10^(6 - fractionalDigitCount) }.
         return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "microsecond"sv, .increment = (u32)pow(10, 6 - fractional_digit_count) };
     }
 
-    // 13. Assert: fractionalDigitCount is 7, 8, or 9.
+    // 17. Assert: fractionalDigitCount is 7, 8, or 9.
     VERIFY(fractional_digit_count == 7 || fractional_digit_count == 8 || fractional_digit_count == 9);
 
-    // 14. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - fractionalDigitCount) }.
+    // 18. Return the Record { [[Precision]]: fractionalDigitCount, [[Unit]]: "nanosecond", [[Increment]]: 10^(9 - fractionalDigitCount) }.
     return SecondsStringPrecision { .precision = fractional_digit_count, .unit = "nanosecond"sv, .increment = (u32)pow(10, 9 - fractional_digit_count) };
 }
 
