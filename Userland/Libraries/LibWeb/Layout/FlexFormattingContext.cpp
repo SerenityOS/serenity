@@ -1179,28 +1179,40 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         // 12.2.
         float space_between_items = 0;
-        float space_before_first_item = 0;
+        float initial_offset = 0;
         auto number_of_items = flex_line.items.size();
+
+        enum class FlexRegionRenderCursor {
+            Left,
+            Right
+        };
+
+        auto flex_region_render_cursor = FlexRegionRenderCursor::Left;
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
+            initial_offset = 0;
+            break;
         case CSS::JustifyContent::FlexEnd:
-            space_before_first_item = 0;
+            flex_region_render_cursor = FlexRegionRenderCursor::Right;
+            initial_offset = m_available_space->main.value_or(NumericLimits<float>::max());
             break;
         case CSS::JustifyContent::Center:
-            space_before_first_item = (m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space) / 2.0f;
+            initial_offset = (m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space) / 2.0f;
             break;
         case CSS::JustifyContent::SpaceBetween:
             space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
             break;
         case CSS::JustifyContent::SpaceAround:
             space_between_items = flex_line.remaining_free_space / number_of_items;
-            space_before_first_item = space_between_items / 2.0f;
+            initial_offset = space_between_items / 2.0f;
             break;
         }
 
-        // FIXME: Support reverse
-        float main_offset = space_before_first_item;
+        // For reverse, we use FlexRegionRenderCursor::Right
+        // to indicate the cursor offset is the end and render backwards
+        // Otherwise the cursor offset is the 'start' of the region or initial offset
+        float cursor_offset = initial_offset;
 
         auto place_item = [&](FlexItem& item) {
             auto amount_of_main_size_used = item.main_size
@@ -1213,15 +1225,18 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 + space_between_items;
 
             if (is_direction_reverse()) {
-                item.main_offset = main_offset - item.main_size - item.margins.main_after - item.borders.main_after - item.padding.main_after;
-                main_offset -= amount_of_main_size_used;
+                item.main_offset = cursor_offset - item.main_size - item.margins.main_after - item.borders.main_after - item.padding.main_after;
+                cursor_offset -= amount_of_main_size_used;
+            } else if (flex_region_render_cursor == FlexRegionRenderCursor::Right) {
+                cursor_offset -= amount_of_main_size_used;
+                item.main_offset = cursor_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
             } else {
-                item.main_offset = main_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
-                main_offset += amount_of_main_size_used;
+                item.main_offset = cursor_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
+                cursor_offset += amount_of_main_size_used;
             }
         };
 
-        if (is_direction_reverse()) {
+        if (is_direction_reverse() || flex_region_render_cursor == FlexRegionRenderCursor::Right) {
             for (auto& item : flex_line.items.in_reverse()) {
                 place_item(*item);
             }
