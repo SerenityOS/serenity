@@ -79,6 +79,11 @@
 #endif
 #define NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 
+#ifdef NORETURN
+#    undef NORETURN
+#endif
+#define NORETURN __attribute__((noreturn))
+
 #ifdef NAKED
 #    undef NAKED
 #endif
