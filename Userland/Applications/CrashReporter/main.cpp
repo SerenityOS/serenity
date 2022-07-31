@@ -245,6 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
     environment_text_editor->set_text(String::join('\n', environment));
     environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+    environment_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
     auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"));
@@ -254,6 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
     memory_regions_text_editor->set_text(String::join('\n', memory_regions));
     memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+    memory_regions_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
     memory_regions_text_editor->set_visualize_trailing_whitespace(false);
 
@@ -317,6 +319,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto backtrace_text_editor = MUST(container->template try_add<GUI::TextEditor>());
                 backtrace_text_editor->set_text(backtrace.text);
                 backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+                backtrace_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
                 backtrace_text_editor->set_should_hide_unnecessary_scrollbars(true);
                 full_backtrace.appendff("==== {} ====\n{}\n", backtrace.title, backtrace.text);
             }
@@ -328,6 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto cpu_registers_text_editor = MUST(container->template try_add<GUI::TextEditor>());
                 cpu_registers_text_editor->set_text(cpu_registers.text);
                 cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+                cpu_registers_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
                 cpu_registers_text_editor->set_should_hide_unnecessary_scrollbars(true);
             }
 
