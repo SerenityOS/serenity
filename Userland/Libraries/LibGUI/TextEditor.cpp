@@ -766,6 +766,9 @@ void TextEditor::select_all()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
+    if (!is_editable() && event.key() == KeyCode::Key_Tab)
+        return AbstractScrollableWidget::keydown_event(event);
+
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         TemporaryChange change { m_should_keep_autocomplete_box, true };
         if (m_autocomplete_box->apply_suggestion() == CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::Yes)
@@ -868,8 +871,6 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Tab) {
-        if (!is_editable())
-            return;
         if (has_selection()) {
             if (event.modifiers() == Mod_Shift) {
                 unindent_selection();
