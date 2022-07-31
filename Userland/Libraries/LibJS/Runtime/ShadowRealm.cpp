@@ -97,8 +97,9 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
 {
     auto& vm = global_object.vm();
 
+    // FIXME: Needs to be updated to latest ECMA-262. See: https://github.com/tc39/proposal-shadowrealm/issues/367
     // 1. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
-    // FIXME: We don't have this host-defined abstract operation yet.
+    TRY(vm.host_ensure_can_compile_strings(eval_realm));
 
     // 2. Perform the following substeps in an implementation-defined order, possibly interleaving parsing and error detection:
 
