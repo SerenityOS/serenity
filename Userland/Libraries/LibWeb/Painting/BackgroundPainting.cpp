@@ -82,6 +82,26 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     if (!has_paintable_layers)
         return;
 
+    struct {
+        int top { 0 };
+        int bottom { 0 };
+        int left { 0 };
+        int right { 0 };
+    } clip_shrink;
+
+    auto border_top = layout_node.computed_values().border_top();
+    auto border_bottom = layout_node.computed_values().border_bottom();
+    auto border_left = layout_node.computed_values().border_left();
+    auto border_right = layout_node.computed_values().border_right();
+
+    if (border_top.color.alpha() == 255 && border_bottom.color.alpha() == 255
+        && border_left.color.alpha() == 255 && border_right.color.alpha() == 255) {
+        clip_shrink.top = border_top.width;
+        clip_shrink.bottom = border_bottom.width;
+        clip_shrink.left = border_left.width;
+        clip_shrink.right = border_right.width;
+    }
+
     // Note: Background layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : background_layers->in_reverse()) {
         // TODO: Gradients!
@@ -95,6 +115,12 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         auto clip_rect = clip_box.rect.to_rounded<int>();
         painter.add_clip_rect(clip_rect);
         ScopedCornerRadiusClip corner_clip { painter, clip_rect, clip_box.radii };
+
+        if (layer.clip == CSS::BackgroundBox::BorderBox) {
+            // Shrink the effective clip rect if to account for the bits the borders will definitely paint over
+            // (if they all have alpha == 255).
+            clip_rect.shrink(clip_shrink.top, clip_shrink.right, clip_shrink.bottom, clip_shrink.left);
+        }
 
         auto& image = *layer.background_image;
         Gfx::FloatRect background_positioning_area;
