@@ -66,6 +66,16 @@ RecursionDecision ContainerBlock::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
+template<class CodeBlock>
+static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blocks, Heading* current_section)
+{
+    OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section);
+    if (!block)
+        return false;
+    blocks.append(block.release_nonnull());
+    return true;
+}
+
 template<typename BlockType>
 static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blocks)
 {
@@ -81,6 +91,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
     NonnullOwnPtrVector<Block> blocks;
 
     StringBuilder paragraph_text;
+    Heading* current_section;
 
     auto flush_paragraph = [&] {
         if (paragraph_text.is_empty())
@@ -107,12 +118,17 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
             has_blank_lines = has_blank_lines || has_trailing_blank_lines;
         }
 
-        bool any = try_parse_block<Table>(lines, blocks)
+        bool heading = false;
+        if ((heading = try_parse_block<Heading>(lines, blocks)))
+            current_section = dynamic_cast<Heading*>(&blocks.last());
+
+        bool any = heading
+            || try_parse_block<Table>(lines, blocks)
             || try_parse_block<HorizontalRule>(lines, blocks)
             || try_parse_block<List>(lines, blocks)
-            || try_parse_block<CodeBlock>(lines, blocks)
+            // CodeBlock needs to know the current section's name for proper indentation
+            || try_parse_block<CodeBlock>(lines, blocks, current_section)
             || try_parse_block<CommentBlock>(lines, blocks)
-            || try_parse_block<Heading>(lines, blocks)
             || try_parse_block<BlockQuote>(lines, blocks);
 
         if (any) {
