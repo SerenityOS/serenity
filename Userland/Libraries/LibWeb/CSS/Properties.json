@@ -475,6 +475,9 @@
     "valid-identifiers": [
       "auto"
     ],
+    "valid-types": [
+      "rect"
+    ],
     "quirks": [
       "unitless-length"
     ]

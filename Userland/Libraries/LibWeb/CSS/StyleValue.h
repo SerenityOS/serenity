@@ -84,6 +84,13 @@ struct ColorStopListElement {
     GradientColorStop color_stop;
 };
 
+struct EdgeRect {
+    Length top_edge;
+    Length right_edge;
+    Length bottom_edge;
+    Length left_edge;
+};
+
 // FIXME: Find a better place for this helper.
 inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
 {
@@ -131,6 +138,7 @@ public:
         Overflow,
         Percentage,
         Position,
+        Rect,
         Resolution,
         Shadow,
         String,
@@ -169,6 +177,7 @@ public:
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
+    bool is_rect() const { return type() == Type::Rect; }
     bool is_resolution() const { return type() == Type::Resolution; }
     bool is_shadow() const { return type() == Type::Shadow; }
     bool is_string() const { return type() == Type::String; }
@@ -206,6 +215,7 @@ public:
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
+    RectStyleValue const& as_rect() const;
     ResolutionStyleValue const& as_resolution() const;
     ShadowStyleValue const& as_shadow() const;
     StringStyleValue const& as_string() const;
@@ -241,6 +251,7 @@ public:
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
+    RectStyleValue& as_rect() { return const_cast<RectStyleValue&>(const_cast<StyleValue const&>(*this).as_rect()); }
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     ShadowStyleValue& as_shadow() { return const_cast<ShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_shadow()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
@@ -255,12 +266,14 @@ public:
     virtual bool has_color() const { return false; }
     virtual bool has_identifier() const { return false; }
     virtual bool has_length() const { return false; }
+    virtual bool has_rect() const { return false; }
     virtual bool has_number() const { return false; }
     virtual bool has_integer() const { return false; }
 
     virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
+    virtual EdgeRect to_rect() const { VERIFY_NOT_REACHED(); }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
     virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
@@ -1438,6 +1451,27 @@ private:
 
     Separator m_separator;
     NonnullRefPtrVector<StyleValue> m_values;
+};
+
+class RectStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<RectStyleValue> create(EdgeRect rect);
+    virtual ~RectStyleValue() override = default;
+
+    EdgeRect rect() const { return m_rect; }
+    virtual String to_string() const override;
+    virtual bool has_rect() const override { return true; }
+    virtual EdgeRect to_rect() const override { return m_rect; }
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    explicit RectStyleValue(EdgeRect rect)
+        : StyleValue(Type::Rect)
+        , m_rect(rect)
+    {
+    }
+
+    EdgeRect m_rect;
 };
 
 }

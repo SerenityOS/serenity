@@ -27,6 +27,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 
@@ -3350,6 +3351,46 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
     return {};
 }
 
+// https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
+RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_value)
+{
+    if (!component_value.is_function())
+        return {};
+    auto& function = component_value.function();
+    if (!function.name().equals_ignoring_case("rect"sv))
+        return {};
+
+    Vector<Length, 4> params;
+    auto tokens = TokenStream { function.values() };
+
+    // In CSS 2.1, the only valid <shape> value is: rect(<top>, <right>, <bottom>, <left>) where
+    // <top> and <bottom> specify offsets from the top border edge of the box, and <right>, and
+    //  <left> specify offsets from the left border edge of the box.
+    for (size_t idx = 0; idx < 4; idx++) {
+        tokens.skip_whitespace();
+
+        // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
+        // Negative lengths are permitted.
+        auto current_token = tokens.next_token().token();
+        if (current_token.to_string() == "auto") {
+            params.append(Length::make_auto());
+        } else {
+            auto maybe_length = parse_length(current_token);
+            if (!maybe_length.has_value())
+                return {};
+            params.append(maybe_length.value());
+        }
+        tokens.skip_whitespace();
+
+        // Authors should separate offset values with commas. User agents must support separation
+        // with commas, but may also support separation without commas (but not a combination),
+        // because a previous revision of this specification was ambiguous in this respect.
+        if (tokens.peek_token().is(Token::Type::Comma))
+            tokens.next_token();
+    }
+    return RectStyleValue::create(EdgeRect { params[0], params[1], params[2], params[3] });
+}
+
 Optional<Color> Parser::parse_color(ComponentValue const& component_value)
 {
     // https://www.w3.org/TR/css-color-4/
@@ -5415,6 +5456,9 @@ RefPtr<StyleValue> Parser::parse_css_value(ComponentValue const& component_value
 
     if (auto image = parse_image_value(component_value))
         return image;
+
+    if (auto rect = parse_rect_value(component_value))
+        return rect;
 
     return {};
 }

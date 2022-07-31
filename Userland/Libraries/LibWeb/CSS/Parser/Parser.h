@@ -328,6 +328,7 @@ private:
     RefPtr<StyleValue> parse_numeric_value(ComponentValue const&);
     RefPtr<StyleValue> parse_identifier_value(ComponentValue const&);
     RefPtr<StyleValue> parse_color_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_rect_value(ComponentValue const&);
     RefPtr<StyleValue> parse_string_value(ComponentValue const&);
     RefPtr<StyleValue> parse_image_value(ComponentValue const&);
     template<typename ParseFunction>

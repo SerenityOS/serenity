@@ -179,6 +179,12 @@ PositionStyleValue const& StyleValue::as_position() const
     return static_cast<PositionStyleValue const&>(*this);
 }
 
+RectStyleValue const& StyleValue::as_rect() const
+{
+    VERIFY(is_rect());
+    return static_cast<RectStyleValue const&>(*this);
+}
+
 ResolutionStyleValue const& StyleValue::as_resolution() const
 {
     VERIFY(is_resolution());
@@ -1485,6 +1491,11 @@ static bool operator==(ColorStopListElement a, ColorStopListElement b)
     return a.transition_hint == b.transition_hint && a.color_stop == b.color_stop;
 }
 
+static bool operator==(EdgeRect a, EdgeRect b)
+{
+    return a.top_edge == b.top_edge && a.right_edge == b.right_edge && a.bottom_edge == b.bottom_edge && a.left_edge == b.left_edge;
+}
+
 bool LinearGradientStyleValue::equals(StyleValue const& other_) const
 {
     if (type() != other_.type())
@@ -1650,6 +1661,19 @@ bool PositionStyleValue::equals(StyleValue const& other) const
         && m_offset_y == typed_other.m_offset_y;
 }
 
+String RectStyleValue::to_string() const
+{
+    return String::formatted("top_edge: {}, right_edge: {}, bottom_edge: {}, left_edge: {}", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
+}
+
+bool RectStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_rect();
+    return m_rect == typed_other.rect();
+}
+
 bool ResolutionStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
@@ -1808,6 +1832,11 @@ NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
     }
 
     return adopt_ref(*new ColorStyleValue(color));
+}
+
+NonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
+{
+    return adopt_ref(*new RectStyleValue(rect));
 }
 
 NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
