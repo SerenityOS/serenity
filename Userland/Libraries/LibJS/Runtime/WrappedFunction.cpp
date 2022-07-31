@@ -43,32 +43,68 @@ WrappedFunction::WrappedFunction(Realm& realm, FunctionObject& wrapped_target_fu
 {
 }
 
+void WrappedFunction::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    visitor.visit(&m_wrapped_target_function);
+    visitor.visit(&m_realm);
+}
+
 // 2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist
 ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
+
+    // 1. Let callerContext be the running execution context.
+    // NOTE: No-op, kept by the VM in its execution context stack.
+
+    // 2. Let calleeContext be PrepareForWrappedFunctionCall(F).
+    ExecutionContext callee_context { vm.heap() };
+    prepare_for_wrapped_function_call(*this, callee_context);
+
+    // 3. Assert: calleeContext is now the running execution context.
+    VERIFY(&vm.running_execution_context() == &callee_context);
+
+    // 4. Let result be OrdinaryWrappedFunctionCall(F, thisArgument, argumentsList).
+    auto result = ordinary_wrapped_function_call(*this, this_argument, arguments_list);
+
+    // 5. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+    vm.pop_execution_context();
+
+    // NOTE: I think the spec isn't fully correct here, see https://github.com/tc39/proposal-shadowrealm/issues/371.
+    // 6. If result.[[Type]] is return, return result.[[Value]].
+    // 7. ReturnIfAbrupt(result).
+    // 8. Return undefined.
+    return result;
+}
+
+// 2.2 OrdinaryWrappedFunctionCall ( F: a wrapped function exotic object, thisArgument: an ECMAScript language value, argumentsList: a List of ECMAScript language values, ), https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call
+ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& function, Value this_argument, MarkedVector<Value> const& arguments_list)
+{
+    auto& vm = function.vm();
 
     // 1. Let target be F.[[WrappedTargetFunction]].
-    auto& target = m_wrapped_target_function;
+    auto const& target = function.wrapped_target_function();
 
     // 2. Assert: IsCallable(target) is true.
     VERIFY(Value(&target).is_function());
 
-    // 3. Let targetRealm be ? GetFunctionRealm(target).
+    // 3. Let callerRealm be F.[[Realm]].
+    auto* caller_realm = function.realm();
+
+    // 4. NOTE: Any exception objects produced after this point are associated with callerRealm.
+    auto& global_object = caller_realm->global_object();
+
+    // 5. Let targetRealm be ? GetFunctionRealm(target).
     auto* target_realm = TRY(get_function_realm(global_object, target));
-
-    // 4. Let callerRealm be ? GetFunctionRealm(F).
-    auto* caller_realm = TRY(get_function_realm(global_object, *this));
-
-    // 5. NOTE: Any exception objects produced after this point are associated with callerRealm.
 
     // 6. Let wrappedArgs be a new empty List.
     auto wrapped_args = MarkedVector<Value> { vm.heap() };
     wrapped_args.ensure_capacity(arguments_list.size());
 
     // 7. For each element arg of argumentsList, do
-    for (auto& arg : arguments_list) {
+    for (auto const& arg : arguments_list) {
         // a. Let wrappedValue be ? GetWrappedValue(targetRealm, arg).
         auto wrapped_value = TRY(get_wrapped_value(global_object, *target_realm, arg));
 
@@ -96,12 +132,43 @@ ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, Mar
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.
 }
 
-void WrappedFunction::visit_edges(Visitor& visitor)
+// 2.3 PrepareForWrappedFunctionCall ( F: a wrapped function exotic object, ), https://tc39.es/proposal-shadowrealm/#sec-prepare-for-wrapped-function-call
+void prepare_for_wrapped_function_call(WrappedFunction const& function, ExecutionContext& callee_context)
 {
-    Base::visit_edges(visitor);
+    auto& vm = function.vm();
 
-    visitor.visit(&m_wrapped_target_function);
-    visitor.visit(&m_realm);
+    // 1. Let callerContext be the running execution context.
+    auto const& caller_context = vm.running_execution_context();
+
+    // 2. Let calleeContext be a new execution context.
+
+    // NOTE: In the specification, PrepareForWrappedFunctionCall "returns" a new callee execution context.
+    // To avoid heap allocations, we put our ExecutionContext objects on the C++ stack instead.
+    // Whoever calls us should put an ExecutionContext on their stack and pass that as the `callee_context`.
+
+    // 3. Set the Function of calleeContext to F.
+    callee_context.function = &const_cast<WrappedFunction&>(function);
+
+    // 4. Let calleeRealm be F.[[Realm]].
+    auto* callee_realm = function.realm();
+
+    // 5. Set the Realm of calleeContext to calleeRealm.
+    callee_context.realm = callee_realm;
+
+    // 6. Set the ScriptOrModule of calleeContext to null.
+    callee_context.script_or_module = {};
+
+    // 7. If callerContext is not already suspended, suspend callerContext.
+    // NOTE: We don't support this concept yet.
+    (void)caller_context;
+
+    // 8. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+    vm.push_execution_context(callee_context);
+
+    // 9. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+
+    // 10. Return calleeContext.
+    // NOTE: No-op, see NOTE after step 2.
 }
 
 }
