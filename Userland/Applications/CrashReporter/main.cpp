@@ -263,6 +263,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             unlink_coredump(coredump_path);
         app->quit();
     };
+    close_button.set_focus(true);
 
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
     debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
