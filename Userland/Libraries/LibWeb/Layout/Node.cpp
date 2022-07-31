@@ -385,6 +385,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_flex_grow(computed_style.flex_grow());
     computed_values.set_flex_shrink(computed_style.flex_shrink());
     computed_values.set_order(computed_style.order());
+    computed_values.set_clip(computed_style.clip());
 
     auto justify_content = computed_style.justify_content();
     if (justify_content.has_value())

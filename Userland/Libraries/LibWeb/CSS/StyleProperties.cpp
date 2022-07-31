@@ -8,6 +8,7 @@
 #include <AK/TypeCasts.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibWeb/CSS/Clip.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -233,6 +234,14 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
 {
     auto value = property(CSS::PropertyID::ImageRendering);
     return value_id_to_image_rendering(value->to_identifier());
+}
+
+CSS::Clip StyleProperties::clip() const
+{
+    auto value = property(CSS::PropertyID::Clip);
+    if (!value->has_rect())
+        return CSS::Clip::make_auto();
+    return CSS::Clip(value->as_rect().rect());
 }
 
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const

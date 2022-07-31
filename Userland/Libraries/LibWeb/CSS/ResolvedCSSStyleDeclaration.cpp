@@ -265,6 +265,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().box_sizing()));
     case CSS::PropertyID::Clear:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().clear()));
+    case CSS::PropertyID::Clip:
+        return RectStyleValue::create(layout_node.computed_values().clip().to_rect());
     case CSS::PropertyID::Color:
         return ColorStyleValue::create(layout_node.computed_values().color());
     case CSS::PropertyID::Cursor:

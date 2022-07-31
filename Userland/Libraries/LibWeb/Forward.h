@@ -32,6 +32,7 @@ class BackgroundStyleValue;
 class BorderRadiusStyleValue;
 class BorderRadiusShorthandStyleValue;
 class BorderStyleValue;
+class Clip;
 class CalculatedStyleValue;
 class ColorStyleValue;
 class ContentStyleValue;

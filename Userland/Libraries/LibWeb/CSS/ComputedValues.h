@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <LibWeb/CSS/Clip.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
@@ -19,6 +20,7 @@ public:
     static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
+    static CSS::Clip clip() { return CSS::Clip::make_auto(); }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
@@ -130,6 +132,7 @@ class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
+    CSS::Clip clip() const { return m_noninherited.clip; }
     CSS::Cursor cursor() const { return m_inherited.cursor; }
     CSS::ContentData content() const { return m_noninherited.content; }
     CSS::PointerEvents pointer_events() const { return m_inherited.pointer_events; }
@@ -233,6 +236,7 @@ protected:
     struct {
         CSS::Float float_ { InitialValues::float_() };
         CSS::Clear clear { InitialValues::clear() };
+        CSS::Clip clip { InitialValues::clip() };
         CSS::Display display { InitialValues::display() };
         Optional<int> z_index;
         // FIXME: Store this as flags in a u8.
@@ -292,6 +296,7 @@ public:
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
     void set_color(Color const& color) { m_inherited.color = color; }
+    void set_clip(CSS::Clip const& clip) { m_noninherited.clip = clip; }
     void set_content(ContentData const& content) { m_noninherited.content = content; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
