@@ -48,6 +48,7 @@ public:
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
     Optional<CSS::TextJustify> text_justify() const;
+    CSS::Clip clip() const;
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;
     Optional<CSS::Clear> clear() const;
