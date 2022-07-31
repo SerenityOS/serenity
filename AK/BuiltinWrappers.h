@@ -23,7 +23,7 @@ inline constexpr int popcount(IntType value)
 #else
     int ones = 0;
     for (size_t i = 0; i < 8 * sizeof(IntType); ++i) {
-        if ((val >> i) & 1) {
+        if ((value >> i) & 1) {
             ++ones;
         }
     }
@@ -50,7 +50,7 @@ inline constexpr int count_trailing_zeroes(IntType value)
     VERIFY_NOT_REACHED();
 #else
     for (size_t i = 0; i < 8 * sizeof(IntType); ++i) {
-        if ((val >> i) & 1) {
+        if ((value >> i) & 1) {
             return i;
         }
     }
@@ -89,7 +89,7 @@ inline constexpr int count_leading_zeroes(IntType value)
 #else
     // Wrap around, catch going past zero by noticing that i is greater than the number of bits in the number
     for (size_t i = (8 * sizeof(IntType)) - 1; i < 8 * sizeof(IntType); --i) {
-        if ((val >> i) & 1) {
+        if ((value >> i) & 1) {
             return i;
         }
     }
