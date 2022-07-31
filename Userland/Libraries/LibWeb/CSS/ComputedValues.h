@@ -63,7 +63,7 @@ public:
 };
 
 struct BackgroundLayerData {
-    RefPtr<CSS::StyleValue> background_image { nullptr };
+    RefPtr<CSS::AbstractImageStyleValue> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
     CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
     CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };

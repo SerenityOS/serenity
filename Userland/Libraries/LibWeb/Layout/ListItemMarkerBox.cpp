@@ -51,11 +51,6 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
 
 ListItemMarkerBox::~ListItemMarkerBox() = default;
 
-Gfx::Bitmap const* ListItemMarkerBox::list_style_image_bitmap() const
-{
-    return list_style_image() ? list_style_image()->bitmap() : nullptr;
-}
-
 RefPtr<Painting::Paintable> ListItemMarkerBox::create_paintable() const
 {
     return Painting::MarkerPaintable::create(*this);

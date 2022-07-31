@@ -166,7 +166,7 @@ public:
     Gfx::Font const& font() const { return *m_font; }
     float line_height() const { return m_line_height; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
-    const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
+    const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
@@ -180,7 +180,7 @@ private:
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::Font> m_font;
     float m_line_height { 0 };
-    RefPtr<CSS::ImageStyleValue> m_list_style_image;
+    RefPtr<CSS::AbstractImageStyleValue> m_list_style_image;
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {

@@ -9,7 +9,6 @@
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
-#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
 
@@ -27,7 +26,7 @@ struct LinearGradientData {
     ColorStopList color_stops;
 };
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatRect const&, CSS::LinearGradientStyleValue const&);
+LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatSize const&, CSS::LinearGradientStyleValue const&);
 
 void paint_linear_gradient(PaintContext&, Gfx::IntRect const&, LinearGradientData const&);
 

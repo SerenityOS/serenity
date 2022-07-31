@@ -765,9 +765,9 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
 
     int image_width = 0;
     int image_height = 0;
-    if (auto const* list_style_image = marker.list_style_image_bitmap()) {
-        image_width = list_style_image->rect().width();
-        image_height = list_style_image->rect().height();
+    if (auto const* list_style_image = marker.list_style_image()) {
+        image_width = list_style_image->natural_width().value_or(0);
+        image_height = list_style_image->natural_height().value_or(0);
     }
 
     int default_marker_width = max(4, marker.font().glyph_height() - 4);
