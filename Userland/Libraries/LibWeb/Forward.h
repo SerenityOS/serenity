@@ -75,6 +75,7 @@ class Percentage;
 class PercentageStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
+class RectStyleValue;
 class Resolution;
 class ResolutionStyleValue;
 class Screen;

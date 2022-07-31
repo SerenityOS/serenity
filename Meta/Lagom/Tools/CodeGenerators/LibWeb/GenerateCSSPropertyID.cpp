@@ -501,6 +501,11 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                             output_numeric_value_check(property_generator, "has_number"sv, "to_number()"sv, Array { "Integer"sv, "Number"sv }, min_value, max_value);
                         } else if (type_name == "percentage") {
                             output_numeric_value_check(property_generator, "is_percentage"sv, "as_percentage().percentage().value()"sv, Array { "Percentage"sv }, min_value, max_value);
+                        } else if (type_name == "rect") {
+                            property_generator.append(R"~~~(
+        if (style_value.has_rect())
+            return true;
+)~~~");
                         } else if (type_name == "resolution") {
                             output_numeric_value_check(property_generator, "is_resolution"sv, "as_resolution().resolution().to_dots_per_pixel()"sv, Array<StringView, 0> {}, min_value, max_value);
                         } else if (type_name == "string") {
