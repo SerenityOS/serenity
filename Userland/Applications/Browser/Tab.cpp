@@ -19,6 +19,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -114,6 +115,10 @@ Tab::Tab(BrowserWindow& window)
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
     m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
+
+    auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
+    m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
+
     if (g_content_filters_enabled)
         m_web_content_view->set_content_filters(g_content_filters);
     else
