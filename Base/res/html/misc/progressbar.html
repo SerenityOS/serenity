@@ -33,6 +33,12 @@
     <br>
     <progress id="custom-progress" value="25" max="100"></progress>
     <br>
+    <br>
+    <em>A super fancy progress bar done purely in CSS</em>
+    <br>
+    <br>
+    <progress id="really-fancy-progress" value="25" max="100"></progress>
+    <br>
 
     <style>
         body {
@@ -57,6 +63,34 @@
         #custom-progress::-webkit-progress-value {
             border-radius: 10px;
             background-color: #ff3863d2;
+        }
+
+        /* The following example is taken from https://css-tricks.com/html5-progress-element/ */
+
+        #really-fancy-progress[value] {
+            appearance: none;
+            width: 500px;
+            height: 40px;
+        }
+
+        #really-fancy-progress[value]::-webkit-progress-bar {
+            background-color: #eee;
+            border-radius: 2px;
+            /* FIXME: Should be an inset shadow (not supported yet) */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+        }
+
+        #really-fancy-progress[value]::-webkit-progress-value {
+            background-image:
+                -webkit-linear-gradient(-45deg,
+                                        transparent 33%, rgba(0, 0, 0, .1) 33%,
+                                        rgba(0,0, 0, .1) 66%, transparent 66%),
+                -webkit-linear-gradient(top,
+                                        rgba(255, 255, 255, .25),
+                                        rgba(0, 0, 0, .25)),
+                -webkit-linear-gradient(left, #09c, #f44);
+            border-radius: 2px;
+            background-size: 70px 40px, 100% 100%, 100% 100%;
         }
     </style>
 
