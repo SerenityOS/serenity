@@ -8,6 +8,7 @@
 #include <AK/Math.h>
 #include <LibGfx/Gamma.h>
 #include <LibGfx/Line.h>
+#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::Painting {
@@ -19,20 +20,20 @@ static float normalized_gradient_angle_radians(float gradient_angle)
     return real_angle * (AK::Pi<float> / 180);
 }
 
-static float calulate_gradient_length(Gfx::IntRect const& gradient_rect, float sin_angle, float cos_angle)
+static float calulate_gradient_length(Gfx::IntSize const& gradient_size, float sin_angle, float cos_angle)
 {
-    return AK::fabs(gradient_rect.height() * sin_angle) + AK::fabs(gradient_rect.width() * cos_angle);
+    return AK::fabs(gradient_size.height() * sin_angle) + AK::fabs(gradient_size.width() * cos_angle);
 }
 
-static float calulate_gradient_length(Gfx::IntRect const& gradient_rect, float gradient_angle)
+static float calulate_gradient_length(Gfx::IntSize const& gradient_size, float gradient_angle)
 {
     float angle = normalized_gradient_angle_radians(gradient_angle);
     float sin_angle, cos_angle;
     AK::sincos(angle, sin_angle, cos_angle);
-    return calulate_gradient_length(gradient_rect, sin_angle, cos_angle);
+    return calulate_gradient_length(gradient_size, sin_angle, cos_angle);
 }
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::FloatRect const& gradient_rect, CSS::LinearGradientStyleValue const& linear_gradient)
+LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::FloatSize const& gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
     auto& color_stop_list = linear_gradient.color_stop_list();
 
@@ -42,8 +43,8 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
     for (auto& stop : color_stop_list)
         resolved_color_stops.append(ColorStop { .color = stop.color_stop.color });
 
-    auto gradient_angle = linear_gradient.angle_degrees(gradient_rect);
-    auto gradient_length_px = calulate_gradient_length(gradient_rect.to_rounded<int>(), gradient_angle);
+    auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
+    auto gradient_length_px = calulate_gradient_length(gradient_size.to_rounded<int>(), gradient_angle);
     auto gradient_length = CSS::Length::make_px(gradient_length_px);
 
     // 1. If the first color stop does not have a position, set its position to 0%.
@@ -137,7 +138,7 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     float sin_angle, cos_angle;
     AK::sincos(angle, sin_angle, cos_angle);
 
-    auto length = calulate_gradient_length(gradient_rect, sin_angle, cos_angle);
+    auto length = calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle);
 
     Gfx::FloatPoint offset { cos_angle * (length / 2), sin_angle * (length / 2) };
 

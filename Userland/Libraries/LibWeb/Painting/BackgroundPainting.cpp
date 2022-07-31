@@ -62,9 +62,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         color_box = get_box(background_layers->last().clip);
 
     auto layer_is_paintable = [&](auto& layer) {
-        return (layer.background_image
-            && ((layer.background_image->is_image() && layer.background_image->as_image().bitmap())
-                || layer.background_image->is_linear_gradient()));
+        return layer.background_image && layer.background_image->is_paintable();
     };
 
     bool has_paintable_layers = false;
@@ -93,19 +91,12 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         // Clip
         auto clip_box = get_box(layer.clip);
+
         auto clip_rect = clip_box.rect.to_rounded<int>();
         painter.add_clip_rect(clip_rect);
         ScopedCornerRadiusClip corner_clip { painter, clip_rect, clip_box.radii };
 
-        if (layer.background_image->is_linear_gradient()) {
-            // FIXME: Support sizing and positioning rules with gradients.
-            auto& linear_gradient = layer.background_image->as_linear_gradient();
-            auto data = resolve_linear_gradient_data(layout_node, border_box.rect, linear_gradient);
-            paint_linear_gradient(context, border_box.rect.to_rounded<int>(), data);
-            continue;
-        }
-
-        auto& image = *layer.background_image->as_image().bitmap();
+        auto& image = *layer.background_image;
         Gfx::FloatRect background_positioning_area;
 
         // Attachment and Origin
@@ -119,21 +110,25 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         }
 
+        // FIXME: Implement proper derault sizing algorithm: https://drafts.csswg.org/css-images/#default-sizing
+        auto natural_image_width = image.natural_width().value_or(background_positioning_area.width());
+        auto natural_image_height = image.natural_height().value_or(background_positioning_area.height());
+
         // Size
         Gfx::FloatRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            float max_width_ratio = background_positioning_area.width() / image.width();
-            float max_height_ratio = background_positioning_area.height() / image.height();
+            float max_width_ratio = background_positioning_area.width() / natural_image_width;
+            float max_height_ratio = background_positioning_area.height() / natural_image_height;
             float ratio = min(max_width_ratio, max_height_ratio);
-            image_rect.set_size(image.width() * ratio, image.height() * ratio);
+            image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            float max_width_ratio = background_positioning_area.width() / image.width();
-            float max_height_ratio = background_positioning_area.height() / image.height();
+            float max_width_ratio = background_positioning_area.width() / natural_image_width;
+            float max_height_ratio = background_positioning_area.height() / natural_image_height;
             float ratio = max(max_width_ratio, max_height_ratio);
-            image_rect.set_size(image.width() * ratio, image.height() * ratio);
+            image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
         case CSS::BackgroundSize::LengthPercentage: {
@@ -142,14 +137,14 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             bool x_is_auto = layer.size_x.is_auto();
             bool y_is_auto = layer.size_y.is_auto();
             if (x_is_auto && y_is_auto) {
-                width = image.width();
-                height = image.height();
+                width = natural_image_width;
+                height = natural_image_height;
             } else if (x_is_auto) {
                 height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
-                width = image.width() * (height / image.height());
+                width = natural_image_width * (height / natural_image_height);
             } else if (y_is_auto) {
                 width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
-                height = image.height() * (width / image.width());
+                height = natural_image_height * (width / natural_image_width);
             } else {
                 width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
                 height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
@@ -180,10 +175,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // so that the original aspect ratio is restored.
             if (layer.repeat_x != layer.repeat_y) {
                 if (layer.size_x.is_auto()) {
-                    image_rect.set_width(image.width() * (image_rect.height() / image.height()));
+                    image_rect.set_width(natural_image_width * (image_rect.height() / natural_image_height));
                 }
                 if (layer.size_y.is_auto()) {
-                    image_rect.set_height(image.height() * (image_rect.width() / image.width()));
+                    image_rect.set_height(natural_image_height * (image_rect.width() / natural_image_width));
                 }
             }
         }
@@ -278,6 +273,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         float image_y = image_rect.y();
         Optional<Gfx::IntRect> last_int_image_rect;
 
+        image.resolve_for_size(layout_node, image_rect.size());
+
         while (image_y < clip_rect.bottom()) {
             image_rect.set_y(image_y);
 
@@ -285,8 +282,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             while (image_x < clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto int_image_rect = image_rect.to_rounded<int>();
-                if (int_image_rect != last_int_image_rect)
-                    painter.draw_scaled_bitmap(int_image_rect, image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                if (int_image_rect != last_int_image_rect && int_image_rect.intersects(context.viewport_rect()))
+                    image.paint(context, int_image_rect);
                 last_int_image_rect = int_image_rect;
                 if (!repeat_x)
                     break;

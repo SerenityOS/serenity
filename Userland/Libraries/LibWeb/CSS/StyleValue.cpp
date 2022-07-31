@@ -15,12 +15,19 @@
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::CSS {
 
 StyleValue::StyleValue(Type type)
     : m_type(type)
 {
+}
+
+AbstractImageStyleValue const& StyleValue::as_abstract_image() const
+{
+    VERIFY(is_abstract_image());
+    return static_cast<AbstractImageStyleValue const&>(*this);
 }
 
 AngleStyleValue const& StyleValue::as_angle() const
@@ -1399,12 +1406,12 @@ Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
 }
 
 ImageStyleValue::ImageStyleValue(AK::URL const& url)
-    : StyleValue(Type::Image)
+    : AbstractImageStyleValue(Type::Image)
     , m_url(url)
 {
 }
 
-void ImageStyleValue::load_bitmap(DOM::Document& document)
+void ImageStyleValue::load_any_resources(DOM::Document& document)
 {
     if (m_bitmap)
         return;
@@ -1434,6 +1441,26 @@ bool ImageStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     return m_url == other.as_image().m_url;
+}
+
+Optional<int> ImageStyleValue::natural_width() const
+{
+    if (m_bitmap)
+        return m_bitmap->width();
+    return {};
+}
+
+Optional<int> ImageStyleValue::natural_height() const
+{
+    if (m_bitmap)
+        return m_bitmap->height();
+    return {};
+}
+
+void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect) const
+{
+    if (m_bitmap)
+        context.painter().draw_scaled_bitmap(dest_rect, *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 }
 
 String LinearGradientStyleValue::to_string() const
@@ -1537,10 +1564,10 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
     return true;
 }
 
-float LinearGradientStyleValue::angle_degrees(Gfx::FloatRect const& gradient_rect) const
+float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize const& gradient_size) const
 {
     auto corner_angle_degrees = [&] {
-        return static_cast<float>(atan2(gradient_rect.height(), gradient_rect.width())) * 180 / AK::Pi<float>;
+        return static_cast<float>(atan2(gradient_size.height(), gradient_size.width())) * 180 / AK::Pi<float>;
     };
     return m_direction.visit(
         [&](SideOrCorner side_or_corner) {
@@ -1574,6 +1601,17 @@ float LinearGradientStyleValue::angle_degrees(Gfx::FloatRect const& gradient_rec
         [&](Angle const& angle) {
             return angle.to_degrees();
         });
+}
+
+void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
+{
+    m_resolved_data = Painting::resolve_linear_gradient_data(node, size, *this);
+}
+
+void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect) const
+{
+    VERIFY(m_resolved_data.has_value());
+    Painting::paint_linear_gradient(context, dest_rect, *m_resolved_data);
 }
 
 bool InheritStyleValue::equals(StyleValue const& other) const

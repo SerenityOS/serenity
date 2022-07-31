@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/GenericShorthands.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -38,6 +39,7 @@
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/ImageResource.h>
+#include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::CSS {
 
@@ -153,6 +155,7 @@ public:
 
     Type type() const { return m_type; }
 
+    bool is_abstract_image() const { return AK::first_is_one_of(type(), Type::Image, Type::LinearGradient); }
     bool is_angle() const { return type() == Type::Angle; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
@@ -191,6 +194,7 @@ public:
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
+    AbstractImageStyleValue const& as_abstract_image() const;
     AngleStyleValue const& as_angle() const;
     BackgroundStyleValue const& as_background() const;
     BackgroundRepeatStyleValue const& as_background_repeat() const;
@@ -227,6 +231,7 @@ public:
     UnsetStyleValue const& as_unset() const;
     StyleValueList const& as_value_list() const;
 
+    AbstractImageStyleValue& as_abstract_image() { return const_cast<AbstractImageStyleValue&>(const_cast<StyleValue const&>(*this).as_abstract_image()); }
     AngleStyleValue& as_angle() { return const_cast<AngleStyleValue&>(const_cast<StyleValue const&>(*this).as_angle()); }
     BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
     BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
@@ -919,8 +924,22 @@ private:
     CSS::ValueID m_id { CSS::ValueID::Invalid };
 };
 
+class AbstractImageStyleValue : public StyleValue {
+public:
+    using StyleValue::StyleValue;
+
+    virtual Optional<int> natural_width() const { return {}; }
+    virtual Optional<int> natural_height() const { return {}; }
+
+    virtual void load_any_resources(DOM::Document&) {};
+    virtual void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const {};
+
+    virtual bool is_paintable() const = 0;
+    virtual void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const = 0;
+};
+
 class ImageStyleValue final
-    : public StyleValue
+    : public AbstractImageStyleValue
     , public ImageResourceClient {
 public:
     static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
@@ -929,8 +948,15 @@ public:
     virtual String to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
-    void load_bitmap(DOM::Document& document);
+    virtual void load_any_resources(DOM::Document&) override;
+
     Gfx::Bitmap const* bitmap() const { return m_bitmap; }
+
+    Optional<int> natural_width() const override;
+    Optional<int> natural_height() const override;
+
+    bool is_paintable() const override { return !m_bitmap.is_null(); }
+    void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const override;
 
 private:
     ImageStyleValue(AK::URL const&);
@@ -943,7 +969,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
-class LinearGradientStyleValue final : public StyleValue {
+class LinearGradientStyleValue final : public AbstractImageStyleValue {
 public:
     using GradientDirection = Variant<Angle, SideOrCorner>;
 
@@ -967,11 +993,16 @@ public:
         return m_color_stop_list;
     }
 
-    float angle_degrees(Gfx::FloatRect const& gradient_rect) const;
+    float angle_degrees(Gfx::FloatSize const& gradient_rect) const;
+
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+
+    bool is_paintable() const override { return true; }
+    void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const override;
 
 private:
     LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)
-        : StyleValue(Type::LinearGradient)
+        : AbstractImageStyleValue(Type::LinearGradient)
         , m_direction(direction)
         , m_color_stop_list(move(color_stop_list))
         , m_gradient_type(type)
@@ -981,6 +1012,8 @@ private:
     GradientDirection m_direction;
     Vector<ColorStopListElement> m_color_stop_list;
     GradientType m_gradient_type;
+
+    mutable Optional<Painting::LinearGradientData> m_resolved_data;
 };
 
 class InheritStyleValue final : public StyleValue {
