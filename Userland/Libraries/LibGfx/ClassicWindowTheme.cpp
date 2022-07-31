@@ -51,7 +51,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
-    auto& title_font = FontDatabase::default_font().bold_variant();
+    auto& title_font = FontDatabase::window_title_font();
 
     auto titlebar_rect = this->titlebar_rect(WindowType::Normal, window_rect, palette);
     auto titlebar_icon_rect = this->titlebar_icon_rect(WindowType::Normal, window_rect, palette);
@@ -118,7 +118,7 @@ void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState w
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
-    auto& title_font = FontDatabase::default_font().bold_variant();
+    auto& title_font = FontDatabase::window_title_font();
 
     auto titlebar_rect = this->titlebar_rect(WindowType::ToolWindow, window_rect, palette);
     auto titlebar_inner_rect = titlebar_text_rect(WindowType::ToolWindow, window_rect, palette);
@@ -152,7 +152,7 @@ IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, IntRect const& 
 
 IntRect ClassicWindowTheme::titlebar_rect(WindowType window_type, IntRect const& window_rect, Palette const& palette) const
 {
-    auto& title_font = FontDatabase::default_font().bold_variant();
+    auto& title_font = FontDatabase::window_title_font();
     auto window_titlebar_height = titlebar_height(window_type, palette);
     // FIXME: The top of the titlebar doesn't get redrawn properly if this padding is different
     int total_vertical_padding = title_font.glyph_height() - 1;
@@ -254,7 +254,7 @@ Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, IntRe
 
 int ClassicWindowTheme::titlebar_height(WindowType window_type, Palette const& palette) const
 {
-    auto& title_font = FontDatabase::default_font().bold_variant();
+    auto& title_font = FontDatabase::window_title_font();
     switch (window_type) {
     case WindowType::Normal:
     case WindowType::Notification:

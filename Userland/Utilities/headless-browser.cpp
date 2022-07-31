@@ -689,6 +689,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
+    Gfx::FontDatabase::set_window_title_font_query("Katica 10 700 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
     if (!error_page_url.is_empty())

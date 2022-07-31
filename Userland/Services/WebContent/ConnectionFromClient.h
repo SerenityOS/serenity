@@ -41,7 +41,7 @@ private:
     Web::Page const& page() const;
 
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
-    virtual void update_system_fonts(String const&, String const&) override;
+    virtual void update_system_fonts(String const&, String const&, String const&) override;
     virtual void update_screen_rects(Vector<Gfx::IntRect> const&, u32) override;
     virtual void load_url(URL const&) override;
     virtual void load_html(String const&, URL const&) override;

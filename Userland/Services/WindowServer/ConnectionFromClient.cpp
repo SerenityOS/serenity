@@ -53,7 +53,7 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     s_connections->set(client_id, *this);
 
     auto& wm = WindowManager::the();
-    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), client_id);
+    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query(), client_id);
 }
 
 ConnectionFromClient::~ConnectionFromClient()
@@ -891,7 +891,7 @@ Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_
     return name;
 }
 
-Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
+Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(String const& default_font_query, String const& fixed_width_font_query, String const& window_title_font_query)
 {
     if (!Gfx::FontDatabase::the().get_by_name(default_font_query)
         || !Gfx::FontDatabase::the().get_by_name(fixed_width_font_query)) {
@@ -903,9 +903,10 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
 
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
+    Gfx::FontDatabase::set_window_title_font_query(window_title_font_query);
 
     ConnectionFromClient::for_each_client([&](auto& client) {
-        client.async_update_system_fonts(default_font_query, fixed_width_font_query);
+        client.async_update_system_fonts(default_font_query, fixed_width_font_query, window_title_font_query);
     });
 
     WindowManager::the().invalidate_after_theme_or_font_change();
@@ -918,6 +919,7 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
     auto wm_config = wm_config_or_error.release_value();
     wm_config->write_entry("Fonts", "Default", default_font_query);
     wm_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
+    wm_config->write_entry("Fonts", "WindowTitle", window_title_font_query);
     return true;
 }
 

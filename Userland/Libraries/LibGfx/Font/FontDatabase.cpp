@@ -25,8 +25,13 @@ FontDatabase& FontDatabase::the()
 
 static RefPtr<Font> s_default_font;
 static String s_default_font_query;
+
+static RefPtr<Font> s_window_title_font;
+static String s_window_title_font_query;
+
 static RefPtr<Font> s_fixed_width_font;
 static String s_fixed_width_font_query;
+
 static String s_default_fonts_lookup_path = "/res/fonts";
 
 void FontDatabase::set_default_font_query(String query)
@@ -40,6 +45,19 @@ void FontDatabase::set_default_font_query(String query)
 String FontDatabase::default_font_query()
 {
     return s_default_font_query;
+}
+
+void FontDatabase::set_window_title_font_query(String query)
+{
+    if (s_window_title_font_query == query)
+        return;
+    s_window_title_font_query = move(query);
+    s_window_title_font = nullptr;
+}
+
+String FontDatabase::window_title_font_query()
+{
+    return s_window_title_font_query;
 }
 
 void FontDatabase::set_default_fonts_lookup_path(String path)
@@ -62,6 +80,16 @@ Font& FontDatabase::default_font()
         VERIFY(s_default_font);
     }
     return *s_default_font;
+}
+
+Font& FontDatabase::window_title_font()
+{
+    if (!s_window_title_font) {
+        VERIFY(!s_window_title_font_query.is_empty());
+        s_window_title_font = FontDatabase::the().get_by_name(s_window_title_font_query);
+        VERIFY(s_window_title_font);
+    }
+    return *s_window_title_font;
 }
 
 void FontDatabase::set_fixed_width_font_query(String query)

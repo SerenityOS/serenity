@@ -47,9 +47,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto default_font_query = wm_config->read_entry("Fonts", "Default", "Katica 10 400 0");
     auto fixed_width_font_query = wm_config->read_entry("Fonts", "FixedWidth", "Csilla 10 400 0");
+    auto window_title_font_query = wm_config->read_entry("Fonts", "WindowTitle", "Katica 10 700 0");
 
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
+    Gfx::FontDatabase::set_window_title_font_query(window_title_font_query);
 
     {
         // FIXME: Map switched tty from screens.

@@ -143,7 +143,7 @@ endpoint WindowServer
     set_cursor_highlight_color(Gfx::Color color) =|
     get_cursor_highlight_color() => (Gfx::Color color)
 
-    set_system_fonts(String default_font_query, String fixed_width_font_query) => (bool success)
+    set_system_fonts(String default_font_query, String fixed_width_font_query, String window_title_font_query) => (bool success)
 
     set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment) =|
     set_window_resize_aspect_ratio(i32 window_id, Optional<Gfx::IntSize> resize_aspect_ratio) =|

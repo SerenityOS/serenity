@@ -52,10 +52,11 @@ ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::Stream::L
     Desktop::the().did_receive_screen_rects({}, message->screen_rects(), message->main_screen_index(), message->workspace_rows(), message->workspace_columns());
     Gfx::FontDatabase::set_default_font_query(message->default_font_query());
     Gfx::FontDatabase::set_fixed_width_font_query(message->fixed_width_font_query());
+    Gfx::FontDatabase::set_window_title_font_query(message->window_title_font_query());
     m_client_id = message->client_id();
 }
 
-void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, i32)
+void ConnectionToWindowServer::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, String const&, i32)
 {
     // NOTE: This message is handled in the constructor.
 }
@@ -71,10 +72,11 @@ void ConnectionToWindowServer::update_system_theme(Core::AnonymousBuffer const& 
     Application::the()->dispatch_event(*make<ThemeChangeEvent>());
 }
 
-void ConnectionToWindowServer::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
+void ConnectionToWindowServer::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query, String const& window_title_font_query)
 {
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
+    Gfx::FontDatabase::set_window_title_font_query(window_title_font_query);
     Window::update_all_windows({});
     Window::for_each_window({}, [](auto& window) {
         Core::EventLoop::current().post_event(window, make<FontsChangeEvent>());

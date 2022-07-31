@@ -154,7 +154,7 @@ private:
     virtual void set_cursor_highlight_color(Gfx::Color const& color) override;
     virtual Messages::WindowServer::GetCursorHighlightColorResponse get_cursor_highlight_color() override;
     virtual Messages::WindowServer::GetCursorThemeResponse get_cursor_theme() override;
-    virtual Messages::WindowServer::SetSystemFontsResponse set_system_fonts(String const&, String const&) override;
+    virtual Messages::WindowServer::SetSystemFontsResponse set_system_fonts(String const&, String const&, String const&) override;
     virtual void set_window_base_size_and_size_increment(i32, Gfx::IntSize const&, Gfx::IntSize const&) override;
     virtual void set_window_resize_aspect_ratio(i32, Optional<Gfx::IntSize> const&) override;
     virtual void enable_display_link() override;

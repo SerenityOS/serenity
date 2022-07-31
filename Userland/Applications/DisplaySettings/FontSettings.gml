@@ -41,6 +41,34 @@
 
         @GUI::Label {
             fixed_width: 100
+            text: "Window title font:"
+            text_alignment: "CenterLeft"
+        }
+
+        @GUI::Label {
+            background_role: "Base"
+            shadow: "Sunken"
+            shape: "Container"
+            thickness: 2
+            fill_with_background_color: true
+            name: "window_title_font_label"
+        }
+
+        @GUI::Button {
+            text: "..."
+            name: "window_title_font_button"
+            fixed_width: 30
+        }
+    }
+
+    @GUI::Widget {
+        preferred_height: "fit"
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 6
+        }
+
+        @GUI::Label {
+            fixed_width: 100
             text: "Fixed-width font:"
             text_alignment: "CenterLeft"
         }

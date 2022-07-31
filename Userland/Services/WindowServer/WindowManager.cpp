@@ -110,7 +110,7 @@ Gfx::Font const& WindowManager::font() const
 
 Gfx::Font const& WindowManager::window_title_font() const
 {
-    return Gfx::FontDatabase::default_font().bold_variant();
+    return Gfx::FontDatabase::window_title_font();
 }
 
 bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, String& error_msg)

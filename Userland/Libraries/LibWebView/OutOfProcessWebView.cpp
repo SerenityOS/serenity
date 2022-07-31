@@ -69,7 +69,7 @@ void OutOfProcessWebView::create_client()
     };
 
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
-    client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
+    client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
     client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }
 

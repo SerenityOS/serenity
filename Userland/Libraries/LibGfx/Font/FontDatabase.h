@@ -36,11 +36,15 @@ public:
 
     static Font& default_font();
     static Font& default_fixed_width_font();
+    static Font& window_title_font();
 
     static String default_font_query();
+    static String window_title_font_query();
     static String fixed_width_font_query();
+
     static String default_fonts_lookup_path();
     static void set_default_font_query(String);
+    static void set_window_title_font_query(String);
     static void set_fixed_width_font_query(String);
     static void set_default_fonts_lookup_path(String);
 
