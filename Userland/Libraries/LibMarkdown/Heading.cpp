@@ -19,7 +19,7 @@ String Heading::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
-    builder.append("\033[0;31;1m\n"sv);
+    builder.append("\n\033[0;31;1m"sv);
     switch (m_level) {
     case 1:
     case 2:
