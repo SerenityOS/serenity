@@ -416,14 +416,14 @@ ThrowCompletionOr<u32> CyclicModule::inner_module_evaluation(VM& vm, Vector<Modu
     return index;
 }
 
-ThrowCompletionOr<void> CyclicModule::initialize_environment(VM&)
+NORETURN ThrowCompletionOr<void> CyclicModule::initialize_environment(VM&)
 {
     // Note: In ecma262 this is never called on a cyclic module only on SourceTextModules.
     //       So this check is to make sure we don't accidentally call this.
     VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> CyclicModule::execute_module(VM&, Optional<PromiseCapability>)
+NORETURN ThrowCompletionOr<void> CyclicModule::execute_module(VM&, Optional<PromiseCapability>)
 {
     // Note: In ecma262 this is never called on a cyclic module only on SourceTextModules.
     //       So this check is to make sure we don't accidentally call this.

@@ -24,7 +24,7 @@ public:
     //       GetBindingValue, DeleteBinding, HasThisBinding and GetThisBinding.
     //       In addition, module Environment Records support the methods listed in Table 24.
     virtual ThrowCompletionOr<Value> get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
+    virtual NORETURN ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
     virtual bool has_this_binding() const final { return true; }
     virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const final;
     ThrowCompletionOr<void> create_import_binding(FlyString name, Module* module, FlyString binding_name);

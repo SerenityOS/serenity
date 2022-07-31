@@ -37,8 +37,8 @@ protected:
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
 
-    virtual ThrowCompletionOr<void> initialize_environment(VM& vm);
-    virtual ThrowCompletionOr<void> execute_module(VM& vm, Optional<PromiseCapability> capability = {});
+    NORETURN virtual ThrowCompletionOr<void> initialize_environment(VM& vm);
+    NORETURN virtual ThrowCompletionOr<void> execute_module(VM& vm, Optional<PromiseCapability> capability = {});
 
     void execute_async_module(VM& vm);
     void gather_available_ancestors(Vector<CyclicModule*>& exec_list);

@@ -71,7 +71,7 @@ ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(GlobalObject&,
 }
 
 // 9.1.1.2.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s
-ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(GlobalObject&, FlyString const&, bool)
+NORETURN ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(GlobalObject&, FlyString const&, bool)
 {
     // "The CreateImmutableBinding concrete method of an object Environment Record is never used within this specification."
     VERIFY_NOT_REACHED();

@@ -229,7 +229,7 @@ ThrowCompletionOr<Value> NativeFunction::call()
     return m_native_function(vm(), global_object());
 }
 
-ThrowCompletionOr<Object*> NativeFunction::construct(FunctionObject&)
+NORETURN ThrowCompletionOr<Object*> NativeFunction::construct(FunctionObject&)
 {
     // Needs to be overridden if [[Construct]] is needed.
     VERIFY_NOT_REACHED();

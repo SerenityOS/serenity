@@ -60,7 +60,7 @@ ThrowCompletionOr<bool> ModuleEnvironment::has_binding(FlyString const& name, Op
 }
 
 // 9.1.1.5.2 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n
-ThrowCompletionOr<bool> ModuleEnvironment::delete_binding(GlobalObject&, FlyString const&)
+NORETURN ThrowCompletionOr<bool> ModuleEnvironment::delete_binding(GlobalObject&, FlyString const&)
 {
     // The DeleteBinding concrete method of a module Environment Record is never used within this specification.
     VERIFY_NOT_REACHED();
