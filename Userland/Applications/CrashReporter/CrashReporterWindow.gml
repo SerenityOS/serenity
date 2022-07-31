@@ -93,7 +93,7 @@
 
         @GUI::DialogButton {
             name: "save_backtrace_button"
-            text: "Save Backtrace"
+            text: "Save Backtrace..."
             fixed_width: 160
         }
 
