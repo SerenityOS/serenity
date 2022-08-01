@@ -96,6 +96,15 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
     return bytes;
 }
 
+bool is_basic_latin(StringView view)
+{
+    for (auto code_point : view) {
+        if (code_point < 0x0020 || code_point > 0x007E)
+            return false;
+    }
+    return true;
+}
+
 Blob::Blob(ByteBuffer byte_buffer, String type)
     : m_byte_buffer(move(byte_buffer))
     , m_type(move(type))

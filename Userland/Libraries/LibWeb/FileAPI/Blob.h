@@ -28,6 +28,7 @@ struct BlobPropertyBag {
 
 [[nodiscard]] ErrorOr<String> convert_line_endings_to_native(String const& string);
 [[nodiscard]] ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optional<BlobPropertyBag> const& options = {});
+[[nodiscard]] bool is_basic_latin(StringView view);
 
 class Blob
     : public RefCounted<Blob>

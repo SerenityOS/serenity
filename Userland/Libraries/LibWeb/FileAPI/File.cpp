@@ -8,15 +8,6 @@
 
 namespace Web::FileAPI {
 
-static bool is_basic_latin(StringView view)
-{
-    for (auto code_point : view) {
-        if (code_point < 0x0020 || code_point > 0x007E)
-            return false;
-    }
-    return true;
-}
-
 File::File(ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
     : Blob(move(byte_buffer), move(type))
     , m_name(move(file_name))
