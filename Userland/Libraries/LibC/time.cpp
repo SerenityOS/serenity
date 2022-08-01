@@ -25,6 +25,16 @@
 
 extern "C" {
 
+static constexpr char const* __utc = "UTC";
+static StringView __tzname { __utc, __builtin_strlen(__utc) };
+static char __tzname_standard[TZNAME_MAX];
+static char __tzname_daylight[TZNAME_MAX];
+
+long timezone = 0;
+long altzone = 0;
+char* tzname[2] = { const_cast<char*>(__utc), const_cast<char*>(__utc) };
+int daylight = 0;
+
 time_t time(time_t* tloc)
 {
     struct timeval tv;
@@ -362,35 +372,25 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
     return fits ? str.length() : 0;
 }
 
-static char __tzname_standard[TZNAME_MAX];
-static char __tzname_daylight[TZNAME_MAX];
-constexpr char const* __utc = "UTC";
-
-long timezone = 0;
-long altzone = 0;
-char* tzname[2] = { const_cast<char*>(__utc), const_cast<char*>(__utc) };
-int daylight = 0;
-
 void tzset()
 {
     // FIXME: Actually parse the TZ environment variable, described here:
     // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08
-    StringView time_zone;
-
     if (char* tz = getenv("TZ"); tz != nullptr)
-        time_zone = { tz, strlen(tz) };
+        __tzname = { tz, strlen(tz) };
     else
-        time_zone = TimeZone::system_time_zone();
+        __tzname = TimeZone::system_time_zone();
 
     auto set_default_values = []() {
         timezone = 0;
         altzone = 0;
         daylight = 0;
+        __tzname = StringView { __utc, __builtin_strlen(__utc) };
         tzname[0] = const_cast<char*>(__utc);
         tzname[1] = const_cast<char*>(__utc);
     };
 
-    if (auto offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::now_realtime()); offsets.has_value()) {
+    if (auto offsets = TimeZone::get_named_time_zone_offsets(__tzname, AK::Time::now_realtime()); offsets.has_value()) {
         if (!offsets->at(0).name.copy_characters_to_buffer(__tzname_standard, TZNAME_MAX))
             return set_default_values();
         if (!offsets->at(1).name.copy_characters_to_buffer(__tzname_daylight, TZNAME_MAX))
