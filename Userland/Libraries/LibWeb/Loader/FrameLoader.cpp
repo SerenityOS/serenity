@@ -281,6 +281,9 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error
             generator.set("error", escape_html_entities(error));
             generator.append(data);
             load_html(generator.as_string_view(), failed_url);
+
+            if (auto* page = browsing_context().page())
+                page->client().page_did_finish_loading(s_error_page_url);
         },
         [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);
