@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +16,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
@@ -112,6 +113,9 @@ public:
     String const& name() const { return m_name; }
     void set_name(String const& name) { m_name = name; }
 
+    Vector<SessionHistoryEntry>& session_history() { return m_session_history; }
+    Vector<SessionHistoryEntry> const& session_history() const { return m_session_history; }
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -121,6 +125,9 @@ private:
 
     FrameLoader m_loader;
     Web::EventHandler m_event_handler;
+
+    // https://html.spec.whatwg.org/multipage/history.html#session-history
+    Vector<SessionHistoryEntry> m_session_history;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
     RefPtr<DOM::Document> m_active_document;
