@@ -59,9 +59,9 @@ These extensions can be used as-is, but you need to point them to the custom Ser
             "intelliSenseMode": "linux-gcc-x86",
             "compileCommands": "Build/i686/compile_commands.json",
             "compilerArgs": [
-                "-wall",
-                "-wextra",
-                "-werror"
+                "-Wall",
+                "-Wextra",
+                "-Werror"
             ],
             "browse": {
                 "path": [
