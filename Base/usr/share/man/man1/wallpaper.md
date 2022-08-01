@@ -1,16 +1,16 @@
 ## Name
 
-pape - manage the system wallpaper.
+wallpaper - manage the system wallpaper.
 
 ## Synopsis
 
 ```**sh
-$ pape [--show-all] [--show-current] [name]
+$ wallpaper [--show-all] [--show-current] [name]
 ```
 
 ## Description
 
-The `pape` utility can be used to set the system wallpaper and
+The `wallpaper` utility can be used to set the system wallpaper and
 list available wallpapers in the `/res/wallpapers/` directory.
 
 ## Options
@@ -23,11 +23,11 @@ list available wallpapers in the `/res/wallpapers/` directory.
 Set wallpaper to `/res/wallpapers/grid.png`:
 
 ```**sh
-$ pape grid.png
+$ wallpaper grid.png
 ```
 
 List available wallpapers:
 
 ```**sh
-$ pape -a
+$ wallpaper -a
 ```
