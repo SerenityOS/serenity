@@ -102,13 +102,19 @@ char* ctime_r(time_t const* t, char* buf)
 
 static int const __seconds_per_day = 60 * 60 * 24;
 
-static struct tm* time_to_tm(struct tm* tm, time_t t)
+static bool is_valid_time(time_t timestamp)
 {
     // Note: these correspond to the number of seconds from epoch to the dates "Jan 1 00:00:00 -2147483648" and "Dec 31 23:59:59 2147483647",
     // respectively, which are the smallest and biggest representable dates without overflowing tm->tm_year, if it is an int.
     constexpr time_t smallest_possible_time = -67768040609740800;
     constexpr time_t biggest_possible_time = 67768036191676799;
-    if (t < smallest_possible_time || t > biggest_possible_time) {
+
+    return (timestamp >= smallest_possible_time) && (timestamp <= biggest_possible_time);
+}
+
+static struct tm* time_to_tm(struct tm* tm, time_t t)
+{
+    if (!is_valid_time(t)) {
         errno = EOVERFLOW;
         return nullptr;
     }
@@ -162,8 +168,12 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
     tm->tm_yday = day_of_year(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday);
     time_t days_since_epoch = years_to_days_since_epoch(1900 + tm->tm_year) + tm->tm_yday;
     auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
-    if (!time_to_tm(tm, timestamp))
+
+    if (!is_valid_time(timestamp)) {
+        errno = EOVERFLOW;
         return -1;
+    }
+
     return timestamp;
 }
 
