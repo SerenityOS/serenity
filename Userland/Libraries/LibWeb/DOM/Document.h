@@ -51,15 +51,8 @@ public:
         HTML
     };
 
-    static NonnullRefPtr<Document> create(const AK::URL& url = "about:blank"sv)
-    {
-        return adopt_ref(*new Document(url));
-    }
-    static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&)
-    {
-        return Document::create();
-    }
-
+    static NonnullRefPtr<Document> create(AK::URL const& url = "about:blank"sv);
+    static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&);
     virtual ~Document() override;
 
     size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }

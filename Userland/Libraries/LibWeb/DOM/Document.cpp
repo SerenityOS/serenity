@@ -74,6 +74,16 @@
 
 namespace Web::DOM {
 
+NonnullRefPtr<Document> Document::create_with_global_object(Bindings::WindowObject&)
+{
+    return Document::create();
+}
+
+NonnullRefPtr<Document> Document::create(AK::URL const& url)
+{
+    return adopt_ref(*new Document(url));
+}
+
 Document::Document(const AK::URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))
