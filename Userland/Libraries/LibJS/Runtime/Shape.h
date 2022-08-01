@@ -47,9 +47,6 @@ public:
         Prototype,
     };
 
-    enum class ShapeWithoutGlobalObjectTag { Tag };
-
-    explicit Shape(ShapeWithoutGlobalObjectTag) {};
     explicit Shape(Object& global_object);
     Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
