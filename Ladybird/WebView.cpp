@@ -167,10 +167,6 @@ public:
         emit m_view.title_changed(title.characters());
     }
 
-    virtual void page_did_set_document_in_top_level_browsing_context(Web::DOM::Document*) override
-    {
-    }
-
     virtual void page_did_start_loading(AK::URL const& url) override
     {
         emit m_view.loadStarted(url);
