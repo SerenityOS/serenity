@@ -541,4 +541,15 @@ BrowsingContext* BrowsingContext::choose_a_browsing_context(StringView name, boo
     return chosen;
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
+bool BrowsingContext::still_on_its_initial_about_blank_document() const
+{
+    // A browsing context browsingContext is still on its initial about:blank Document
+    // if browsingContext's session history's size is 1
+    // and browsingContext's session history[0]'s document's is initial about:blank is true.
+    return m_session_history.size() == 1
+        && m_session_history[0].document
+        && m_session_history[0].document->is_initial_about_blank();
+}
+
 }
