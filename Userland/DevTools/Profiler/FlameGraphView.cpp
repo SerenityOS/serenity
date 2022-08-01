@@ -43,11 +43,16 @@ FlameGraphView::FlameGraphView(GUI::Model& model, int text_column, int width_col
 {
     set_fill_with_background_color(true);
     set_background_role(Gfx::ColorRole::Base);
+    set_scrollbars_enabled(true);
+    set_frame_thickness(0);
+    set_should_hide_unnecessary_scrollbars(false);
+    horizontal_scrollbar().set_visible(false);
 
     m_model.register_client(*this);
 
     m_colors = get_colors();
     layout_bars();
+    scroll_to_bottom();
 }
 
 GUI::ModelIndex FlameGraphView::hovered_index() const
@@ -70,7 +75,7 @@ void FlameGraphView::mousemove_event(GUI::MouseEvent& event)
 
     for (size_t i = 0; i < m_bars.size(); ++i) {
         auto& bar = m_bars[i];
-        if (bar.rect.contains(event.x(), event.y())) {
+        if (to_widget_rect(bar.rect).contains(event.x(), event.y())) {
             hovered_bar = &bar;
             break;
         }
@@ -113,9 +118,20 @@ void FlameGraphView::mousedown_event(GUI::MouseEvent& event)
     update();
 }
 
-void FlameGraphView::resize_event(GUI::ResizeEvent&)
+void FlameGraphView::resize_event(GUI::ResizeEvent& event)
 {
+    auto old_scroll = vertical_scrollbar().value();
+
+    AbstractScrollableWidget::resize_event(event);
+
+    // Adjust scroll to keep the bottom of the graph fixed
+    auto available_height_delta = m_old_available_size.height() - available_size().height();
+
+    vertical_scrollbar().set_value(old_scroll + available_height_delta);
+
     layout_bars();
+
+    m_old_available_size = available_size();
 }
 
 void FlameGraphView::paint_event(GUI::PaintEvent& event)
@@ -123,7 +139,12 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    auto content_clip_rect = to_content_rect(event.rect());
+
     for (auto const& bar : m_bars) {
+        if (!content_clip_rect.intersects_vertically(bar.rect))
+            continue;
+
         auto label = bar_label(bar);
 
         auto color = m_colors[label.hash() % m_colors.size()];
@@ -134,15 +155,17 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
         if (bar.selected)
             color = color.with_alpha(128);
 
-        // Do rounded corners if the node will draw with enough width
-        if (bar.rect.width() > (bar_rounding * 3))
-            painter.fill_rect_with_rounded_corners(bar.rect.shrunken(0, bar_margin), color, bar_rounding);
-        else
-            painter.fill_rect(bar.rect.shrunken(0, bar_margin), color);
+        auto rect = to_widget_rect(bar.rect);
 
-        if (bar.rect.width() > text_threshold) {
+        // Do rounded corners if the node will draw with enough width
+        if (rect.width() > (bar_rounding * 3))
+            painter.fill_rect_with_rounded_corners(rect.shrunken(0, bar_margin), color, bar_rounding);
+        else
+            painter.fill_rect(rect.shrunken(0, bar_margin), color);
+
+        if (rect.width() > text_threshold) {
             painter.draw_text(
-                bar.rect.shrunken(bar_padding, 0),
+                rect.shrunken(bar_padding, 0),
                 label,
                 painter.font(),
                 Gfx::TextAlignment::CenterLeft,
@@ -170,7 +193,30 @@ void FlameGraphView::layout_bars()
     // Explicit copy here so the layout can mutate
     Vector<GUI::ModelIndex> selected = m_selected_indexes;
     GUI::ModelIndex null_index;
-    layout_children(null_index, 0, 0, this->width(), selected);
+    layout_children(null_index, 0, 0, available_size().width(), selected);
+
+    // Translate bars from (-height..0) to (0..height) now that we know the height,
+    // use available height as minimum to keep the graph at the bottom when it's small
+    int height = available_size().height();
+
+    for (auto& bar : m_bars)
+        height = max(height, -bar.rect.top());
+    for (auto& bar : m_bars)
+        bar.rect.translate_by(0, height);
+
+    // Update scrollbars if height changed
+    if (height != content_size().height()) {
+        auto old_content_height = content_size().height();
+        auto old_scroll = vertical_scrollbar().value();
+
+        set_content_size(Gfx::IntSize(available_size().width(), height));
+
+        // Adjust scroll to keep the bottom of the graph fixed, so it doesn't jump
+        // around when double-clicking
+        auto content_height_delta = old_content_height - content_size().height();
+
+        vertical_scrollbar().set_value(old_scroll - content_height_delta);
+    }
 }
 
 void FlameGraphView::layout_children(GUI::ModelIndex& index, int depth, int left, int right, Vector<GUI::ModelIndex>& selected_nodes)
@@ -179,9 +225,7 @@ void FlameGraphView::layout_children(GUI::ModelIndex& index, int depth, int left
     if (available_width < 1)
         return;
 
-    auto y = this->height() - (bar_height * depth) - bar_height;
-    if (y < 0)
-        return;
+    auto y = -(bar_height * depth) - bar_height;
 
     u32 node_event_count = 0;
     if (!index.is_valid()) {

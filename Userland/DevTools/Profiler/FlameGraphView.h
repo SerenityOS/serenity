@@ -11,12 +11,13 @@
 #include <AK/Optional.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Color.h>
 
 namespace Profiler {
 
-class FlameGraphView final : public GUI::Widget
+class FlameGraphView final : public GUI::AbstractScrollableWidget
     , GUI::ModelClient {
     C_OBJECT(FlameGraphView);
 
@@ -56,6 +57,7 @@ private:
     Vector<StackBar> m_bars;
     StackBar* m_hovered_bar {};
     Vector<GUI::ModelIndex> m_selected_indexes;
+    Gfx::IntSize m_old_available_size {};
 };
 
 }
