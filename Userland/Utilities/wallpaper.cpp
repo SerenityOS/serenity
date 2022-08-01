@@ -10,12 +10,15 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio rpath unix sendfd recvfd"));
+
     bool show_all = false;
     bool show_current = false;
     bool set_random = false;
@@ -29,6 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::try_create(arguments));
+
+    TRY(Core::System::pledge("stdio rpath unix sendfd"));
 
     if (show_all) {
         Core::DirIterator wallpapers_directory_iterator("/res/wallpapers", Core::DirIterator::SkipDots);
