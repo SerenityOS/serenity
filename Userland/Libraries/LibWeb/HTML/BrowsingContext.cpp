@@ -98,9 +98,6 @@ void BrowsingContext::set_active_document(DOM::Document* document)
         if (m_page && is_top_level())
             m_page->client().page_did_change_title(m_active_document->title());
     }
-
-    if (m_page)
-        m_page->client().page_did_set_document_in_top_level_browsing_context(m_active_document);
 }
 
 void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)

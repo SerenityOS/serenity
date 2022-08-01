@@ -84,7 +84,6 @@ public:
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
-    virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }
     virtual void page_did_change_title(String const&) { }
     virtual void page_did_start_loading(const AK::URL&) { }
     virtual void page_did_finish_loading(const AK::URL&) { }

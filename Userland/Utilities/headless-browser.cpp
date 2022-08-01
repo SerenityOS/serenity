@@ -125,10 +125,6 @@ public:
     {
     }
 
-    virtual void page_did_set_document_in_top_level_browsing_context(Web::DOM::Document*) override
-    {
-    }
-
     virtual void page_did_start_loading(AK::URL const&) override
     {
     }
