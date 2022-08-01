@@ -364,6 +364,10 @@ public:
     bool has_active_favicon() const { return m_active_favicon; }
     void check_favicon_after_loading_link_resource();
 
+    // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
+    bool is_initial_about_blank() const { return m_is_initial_about_blank; }
+    void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
+
 private:
     explicit Document(const AK::URL&);
 
@@ -480,6 +484,9 @@ private:
     bool m_needs_full_style_update { false };
 
     HashTable<NodeIterator*> m_node_iterators;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
+    bool m_is_initial_about_blank { false };
 };
 
 }
