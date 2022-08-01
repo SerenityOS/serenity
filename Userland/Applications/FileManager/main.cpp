@@ -61,6 +61,7 @@ static void do_copy(Vector<String> const& selected_file_paths, FileOperation fil
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
 static void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
+static void do_set_wallpaper(String const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
 static void show_properties(String const& container_dir_path, String const& path, Vector<String> const& selected, GUI::Window* window);
 static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, String const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
@@ -243,6 +244,22 @@ void do_create_archive(Vector<String> const& selected_file_paths, GUI::Window* w
     }
 }
 
+void do_set_wallpaper(String const& file_path, GUI::Window* window)
+{
+    auto show_error = [&] {
+        GUI::MessageBox::show(window, String::formatted("Failed to set {} as wallpaper.", file_path), "Failed to set wallpaper"sv, GUI::MessageBox::Type::Error);
+    };
+
+    auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(file_path);
+    if (bitmap_or_error.is_error()) {
+        show_error();
+        return;
+    }
+
+    if (!GUI::Desktop::the().set_wallpaper(bitmap_or_error.release_value(), file_path))
+        show_error();
+}
+
 void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window)
 {
     String archive_file_path = selected_file_paths.first();
@@ -384,6 +401,19 @@ ErrorOr<int> run_in_desktop_mode()
             },
             window);
 
+    auto set_wallpaper_action
+        = GUI::Action::create(
+            "Set as Desktop &Wallpaper",
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_set_wallpaper(paths.first(), directory_view->window());
+            },
+            window);
+
     directory_view->on_selection_change = [&](GUI::AbstractView const& view) {
         cut_action->set_enabled(!view.selection().is_empty());
         copy_action->set_enabled(!view.selection().is_empty());
@@ -487,6 +517,11 @@ ErrorOr<int> run_in_desktop_mode()
                 file_context_menu->add_action(directory_view->rename_action());
                 file_context_menu->add_action(create_archive_action);
                 file_context_menu->add_separator();
+
+                if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
+                    file_context_menu->add_action(set_wallpaper_action);
+                    file_context_menu->add_separator();
+                }
 
                 if (node.full_path().ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
@@ -822,6 +857,19 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
                 do_unzip_archive(paths, directory_view->window());
                 refresh_tree_view();
+            },
+            window);
+
+    auto set_wallpaper_action
+        = GUI::Action::create(
+            "Set as Desktop &Wallpaper",
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_set_wallpaper(paths.first(), directory_view->window());
             },
             window);
 
@@ -1179,6 +1227,11 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_action(create_archive_action);
                 file_context_menu->add_separator();
+
+                if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
+                    file_context_menu->add_action(set_wallpaper_action);
+                    file_context_menu->add_separator();
+                }
 
                 if (node.full_path().ends_with(".zip"sv, AK::CaseSensitivity::CaseInsensitive)) {
                     file_context_menu->add_action(unzip_archive_action);
