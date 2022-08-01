@@ -132,10 +132,17 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     String type = String::empty();
     // 3. If the type member of the options argument is not the empty string, run the following sub-steps:
     if (options.has_value() && !options->type.is_empty()) {
-        // FIXME: 1. Let t be the type dictionary member. If t contains any characters outside the range U+0020 to U+007E, then set t to the empty string and return from these substeps.
+        // 1. If the type member is provided and is not the empty string, let t be set to the type dictionary member.
+        //    If t contains any characters outside the range U+0020 to U+007E, then set t to the empty string and return from these substeps.
+        //    NOTE: t is set to empty string at declaration.
+        if (!options->type.is_empty()) {
+            if (is_basic_latin(options->type))
+                type = options->type;
+        }
 
         // 2. Convert every character in t to ASCII lowercase.
-        type = options->type.to_lowercase();
+        if (!type.is_empty())
+            type = options->type.to_lowercase();
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
