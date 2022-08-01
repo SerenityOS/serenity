@@ -129,7 +129,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
         byte_buffer = TRY_OR_RETURN_OOM(process_blob_parts(blob_parts.value(), options));
     }
 
-    String type = String::empty();
+    auto type = String::empty();
     // 3. If the type member of the options argument is not the empty string, run the following sub-steps:
     if (options.has_value() && !options->type.is_empty()) {
         // 1. If the type member is provided and is not the empty string, let t be set to the type dictionary member.
