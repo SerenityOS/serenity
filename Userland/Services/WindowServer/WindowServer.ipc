@@ -104,7 +104,7 @@ endpoint WindowServer
     popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
     dismiss_menu(i32 menu_id) =|
 
-    set_wallpaper(Gfx::ShareableBitmap wallpaper_bitmap) =|
+    set_wallpaper(Gfx::ShareableBitmap wallpaper_bitmap) => (bool success)
 
     set_background_color(String background_color) =|
     set_wallpaper_mode(String mode) =|

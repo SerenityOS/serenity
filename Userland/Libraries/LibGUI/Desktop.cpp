@@ -67,14 +67,14 @@ bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<Strin
         return false;
 
     TemporaryChange is_setting_desktop_wallpaper_change(m_is_setting_desktop_wallpaper, true);
-    ConnectionToWindowServer::the().async_set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
-    auto ret_val = ConnectionToWindowServer::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
+    auto result = ConnectionToWindowServer::the().set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
 
-    if (ret_val && path.has_value()) {
+    if (result && path.has_value()) {
         dbgln("Saving wallpaper path '{}' to ConfigServer", *path);
         Config::write_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, *path);
     }
 
-    return ret_val;
+    return result;
 }
+
 }

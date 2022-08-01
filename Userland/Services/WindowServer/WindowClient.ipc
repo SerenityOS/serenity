@@ -32,8 +32,6 @@ endpoint WindowClient
 
     applet_area_rect_changed(Gfx::IntRect rect) =|
 
-    set_wallpaper_finished(bool success) =|
-
     drag_accepted() =|
     drag_cancelled() =|
 

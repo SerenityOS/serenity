@@ -368,11 +368,6 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::set_wallpaper_finished(bool)
-{
-    // This is handled manually by Desktop::set_wallpaper().
-}
-
 void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint const& mouse_position, String const& text, HashMap<String, ByteBuffer> const& mime_data)
 {
     if (auto* window = Window::from_window_id(window_id)) {

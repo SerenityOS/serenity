@@ -305,10 +305,9 @@ void ConnectionFromClient::set_window_opacity(i32 window_id, float opacity)
     it->value->set_opacity(opacity);
 }
 
-void ConnectionFromClient::set_wallpaper(Gfx::ShareableBitmap const& bitmap)
+Messages::WindowServer::SetWallpaperResponse ConnectionFromClient::set_wallpaper(Gfx::ShareableBitmap const& bitmap)
 {
-    Compositor::the().set_wallpaper(bitmap.bitmap());
-    async_set_wallpaper_finished(true);
+    return Compositor::the().set_wallpaper(bitmap.bitmap());
 }
 
 void ConnectionFromClient::set_background_color(String const& background_color)
