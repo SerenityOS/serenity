@@ -34,15 +34,21 @@ Object* Object::create(GlobalObject& global_object, Object* prototype)
         return global_object.heap().allocate<Object>(global_object, *prototype);
 }
 
-Object::Object(GlobalObjectTag)
+GlobalObject& Object::global_object() const
+{
+    return *shape().global_object();
+}
+
+Object::Object(GlobalObjectTag, Realm& realm)
 {
     // This is the global object
-    m_shape = heap().allocate_without_global_object<Shape>(*this);
+    m_shape = heap().allocate_without_global_object<Shape>(realm);
 }
 
 Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 {
-    m_shape = heap().allocate_without_global_object<Shape>(global_object);
+    VERIFY(global_object.associated_realm());
+    m_shape = heap().allocate_without_global_object<Shape>(*global_object.associated_realm());
 }
 
 Object::Object(GlobalObject& global_object, Object* prototype)

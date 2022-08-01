@@ -63,9 +63,9 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(global_object, new_target, &GlobalObject::shadow_realm_prototype, *realm, move(context)));
 
     // 10. Perform ? SetRealmGlobalObject(realmRec, undefined, undefined).
-    auto* new_global_object = vm.heap().allocate_without_global_object<GlobalObject>();
-    new_global_object->initialize_global_object();
+    auto* new_global_object = vm.heap().allocate_without_global_object<GlobalObject>(*realm);
     realm->set_global_object(*new_global_object, nullptr);
+    new_global_object->initialize_global_object();
 
     // TODO: I don't think we should have these exactly like this, that doesn't work well with how
     //       we create global objects. Still, it should be possible to make a ShadowRealm with a

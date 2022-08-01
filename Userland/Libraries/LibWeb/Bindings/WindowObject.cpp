@@ -50,8 +50,9 @@
 
 namespace Web::Bindings {
 
-WindowObject::WindowObject(HTML::Window& impl)
-    : m_impl(impl)
+WindowObject::WindowObject(JS::Realm& realm, HTML::Window& impl)
+    : GlobalObject(realm)
+    , m_impl(impl)
 {
     impl.set_wrapper({}, *this);
 }

@@ -15,7 +15,10 @@ class GlobalObject final : public JS::GlobalObject {
     JS_OBJECT(GlobalObject, JS::GlobalObject);
 
 public:
-    GlobalObject() = default;
+    GlobalObject(JS::Realm& realm)
+        : JS::GlobalObject(realm)
+    {
+    }
     virtual void initialize_global_object() override;
     virtual ~GlobalObject() override = default;
 

@@ -190,7 +190,11 @@ class TestRunnerGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
 
 public:
-    TestRunnerGlobalObject() = default;
+    TestRunnerGlobalObject(JS::Realm& realm)
+        : JS::GlobalObject(realm)
+    {
+    }
+
     virtual ~TestRunnerGlobalObject() override = default;
 
     virtual void initialize_global_object() override;

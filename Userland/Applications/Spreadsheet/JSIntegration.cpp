@@ -92,8 +92,9 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
     return {};
 }
 
-SheetGlobalObject::SheetGlobalObject(Sheet& sheet)
-    : m_sheet(sheet)
+SheetGlobalObject::SheetGlobalObject(JS::Realm& realm, Sheet& sheet)
+    : JS::GlobalObject(realm)
+    , m_sheet(sheet)
 {
 }
 

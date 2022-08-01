@@ -12,8 +12,7 @@ namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    VERIFY(m_global_object);
-    auto* new_shape = heap().allocate_without_global_object<Shape>(*m_global_object);
+    auto* new_shape = heap().allocate_without_global_object<Shape>(m_realm);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
     ensure_property_table();
@@ -88,13 +87,13 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
     return new_shape;
 }
 
-Shape::Shape(Object& global_object)
-    : m_global_object(&global_object)
+Shape::Shape(Realm& realm)
+    : m_realm(realm)
 {
 }
 
 Shape::Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType transition_type)
-    : m_global_object(previous_shape.m_global_object)
+    : m_realm(previous_shape.m_realm)
     , m_previous(&previous_shape)
     , m_property_key(property_key)
     , m_prototype(previous_shape.m_prototype)
@@ -105,7 +104,7 @@ Shape::Shape(Shape& previous_shape, StringOrSymbol const& property_key, Property
 }
 
 Shape::Shape(Shape& previous_shape, Object* new_prototype)
-    : m_global_object(previous_shape.m_global_object)
+    : m_realm(previous_shape.m_realm)
     , m_previous(&previous_shape)
     , m_prototype(new_prototype)
     , m_property_count(previous_shape.m_property_count)
@@ -116,7 +115,7 @@ Shape::Shape(Shape& previous_shape, Object* new_prototype)
 void Shape::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
-    visitor.visit(m_global_object);
+    visitor.visit(&m_realm);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     m_property_key.visit_edges(visitor);

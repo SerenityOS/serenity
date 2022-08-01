@@ -139,8 +139,8 @@
 
 namespace JS {
 
-GlobalObject::GlobalObject()
-    : Object(GlobalObjectTag::Tag)
+GlobalObject::GlobalObject(Realm& realm)
+    : Object(GlobalObjectTag::Tag, realm)
     , m_console(make<Console>(*this))
 {
 }
@@ -152,14 +152,16 @@ void GlobalObject::initialize_global_object()
     ensure_shape_is_unique();
 
     // These are done first since other prototypes depend on their presence.
-    m_empty_object_shape = heap().allocate_without_global_object<Shape>(*this);
+    VERIFY(associated_realm());
+    auto& realm = *associated_realm();
+    m_empty_object_shape = heap().allocate_without_global_object<Shape>(realm);
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
+    m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(realm);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
 
-    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
+    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(realm);
     m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
@@ -359,8 +361,9 @@ Realm* GlobalObject::associated_realm()
     return m_associated_realm;
 }
 
-void GlobalObject::set_associated_realm(Badge<Realm>, Realm& realm)
+void GlobalObject::set_associated_realm(Realm& realm)
 {
+    VERIFY(&realm == &shape().realm());
     m_associated_realm = &realm;
 }
 

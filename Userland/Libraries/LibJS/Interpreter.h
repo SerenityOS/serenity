@@ -64,7 +64,7 @@ public:
 
         // 7. If the host requires use of an exotic object to serve as realm's global object, let global be such an object created in a host-defined manner.
         //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
-        auto* global_object = static_cast<GlobalObject*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...));
+        auto* global_object = static_cast<GlobalObject*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(*realm, forward<Args>(args)...));
 
         // 8. If the host requires that the this binding in realm's global scope return an object other than the global object, let thisValue be such an object created
         //    in a host-defined manner. Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.
@@ -73,7 +73,7 @@ public:
             this_value = global_object;
         } else {
             // FIXME: Should we pass args in here? Let's er on the side of caution and say yes.
-            this_value = static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalThisObjectType>(forward<Args>(args)...));
+            this_value = static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalThisObjectType>(*realm, forward<Args>(args)...));
         }
 
         // 9. Perform SetRealmGlobalObject(realm, global, thisValue).

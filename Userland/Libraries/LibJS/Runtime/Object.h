@@ -186,7 +186,7 @@ public:
     Shape& shape() { return *m_shape; }
     Shape const& shape() const { return *m_shape; }
 
-    GlobalObject& global_object() const { return *shape().global_object(); }
+    GlobalObject& global_object() const;
 
     void ensure_shape_is_unique();
 
@@ -196,7 +196,7 @@ public:
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
-    explicit Object(GlobalObjectTag);
+    explicit Object(GlobalObjectTag, Realm&);
     Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
     void set_prototype(Object*);

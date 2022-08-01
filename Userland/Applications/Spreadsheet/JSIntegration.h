@@ -23,7 +23,7 @@ class SheetGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
 
 public:
-    SheetGlobalObject(Sheet&);
+    SheetGlobalObject(JS::Realm&, Sheet&);
 
     virtual ~SheetGlobalObject() override = default;
 

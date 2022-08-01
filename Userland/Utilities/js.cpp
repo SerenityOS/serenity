@@ -92,7 +92,10 @@ class ReplObject final : public JS::GlobalObject {
     JS_OBJECT(ReplObject, JS::GlobalObject);
 
 public:
-    ReplObject() = default;
+    ReplObject(JS::Realm& realm)
+        : GlobalObject(realm)
+    {
+    }
     virtual void initialize_global_object() override;
     virtual ~ReplObject() override = default;
 
@@ -110,7 +113,10 @@ class ScriptObject final : public JS::GlobalObject {
     JS_OBJECT(ScriptObject, JS::GlobalObject);
 
 public:
-    ScriptObject() = default;
+    ScriptObject(JS::Realm& realm)
+        : JS::GlobalObject(realm)
+    {
+    }
     virtual void initialize_global_object() override;
     virtual ~ScriptObject() override = default;
 

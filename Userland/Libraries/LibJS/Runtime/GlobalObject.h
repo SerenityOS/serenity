@@ -17,7 +17,7 @@ class GlobalObject : public Object {
     JS_OBJECT(GlobalObject, Object);
 
 public:
-    explicit GlobalObject();
+    explicit GlobalObject(Realm&);
     virtual void initialize_global_object();
 
     virtual ~GlobalObject() override;
@@ -25,7 +25,7 @@ public:
     Console& console() { return *m_console; }
 
     Realm* associated_realm();
-    void set_associated_realm(Badge<Realm>, Realm&);
+    void set_associated_realm(Realm&);
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
@@ -56,25 +56,46 @@ public:
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
-    Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
+    ConstructorName* snake_name##_constructor()                                          \
+    {                                                                                    \
+        return m_##snake_name##_constructor;                                             \
+    }                                                                                    \
+    Object* snake_name##_prototype()                                                     \
+    {                                                                                    \
+        return m_##snake_name##_prototype;                                               \
+    }
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                              \
-    Intl::ConstructorName* intl_##snake_name##_constructor() { return m_intl_##snake_name##_constructor; } \
-    Object* intl_##snake_name##_prototype() { return m_intl_##snake_name##_prototype; }
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    Intl::ConstructorName* intl_##snake_name##_constructor()                  \
+    {                                                                         \
+        return m_intl_##snake_name##_constructor;                             \
+    }                                                                         \
+    Object* intl_##snake_name##_prototype()                                   \
+    {                                                                         \
+        return m_intl_##snake_name##_prototype;                               \
+    }
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \
-    Temporal::ConstructorName* temporal_##snake_name##_constructor() { return m_temporal_##snake_name##_constructor; } \
-    Object* temporal_##snake_name##_prototype() { return m_temporal_##snake_name##_prototype; }
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    Temporal::ConstructorName* temporal_##snake_name##_constructor()          \
+    {                                                                         \
+        return m_temporal_##snake_name##_constructor;                         \
+    }                                                                         \
+    Object* temporal_##snake_name##_prototype()                               \
+    {                                                                         \
+        return m_temporal_##snake_name##_prototype;                           \
+    }
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
-    Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
+    Object* snake_name##_prototype()          \
+    {                                         \
+        return m_##snake_name##_prototype;    \
+    }
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 
@@ -173,7 +194,7 @@ inline void GlobalObject::add_constructor(PropertyKey const& property_key, Const
 
 inline GlobalObject* Shape::global_object() const
 {
-    return static_cast<GlobalObject*>(m_global_object);
+    return &static_cast<GlobalObject&>(m_realm.global_object());
 }
 
 template<>
