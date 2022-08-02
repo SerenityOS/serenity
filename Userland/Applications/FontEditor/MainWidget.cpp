@@ -204,6 +204,15 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
 
+    bool highlight_modifications = Config::read_bool("FontEditor"sv, "Display"sv, "HighlightModifications"sv, true);
+    set_highlight_modifications(highlight_modifications);
+    m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [&](auto& action) {
+        set_highlight_modifications(action.is_checked());
+        Config::write_bool("FontEditor"sv, "Display"sv, "HighlightModifications"sv, action.is_checked());
+    });
+    m_highlight_modifications_action->set_checked(highlight_modifications);
+    m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs. (Green = New, Blue = Modified, Red = Deleted)");
+
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
@@ -652,6 +661,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_show_metadata_action));
     TRY(view_menu->try_add_action(*m_show_unicode_blocks_action));
     TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(*m_highlight_modifications_action));
+    TRY(view_menu->try_add_separator());
     auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"));
     TRY(scale_menu->try_add_action(*m_scale_five_action));
     TRY(scale_menu->try_add_action(*m_scale_ten_action));
@@ -691,6 +702,11 @@ void MainWidget::set_show_unicode_blocks(bool show)
         return;
     m_unicode_blocks = show;
     m_unicode_block_container->set_visible(m_unicode_blocks);
+}
+
+void MainWidget::set_highlight_modifications(bool highlight_modifications)
+{
+    m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
 }
 
 ErrorOr<void> MainWidget::open_file(String const& path)
