@@ -2,6 +2,7 @@ include(commonmark_spec)
 
 set(TEST_SOURCES
     TestCommonmark.cpp
+    TestImageSizeExtension.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
