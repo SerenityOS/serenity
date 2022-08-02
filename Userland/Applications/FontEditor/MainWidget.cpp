@@ -547,7 +547,7 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
         return {};
 
     auto selection = m_glyph_map_widget->selection().normalized();
-    m_undo_selection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font)));
+    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font, *m_glyph_map_widget));
     m_undo_stack->clear();
 
     m_path = path;

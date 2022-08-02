@@ -7,26 +7,33 @@
 #pragma once
 
 #include <LibGUI/Command.h>
+#include <LibGUI/GlyphMapWidget.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Font/BitmapFont.h>
 
 class UndoSelection : public RefCounted<UndoSelection> {
 public:
-    explicit UndoSelection(int const start, int const size, u32 const active_glyph, Gfx::BitmapFont const& font)
+    explicit UndoSelection(int const start, int const size, u32 const active_glyph, Gfx::BitmapFont const& font, NonnullRefPtr<GUI::GlyphMapWidget> glyph_map_widget)
         : m_start(start)
         , m_size(size)
         , m_active_glyph(active_glyph)
         , m_font(font)
+        , m_glyph_map_widget(move(glyph_map_widget))
     {
     }
     ErrorOr<NonnullRefPtr<UndoSelection>> save_state()
     {
-        auto state = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UndoSelection(m_start, m_size, m_active_glyph, *m_font)));
+        auto state = TRY(try_make_ref_counted<UndoSelection>(m_start, m_size, m_active_glyph, *m_font, m_glyph_map_widget));
         size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * font().glyph_height();
         auto* rows = font().rows() + m_start * bytes_per_glyph;
         auto* widths = font().widths() + m_start;
         TRY(state->m_data.try_append(&rows[0], bytes_per_glyph * m_size));
         TRY(state->m_data.try_append(&widths[0], m_size));
+
+        TRY(state->m_restored_modified_state.try_ensure_capacity(m_size));
+        for (int glyph = m_start; glyph < m_start + m_size; ++glyph)
+            TRY(state->m_restored_modified_state.try_append(m_glyph_map_widget->glyph_is_modified(glyph)));
+
         return state;
     }
     void restore_state(UndoSelection const& state)
@@ -36,6 +43,10 @@ public:
         auto* widths = font().widths() + state.m_start;
         memcpy(rows, &state.m_data[0], bytes_per_glyph * state.m_size);
         memcpy(widths, &state.m_data[bytes_per_glyph * state.m_size], state.m_size);
+
+        for (int i = 0; i < state.m_size; ++i)
+            m_glyph_map_widget->set_glyph_modified(state.m_start + i, state.m_restored_modified_state[i]);
+
         m_restored_active_glyph = state.m_active_glyph;
         m_restored_start = state.m_start;
         m_restored_size = state.m_size;
@@ -55,7 +66,9 @@ private:
     int m_restored_start { 0 };
     int m_restored_size { 0 };
     u32 m_restored_active_glyph { 0 };
+    Vector<bool> m_restored_modified_state;
     RefPtr<Gfx::BitmapFont> m_font;
+    NonnullRefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
     ByteBuffer m_data;
 };
 
