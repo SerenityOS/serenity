@@ -836,6 +836,27 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSum::reso
     return resolve_sum_type(type, zero_or_more_additional_calc_products);
 }
 
+// https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
+Gfx::FloatRect EdgeRect::resolved(Layout::Node const& layout_node, Gfx::FloatRect border_box) const
+{
+    // In CSS 2.1, the only valid <shape> value is: rect(<top>, <right>, <bottom>, <left>) where
+    // <top> and <bottom> specify offsets from the top border edge of the box, and <right>, and
+    // <left> specify offsets from the left border edge of the box.
+
+    // The value 'auto' means that a given edge of the clipping region will be the same as the edge
+    // of the element's generated border box (i.e., 'auto' means the same as '0' for <top> and
+    // <left>, the same as the used value of the height plus the sum of vertical padding and border
+    // widths for <bottom>, and the same as the used value of the width plus the sum of the
+    // horizontal padding and border widths for <right>, such that four 'auto' values result in the
+    // clipping region being the same as the element's border box).
+    return Gfx::FloatRect {
+        left_edge.is_auto() ? 0 : left_edge.to_px(layout_node),
+        top_edge.is_auto() ? 0 : top_edge.to_px(layout_node),
+        right_edge.is_auto() ? border_box.width() : right_edge.to_px(layout_node) - left_edge.to_px(layout_node),
+        bottom_edge.is_auto() ? border_box.height() : bottom_edge.to_px(layout_node) - top_edge.to_px(layout_node)
+    };
+}
+
 Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSum::resolved_type() const
 {
     auto maybe_type = first_calc_number_product->resolved_type();

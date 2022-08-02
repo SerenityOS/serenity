@@ -113,7 +113,15 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
+    auto clip_rect = computed_values().clip();
+    auto should_clip_rect = clip_rect.is_rect() && computed_values().position() == CSS::Position::Absolute;
+
     if (phase == PaintPhase::Background) {
+        if (should_clip_rect) {
+            context.painter().save();
+            auto border_box = absolute_border_box_rect();
+            context.painter().add_clip_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box).to_rounded<int>());
+        }
         paint_background(context);
         paint_box_shadow(context);
     }
@@ -121,6 +129,9 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Border) {
         paint_border(context);
     }
+
+    if (phase == PaintPhase::Overlay && should_clip_rect)
+        context.painter().restore();
 
     if (phase == PaintPhase::Overlay && layout_box().dom_node() && layout_box().document().inspected_node() == layout_box().dom_node()) {
         auto content_rect = absolute_rect();
