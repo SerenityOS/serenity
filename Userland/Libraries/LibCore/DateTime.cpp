@@ -92,13 +92,13 @@ String DateTime::to_string(StringView format) const
     int const format_len = format.length();
 
     auto format_time_zone_offset = [&](bool with_separator) {
-#if defined(__serenity__)
-        auto offset_seconds = daylight ? -altzone : -timezone;
-#elif !defined(__FreeBSD__)
-        auto offset_seconds = -timezone;
-#else
-        auto offset_seconds = 0;
-#endif
+        struct tm gmt_tm;
+        gmtime_r(&m_timestamp, &gmt_tm);
+
+        gmt_tm.tm_isdst = -1;
+        auto gmt_timestamp = mktime(&gmt_tm);
+
+        auto offset_seconds = static_cast<time_t>(difftime(m_timestamp, gmt_timestamp));
         StringView offset_sign;
 
         if (offset_seconds >= 0) {
@@ -251,11 +251,7 @@ String DateTime::to_string(StringView format) const
                 format_time_zone_offset(true);
                 break;
             case 'Z': {
-#ifndef __FreeBSD__
-                auto const* timezone_name = tzname[daylight];
-#else
-                auto const* timezone_name = tzname[0];
-#endif
+                auto const* timezone_name = tzname[tm.tm_isdst == 0 ? 0 : 1];
                 builder.append({ timezone_name, strlen(timezone_name) });
                 break;
             }

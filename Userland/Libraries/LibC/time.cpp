@@ -112,11 +112,16 @@ static bool is_valid_time(time_t timestamp)
     return (timestamp >= smallest_possible_time) && (timestamp <= biggest_possible_time);
 }
 
-static struct tm* time_to_tm(struct tm* tm, time_t t)
+static struct tm* time_to_tm(struct tm* tm, time_t t, StringView time_zone)
 {
     if (!is_valid_time(t)) {
         errno = EOVERFLOW;
         return nullptr;
+    }
+
+    if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(t)); offset.has_value()) {
+        tm->tm_isdst = offset->in_dst == TimeZone::InDST::Yes;
+        t += offset->seconds;
     }
 
     int year = 1970;
@@ -146,7 +151,7 @@ static struct tm* time_to_tm(struct tm* tm, time_t t)
     return tm;
 }
 
-static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
+static time_t tm_to_time(struct tm* tm, StringView time_zone)
 {
     // "The original values of the tm_wday and tm_yday components of the structure are ignored,
     // and the original values of the other components are not restricted to the ranges described in <time.h>.
@@ -155,8 +160,6 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
     // and the other components are set to represent the specified time since the Epoch,
     // but with their values forced to the ranges indicated in the <time.h> entry;
     // the final value of tm_mday shall not be set until tm_mon and tm_year are determined."
-
-    // FIXME: Handle tm_isdst eventually.
 
     tm->tm_year += tm->tm_mon / 12;
     tm->tm_mon %= 12;
@@ -167,7 +170,17 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 
     tm->tm_yday = day_of_year(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday);
     time_t days_since_epoch = years_to_days_since_epoch(1900 + tm->tm_year) + tm->tm_yday;
-    auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
+    auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec;
+
+    if (tm->tm_isdst < 0) {
+        if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(timestamp)); offset.has_value())
+            timestamp -= offset->seconds;
+    } else {
+        auto index = tm->tm_isdst == 0 ? 0 : 1;
+
+        if (auto offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::from_seconds(timestamp)); offsets.has_value())
+            timestamp -= offsets->at(index).seconds;
+    }
 
     if (!is_valid_time(timestamp)) {
         errno = EOVERFLOW;
@@ -180,7 +193,7 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 time_t mktime(struct tm* tm)
 {
     tzset();
-    return tm_to_time(tm, daylight ? altzone : timezone);
+    return tm_to_time(tm, __tzname);
 }
 
 struct tm* localtime(time_t const* t)
@@ -196,12 +209,12 @@ struct tm* localtime_r(time_t const* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    return time_to_tm(tm, *t - (daylight ? altzone : timezone));
+    return time_to_tm(tm, *t, __tzname);
 }
 
 time_t timegm(struct tm* tm)
 {
-    return tm_to_time(tm, 0);
+    return tm_to_time(tm, { __utc, __builtin_strlen(__utc) });
 }
 
 struct tm* gmtime(time_t const* t)
@@ -214,7 +227,7 @@ struct tm* gmtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
-    return time_to_tm(tm, *t);
+    return time_to_tm(tm, *t, { __utc, __builtin_strlen(__utc) });
 }
 
 char* asctime(const struct tm* tm)
