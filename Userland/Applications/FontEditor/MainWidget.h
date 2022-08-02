@@ -51,6 +51,8 @@ public:
     bool is_showing_unicode_blocks() { return m_unicode_blocks; }
     void set_show_unicode_blocks(bool);
 
+    void set_highlight_modifications(bool);
+
 private:
     MainWidget();
 
@@ -110,6 +112,7 @@ private:
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;
     RefPtr<GUI::Action> m_show_unicode_blocks_action;
+    RefPtr<GUI::Action> m_highlight_modifications_action;
 
     GUI::ActionGroup m_glyph_editor_scale_actions;
     RefPtr<GUI::Action> m_scale_five_action;
