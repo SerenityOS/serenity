@@ -97,14 +97,22 @@ public:
         bool is_image;
         NonnullOwnPtr<Node> text;
         String href;
+        Optional<int> image_width;
+        Optional<int> image_height;
 
-        LinkNode(bool is_image, NonnullOwnPtr<Node> text, String href)
+        LinkNode(bool is_image, NonnullOwnPtr<Node> text, String href, Optional<int> image_width, Optional<int> image_height)
             : is_image(is_image)
             , text(move(text))
             , href(move(href))
+            , image_width(image_width)
+            , image_height(image_height)
         {
         }
 
+        bool has_image_dimensions() const
+        {
+            return image_width.has_value() || image_height.has_value();
+        }
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;

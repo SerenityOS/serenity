@@ -140,6 +140,13 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
     if (is_image) {
         builder.append("<img src=\""sv);
         builder.append(escape_html_entities(href));
+        if (has_image_dimensions()) {
+            builder.append("\" style=\""sv);
+            if (image_width.has_value())
+                builder.appendff("width: {}px;", *image_width);
+            if (image_height.has_value())
+                builder.appendff("height: {}px;", *image_height);
+        }
         builder.append("\" alt=\""sv);
         text->render_to_html(builder);
         builder.append("\" >"sv);
@@ -576,11 +583,52 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
     auto separator = *tokens;
     VERIFY(separator == "]("sv);
 
+    Optional<int> image_width;
+    Optional<int> image_height;
+
+    auto parse_image_dimensions = [&](StringView dimensions) -> bool {
+        if (!dimensions.starts_with('='))
+            return false;
+
+        ArmedScopeGuard clear_image_dimensions = [&] {
+            image_width = {};
+            image_height = {};
+        };
+
+        auto dimension_seperator = dimensions.find('x', 1);
+        if (!dimension_seperator.has_value())
+            return false;
+
+        auto width_string = dimensions.substring_view(1, *dimension_seperator - 1);
+        if (!width_string.is_empty()) {
+            auto width = width_string.to_int();
+            if (!width.has_value())
+                return false;
+            image_width = width;
+        }
+
+        auto height_start = *dimension_seperator + 1;
+        if (height_start < dimensions.length()) {
+            auto height_string = dimensions.substring_view(height_start);
+            auto height = height_string.to_int();
+            if (!height.has_value())
+                return false;
+            image_height = height;
+        }
+
+        clear_image_dimensions.disarm();
+        return true;
+    };
+
     StringBuilder address;
     for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
+        // FIXME: What to do if there's multiple dimension tokens?
+        if (is_image && !address.is_empty() && parse_image_dimensions(iterator->data))
+            continue;
+
         if (*iterator == ")"sv) {
             tokens = iterator;
-            return make<LinkNode>(is_image, move(link_text), address.build());
+            return make<LinkNode>(is_image, move(link_text), address.build().trim_whitespace(), image_width, image_height);
         }
 
         address.append(iterator->data);
