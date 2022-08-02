@@ -89,6 +89,7 @@ struct EdgeRect {
     Length right_edge;
     Length bottom_edge;
     Length left_edge;
+    Gfx::FloatRect resolved(Layout::Node const&, Gfx::FloatRect) const;
 };
 
 // FIXME: Find a better place for this helper.
