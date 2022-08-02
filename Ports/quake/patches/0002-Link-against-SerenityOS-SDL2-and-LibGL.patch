@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Grigoris Pavlakis <grigpavl@ece.auth.gr>
+Date: Tue, 2 Aug 2022 23:09:54 +0300
+Subject: [PATCH] Link against SerenityOS SDL2 and LibGL
+
+When specifying TARGET_OS=UNIX and TARGET_UNIX=serenity, use the
+SerenityOS library paths for SDL2 and LibGL.
+---
+ Makefile | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index b48cf8c..9fc0828 100644
+--- a/Makefile
++++ b/Makefile
+@@ -183,6 +183,9 @@ ifneq (,$(filter sdl,$(VID_TARGET) $(SND_TARGET) $(IN_TARGET)))
+ ifeq (,$(filter-out UNIX,$(TARGET_OS))$(filter-out darwin,$(TARGET_UNIX)))
+ SDL_CFLAGS_DEFAULT := -iquote /Library/Frameworks/SDL2.framework/Versions/Current/Headers
+ SDL_LFLAGS_DEFAULT := -F/Library/Frameworks -framework SDL2 -Xlinker -rpath -Xlinker @executable_path/../Frameworks
++else ifeq (,$(filter-out UNIX,$(TARGET_OS))$(filter-out serenity,$(TARGET_UNIX)))
++SDL_CFLAGS_DEFAULT := -I$(SERENITY_BUILD_DIR)/Root/usr/local/include/SDL2 
++SDL_LFLAGS_DEFAULT := -lSDL2
+ else
+ SDL_CFLAGS_DEFAULT := $(shell sdl2-config --cflags)
+ SDL_LFLAGS_DEFAULT := $(shell sdl2-config --libs)
+@@ -848,6 +851,9 @@ ifeq ($(filter-out UNIX,$(TARGET_OS))$(filter-out darwin,$(TARGET_UNIX))$(filter
+ GL_CPPFLAGS     += -DAPPLE_OPENGL
+ GL_CPPFLAGS     += -DGL_SILENCE_DEPRECATION
+ GL_LFLAGS       += -framework OpenGL
++else ifeq (,$(filter-out UNIX,$(TARGET_OS))$(filter-out serenity,$(TARGET_UNIX)))
++GL_CPPFLAGS += -I$(SERENITY_BUILD_DIR)/Root/usr/include/LibGL -L$(SERENITY_BUILD_DIR)/Root/usr/lib/
++GL_LFLAGS += -lgl
+ else
+ GL_CPPFLAGS     += $(if $(OGLBASE),-idirafter $(OGLBASE)/include,)
+ GL_LFLAGS       += $(if $(OGLBASE),$(call libdir-check,$(OGLBASE)/lib,),)
+@@ -912,10 +918,15 @@ endif
+ # If we are on OSX (Darwin) and this is not the GLX target, we will link with
+ # "-framework OpenGL" instead. Otherwise, link with libGL as normal
+ # => if ($TARGET_UNIX != darwin || $VID_TARGET == x11)...
++# NOTE: SerenityOS names its library `gl` instead of `GL`
+ ifneq ($(filter-out darwin,$(TARGET_UNIX))$(filter x11,$(VID_TARGET)),)
++ifeq (,$(filter-out UNIX,$(TARGET_OS))$(filter-out serenity,$(TARGET_UNIX)))
++GL_LIBS     += gl
++else
+ GL_LIBS     += GL
+ endif
+ endif
++endif
+ 
+ # ----------------------------------------------------------------------------
+ # Driver Options

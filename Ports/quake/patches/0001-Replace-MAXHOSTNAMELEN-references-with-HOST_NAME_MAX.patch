@@ -1,0 +1,77 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Grigoris Pavlakis <grigpavl@ece.auth.gr>
+Date: Tue, 2 Aug 2022 23:03:29 +0300
+Subject: [PATCH] Replace MAXHOSTNAMELEN references with HOST_NAME_MAX
+
+MAXHOSTNAMELEN is not defined in SerenityOS, but HOST_NAME_MAX is
+(under limits.h). Therefore, change all relevant references to point
+to HOST_NAME_MAX.
+---
+ NQ/net_udp.c        | 7 ++++---
+ QW/common/net_udp.c | 7 ++++---
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/NQ/net_udp.c b/NQ/net_udp.c
+index f922d08..62e60d5 100644
+--- a/NQ/net_udp.c
++++ b/NQ/net_udp.c
+@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ 
+ #include "common.h"
+ #include "console.h"
++#include "limits.h"
+ #include "net.h"
+ #include "net_udp.h"
+ #include "quakedef.h"
+@@ -121,7 +122,7 @@ UDP_Init(void)
+ {
+     int i;
+     int err;
+-    char buff[MAXHOSTNAMELEN];
++    char buff[HOST_NAME_MAX];
+     char *colon;
+     struct hostent *local;
+     netadr_t addr;
+@@ -132,12 +133,12 @@ UDP_Init(void)
+     /* determine my name & address, default to loopback */
+     myAddr.ip.l = htonl(INADDR_LOOPBACK);
+     myAddr.port = htons(DEFAULTnet_hostport);
+-    err = gethostname(buff, MAXHOSTNAMELEN);
++    err = gethostname(buff, HOST_NAME_MAX);
+     if (err) {
+ 	Con_Printf("%s: WARNING: gethostname failed (%s)\n", __func__,
+ 		   strerror(errno));
+     } else {
+-	buff[MAXHOSTNAMELEN - 1] = 0;
++	buff[HOST_NAME_MAX - 1] = 0;
+ 	local = gethostbyname(buff);
+ 	if (!local) {
+ 	    Con_Printf("%s: WARNING: gethostbyname failed (%s)\n", __func__,
+diff --git a/QW/common/net_udp.c b/QW/common/net_udp.c
+index 5ad22a8..6cf9d6a 100644
+--- a/QW/common/net_udp.c
++++ b/QW/common/net_udp.c
+@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ #include <unistd.h>
+ 
+ #include "console.h"
++#include "limits.h"
+ #include "net.h"
+ #include "quakedef.h"
+ #include "sys.h"
+@@ -223,12 +224,12 @@ UDP_OpenSocket(int port)
+ void
+ NET_GetLocalAddress(void)
+ {
+-    char buff[MAXHOSTNAMELEN];
++    char buff[HOST_NAME_MAX];
+     struct sockaddr_in address;
+     socklen_t namelen;
+ 
+-    gethostname(buff, MAXHOSTNAMELEN);
+-    buff[MAXHOSTNAMELEN - 1] = 0;
++    gethostname(buff, HOST_NAME_MAX);
++    buff[HOST_NAME_MAX - 1] = 0;
+ 
+     NET_StringToAdr(buff, &net_local_adr);
+ 

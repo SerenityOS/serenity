@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Grigoris Pavlakis <grigpavl@ece.auth.gr>
+Date: Tue, 2 Aug 2022 23:11:31 +0300
+Subject: [PATCH] Remove non-existent header sys/ipc.h
+
+sys/ipc.h is not available in SerenityOS. Commenting it out fixes the
+build and doesn't seem to cause any obvious errors.
+---
+ common/sys_unix.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/common/sys_unix.c b/common/sys_unix.c
+index c55cabd..fe530d6 100644
+--- a/common/sys_unix.c
++++ b/common/sys_unix.c
+@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ 
+ #ifndef SERVERONLY
+ #include <signal.h>
+-#include <sys/ipc.h>
++/* #include <sys/ipc.h> */
+ #include <sys/mman.h>
+ #endif
+ 
