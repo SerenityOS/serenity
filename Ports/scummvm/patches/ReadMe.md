@@ -15,8 +15,3 @@ Since this is for MSAA which we do not yet support, patch it out.
 Teach configure about serenity
 
 
-## `0003-Remove-SDL-timer-lock.patch`
-
-Remove SDL timer lock
-
-

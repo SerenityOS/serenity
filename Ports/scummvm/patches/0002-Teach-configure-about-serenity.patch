@@ -4,29 +4,20 @@ Date: Sun, 9 Jan 2022 23:01:32 +0100
 Subject: [PATCH] Teach configure about serenity
 
 ---
- configure | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ configure | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/configure b/configure
-index 65e4731..39509f3 100755
+index a9f4b0e2..a061df20 100755
 --- a/configure
 +++ b/configure
-@@ -3998,7 +3998,7 @@ case $_host_os in
- 	amigaos* | cygwin* | dreamcast | ds | gamecube | mingw* | morphos | n64 | ps3 | psp2 | psp | riscos | wii)
- 		_posix=no
- 		;;
--	3ds | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | solaris* | sunos* | switch | uclinux*)
-+	3ds | android | androidsdl | beos* | bsd* | darwin* | freebsd* | gnu* | gph-linux | haiku* | hpux* | iphone | ios7 | irix*| k*bsd*-gnu* | linux* | maemo | mint* | netbsd* | openbsd* | serenity* | solaris* | sunos* | switch | uclinux*)
- 		_posix=yes
- 		;;
- 	os2-emx*)
-@@ -5538,6 +5538,9 @@ EOF
- 		mingw*)
- 			OPENGL_LIBS="-lopengl32"
- 			;;
-+		serenity*)
-+			OPENGL_LIBS="-lgl"
-+			;;
- 		*)
- 			OPENGL_LIBS="-lGL"
- 			;;
+@@ -5543,6 +5543,9 @@ EOF
+ 			mingw*)
+ 				OPENGL_LIBS="-lopengl32"
+ 				;;
++			serenity*)
++				OPENGL_LIBS="-lgl"
++				;;
+ 			*)
+ 				OPENGL_LIBS="-lGL"
+ 				;;
