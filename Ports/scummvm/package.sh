@@ -28,3 +28,20 @@ function post_configure() {
     unset OPENGL_CFLAGS
     unset SDL_CFLAGS
 }
+
+function post_install() {
+    icons_build_dir="${PORT_BUILD_DIR}/scummvm-icons"
+    if [ ! -d "${icons_build_dir}" ]; then
+        echo 'Downloading & building an icon pack for ScummVM...'
+
+        # Unfortunately, `gen-set.py` prevents us from fixating on a commit ID since it
+        # checks whether the git repository is up-to-date. Also, we cannot perform a
+        # shallow clone since that will mess up the icon list.
+        cd "$(dirname ${icons_build_dir})"
+        git clone https://github.com/scummvm/scummvm-icons "$(basename ${icons_build_dir})"
+        cd "$(basename ${icons_build_dir})"
+
+        ./gen-set.py 19700101
+        cp gui-icons-*.dat "${SERENITY_INSTALL_ROOT}/usr/local/share/scummvm/gui-icons.dat"
+    fi
+}
