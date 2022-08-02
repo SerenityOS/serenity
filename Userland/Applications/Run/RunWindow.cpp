@@ -71,7 +71,7 @@ RunWindow::RunWindow()
 
 void RunWindow::event(Core::Event& event)
 {
-    if (event.type() == GUI::Event::KeyUp || event.type() == GUI::Event::KeyDown) {
+    if (event.type() == GUI::Event::KeyDown) {
         auto& key_event = static_cast<GUI::KeyEvent&>(event);
         if (key_event.key() == Key_Escape) {
             // Escape key pressed, close dialog
