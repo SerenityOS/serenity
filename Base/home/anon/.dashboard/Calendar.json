@@ -1,0 +1,9 @@
+{
+    "animation": "none",
+    "branding": "label",
+    "content": [
+        {
+            "kind": "date"
+        }
+    ]
+}

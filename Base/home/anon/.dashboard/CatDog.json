@@ -1,0 +1,19 @@
+{
+    "animation": "slide",
+    "branding": "label",
+    "content": [
+        {
+            "kind": "branding"
+        },
+        {
+            "kind": "normal",
+            "alignment": "center",
+            "content": "Have you tried sleeping? It's good for you :^)"
+        },
+        {
+            "kind": "normal",
+            "alignment": "center",
+            "content": "Did you know?\nOver 700 people have contributed to SerenityOS!"
+        }
+    ]
+}

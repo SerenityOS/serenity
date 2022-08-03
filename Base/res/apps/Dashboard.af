@@ -1,0 +1,4 @@
+[App]
+Name=Dashboard
+Executable=/bin/Dashboard
+Category=Utilities
