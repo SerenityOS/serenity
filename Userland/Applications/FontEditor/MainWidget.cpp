@@ -960,6 +960,7 @@ void MainWidget::paste_glyphs()
             : min(edited_font().max_glyph_width(), data[bytes_per_copied_glyph * glyph_count + i]);
         memcpy(&rows[i * bytes_per_glyph], &data[i * bytes_per_copied_glyph], copyable_bytes_per_glyph);
         memset(&widths[i], copyable_width, sizeof(u8));
+        m_glyph_map_widget->set_glyph_modified(selection.start() + i, true);
     }
 
     m_glyph_map_widget->set_selection(selection.start() + range_bound_glyph_count - 1, -range_bound_glyph_count + 1);
