@@ -29,6 +29,7 @@ class DropEvent;
 class EditingEngine;
 class FileSystemModel;
 class Frame;
+class GridLayout;
 class GroupBox;
 class HeaderView;
 class HorizontalBoxLayout;
