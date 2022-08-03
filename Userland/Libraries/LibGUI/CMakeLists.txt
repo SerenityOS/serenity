@@ -106,6 +106,7 @@ set(SOURCES
     TextBox.cpp
     TextDocument.cpp
     TextEditor.cpp
+    Tile.cpp
     Toolbar.cpp
     ToolbarContainer.cpp
     Tray.cpp

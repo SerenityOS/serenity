@@ -81,6 +81,7 @@ class TextDocumentUndoCommand;
 class TextEditor;
 class ThemeChangeEvent;
 class FontsChangeEvent;
+class Tile;
 class Toolbar;
 class ToolbarContainer;
 class TreeView;
