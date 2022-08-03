@@ -10,6 +10,7 @@
 #include "DesktopSettingsWidget.h"
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
+#include "TaskbarSettingsWidget.h"
 #include "ThemesSettingsWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -24,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix proc exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domain("WindowManager");
+    Config::pledge_domains({ "WindowManager", "Taskbar" });
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
@@ -41,6 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"sv, "fonts"sv));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"sv, "monitor"sv));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"sv, "workspaces"sv));
+    (void)TRY(window->add_tab<DisplaySettings::TaskbarSettingsWidget>("Taskbar"sv, "taskbar"sv));
     window->set_active_tab(selected_tab);
 
     window->set_icon(app_icon.bitmap_for_size(16));

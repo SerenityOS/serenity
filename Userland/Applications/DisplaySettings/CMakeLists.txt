@@ -8,6 +8,7 @@ compile_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml
 compile_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_gml)
 compile_gml(DesktopSettings.gml DesktopSettingsGML.h desktop_settings_gml)
 compile_gml(FontSettings.gml FontSettingsGML.h font_settings_gml)
+compile_gml(TaskbarSettings.gml TaskbarSettingsGML.h taskbar_settings_gml)
 compile_gml(ThemesSettings.gml ThemesSettingsGML.h themes_settings_gml)
 
 set(SOURCES
@@ -20,6 +21,9 @@ set(SOURCES
     MonitorSettingsWidget.cpp
     MonitorSettingsGML.h
     MonitorWidget.cpp
+    TaskbarSettingsWidget.h
+    TaskbarSettingsWidget.cpp
+    TaskbarSettingsGML.h
     ThemePreviewWidget.h
     ThemePreviewWidget.cpp
     ThemesSettingsWidget.h
