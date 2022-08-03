@@ -63,6 +63,20 @@ describe("correct behavior", () => {
         expect(BigInt("0X10")).toBe(16n);
         expect(BigInt(`0x${"f".repeat(25)}`)).toBe(1267650600228229401496703205375n);
     });
+
+    test("only coerces value once", () => {
+        let calls = 0;
+        const value = {
+            [Symbol.toPrimitive]() {
+                expect(calls).toBe(0);
+                ++calls;
+                return "123";
+            },
+        };
+
+        expect(BigInt(value)).toEqual(123n);
+        expect(calls).toBe(1);
+    });
 });
 
 describe("errors", () => {
