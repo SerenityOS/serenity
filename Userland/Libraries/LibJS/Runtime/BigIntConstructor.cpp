@@ -52,8 +52,8 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
     if (primitive.is_number())
         return TRY(number_to_bigint(global_object, primitive));
 
-    // 4. Otherwise, return ? ToBigInt(value).
-    return TRY(value.to_bigint(global_object));
+    // 4. Otherwise, return ? ToBigInt(prim).
+    return TRY(primitive.to_bigint(global_object));
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
