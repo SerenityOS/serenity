@@ -1,12 +1,9 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(PNP_IDS_FILE pnp.ids)
 set(PNP_IDS_URL http://www.uefi.org/uefi-pnp-export)
 set(PNP_IDS_EXPORT_PATH ${CMAKE_BINARY_DIR}/pnp_ids.html)
-set(PNP_IDS_INSTALL_PATH ${CMAKE_INSTALL_DATAROOTDIR}/${PNP_IDS_FILE})
 
 if (ENABLE_PNP_IDS_DOWNLOAD)
-    file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
     download_file("${PNP_IDS_URL}" "${PNP_IDS_EXPORT_PATH}")
 
     set(PNP_IDS_HEADER PnpIDs.h)
