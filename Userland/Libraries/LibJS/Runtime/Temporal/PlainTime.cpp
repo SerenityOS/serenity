@@ -160,8 +160,7 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
     auto& vm = global_object.vm();
 
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
-    // NOTE: As the spec is currently written this assertion can fail, these are either integers _or_ infinity.
-    //       See https://github.com/tc39/proposal-temporal/issues/1672.
+    VERIFY(trunc(hour) == hour && trunc(minute) == minute && trunc(second) == second && trunc(millisecond) == millisecond && trunc(microsecond) == microsecond && trunc(nanosecond) == nanosecond);
 
     // 2. Assert: overflow is either "constrain" or "reject".
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
