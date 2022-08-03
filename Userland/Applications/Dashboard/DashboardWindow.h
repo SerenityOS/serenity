@@ -18,7 +18,8 @@ public:
     virtual void event(Core::Event&) override;
 
 private:
-    explicit DashboardWindow();
+    explicit DashboardWindow(bool desktop_mode);
 
     RefPtr<GUI::Widget> m_container;
+    bool m_desktop_mode;
 };

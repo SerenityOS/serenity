@@ -54,11 +54,23 @@ struct AppMetadata {
 Vector<AppMetadata> apps;
 
 int const ITEM_SIZE = 114;
-DashboardWindow::DashboardWindow()
+DashboardWindow::DashboardWindow(bool desktop_mode)
+    : m_desktop_mode(desktop_mode)
 {
     set_title("Dashboard");
     set_minimum_size(378, 400);
     resize(378, 480);
+
+    if (m_desktop_mode) {
+        set_frameless(true);
+        set_forced_shadow(true);
+        move_to(0, GUI::Desktop::the().rect().height() - height() - 28);
+
+        on_active_window_change = [](bool is_active_window) {
+            if (!is_active_window)
+                GUI::Application::the()->quit();
+        };
+    }
 
     auto& main_widget = set_main_widget<DashboardWidget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -90,6 +102,11 @@ DashboardWindow::DashboardWindow()
         tile.set_text(app.name);
         tile.set_icon(app.icon.bitmap_for_size(ITEM_SIZE));
         tile.set_fixed_size(ITEM_SIZE, ITEM_SIZE);
+
+        if (m_desktop_mode) {
+            tile.set_animation_start(n * 30);
+        }
+
         tile.on_click = [app](auto) {
             char const* argv[4] { nullptr, nullptr, nullptr, nullptr };
             if (app.run_in_terminal) {

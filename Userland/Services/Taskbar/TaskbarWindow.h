@@ -26,9 +26,11 @@ public:
     static int taskbar_icon_size() { return 16; }
 
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
+    virtual void config_bool_did_change(String const&, String const&, String const&, bool) override;
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
+    void on_dashboard_mode_change();
     static void show_desktop_button_clicked(unsigned);
     static void toggle_show_desktop();
     void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
@@ -64,4 +66,5 @@ private:
 
     unsigned m_current_workspace_row { 0 };
     unsigned m_current_workspace_column { 0 };
+    bool m_dashboard_mode = false;
 };

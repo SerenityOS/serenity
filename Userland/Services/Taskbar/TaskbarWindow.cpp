@@ -10,6 +10,7 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -60,6 +61,8 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 
+    m_dashboard_mode = Config::read_bool("Taskbar"sv, "Interface"sv, "Dashboard"sv);
+
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 2, 3, 0, 3 });
@@ -69,7 +72,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
-    m_start_button->set_menu(m_start_menu);
+    on_dashboard_mode_change();
 
     main_widget.add_child(*m_start_button);
     main_widget.add<Taskbar::QuickLaunchWidget>();
@@ -105,6 +108,45 @@ void TaskbarWindow::config_string_did_change(String const& domain, String const&
     if (group == "Clock" && key == "TimeFormat") {
         m_clock_widget->update_format(value);
         update_applet_area();
+    }
+}
+void TaskbarWindow::config_bool_did_change(String const& domain, String const& group, String const& key, bool value)
+{
+    VERIFY(domain == "Taskbar");
+    dbgln("{}/{}", group, key);
+    if (group == "Interface" && key == "Dashboard") {
+        m_dashboard_mode = value;
+        on_dashboard_mode_change();
+    }
+}
+
+void TaskbarWindow::on_dashboard_mode_change()
+{
+    if (m_dashboard_mode) {
+        m_start_button->set_menu(NULL);
+        m_start_button->on_click = [&](auto) {
+            char const* argv[4] { "/bin/Dashboard", "-d" };
+
+            posix_spawn_file_actions_t spawn_actions;
+            posix_spawn_file_actions_init(&spawn_actions);
+            auto home_directory = Core::StandardPaths::home_directory();
+            posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
+
+            pid_t child_pid;
+            if ((errno = posix_spawn(&child_pid, argv[0], &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
+                perror("posix_spawn");
+            } else {
+                if (disown(child_pid) < 0)
+                    perror("disown");
+            }
+            posix_spawn_file_actions_destroy(&spawn_actions);
+        };
+        m_start_button->on_context_menu_request = [&](auto&) {
+            m_start_menu->popup(m_start_button->screen_relative_rect().top_left());
+        };
+    } else {
+        m_start_button->on_click = NULL;
+        m_start_button->set_menu(m_start_menu);
     }
 }
 
@@ -335,7 +377,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (m_start_menu->is_visible()) {
             m_start_menu->dismiss();
         } else {
-            m_start_menu->popup(m_start_button->screen_relative_rect().top_left());
+            m_start_button->click();
         }
         break;
     }
