@@ -361,6 +361,47 @@ pushd "$DIR/Build/$ARCH"
         echo "XXX build binutils"
         buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || exit 1
         buildstep "binutils/install" "$MAKE" install || exit 1
+
+        # Fix up the hardcoded RPATH in the binutils libraries if the necessary tools are present.
+        if command -v patchelf >/dev/null 2>&1; then
+            for binary in "${PREFIX}/bin/${TARGET}"-* "${PREFIX}/${TARGET}/bin/"*; do
+                ELF_HEADERS="$(objdump -x "${binary}")"
+
+                if ! grep -q RPATH <<< "${ELF_HEADERS}"; then
+                    continue
+                fi
+
+                CURRENT_RPATH="$(grep RPATH <<< "${ELF_HEADERS}" | tr -s ' ' | cut -d ' ' -f3)"
+
+                if ! grep -q "${PREFIX}" <<< "${CURRENT_RPATH}"; then
+                    continue
+                fi
+
+                IFS=':' read -ra CURRENT_RPATH_SPLIT <<< "${CURRENT_RPATH}"
+
+                RELATIVE_RPATH=""
+
+                for path in "${CURRENT_RPATH_SPLIT[@]}"; do
+                    if [ -n "${RELATIVE_RPATH}" ]; then
+                        RELATIVE_RPATH+=":"
+                    fi
+
+                    if ! grep -q "${PREFIX}" <<< "${path}"; then
+                        RELATIVE_RPATH+="${path}"
+                    else
+                        RELATIVE_RPATH+="\$ORIGIN/$(realpath --relative-to="$(dirname "${binary}")" "${path}")"
+                    fi
+
+                done
+
+                # This copies the file to itself to remove any hardlinks, as those might cause the rpath change
+                # to be reflected in files at other paths, where that path is obviously wrong.
+                sed -i ';' "${binary}"
+
+                buildstep "binutils/install" echo "Patching RPATH of $(basename "${binary}") to '${RELATIVE_RPATH}'"
+                patchelf --force-rpath --set-rpath "${RELATIVE_RPATH}" "${binary}"
+            done
+        fi
     popd
 
     echo "XXX serenity libc and libm headers"
