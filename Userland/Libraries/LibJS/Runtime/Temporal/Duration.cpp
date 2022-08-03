@@ -794,8 +794,8 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         // a. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
         auto move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_year));
 
-        // b. Set relativeTo to moveResult.[[RelativeTo]].
-        relative_to = move_result.relative_to.cell();
+        // b. Let newRelativeTo be moveResult.[[RelativeTo]].
+        auto* new_relative_to = move_result.relative_to.cell();
 
         // c. Let oneYearDays be moveResult.[[Days]].
         auto one_year_days = move_result.days;
@@ -808,21 +808,24 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             // ii. Set years to years + sign.
             years += sign;
 
-            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneYear).
+            // iii. Set relativeTo to newRelativeTo.
+            relative_to = new_relative_to;
+
+            // iv. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneYear).
             move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_year));
 
-            // iv. Set relativeTo to moveResult.[[RelativeTo]].
-            relative_to = move_result.relative_to.cell();
+            // v. Set newRelativeTo to moveResult.[[RelativeTo]].
+            new_relative_to = move_result.relative_to.cell();
 
-            // v. Set oneYearDays to moveResult.[[Days]].
+            // vi. Set oneYearDays to moveResult.[[Days]].
             one_year_days = move_result.days;
         }
 
         // e. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
 
-        // f. Set relativeTo to moveResult.[[RelativeTo]].
-        relative_to = move_result.relative_to.cell();
+        // f. Set newRelativeTo to moveResult.[[RelativeTo]].
+        new_relative_to = move_result.relative_to.cell();
 
         // g. Let oneMonthDays be moveResult.[[Days]].
         auto one_month_days = move_result.days;
@@ -835,21 +838,24 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             // ii. Set months to months + sign.
             months += sign;
 
-            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+            // iii. Set relativeTo to newRelativeTo.
+            relative_to = new_relative_to;
+
+            // iv. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
             move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
 
-            // iv. Set relativeTo to moveResult.[[RelativeTo]].
-            relative_to = move_result.relative_to.cell();
+            // v. Set newRelativeTo to moveResult.[[RelativeTo]].
+            new_relative_to = move_result.relative_to.cell();
 
-            // v. Set oneMonthDays to moveResult.[[Days]].
+            // vi. Set oneMonthDays to moveResult.[[Days]].
             one_month_days = move_result.days;
         }
 
         // i. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
 
-        // j. Let newRelativeTo be ? CalendarDateAdd(calendar, relativeTo, oneYear, undefined, dateAdd).
-        auto* new_relative_to = TRY(calendar_date_add(global_object, calendar, relative_to, *one_year, nullptr, date_add));
+        // j. Set newRelativeTo to ? CalendarDateAdd(calendar, relativeTo, oneYear, undefined, dateAdd).
+        new_relative_to = TRY(calendar_date_add(global_object, calendar, relative_to, *one_year, nullptr, date_add));
 
         // k. Let dateUntil be ? GetMethod(calendar, "dateUntil").
         auto* date_until = TRY(Value(&calendar).get_method(global_object, vm.names.dateUntil));
@@ -898,8 +904,8 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         // a. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         auto move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
 
-        // b. Set relativeTo to moveResult.[[RelativeTo]].
-        relative_to = move_result.relative_to.cell();
+        // b. Let newRelativeTo be moveResult.[[RelativeTo]].
+        auto* new_relative_to = move_result.relative_to.cell();
 
         // c. Let oneMonthDays be moveResult.[[Days]].
         auto one_month_days = move_result.days;
@@ -912,13 +918,16 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             // ii. Set months to months + sign.
             months += sign;
 
-            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+            // iii. Set relativeTo to newRelativeTo.
+            relative_to = new_relative_to;
+
+            // iv. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
             move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
 
-            // iv. Set relativeTo to moveResult.[[RelativeTo]].
-            relative_to = move_result.relative_to.cell();
+            // v. Set newRelativeTo to moveResult.[[RelativeTo]].
+            new_relative_to = move_result.relative_to.cell();
 
-            // v. Set oneMonthDays to moveResult.[[Days]].
+            // vi. Set oneMonthDays to moveResult.[[Days]].
             one_month_days = move_result.days;
         }
     }
@@ -930,8 +939,8 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         // b. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
         auto move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_week));
 
-        // c. Set relativeTo to moveResult.[[RelativeTo]].
-        relative_to = move_result.relative_to.cell();
+        // c. Let newRelativeTo be moveResult.[[RelativeTo]].
+        auto* new_relative_to = move_result.relative_to.cell();
 
         // d. Let oneWeekDays be moveResult.[[Days]].
         auto one_week_days = move_result.days;
@@ -944,13 +953,16 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             // ii. Set weeks to weeks + sign.
             weeks += sign;
 
-            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneWeek).
+            // iii. Set relativeTo to newRelativeTo.
+            relative_to = new_relative_to;
+
+            // iv. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneWeek).
             move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_week));
 
-            // iv. Set relativeTo to moveResult.[[RelativeTo]].
-            relative_to = move_result.relative_to.cell();
+            // v. Set newRelativeTo to moveResult.[[RelativeTo]].
+            new_relative_to = move_result.relative_to.cell();
 
-            // v. Set oneWeekDays to moveResult.[[Days]].
+            // vi. Set oneWeekDays to moveResult.[[Days]].
             one_week_days = move_result.days;
         }
     }
