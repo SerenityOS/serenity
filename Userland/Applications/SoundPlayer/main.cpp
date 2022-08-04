@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Player* player = TRY(window->try_set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client));
     if (arguments.argc > 1) {
         StringView path = arguments.strings[1];
-        player->play_file_path(path);
+        player->play_file_path(path, Player::AppendPlaylist::Yes);
         if (player->is_playlist(path))
             player->set_loop_mode(Player::LoopMode::Playlist);
     }
@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open sound file...");
         if (path.has_value()) {
-            player->play_file_path(path.value());
+            player->play_file_path(path.value(), Player::AppendPlaylist::Yes);
         }
     })));
 

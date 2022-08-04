@@ -24,7 +24,8 @@ PlaylistWidget::PlaylistWidget()
         auto index = m_table_view->index_at_event_position(point);
         if (!index.is_valid())
             return;
-        player->play_file_path(m_table_view->model()->data(index, static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)).as_string());
+        auto path = m_table_view->model()->data(index, static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)).as_string();
+        player->play_file_path(path, Player::AppendPlaylist::No);
     };
 }
 

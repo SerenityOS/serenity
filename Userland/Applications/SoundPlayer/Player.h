@@ -34,7 +34,11 @@ public:
     explicit Player(Audio::ConnectionToServer& audio_client_connection);
     virtual ~Player() = default;
 
-    void play_file_path(String const& path);
+    enum class AppendPlaylist {
+        No,
+        Yes,
+    };
+    void play_file_path(String const& path, AppendPlaylist);
     bool is_playlist(String const& path);
 
     Playlist& playlist() { return m_playlist; }

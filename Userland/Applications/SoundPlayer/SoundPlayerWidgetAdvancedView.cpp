@@ -83,13 +83,13 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     menubar.add<GUI::Label>();
 
     m_back_action = GUI::Action::create("Back", m_back_icon, [&](auto&) {
-        play_file_path(playlist().previous());
+        play_file_path(playlist().previous(), AppendPlaylist::No);
     });
     m_back_action->set_enabled(false);
     menubar.add_action(*m_back_action);
 
     m_next_action = GUI::Action::create("Next", m_next_icon, [&](auto&) {
-        play_file_path(playlist().next());
+        play_file_path(playlist().next(), AppendPlaylist::No);
     });
     m_next_action->set_enabled(false);
     menubar.add_action(*m_next_action);
@@ -130,7 +130,7 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
             return;
         window()->move_to_front();
         // FIXME: Add all paths from drop event to the playlist
-        play_file_path(urls.first().path());
+        play_file_path(urls.first().path(), Player::AppendPlaylist::Yes);
     }
 }
 
@@ -228,7 +228,7 @@ void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded
         return;
     }
     set_playlist_visible(true);
-    play_file_path(playlist().next());
+    play_file_path(playlist().next(), AppendPlaylist::No);
 }
 
 void SoundPlayerWidgetAdvancedView::audio_load_error(StringView path, StringView error_string)

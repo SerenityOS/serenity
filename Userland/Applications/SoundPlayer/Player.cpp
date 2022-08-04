@@ -27,10 +27,10 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
 
         switch (loop_mode()) {
         case LoopMode::File:
-            play_file_path(loaded_filename());
+            play_file_path(loaded_filename(), Player::AppendPlaylist::No);
             return;
         case LoopMode::Playlist:
-            play_file_path(m_playlist.next());
+            play_file_path(m_playlist.next(), Player::AppendPlaylist::No);
             return;
         case LoopMode::None:
             return;
@@ -38,7 +38,7 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
     };
 }
 
-void Player::play_file_path(String const& path)
+void Player::play_file_path(String const& path, AppendPlaylist append_playlist)
 {
     if (path.is_null())
         return;
@@ -61,6 +61,14 @@ void Player::play_file_path(String const& path)
     auto loader = maybe_loader.value();
 
     m_loaded_filename = path;
+
+    if (append_playlist == AppendPlaylist::Yes) {
+        M3UExtendedInfo current_track_info;
+        current_track_info.track_length_in_seconds = loader->total_samples() / loader->sample_rate();
+
+        M3UEntry entry { path, current_track_info };
+        m_playlist.model()->items().append(entry);
+    }
 
     file_name_changed(path);
     total_samples_changed(loader->total_samples());
