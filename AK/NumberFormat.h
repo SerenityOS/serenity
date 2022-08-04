@@ -63,8 +63,27 @@ static inline String human_readable_time(i64 time_in_seconds)
     return builder.to_string();
 }
 
+static inline String human_readable_digital_time(i64 time_in_seconds)
+{
+    auto hours = time_in_seconds / 3600;
+    time_in_seconds = time_in_seconds % 3600;
+
+    auto minutes = time_in_seconds / 60;
+    time_in_seconds = time_in_seconds % 60;
+
+    StringBuilder builder;
+
+    if (hours > 0)
+        builder.appendff("{:02}:", hours);
+    builder.appendff("{:02}:", minutes);
+    builder.appendff("{:02}", time_in_seconds);
+
+    return builder.to_string();
 }
 
+}
+
+using AK::human_readable_digital_time;
 using AK::human_readable_size;
 using AK::human_readable_size_long;
 using AK::human_readable_time;
