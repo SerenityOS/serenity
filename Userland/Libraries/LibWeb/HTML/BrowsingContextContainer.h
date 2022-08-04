@@ -21,6 +21,8 @@ public:
     const DOM::Document* content_document() const;
     DOM::Document const* content_document_without_origin_check() const;
 
+    HTML::Window* content_window() const;
+
     DOM::Document const* get_svg_document() const;
 
 protected:

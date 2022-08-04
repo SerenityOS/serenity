@@ -103,4 +103,13 @@ const DOM::Document* BrowsingContextContainer::get_svg_document() const
     return nullptr;
 }
 
+HTML::Window* BrowsingContextContainer::content_window() const
+{
+    // FIXME: This should return the WindowProxy
+    auto* document = content_document();
+    if (!document)
+        return nullptr;
+    return const_cast<HTML::Window*>(&document->window());
+}
+
 }

@@ -13,6 +13,9 @@ interface HTMLIFrameElement : HTMLElement {
 
     readonly attribute Document? contentDocument;
 
+    // FIXME: Should return a WindowProxy?
+    readonly attribute Window? contentWindow;
+
     [Reflect] attribute DOMString align;
     [Reflect] attribute DOMString scrolling;
     [Reflect=frameborder] attribute DOMString frameBorder;
