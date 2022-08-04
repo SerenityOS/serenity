@@ -40,6 +40,7 @@ EditorWrapper::EditorWrapper()
 
     m_editor->on_modified_change = [this](bool) {
         update_title();
+        update_editor_window_title();
     };
 }
 

@@ -21,6 +21,7 @@ void open_file(String const&, size_t line, size_t column);
 Project& project();
 String currently_open_file();
 void set_current_editor_wrapper(RefPtr<EditorWrapper>);
+void update_editor_window_title();
 void for_each_open_file(Function<void(ProjectFile const&)>);
 bool semantic_syntax_highlighting_is_enabled();
 
