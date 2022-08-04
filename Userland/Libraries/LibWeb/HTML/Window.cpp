@@ -56,9 +56,22 @@ private:
     u32 m_handle { 0 };
 };
 
+NonnullRefPtr<Window> Window::create()
+{
+    return adopt_ref(*new Window);
+}
+
 NonnullRefPtr<Window> Window::create_with_document(DOM::Document& document)
 {
     return adopt_ref(*new Window(document));
+}
+
+Window::Window()
+    : DOM::EventTarget()
+    , m_performance(make<HighResolutionTime::Performance>(*this))
+    , m_crypto(Crypto::Crypto::create())
+    , m_screen(CSS::Screen::create({}, *this))
+{
 }
 
 Window::Window(DOM::Document& document)
@@ -668,6 +681,11 @@ void Window::cancel_idle_callback(u32 handle)
     window.m_runnable_idle_callbacks.remove_first_matching([handle](auto& callback) {
         return callback->handle() == handle;
     });
+}
+
+void Window::set_associated_document(DOM::Document& document)
+{
+    m_associated_document = document;
 }
 
 }

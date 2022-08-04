@@ -34,6 +34,7 @@ class Window final
     , public HTML::GlobalEventHandlers
     , public HTML::WindowEventHandlers {
 public:
+    static NonnullRefPtr<Window> create();
     static NonnullRefPtr<Window> create_with_document(DOM::Document&);
     ~Window();
 
@@ -51,6 +52,7 @@ public:
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     DOM::Document const& associated_document() const { return *m_associated_document; }
     DOM::Document& associated_document() { return *m_associated_document; }
+    void set_associated_document(DOM::Document&);
 
     // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
     HTML::BrowsingContext const* browsing_context() const { return m_associated_document->browsing_context(); }
@@ -127,6 +129,7 @@ public:
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
 
 private:
+    Window();
     explicit Window(DOM::Document&);
 
     // ^HTML::GlobalEventHandlers
