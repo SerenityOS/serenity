@@ -458,7 +458,8 @@ ExceptionOr<Document*> Document::open(String const&, String const&)
         // FIXME: 3. Run the URL and history update steps with document and newURL.
     }
 
-    // FIXME: 13. Set document's is initial about:blank to false.
+    // 13. Set document's is initial about:blank to false.
+    set_is_initial_about_blank(false);
 
     // FIXME: 14. If document's iframe load in progress flag is set, then set document's mute iframe load flag.
 
