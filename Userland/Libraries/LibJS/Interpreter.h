@@ -36,69 +36,33 @@ struct ExecutingASTNodeChain {
 
 class Interpreter : public Weakable<Interpreter> {
 public:
-    // 9.6 InitializeHostDefinedRealm ( ), https://tc39.es/ecma262/#sec-initializehostdefinedrealm
-    template<typename GlobalObjectType, typename GlobalThisObjectType, typename... Args>
-    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args) requires(IsBaseOf<GlobalObject, GlobalObjectType>&& IsBaseOf<Object, GlobalThisObjectType>)
+    template<typename GlobalObjectType, typename... Args>
+    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args) requires(IsBaseOf<GlobalObject, GlobalObjectType>)
     {
         DeferGC defer_gc(vm.heap());
         auto interpreter = adopt_own(*new Interpreter(vm));
         VM::InterpreterExecutionScope scope(*interpreter);
 
-        // 1. Let realm be CreateRealm().
-        auto* realm = Realm::create(vm);
+        GlobalObject* global_object { nullptr };
 
-        // 2. Let newContext be a new execution context.
-        auto& new_context = interpreter->m_global_execution_context;
-
-        // 3. Set the Function of newContext to null.
-        // NOTE: This was done during execution context construction.
-
-        // 4. Set the Realm of newContext to realm.
-        new_context.realm = realm;
-
-        // 5. Set the ScriptOrModule of newContext to null.
-        // NOTE: This was done during execution context construction.
-
-        // 6. Push newContext onto the execution context stack; newContext is now the running execution context.
-        vm.push_execution_context(new_context);
-
-        // 7. If the host requires use of an exotic object to serve as realm's global object, let global be such an object created in a host-defined manner.
-        //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
-        auto* global_object = static_cast<GlobalObject*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(*realm, forward<Args>(args)...));
-
-        // 8. If the host requires that the this binding in realm's global scope return an object other than the global object, let thisValue be such an object created
-        //    in a host-defined manner. Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.
-        Object* this_value;
-        if constexpr (IsSame<GlobalObjectType, GlobalThisObjectType>) {
-            this_value = global_object;
-        } else {
-            // FIXME: Should we pass args in here? Let's er on the side of caution and say yes.
-            this_value = static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalThisObjectType>(*realm, forward<Args>(args)...));
-        }
-
-        // 9. Perform SetRealmGlobalObject(realm, global, thisValue).
-        realm->set_global_object(*global_object, this_value);
+        interpreter->m_global_execution_context = MUST(Realm::initialize_host_defined_realm(
+            vm,
+            [&](Realm& realm) -> Value {
+                global_object = interpreter->heap().allocate_without_global_object<GlobalObjectType>(realm, forward<Args>(args)...);
+                return global_object;
+            },
+            [](Realm&) -> Value {
+                return js_undefined();
+            }));
 
         // NOTE: These are not in the spec.
         static FlyString global_execution_context_name = "(global execution context)";
-        interpreter->m_global_execution_context.function_name = global_execution_context_name;
+        interpreter->m_global_execution_context->function_name = global_execution_context_name;
 
         interpreter->m_global_object = make_handle(global_object);
-        interpreter->m_realm = make_handle(realm);
+        interpreter->m_realm = make_handle(global_object->associated_realm());
 
-        // 10. Let globalObj be ? SetDefaultGlobalBindings(realm).
-        // 11. Create any host-defined global object properties on globalObj.
-        static_cast<GlobalObjectType*>(global_object)->initialize_global_object();
-
-        // 12. Return unused.
         return interpreter;
-    }
-
-    template<typename GlobalObjectType, typename... Args>
-    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args) requires IsBaseOf<GlobalObject, GlobalObjectType>
-    {
-        // NOTE: This function is here to facilitate step 8 of InitializeHostDefinedRealm. (Callers don't have to specify the same type twice if not necessary)
-        return create<GlobalObjectType, GlobalObjectType>(vm, args...);
     }
 
     static NonnullOwnPtr<Interpreter> create_with_existing_realm(Realm&);
@@ -145,7 +109,7 @@ private:
     Handle<Realm> m_realm;
 
     // This is here to keep the global execution context alive for the entire lifespan of the Interpreter.
-    ExecutionContext m_global_execution_context;
+    OwnPtr<ExecutionContext> m_global_execution_context;
 };
 
 }

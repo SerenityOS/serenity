@@ -32,7 +32,6 @@ NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_realm(Realm& realm)
 
 Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
-    , m_global_execution_context(vm.heap())
 {
 }
 
