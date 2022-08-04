@@ -286,6 +286,12 @@ JS::VM& main_thread_vm()
         vm->host_resolve_imported_module = [&](JS::ScriptOrModule, JS::ModuleRequest const&) -> JS::ThrowCompletionOr<NonnullRefPtr<JS::Module>> {
             return vm->throw_completion<JS::InternalError>(vm->current_realm()->global_object(), JS::ErrorType::NotImplemented, "Modules in the browser");
         };
+
+        // NOTE: We push a dummy execution context onto the JS execution context stack,
+        //       just to make sure that it's never empty.
+        auto& custom_data = *verify_cast<WebEngineCustomData>(vm->custom_data());
+        custom_data.root_execution_context = make<JS::ExecutionContext>(vm->heap());
+        vm->push_execution_context(*custom_data.root_execution_context);
     }
     return *vm;
 }

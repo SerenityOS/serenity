@@ -29,6 +29,8 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
     // https://dom.spec.whatwg.org/#mutation-observer-list
     // FIXME: This should be a set.
     NonnullRefPtrVector<DOM::MutationObserver> mutation_observers;
+
+    OwnPtr<JS::ExecutionContext> root_execution_context;
 };
 
 struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData {
