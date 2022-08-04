@@ -5,9 +5,11 @@ serenity_component(
 )
 
 compile_gml(MinesweeperCustomGameWindow.gml MinesweeperCustomGameWindowGML.h minesweeper_custom_game_window_gml)
+compile_gml(MinesweeperWindow.gml MinesweeperWindowGML.h minesweeper_window_gml)
 
 set(SOURCES
     MinesweeperCustomGameWindowGML.h
+    MinesweeperWindowGML.h
     CustomGameDialog.cpp
     Field.cpp
     main.cpp

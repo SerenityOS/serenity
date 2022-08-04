@@ -42,8 +42,7 @@ void CustomGameDialog::set_max_mines()
 CustomGameDialog::CustomGameDialog(Window* parent_window)
     : Dialog(parent_window)
 {
-    resize(305, 90);
-    center_on_screen();
+    resize(300, 82);
     set_resizable(false);
     set_title("Custom game");
 

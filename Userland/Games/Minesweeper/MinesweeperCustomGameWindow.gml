@@ -2,13 +2,14 @@
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
+        spacing: 6
     }
 
     @GUI::GroupBox {
         title: "Field"
         autosize: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 6, 6]
+            margins: [6]
         }
 
         @GUI::Label {
@@ -23,7 +24,7 @@
             fixed_width: 40
         }
 
-        @GUI::VerticalSeparator {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Label {
             text: "Rows: "
@@ -37,7 +38,7 @@
             fixed_width: 40
         }
 
-        @GUI::VerticalSeparator {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Label {
             text: "Mines: "
@@ -53,8 +54,9 @@
     }
 
     @GUI::Widget {
-        max_height: 24
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 10
+        }
 
         @GUI::Layout::Spacer {}
 
