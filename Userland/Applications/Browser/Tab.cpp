@@ -186,21 +186,18 @@ Tab::Tab(BrowserWindow& window)
         m_location_box->on_return_pressed();
     }));
 
-    m_bookmark_button = toolbar.add<GUI::Button>();
-    m_bookmark_button->set_button_style(Gfx::ButtonStyle::Coolbar);
-    m_bookmark_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
-    m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
-    m_bookmark_button->set_fixed_size(22, 22);
-
-    m_bookmark_button->on_click = [this](auto) {
-        bookmark_current_url();
-    };
-
     auto bookmark_action = GUI::Action::create(
         "Bookmark current URL", { Mod_Ctrl, Key_D }, [this](auto&) {
             bookmark_current_url();
         },
         this);
+
+    m_bookmark_button = toolbar.add<GUI::Button>();
+    m_bookmark_button->set_action(bookmark_action);
+    m_bookmark_button->set_button_style(Gfx::ButtonStyle::Coolbar);
+    m_bookmark_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
+    m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
+    m_bookmark_button->set_fixed_size(22, 22);
 
     view().on_load_start = [this](auto& url) {
         m_navigating_url = url;
