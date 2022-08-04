@@ -102,6 +102,7 @@ BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enable
     s_the = this;
     set_layout<GUI::HorizontalBoxLayout>();
     layout()->set_spacing(0);
+    layout()->set_margins(2);
 
     set_fixed_height(20);
 
