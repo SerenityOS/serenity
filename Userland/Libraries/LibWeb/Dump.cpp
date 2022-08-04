@@ -24,6 +24,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -225,6 +226,15 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
 
         builder.appendff(" children: {}", box.children_are_inline() ? "inline" : "not-inline");
+
+        if (is<Layout::FrameBox>(box)) {
+            auto const& frame_box = static_cast<Layout::FrameBox const&>(box);
+            if (auto* nested_browsing_context = frame_box.dom_node().nested_browsing_context()) {
+                if (auto* document = nested_browsing_context->active_document()) {
+                    builder.appendff(" (url: {})", document->url());
+                }
+            }
+        }
 
         builder.append("\n"sv);
     }
