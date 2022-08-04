@@ -51,6 +51,8 @@ public:
         HTML
     };
 
+    static NonnullRefPtr<Document> create_and_initialize(Type, String content_type, HTML::NavigationParams);
+
     static NonnullRefPtr<Document> create(AK::URL const& url = "about:blank"sv);
     static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&);
     virtual ~Document() override;

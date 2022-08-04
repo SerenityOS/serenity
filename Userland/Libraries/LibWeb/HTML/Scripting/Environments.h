@@ -105,10 +105,10 @@ struct EnvironmentSettingsObject
     bool is_scripting_disabled() const;
 
 protected:
-    explicit EnvironmentSettingsObject(JS::ExecutionContext& realm_execution_context);
+    explicit EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext>);
 
 private:
-    JS::ExecutionContext& m_realm_execution_context;
+    NonnullOwnPtr<JS::ExecutionContext> m_realm_execution_context;
     EventLoop* m_responsible_event_loop { nullptr };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#outstanding-rejected-promises-weak-set

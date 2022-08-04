@@ -10,17 +10,17 @@
 
 namespace Web::HTML {
 
-WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window, JS::ExecutionContext& execution_context)
-    : EnvironmentSettingsObject(execution_context)
+WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window, NonnullOwnPtr<JS::ExecutionContext> execution_context)
+    : EnvironmentSettingsObject(move(execution_context))
     , m_window(window)
 {
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object
-void WindowEnvironmentSettingsObject::setup(AK::URL& creation_url, JS::ExecutionContext& execution_context)
+void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
 {
     // 1. Let realm be the value of execution context's Realm component.
-    auto* realm = execution_context.realm;
+    auto* realm = execution_context->realm;
     VERIFY(realm);
 
     // 2. Let window be realm's global object.
@@ -29,17 +29,32 @@ void WindowEnvironmentSettingsObject::setup(AK::URL& creation_url, JS::Execution
 
     // 3. Let settings object be a new environment settings object whose algorithms are defined as follows:
     // NOTE: See the functions defined for this class.
-    auto settings_object = adopt_own(*new WindowEnvironmentSettingsObject(window, execution_context));
+    auto settings_object = adopt_own(*new WindowEnvironmentSettingsObject(window, move(execution_context)));
 
-    // FIXME: 4. If reservedEnvironment is non-null, then:
-    // FIXME:    1. Set settings object's id to reservedEnvironment's id, target browsing context to reservedEnvironment's target browsing context, and active service worker to reservedEnvironment's active service worker.
-    // FIXME:    2. Set reservedEnvironment's id to the empty string.
+    // 4. If reservedEnvironment is non-null, then:
+    if (reserved_environment.has_value()) {
+        // FIXME:    1. Set settings object's id to reservedEnvironment's id,
+        //              target browsing context to reservedEnvironment's target browsing context,
+        //              and active service worker to reservedEnvironment's active service worker.
+        settings_object->target_browsing_context = reserved_environment->target_browsing_context;
 
-    // FIXME: 5. Otherwise, set settings object's id to a new unique opaque string, settings object's target browsing context to null, and settings object's active service worker to null.
-    settings_object->target_browsing_context = nullptr;
+        // FIXME:    2. Set reservedEnvironment's id to the empty string.
+    }
 
-    // FIXME: 6. Set settings object's creation URL to creationURL, settings object's top-level creation URL to topLevelCreationURL, and settings object's top-level origin to topLevelOrigin.
+    // 5. Otherwise, ...
+    else {
+        // FIXME: ...set settings object's id to a new unique opaque string,
+        //        settings object's target browsing context to null,
+        //        and settings object's active service worker to null.
+        settings_object->target_browsing_context = nullptr;
+    }
+
+    // 6. Set settings object's creation URL to creationURL,
+    //    settings object's top-level creation URL to topLevelCreationURL,
+    //    and settings object's top-level origin to topLevelOrigin.
     settings_object->creation_url = creation_url;
+    settings_object->top_level_creation_url = top_level_creation_url;
+    settings_object->top_level_origin = top_level_origin;
 
     // 7. Set realm's [[HostDefined]] field to settings object.
     realm->set_host_defined(move(settings_object));

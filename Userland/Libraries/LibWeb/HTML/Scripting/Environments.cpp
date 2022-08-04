@@ -16,8 +16,8 @@
 
 namespace Web::HTML {
 
-EnvironmentSettingsObject::EnvironmentSettingsObject(JS::ExecutionContext& realm_execution_context)
-    : m_realm_execution_context(realm_execution_context)
+EnvironmentSettingsObject::EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> realm_execution_context)
+    : m_realm_execution_context(move(realm_execution_context))
 {
     // Register with the responsible event loop so we can perform step 4 of "perform a microtask checkpoint".
     responsible_event_loop().register_environment_settings_object({}, *this);
@@ -31,7 +31,7 @@ EnvironmentSettingsObject::~EnvironmentSettingsObject()
 JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()
 {
     // NOTE: All environment settings objects are created with a realm execution context, so it's stored and returned here in the base class.
-    return m_realm_execution_context;
+    return *m_realm_execution_context;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object%27s-realm

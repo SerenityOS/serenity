@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/FrameLoader.h>
@@ -253,7 +254,25 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
-    auto document = DOM::Document::create(url);
+    auto response = make<Fetch::Infrastructure::Response>();
+    response->url_list().append(url);
+    HTML::NavigationParams navigation_params {
+        .id = {},
+        .request = nullptr,
+        .response = move(response),
+        .origin = HTML::Origin {},
+        .policy_container = HTML::PolicyContainer {},
+        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
+        .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
+        .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
+        .reserved_environment = {},
+        .browsing_context = browsing_context(),
+    };
+    auto document = DOM::Document::create_and_initialize(
+        DOM::Document::Type::HTML,
+        "text/html",
+        move(navigation_params));
+
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
     parser->run(url);
     browsing_context().set_active_document(&parser->document());
@@ -348,7 +367,25 @@ void FrameLoader::resource_did_load()
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding unknown", resource()->mime_type());
     }
 
-    auto document = DOM::Document::create();
+    auto response = make<Fetch::Infrastructure::Response>();
+    response->url_list().append(url);
+    HTML::NavigationParams navigation_params {
+        .id = {},
+        .request = nullptr,
+        .response = move(response),
+        .origin = HTML::Origin {},
+        .policy_container = HTML::PolicyContainer {},
+        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
+        .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
+        .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
+        .reserved_environment = {},
+        .browsing_context = browsing_context(),
+    };
+    auto document = DOM::Document::create_and_initialize(
+        DOM::Document::Type::HTML,
+        "text/html",
+        move(navigation_params));
+
     document->set_url(url);
     document->set_encoding(resource()->encoding());
     document->set_content_type(resource()->mime_type());

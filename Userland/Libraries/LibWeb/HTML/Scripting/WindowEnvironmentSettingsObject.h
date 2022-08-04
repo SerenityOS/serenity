@@ -13,7 +13,7 @@ namespace Web::HTML {
 
 class WindowEnvironmentSettingsObject final : public EnvironmentSettingsObject {
 public:
-    static void setup(AK::URL& creation_url, JS::ExecutionContext& execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */);
+    static void setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext>, Optional<Environment>, AK::URL top_level_creation_url, Origin top_level_origin);
 
     virtual ~WindowEnvironmentSettingsObject() override = default;
 
@@ -24,7 +24,7 @@ public:
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override;
 
 private:
-    WindowEnvironmentSettingsObject(Window&, JS::ExecutionContext& execution_context);
+    WindowEnvironmentSettingsObject(Window&, NonnullOwnPtr<JS::ExecutionContext>);
 
     NonnullRefPtr<Window> m_window;
 };

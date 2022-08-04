@@ -49,5 +49,6 @@ struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData
 HTML::ClassicScript* active_script();
 JS::VM& main_thread_vm();
 void queue_mutation_observer_microtask(DOM::Document&);
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM&, Function<JS::Value(JS::Realm&)> create_global_object, Function<JS::Value(JS::Realm&)> create_global_this_value);
 
 }

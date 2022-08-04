@@ -18,17 +18,17 @@ class WorkerEnvironmentSettingsObject final
     : public EnvironmentSettingsObject
     , public Weakable<WorkerEnvironmentSettingsObject> {
 public:
-    WorkerEnvironmentSettingsObject(DOM::Document& document, JS::ExecutionContext& execution_context)
-        : EnvironmentSettingsObject(execution_context)
+    WorkerEnvironmentSettingsObject(DOM::Document& document, NonnullOwnPtr<JS::ExecutionContext> execution_context)
+        : EnvironmentSettingsObject(move(execution_context))
         , m_document(document)
     {
     }
 
-    static WeakPtr<WorkerEnvironmentSettingsObject> setup(DOM::Document& document, JS::ExecutionContext& execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
+    static WeakPtr<WorkerEnvironmentSettingsObject> setup(DOM::Document& document, NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
     {
-        auto* realm = execution_context.realm;
+        auto* realm = execution_context->realm;
         VERIFY(realm);
-        auto settings_object = adopt_own(*new WorkerEnvironmentSettingsObject(document, execution_context));
+        auto settings_object = adopt_own(*new WorkerEnvironmentSettingsObject(document, move(execution_context)));
         settings_object->target_browsing_context = nullptr;
         realm->set_host_defined(move(settings_object));
 

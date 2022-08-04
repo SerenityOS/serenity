@@ -88,7 +88,6 @@ private:
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
     WeakPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
-    JS::ExecutionContext m_execution_context;
     WeakPtr<JS::Realm> m_worker_realm;
     RefPtr<WorkerDebugConsoleClient> m_console;
     JS::GlobalObject* m_worker_scope;

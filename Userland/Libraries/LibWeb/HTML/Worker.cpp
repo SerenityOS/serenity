@@ -24,7 +24,6 @@ Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Do
     , m_worker_vm(JS::VM::create(adopt_own(m_custom_data)))
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_worker_vm))
     , m_interpreter_scope(*m_interpreter)
-    , m_execution_context(m_worker_vm->heap())
     , m_implicit_port(MessagePort::create())
 {
 }
@@ -153,22 +152,23 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     // FIXME: This is because I don't know all the libraries well enough to properly setup the environment to spec
     // let alone making it a parallel implementation.
-    m_execution_context.current_node = nullptr;
-    m_execution_context.this_value = m_worker_scope;
-    m_execution_context.function_name = "(global execution context)"sv;
-    m_execution_context.lexical_environment = &m_worker_realm->global_environment();
-    m_execution_context.variable_environment = &m_worker_realm->global_environment();
-    m_execution_context.realm = m_worker_realm;
+    auto execution_context = make<JS::ExecutionContext>(m_worker_vm->heap());
+    execution_context->current_node = nullptr;
+    execution_context->this_value = m_worker_scope;
+    execution_context->function_name = "(global execution context)"sv;
+    execution_context->lexical_environment = &m_worker_realm->global_environment();
+    execution_context->variable_environment = &m_worker_realm->global_environment();
+    execution_context->realm = m_worker_realm;
 
-    m_worker_vm->push_execution_context(m_execution_context);
-    m_worker_realm->set_global_object(*m_worker_scope, m_worker_scope);
+    m_worker_vm->push_execution_context(*execution_context);
+    m_worker_realm->set_global_object(m_worker_scope, m_worker_scope);
 
     // 8. Let worker global scope be the global object of realm execution context's Realm component.
     // NOTE: This is the DedicatedWorkerGlobalScope or SharedWorkerGlobalScope object created in the previous step.
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, m_execution_context);
+    m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, move(execution_context));
 
     // 10. Set worker global scope's name to the value of options's name member.
     // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
