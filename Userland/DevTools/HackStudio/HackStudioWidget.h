@@ -79,6 +79,9 @@ public:
 
     static Vector<String> read_recent_projects();
 
+    void update_current_editor_title();
+    void update_window_title();
+
 private:
     static constexpr size_t recent_projects_history_size = 15;
 
@@ -160,8 +163,6 @@ private:
 
     void update_gml_preview();
     void update_tree_view();
-    void update_window_title();
-    void update_current_editor_title();
     void on_cursor_change();
     void file_renamed(String const& old_name, String const& new_name);
 
