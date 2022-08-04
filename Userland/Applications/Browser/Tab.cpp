@@ -377,7 +377,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_tab_context_menu = GUI::Menu::construct();
     m_tab_context_menu->add_action(GUI::CommonActions::make_reload_action([this](auto&) {
-        this->window().reload_action().activate();
+        reload();
     }));
     m_tab_context_menu->add_action(GUI::CommonActions::make_close_tab_action([this](auto&) {
         on_tab_close_request(*this);
