@@ -93,3 +93,39 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
 
     return vec;
 }
+
+void M3UWriter::export_to_file(Core::File& file, Vector<M3UEntry> const& items)
+{
+    file.write("#EXTM3U\n"sv);
+
+    auto write_extinf = [&](Optional<u32> length, Optional<String> title) {
+        if (!length.has_value() || !title.has_value())
+            return;
+        file.write("#EXTINF:"sv);
+        auto length_string = String::number(*length);
+        file.write(length_string);
+        file.write(","sv);
+        file.write(*title);
+        file.write("\n"sv);
+    };
+    auto write_tag = [&](StringView tag_name, Optional<String> value) {
+        if (!value.has_value())
+            return;
+        file.write(tag_name);
+        file.write(*value);
+        file.write("\n"sv);
+    };
+
+    for (auto const& item : items) {
+        if (auto extended_info = item.extended_info; extended_info.has_value()) {
+            write_extinf(extended_info->track_length_in_seconds, extended_info->track_display_title);
+            write_tag("#EXTGRP:"sv, extended_info->group_name);
+            write_tag("#EXTALB:"sv, extended_info->album_title);
+            write_tag("#EXTART:"sv, extended_info->album_artist);
+            write_tag("#EXTGENRE:"sv, extended_info->album_genre);
+        }
+
+        file.write(item.path);
+        file.write("\n"sv);
+    }
+}

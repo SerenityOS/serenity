@@ -12,6 +12,7 @@
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ConnectionToServer.h>
 #include <LibCore/System.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -29,8 +30,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
-
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
 
     auto app_icon = GUI::Icon::default_icon("app-sound-player"sv);
 
@@ -53,6 +52,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (path.has_value()) {
             player->play_file_path(path.value(), Player::AppendPlaylist::Yes);
         }
+    })));
+
+    TRY(file_menu->try_add_action(GUI::Action::create("&Save Playlist...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png"sv)), [&](auto&) {
+        auto response = FileSystemAccessClient::Client::the().try_save_file(window, "playlist", "m3u");
+        if (response.is_error())
+            return;
+        auto file = response.release_value();
+
+        M3UWriter::export_to_file(file, player->playlist().model()->items());
     })));
 
     TRY(file_menu->try_add_separator());

@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCore/Forward.h>
 
 // Extended M3U fields (de facto standard)
 struct M3UExtendedInfo {
@@ -46,4 +47,8 @@ private:
     String m_playlist_path;
     bool m_use_utf8;
     Optional<String> m_parsed_playlist_title;
+};
+
+namespace M3UWriter {
+void export_to_file(Core::File&, Vector<M3UEntry> const&);
 };
