@@ -111,17 +111,14 @@ BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enable
 
     m_additional = GUI::Button::construct();
     m_additional->set_tooltip("Show hidden bookmarks");
+    m_additional->set_menu(m_additional_menu);
+    m_additional->set_menu_position(GUI::Button::MenuPosition::BottomLeft);
     auto bitmap_or_error = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/overflow-menu.png"sv);
     if (!bitmap_or_error.is_error())
         m_additional->set_icon(bitmap_or_error.release_value());
     m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_additional->set_fixed_size(22, 20);
     m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
-    m_additional->on_click = [this](auto) {
-        if (m_additional_menu) {
-            m_additional_menu->popup(m_additional->relative_position().translated(relative_position().translated(m_additional->window()->position())));
-        }
-    };
 
     m_separator = GUI::Widget::construct();
 
@@ -254,6 +251,7 @@ void BookmarksBarWidget::update_content_size()
         // hide all items > m_last_visible_index and create new bookmarks menu for them
         m_additional->set_visible(true);
         m_additional_menu = GUI::Menu::construct("Additional Bookmarks");
+        m_additional->set_menu(m_additional_menu);
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
             bookmark.set_visible(false);
