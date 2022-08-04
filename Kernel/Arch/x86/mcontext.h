@@ -24,7 +24,7 @@ struct __attribute__((packed)) __mcontext {
     uint32_t edi;
     uint32_t eip;
     uint32_t eflags;
-#else
+#elif __x86_64__
     uint64_t rax;
     uint64_t rcx;
     uint64_t rdx;
