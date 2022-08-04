@@ -26,8 +26,9 @@ public:
     Realm() = default;
 
     static Realm* create(VM&);
+    static ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> initialize_host_defined_realm(VM&, Function<Value(Realm&)> create_global_object, Function<Value(Realm&)> create_global_this_value);
 
-    void set_global_object(GlobalObject&, Object* this_value = nullptr);
+    void set_global_object(Value global_object, Value this_value);
 
     [[nodiscard]] GlobalObject& global_object() const { return *m_global_object; }
     [[nodiscard]] GlobalEnvironment& global_environment() const { return *m_global_environment; }
