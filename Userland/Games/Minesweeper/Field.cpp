@@ -7,6 +7,7 @@
 
 #include "Field.h"
 #include <AK/HashTable.h>
+#include <AK/NumberFormat.h>
 #include <AK/Queue.h>
 #include <AK/Random.h>
 #include <LibConfig/Client.h>
@@ -115,7 +116,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
             ++m_time_elapsed;
-            m_time_label.set_text(String::number(m_time_elapsed));
+            m_time_label.set_text(human_readable_digital_time(m_time_elapsed));
         },
         this);
     m_mine_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/mine.png"sv).release_value_but_fixme_should_propagate_errors();
@@ -199,7 +200,7 @@ void Field::reset()
     m_first_click = true;
     set_updates_enabled(false);
     m_time_elapsed = 0;
-    m_time_label.set_text("0");
+    m_time_label.set_text("00:00");
     m_flags_left = m_mine_count;
     m_flag_label.set_text(String::number(m_flags_left));
     m_timer->stop();
@@ -520,7 +521,9 @@ void Field::set_field_size(Difficulty difficulty, size_t rows, size_t columns, s
     m_mine_count = mine_count;
     set_fixed_size(frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size());
     reset();
-    m_on_size_changed(Gfx::IntSize(min_size()));
+    deferred_invoke([this] {
+        m_on_size_changed(Gfx::IntSize(min_size()));
+    });
 }
 
 void Field::set_single_chording(bool enabled)
