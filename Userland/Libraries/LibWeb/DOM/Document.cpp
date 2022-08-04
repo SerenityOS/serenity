@@ -377,7 +377,7 @@ ExceptionOr<void> Document::writeln(Vector<String> const& strings)
 ExceptionOr<void> Document::run_the_document_write_steps(String input)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
-    if (doctype() && doctype()->name() == "xml")
+    if (m_type == Type::XML)
         return DOM::InvalidStateError::create("write() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
@@ -412,7 +412,7 @@ ExceptionOr<void> Document::run_the_document_write_steps(String input)
 ExceptionOr<Document*> Document::open(String const&, String const&)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
-    if (doctype() && doctype()->name() == "xml")
+    if (m_type == Type::XML)
         return DOM::InvalidStateError::create("open() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
@@ -482,7 +482,7 @@ ExceptionOr<Document*> Document::open(String const&, String const&)
 ExceptionOr<void> Document::close()
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
-    if (doctype() && doctype()->name() == "xml")
+    if (m_type == Type::XML)
         return DOM::InvalidStateError::create("close() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
