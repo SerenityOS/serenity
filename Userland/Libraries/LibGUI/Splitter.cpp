@@ -20,11 +20,9 @@ namespace GUI {
 Splitter::Splitter(Orientation orientation)
     : m_orientation(orientation)
 {
-    REGISTER_INT_PROPERTY("first_resizee_minimum_size", first_resizee_minimum_size, set_first_resizee_minimum_size);
-    REGISTER_INT_PROPERTY("second_resizee_minimum_size", second_resizee_minimum_size, set_second_resizee_minimum_size);
-    REGISTER_ENUM_PROPERTY("fixed_resizee", fixed_resizee, set_fixed_resizee, FixedResizee,
-        { FixedResizee::First, "First" },
-        { FixedResizee::Second, "Second" });
+    REGISTER_ENUM_PROPERTY("opportunistic_resizee", opportunisitic_resizee, set_opportunisitic_resizee, OpportunisticResizee,
+        { OpportunisticResizee::First, "First" },
+        { OpportunisticResizee::Second, "Second" });
 
     set_background_role(ColorRole::Button);
     set_layout<BoxLayout>(orientation);
@@ -197,7 +195,6 @@ void Splitter::recompute_grabbables()
         set_hovered_grabbable(&m_grabbables[old_hovered_index.value()]);
 }
 
-// FIXME: Respect the child widgets min and max sizes
 void Splitter::mousemove_event(MouseEvent& event)
 {
     auto* grabbable = grabbable_at(event.position());
@@ -206,50 +203,33 @@ void Splitter::mousemove_event(MouseEvent& event)
         override_cursor(grabbable != nullptr);
         return;
     }
-    auto delta = event.position() - m_resize_origin;
     if (!m_first_resizee || !m_second_resizee) {
-        // One or both of the resizees were deleted during an ongoing resize, screw this.
         m_resizing = false;
         return;
     }
-    auto new_first_resizee_size = m_first_resizee_start_size;
-    auto new_second_resizee_size = m_second_resizee_start_size;
 
-    new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + delta.primary_offset_for_orientation(m_orientation));
-    new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - delta.primary_offset_for_orientation(m_orientation));
-
-    if (new_first_resizee_size.primary_size_for_orientation(m_orientation) < m_first_resizee_minimum_size) {
-        int correction = m_first_resizee_minimum_size - new_first_resizee_size.primary_size_for_orientation(m_orientation);
-        new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + correction);
-        new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - correction);
-    }
-    if (new_second_resizee_size.primary_size_for_orientation(m_orientation) < m_second_resizee_minimum_size) {
-        int correction = m_second_resizee_minimum_size - new_second_resizee_size.primary_size_for_orientation(m_orientation);
-        new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) + correction);
-        new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) - correction);
-    }
+    auto delta = (event.position() - m_resize_origin).primary_offset_for_orientation(m_orientation);
+    auto new_first_resizee_size = clamp(m_first_resizee_start_size.primary_size_for_orientation(m_orientation) + delta, 0, m_first_resizee_max_size);
+    auto new_second_resizee_size = clamp(m_second_resizee_start_size.primary_size_for_orientation(m_orientation) - delta, 0, m_second_resizee_max_size);
 
     if (m_orientation == Orientation::Horizontal) {
-        if (fixed_resizee() == FixedResizee::First) {
-            m_first_resizee->set_fixed_width(new_first_resizee_size.width());
-            m_second_resizee->set_min_width(SpecialDimension::Shrink);
-            m_second_resizee->set_max_width(SpecialDimension::Grow);
+        if (opportunisitic_resizee() == OpportunisticResizee::First) {
+            m_first_resizee->set_preferred_width(SpecialDimension::OpportunisticGrow);
+            m_second_resizee->set_preferred_width(new_second_resizee_size);
         } else {
-            VERIFY(fixed_resizee() == FixedResizee::Second);
-            m_second_resizee->set_fixed_width(new_second_resizee_size.width());
-            m_first_resizee->set_min_width(SpecialDimension::Shrink);
-            m_first_resizee->set_max_width(SpecialDimension::Grow);
+            VERIFY(opportunisitic_resizee() == OpportunisticResizee::Second);
+            m_second_resizee->set_preferred_width(SpecialDimension::OpportunisticGrow);
+            m_first_resizee->set_preferred_width(new_first_resizee_size);
         }
     } else {
-        if (fixed_resizee() == FixedResizee::First) {
-            m_first_resizee->set_fixed_height(new_first_resizee_size.height());
-            m_second_resizee->set_min_height(SpecialDimension::Shrink);
-            m_second_resizee->set_max_height(SpecialDimension::Grow);
+        if (opportunisitic_resizee() == OpportunisticResizee::First) {
+            m_first_resizee->set_preferred_height(SpecialDimension::OpportunisticGrow);
+            m_second_resizee->set_preferred_height(new_second_resizee_size);
+
         } else {
-            VERIFY(fixed_resizee() == FixedResizee::Second);
-            m_second_resizee->set_fixed_height(new_second_resizee_size.height());
-            m_first_resizee->set_min_height(SpecialDimension::Shrink);
-            m_first_resizee->set_max_height(SpecialDimension::Grow);
+            VERIFY(opportunisitic_resizee() == OpportunisticResizee::Second);
+            m_second_resizee->set_preferred_height(SpecialDimension::OpportunisticGrow);
+            m_first_resizee->set_preferred_height(new_first_resizee_size);
         }
     }
 
@@ -272,13 +252,13 @@ void Splitter::custom_layout()
     if (m_last_child_count > child_widgets.size()) {
         bool has_child_to_fill_space = false;
         for (auto& child : child_widgets) {
-            if (child.max_size().primary_size_for_orientation(m_orientation).is_grow()) {
+            if (child.preferred_size().primary_size_for_orientation(m_orientation).is_opportunistic_grow()) {
                 has_child_to_fill_space = true;
                 break;
             }
         }
         if (!has_child_to_fill_space)
-            child_widgets.last().set_preferred_size(SpecialDimension::Grow);
+            child_widgets.last().set_preferred_size(SpecialDimension::OpportunisticGrow);
     }
 }
 
