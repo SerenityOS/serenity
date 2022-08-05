@@ -29,7 +29,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDi
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::EndLBA));
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::SectorSize));
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::CommandSet));
-        list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::InterfaceType));
         return {};
     }));
     return directory;

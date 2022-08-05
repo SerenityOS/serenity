@@ -27,19 +27,12 @@ public:
     // The IDE controller code being aware of the possibility of ATAPI devices attached
     // to the ATA bus, will check whether the Command set is ATA or SCSI and will act
     // accordingly.
+    // Note: For now, there's simply no distinction between the interface type and the commandset.
+    // As mentioned above, ATAPI devices use the ATA interface with actual SCSI packets so
+    // the commandset is SCSI while the interface type is ATA. We simply don't support SCSI over ATA (ATAPI)
+    // and ATAPI is the exception to no-distinction rule. If we ever put SCSI support in the kernel,
+    // we can create another enum class to put the distinction.
     enum class CommandSet {
-        PlainMemory,
-        SCSI,
-        ATA,
-        NVMe,
-    };
-
-    // Note: this attribute describes the interface type of a Storage device.
-    // For example, an ordinary harddrive utilizes the ATA command set, while
-    // an ATAPI device (e.g. Optical drive) that is connected to the ATA bus,
-    // is actually using SCSI commands (packets) encapsulated inside an ATA command.
-    // Therefore, an ATAPI device is still using the ATA interface.
-    enum class InterfaceType {
         PlainMemory,
         SCSI,
         ATA,
@@ -81,7 +74,6 @@ public:
 
     virtual CommandSet command_set() const = 0;
 
-    StringView interface_type_to_string_view() const;
     StringView command_set_to_string_view() const;
 
     // ^File
@@ -96,7 +88,6 @@ private:
     virtual void after_inserting() override;
     virtual void will_be_destroyed() override;
 
-    virtual InterfaceType interface_type() const = 0;
     mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
     NonnullRefPtrVector<DiskPartition> m_partitions;
 

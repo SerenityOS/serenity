@@ -25,7 +25,6 @@ public:
     virtual CommandSet command_set() const override { return CommandSet::ATA; }
 
 private:
-    virtual InterfaceType interface_type() const override { return InterfaceType::ATA; }
     ATADiskDevice(ATAController const&, Address, MinorNumber, u16, u16, u64, NonnullOwnPtr<KString>);
 
     // ^DiskDevice

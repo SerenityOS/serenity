@@ -18,7 +18,6 @@ public:
         EndLBA,
         SectorSize,
         CommandSet,
-        InterfaceType,
     };
 
 public:
