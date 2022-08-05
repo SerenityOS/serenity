@@ -525,14 +525,26 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 // 22.1.3.5 String.prototype.concat ( ...args ), https://tc39.es/ecma262/#sec-string.prototype.concat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
-    auto string = TRY(ak_string_from(vm, global_object));
-    StringBuilder builder;
-    builder.append(string);
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
+
+    // 2. Let S be ? ToString(O).
+    auto* string = TRY(object.to_primitive_string(global_object));
+
+    // 3. Let R be S.
+    auto* result = string;
+
+    // 4. For each element next of args, do
     for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto string_argument = TRY(vm.argument(i).to_string(global_object));
-        builder.append(string_argument);
+        // a. Let nextString be ? ToString(next).
+        auto* next_string = TRY(vm.argument(i).to_primitive_string(global_object));
+
+        // b. Set R to the string-concatenation of R and nextString.
+        result = js_rope_string(vm, *result, *next_string);
     }
-    return js_string(vm, builder.to_string());
+
+    // 5. Return R.
+    return result;
 }
 
 // 22.1.3.24 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
