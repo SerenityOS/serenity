@@ -133,7 +133,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("clientInformation", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
-    define_direct_property("location", m_location_object, JS::Attribute::Enumerable);
+    define_native_accessor("location", location_getter, location_setter, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -184,7 +184,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObje
 
     auto* this_object = MUST(this_value.to_object(global_object));
 
-    if ("WindowObject"sv != this_object->class_name())
+    if (!is<WindowObject>(*this_object))
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WindowObject");
     return &static_cast<WindowObject*>(this_object)->impl();
 }
@@ -451,6 +451,21 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_setter)
 {
     REPLACEABLE_PROPERTY_SETTER(WindowObject, event);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::location_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    VERIFY(impl->wrapper());
+    return impl->wrapper()->m_location_object;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::location_setter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    VERIFY(impl->wrapper());
+    TRY(impl->wrapper()->m_location_object->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
+    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::crypto_getter)

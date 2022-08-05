@@ -82,6 +82,9 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(document_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(location_getter);
+    JS_DECLARE_NATIVE_FUNCTION(location_setter);
+
     JS_DECLARE_NATIVE_FUNCTION(name_getter);
     JS_DECLARE_NATIVE_FUNCTION(name_setter);
 
