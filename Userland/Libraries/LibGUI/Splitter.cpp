@@ -139,6 +139,12 @@ void Splitter::mousedown_event(MouseEvent& event)
     m_first_resizee_start_size = m_first_resizee->size();
     m_second_resizee_start_size = m_second_resizee->size();
     m_resize_origin = event.position();
+
+    VERIFY(layout());
+    auto spacer = layout()->spacing();
+    auto splitter = size().primary_size_for_orientation(m_orientation);
+    m_first_resizee_max_size = splitter - spacer - m_second_resizee->calculated_min_size().value_or({ 0, 0 }).primary_size_for_orientation(m_orientation).as_int();
+    m_second_resizee_max_size = splitter - spacer - m_first_resizee->calculated_min_size().value_or({ 0, 0 }).primary_size_for_orientation(m_orientation).as_int();
 }
 
 Gfx::IntRect Splitter::rect_between_widgets(GUI::Widget const& first_widget, GUI::Widget const& second_widget, bool honor_grabbable_margins) const
