@@ -30,6 +30,9 @@ Layout::FrameBox const& NestedBrowsingContextPaintable::layout_box() const
 
 void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!layout_box().is_visible())
+        return;
+
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
