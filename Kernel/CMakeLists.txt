@@ -101,7 +101,6 @@ set(KERNEL_SOURCES
     Storage/ATA/GenericIDE/PCIController.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
-    Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/ATAPort.cpp
     Storage/NVMe/NVMeController.cpp
     Storage/NVMe/NVMeNameSpace.cpp
