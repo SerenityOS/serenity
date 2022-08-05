@@ -6,11 +6,11 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibJS/Heap/DeferGC.h>
 
 namespace JS {
 
