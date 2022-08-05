@@ -17,7 +17,7 @@
 
         @GUI::TabWidget {
             name: "tab_widget"
-            fixed_width: 200
+            preferred_width: 200
             container_margins: [6]
 
             @GUI::TreeView {

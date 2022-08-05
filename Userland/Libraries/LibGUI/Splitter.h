@@ -15,17 +15,12 @@ class Splitter : public Widget {
     C_OBJECT(Splitter);
 
 public:
-    enum class FixedResizee {
+    enum class OpportunisticResizee {
         First,
         Second
     };
 
     virtual ~Splitter() override = default;
-
-    int first_resizee_minimum_size() { return m_first_resizee_minimum_size; }
-    void set_first_resizee_minimum_size(int minimum_size) { m_first_resizee_minimum_size = minimum_size; }
-    int second_resizee_minimum_size() { return m_second_resizee_minimum_size; }
-    void set_second_resizee_minimum_size(int minimum_size) { m_second_resizee_minimum_size = minimum_size; }
 
 protected:
     explicit Splitter(Gfx::Orientation);
@@ -40,8 +35,8 @@ protected:
     virtual void did_layout() override;
     virtual void custom_layout() override;
 
-    FixedResizee fixed_resizee() const { return m_fixed_resizee; }
-    void set_fixed_resizee(FixedResizee resizee) { m_fixed_resizee = resizee; }
+    OpportunisticResizee opportunisitic_resizee() const { return m_opportunistic_resizee; }
+    void set_opportunisitic_resizee(OpportunisticResizee resizee) { m_opportunistic_resizee = resizee; }
 
 private:
     void override_cursor(bool do_override);
@@ -55,9 +50,7 @@ private:
     WeakPtr<Widget> m_second_resizee;
     Gfx::IntSize m_first_resizee_start_size;
     Gfx::IntSize m_second_resizee_start_size;
-    int m_first_resizee_minimum_size { 0 };
-    int m_second_resizee_minimum_size { 0 };
-    FixedResizee m_fixed_resizee { FixedResizee::First };
+    OpportunisticResizee m_opportunistic_resizee { OpportunisticResizee::Second };
     size_t m_last_child_count { 0 };
     int m_first_resizee_max_size { 0 };
     int m_second_resizee_max_size { 0 };
