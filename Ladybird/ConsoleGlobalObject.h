@@ -23,7 +23,7 @@ class ConsoleGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(ConsoleGlobalObject, JS::GlobalObject);
 
 public:
-    ConsoleGlobalObject(Web::Bindings::WindowObject&);
+    ConsoleGlobalObject(JS::Realm&, Web::Bindings::WindowObject&);
     virtual ~ConsoleGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
