@@ -92,6 +92,11 @@ public:
         return 0;
     }
 
+    ALWAYS_INLINE static bool is_bootstrap_processor()
+    {
+        return Processor::current_id() == 0;
+    }
+
     // FIXME: Actually return the current thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* current_thread()
     {

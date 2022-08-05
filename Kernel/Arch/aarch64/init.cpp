@@ -23,6 +23,10 @@
 #include <Kernel/Arch/aarch64/TrapFrame.h>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#include <Kernel/Devices/DeviceManagement.h>
+>>>>>>> 3c34ccfbc7 (Kernel: Include `DeviceManagement` as a part of aarch64)
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 =======
 >>>>>>> 8cfad14511 (Kernel: Move TrapFrame into it's own header on aarch64)
@@ -106,9 +110,6 @@ extern "C" [[noreturn]] void init()
         (*ctor)();
     kmalloc_init();
 
-    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
-        (*ctor)();
-
     load_kernel_symbol_table();
 
     auto& framebuffer = RPi::Framebuffer::the();
@@ -117,6 +118,13 @@ extern "C" [[noreturn]] void init()
         draw_logo();
     }
     dmesgln("Starting SerenityOS...");
+
+    DeviceManagement::initialize();
+
+    // Invoke all static global constructors in the kernel.
+    // Note that we want to do this as early as possible.
+    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
+        (*ctor)();
 
     initialize_interrupts();
     InterruptManagement::initialize();
