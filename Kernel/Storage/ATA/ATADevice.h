@@ -36,7 +36,7 @@ public:
     Address const& ata_address() const { return m_ata_address; }
 
 protected:
-    ATADevice(ATAController const&, Address, MinorNumber, u16, u16, u64, NonnullOwnPtr<KString>);
+    ATADevice(ATAController const&, Address, u16, u16, u64);
 
     LockWeakPtr<ATAController> m_controller;
     const Address m_ata_address;

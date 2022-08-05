@@ -100,6 +100,7 @@ set(KERNEL_SOURCES
     Storage/ATA/GenericIDE/Channel.cpp
     Storage/ATA/GenericIDE/ISAController.cpp
     Storage/ATA/GenericIDE/PCIController.cpp
+    Storage/ATA/ATAController.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPort.cpp

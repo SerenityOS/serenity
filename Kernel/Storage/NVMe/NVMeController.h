@@ -28,7 +28,6 @@ class NVMeController : public PCI::Device
 public:
     static ErrorOr<NonnullLockRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
     ErrorOr<void> initialize(bool is_queue_polled);
-    explicit NVMeController(PCI::DeviceIdentifier const&);
     LockRefPtr<StorageDevice> device(u32 index) const override;
     size_t devices_count() const override;
 
@@ -56,6 +55,8 @@ public:
     void set_admin_queue_ready_flag() { m_admin_queue_ready = true; };
 
 private:
+    NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);
+
     ErrorOr<void> identify_and_init_namespaces();
     Tuple<u64, u8> get_ns_features(IdentifyNamespace& identify_data_struct);
     ErrorOr<void> create_admin_queue(Optional<u8> irq);

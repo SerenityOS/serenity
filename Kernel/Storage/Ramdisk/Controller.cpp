@@ -37,7 +37,7 @@ void RamdiskController::complete_current_request(AsyncDeviceRequest::RequestResu
 }
 
 RamdiskController::RamdiskController()
-    : StorageController()
+    : StorageController(0)
 {
     // Populate ramdisk controllers from Multiboot boot modules, if any.
     size_t count = 0;

@@ -25,7 +25,7 @@ public:
     virtual CommandSet command_set() const override { return CommandSet::ATA; }
 
 private:
-    ATADiskDevice(ATAController const&, Address, MinorNumber, u16, u16, u64, NonnullOwnPtr<KString>);
+    ATADiskDevice(ATAController const&, Address, u16, u16, u64);
 
     // ^DiskDevice
     virtual StringView class_name() const override;

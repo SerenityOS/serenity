@@ -15,6 +15,7 @@
 
 namespace Kernel {
 
+class RamdiskDevice;
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
     friend class DeviceManagement;
@@ -46,7 +47,6 @@ public:
     // to the Primary channel as a slave device, which translates to LUN 1:0:1.
     // On NVMe, for example, connecting a second PCIe NVMe storage device as a sole NVMe namespace translates
     // to LUN 1:0:0.
-    // TODO: LUNs are also useful also when specifying the boot drive on boot. Consider doing that.
     struct LUNAddress {
         u32 controller_id;
         u32 target_id;
@@ -63,14 +63,13 @@ public:
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
-    // FIXME: Remove this method after figuring out another scheme for naming.
-    StringView early_storage_name() const;
-
     NonnullLockRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
 
     void add_partition(NonnullLockRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
 
     LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
+
+    u32 parent_controller_hardware_relative_id() const { return m_hardware_relative_controller_id; }
 
     virtual CommandSet command_set() const = 0;
 
@@ -80,7 +79,12 @@ public:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
 
 protected:
-    StorageDevice(LUNAddress, MajorNumber, MinorNumber, size_t, u64, NonnullOwnPtr<KString>);
+    StorageDevice(LUNAddress, u32 hardware_relative_controller_id, size_t sector_size, u64);
+
+    // Note: We want to be able to put distinction between Storage devices and Ramdisk-based devices.
+    // We do this because it will make selecting ramdisk devices much more easier in boot time in the kernel commandline.
+    StorageDevice(Badge<RamdiskDevice>, LUNAddress, u32 hardware_relative_controller_id, MajorNumber, MinorNumber, size_t sector_size, u64);
+
     // ^DiskDevice
     virtual StringView class_name() const override;
 
@@ -91,9 +95,15 @@ private:
     mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;
     NonnullLockRefPtrVector<DiskPartition> m_partitions;
 
-    // FIXME: Remove this method after figuring out another scheme for naming.
-    NonnullOwnPtr<KString> m_early_storage_device_name;
     LUNAddress const m_logical_unit_number_address;
+
+    // Note: This data member should be used with LUNAddress target_id and disk_id.
+    // LUNs are agnostic system-wide addresses, so they are assigned without caring about the specific hardware interfaces.
+    // This class member on the other side, is meant to be assigned *per hardware type*,
+    // which means in constrast to the LUNAddress controller_id struct member, we take the index of the hardware
+    // controller among its fellow controllers of the same hardware type in the system.
+    u32 const m_hardware_relative_controller_id { 0 };
+
     u64 m_max_addressable_block { 0 };
     size_t m_blocks_per_page { 0 };
 };

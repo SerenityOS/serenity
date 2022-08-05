@@ -12,17 +12,14 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create(NVMeController const& controller, NonnullLockRefPtrVector<NVMeQueue> queues, u8 controller_id, u16 nsid, size_t storage_size, size_t lba_size)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create(NVMeController const& controller, NonnullLockRefPtrVector<NVMeQueue> queues, u16 nsid, size_t storage_size, size_t lba_size)
 {
-    auto minor_number = StorageManagement::generate_storage_minor_number();
-    auto major_number = StorageManagement::storage_type_major_number();
-    auto device_name_kstring = TRY(KString::formatted("nvme{:d}n{:d}", controller_id, nsid));
-    auto device = TRY(DeviceManagement::try_create_device<NVMeNameSpace>(StorageDevice::LUNAddress { controller.controller_id(), nsid, 0 }, move(queues), storage_size, lba_size, major_number.value(), minor_number.value(), nsid, move(device_name_kstring)));
+    auto device = TRY(DeviceManagement::try_create_device<NVMeNameSpace>(StorageDevice::LUNAddress { controller.controller_id(), nsid, 0 }, controller.hardware_relative_controller_id(), move(queues), storage_size, lba_size, nsid));
     return device;
 }
 
-UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(LUNAddress logical_unit_number_address, NonnullLockRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> dev_name)
-    : StorageDevice(logical_unit_number_address, major_number, minor_number, lba_size, max_addresable_block, move(dev_name))
+UNMAP_AFTER_INIT NVMeNameSpace::NVMeNameSpace(LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, NonnullLockRefPtrVector<NVMeQueue> queues, size_t max_addresable_block, size_t lba_size, u16 nsid)
+    : StorageDevice(logical_unit_number_address, hardware_relative_controller_id, lba_size, max_addresable_block)
     , m_nsid(nsid)
     , m_queues(move(queues))
 {
