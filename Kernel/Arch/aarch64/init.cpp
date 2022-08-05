@@ -22,9 +22,13 @@
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Arch/aarch64/TrapFrame.h>
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 =======
 >>>>>>> 8cfad14511 (Kernel: Move TrapFrame into it's own header on aarch64)
+=======
+#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
+>>>>>>> 4ec9647b24 (Kernel: Add aarch64 support to `BootFramebufferConsole`)
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 
