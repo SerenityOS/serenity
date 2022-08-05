@@ -15,15 +15,22 @@
 
 namespace JS {
 
+PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
+{
+    m_is_rope = true;
+    m_left = &lhs;
+    m_right = &rhs;
+}
+
 PrimitiveString::PrimitiveString(String string)
-    : m_utf8_string(move(string))
-    , m_has_utf8_string(true)
+    : m_has_utf8_string(true)
+    , m_utf8_string(move(string))
 {
 }
 
 PrimitiveString::PrimitiveString(Utf16String string)
-    : m_utf16_string(move(string))
-    , m_has_utf16_string(true)
+    : m_has_utf16_string(true)
+    , m_utf16_string(move(string))
 {
 }
 
@@ -32,8 +39,22 @@ PrimitiveString::~PrimitiveString()
     vm().string_cache().remove(m_utf8_string);
 }
 
+void PrimitiveString::visit_edges(Cell::Visitor& visitor)
+{
+    Cell::visit_edges(visitor);
+    if (m_is_rope) {
+        visitor.visit(m_left);
+        visitor.visit(m_right);
+    }
+}
+
 bool PrimitiveString::is_empty() const
 {
+    if (m_is_rope) {
+        // NOTE: We never make an empty rope string.
+        return false;
+    }
+
     if (m_has_utf16_string)
         return m_utf16_string.is_empty();
     if (m_has_utf8_string)
@@ -43,6 +64,7 @@ bool PrimitiveString::is_empty() const
 
 String const& PrimitiveString::string() const
 {
+    resolve_rope_if_needed();
     if (!m_has_utf8_string) {
         m_utf8_string = m_utf16_string.to_utf8();
         m_has_utf8_string = true;
@@ -52,6 +74,7 @@ String const& PrimitiveString::string() const
 
 Utf16String const& PrimitiveString::utf16_string() const
 {
+    resolve_rope_if_needed();
     if (!m_has_utf16_string) {
         m_utf16_string = Utf16String(m_utf8_string);
         m_has_utf16_string = true;
@@ -137,6 +160,137 @@ PrimitiveString* js_string(Heap& heap, String string)
 PrimitiveString* js_string(VM& vm, String string)
 {
     return js_string(vm.heap(), move(string));
+}
+
+PrimitiveString* js_rope_string(VM& vm, PrimitiveString& lhs, PrimitiveString& rhs)
+{
+    // We're here to concatenate two strings into a new rope string.
+    // However, if any of them are empty, no rope is required.
+
+    bool lhs_empty = lhs.is_empty();
+    bool rhs_empty = rhs.is_empty();
+
+    if (lhs_empty && rhs_empty)
+        return &vm.empty_string();
+
+    if (lhs_empty)
+        return &rhs;
+
+    if (rhs_empty)
+        return &lhs;
+
+    return vm.heap().allocate_without_global_object<PrimitiveString>(lhs, rhs);
+}
+
+void PrimitiveString::resolve_rope_if_needed() const
+{
+    if (!m_is_rope)
+        return;
+
+    // NOTE: Special case for two concatenated UTF-16 strings.
+    //       This is here as an optimization, although I'm unsure how valuable it is.
+    if (m_left->has_utf16_string() && m_right->has_utf16_string()) {
+        auto const& lhs_string = m_left->utf16_string();
+        auto const& rhs_string = m_right->utf16_string();
+
+        Vector<u16, 1> combined;
+        combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
+        combined.extend(lhs_string.string());
+        combined.extend(rhs_string.string());
+
+        m_utf16_string = Utf16String(move(combined));
+        m_has_utf16_string = true;
+        m_is_rope = false;
+        m_left = nullptr;
+        m_right = nullptr;
+        return;
+    }
+
+    // This vector will hold all the pieces of the rope that need to be assembled
+    // into the resolved string.
+    Vector<PrimitiveString const*> pieces;
+
+    // NOTE: We traverse the rope tree without using recursion, since we'd run out of
+    //       stack space quickly when handling a long sequence of unresolved concatenations.
+    Vector<PrimitiveString const*> stack;
+    stack.append(m_right);
+    stack.append(m_left);
+    while (!stack.is_empty()) {
+        auto* current = stack.take_last();
+        if (current->m_is_rope) {
+            stack.append(current->m_right);
+            stack.append(current->m_left);
+            continue;
+        }
+        pieces.append(current);
+    }
+
+    // Now that we have all the pieces, we can concatenate them using a StringBuilder.
+    StringBuilder builder;
+
+    // We keep track of the previous piece in order to handle surrogate pairs spread across two pieces.
+    PrimitiveString const* previous = nullptr;
+    for (auto const* current : pieces) {
+        if (!previous) {
+            // This is the very first piece, just append it and continue.
+            builder.append(current->string());
+            previous = current;
+            continue;
+        }
+
+        // Get the UTF-8 representations for both strings.
+        auto const& previous_string_as_utf8 = previous->string();
+        auto const& current_string_as_utf8 = current->string();
+
+        // NOTE: Now we need to look at the end of the previous string and the start
+        //       of the current string, to see if they should be combined into a surrogate.
+
+        // Surrogates encoded as UTF-8 are 3 bytes.
+        if ((previous_string_as_utf8.length() < 3) || (current_string_as_utf8.length() < 3)) {
+            builder.append(current->string());
+            previous = current;
+            continue;
+        }
+
+        // Might the previous string end with a UTF-8 encoded surrogate?
+        if ((static_cast<u8>(previous_string_as_utf8[previous_string_as_utf8.length() - 3]) & 0xf0) != 0xe0) {
+            // If not, just append the current string and continue.
+            builder.append(current->string());
+            previous = current;
+            continue;
+        }
+
+        // Might the current string begin with a UTF-8 encoded surrogate?
+        if ((static_cast<u8>(current_string_as_utf8[0]) & 0xf0) != 0xe0) {
+            // If not, just append the current string and continue.
+            builder.append(current->string());
+            previous = current;
+            continue;
+        }
+
+        auto high_surrogate = *Utf8View(previous_string_as_utf8.substring_view(previous_string_as_utf8.length() - 3)).begin();
+        auto low_surrogate = *Utf8View(current_string_as_utf8).begin();
+
+        if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate)) {
+            builder.append(current->string());
+            previous = current;
+            continue;
+        }
+
+        // Remove 3 bytes from the builder and replace them with the UTF-8 encoded code point.
+        builder.trim(3);
+        builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
+
+        // Append the remaining part of the current string.
+        builder.append(current_string_as_utf8.substring_view(3));
+        previous = current;
+    }
+
+    m_utf8_string = builder.to_string();
+    m_has_utf8_string = true;
+    m_is_rope = false;
+    m_left = nullptr;
+    m_right = nullptr;
 }
 
 }

@@ -17,6 +17,7 @@ namespace JS {
 
 class PrimitiveString final : public Cell {
 public:
+    explicit PrimitiveString(PrimitiveString&, PrimitiveString&);
     explicit PrimitiveString(String);
     explicit PrimitiveString(Utf16String);
     virtual ~PrimitiveString();
@@ -37,12 +38,20 @@ public:
 
 private:
     virtual StringView class_name() const override { return "PrimitiveString"sv; }
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    void resolve_rope_if_needed() const;
+
+    mutable bool m_is_rope { false };
+    mutable bool m_has_utf8_string { false };
+    mutable bool m_has_utf16_string { false };
+
+    mutable PrimitiveString* m_left { nullptr };
+    mutable PrimitiveString* m_right { nullptr };
 
     mutable String m_utf8_string;
-    mutable bool m_has_utf8_string { false };
 
     mutable Utf16String m_utf16_string;
-    mutable bool m_has_utf16_string { false };
 };
 
 PrimitiveString* js_string(Heap&, Utf16View const&);
@@ -53,5 +62,7 @@ PrimitiveString* js_string(VM&, Utf16String);
 
 PrimitiveString* js_string(Heap&, String);
 PrimitiveString* js_string(VM&, String);
+
+PrimitiveString* js_rope_string(VM&, PrimitiveString&, PrimitiveString&);
 
 }

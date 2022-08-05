@@ -1074,58 +1074,6 @@ ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject& global_object, Value
     return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperator, "unsigned right-shift");
 }
 
-// https://tc39.es/ecma262/#string-concatenation
-static PrimitiveString* concatenate_strings(GlobalObject& global_object, PrimitiveString const& lhs, PrimitiveString const& rhs)
-{
-    auto& vm = global_object.vm();
-
-    if (lhs.has_utf16_string() && rhs.has_utf16_string()) {
-        auto const& lhs_string = lhs.utf16_string();
-        auto const& rhs_string = rhs.utf16_string();
-
-        Vector<u16, 1> combined;
-        combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
-        combined.extend(lhs_string.string());
-        combined.extend(rhs_string.string());
-
-        return js_string(vm, Utf16String(move(combined)));
-    }
-
-    auto const& lhs_string = lhs.string();
-    auto const& rhs_string = rhs.string();
-    StringBuilder builder(lhs_string.length() + rhs_string.length());
-
-    auto return_combined_strings = [&]() {
-        builder.append(lhs_string);
-        builder.append(rhs_string);
-        return js_string(vm, builder.to_string());
-    };
-
-    // Surrogates encoded as UTF-8 are 3 bytes.
-    if ((lhs_string.length() < 3) || (rhs_string.length() < 3))
-        return return_combined_strings();
-
-    auto lhs_leading_byte = static_cast<u8>(lhs_string[lhs_string.length() - 3]);
-    auto rhs_leading_byte = static_cast<u8>(rhs_string[0]);
-
-    if ((lhs_leading_byte & 0xf0) != 0xe0)
-        return return_combined_strings();
-    if ((rhs_leading_byte & 0xf0) != 0xe0)
-        return return_combined_strings();
-
-    auto high_surrogate = *Utf8View(lhs_string.substring_view(lhs_string.length() - 3)).begin();
-    auto low_surrogate = *Utf8View(rhs_string).begin();
-
-    if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate))
-        return return_combined_strings();
-
-    builder.append(lhs_string.substring_view(0, lhs_string.length() - 3));
-    builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
-    builder.append(rhs_string.substring_view(3));
-
-    return js_string(vm, builder.to_string());
-}
-
 // 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
 ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
 {
@@ -1146,7 +1094,7 @@ ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
         auto lhs_string = TRY(lhs_primitive.to_primitive_string(global_object));
         auto rhs_string = TRY(rhs_primitive.to_primitive_string(global_object));
-        return concatenate_strings(global_object, *lhs_string, *rhs_string);
+        return js_rope_string(global_object.vm(), *lhs_string, *rhs_string);
     }
 
     auto lhs_numeric = TRY(lhs_primitive.to_numeric(global_object));
