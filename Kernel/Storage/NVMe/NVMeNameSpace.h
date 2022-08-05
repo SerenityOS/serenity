@@ -33,7 +33,6 @@ public:
 private:
     NVMeNameSpace(LUNAddress, NonnullRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, size_t major_number, size_t minor_number, u16 nsid, NonnullOwnPtr<KString> early_device_name);
 
-    virtual InterfaceType interface_type() const override { return InterfaceType::NVMe; }
     u16 m_nsid;
     NonnullRefPtrVector<NVMeQueue> m_queues;
 };

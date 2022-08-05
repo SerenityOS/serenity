@@ -71,23 +71,6 @@ StringView StorageDevice::command_set_to_string_view() const
     VERIFY_NOT_REACHED();
 }
 
-StringView StorageDevice::interface_type_to_string_view() const
-{
-    switch (interface_type()) {
-    case InterfaceType::PlainMemory:
-        return "memory"sv;
-    case InterfaceType::SCSI:
-        return "scsi"sv;
-    case InterfaceType::ATA:
-        return "ata"sv;
-    case InterfaceType::NVMe:
-        return "nvme"sv;
-    default:
-        break;
-    }
-    VERIFY_NOT_REACHED();
-}
-
 ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     u64 index = offset >> block_size_log();
