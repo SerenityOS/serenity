@@ -15,8 +15,9 @@
 
 namespace Ladybird {
 
-ConsoleGlobalObject::ConsoleGlobalObject(Web::Bindings::WindowObject& parent_object)
-    : m_window_object(&parent_object)
+ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::Bindings::WindowObject& parent_object)
+    : JS::GlobalObject(realm)
+    , m_window_object(&parent_object)
 {
 }
 
