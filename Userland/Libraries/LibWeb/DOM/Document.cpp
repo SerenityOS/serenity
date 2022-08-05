@@ -509,16 +509,12 @@ ExceptionOr<void> Document::close()
 
 HTML::Origin Document::origin() const
 {
-    if (!m_url.is_valid())
-        return {};
-    return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
+    return m_origin;
 }
 
 void Document::set_origin(HTML::Origin const& origin)
 {
-    m_url.set_protocol(origin.protocol());
-    m_url.set_host(origin.host());
-    m_url.set_port(origin.port());
+    m_origin = origin;
 }
 
 void Document::schedule_style_update()

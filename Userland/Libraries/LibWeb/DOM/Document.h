@@ -482,6 +482,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };
+
+    // https://dom.spec.whatwg.org/#concept-document-origin
+    HTML::Origin m_origin;
 };
 
 }
