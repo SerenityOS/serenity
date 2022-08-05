@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 
@@ -12,7 +13,7 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_browsing_context = HTML::BrowsingContext::create(*this);
+    m_top_level_browsing_context = HTML::BrowsingContext::create_a_new_browsing_context(*this, nullptr, nullptr);
 }
 
 Page::~Page() = default;

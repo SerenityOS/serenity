@@ -334,6 +334,12 @@ EnvironmentSettingsObject& relevant_settings_object(JS::Object const& object)
     return verify_cast<EnvironmentSettingsObject>(*relevant_realm(object).host_defined());
 }
 
+EnvironmentSettingsObject& relevant_settings_object(DOM::Node const& node)
+{
+    // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
+    return const_cast<DOM::Document&>(node.document()).relevant_settings_object();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global
 JS::GlobalObject& relevant_global_object(JS::Object const& object)
 {

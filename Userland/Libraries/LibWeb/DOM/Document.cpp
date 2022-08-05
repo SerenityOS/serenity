@@ -659,7 +659,6 @@ void Document::set_title(String const& title)
 void Document::attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
 {
     m_browsing_context = browsing_context;
-    update_layout();
 }
 
 void Document::detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
@@ -1831,6 +1830,11 @@ void Document::check_favicon_after_loading_link_resource()
     }
 
     dbgln_if(SPAM_DEBUG, "No favicon found to be used");
+}
+
+void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
+{
+    m_window = window;
 }
 
 }

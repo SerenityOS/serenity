@@ -4,13 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
+#include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -18,6 +23,207 @@
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
+static bool url_matches_about_blank(AK::URL const& url)
+{
+    // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
+    return url.scheme() == "about"sv
+        && url.path() == "blank"sv
+        && url.username().is_empty()
+        && url.password().is_empty()
+        && url.host().is_null();
+}
+
+// https://url.spec.whatwg.org/#concept-url-origin
+static HTML::Origin url_origin(AK::URL const& url)
+{
+    // FIXME: Move this whole function somewhere better.
+
+    if (url.scheme() == "blob"sv) {
+        // FIXME: Implement
+        return HTML::Origin {};
+    }
+
+    if (url.scheme().is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) {
+        // Return the tuple origin (url’s scheme, url’s host, url’s port, null).
+        return HTML::Origin(url.scheme(), url.host(), url.port().value_or(0));
+    }
+
+    if (url.scheme() == "file"sv) {
+        // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
+        return HTML::Origin {};
+    }
+
+    return HTML::Origin {};
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#determining-the-origin
+static HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
+{
+    // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
+    if (sandbox_flags.flags & SandboxingFlagSet::SandboxedOrigin) {
+        return HTML::Origin {};
+    }
+
+    // 2. If url is null, then return a new opaque origin.
+    if (!url.has_value()) {
+        return HTML::Origin {};
+    }
+
+    // 3. If invocationOrigin is non-null and url matches about:blank, then return invocationOrigin.
+    if (invocation_origin.has_value() && url_matches_about_blank(*url)) {
+        return invocation_origin.value();
+    }
+
+    // 4. If url is about:srcdoc, then return the origin of browsingContext's container document.
+    if (url == AK::URL("about:srcdoc")) {
+        VERIFY(browsing_context.container_document());
+        return browsing_context.container_document()->origin();
+    }
+
+    // 5. Return url's origin.
+    return url_origin(*url);
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, RefPtr<DOM::Document> creator, RefPtr<DOM::Element> embedder)
+{
+    // 1. Let browsingContext be a new browsing context.
+    BrowsingContextContainer* container = (embedder && is<BrowsingContextContainer>(*embedder)) ? static_cast<BrowsingContextContainer*>(embedder.ptr()) : nullptr;
+    auto browsing_context = adopt_ref(*new BrowsingContext(page, container));
+
+    // 2. Let unsafeContextCreationTime be the unsafe shared current time.
+    [[maybe_unused]] auto unsafe_context_creation_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+
+    // 3. If creator is non-null, then set browsingContext's creator origin to return creator's origin,
+    //    browsingContext's creator URL to return creator's URL,
+    //    browsingContext's creator base URL to return creator's base URL,
+    //    FIXME: and browsingContext's virtual browsing context group ID to creator's top-level browsing context's virtual browsing context group ID.
+    if (creator) {
+        browsing_context->m_creator_origin = creator->origin();
+        browsing_context->m_creator_url = creator->url();
+        browsing_context->m_creator_base_url = creator->base_url();
+    }
+
+    // FIXME: 4. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and embedded.
+    SandboxingFlagSet sandbox_flags;
+
+    // 5. Let origin be the result of determining the origin given browsingContext, about:blank, sandboxFlags, and browsingContext's creator origin.
+    auto origin = determine_the_origin(browsing_context, AK::URL("about:blank"), sandbox_flags, browsing_context->m_creator_origin);
+
+    // FIXME: 6. Let permissionsPolicy be the result of creating a permissions policy given browsingContext and origin. [PERMISSIONSPOLICY]
+
+    // FIXME: 7. Let agent be the result of obtaining a similar-origin window agent given origin, group, and false.
+
+    RefPtr<Window> window;
+
+    // 8. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
+    auto realm_execution_context = Bindings::create_a_new_javascript_realm(
+        Bindings::main_thread_vm(),
+        [&](JS::Realm& realm) -> JS::Value {
+            // - For the global object, create a new Window object.
+            window = HTML::Window::create();
+            auto* global_object = realm.heap().allocate_without_global_object<Bindings::WindowObject>(realm, *window);
+            VERIFY(window->wrapper() == global_object);
+            return global_object;
+        },
+        [](JS::Realm&) -> JS::Value {
+            // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
+            return JS::js_undefined();
+        });
+
+    // 9. Let topLevelCreationURL be about:blank if embedder is null; otherwise embedder's relevant settings object's top-level creation URL.
+    auto top_level_creation_url = !embedder ? AK::URL("about:blank") : relevant_settings_object(*embedder).top_level_creation_url;
+
+    // 10. Let topLevelOrigin be origin if embedder is null; otherwise embedder's relevant settings object's top-level origin.
+    auto top_level_origin = !embedder ? origin : relevant_settings_object(*embedder).origin();
+
+    // 11. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
+    HTML::WindowEnvironmentSettingsObject::setup(
+        AK::URL("about:blank"),
+        move(realm_execution_context),
+        {},
+        top_level_creation_url,
+        top_level_origin);
+
+    // FIXME: 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
+    //            coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
+
+    // 13. Let coop be a new cross-origin opener policy.
+    auto coop = CrossOriginOpenerPolicy {};
+
+    // 14. If creator is non-null and creator's origin is same origin with creator's relevant settings object's top-level origin,
+    //     then set coop to creator's browsing context's top-level browsing context's active document's cross-origin opener policy.
+    if (creator && creator->origin().is_same_origin(relevant_settings_object(*creator).top_level_origin)) {
+        VERIFY(creator->browsing_context());
+        auto* top_level_document = creator->browsing_context()->top_level_browsing_context().active_document();
+        VERIFY(top_level_document);
+        coop = top_level_document->cross_origin_opener_policy();
+    }
+
+    // 15. Let document be a new Document, marked as an HTML document in quirks mode,
+    //     whose content type is "text/html",
+    //     origin is origin,
+    //     FIXME: active sandboxing flag set is sandboxFlags,
+    //     FIXME: permissions policy is permissionsPolicy,
+    //     cross-origin opener policy is coop,
+    //     FIXME: load timing info is loadTimingInfo,
+    //     FIXME: navigation id is null,
+    //     and which is ready for post-load tasks.
+    auto document = DOM::Document::create();
+
+    // Non-standard
+    document->set_window({}, *window);
+    window->set_associated_document(*document);
+
+    document->set_quirks_mode(DOM::QuirksMode::Yes);
+    document->set_content_type("text/html");
+    document->set_origin(origin);
+    document->set_url(AK::URL("about:blank"));
+    document->set_cross_origin_opener_policy(coop);
+    document->set_ready_for_post_load_tasks(true);
+
+    // FIXME: 16. Assert: document's URL and document's relevant settings object's creation URL are about:blank.
+
+    // 17. Set document's is initial about:blank to true.
+    document->set_is_initial_about_blank(true);
+
+    // 18. Ensure that document has a single child html node, which itself has two empty child nodes: a head element, and a body element.
+    auto html_node = document->create_element(HTML::TagNames::html).release_value();
+    html_node->append_child(document->create_element(HTML::TagNames::head).release_value());
+    html_node->append_child(document->create_element(HTML::TagNames::body).release_value());
+    document->append_child(html_node);
+
+    // 19. Set the active document of browsingContext to document.
+    browsing_context->m_active_document = document;
+
+    // 20. If browsingContext's creator URL is non-null, then set document's referrer to the serialization of it.
+    if (browsing_context->m_creator_url.has_value()) {
+        document->set_referrer(browsing_context->m_creator_url->serialize());
+    }
+
+    // FIXME: 21. If creator is non-null, then set document's policy container to a clone of creator's policy container.
+
+    // 22. Append a new session history entry to browsingContext's session history whose URL is about:blank and document is document.
+    browsing_context->m_session_history.append(HTML::SessionHistoryEntry {
+        .url = AK::URL("about:blank"),
+        .document = document,
+        .serialized_state = {},
+        .policy_container = {},
+        .scroll_restoration_mode = {},
+        .browsing_context_name = {},
+    });
+
+    // Non-standard:
+    document->attach_to_browsing_context({}, browsing_context);
+
+    // 23. Completely finish loading document.
+    document->completely_finish_loading();
+
+    // 24. Return browsingContext.
+    return browsing_context;
+}
 
 BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* container)
     : m_page(page)

@@ -126,6 +126,7 @@ EnvironmentSettingsObject& current_settings_object();
 JS::GlobalObject& current_global_object();
 JS::Realm& relevant_realm(JS::Object const&);
 EnvironmentSettingsObject& relevant_settings_object(JS::Object const&);
+EnvironmentSettingsObject& relevant_settings_object(DOM::Node const&);
 JS::GlobalObject& relevant_global_object(JS::Object const&);
 
 }

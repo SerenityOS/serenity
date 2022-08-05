@@ -25,6 +25,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
@@ -81,6 +82,9 @@ public:
 
     HTML::Origin origin() const;
     void set_origin(HTML::Origin const& origin);
+
+    HTML::CrossOriginOpenerPolicy const& cross_origin_opener_policy() const { return m_cross_origin_opener_policy; }
+    void set_cross_origin_opener_policy(HTML::CrossOriginOpenerPolicy policy) { m_cross_origin_opener_policy = move(policy); }
 
     AK::URL parse_url(String const&) const;
 
@@ -262,6 +266,8 @@ public:
 
     HTML::Window& window() { return *m_window; }
     HTML::Window const& window() const { return *m_window; }
+
+    void set_window(Badge<HTML::BrowsingContext>, HTML::Window&);
 
     ExceptionOr<void> write(Vector<String> const& strings);
     ExceptionOr<void> writeln(Vector<String> const& strings);
@@ -483,6 +489,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-coop
+    HTML::CrossOriginOpenerPolicy m_cross_origin_opener_policy;
 
     // https://html.spec.whatwg.org/multipage/dom.html#the-document's-referrer
     String m_referrer { "" };

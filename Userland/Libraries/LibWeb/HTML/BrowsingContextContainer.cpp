@@ -34,7 +34,7 @@ void BrowsingContextContainer::create_new_nested_browsing_context()
 
     // 2. Let browsingContext be the result of creating a new browsing context with element's node document, element, and group.
     // 3. Set element's nested browsing context to browsingContext.
-    m_nested_browsing_context = BrowsingContext::create_nested(*group->page(), *this);
+    m_nested_browsing_context = BrowsingContext::create_a_new_browsing_context(*group->page(), document(), *this);
     group->append_child(*m_nested_browsing_context);
     m_nested_browsing_context->set_frame_nesting_levels(group->frame_nesting_levels());
     m_nested_browsing_context->register_frame_nesting(document().url());

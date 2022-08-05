@@ -16,6 +16,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
@@ -25,8 +26,8 @@ namespace Web::HTML {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<BrowsingContext> create_nested(Page& page, HTML::BrowsingContextContainer& container) { return adopt_ref(*new BrowsingContext(page, &container)); }
-    static NonnullRefPtr<BrowsingContext> create(Page& page) { return adopt_ref(*new BrowsingContext(page, nullptr)); }
+    static NonnullRefPtr<BrowsingContext> create_a_new_browsing_context(Page&, RefPtr<DOM::Document> creator, RefPtr<DOM::Element> embedder);
+
     ~BrowsingContext();
 
     class ViewportClient {
@@ -131,6 +132,15 @@ private:
 
     // https://html.spec.whatwg.org/multipage/history.html#session-history
     Vector<SessionHistoryEntry> m_session_history;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#creator-url
+    Optional<AK::URL> m_creator_url;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#creator-base-url
+    Optional<AK::URL> m_creator_base_url;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#creator-origin
+    Optional<HTML::Origin> m_creator_origin;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
     RefPtr<DOM::Document> m_active_document;
