@@ -35,7 +35,7 @@ void WMConnectionFromClient::die()
 
 void WMConnectionFromClient::set_applet_area_position(Gfx::IntPoint const& position)
 {
-    if (m_window_id < 0) {
+    if (m_wm_id < 0) {
         did_misbehave("SetAppletAreaPosition: WM didn't assign window as manager yet");
         // FIXME: return ok boolean?
         return;
@@ -150,9 +150,9 @@ void WMConnectionFromClient::set_event_mask(u32 event_mask)
     m_event_mask = event_mask;
 }
 
-void WMConnectionFromClient::set_manager_window(i32 window_id)
+void WMConnectionFromClient::set_window_manager(i32 wm_id)
 {
-    m_window_id = window_id;
+    m_wm_id = wm_id;
 
     // Let the window manager know that we obtained a manager window, and should
     // receive information about other windows.

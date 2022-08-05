@@ -15,10 +15,9 @@ class KeymapStatusWindow final : public GUI::Window {
     C_OBJECT(KeymapStatusWindow)
 public:
     virtual ~KeymapStatusWindow() override = default;
-
-private:
     virtual void wm_event(GUI::WMEvent&) override;
 
+private:
     KeymapStatusWindow();
 
     RefPtr<KeymapStatusWidget> m_status_widget;

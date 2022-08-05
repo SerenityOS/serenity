@@ -5,6 +5,7 @@
  */
 
 #include "KeymapStatusWindow.h"
+#include "KeymapWindowManager.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
@@ -18,6 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     auto window = TRY(KeymapStatusWindow::try_create());
+    KeymapWindowManager wm(window);
     window->set_has_alpha_channel(true);
     window->set_title("Keymap");
     window->resize(16, 16);
@@ -25,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
         WindowServer::WMEventMask::KeymapChanged);
-    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window->window_id());
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath getkeymap proc exec"));
 

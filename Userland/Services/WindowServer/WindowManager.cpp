@@ -58,10 +58,10 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
         for_each_window_manager([&keymap](WMConnectionFromClient& conn) {
             if (!(conn.event_mask() & WMEventMask::KeymapChanged))
                 return IterationDecision::Continue;
-            if (conn.window_id() < 0)
+            if (conn.wm_id() < 0)
                 return IterationDecision::Continue;
 
-            conn.async_keymap_changed(conn.window_id(), keymap);
+            conn.async_keymap_changed(conn.wm_id(), keymap);
             return IterationDecision::Continue;
         });
     };
@@ -394,17 +394,17 @@ void WindowManager::remove_window(Window& window)
     Compositor::the().invalidate_occlusions();
 
     for_each_window_manager([&](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
+        if (conn.wm_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (!window.is_internal() && !was_modal)
-            conn.async_window_removed(conn.window_id(), window.client_id(), window.window_id());
+            conn.async_window_removed(conn.wm_id(), window.client_id(), window.window_id());
         return IterationDecision::Continue;
     });
 }
 
 void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
 {
-    if (conn.window_id() < 0)
+    if (conn.wm_id() < 0)
         return;
 
     tell_wm_about_current_window_stack(conn);
@@ -423,7 +423,7 @@ void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
 
 void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& window)
 {
-    if (conn.window_id() < 0)
+    if (conn.wm_id() < 0)
         return;
     if (!(conn.event_mask() & WMEventMask::WindowStateChanges))
         return;
@@ -445,39 +445,39 @@ void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& w
     });
 
     auto& window_stack = is_stationary_window_type(modeless->type()) ? current_window_stack() : modeless->window_stack();
-    conn.async_window_state_changed(conn.window_id(), modeless->client_id(), modeless->window_id(), window_stack.row(), window_stack.column(), is_active, is_blocked, modeless->is_minimized(), modeless->is_frameless(), (i32)modeless->type(), modeless->computed_title(), modeless->rect(), modeless->progress());
+    conn.async_window_state_changed(conn.wm_id(), modeless->client_id(), modeless->window_id(), window_stack.row(), window_stack.column(), is_active, is_blocked, modeless->is_minimized(), modeless->is_frameless(), (i32)modeless->type(), modeless->computed_title(), modeless->rect(), modeless->progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMConnectionFromClient& conn, Window& window)
 {
-    if (conn.window_id() < 0)
+    if (conn.wm_id() < 0)
         return;
     if (!(conn.event_mask() & WMEventMask::WindowRectChanges))
         return;
     if (window.is_internal())
         return;
-    conn.async_window_rect_changed(conn.window_id(), window.client_id(), window.window_id(), window.rect());
+    conn.async_window_rect_changed(conn.wm_id(), window.client_id(), window.window_id(), window.rect());
 }
 
 void WindowManager::tell_wm_about_window_icon(WMConnectionFromClient& conn, Window& window)
 {
-    if (conn.window_id() < 0)
+    if (conn.wm_id() < 0)
         return;
     if (!(conn.event_mask() & WMEventMask::WindowIconChanges))
         return;
     if (window.is_internal())
         return;
-    conn.async_window_icon_bitmap_changed(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap());
+    conn.async_window_icon_bitmap_changed(conn.wm_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap());
 }
 
 void WindowManager::tell_wm_about_current_window_stack(WMConnectionFromClient& conn)
 {
-    if (conn.window_id() < 0)
+    if (conn.wm_id() < 0)
         return;
     if (!(conn.event_mask() & WMEventMask::WorkspaceChanges))
         return;
     auto& window_stack = current_window_stack();
-    conn.async_workspace_changed(conn.window_id(), window_stack.row(), window_stack.column());
+    conn.async_workspace_changed(conn.wm_id(), window_stack.row(), window_stack.column());
 }
 
 void WindowManager::tell_wms_window_state_changed(Window& window)
@@ -514,10 +514,10 @@ void WindowManager::tell_wms_screen_rects_changed()
 void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
 {
     for_each_window_manager([&](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0)
+        if (conn.wm_id() < 0)
             return IterationDecision::Continue;
 
-        conn.async_applet_area_size_changed(conn.window_id(), size);
+        conn.async_applet_area_size_changed(conn.wm_id(), size);
         return IterationDecision::Continue;
     });
 }
@@ -525,10 +525,10 @@ void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
 void WindowManager::tell_wms_super_key_pressed()
 {
     for_each_window_manager([](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0)
+        if (conn.wm_id() < 0)
             return IterationDecision::Continue;
 
-        conn.async_super_key_pressed(conn.window_id());
+        conn.async_super_key_pressed(conn.wm_id());
         return IterationDecision::Continue;
     });
 }
@@ -536,10 +536,10 @@ void WindowManager::tell_wms_super_key_pressed()
 void WindowManager::tell_wms_super_space_key_pressed()
 {
     for_each_window_manager([](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0)
+        if (conn.wm_id() < 0)
             return IterationDecision::Continue;
 
-        conn.async_super_space_key_pressed(conn.window_id());
+        conn.async_super_space_key_pressed(conn.wm_id());
         return IterationDecision::Continue;
     });
 }
@@ -547,10 +547,10 @@ void WindowManager::tell_wms_super_space_key_pressed()
 void WindowManager::tell_wms_super_d_key_pressed()
 {
     for_each_window_manager([](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0)
+        if (conn.wm_id() < 0)
             return IterationDecision::Continue;
 
-        conn.async_super_d_key_pressed(conn.window_id());
+        conn.async_super_d_key_pressed(conn.wm_id());
         return IterationDecision::Continue;
     });
 }
@@ -558,10 +558,10 @@ void WindowManager::tell_wms_super_d_key_pressed()
 void WindowManager::tell_wms_super_digit_key_pressed(u8 digit)
 {
     for_each_window_manager([digit](WMConnectionFromClient& conn) {
-        if (conn.window_id() < 0)
+        if (conn.wm_id() < 0)
             return IterationDecision::Continue;
 
-        conn.async_super_digit_key_pressed(conn.window_id(), digit);
+        conn.async_super_digit_key_pressed(conn.wm_id(), digit);
         return IterationDecision::Continue;
     });
 }

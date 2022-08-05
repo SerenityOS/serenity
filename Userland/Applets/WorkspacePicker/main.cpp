@@ -5,6 +5,7 @@
  */
 
 #include "DesktopStatusWindow.h"
+#include "WorkspacePickerWindowManager.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
@@ -33,6 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("WorkspacePicker");
     window->resize(28, 15);
 
+    WorkspacePickerWindowManager wm(window);
+
     auto& desktop = GUI::Desktop::the();
 
     auto hide_tray_icon = [&] {
@@ -45,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
                 WindowServer::WMEventMask::WorkspaceChanges);
-            GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window->window_id());
+            GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
         }
     };
 

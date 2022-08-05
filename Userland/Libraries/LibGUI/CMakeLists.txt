@@ -116,6 +116,7 @@ set(SOURCES
     VimEditingEngine.cpp
     Widget.cpp
     Window.cpp
+    WindowManager.cpp
     Wizards/AbstractWizardPage.cpp
     Wizards/CoverWizardPage.cpp
     Wizards/WizardDialog.cpp

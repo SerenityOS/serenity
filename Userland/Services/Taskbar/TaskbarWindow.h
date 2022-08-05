@@ -27,6 +27,8 @@ public:
 
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
+    virtual void wm_event(GUI::WMEvent&) override;
+
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
     static void show_desktop_button_clicked(unsigned);
@@ -39,7 +41,6 @@ private:
     void update_window_button(::Window&, bool);
 
     virtual void event(Core::Event&) override;
-    virtual void wm_event(GUI::WMEvent&) override;
     virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
 
     void update_applet_area();

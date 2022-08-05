@@ -7,6 +7,7 @@
 
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
+#include "TaskbarWindowManager.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <LibConfig/Client.h>
@@ -74,12 +75,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
+    TaskbarWindowManager wm(window);
     GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
         | WindowServer::WMEventMask::WindowIconChanges
         | WindowServer::WMEventMask::WorkspaceChanges);
-    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window.window_id());
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
 
     return app->exec();
 }
