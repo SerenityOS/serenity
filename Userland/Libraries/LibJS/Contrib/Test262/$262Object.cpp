@@ -57,10 +57,14 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::clear_kept_objects)
 
 JS_DEFINE_NATIVE_FUNCTION($262Object::create_realm)
 {
-    // FIXME: This doesn't look right.
-    auto realm = vm.heap().allocate_without_global_object<GlobalObject>(*global_object.associated_realm());
-    realm->initialize_global_object();
-    return Value(realm->$262());
+    auto* realm = Realm::create(vm);
+    VERIFY(realm);
+    auto* realm_global_object = vm.heap().allocate_without_global_object<GlobalObject>(*realm);
+    VERIFY(realm_global_object);
+    realm->set_global_object(realm_global_object, js_undefined());
+    realm_global_object->set_associated_realm(*realm);
+    realm_global_object->initialize_global_object();
+    return Value(realm_global_object->$262());
 }
 
 JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
