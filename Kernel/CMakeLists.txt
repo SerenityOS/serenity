@@ -456,7 +456,9 @@ else()
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
+        CommandLine.cpp
         KSyms.cpp
+        KString.cpp
         MiniStdLib.cpp
         UBSanitizer.cpp
 

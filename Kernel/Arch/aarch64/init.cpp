@@ -24,7 +24,11 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+#include <Kernel/CommandLine.h>
+>>>>>>> 90063bc96f (Kernel: Include `CommandLine` as a part of aarch64)
 #include <Kernel/Devices/DeviceManagement.h>
 >>>>>>> 3c34ccfbc7 (Kernel: Include `DeviceManagement` as a part of aarch64)
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
@@ -77,6 +81,8 @@ void __stack_chk_fail()
     Kernel::Processor::halt();
 }
 
+READONLY_AFTER_INIT bool g_in_early_boot;
+
 namespace Kernel {
 
 static void draw_logo();
@@ -95,10 +101,14 @@ Atomic<Graphics::Console*> g_boot_console;
 
 extern "C" [[noreturn]] void init()
 {
+    g_in_early_boot = true;
+
     dbgln("Welcome to Serenity OS!");
     dbgln("Imagine this being your ideal operating system.");
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
     dbgln();
+
+    CommandLine::early_initialize("");
 
     new (&bootstrap_processor()) Processor();
     bootstrap_processor().initialize(0);
@@ -111,6 +121,8 @@ extern "C" [[noreturn]] void init()
     kmalloc_init();
 
     load_kernel_symbol_table();
+
+    CommandLine::initialize();
 
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
