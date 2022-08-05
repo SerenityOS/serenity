@@ -18,7 +18,7 @@ namespace Gfx {
 // https://unicode.org/emoji/charts/emoji-list.html
 // https://unicode.org/emoji/charts/emoji-zwj-sequences.html
 
-static HashMap<Span<u32>, RefPtr<Gfx::Bitmap>> s_emojis;
+static HashMap<String, RefPtr<Gfx::Bitmap>> s_emojis;
 
 Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 {
@@ -27,18 +27,20 @@ Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 
 Bitmap const* Emoji::emoji_for_code_points(Span<u32> const& code_points)
 {
-    auto it = s_emojis.find(code_points);
+    // FIXME: This function is definitely not fast.
+    auto basename = String::join('_', code_points, "U+{:X}"sv);
+
+    auto it = s_emojis.find(basename);
     if (it != s_emojis.end())
         return (*it).value.ptr();
 
-    auto basename = String::join('_', code_points, "U+{:X}"sv);
     auto bitmap_or_error = Bitmap::try_load_from_file(String::formatted("/res/emoji/{}.png", basename));
     if (bitmap_or_error.is_error()) {
-        s_emojis.set(code_points, nullptr);
+        s_emojis.set(basename, nullptr);
         return nullptr;
     }
     auto bitmap = bitmap_or_error.release_value();
-    s_emojis.set(code_points, bitmap);
+    s_emojis.set(basename, bitmap);
     return bitmap.ptr();
 }
 
