@@ -100,20 +100,23 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // NOTE: This is effectively the worker's vm
 
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
-    // FIXME: Perform the full steps for 'create a new JavaScript realm'
-    // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
-    m_worker_realm = JS::Realm::create(m_worker_vm);
-
-    //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
-    //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
-    // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
-    if (is_shared)
-        TODO();
-
-    // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
-    //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
-    m_worker_scope = m_worker_vm->heap().allocate_without_global_object<JS::GlobalObject>(*m_worker_realm);
-    m_worker_scope->initialize_global_object();
+    auto realm_execution_context = Bindings::create_a_new_javascript_realm(
+        *m_worker_vm,
+        [&](JS::Realm& realm) -> JS::Value {
+            //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
+            //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
+            // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
+            if (is_shared)
+                TODO();
+            // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
+            //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
+            m_worker_scope = m_worker_vm->heap().allocate_without_global_object<JS::GlobalObject>(realm);
+            return m_worker_scope;
+        },
+        [&](JS::Realm&) -> JS::Value {
+            return JS::js_undefined();
+        });
+    m_worker_realm = realm_execution_context->realm;
 
     m_console = adopt_ref(*new WorkerDebugConsoleClient(m_worker_scope->console()));
     m_worker_scope->console().set_client(*m_console);
@@ -150,25 +153,12 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
         },
         2, attr);
 
-    // FIXME: This is because I don't know all the libraries well enough to properly setup the environment to spec
-    // let alone making it a parallel implementation.
-    auto execution_context = make<JS::ExecutionContext>(m_worker_vm->heap());
-    execution_context->current_node = nullptr;
-    execution_context->this_value = m_worker_scope;
-    execution_context->function_name = "(global execution context)"sv;
-    execution_context->lexical_environment = &m_worker_realm->global_environment();
-    execution_context->variable_environment = &m_worker_realm->global_environment();
-    execution_context->realm = m_worker_realm;
-
-    m_worker_vm->push_execution_context(*execution_context);
-    m_worker_realm->set_global_object(m_worker_scope, m_worker_scope);
-
     // 8. Let worker global scope be the global object of realm execution context's Realm component.
     // NOTE: This is the DedicatedWorkerGlobalScope or SharedWorkerGlobalScope object created in the previous step.
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, move(execution_context));
+    m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, move(realm_execution_context));
 
     // 10. Set worker global scope's name to the value of options's name member.
     // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
