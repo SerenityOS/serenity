@@ -1515,6 +1515,12 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
         current_editor_wrapper().search_action();
     });
     view_menu.add_action(search_action);
+
+    view_menu.add_separator();
+
+    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window.set_fullscreen(!window.is_fullscreen());
+    }));
 }
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
