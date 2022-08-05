@@ -59,6 +59,8 @@ private:
     int m_second_resizee_minimum_size { 0 };
     FixedResizee m_fixed_resizee { FixedResizee::First };
     size_t m_last_child_count { 0 };
+    int m_first_resizee_max_size { 0 };
+    int m_second_resizee_max_size { 0 };
 
     void recompute_grabbables();
 
