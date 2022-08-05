@@ -1498,8 +1498,12 @@ bool Document::has_a_style_sheet_that_is_blocking_scripts() const
 
 String Document::referrer() const
 {
-    // FIXME: Return the document's actual referrer.
-    return "";
+    return m_referrer;
+}
+
+void Document::set_referrer(String referrer)
+{
+    m_referrer = referrer;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#fully-active

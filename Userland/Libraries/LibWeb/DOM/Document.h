@@ -64,6 +64,7 @@ public:
     void set_cookie(String const&, Cookie::Source = Cookie::Source::NonHttp);
 
     String referrer() const;
+    void set_referrer(String);
 
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
     void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
@@ -482,6 +483,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };
+
+    // https://html.spec.whatwg.org/multipage/dom.html#the-document's-referrer
+    String m_referrer { "" };
 
     // https://dom.spec.whatwg.org/#concept-document-origin
     HTML::Origin m_origin;
