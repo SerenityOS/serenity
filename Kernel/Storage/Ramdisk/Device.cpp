@@ -15,16 +15,14 @@ namespace Kernel {
 
 NonnullLockRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
-    auto device_name = MUST(KString::formatted("ramdisk{}", minor));
-
-    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor, move(device_name));
+    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor);
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();
 }
 
-RamdiskDevice::RamdiskDevice(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor, NonnullOwnPtr<KString> device_name)
-    : StorageDevice(LUNAddress { controller.controller_id(), 0, 0 }, major, minor, 512, region->size() / 512, move(device_name))
+RamdiskDevice::RamdiskDevice(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
+    : StorageDevice({}, LUNAddress { controller.controller_id(), 0, 0 }, 0, major, minor, 512, region->size() / 512)
     , m_region(move(region))
 {
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);

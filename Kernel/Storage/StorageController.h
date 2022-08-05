@@ -30,6 +30,7 @@ public:
     virtual size_t devices_count() const = 0;
 
     u32 controller_id() const { return m_controller_id; }
+    u32 hardware_relative_controller_id() const { return m_hardware_relative_controller_id; }
 
 protected:
     virtual bool reset() = 0;
@@ -37,9 +38,11 @@ protected:
 
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) = 0;
 
-    StorageController();
+    explicit StorageController(u32 hardware_relative_controller_id);
 
 private:
     u32 const m_controller_id { 0 };
+
+    u32 const m_hardware_relative_controller_id { 0 };
 };
 }

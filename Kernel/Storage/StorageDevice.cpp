@@ -19,10 +19,19 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
-    : BlockDevice(major, minor, sector_size)
-    , m_early_storage_device_name(move(device_name))
+StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
+    : BlockDevice(StorageManagement::storage_type_major_number(), StorageManagement::generate_storage_minor_number(), sector_size)
     , m_logical_unit_number_address(logical_unit_number_address)
+    , m_hardware_relative_controller_id(hardware_relative_controller_id)
+    , m_max_addressable_block(max_addressable_block)
+    , m_blocks_per_page(PAGE_SIZE / block_size())
+{
+}
+
+StorageDevice::StorageDevice(Badge<RamdiskDevice>, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block)
+    : BlockDevice(major, minor, sector_size)
+    , m_logical_unit_number_address(logical_unit_number_address)
+    , m_hardware_relative_controller_id(hardware_relative_controller_id)
     , m_max_addressable_block(max_addressable_block)
     , m_blocks_per_page(PAGE_SIZE / block_size())
 {
@@ -225,11 +234,6 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, UserOrKer
     }
 
     return pos + remaining;
-}
-
-StringView StorageDevice::early_storage_name() const
-{
-    return m_early_storage_device_name->view();
 }
 
 bool StorageDevice::can_write(OpenFileDescription const&, u64 offset) const

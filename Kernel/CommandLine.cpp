@@ -183,7 +183,7 @@ UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
 
 UNMAP_AFTER_INIT StringView CommandLine::root_device() const
 {
-    return lookup("root"sv).value_or("/dev/hda"sv);
+    return lookup("root"sv).value_or("lun0:0:0"sv);
 }
 
 bool CommandLine::is_nvme_polling_enabled() const

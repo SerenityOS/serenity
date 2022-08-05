@@ -9,8 +9,9 @@
 
 namespace Kernel {
 
-StorageController::StorageController()
+StorageController::StorageController(u32 hardware_relative_controller_id)
     : m_controller_id(StorageManagement::generate_controller_id())
+    , m_hardware_relative_controller_id(hardware_relative_controller_id)
 {
 }
 

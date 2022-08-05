@@ -24,6 +24,6 @@ public:
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) = 0;
 
 protected:
-    ATAController() = default;
+    ATAController();
 };
 }

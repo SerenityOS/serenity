@@ -18,6 +18,8 @@
 
 namespace Kernel {
 
+class ATAController;
+class NVMeController;
 class StorageManagement {
 
 public:
@@ -35,6 +37,9 @@ public:
 
     static u32 generate_controller_id();
 
+    static u32 generate_relative_nvme_controller_id(Badge<NVMeController>);
+    static u32 generate_relative_ata_controller_id(Badge<ATAController>);
+
     void remove_device(StorageDevice&);
 
 private:
@@ -46,6 +51,16 @@ private:
 
     void determine_boot_device();
     void determine_boot_device_with_partition_uuid();
+
+    void resolve_partition_from_boot_device_parameter(StorageDevice const& chosen_storage_device, StringView boot_device_prefix);
+    void determine_boot_device_with_logical_unit_number();
+    void determine_block_boot_device();
+    void determine_ramdisk_boot_device();
+    void determine_nvme_boot_device();
+    void determine_ata_boot_device();
+    void determine_hardware_relative_boot_device(StringView relative_hardware_prefix, Function<bool(StorageDevice const&)> filter_device_callback);
+    Array<unsigned, 3> extract_boot_device_address_parameters(StringView device_prefix);
+    Optional<unsigned> extract_boot_device_partition_number_parameter(StringView device_prefix);
 
     void dump_storage_devices_and_partitions() const;
 

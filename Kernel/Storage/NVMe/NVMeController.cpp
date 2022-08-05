@@ -17,20 +17,20 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
-Atomic<u8> NVMeController::s_controller_id {};
 
 UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
 {
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new NVMeController(device_identifier)));
+    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new NVMeController(device_identifier, StorageManagement::generate_relative_nvme_controller_id({}))));
     TRY(controller->initialize(is_queue_polled));
-    NVMeController::s_controller_id++;
     return controller;
 }
 
-UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier)
+UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier, u32 hardware_relative_controller_id)
     : PCI::Device(device_identifier.address())
+    , StorageController(hardware_relative_controller_id)
     , m_pci_device_id(device_identifier)
 {
 }
@@ -207,7 +207,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
-            m_namespaces.append(TRY(NVMeNameSpace::try_create(*this, m_queues, s_controller_id.load(), nsid, block_counts, block_size)));
+            m_namespaces.append(TRY(NVMeNameSpace::try_create(*this, m_queues, nsid, block_counts, block_size)));
             m_device_count++;
             dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
         }
