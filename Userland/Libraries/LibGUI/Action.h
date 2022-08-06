@@ -121,6 +121,9 @@ public:
 
     HashTable<MenuItem*> menu_items() const { return m_menu_items; }
 
+    Function<void(Action&)> on_enter;
+    Function<void(Action&)> on_leave;
+
 private:
     Action(String, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
     Action(String, Shortcut const&, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);

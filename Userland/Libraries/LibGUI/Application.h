@@ -12,6 +12,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGUI/Widget.h>
@@ -81,8 +82,8 @@ public:
     }
     void notify_drag_cancelled(Badge<ConnectionToWindowServer>);
 
-    Function<void(Action&)> on_action_enter;
-    Function<void(Action&)> on_action_leave;
+    Function<void(Action&)> on_action_enter { [](auto& action) { if (action.on_enter) action.on_enter(action); } };
+    Function<void(Action&)> on_action_leave { [](auto& action) { if (action.on_leave) action.on_leave(action); } };
     Function<void()> on_theme_change;
 
     auto const& global_shortcut_actions(Badge<GUI::CommandPalette>) const { return m_global_shortcut_actions; }
