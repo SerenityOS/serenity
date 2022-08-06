@@ -1499,9 +1499,9 @@ ErrorOr<NonnullLockRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode
     return new_inode;
 }
 
-ErrorOr<void> Ext2FSInode::populate_lookup_cache() const
+ErrorOr<void> Ext2FSInode::populate_lookup_cache()
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_exclusively_locked_by_current_thread());
     if (!m_lookup_cache.is_empty())
         return {};
     HashMap<NonnullOwnPtr<KString>, InodeIndex> children;
@@ -1521,11 +1521,11 @@ ErrorOr<NonnullLockRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
 {
     VERIFY(is_directory());
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): Looking up '{}'", identifier(), name);
-    TRY(populate_lookup_cache());
 
     InodeIndex inode_index;
     {
         MutexLocker locker(m_inode_lock);
+        TRY(populate_lookup_cache());
         auto it = m_lookup_cache.find(name);
         if (it == m_lookup_cache.end()) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);

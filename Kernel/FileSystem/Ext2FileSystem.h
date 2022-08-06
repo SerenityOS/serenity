@@ -53,7 +53,7 @@ private:
     virtual ErrorOr<int> get_block_address(int) override;
 
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
-    ErrorOr<void> populate_lookup_cache() const;
+    ErrorOr<void> populate_lookup_cache();
     ErrorOr<void> resize(u64);
     ErrorOr<void> write_indirect_block(BlockBasedFileSystem::BlockIndex, Span<BlockBasedFileSystem::BlockIndex>);
     ErrorOr<void> grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, Span<BlockBasedFileSystem::BlockIndex>, Vector<BlockBasedFileSystem::BlockIndex>&, unsigned&);
@@ -71,7 +71,7 @@ private:
     Ext2FSInode(Ext2FS&, InodeIndex);
 
     mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
-    mutable HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
+    HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
 };
 
