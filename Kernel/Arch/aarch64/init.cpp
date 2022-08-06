@@ -22,6 +22,7 @@
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Arch/aarch64/TrapFrame.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
@@ -100,9 +101,6 @@ extern "C" [[noreturn]] void init()
         (*ctor)();
     kmalloc_init();
 
-    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
-        (*ctor)();
-
     load_kernel_symbol_table();
 
     auto& framebuffer = RPi::Framebuffer::the();
@@ -111,6 +109,13 @@ extern "C" [[noreturn]] void init()
         draw_logo();
     }
     dmesgln("Starting SerenityOS...");
+
+    DeviceManagement::initialize();
+
+    // Invoke all static global constructors in the kernel.
+    // Note that we want to do this as early as possible.
+    for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
+        (*ctor)();
 
     initialize_interrupts();
     InterruptManagement::initialize();
