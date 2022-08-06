@@ -50,13 +50,74 @@ public:
         return Handle(adopt_ref(*new HandleImpl(cell)));
     }
 
-    T* cell() { return static_cast<T*>(m_impl->cell()); }
-    const T* cell() const { return static_cast<const T*>(m_impl->cell()); }
+    Handle(T* cell)
+    {
+        if (cell)
+            m_impl = adopt_ref(*new HandleImpl(cell));
+    }
 
-    bool is_null() const { return m_impl.is_null(); }
+    Handle(T& cell)
+        : m_impl(adopt_ref(*new HandleImpl(&cell)))
+    {
+    }
 
-    T* operator->() { return cell(); }
-    T const* operator->() const { return cell(); }
+    T* cell()
+    {
+        if (!m_impl)
+            return nullptr;
+        return static_cast<T*>(m_impl->cell());
+    }
+
+    T const* cell() const
+    {
+        if (!m_impl)
+            return nullptr;
+        return static_cast<T const*>(m_impl->cell());
+    }
+
+    T* ptr()
+    {
+        return cell();
+    }
+    T const* ptr() const
+    {
+        return cell();
+    }
+
+    bool is_null() const
+    {
+        return m_impl.is_null();
+    }
+
+    T* operator->()
+    {
+        return cell();
+    }
+    T const* operator->() const
+    {
+        return cell();
+    }
+
+    T& operator*()
+    {
+        return *cell();
+    }
+    T const& operator*() const
+    {
+        return *cell();
+    }
+
+    bool operator!() const
+    {
+        return !cell();
+    }
+    operator bool() const
+    {
+        return cell();
+    }
+
+    operator T*() { return cell(); }
+    operator T const*() const { return cell(); }
 
 private:
     explicit Handle(NonnullRefPtr<HandleImpl> impl)
