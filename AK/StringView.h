@@ -140,6 +140,14 @@ public:
         return substring_view(begin.release_value() + 1);
     }
 
+    [[nodiscard]] StringView find_first_split_view(char separator) const
+    {
+        auto needle_begin = find(separator);
+        if (!needle_begin.has_value())
+            return *this;
+        return substring_view(0, needle_begin.release_value());
+    }
+
     template<VoidFunction<StringView> Callback>
     void for_each_split_view(char separator, bool keep_empty, Callback callback) const
     {
