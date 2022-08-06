@@ -279,6 +279,8 @@
 #include <LibWeb/Bindings/NavigatorConstructor.h>
 #include <LibWeb/Bindings/NavigatorPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
+#include <LibWeb/Bindings/NodeFilterConstructor.h>
+#include <LibWeb/Bindings/NodeFilterPrototype.h>
 #include <LibWeb/Bindings/NodeIteratorConstructor.h>
 #include <LibWeb/Bindings/NodeIteratorPrototype.h>
 #include <LibWeb/Bindings/NodeListConstructor.h>
@@ -533,6 +535,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(NamedNodeMap)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(Navigator)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                                                               \
+    ADD_WINDOW_OBJECT_INTERFACE(NodeFilter)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(NodeIterator)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(NodeList)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(PageTransitionEvent)                                                \

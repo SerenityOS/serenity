@@ -8,6 +8,7 @@
 
 #include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/DOM/Node.h>
 
 namespace Web::DOM {
 
@@ -26,6 +27,8 @@ public:
         FILTER_REJECT = 2,
         FILTER_SKIP = 3,
     };
+
+    NodeFilter::Result accept_node(Node&) { return NodeFilter::FILTER_ACCEPT; }
 
 private:
     NodeFilter(JS::Realm&, Bindings::CallbackType&);
