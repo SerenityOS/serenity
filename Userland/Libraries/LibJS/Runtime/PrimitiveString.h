@@ -46,8 +46,8 @@ private:
     mutable bool m_has_utf8_string { false };
     mutable bool m_has_utf16_string { false };
 
-    mutable PrimitiveString* m_left { nullptr };
-    mutable PrimitiveString* m_right { nullptr };
+    mutable PrimitiveString* m_lhs { nullptr };
+    mutable PrimitiveString* m_rhs { nullptr };
 
     mutable String m_utf8_string;
 

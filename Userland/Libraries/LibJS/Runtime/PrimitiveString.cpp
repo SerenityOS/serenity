@@ -16,10 +16,10 @@
 namespace JS {
 
 PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
+    : m_is_rope(true)
+    , m_lhs(&lhs)
+    , m_rhs(&rhs)
 {
-    m_is_rope = true;
-    m_left = &lhs;
-    m_right = &rhs;
 }
 
 PrimitiveString::PrimitiveString(String string)
@@ -43,8 +43,8 @@ void PrimitiveString::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
     if (m_is_rope) {
-        visitor.visit(m_left);
-        visitor.visit(m_right);
+        visitor.visit(m_lhs);
+        visitor.visit(m_rhs);
     }
 }
 
@@ -189,9 +189,9 @@ void PrimitiveString::resolve_rope_if_needed() const
 
     // NOTE: Special case for two concatenated UTF-16 strings.
     //       This is here as an optimization, although I'm unsure how valuable it is.
-    if (m_left->has_utf16_string() && m_right->has_utf16_string()) {
-        auto const& lhs_string = m_left->utf16_string();
-        auto const& rhs_string = m_right->utf16_string();
+    if (m_lhs->has_utf16_string() && m_rhs->has_utf16_string()) {
+        auto const& lhs_string = m_lhs->utf16_string();
+        auto const& rhs_string = m_rhs->utf16_string();
 
         Vector<u16, 1> combined;
         combined.ensure_capacity(lhs_string.length_in_code_units() + rhs_string.length_in_code_units());
@@ -201,8 +201,8 @@ void PrimitiveString::resolve_rope_if_needed() const
         m_utf16_string = Utf16String(move(combined));
         m_has_utf16_string = true;
         m_is_rope = false;
-        m_left = nullptr;
-        m_right = nullptr;
+        m_lhs = nullptr;
+        m_rhs = nullptr;
         return;
     }
 
@@ -213,13 +213,13 @@ void PrimitiveString::resolve_rope_if_needed() const
     // NOTE: We traverse the rope tree without using recursion, since we'd run out of
     //       stack space quickly when handling a long sequence of unresolved concatenations.
     Vector<PrimitiveString const*> stack;
-    stack.append(m_right);
-    stack.append(m_left);
+    stack.append(m_rhs);
+    stack.append(m_lhs);
     while (!stack.is_empty()) {
         auto* current = stack.take_last();
         if (current->m_is_rope) {
-            stack.append(current->m_right);
-            stack.append(current->m_left);
+            stack.append(current->m_rhs);
+            stack.append(current->m_lhs);
             continue;
         }
         pieces.append(current);
@@ -289,8 +289,8 @@ void PrimitiveString::resolve_rope_if_needed() const
     m_utf8_string = builder.to_string();
     m_has_utf8_string = true;
     m_is_rope = false;
-    m_left = nullptr;
-    m_right = nullptr;
+    m_lhs = nullptr;
+    m_rhs = nullptr;
 }
 
 }
