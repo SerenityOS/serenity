@@ -23,16 +23,7 @@ enum class WriterBehavior : u32 {
     QuoteOnlyInFieldStart = WriteHeaders << 2,
     QuoteAll = WriteHeaders << 3,
 };
-
-inline WriterBehavior operator&(WriterBehavior left, WriterBehavior right)
-{
-    return static_cast<WriterBehavior>(static_cast<u32>(left) & static_cast<u32>(right));
-}
-
-inline WriterBehavior operator|(WriterBehavior left, WriterBehavior right)
-{
-    return static_cast<WriterBehavior>(static_cast<u32>(left) | static_cast<u32>(right));
-}
+AK_ENUM_BITWISE_OPERATORS(WriterBehavior);
 
 struct WriterTraits {
     DeprecatedString separator;
@@ -101,7 +92,7 @@ private:
 
     void generate()
     {
-        auto with_headers = (m_behaviors & WriterBehavior::WriteHeaders) != WriterBehavior::None;
+        auto with_headers = has_flag(m_behaviors, WriterBehavior::WriteHeaders);
         if (with_headers) {
             write_row(m_names);
             if (m_output.write({ "\n", 1 }) != 1)
@@ -139,15 +130,15 @@ private:
     {
         auto string = DeprecatedString::formatted("{}", FormatIfSupported(entry));
 
-        auto safe_to_write_normally = (m_behaviors & WriterBehavior::QuoteAll) == WriterBehavior::None
+        auto safe_to_write_normally = !has_flag(m_behaviors, WriterBehavior::QuoteAll)
             && !string.contains('\n')
             && !string.contains(m_traits.separator);
 
         if (safe_to_write_normally) {
-            if ((m_behaviors & WriterBehavior::QuoteOnlyInFieldStart) == WriterBehavior::None)
-                safe_to_write_normally = !string.contains(m_traits.quote);
-            else
+            if (has_flag(m_behaviors, WriterBehavior::QuoteOnlyInFieldStart))
                 safe_to_write_normally = !string.starts_with(m_traits.quote);
+            else
+                safe_to_write_normally = !string.contains(m_traits.quote);
         }
 
         if (safe_to_write_normally) {
