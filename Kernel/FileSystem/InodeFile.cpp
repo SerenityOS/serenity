@@ -80,11 +80,11 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> InodeFile::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64&, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> InodeFile::vmobject_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool shared)
 {
     if (shared)
-        return TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
-    return TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
+        return TRY(Memory::SharedInodeVMObject::try_create_with_inode_and_range(inode(), offset, range.size()));
+    return TRY(Memory::PrivateInodeVMObject::try_create_with_inode_and_range(inode(), offset, range.size()));
 }
 
 ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const&) const
