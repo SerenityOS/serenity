@@ -54,4 +54,10 @@ There are multiple packages to handle auto formatting with
 - [format-all-mode](https://github.com/lassik/emacs-format-all-the-code)
 - [clang-format-plus](https://github.com/SavchenkoValeriy/emacs-clang-format-plus)
 
+Alternatively, this can be done without additional packages, using `lsp-mode`.
+You can use the following `.dir-locals.el` file placed in the project root:
+
+```lisp
+((c++-mode
+  (eval add-hook 'before-save-hook #'lsp-format-buffer nil t)))
 ```
