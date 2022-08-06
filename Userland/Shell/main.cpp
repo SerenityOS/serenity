@@ -231,7 +231,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(script_args))));
 
     if (!command_to_run.is_empty()) {
-        dbgln("sh -c '{}'\n", command_to_run);
         auto result = shell->run_command(command_to_run);
         if (!keep_open)
             return result;
