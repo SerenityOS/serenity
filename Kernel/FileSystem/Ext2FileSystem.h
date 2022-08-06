@@ -61,6 +61,8 @@ private:
     ErrorOr<void> grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, Span<BlockBasedFileSystem::BlockIndex>, Vector<BlockBasedFileSystem::BlockIndex>&, unsigned&);
     ErrorOr<void> shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, size_t, unsigned&);
     ErrorOr<void> flush_block_list();
+
+    ErrorOr<void> compute_block_list_with_exclusive_locking();
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list() const;
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_with_meta_blocks() const;
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl(bool include_block_list_blocks) const;
@@ -70,9 +72,11 @@ private:
     Ext2FS const& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
-    mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
+    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
     HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
+
+    Mutex m_block_list_lock { "BlockList"sv };
 };
 
 class Ext2FS final : public BlockBasedFileSystem {

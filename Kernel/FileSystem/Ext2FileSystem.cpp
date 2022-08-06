@@ -798,6 +798,19 @@ ErrorOr<NonnullLockRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
+ErrorOr<void> Ext2FSInode::compute_block_list_with_exclusive_locking()
+{
+    // Note: We verify that the inode mutex is being held locked. Because only the read_bytes_locked()
+    // method uses this method and the mutex can be locked in shared mode when reading the Inode if
+    // it is an ext2 regular file, but also in exclusive mode, when the Inode is an ext2 directory and being
+    // traversed, we use another exclusive lock to ensure we always mutate the block list safely.
+    VERIFY(m_inode_lock.is_locked());
+    MutexLocker block_list_locker(m_block_list_lock);
+    if (m_block_list.is_empty())
+        m_block_list = TRY(compute_block_list());
+    return {};
+}
+
 ErrorOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     MutexLocker inode_locker(m_inode_lock);
@@ -817,8 +830,12 @@ ErrorOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernel
         return nread;
     }
 
-    if (m_block_list.is_empty())
-        m_block_list = TRY(compute_block_list());
+    // Note: We bypass the const declaration of this method, but this is a strong
+    // requirement to be able to accomplish the read operation successfully.
+    // We call this special method becuase it locks a separate mutex to ensure we
+    // update the block list of the inode safely, as the m_inode_lock is locked in
+    // shared mode.
+    TRY(const_cast<Ext2FSInode&>(*this).compute_block_list_with_exclusive_locking());
 
     if (m_block_list.is_empty()) {
         dmesgln("Ext2FSInode[{}]::read_bytes(): Empty block list", identifier());
