@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::create_realm)
     VERIFY(realm);
     auto* realm_global_object = vm.heap().allocate_without_global_object<GlobalObject>(*realm);
     VERIFY(realm_global_object);
-    realm->set_global_object(realm_global_object, js_undefined());
+    realm->set_global_object(realm_global_object, nullptr);
     realm_global_object->set_associated_realm(*realm);
     realm_global_object->initialize_global_object();
     return Value(realm_global_object->$262());

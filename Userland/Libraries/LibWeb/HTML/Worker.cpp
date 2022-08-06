@@ -102,7 +102,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         *m_worker_vm,
-        [&](JS::Realm& realm) -> JS::Value {
+        [&](JS::Realm& realm) -> JS::GlobalObject* {
             //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
             //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
@@ -113,9 +113,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             m_worker_scope = m_worker_vm->heap().allocate_without_global_object<JS::GlobalObject>(realm);
             return m_worker_scope;
         },
-        [&](JS::Realm&) -> JS::Value {
-            return JS::js_undefined();
-        });
+        nullptr);
     m_worker_realm = realm_execution_context->realm;
 
     m_console = adopt_ref(*new WorkerDebugConsoleClient(m_worker_scope->console()));

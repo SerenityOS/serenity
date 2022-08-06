@@ -367,7 +367,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
-NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Function<JS::Value(JS::Realm&)> create_global_object, Function<JS::Value(JS::Realm&)> create_global_this_value)
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Function<JS::GlobalObject*(JS::Realm&)> create_global_object, Function<JS::GlobalObject*(JS::Realm&)> create_global_this_value)
 {
     // 1. Perform InitializeHostDefinedRealm() with the provided customizations for creating the global object and the global this binding.
     // 2. Let realm execution context be the running JavaScript execution context.

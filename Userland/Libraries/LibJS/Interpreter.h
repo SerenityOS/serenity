@@ -47,13 +47,11 @@ public:
 
         interpreter->m_global_execution_context = MUST(Realm::initialize_host_defined_realm(
             vm,
-            [&](Realm& realm) -> Value {
+            [&](Realm& realm) -> GlobalObject* {
                 global_object = interpreter->heap().allocate_without_global_object<GlobalObjectType>(realm, forward<Args>(args)...);
                 return global_object;
             },
-            [](Realm&) -> Value {
-                return js_undefined();
-            }));
+            nullptr));
 
         // NOTE: These are not in the spec.
         static FlyString global_execution_context_name = "(global execution context)";

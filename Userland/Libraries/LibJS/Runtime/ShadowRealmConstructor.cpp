@@ -64,7 +64,7 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
 
     // 10. Perform ? SetRealmGlobalObject(realmRec, undefined, undefined).
     auto* new_global_object = vm.heap().allocate_without_global_object<GlobalObject>(*realm);
-    realm->set_global_object(new_global_object, js_undefined());
+    realm->set_global_object(new_global_object, nullptr);
     new_global_object->initialize_global_object();
 
     // TODO: I don't think we should have these exactly like this, that doesn't work well with how
