@@ -472,6 +472,8 @@ else()
         MiniStdLib.cpp
         UBSanitizer.cpp
 
+        Devices/DeviceManagement.cpp
+
         Graphics/Console/BootFramebufferConsole.cpp
         Graphics/Console/GenericFramebufferConsole.cpp
 
