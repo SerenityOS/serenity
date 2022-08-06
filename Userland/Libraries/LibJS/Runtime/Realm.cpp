@@ -21,7 +21,7 @@ Realm* Realm::create(VM& vm)
 }
 
 // 9.6 InitializeHostDefinedRealm ( ), https://tc39.es/ecma262/#sec-initializehostdefinedrealm
-ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_defined_realm(VM& vm, Function<Value(Realm&)> create_global_object, Function<Value(Realm&)> create_global_this_value)
+ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_defined_realm(VM& vm, Function<GlobalObject*(Realm&)> create_global_object, Function<GlobalObject*(Realm&)> create_global_this_value)
 {
     DeferGC defer_gc(vm.heap());
 
@@ -46,20 +46,16 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
     // 7. If the host requires use of an exotic object to serve as realm's global object,
     //    let global be such an object created in a host-defined manner.
     //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
-    Value global;
+    GlobalObject* global = nullptr;
     if (create_global_object)
         global = create_global_object(*realm);
-    else
-        global = js_undefined();
 
     // 8. If the host requires that the this binding in realm's global scope return an object other than the global object,
     //    let thisValue be such an object created in a host-defined manner.
     //    Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.
-    Value this_value;
+    GlobalObject* this_value = nullptr;
     if (create_global_this_value)
         this_value = create_global_this_value(*realm);
-    else
-        this_value = js_undefined();
 
     // 9. Perform SetRealmGlobalObject(realm, global, thisValue).
     realm->set_global_object(global, this_value);
@@ -75,34 +71,33 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
 }
 
 // 9.3.3 SetRealmGlobalObject ( realmRec, globalObj, thisValue ), https://tc39.es/ecma262/#sec-setrealmglobalobject
-void Realm::set_global_object(Value global_object, Value this_value)
+void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_value)
 {
     // 1. If globalObj is undefined, then
-    if (global_object.is_undefined()) {
+    if (global_object == nullptr) {
         // NOTE: Step 1 is not supported, the global object must be allocated elsewhere.
         VERIFY_NOT_REACHED();
     }
 
     // 2. Assert: Type(globalObj) is Object.
-    VERIFY(global_object.is_object());
-    VERIFY(is<GlobalObject>(global_object.as_object()));
+    VERIFY(global_object);
 
     // Non-standard
-    verify_cast<GlobalObject>(global_object.as_object()).set_associated_realm(*this);
+    global_object->set_associated_realm(*this);
 
     // 3. If thisValue is undefined, set thisValue to globalObj.
-    if (this_value.is_undefined())
+    if (this_value == nullptr)
         this_value = global_object;
 
     // Non-standard
-    VERIFY(this_value.is_object());
+    VERIFY(this_value);
 
     // 4. Set realmRec.[[GlobalObject]] to globalObj.
-    m_global_object = &verify_cast<GlobalObject>(global_object.as_object());
+    m_global_object = global_object;
 
     // 5. Let newGlobalEnv be NewGlobalEnvironment(globalObj, thisValue).
     // 6. Set realmRec.[[GlobalEnv]] to newGlobalEnv.
-    m_global_environment = m_global_object->heap().allocate_without_global_object<GlobalEnvironment>(verify_cast<GlobalObject>(global_object.as_object()), this_value.as_object());
+    m_global_environment = m_global_object->heap().allocate_without_global_object<GlobalEnvironment>(*global_object, *this_value);
 
     // 7. Return unused.
 }

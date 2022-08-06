@@ -168,16 +168,16 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
         // 5. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
         auto realm_execution_context = Bindings::create_a_new_javascript_realm(
             Bindings::main_thread_vm(),
-            [&](JS::Realm& realm) -> JS::Value {
+            [&](JS::Realm& realm) -> JS::GlobalObject* {
                 // - For the global object, create a new Window object.
                 window = HTML::Window::create();
                 auto* global_object = realm.heap().allocate_without_global_object<Bindings::WindowObject>(realm, *window);
                 VERIFY(window->wrapper() == global_object);
                 return global_object;
             },
-            [](JS::Realm&) -> JS::Value {
+            [](JS::Realm&) -> JS::GlobalObject* {
                 // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
-                return JS::js_undefined();
+                return nullptr;
             });
 
         // 6. Let topLevelCreationURL be creationURL.
