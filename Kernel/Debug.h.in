@@ -303,6 +303,10 @@
 #cmakedefine01 STORAGE_DEVICE_DEBUG
 #endif
 
+#ifndef SYSFS_DEBUG
+#cmakedefine01 SYSFS_DEBUG
+#endif
+
 #ifndef TCP_DEBUG
 #cmakedefine01 TCP_DEBUG
 #endif

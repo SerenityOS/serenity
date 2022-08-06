@@ -115,7 +115,7 @@ ErrorOr<void> SysFSUSBDeviceInformation::refresh_data(OpenFileDescription& descr
 
 ErrorOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
-    dbgln_if(PROCFS_DEBUG, "SysFSUSBDeviceInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
+    dbgln_if(SYSFS_DEBUG, "SysFSUSBDeviceInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
 
     VERIFY(offset >= 0);
     VERIFY(buffer.user_or_kernel_ptr());
