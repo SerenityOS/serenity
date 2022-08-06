@@ -468,6 +468,8 @@ else()
         Arch/aarch64/vector_table.S
 
         # Files from base Kernel
+        CommandLine.cpp
+        KString.cpp
         KSyms.cpp
         MiniStdLib.cpp
         UBSanitizer.cpp

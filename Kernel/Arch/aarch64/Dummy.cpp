@@ -148,26 +148,6 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
-namespace Kernel {
-
-// KString.cpp
-ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&)
-{
-    VERIFY_NOT_REACHED();
-    return ENOMEM;
-}
-ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView)
-{
-    VERIFY_NOT_REACHED();
-    return ENOMEM;
-}
-void KString::operator delete(void*)
-{
-    VERIFY_NOT_REACHED();
-}
-
-}
-
 extern "C" {
 FlatPtr kernel_mapping_base;
 }
