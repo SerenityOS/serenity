@@ -54,7 +54,7 @@ u64 Timer::microseconds_since_boot()
 
 bool Timer::handle_irq(RegisterState const&)
 {
-    dbgln("Timer fired: {} us", m_current_timer_value);
+    dmesgln("Timer fired: {} us", m_current_timer_value);
 
     m_current_timer_value += m_interrupt_interval;
     set_compare(TimerID::Timer1, m_current_timer_value);
