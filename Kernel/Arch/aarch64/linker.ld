@@ -78,4 +78,4 @@ SECTIONS
     page_tables_phys_end = .;
 }
 
-size_of_bss_divided_by_8 = (end_of_bss - start_of_bss) / 8;
+size_of_bss_divided_by_8 = (end_of_bss - start_of_bss + 7) / 8;
