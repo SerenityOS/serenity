@@ -87,9 +87,9 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     return {};
 }
 
-ErrorOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> TmpFSInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
@@ -106,7 +106,7 @@ ErrorOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBu
     return size;
 }
 
-ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> TmpFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());

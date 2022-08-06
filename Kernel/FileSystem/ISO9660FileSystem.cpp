@@ -398,9 +398,9 @@ u32 ISO9660FS::calculate_directory_entry_cache_key(ISO::DirectoryRecordHeader co
     return LittleEndian { record.extent_location.little };
 }
 
-ErrorOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> ISO9660Inode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    MutexLocker inode_locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
 
     u32 data_length = LittleEndian { m_record.data_length.little };
     u32 extent_location = LittleEndian { m_record.extent_location.little };
@@ -493,7 +493,7 @@ ErrorOr<void> ISO9660Inode::flush_metadata()
     return {};
 }
 
-ErrorOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
+ErrorOr<size_t> ISO9660Inode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     return EROFS;
 }

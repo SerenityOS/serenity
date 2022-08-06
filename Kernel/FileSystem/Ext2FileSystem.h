@@ -35,12 +35,12 @@ public:
 
 private:
     // ^Inode
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
+    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;

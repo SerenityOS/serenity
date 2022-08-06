@@ -77,8 +77,8 @@ protected:
 
     // ^Inode
     virtual ErrorOr<void> attach(OpenFileDescription& description) override final;
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override final;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
+    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
@@ -123,7 +123,7 @@ protected:
     ProcessID associated_pid() const { return m_pid; }
 
     // ^Inode
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override final;
+    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override final;
 
 private:
     const ProcessID m_pid;
@@ -142,7 +142,7 @@ private:
     virtual void did_seek(OpenFileDescription&, off_t) override { }
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 };
 
@@ -159,7 +159,7 @@ private:
     virtual void did_seek(OpenFileDescription&, off_t) override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 
     const SegmentedProcFSIndex::ProcessSubDirectory m_sub_directory_type;
@@ -185,7 +185,7 @@ private:
     virtual void did_seek(OpenFileDescription&, off_t) override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override final;
 
     ErrorOr<void> refresh_data(OpenFileDescription& description);
