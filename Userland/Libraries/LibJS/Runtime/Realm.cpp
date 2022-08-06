@@ -75,8 +75,11 @@ void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_va
 {
     // 1. If globalObj is undefined, then
     if (global_object == nullptr) {
-        // NOTE: Step 1 is not supported, the global object must be allocated elsewhere.
-        VERIFY_NOT_REACHED();
+        // a. Let intrinsics be realmRec.[[Intrinsics]].
+        // b. Set globalObj to OrdinaryObjectCreate(intrinsics.[[%Object.prototype%]]).
+        // NOTE: We allocate a proper GlobalObject directly as this plain object is
+        //       turned into one via SetDefaultGlobalBindings in the spec.
+        global_object = heap().allocate_without_global_object<GlobalObject>(*this);
     }
 
     // 2. Assert: Type(globalObj) is Object.
