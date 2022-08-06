@@ -48,8 +48,8 @@ public:
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
 
     String get_fen() const;
-    bool import_pgn(StringView import_path);
-    bool export_pgn(StringView export_path) const;
+    void import_pgn(Core::File&);
+    void export_pgn(Core::File&) const;
 
     int resign();
     void flip_board();

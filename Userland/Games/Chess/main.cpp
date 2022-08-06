@@ -9,10 +9,10 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -22,7 +22,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd thread proc exec unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -30,8 +30,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/Chess.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
-
-    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec"));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-chess"sv));
 
@@ -42,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
-    TRY(Core::System::unveil(Core::StandardPaths::home_directory(), "wcbr"sv));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto size = Config::read_i32("Chess"sv, "Display"sv, "size"sv, 512);
@@ -69,30 +67,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_separator());
 
     TRY(game_menu->try_add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
-        Optional<String> import_path = GUI::FilePicker::get_open_filepath(window);
-
-        if (!import_path.has_value())
+        auto result = FileSystemAccessClient::Client::the().try_open_file(window);
+        if (result.is_error())
             return;
 
-        if (!widget->import_pgn(import_path.value())) {
-            GUI::MessageBox::show(window, "Unable to import game.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        dbgln("Imported PGN file from {}", import_path.value());
+        widget->import_pgn(result.value());
+        dbgln("Imported PGN file from {}", result.value()->filename());
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
-        Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "pgn");
-
-        if (!export_path.has_value())
+        auto result = FileSystemAccessClient::Client::the().try_save_file(window, "Untitled", "pgn");
+        if (result.is_error())
             return;
 
-        if (!widget->export_pgn(export_path.value())) {
-            GUI::MessageBox::show(window, "Unable to export game.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        dbgln("Exported PGN file to {}", export_path.value());
+        widget->export_pgn(result.value());
+        dbgln("Exported PGN file to {}", result.value()->filename());
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
         GUI::Clipboard::the().set_data(widget->get_fen().bytes());

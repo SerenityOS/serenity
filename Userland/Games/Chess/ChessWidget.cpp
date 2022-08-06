@@ -518,15 +518,8 @@ String ChessWidget::get_fen() const
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
-bool ChessWidget::import_pgn(StringView import_path)
+void ChessWidget::import_pgn(Core::File& file)
 {
-    auto file_or_error = Core::File::open(import_path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Couldn't open '{}': {}", import_path, file_or_error.error());
-        return false;
-    }
-    auto& file = *file_or_error.value();
-
     m_board = Chess::Board();
 
     ByteBuffer bytes = file.read_all();
@@ -618,20 +611,10 @@ bool ChessWidget::import_pgn(StringView import_path)
     m_playback_move_number = m_board_playback.moves().size();
     m_playback = true;
     update();
-
-    file.close();
-    return true;
 }
 
-bool ChessWidget::export_pgn(StringView export_path) const
+void ChessWidget::export_pgn(Core::File& file) const
 {
-    auto file_or_error = Core::File::open(export_path, Core::OpenMode::WriteOnly);
-    if (file_or_error.is_error()) {
-        warnln("Couldn't open '{}': {}", export_path, file_or_error.error());
-        return false;
-    }
-    auto& file = *file_or_error.value();
-
     // Tag Pair Section
     file.write("[Event \"Casual Game\"]\n"sv);
     file.write("[Site \"SerenityOS Chess\"]\n"sv);
@@ -669,9 +652,6 @@ bool ChessWidget::export_pgn(StringView export_path) const
     file.write(" } "sv);
     file.write(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
     file.write("\n"sv);
-
-    file.close();
-    return true;
 }
 
 void ChessWidget::flip_board()
