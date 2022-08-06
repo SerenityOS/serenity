@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Marcin Undak <mcinek@gmail.com>
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,19 +21,13 @@
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/Arch/aarch64/TrapFrame.h>
+#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 
-struct TrapFrame {
-    u64 x[31];     // Saved general purpose registers
-    u64 spsr_el1;  // Save Processor Status Register, EL1
-    u64 elr_el1;   // Exception Link Reigster, EL1
-    u64 tpidr_el1; // EL0 thread ID
-    u64 sp_el0;    // EL0 stack pointer
-};
-
-extern "C" void exception_common(TrapFrame const* const trap_frame);
-extern "C" void exception_common(TrapFrame const* const trap_frame)
+extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame);
+extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
 {
     constexpr bool print_stack_frame = true;
 
@@ -86,6 +81,8 @@ ALWAYS_INLINE static Processor& bootstrap_processor()
     return (Processor&)bootstrap_processor_storage;
 }
 
+Atomic<Graphics::Console*> g_boot_console;
+
 extern "C" [[noreturn]] void init()
 {
     dbgln("Welcome to Serenity OS!");
@@ -108,26 +105,28 @@ extern "C" [[noreturn]] void init()
 
     load_kernel_symbol_table();
 
+    auto& framebuffer = RPi::Framebuffer::the();
+    if (framebuffer.initialized()) {
+        g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(framebuffer.gpu_buffer(), framebuffer.width(), framebuffer.width(), framebuffer.pitch()).value().leak_ref();
+        draw_logo();
+    }
+    dmesgln("Starting SerenityOS...");
+
     initialize_interrupts();
     InterruptManagement::initialize();
     Processor::enable_interrupts();
 
     auto firmware_version = query_firmware_version();
-    dbgln("Firmware version: {}", firmware_version);
+    dmesgln("Firmware version: {}", firmware_version);
 
-    dbgln("Initialize MMU");
+    dmesgln("Initialize MMU");
     init_page_tables();
-
-    auto& framebuffer = RPi::Framebuffer::the();
-    if (framebuffer.initialized()) {
-        draw_logo();
-    }
 
     auto& timer = RPi::Timer::the();
     timer.set_interrupt_interval_usec(1'000'000);
     timer.enable_interrupt_mode();
 
-    dbgln("Enter loop");
+    dmesgln("Enter loop");
 
     // This will not disable interrupts, so the timer will still fire and show that
     // interrupts are working!

@@ -459,6 +459,9 @@ else()
         MiniStdLib.cpp
         UBSanitizer.cpp
 
+        Graphics/Console/BootFramebufferConsole.cpp
+        Graphics/Console/GenericFramebufferConsole.cpp
+
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
         Memory/InodeVMObject.cpp
