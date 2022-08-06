@@ -226,6 +226,12 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
     g_themes = Gfx::list_installed_system_themes();
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
+    auto& current_theme = g_themes[0];
+    for (auto& theme : g_themes) {
+        if (theme.name == current_theme_name)
+            current_theme = theme;
+    }
+
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
@@ -235,6 +241,13 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
                 auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false);
                 VERIFY(success);
             });
+            action->on_enter = [theme_identifier](auto&) {
+                auto& theme = g_themes[theme_identifier];
+                GUI::ConnectionToWindowServer::the().async_set_system_theme(theme.path, theme.name, false);
+            };
+            action->on_leave = [&current_theme](auto&) {
+                GUI::ConnectionToWindowServer::the().async_set_system_theme(current_theme.path, current_theme.name, false);
+            };
             if (theme.name == current_theme_name)
                 action->set_checked(true);
             g_themes_group.add_action(action);
@@ -250,7 +263,10 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
         auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
         for (size_t index = 0; index < g_themes.size(); ++index) {
             auto* action = g_themes_menu->action_at(index);
-            action->set_checked(!theme_overridden && action->text() == current_theme_name);
+            auto is_current_theme = action->text() == current_theme_name;
+            action->set_checked(is_current_theme && !theme_overridden);
+            if (is_current_theme)
+                current_theme = g_themes[index];
         }
     };
 
