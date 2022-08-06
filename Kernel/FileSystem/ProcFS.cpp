@@ -120,7 +120,7 @@ ErrorOr<void> ProcFSGlobalInode::attach(OpenFileDescription& description)
     return m_associated_component->refresh_data(description);
 }
 
-ErrorOr<size_t> ProcFSGlobalInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
+ErrorOr<size_t> ProcFSGlobalInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
 {
     return m_associated_component->read_bytes(offset, count, buffer, fd);
 }
@@ -163,7 +163,7 @@ InodeMetadata ProcFSGlobalInode::metadata() const
     return metadata;
 }
 
-ErrorOr<size_t> ProcFSGlobalInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
+ErrorOr<size_t> ProcFSGlobalInode::write_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
 {
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
@@ -233,7 +233,7 @@ ProcFSProcessAssociatedInode::ProcFSProcessAssociatedInode(ProcFS const& fs, Pro
 {
 }
 
-ErrorOr<size_t> ProcFSProcessAssociatedInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
+ErrorOr<size_t> ProcFSProcessAssociatedInode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     return ENOTSUP;
 }
@@ -271,7 +271,7 @@ InodeMetadata ProcFSProcessDirectoryInode::metadata() const
     return metadata;
 }
 
-ErrorOr<size_t> ProcFSProcessDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> ProcFSProcessDirectoryInode::read_bytes_locked(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -327,7 +327,7 @@ ProcFSProcessSubDirectoryInode::ProcFSProcessSubDirectoryInode(ProcFS const& pro
 {
 }
 
-ErrorOr<size_t> ProcFSProcessSubDirectoryInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> ProcFSProcessSubDirectoryInode::read_bytes_locked(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -490,9 +490,9 @@ ErrorOr<void> ProcFSProcessPropertyInode::traverse_as_directory(Function<ErrorOr
 {
     VERIFY_NOT_REACHED();
 }
-ErrorOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
+ErrorOr<size_t> ProcFSProcessPropertyInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
-    dbgln_if(PROCFS_DEBUG, "ProcFS ProcessInformation: read_bytes offset: {} count: {}", offset, count);
+    dbgln_if(PROCFS_DEBUG, "ProcFS ProcessInformation: read_bytes_locked offset: {} count: {}", offset, count);
 
     VERIFY(offset >= 0);
     VERIFY(buffer.user_or_kernel_ptr());

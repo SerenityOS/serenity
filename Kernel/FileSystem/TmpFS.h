@@ -47,12 +47,10 @@ public:
     TmpFS const& fs() const { return static_cast<TmpFS const&>(Inode::fs()); }
 
     // ^Inode
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
@@ -65,6 +63,10 @@ private:
     TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_root(TmpFS&);
+
+    // ^Inode
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
     struct Child {
         NonnullOwnPtr<KString> name;

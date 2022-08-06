@@ -106,6 +106,19 @@ void Inode::will_be_destroyed()
         (void)flush_metadata();
 }
 
+ErrorOr<size_t> Inode::write_bytes(off_t offset, size_t length, UserOrKernelBuffer const& target_buffer, OpenFileDescription* open_description)
+{
+    MutexLocker locker(m_inode_lock);
+    TRY(prepare_to_write_data());
+    return write_bytes_locked(offset, length, target_buffer, open_description);
+}
+
+ErrorOr<size_t> Inode::read_bytes(off_t offset, size_t length, UserOrKernelBuffer& buffer, OpenFileDescription* open_description) const
+{
+    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
+    return read_bytes_locked(offset, length, buffer, open_description);
+}
+
 ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<time_t> atime, [[maybe_unused]] Optional<time_t> ctime, [[maybe_unused]] Optional<time_t> mtime)
 {
     return ENOTIMPL;

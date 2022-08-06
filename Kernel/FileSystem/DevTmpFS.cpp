@@ -51,7 +51,7 @@ DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, MajorNumber major_number, MinorNumber
 {
 }
 
-ErrorOr<size_t> DevTmpFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> DevTmpFSInode::read_bytes_locked(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -71,7 +71,7 @@ ErrorOr<void> DevTmpFSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
+ErrorOr<size_t> DevTmpFSInode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -171,20 +171,19 @@ DevTmpFSLinkInode::DevTmpFSLinkInode(DevTmpFS& fs, NonnullOwnPtr<KString> name)
 {
 }
 
-ErrorOr<size_t> DevTmpFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> DevTmpFSLinkInode::read_bytes_locked(off_t offset, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(offset == 0);
     VERIFY(m_link);
     TRY(buffer.write(m_link->characters() + offset, m_link->length()));
     return m_link->length();
 }
 
-ErrorOr<size_t> DevTmpFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> DevTmpFSLinkInode::write_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
+    VERIFY(m_inode_lock.is_locked());
     auto new_string = TRY(buffer.try_copy_into_kstring(count));
-
-    MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
     m_link = move(new_string);
@@ -303,9 +302,9 @@ StringView DevTmpFSDeviceInode::name() const
     return m_name->view();
 }
 
-ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
+ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(!!description);
     LockRefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
@@ -318,9 +317,9 @@ ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, User
     return result.value();
 }
 
-ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* description)
+ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* description)
 {
-    MutexLocker locker(m_inode_lock);
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(!!description);
     LockRefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
