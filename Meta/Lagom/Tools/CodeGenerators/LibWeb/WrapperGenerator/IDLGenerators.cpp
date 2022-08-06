@@ -1979,7 +1979,9 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -2858,7 +2860,9 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
 #include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
@@ -3162,7 +3166,9 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
@@ -3640,7 +3646,9 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
+#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#endif
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
 
