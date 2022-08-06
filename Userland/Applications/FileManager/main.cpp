@@ -550,10 +550,14 @@ ErrorOr<int> run_in_desktop_mode()
     } wallpaper_listener;
 
     auto selected_wallpaper = Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv);
+    RefPtr<Gfx::Bitmap> wallpaper_bitmap {};
     if (!selected_wallpaper.is_empty()) {
-        auto wallpaper_bitmap = TRY(Gfx::Bitmap::try_load_from_file(selected_wallpaper));
-        GUI::Desktop::the().set_wallpaper(wallpaper_bitmap, {});
+        wallpaper_bitmap = TRY(Gfx::Bitmap::try_load_from_file(selected_wallpaper));
     }
+    // This sets the wallpaper at startup, even if there is no wallpaper, the
+    // desktop should still show the background color. It's fine to pass a
+    // nullptr to Desktop::set_wallpaper.
+    GUI::Desktop::the().set_wallpaper(wallpaper_bitmap, {});
 
     window->show();
     return GUI::Application::the()->exec();
