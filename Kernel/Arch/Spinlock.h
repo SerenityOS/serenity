@@ -26,6 +26,10 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
+        // FIXME: Implement Spinlock on aarch64
+#if ARCH(AARCH64)
+        return true;
+#endif
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
