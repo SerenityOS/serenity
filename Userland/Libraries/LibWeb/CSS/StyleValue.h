@@ -933,10 +933,15 @@ class LinearGradientStyleValue final : public StyleValue {
 public:
     using GradientDirection = Variant<Angle, SideOrCorner>;
 
-    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list)
+    enum class GradientType {
+        Standard,
+        WebKit
+    };
+
+    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list)));
+        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type));
     }
 
     virtual String to_string() const override;
@@ -951,15 +956,17 @@ public:
     float angle_degrees(Gfx::FloatRect const& gradient_rect) const;
 
 private:
-    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list)
+    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)
         : StyleValue(Type::LinearGradient)
         , m_direction(direction)
         , m_color_stop_list(move(color_stop_list))
+        , m_gradient_type(type)
     {
     }
 
     GradientDirection m_direction;
     Vector<ColorStopListElement> m_color_stop_list;
+    GradientType m_gradient_type;
 };
 
 class InheritStyleValue final : public StyleValue {

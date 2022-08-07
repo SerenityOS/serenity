@@ -1431,10 +1431,12 @@ String LinearGradientStyleValue::to_string() const
         }
     };
 
+    if (m_gradient_type == GradientType::WebKit)
+        builder.append("-webkit-"sv);
     builder.append("linear-gradient("sv);
     m_direction.visit(
         [&](SideOrCorner side_or_corner) {
-            builder.appendff("to {}, "sv, side_or_corner_to_string(side_or_corner));
+            builder.appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
         },
         [&](Angle const& angle) {
             builder.appendff("{}, "sv, angle.to_string());
@@ -1506,26 +1508,32 @@ float LinearGradientStyleValue::angle_degrees(Gfx::FloatRect const& gradient_rec
     };
     return m_direction.visit(
         [&](SideOrCorner side_or_corner) {
-            switch (side_or_corner) {
-            case SideOrCorner::Top:
-                return 0.0f;
-            case SideOrCorner::Bottom:
-                return 180.0f;
-            case SideOrCorner::Left:
-                return 270.0f;
-            case SideOrCorner::Right:
-                return 90.0f;
-            case SideOrCorner::TopRight:
-                return corner_angle_degrees();
-            case SideOrCorner::BottomLeft:
-                return corner_angle_degrees() + 180.0f;
-            case SideOrCorner::TopLeft:
-                return -corner_angle_degrees();
-            case SideOrCorner::BottomRight:
-                return -(corner_angle_degrees() + 180.0f);
-            default:
-                VERIFY_NOT_REACHED();
-            }
+            auto angle = [&] {
+                switch (side_or_corner) {
+                case SideOrCorner::Top:
+                    return 0.0f;
+                case SideOrCorner::Bottom:
+                    return 180.0f;
+                case SideOrCorner::Left:
+                    return 270.0f;
+                case SideOrCorner::Right:
+                    return 90.0f;
+                case SideOrCorner::TopRight:
+                    return corner_angle_degrees();
+                case SideOrCorner::BottomLeft:
+                    return corner_angle_degrees() + 180.0f;
+                case SideOrCorner::TopLeft:
+                    return -corner_angle_degrees();
+                case SideOrCorner::BottomRight:
+                    return -(corner_angle_degrees() + 180.0f);
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            }();
+            // Note: For unknowable reasons the angles are opposite on the -webkit- version
+            if (m_gradient_type == GradientType::WebKit)
+                return angle + 180.0f;
+            return angle;
         },
         [&](Angle const& angle) {
             return angle.to_degrees();

@@ -2360,11 +2360,17 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
 
 RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
+    using GradientType = LinearGradientStyleValue::GradientType;
+
     if (!component_value.is_function())
         return {};
 
     auto function_name = component_value.function().name();
-    if (!function_name.is_one_of_ignoring_case("linear-gradient"sv, "-webkit-linear-gradient"sv))
+
+    GradientType gradient_type { GradientType::Standard };
+    if (function_name.equals_ignoring_case("-webkit-linear-gradient"sv))
+        gradient_type = GradientType::WebKit;
+    else if (!function_name.equals_ignoring_case("linear-gradient"sv))
         return {};
 
     // linear-gradient() = linear-gradient([ <angle> | to <side-or-corner> ]?, <color-stop-list>)
@@ -2376,7 +2382,29 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         return {};
 
     bool has_direction_param = true;
-    LinearGradientStyleValue::GradientDirection gradient_direction = SideOrCorner::Bottom;
+    LinearGradientStyleValue::GradientDirection gradient_direction = gradient_type == GradientType::Standard
+        ? SideOrCorner::Bottom
+        : SideOrCorner::Top;
+
+    auto to_side = [](StringView value) -> Optional<SideOrCorner> {
+        if (value.equals_ignoring_case("top"sv))
+            return SideOrCorner::Top;
+        if (value.equals_ignoring_case("bottom"sv))
+            return SideOrCorner::Bottom;
+        if (value.equals_ignoring_case("left"sv))
+            return SideOrCorner::Left;
+        if (value.equals_ignoring_case("right"sv))
+            return SideOrCorner::Right;
+        return {};
+    };
+
+    auto is_to_side_or_corner = [&](auto const& token) {
+        if (!token.is(Token::Type::Ident))
+            return false;
+        if (gradient_type == GradientType::WebKit)
+            return to_side(token.token().ident()).has_value();
+        return token.token().ident().equals_ignoring_case("to"sv);
+    };
 
     auto& first_param = tokens.peek_token();
     if (first_param.is(Token::Type::Dimension)) {
@@ -2390,31 +2418,24 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
             return {};
 
         gradient_direction = Angle { angle_value, angle_type.release_value() };
-    } else if (first_param.is(Token::Type::Ident) && first_param.token().ident().equals_ignoring_case("to"sv)) {
+    } else if (is_to_side_or_corner(first_param)) {
         // <side-or-corner> = [left | right] || [top | bottom]
-        tokens.next_token();
-        tokens.skip_whitespace();
 
-        auto to_side = [](StringView value) -> Optional<SideOrCorner> {
-            if (value.equals_ignoring_case("top"sv))
-                return SideOrCorner::Top;
-            if (value.equals_ignoring_case("bottom"sv))
-                return SideOrCorner::Bottom;
-            if (value.equals_ignoring_case("left"sv))
-                return SideOrCorner::Left;
-            if (value.equals_ignoring_case("right"sv))
-                return SideOrCorner::Right;
-            return {};
-        };
+        // Note: -webkit-linear-gradient does not include to the "to" prefix on the side or corner
+        if (gradient_type == GradientType::Standard) {
+            tokens.next_token();
+            tokens.skip_whitespace();
 
-        if (!tokens.has_next_token())
-            return {};
+            if (!tokens.has_next_token())
+                return {};
+        }
 
         // [left | right] || [top | bottom]
-        auto& second_param = tokens.next_token();
-        if (!second_param.is(Token::Type::Ident))
+        auto& first_side = tokens.next_token();
+        if (!first_side.is(Token::Type::Ident))
             return {};
-        auto side_a = to_side(second_param.token().ident());
+
+        auto side_a = to_side(first_side.token().ident());
         tokens.skip_whitespace();
         Optional<SideOrCorner> side_b;
         if (tokens.has_next_token() && tokens.peek_token().is(Token::Type::Ident))
@@ -2536,7 +2557,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         color_stops.append(list_element);
     }
 
-    return LinearGradientStyleValue::create(gradient_direction, move(color_stops));
+    return LinearGradientStyleValue::create(gradient_direction, move(color_stops), gradient_type);
 }
 
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
