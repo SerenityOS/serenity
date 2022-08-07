@@ -127,7 +127,7 @@ public:
     ~Parser() = default;
 
     CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);
-    RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
+    ElementInlineCSSStyleDeclaration* parse_as_style_attribute(DOM::Element&);
     CSSRule* parse_as_css_rule();
     Optional<StyleProperty> parse_as_supports_condition();
 
@@ -240,7 +240,7 @@ private:
     Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
     CSSRule* convert_to_rule(NonnullRefPtr<Rule>);
-    RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
+    PropertyOwningCSSStyleDeclaration* convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
     class Dimension {
@@ -421,7 +421,7 @@ private:
 namespace Web {
 
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<AK::URL> location = {});
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
+CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
 CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const&, StringView);

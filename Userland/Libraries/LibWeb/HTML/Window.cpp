@@ -319,7 +319,7 @@ Page const* Window::page() const
     return associated_document().page();
 }
 
-NonnullRefPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element& element) const
+CSS::CSSStyleDeclaration* Window::get_computed_style(DOM::Element& element) const
 {
     return CSS::ResolvedCSSStyleDeclaration::create(element);
 }

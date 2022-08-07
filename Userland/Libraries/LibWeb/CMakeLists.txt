@@ -4,7 +4,6 @@ set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CrossOriginAbstractOperations.cpp
     Bindings/CSSNamespace.cpp
-    Bindings/CSSStyleDeclarationWrapperCustom.cpp
     Bindings/EventListenerWrapper.cpp
     Bindings/EventTargetWrapperFactory.cpp
     Bindings/EventWrapperFactory.cpp

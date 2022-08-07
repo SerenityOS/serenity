@@ -105,7 +105,7 @@ public:
 
     CSS::CSSStyleDeclaration const* inline_style() const;
 
-    NonnullRefPtr<CSS::CSSStyleDeclaration> style_for_bindings();
+    CSS::CSSStyleDeclaration* style_for_bindings();
 
     String inner_html() const;
     ExceptionOr<void> set_inner_html(String const&);
@@ -152,7 +152,7 @@ private:
     String m_html_uppercased_qualified_name;
     NonnullRefPtr<NamedNodeMap> m_attributes;
 
-    RefPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
+    JS::Handle<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;

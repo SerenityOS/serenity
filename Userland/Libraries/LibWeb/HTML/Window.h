@@ -95,7 +95,7 @@ public:
     DOM::Event const* current_event() const { return m_current_event; }
     void set_current_event(DOM::Event* event) { m_current_event = event; }
 
-    NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
+    CSS::CSSStyleDeclaration* get_computed_style(DOM::Element&) const;
     NonnullRefPtr<CSS::MediaQueryList> match_media(String);
     Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 

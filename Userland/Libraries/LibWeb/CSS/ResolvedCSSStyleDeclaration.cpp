@@ -19,8 +19,15 @@
 
 namespace Web::CSS {
 
+ResolvedCSSStyleDeclaration* ResolvedCSSStyleDeclaration::create(DOM::Element& element)
+{
+    auto& window_object = element.document().preferred_window_object();
+    return window_object.heap().allocate<ResolvedCSSStyleDeclaration>(window_object.realm(), element);
+}
+
 ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
-    : m_element(element)
+    : CSSStyleDeclaration(element.document().preferred_window_object())
+    , m_element(element)
 {
 }
 

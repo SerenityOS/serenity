@@ -295,7 +295,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
 
 CSS::CSSStyleDeclaration const* Element::inline_style() const
 {
-    return m_inline_style;
+    return m_inline_style.cell();
 }
 
 void Element::parse_attribute(FlyString const& name, String const& value)
@@ -311,9 +311,9 @@ void Element::parse_attribute(FlyString const& name, String const& value)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
         // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
-        if (m_inline_style && m_inline_style->is_updating())
+        if (m_inline_style.cell() && m_inline_style->is_updating())
             return;
-        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
+        m_inline_style = JS::make_handle(parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this));
         set_needs_style_update(true);
     }
 }
@@ -321,8 +321,8 @@ void Element::parse_attribute(FlyString const& name, String const& value)
 void Element::did_remove_attribute(FlyString const& name)
 {
     if (name == HTML::AttributeNames::style) {
-        if (m_inline_style) {
-            m_inline_style = nullptr;
+        if (m_inline_style.cell()) {
+            m_inline_style = {};
             set_needs_style_update(true);
         }
     }
@@ -507,11 +507,11 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
     invalidate_style();
 }
 
-NonnullRefPtr<CSS::CSSStyleDeclaration> Element::style_for_bindings()
+CSS::CSSStyleDeclaration* Element::style_for_bindings()
 {
-    if (!m_inline_style)
-        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
-    return *m_inline_style;
+    if (m_inline_style.is_null())
+        m_inline_style = JS::make_handle(CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {}));
+    return m_inline_style.cell();
 }
 
 // https://dom.spec.whatwg.org/#element-html-uppercased-qualified-name

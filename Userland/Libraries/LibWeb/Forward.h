@@ -459,7 +459,6 @@ class CharacterDataWrapper;
 class CloseEventWrapper;
 class CommentWrapper;
 class CryptoWrapper;
-class CSSStyleDeclarationWrapper;
 class CustomEventWrapper;
 class DocumentFragmentWrapper;
 class DocumentTypeWrapper;
