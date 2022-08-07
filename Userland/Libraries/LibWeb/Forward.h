@@ -601,7 +601,6 @@ class ScreenWrapper;
 class SelectionWrapper;
 class StaticRangeWrapper;
 class StorageWrapper;
-class StyleSheetListWrapper;
 class SubmitEventWrapper;
 class SubtleCryptoWrapper;
 class SVGAnimatedLengthWrapper;

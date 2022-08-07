@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace Web::Bindings {

@@ -53,11 +53,13 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
+    virtual void visit_edges(Cell::Visitor&) override;
+
     NonnullRefPtr<CSSRuleList> m_rules;
 
     WeakPtr<CSSRule> m_owner_css_rule;
 
-    WeakPtr<StyleSheetList> m_style_sheet_list;
+    JS::GCPtr<StyleSheetList> m_style_sheet_list;
 };
 
 }

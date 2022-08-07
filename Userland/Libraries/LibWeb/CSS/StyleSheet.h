@@ -49,10 +49,9 @@ public:
 
 protected:
     explicit StyleSheet(Bindings::WindowObject&);
-
-private:
     virtual void visit_edges(Cell::Visitor&) override;
 
+private:
     WeakPtr<DOM::Element> m_owner_node;
 
     CSSStyleSheet* m_parent_style_sheet { nullptr };

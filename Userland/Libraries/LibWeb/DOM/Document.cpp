@@ -279,7 +279,7 @@ NonnullRefPtr<Document> Document::create(AK::URL const& url)
 Document::Document(const AK::URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))
-    , m_style_sheets(CSS::StyleSheetList::create(*this))
+    , m_style_sheets(JS::make_handle(CSS::StyleSheetList::create(*this)))
     , m_url(url)
     , m_window(HTML::Window::create_with_document(*this))
     , m_implementation(DOMImplementation::create({}, *this))
@@ -1610,7 +1610,7 @@ void Document::evaluate_media_rules()
 {
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        if (style_sheet->evaluate_media_queries(window()))
+        if (style_sheet.evaluate_media_queries(window()))
             any_media_queries_changed_match_state = true;
     }
 
