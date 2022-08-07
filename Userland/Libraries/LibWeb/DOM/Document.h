@@ -99,7 +99,7 @@ public:
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
 
-    NonnullRefPtr<CSS::StyleSheetList> style_sheets_for_bindings() { return *m_style_sheets; }
+    CSS::StyleSheetList* style_sheets_for_bindings() { return m_style_sheets.cell(); }
 
     virtual FlyString node_name() const override { return "#document"; }
 
@@ -409,7 +409,7 @@ private:
     size_t m_next_layout_node_serial_id { 0 };
 
     OwnPtr<CSS::StyleComputer> m_style_computer;
-    RefPtr<CSS::StyleSheetList> m_style_sheets;
+    JS::Handle<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
     RefPtr<Node> m_active_favicon;

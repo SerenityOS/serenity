@@ -31,6 +31,12 @@ CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, NonnullRefPt
         rule.set_parent_style_sheet(this);
 }
 
+void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_style_sheet_list.ptr());
+}
+
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
 DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
 {

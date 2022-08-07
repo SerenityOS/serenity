@@ -206,7 +206,7 @@ void ConnectionFromClient::debug_request(String const& request, String const& ar
     if (request == "dump-style-sheets") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
-                Web::dump_sheet(*sheet);
+                Web::dump_sheet(sheet);
             }
         }
     }
