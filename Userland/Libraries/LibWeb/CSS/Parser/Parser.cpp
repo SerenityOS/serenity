@@ -3363,10 +3363,25 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
     Vector<Length, 4> params;
     auto tokens = TokenStream { function.values() };
 
+    enum class CommaRequirement {
+        Unknown,
+        RequiresCommas,
+        RequiresNoCommas
+    };
+
+    enum class Side {
+        Top = 0,
+        Right = 1,
+        Bottom = 2,
+        Left = 3
+    };
+
+    auto comma_requirement = CommaRequirement::Unknown;
+
     // In CSS 2.1, the only valid <shape> value is: rect(<top>, <right>, <bottom>, <left>) where
     // <top> and <bottom> specify offsets from the top border edge of the box, and <right>, and
     //  <left> specify offsets from the left border edge of the box.
-    for (size_t idx = 0; idx < 4; idx++) {
+    for (size_t side = 0; side < 4; side++) {
         tokens.skip_whitespace();
 
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
@@ -3382,12 +3397,34 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
         }
         tokens.skip_whitespace();
 
+        // The last side, should be no more tokens following it.
+        if (static_cast<Side>(side) == Side::Left) {
+            if (tokens.has_next_token())
+                return {};
+            break;
+        }
+
+        bool next_is_comma = tokens.peek_token().is(Token::Type::Comma);
+
         // Authors should separate offset values with commas. User agents must support separation
         // with commas, but may also support separation without commas (but not a combination),
         // because a previous revision of this specification was ambiguous in this respect.
-        if (tokens.peek_token().is(Token::Type::Comma))
-            tokens.next_token();
+        if (comma_requirement == CommaRequirement::Unknown)
+            comma_requirement = next_is_comma ? CommaRequirement::RequiresCommas : CommaRequirement::RequiresNoCommas;
+
+        if (comma_requirement == CommaRequirement::RequiresCommas) {
+            if (next_is_comma)
+                tokens.next_token();
+            else
+                return {};
+        } else if (comma_requirement == CommaRequirement::RequiresNoCommas) {
+            if (next_is_comma)
+                return {};
+        } else {
+            VERIFY_NOT_REACHED();
+        }
     }
+
     return RectStyleValue::create(EdgeRect { params[0], params[1], params[2], params[3] });
 }
 
