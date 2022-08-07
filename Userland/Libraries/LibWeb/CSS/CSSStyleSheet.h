@@ -21,15 +21,15 @@ class CSSImportRule;
 class CSSStyleSheet final
     : public StyleSheet
     , public Weakable<CSSStyleSheet> {
+    JS_OBJECT(CSSStyleSheet, StyleSheet);
+
 public:
-    using WrapperType = Bindings::CSSStyleSheetWrapper;
+    static CSSStyleSheet* create(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location);
 
-    static NonnullRefPtr<CSSStyleSheet> create(NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
-    {
-        return adopt_ref(*new CSSStyleSheet(move(rules), move(location)));
-    }
-
+    explicit CSSStyleSheet(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule>, Optional<AK::URL> location);
     virtual ~CSSStyleSheet() override = default;
+
+    CSSStyleSheet& impl() { return *this; }
 
     void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
 
@@ -53,8 +53,6 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
-    explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>, Optional<AK::URL> location);
-
     NonnullRefPtr<CSSRuleList> m_rules;
 
     WeakPtr<CSSRule> m_owner_css_rule;
@@ -65,7 +63,6 @@ private:
 }
 
 namespace Web::Bindings {
-
-CSSStyleSheetWrapper* wrap(JS::Realm&, CSS::CSSStyleSheet&);
-
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSStyleSheet& object) { return &object; }
+using CSSStyleSheetWrapper = Web::CSS::CSSStyleSheet;
 }

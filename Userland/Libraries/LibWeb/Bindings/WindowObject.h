@@ -36,6 +36,8 @@ public:
     virtual void initialize(JS::Realm&) override;
     virtual ~WindowObject() override = default;
 
+    JS::Realm& realm() const { return shape().realm(); }
+
     HTML::Window& impl() { return *m_impl; }
     const HTML::Window& impl() const { return *m_impl; }
 

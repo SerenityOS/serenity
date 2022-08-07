@@ -58,6 +58,11 @@ public:
     static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&);
     virtual ~Document() override;
 
+    // NOTE: This returns the web-facing window object if there is one,
+    //       otherwise it returns the internal window object.
+    // FIXME: Remove this when Document is a JS::Object.
+    Bindings::WindowObject& preferred_window_object() const;
+
     size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
     size_t layout_node_count() const { return m_next_layout_node_serial_id; }
 

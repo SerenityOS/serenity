@@ -5,11 +5,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/StyleSheetPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::CSS {
+
+StyleSheet::StyleSheet(Bindings::WindowObject& window_object)
+    : PlatformObject(window_object.ensure_web_prototype<Bindings::StyleSheetPrototype>("StyleSheet"))
+{
+}
+
+void StyleSheet::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_parent_style_sheet);
+}
 
 void StyleSheet::set_owner_node(DOM::Element* element)
 {

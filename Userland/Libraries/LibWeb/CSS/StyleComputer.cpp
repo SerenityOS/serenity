@@ -108,24 +108,24 @@ private:
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
-static StyleSheet& default_stylesheet()
+static CSSStyleSheet& default_stylesheet()
 {
-    static StyleSheet* sheet;
-    if (!sheet) {
+    static JS::Handle<CSSStyleSheet> sheet;
+    if (!sheet.cell()) {
         extern char const default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
     }
     return *sheet;
 }
 
-static StyleSheet& quirks_mode_stylesheet()
+static CSSStyleSheet& quirks_mode_stylesheet()
 {
-    static StyleSheet* sheet;
-    if (!sheet) {
+    static JS::Handle<CSSStyleSheet> sheet;
+    if (!sheet.cell()) {
         extern char const quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
     }
     return *sheet;
 }
@@ -140,7 +140,7 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
     }
     if (cascade_origin == CascadeOrigin::Author) {
         for (auto const& sheet : document().style_sheets().sheets()) {
-            callback(sheet);
+            callback(*sheet);
         }
     }
 }
@@ -180,7 +180,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     size_t style_sheet_index = 0;
     for_each_stylesheet(cascade_origin, [&](auto& sheet) {
         size_t rule_index = 0;
-        static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto const& rule) {
+        sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element, pseudo_element)) {
@@ -1261,7 +1261,7 @@ void StyleComputer::build_rule_cache()
     size_t style_sheet_index = 0;
     for_each_stylesheet(CascadeOrigin::Author, [&](auto& sheet) {
         size_t rule_index = 0;
-        static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto const& rule) {
+        sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (CSS::Selector const& selector : rule.selectors()) {
                 MatchingRule matching_rule { rule, style_sheet_index, rule_index, selector_index, selector.specificity() };

@@ -73,9 +73,24 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     }
 }
 
+static bool impl_is_wrapper(Type const& type)
+{
+    if (type.name == "StyleSheet"sv)
+        return true;
+
+    if (type.name == "CSSStyleSheet"sv)
+        return true;
+
+    return false;
+}
+
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
     if (is_wrappable_type(type)) {
+        if (impl_is_wrapper(type)) {
+            return { .name = String::formatted("JS::Handle<{}>", type.name), .sequence_storage_type = SequenceStorageType::MarkedVector };
+        }
+
         if (type.nullable)
             return { .name = String::formatted("RefPtr<{}>", type.name), .sequence_storage_type = SequenceStorageType::Vector };
 

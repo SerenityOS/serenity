@@ -13,6 +13,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
@@ -38,20 +39,28 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 
 namespace Web::CSS::Parser {
 
+ParsingContext::ParsingContext()
+    : m_window_object(Bindings::main_thread_internal_window_object())
+{
+}
+
 ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
-    : m_document(&document)
+    : m_window_object(document.preferred_window_object())
+    , m_document(&document)
     , m_url(move(url))
 {
 }
 
 ParsingContext::ParsingContext(DOM::Document const& document)
-    : m_document(&document)
+    : m_window_object(document.preferred_window_object())
+    , m_document(&document)
     , m_url(document.url())
 {
 }
 
 ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
-    : m_document(&parent_node.document())
+    : m_window_object(parent_node.document().preferred_window_object())
+    , m_document(&parent_node.document())
     , m_url(parent_node.document().url())
 {
 }
@@ -179,7 +188,7 @@ Parser::ParsedStyleSheet Parser::parse_a_stylesheet(TokenStream<T>& tokens, Opti
 }
 
 // https://www.w3.org/TR/css-syntax-3/#parse-a-css-stylesheet
-NonnullRefPtr<CSSStyleSheet> Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
+CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
 {
     // To parse a CSS stylesheet, first parse a stylesheet.
     auto style_sheet = parse_a_stylesheet(m_token_stream, {});
@@ -193,7 +202,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_css_stylesheet(Optional<AK::URL> l
             rules.append(*rule);
     }
 
-    return CSSStyleSheet::create(move(rules), move(location));
+    return CSSStyleSheet::create(m_context.window_object(), move(rules), move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -6373,10 +6382,10 @@ TimePercentage Parser::Dimension::time_percentage() const
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
+CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
-        return CSS::CSSStyleSheet::create({}, location);
+        return CSS::CSSStyleSheet::create(context.window_object(), {}, location);
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }
