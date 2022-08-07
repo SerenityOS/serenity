@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/URL.h>
+#include <LibWeb/Bindings/CSSImportRulePrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
@@ -14,10 +17,19 @@
 
 namespace Web::CSS {
 
+CSSImportRule* CSSImportRule::create(AK::URL url, DOM::Document& document)
+{
+    auto& window_object = document.preferred_window_object();
+    return window_object.heap().allocate<CSSImportRule>(window_object.realm(), move(url), document);
+}
+
 CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
-    : m_url(move(url))
+    : CSSRule(document.preferred_window_object())
+    , m_url(move(url))
     , m_document(document)
 {
+    set_prototype(&document.preferred_window_object().ensure_web_prototype<Bindings::CSSImportRulePrototype>("CSSImportRule"));
+
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
 
@@ -26,6 +38,12 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     m_document_load_event_delayer.emplace(document);
 
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+}
+
+void CSSImportRule::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_style_sheet);
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
@@ -79,7 +97,7 @@ void CSSImportRule::resource_did_load()
         return;
     }
 
-    m_style_sheet = JS::make_handle(sheet);
+    m_style_sheet = sheet;
 
     m_document->style_computer().invalidate_rule_cache();
     m_document->invalidate_style();

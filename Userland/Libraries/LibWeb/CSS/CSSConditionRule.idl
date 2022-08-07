@@ -1,6 +1,6 @@
 #import <CSS/CSSGroupingRule.idl>
 
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface CSSConditionRule : CSSGroupingRule {
     attribute CSSOMString conditionText;
 };

@@ -184,7 +184,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element, pseudo_element)) {
-                    matching_rules.append({ rule, style_sheet_index, rule_index, selector_index, selector.specificity() });
+                    matching_rules.append({ &rule, style_sheet_index, rule_index, selector_index, selector.specificity() });
                     break;
                 }
                 ++selector_index;
@@ -1264,7 +1264,7 @@ void StyleComputer::build_rule_cache()
         sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (CSS::Selector const& selector : rule.selectors()) {
-                MatchingRule matching_rule { rule, style_sheet_index, rule_index, selector_index, selector.specificity() };
+                MatchingRule matching_rule { &rule, style_sheet_index, rule_index, selector_index, selector.specificity() };
 
                 bool added_to_bucket = false;
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {

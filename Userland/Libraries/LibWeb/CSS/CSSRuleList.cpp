@@ -9,21 +9,36 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
+#include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::CSS {
 
-CSSRuleList* CSSRuleList::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<Web::CSS::CSSRule>&& rules)
+CSSRuleList* CSSRuleList::create(Bindings::WindowObject& window_object, JS::MarkedVector<CSSRule*> const& rules)
 {
-    return window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object, move(rules));
+    auto* rule_list = window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object);
+    for (auto* rule : rules)
+        rule_list->m_rules.append(*rule);
+    return rule_list;
 }
 
-CSSRuleList::CSSRuleList(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule>&& rules)
+CSSRuleList::CSSRuleList(Bindings::WindowObject& window_object)
     : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::CSSRuleListPrototype>("CSSRuleList"))
-    , m_rules(move(rules))
 {
+}
+
+CSSRuleList* CSSRuleList::create_empty(Bindings::WindowObject& window_object)
+{
+    return window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object);
+}
+
+void CSSRuleList::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& rule : m_rules)
+        visitor.visit(&rule);
 }
 
 bool CSSRuleList::is_supported_property_index(u32 index) const
@@ -34,7 +49,7 @@ bool CSSRuleList::is_supported_property_index(u32 index) const
 }
 
 // https://www.w3.org/TR/cssom/#insert-a-css-rule
-DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, NonnullRefPtr<CSSRule>> rule, u32 index)
+DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, CSSRule*> rule, u32 index)
 {
     // 1. Set length to the number of items in list.
     auto length = m_rules.size();
@@ -47,11 +62,13 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, No
     // NOTE: The insert-a-css-rule spec expects `rule` to be a string, but the CSSStyleSheet.insertRule()
     //       spec calls this algorithm with an already-parsed CSSRule. So, we use a Variant and skip step 3
     //       if that variant holds a CSSRule already.
-    RefPtr<CSSRule> new_rule;
+    CSSRule* new_rule = nullptr;
     if (rule.has<StringView>()) {
-        new_rule = parse_css_rule(CSS::Parser::ParsingContext {}, rule.get<StringView>());
+        new_rule = parse_css_rule(
+            CSS::Parser::ParsingContext { static_cast<Bindings::WindowObject&>(global_object()) },
+            rule.get<StringView>());
     } else {
-        new_rule = rule.get<NonnullRefPtr<CSSRule>>();
+        new_rule = rule.get<CSSRule*>();
     }
 
     // 4. If new rule is a syntax error, throw a SyntaxError exception.
@@ -63,7 +80,7 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, No
     // FIXME: 6. If new rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
 
     // 7. Insert new rule into list at the zero-indexed position index.
-    m_rules.insert(index, new_rule.release_nonnull());
+    m_rules.insert(index, *new_rule);
 
     // 8. Return index.
     return index;
@@ -80,7 +97,7 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
         return DOM::IndexSizeError::create("CSS rule index out of bounds.");
 
     // 3. Set old rule to the indexth item in list.
-    NonnullRefPtr<CSSRule> old_rule = m_rules[index];
+    CSSRule& old_rule = m_rules[index];
 
     // FIXME: 4. If old rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
 
@@ -88,8 +105,8 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     m_rules.remove(index);
 
     // 6. Set old rule’s parent CSS rule and parent CSS style sheet to null.
-    old_rule->set_parent_rule(nullptr);
-    old_rule->set_parent_style_sheet(nullptr);
+    old_rule.set_parent_rule(nullptr);
+    old_rule.set_parent_style_sheet(nullptr);
 
     return {};
 }
@@ -102,7 +119,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
             break;
         case CSSRule::Type::Import: {
             auto const& import_rule = static_cast<CSSImportRule const&>(rule);
-            if (import_rule.has_import_result())
+            if (import_rule.has_import_result() && import_rule.loaded_style_sheet())
                 import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             break;
         }
@@ -129,7 +146,7 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
             break;
         case CSSRule::Type::Import: {
             auto& import_rule = verify_cast<CSSImportRule>(rule);
-            if (import_rule.has_import_result() && import_rule.loaded_style_sheet()->evaluate_media_queries(window))
+            if (import_rule.has_import_result() && import_rule.loaded_style_sheet() && import_rule.loaded_style_sheet()->evaluate_media_queries(window))
                 any_media_queries_changed_match_state = true;
             break;
         }

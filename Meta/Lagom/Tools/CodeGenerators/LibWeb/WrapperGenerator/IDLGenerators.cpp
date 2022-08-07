@@ -87,6 +87,27 @@ static bool impl_is_wrapper(Type const& type)
     if (type.name == "CSSRuleList"sv)
         return true;
 
+    if (type.name == "CSSRule"sv)
+        return true;
+
+    if (type.name == "CSSStyleRule"sv)
+        return true;
+
+    if (type.name == "CSSFontFaceRule"sv)
+        return true;
+
+    if (type.name == "CSSConditionRule"sv)
+        return true;
+
+    if (type.name == "CSSGroupingRule"sv)
+        return true;
+
+    if (type.name == "CSSMediaRule"sv)
+        return true;
+
+    if (type.name == "CSSImportRule"sv)
+        return true;
+
     return false;
 }
 
@@ -2884,7 +2905,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
-#include <LibWeb/Bindings/CSSRuleWrapperFactory.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>

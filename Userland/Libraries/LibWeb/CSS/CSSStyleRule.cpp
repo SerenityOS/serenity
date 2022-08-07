@@ -4,15 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSStyleRulePrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::CSS {
 
-CSSStyleRule::CSSStyleRule(NonnullRefPtrVector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
-    : m_selectors(move(selectors))
+CSSStyleRule* CSSStyleRule::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, NonnullRefPtr<Web::CSS::CSSStyleDeclaration>&& declaration)
+{
+    return window_object.heap().allocate<CSSStyleRule>(window_object.realm(), window_object, move(selectors), move(declaration));
+}
+
+CSSStyleRule::CSSStyleRule(Bindings::WindowObject& window_object, NonnullRefPtrVector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
+    : CSSRule(window_object)
+    , m_selectors(move(selectors))
     , m_declaration(move(declaration))
 {
+    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleRulePrototype>("CSSStyleRule"));
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-style

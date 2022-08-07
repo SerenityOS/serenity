@@ -2,7 +2,7 @@
 #import <CSS/CSSStyleSheet.idl>
 #import <CSS/MediaList.idl>
 
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface CSSImportRule : CSSRule {
     readonly attribute USVString href;
     // [SameObject, PutForwards=mediaText] readonly attribute MediaList media;

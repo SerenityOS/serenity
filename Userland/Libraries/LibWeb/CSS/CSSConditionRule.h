@@ -15,9 +15,10 @@ namespace Web::CSS {
 class CSSConditionRule : public CSSGroupingRule {
     AK_MAKE_NONCOPYABLE(CSSConditionRule);
     AK_MAKE_NONMOVABLE(CSSConditionRule);
+    JS_OBJECT(CSSConditionRule, CSSGroupingRule);
 
 public:
-    using WrapperType = Bindings::CSSConditionRuleWrapper;
+    CSSConditionRule& impl() { return *this; }
 
     virtual ~CSSConditionRule() = default;
 
@@ -28,7 +29,12 @@ public:
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const override;
 
 protected:
-    explicit CSSConditionRule(NonnullRefPtrVector<CSSRule>&&);
+    explicit CSSConditionRule(Bindings::WindowObject&, CSSRuleList&);
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSConditionRule& object) { return &object; }
+using CSSConditionRuleWrapper = Web::CSS::CSSConditionRule;
 }

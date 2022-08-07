@@ -17,20 +17,18 @@ namespace Web::CSS {
 
 // https://www.w3.org/TR/css-conditional-3/#the-csssupportsrule-interface
 class CSSSupportsRule final : public CSSConditionRule {
+    JS_OBJECT(CSSSupportsRule, CSSConditionRule);
     AK_MAKE_NONCOPYABLE(CSSSupportsRule);
     AK_MAKE_NONMOVABLE(CSSSupportsRule);
 
 public:
-    using WrapperType = Bindings::CSSSupportsRuleWrapper;
-
-    static NonnullRefPtr<CSSSupportsRule> create(NonnullRefPtr<Supports>&& supports, NonnullRefPtrVector<CSSRule>&& rules)
-    {
-        return adopt_ref(*new CSSSupportsRule(move(supports), move(rules)));
-    }
+    static CSSSupportsRule* create(Bindings::WindowObject&, NonnullRefPtr<Supports>&&, CSSRuleList&);
+    explicit CSSSupportsRule(Bindings::WindowObject&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
     virtual ~CSSSupportsRule() = default;
 
-    virtual StringView class_name() const override { return "CSSSupportsRule"sv; };
+    CSSSupportsRule& impl() { return *this; }
+
     virtual Type type() const override { return Type::Supports; };
 
     String condition_text() const override;
@@ -38,8 +36,6 @@ public:
     virtual bool condition_matches() const override { return m_supports->matches(); }
 
 private:
-    explicit CSSSupportsRule(NonnullRefPtr<Supports>&&, NonnullRefPtrVector<CSSRule>&&);
-
     virtual String serialized() const override;
 
     NonnullRefPtr<Supports> m_supports;
@@ -48,4 +44,9 @@ private:
 template<>
 inline bool CSSRule::fast_is<CSSSupportsRule>() const { return type() == CSSRule::Type::Supports; }
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSSupportsRule& object) { return &object; }
+using CSSSupportsRuleWrapper = Web::CSS::CSSSupportsRule;
 }
