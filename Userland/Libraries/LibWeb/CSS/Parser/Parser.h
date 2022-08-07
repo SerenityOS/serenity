@@ -35,6 +35,7 @@ namespace Web::CSS::Parser {
 class ParsingContext {
 public:
     ParsingContext();
+    explicit ParsingContext(Bindings::WindowObject&);
     explicit ParsingContext(DOM::Document const&);
     explicit ParsingContext(DOM::Document const&, AK::URL);
     explicit ParsingContext(DOM::ParentNode&);
@@ -127,7 +128,7 @@ public:
 
     CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);
     RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
-    RefPtr<CSSRule> parse_as_css_rule();
+    CSSRule* parse_as_css_rule();
     Optional<StyleProperty> parse_as_supports_condition();
 
     enum class SelectorParsingMode {
@@ -235,10 +236,10 @@ private:
 
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
-    RefPtr<CSSRule> parse_font_face_rule(TokenStream<ComponentValue>&);
+    CSSRule* parse_font_face_rule(TokenStream<ComponentValue>&);
     Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
-    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<Rule>);
+    CSSRule* convert_to_rule(NonnullRefPtr<Rule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
@@ -423,7 +424,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const&, Str
 RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
-RefPtr<CSS::CSSRule> parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
+CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const&, StringView);
 NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const&, StringView);
 RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const&, StringView);

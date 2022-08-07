@@ -1,17 +1,26 @@
 /*
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSMediaRulePrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 
 namespace Web::CSS {
 
-CSSMediaRule::CSSMediaRule(NonnullRefPtr<MediaList>&& media, NonnullRefPtrVector<CSSRule>&& rules)
-    : CSSConditionRule(move(rules))
+CSSMediaRule* CSSMediaRule::create(Bindings::WindowObject& window_object, NonnullRefPtr<MediaList>&& media_queries, CSSRuleList& rules)
+{
+    return window_object.heap().allocate<CSSMediaRule>(window_object.realm(), window_object, move(media_queries), rules);
+}
+
+CSSMediaRule::CSSMediaRule(Bindings::WindowObject& window_object, NonnullRefPtr<MediaList>&& media, CSSRuleList& rules)
+    : CSSConditionRule(window_object, rules)
     , m_media(move(media))
 {
+    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSMediaRulePrototype>("CSSMediaRule"));
 }
 
 String CSSMediaRule::condition_text() const

@@ -21,7 +21,7 @@
 namespace Web::CSS {
 
 struct MatchingRule {
-    RefPtr<CSSStyleRule> rule;
+    CSSStyleRule const* rule { nullptr };
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };

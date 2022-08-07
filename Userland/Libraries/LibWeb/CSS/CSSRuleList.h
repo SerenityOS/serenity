@@ -25,20 +25,30 @@ class CSSRuleList : public Bindings::LegacyPlatformObject {
 public:
     CSSRuleList& impl() { return *this; }
 
-    static CSSRuleList* create(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule>&& rules);
-    CSSRuleList(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule>&&);
+    static CSSRuleList* create(Bindings::WindowObject&, JS::MarkedVector<CSSRule*> const&);
+    static CSSRuleList* create_empty(Bindings::WindowObject&);
+
+    explicit CSSRuleList(Bindings::WindowObject&);
     ~CSSRuleList() = default;
 
-    RefPtr<CSSRule> item(size_t index) const
+    CSSRule const* item(size_t index) const
     {
         if (index >= length())
             return nullptr;
-        return m_rules[index];
+        return &m_rules[index];
     }
+
+    CSSRule* item(size_t index)
+    {
+        if (index >= length())
+            return nullptr;
+        return &m_rules[index];
+    }
+
     size_t length() const { return m_rules.size(); }
 
-    using ConstIterator = AK::SimpleIterator<AK::NonnullPtrVector<NonnullRefPtr<CSSRule>> const, CSSRule const>;
-    using Iterator = AK::SimpleIterator<AK::NonnullPtrVector<NonnullRefPtr<CSSRule>>, CSSRule>;
+    using ConstIterator = AK::SimpleIterator<Vector<CSSRule&> const, CSSRule const>;
+    using Iterator = AK::SimpleIterator<Vector<CSSRule&>, CSSRule>;
 
     ConstIterator const begin() const { return m_rules.begin(); }
     Iterator begin() { return m_rules.begin(); }
@@ -50,19 +60,21 @@ public:
     virtual JS::Value item_value(size_t index) const override;
 
     DOM::ExceptionOr<void> remove_a_css_rule(u32 index);
-    DOM::ExceptionOr<unsigned> insert_a_css_rule(Variant<StringView, NonnullRefPtr<CSSRule>>, u32 index);
+    DOM::ExceptionOr<unsigned> insert_a_css_rule(Variant<StringView, CSSRule*>, u32 index);
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.
     bool evaluate_media_queries(HTML::Window const&);
 
 private:
-    NonnullRefPtrVector<CSSRule> m_rules;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    Vector<CSSRule&> m_rules;
 };
 
 }
 
 namespace Web::Bindings {
-inline JS::Object* wrap(JS::GlobalObject&, Web::CSS::CSSRuleList& object) { return &object; }
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSRuleList& object) { return &object; }
 using CSSRuleListWrapper = Web::CSS::CSSRuleList;
 }

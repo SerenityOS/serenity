@@ -24,9 +24,9 @@ class CSSStyleSheet final
     JS_OBJECT(CSSStyleSheet, StyleSheet);
 
 public:
-    static CSSStyleSheet* create(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location);
+    static CSSStyleSheet* create(Bindings::WindowObject&, CSSRuleList& rules, Optional<AK::URL> location);
 
-    explicit CSSStyleSheet(Bindings::WindowObject&, NonnullRefPtrVector<CSSRule>, Optional<AK::URL> location);
+    explicit CSSStyleSheet(Bindings::WindowObject&, CSSRuleList&, Optional<AK::URL> location);
     virtual ~CSSStyleSheet() override = default;
 
     CSSStyleSheet& impl() { return *this; }
@@ -57,9 +57,8 @@ private:
 
     CSSRuleList* m_rules { nullptr };
 
-    WeakPtr<CSSRule> m_owner_css_rule;
-
     JS::GCPtr<StyleSheetList> m_style_sheet_list;
+    CSSRule* m_owner_css_rule { nullptr };
 };
 
 }

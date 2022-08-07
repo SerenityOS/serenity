@@ -1,5 +1,5 @@
 #import <CSS/CSSConditionRule.idl>
 
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface CSSSupportsRule : CSSConditionRule {
 };

@@ -39,7 +39,6 @@ interface CSSRule {
    - It must have a public `using WrapperType = Bindings::HTMLDetailsElementWrapper;`
 
 7. Depending on what kind of thing your interface is, you may need to add it to the `WrapperFactory` of that kind:
-   - CSSRules: [`LibWeb/Bindings/CSSRuleWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/CSSRuleWrapperFactory.cpp)
    - Events: [`LibWeb/Bindings/EventWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/EventWrapperFactory.cpp)
    - Elements: [`LibWeb/Bindings/NodeWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/NodeWrapperFactory.cpp)
 

@@ -17,15 +17,16 @@ namespace Web::CSS {
 class CSSGroupingRule : public CSSRule {
     AK_MAKE_NONCOPYABLE(CSSGroupingRule);
     AK_MAKE_NONMOVABLE(CSSGroupingRule);
+    JS_OBJECT(CSSGroupingRule, CSSRule);
 
 public:
-    using WrapperType = Bindings::CSSGroupingRuleWrapper;
+    CSSGroupingRule& impl() { return *this; }
 
     virtual ~CSSGroupingRule() = default;
 
-    CSSRuleList const& css_rules() const { return *m_rules; }
-    CSSRuleList& css_rules() { return *m_rules; }
-    CSSRuleList* css_rules_for_bindings() { return m_rules.cell(); }
+    CSSRuleList const& css_rules() const { return m_rules; }
+    CSSRuleList& css_rules() { return m_rules; }
+    CSSRuleList* css_rules_for_bindings() { return &m_rules; }
     DOM::ExceptionOr<u32> insert_rule(StringView rule, u32 index = 0);
     DOM::ExceptionOr<void> delete_rule(u32 index);
 
@@ -34,10 +35,17 @@ public:
     virtual void set_parent_style_sheet(CSSStyleSheet*) override;
 
 protected:
-    explicit CSSGroupingRule(NonnullRefPtrVector<CSSRule>&&);
+    explicit CSSGroupingRule(Bindings::WindowObject&, CSSRuleList&);
 
 private:
-    JS::Handle<CSSRuleList> m_rules;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    CSSRuleList& m_rules;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSGroupingRule& object) { return &object; }
+using CSSGroupingRuleWrapper = Web::CSS::CSSGroupingRule;
 }

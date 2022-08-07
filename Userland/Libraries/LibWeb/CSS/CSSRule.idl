@@ -1,6 +1,6 @@
 #import <CSS/CSSStyleSheet.idl>
 
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface CSSRule {
 
     attribute CSSOMString cssText;

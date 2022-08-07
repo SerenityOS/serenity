@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,32 +21,30 @@ class CSSImportRule final
     , public ResourceClient {
     AK_MAKE_NONCOPYABLE(CSSImportRule);
     AK_MAKE_NONMOVABLE(CSSImportRule);
+    JS_OBJECT(CSSImportRule, CSSRule);
 
 public:
-    using WrapperType = Bindings::CSSImportRuleWrapper;
-
-    static NonnullRefPtr<CSSImportRule> create(AK::URL url, DOM::Document& document)
-    {
-        return adopt_ref(*new CSSImportRule(move(url), document));
-    }
+    static CSSImportRule* create(AK::URL, DOM::Document&);
+    CSSImportRule(AK::URL, DOM::Document&);
 
     virtual ~CSSImportRule() = default;
+
+    CSSImportRule& impl() { return *this; }
 
     AK::URL const& url() const { return m_url; }
     // FIXME: This should return only the specified part of the url. eg, "stuff/foo.css", not "https://example.com/stuff/foo.css".
     String href() const { return m_url.to_string(); }
 
-    bool has_import_result() const { return !m_style_sheet.is_null(); }
-    CSSStyleSheet* loaded_style_sheet() { return m_style_sheet.cell(); }
-    CSSStyleSheet const* loaded_style_sheet() const { return m_style_sheet.cell(); }
-    CSSStyleSheet* style_sheet_for_bindings() { return m_style_sheet.cell(); }
-    void set_style_sheet(CSSStyleSheet* style_sheet) { m_style_sheet = JS::make_handle(style_sheet); }
+    bool has_import_result() const { return !m_style_sheet; }
+    CSSStyleSheet* loaded_style_sheet() { return m_style_sheet; }
+    CSSStyleSheet const* loaded_style_sheet() const { return m_style_sheet; }
+    CSSStyleSheet* style_sheet_for_bindings() { return m_style_sheet; }
+    void set_style_sheet(CSSStyleSheet* style_sheet) { m_style_sheet = style_sheet; }
 
-    virtual StringView class_name() const override { return "CSSImportRule"sv; };
     virtual Type type() const override { return Type::Import; };
 
 private:
-    explicit CSSImportRule(AK::URL, DOM::Document&);
+    virtual void visit_edges(Cell::Visitor&) override;
 
     virtual String serialized() const override;
 
@@ -56,10 +55,15 @@ private:
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
-    JS::Handle<CSSStyleSheet> m_style_sheet;
+    CSSStyleSheet* m_style_sheet { nullptr };
 };
 
 template<>
 inline bool CSSRule::fast_is<CSSImportRule>() const { return type() == CSSRule::Type::Import; }
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSImportRule& object) { return &object; }
+using CSSImportRuleWrapper = Web::CSS::CSSImportRule;
 }

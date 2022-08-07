@@ -13,14 +13,14 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet* CSSStyleSheet::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
+CSSStyleSheet* CSSStyleSheet::create(Bindings::WindowObject& window_object, CSSRuleList& rules, Optional<AK::URL> location)
 {
-    return window_object.heap().allocate<CSSStyleSheet>(window_object.realm(), window_object, move(rules), move(location));
+    return window_object.heap().allocate<CSSStyleSheet>(window_object.realm(), window_object, rules, move(location));
 }
 
-CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
+CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, CSSRuleList& rules, Optional<AK::URL> location)
     : StyleSheet(window_object)
-    , m_rules(CSSRuleList::create(window_object, move(rules)))
+    , m_rules(&rules)
 {
     set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleSheetPrototype>("CSSStyleSheet"));
 
@@ -35,6 +35,8 @@ void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_style_sheet_list.ptr());
+    visitor.visit(m_rules);
+    visitor.visit(m_owner_css_rule);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
@@ -54,12 +56,11 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 
     // 6. Return the result of invoking insert a CSS rule rule in the CSS rules at index.
-    auto parsed_rule_nonnull = parsed_rule.release_nonnull();
-    auto result = m_rules->insert_a_css_rule(parsed_rule_nonnull, index);
+    auto result = m_rules->insert_a_css_rule(parsed_rule, index);
 
     if (!result.is_exception()) {
         // NOTE: The spec doesn't say where to set the parent style sheet, so we'll do it here.
-        parsed_rule_nonnull->set_parent_style_sheet(this);
+        parsed_rule->set_parent_style_sheet(this);
 
         if (m_style_sheet_list) {
             m_style_sheet_list->document().style_computer().invalidate_rule_cache();

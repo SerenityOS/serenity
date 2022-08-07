@@ -1,6 +1,7 @@
 #import <CSS/CSSRule.idl>
 #import <CSS/CSSStyleDeclaration.idl>
 
+[Exposed=Window, NoInstanceWrapper]
 interface CSSStyleRule : CSSRule {
 
     attribute CSSOMString selectorText;

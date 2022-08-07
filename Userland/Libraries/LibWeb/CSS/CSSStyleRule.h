@@ -16,23 +16,21 @@
 namespace Web::CSS {
 
 class CSSStyleRule final : public CSSRule {
+    JS_OBJECT(CSSStyleRule, CSSRule);
     AK_MAKE_NONCOPYABLE(CSSStyleRule);
     AK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
-    using WrapperType = Bindings::CSSStyleRuleWrapper;
-
-    static NonnullRefPtr<CSSStyleRule> create(NonnullRefPtrVector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
-    {
-        return adopt_ref(*new CSSStyleRule(move(selectors), move(declaration)));
-    }
+    static CSSStyleRule* create(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
+    CSSStyleRule(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
 
     virtual ~CSSStyleRule() override = default;
+
+    CSSStyleRule& impl() { return *this; }
 
     NonnullRefPtrVector<Selector> const& selectors() const { return m_selectors; }
     CSSStyleDeclaration const& declaration() const { return m_declaration; }
 
-    virtual StringView class_name() const override { return "CSSStyleRule"sv; };
     virtual Type type() const override { return Type::Style; };
 
     String selector_text() const;
@@ -41,8 +39,6 @@ public:
     CSSStyleDeclaration* style();
 
 private:
-    CSSStyleRule(NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
-
     virtual String serialized() const override;
 
     NonnullRefPtrVector<Selector> m_selectors;
@@ -52,4 +48,9 @@ private:
 template<>
 inline bool CSSRule::fast_is<CSSStyleRule>() const { return type() == CSSRule::Type::Style; }
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSStyleRule& object) { return &object; }
+using CSSStyleRuleWrapper = Web::CSS::CSSStyleRule;
 }
