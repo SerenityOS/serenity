@@ -658,7 +658,6 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     // FIXME: The section below is partly on-spec, partly ad-hoc.
     auto& computed_values = box.computed_values();
-    auto const& containing_block = *box.containing_block();
 
     auto width_of_containing_block = containing_block_width_for(box);
     auto height_of_containing_block = containing_block_height_for(box);
@@ -675,12 +674,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto used_bottom = computed_bottom.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box);
     auto tentative_height = CSS::Length::make_auto();
 
-    if (computed_values.height().is_percentage()
-        && !(containing_block.computed_values().height().is_length() && containing_block.computed_values().height().length().is_absolute())) {
-        // tentative_height is already auto
-    } else {
+    if (!computed_height.is_auto())
         tentative_height = computed_values.height().resolved(box, height_of_containing_block_as_length).resolved(box);
-    }
 
     auto& box_state = m_state.get_mutable(box);
     box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block_as_length).to_px(box);
