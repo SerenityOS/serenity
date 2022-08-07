@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2019-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleSheetList.h>
@@ -12,9 +13,17 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
-    : m_rules(CSSRuleList::create(move(rules)))
+CSSStyleSheet* CSSStyleSheet::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
 {
+    return window_object.heap().allocate<CSSStyleSheet>(window_object.realm(), window_object, move(rules), move(location));
+}
+
+CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
+    : StyleSheet(window_object)
+    , m_rules(CSSRuleList::create(move(rules)))
+{
+    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleSheetPrototype>("CSSStyleSheet"));
+
     if (location.has_value())
         set_location(location->to_string());
 

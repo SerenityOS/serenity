@@ -26,17 +26,17 @@ public:
         return adopt_ref(*new StyleSheetList(document));
     }
 
-    void add_sheet(NonnullRefPtr<CSSStyleSheet>);
+    void add_sheet(CSSStyleSheet&);
     void remove_sheet(CSSStyleSheet&);
 
-    NonnullRefPtrVector<CSSStyleSheet> const& sheets() const { return m_sheets; }
-    NonnullRefPtrVector<CSSStyleSheet>& sheets() { return m_sheets; }
+    Vector<JS::Handle<CSSStyleSheet>> const& sheets() const { return m_sheets; }
+    Vector<JS::Handle<CSSStyleSheet>>& sheets() { return m_sheets; }
 
-    RefPtr<CSSStyleSheet> item(size_t index) const
+    CSSStyleSheet* item(size_t index) const
     {
         if (index >= m_sheets.size())
             return {};
-        return m_sheets[index];
+        return const_cast<CSSStyleSheet*>(m_sheets[index].cell());
     }
 
     size_t length() const { return m_sheets.size(); }
@@ -50,7 +50,7 @@ private:
     explicit StyleSheetList(DOM::Document&);
 
     DOM::Document& m_document;
-    NonnullRefPtrVector<CSSStyleSheet> m_sheets;
+    Vector<JS::Handle<CSSStyleSheet>> m_sheets;
 };
 
 }

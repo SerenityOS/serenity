@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
@@ -35,10 +36,10 @@ public:
     String href() const { return m_url.to_string(); }
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
-    RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }
-    RefPtr<CSSStyleSheet> const loaded_style_sheet() const { return m_style_sheet; }
-    NonnullRefPtr<CSSStyleSheet> style_sheet_for_bindings() { return *m_style_sheet; }
-    void set_style_sheet(RefPtr<CSSStyleSheet> const& style_sheet) { m_style_sheet = style_sheet; }
+    CSSStyleSheet* loaded_style_sheet() { return m_style_sheet.cell(); }
+    CSSStyleSheet const* loaded_style_sheet() const { return m_style_sheet.cell(); }
+    CSSStyleSheet* style_sheet_for_bindings() { return m_style_sheet.cell(); }
+    void set_style_sheet(CSSStyleSheet* style_sheet) { m_style_sheet = JS::make_handle(style_sheet); }
 
     virtual StringView class_name() const override { return "CSSImportRule"sv; };
     virtual Type type() const override { return Type::Import; };
@@ -55,7 +56,7 @@ private:
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
-    RefPtr<CSSStyleSheet> m_style_sheet;
+    JS::Handle<CSSStyleSheet> m_style_sheet;
 };
 
 template<>

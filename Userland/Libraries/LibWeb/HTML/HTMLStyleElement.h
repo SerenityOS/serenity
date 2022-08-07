@@ -24,11 +24,12 @@ public:
 
     void update_a_style_block();
 
-    RefPtr<CSS::CSSStyleSheet> sheet() const;
+    CSS::CSSStyleSheet* sheet();
+    CSS::CSSStyleSheet const* sheet() const;
 
 private:
     // https://www.w3.org/TR/cssom/#associated-css-style-sheet
-    RefPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
+    JS::Handle<CSS::CSSStyleSheet> m_associated_css_style_sheet;
 };
 
 }

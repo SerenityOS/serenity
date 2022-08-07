@@ -38,27 +38,25 @@ void HTMLStyleElement::removed_from(Node* old_parent)
 }
 
 // https://www.w3.org/TR/cssom/#remove-a-css-style-sheet
-static void remove_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
+static void remove_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet)
 {
-    VERIFY(sheet.ptr());
-
     // 1. Remove the CSS style sheet from the list of document or shadow root CSS style sheets.
     document.style_sheets().remove_sheet(sheet);
 
     // 2. Set the CSS style sheet’s parent CSS style sheet, owner node and owner CSS rule to null.
-    sheet->set_parent_css_style_sheet(nullptr);
-    sheet->set_owner_node(nullptr);
-    sheet->set_owner_css_rule(nullptr);
+    sheet.set_parent_css_style_sheet(nullptr);
+    sheet.set_owner_node(nullptr);
+    sheet.set_owner_css_rule(nullptr);
 }
 
 // https://www.w3.org/TR/cssom/#add-a-css-style-sheet
-static void add_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
+static void add_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet)
 {
     // 1. Add the CSS style sheet to the list of document or shadow root CSS style sheets at the appropriate location. The remainder of these steps deal with the disabled flag.
     document.style_sheets().add_sheet(sheet);
 
     // 2. If the disabled flag is set, then return.
-    if (sheet->disabled())
+    if (sheet.disabled())
         return;
 
     // FIXME: 3. If the title is not the empty string, the alternate flag is unset, and preferred CSS style sheet set name is the empty string change the preferred CSS style sheet set name to the title.
@@ -72,23 +70,23 @@ static void add_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CS
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, String location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
+static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, String location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
 
-    sheet->set_parent_css_style_sheet(parent_style_sheet);
-    sheet->set_owner_css_rule(owner_rule);
-    sheet->set_owner_node(owner_node);
-    sheet->set_type(move(type));
-    sheet->set_media(move(media));
-    sheet->set_title(move(title));
-    sheet->set_alternate(alternate);
-    sheet->set_origin_clean(origin_clean);
-    sheet->set_location(move(location));
+    sheet.set_parent_css_style_sheet(parent_style_sheet);
+    sheet.set_owner_css_rule(owner_rule);
+    sheet.set_owner_node(owner_node);
+    sheet.set_type(move(type));
+    sheet.set_media(move(media));
+    sheet.set_title(move(title));
+    sheet.set_alternate(alternate);
+    sheet.set_origin_clean(origin_clean);
+    sheet.set_location(move(location));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
-    add_a_css_style_sheet(document, move(sheet));
+    add_a_css_style_sheet(document, sheet);
 }
 
 // The user agent must run the "update a style block" algorithm whenever one of the following conditions occur:
@@ -106,11 +104,11 @@ void HTMLStyleElement::update_a_style_block()
     // 1. Let element be the style element.
     // 2. If element has an associated CSS style sheet, remove the CSS style sheet in question.
 
-    if (m_associated_css_style_sheet) {
+    if (m_associated_css_style_sheet.cell()) {
         remove_a_css_style_sheet(document(), *m_associated_css_style_sheet);
 
         // FIXME: This should probably be handled by StyleSheet::set_owner_node().
-        m_associated_css_style_sheet = nullptr;
+        m_associated_css_style_sheet = {};
     }
 
     // 3. If element is not connected, then return.
@@ -131,7 +129,7 @@ void HTMLStyleElement::update_a_style_block()
         return;
 
     // FIXME: This should probably be handled by StyleSheet::set_owner_node().
-    m_associated_css_style_sheet = sheet;
+    m_associated_css_style_sheet = JS::make_handle(sheet);
 
     // 6. Create a CSS style sheet with the following properties...
     create_a_css_style_sheet(
@@ -145,14 +143,21 @@ void HTMLStyleElement::update_a_style_block()
         {},
         nullptr,
         nullptr,
-        sheet.release_nonnull());
+        *sheet);
 }
 
 // https://www.w3.org/TR/cssom/#dom-linkstyle-sheet
-RefPtr<CSS::CSSStyleSheet> HTMLStyleElement::sheet() const
+CSS::CSSStyleSheet* HTMLStyleElement::sheet()
 {
     // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.
-    return m_associated_css_style_sheet;
+    return m_associated_css_style_sheet.cell();
+}
+
+// https://www.w3.org/TR/cssom/#dom-linkstyle-sheet
+CSS::CSSStyleSheet const* HTMLStyleElement::sheet() const
+{
+    // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.
+    return m_associated_css_style_sheet.cell();
 }
 
 }

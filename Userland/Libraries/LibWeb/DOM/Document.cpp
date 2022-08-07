@@ -1610,7 +1610,7 @@ void Document::evaluate_media_rules()
 {
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        if (style_sheet.evaluate_media_queries(window()))
+        if (style_sheet->evaluate_media_queries(window()))
             any_media_queries_changed_match_state = true;
     }
 
@@ -1835,6 +1835,13 @@ void Document::check_favicon_after_loading_link_resource()
 void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
 {
     m_window = window;
+}
+
+Bindings::WindowObject& Document::preferred_window_object() const
+{
+    if (m_window && m_window->wrapper())
+        return const_cast<Bindings::WindowObject&>(*m_window->wrapper());
+    return Bindings::main_thread_internal_window_object();
 }
 
 }

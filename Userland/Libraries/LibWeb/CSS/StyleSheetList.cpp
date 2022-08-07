@@ -9,14 +9,13 @@
 
 namespace Web::CSS {
 
-void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
+void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 {
-    VERIFY(!m_sheets.contains_slow(sheet));
-    sheet->set_style_sheet_list({}, this);
-    m_sheets.append(sheet);
+    sheet.set_style_sheet_list({}, this);
+    m_sheets.append(JS::make_handle(sheet));
 
     m_document.style_computer().invalidate_rule_cache();
-    m_document.style_computer().load_fonts_from_sheet(*sheet);
+    m_document.style_computer().load_fonts_from_sheet(sheet);
     m_document.invalidate_style();
 }
 

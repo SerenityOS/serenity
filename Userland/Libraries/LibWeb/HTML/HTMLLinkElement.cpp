@@ -126,14 +126,14 @@ void HTMLLinkElement::resource_did_load_stylesheet()
         }
     }
 
-    auto sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), resource()->url()), resource()->encoded_data());
+    auto* sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), resource()->url()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
         return;
     }
 
     sheet->set_owner_node(this);
-    document().style_sheets().add_sheet(sheet.release_nonnull());
+    document().style_sheets().add_sheet(*sheet);
 }
 
 void HTMLLinkElement::resource_did_load_favicon()
