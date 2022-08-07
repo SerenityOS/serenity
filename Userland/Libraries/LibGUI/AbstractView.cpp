@@ -359,8 +359,7 @@ void AbstractView::mouseup_event(MouseEvent& event)
         // Since we're here, it was not that; so fix up the selection now.
         auto index = index_at_event_position(event.position());
         if (index.is_valid()) {
-            set_selection(index);
-            set_selection_start_index(index);
+            set_cursor(index, SelectionUpdate::Set, true);
         } else
             clear_selection();
         m_might_drag = false;
