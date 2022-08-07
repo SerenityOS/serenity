@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath exec proc id"));
+    TRY(Core::System::pledge("stdio recvfd sendfd cpath chown rpath exec proc id"));
     TRY(Core::System::unveil("/home", "r"));
     TRY(Core::System::unveil("/tmp", "c"));
     TRY(Core::System::unveil("/etc/passwd", "r"));

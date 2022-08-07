@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
-    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/user/100/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

@@ -432,7 +432,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/TerminalSettings", "x"));
     TRY(Core::System::unveil("/bin/utmpupdate", "x"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
-    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/user/100/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
