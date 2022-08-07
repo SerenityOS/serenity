@@ -1,4 +1,4 @@
-[CustomGet,CustomSet,CustomHasProperty]
+[NoInstanceWrapper]
 interface CSSStyleDeclaration {
 
     readonly attribute unsigned long length;

@@ -2320,7 +2320,7 @@ Vector<Vector<ComponentValue>> Parser::parse_a_comma_separated_list_of_component
     return list_of_component_value_lists;
 }
 
-RefPtr<ElementInlineCSSStyleDeclaration> Parser::parse_as_style_attribute(DOM::Element& element)
+ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element& element)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
@@ -2706,13 +2706,13 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
         auto stream = TokenStream(rule->block()->values());
         auto declarations_and_at_rules = parse_a_style_blocks_contents(stream);
 
-        auto declaration = convert_to_style_declaration(declarations_and_at_rules);
+        auto* declaration = convert_to_style_declaration(declarations_and_at_rules);
         if (!declaration) {
             dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule declaration invalid; discarding.");
             return {};
         }
 
-        return CSSStyleRule::create(m_context.window_object(), move(selectors.value()), move(*declaration));
+        return CSSStyleRule::create(m_context.window_object(), move(selectors.value()), *declaration);
     }
 
     return {};
@@ -2741,10 +2741,10 @@ auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_
     return result;
 }
 
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
+PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
 {
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
+    return PropertyOwningCSSStyleDeclaration::create(m_context.window_object(), move(properties), move(custom_properties));
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
@@ -6396,7 +6396,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& cont
     return parser.parse_as_css_stylesheet(location);
 }
 
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
+CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
 {
     if (css.is_empty())
         return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});

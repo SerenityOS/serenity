@@ -14,7 +14,6 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
-#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CryptoWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/ElementWrapper.h>
@@ -526,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     if (!is<ElementWrapper>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "DOM element");
 
-    return wrap(realm, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
+    return wrap(realm, *impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)

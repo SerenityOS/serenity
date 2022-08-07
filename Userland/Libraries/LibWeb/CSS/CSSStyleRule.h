@@ -21,8 +21,8 @@ class CSSStyleRule final : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
-    static CSSStyleRule* create(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
-    CSSStyleRule(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
+    static CSSStyleRule* create(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    CSSStyleRule(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
 
     virtual ~CSSStyleRule() override = default;
 
@@ -39,10 +39,11 @@ public:
     CSSStyleDeclaration* style();
 
 private:
+    virtual void visit_edges(Cell::Visitor&) override;
     virtual String serialized() const override;
 
     NonnullRefPtrVector<Selector> m_selectors;
-    NonnullRefPtr<CSSStyleDeclaration> m_declaration;
+    CSSStyleDeclaration& m_declaration;
 };
 
 template<>
