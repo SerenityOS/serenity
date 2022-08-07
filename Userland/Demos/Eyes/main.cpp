@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/100/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/user/100/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if ((grid_rows > 0) ^ (grid_columns > 0)) {

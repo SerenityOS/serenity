@@ -142,6 +142,15 @@ bool Account::authenticate(SecretString const& password) const
 
 bool Account::login() const
 {
+    auto const temporary_directory = String::formatted("/tmp/user/{}", m_uid);
+    if (auto result = Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::Yes); result.is_error()) {
+        dbgln("{}", result.release_error());
+        return false;
+    }
+
+    if (chown(temporary_directory.characters(), m_uid, m_gid) < 0)
+        return false;
+
     if (setgroups(m_extra_gids.size(), m_extra_gids.data()) < 0)
         return false;
 
@@ -150,10 +159,6 @@ bool Account::login() const
 
     if (setuid(m_uid) < 0)
         return false;
-
-    auto const temporary_directory = String::formatted("/tmp/{}", m_uid);
-    if (auto result = Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::No); result.is_error())
-        dbgln("{}", result.release_error());
 
     return true;
 }
