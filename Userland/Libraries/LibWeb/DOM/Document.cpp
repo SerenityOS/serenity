@@ -279,12 +279,13 @@ NonnullRefPtr<Document> Document::create(AK::URL const& url)
 Document::Document(const AK::URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))
-    , m_style_sheets(JS::make_handle(CSS::StyleSheetList::create(*this)))
     , m_url(url)
     , m_window(HTML::Window::create_with_document(*this))
     , m_implementation(DOMImplementation::create({}, *this))
     , m_history(HTML::History::create(*this))
 {
+    m_style_sheets = JS::make_handle(CSS::StyleSheetList::create(*this));
+
     HTML::main_thread_event_loop().register_document({}, *this);
 
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
