@@ -91,6 +91,10 @@
         .grad-14 {
             background-image: linear-gradient(to bottom right,  indigo, white, deeppink);
         }
+
+        .grad-webkit {
+            background-image: -webkit-linear-gradient(top right, yellow, black, yellow, black);
+        }
     </style>
   </head>
   <body>
@@ -116,6 +120,8 @@
     <div class="rect grad-12"></div>
     <div class="rect grad-13"></div>
     <div class="rect grad-14"></div>
+    <b>A webkit gradient</b><br>
+    <div class="box grad-webkit"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
