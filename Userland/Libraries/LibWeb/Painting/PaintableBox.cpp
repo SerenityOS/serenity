@@ -114,7 +114,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     auto clip_rect = computed_values().clip();
-    auto should_clip_rect = clip_rect.is_rect() && computed_values().position() == CSS::Position::Absolute;
+    auto should_clip_rect = clip_rect.is_rect() && layout_box().is_absolutely_positioned();
 
     if (phase == PaintPhase::Background) {
         if (should_clip_rect) {
