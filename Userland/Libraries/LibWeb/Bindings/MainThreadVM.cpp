@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -307,10 +307,25 @@ JS::VM& main_thread_vm()
         // NOTE: We push a dummy execution context onto the JS execution context stack,
         //       just to make sure that it's never empty.
         auto& custom_data = *verify_cast<WebEngineCustomData>(vm->custom_data());
-        custom_data.root_execution_context = make<JS::ExecutionContext>(vm->heap());
+        custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
+            *vm, [&](JS::Realm& realm) -> JS::GlobalObject* {
+                auto internal_window = HTML::Window::create();
+                custom_data.internal_window_object = JS::make_handle(vm->heap().allocate<Bindings::WindowObject>(realm, realm, internal_window));
+                return custom_data.internal_window_object.cell(); },
+            [](JS::Realm&) -> JS::GlobalObject* {
+                return nullptr;
+            }));
+
         vm->push_execution_context(*custom_data.root_execution_context);
     }
     return *vm;
+}
+
+Bindings::WindowObject& main_thread_internal_window_object()
+{
+    auto& vm = main_thread_vm();
+    auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());
+    return *custom_data.internal_window_object;
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-observer-compound-microtask

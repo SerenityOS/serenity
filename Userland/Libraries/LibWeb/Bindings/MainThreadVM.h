@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,6 +11,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/JobCallback.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 
@@ -31,6 +32,10 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
     NonnullRefPtrVector<DOM::MutationObserver> mutation_observers;
 
     OwnPtr<JS::ExecutionContext> root_execution_context;
+
+    // This object is used as the global object for GC-allocated objects that don't
+    // belong to a web-facing global object.
+    JS::Handle<Bindings::WindowObject> internal_window_object;
 };
 
 struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData {
@@ -48,6 +53,7 @@ struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData
 
 HTML::ClassicScript* active_script();
 JS::VM& main_thread_vm();
+Bindings::WindowObject& main_thread_internal_window_object();
 void queue_mutation_observer_microtask(DOM::Document&);
 NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM&, Function<JS::GlobalObject*(JS::Realm&)> create_global_object, Function<JS::GlobalObject*(JS::Realm&)> create_global_this_value);
 
