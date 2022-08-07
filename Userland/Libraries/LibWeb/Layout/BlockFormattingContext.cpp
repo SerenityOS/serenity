@@ -311,33 +311,24 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
 float BlockFormattingContext::compute_theoretical_height(LayoutState const& state, Box const& box)
 {
     auto const& computed_values = box.computed_values();
-    auto const& containing_block = *box.containing_block();
     auto containing_block_height = CSS::Length::make_px(containing_block_height_for(box, state));
-
-    auto is_absolute = [](Optional<CSS::LengthPercentage> const& length_percentage) {
-        return length_percentage.has_value() && length_percentage->is_length() && length_percentage->length().is_absolute();
-    };
 
     // Then work out what the height is, based on box type and CSS properties.
     float height = 0;
     if (is<ReplacedBox>(box)) {
         height = compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
     } else {
-        if (box.computed_values().height().is_auto()
-            || (computed_values.height().is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
+        if (box.computed_values().height().is_auto())
             height = compute_auto_height_for_block_level_element(state, box);
-        } else {
+        else
             height = computed_values.height().resolved(box, containing_block_height).to_px(box);
-        }
     }
 
     auto specified_max_height = computed_values.max_height().resolved(box, containing_block_height).resolved(box);
-    if (!specified_max_height.is_auto()
-        && !(computed_values.max_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
+    if (!specified_max_height.is_auto())
         height = min(height, specified_max_height.to_px(box));
     auto specified_min_height = computed_values.min_height().resolved(box, containing_block_height).resolved(box);
-    if (!specified_min_height.is_auto()
-        && !(computed_values.min_height().is_percentage() && !is_absolute(containing_block.computed_values().height())))
+    if (!specified_min_height.is_auto())
         height = max(height, specified_min_height.to_px(box));
     return height;
 }
