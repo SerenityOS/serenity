@@ -33,7 +33,11 @@ serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 
 set(LIBTEST_BASED_SOURCES
     TestEFault.cpp
+    TestEmptyPrivateInodeVMObject.cpp
+    TestEmptySharedInodeVMObject.cpp
     TestInvalidUIDSet.cpp
+    TestSharedInodeVMObject.cpp
+    TestPrivateInodeVMObject.cpp
     TestKernelAlarm.cpp
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
