@@ -5,6 +5,8 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibWeb/Bindings/CSSRuleListPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
@@ -13,8 +15,14 @@
 
 namespace Web::CSS {
 
-CSSRuleList::CSSRuleList(NonnullRefPtrVector<CSSRule>&& rules)
-    : m_rules(move(rules))
+CSSRuleList* CSSRuleList::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<Web::CSS::CSSRule>&& rules)
+{
+    return window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object, move(rules));
+}
+
+CSSRuleList::CSSRuleList(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule>&& rules)
+    : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::CSSRuleListPrototype>("CSSRuleList"))
+    , m_rules(move(rules))
 {
 }
 
@@ -147,6 +155,11 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
     }
 
     return any_media_queries_changed_match_state;
+}
+
+JS::Value CSSRuleList::item_value(size_t index) const
+{
+    return item(index);
 }
 
 }

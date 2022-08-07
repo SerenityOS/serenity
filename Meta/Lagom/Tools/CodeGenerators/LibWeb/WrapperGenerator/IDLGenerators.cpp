@@ -84,6 +84,9 @@ static bool impl_is_wrapper(Type const& type)
     if (type.name == "StyleSheetList"sv)
         return true;
 
+    if (type.name == "CSSRuleList"sv)
+        return true;
+
     return false;
 }
 

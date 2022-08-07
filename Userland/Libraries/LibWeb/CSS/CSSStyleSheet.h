@@ -35,9 +35,9 @@ public:
 
     virtual String type() const override { return "text/css"; }
 
-    CSSRuleList const& rules() const { return m_rules; }
-    CSSRuleList& rules() { return m_rules; }
-    void set_rules(NonnullRefPtr<CSSRuleList> rules) { m_rules = move(rules); }
+    CSSRuleList const& rules() const { return *m_rules; }
+    CSSRuleList& rules() { return *m_rules; }
+    void set_rules(CSSRuleList& rules) { m_rules = &rules; }
 
     CSSRuleList* css_rules() { return m_rules; }
     CSSRuleList const* css_rules() const { return m_rules; }
@@ -55,7 +55,7 @@ public:
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
-    NonnullRefPtr<CSSRuleList> m_rules;
+    CSSRuleList* m_rules { nullptr };
 
     WeakPtr<CSSRule> m_owner_css_rule;
 

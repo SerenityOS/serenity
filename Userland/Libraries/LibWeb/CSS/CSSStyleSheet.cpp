@@ -20,7 +20,7 @@ CSSStyleSheet* CSSStyleSheet::create(Bindings::WindowObject& window_object, Nonn
 
 CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
     : StyleSheet(window_object)
-    , m_rules(CSSRuleList::create(move(rules)))
+    , m_rules(CSSRuleList::create(window_object, move(rules)))
 {
     set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleSheetPrototype>("CSSStyleSheet"));
 

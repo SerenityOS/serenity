@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/CSSGroupingRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 
 namespace Web::CSS {
 
 CSSGroupingRule::CSSGroupingRule(NonnullRefPtrVector<CSSRule>&& rules)
-    : m_rules(CSSRuleList::create(move(rules)))
+    // FIXME: Use the same window object for the rule list.
+    : m_rules(JS::make_handle(CSSRuleList::create(Bindings::main_thread_internal_window_object(), move(rules))))
 {
     for (auto& rule : *m_rules)
         rule.set_parent_rule(this);
