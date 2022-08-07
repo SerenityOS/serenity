@@ -101,6 +101,8 @@ void WindowManager::reload_config()
     Compositor::the().invalidate_after_theme_or_font_change();
 
     WindowFrame::reload_config();
+
+    load_system_effects();
 }
 
 Gfx::Font const& WindowManager::font() const
@@ -2329,6 +2331,46 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color const& color)
     Compositor::the().invalidate_cursor();
     m_config->write_entry("Mouse", "CursorHighlightColor", color.to_string());
     sync_config_to_disk();
+}
+
+void WindowManager::apply_system_effects(Vector<bool> effects, ShowGeometry geometry)
+{
+    if (m_system_effects == SystemEffects { effects, geometry })
+        return;
+
+    m_system_effects = { effects, geometry };
+    m_config->write_bool_entry("Effects", "AnimateMenus", m_system_effects.animate_menus());
+    m_config->write_bool_entry("Effects", "FlashMenus", m_system_effects.flash_menus());
+    m_config->write_bool_entry("Effects", "AnimateWindows", m_system_effects.animate_windows());
+    m_config->write_bool_entry("Effects", "SmoothScrolling", m_system_effects.smooth_scrolling());
+    m_config->write_bool_entry("Effects", "TabAccents", m_system_effects.tab_accents());
+    m_config->write_bool_entry("Effects", "SplitterKnurls", m_system_effects.splitter_knurls());
+    m_config->write_bool_entry("Effects", "MenuShadow", m_system_effects.menu_shadow());
+    m_config->write_bool_entry("Effects", "WindowShadow", m_system_effects.window_shadow());
+    m_config->write_bool_entry("Effects", "TooltipShadow", m_system_effects.tooltip_shadow());
+    m_config->write_entry("Effects", "ShowGeometry", ShowGeometryTools::enum_to_string(geometry));
+    sync_config_to_disk();
+}
+
+void WindowManager::load_system_effects()
+{
+    Vector<bool> effects = {
+        m_config->read_bool_entry("Effects", "AnimateMenus", true),
+        m_config->read_bool_entry("Effects", "FlashMenus", true),
+        m_config->read_bool_entry("Effects", "AnimateWindows", true),
+        m_config->read_bool_entry("Effects", "SmoothScrolling", true),
+        m_config->read_bool_entry("Effects", "TabAccents", true),
+        m_config->read_bool_entry("Effects", "SplitterKnurls", true),
+        m_config->read_bool_entry("Effects", "MenuShadow", true),
+        m_config->read_bool_entry("Effects", "WindowShadow", true),
+        m_config->read_bool_entry("Effects", "TooltipShadow", true)
+    };
+    ShowGeometry geometry = ShowGeometryTools::string_to_enum(m_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
+    m_system_effects = { effects, geometry };
+
+    ConnectionFromClient::for_each_client([&](auto& client) {
+        client.async_update_system_effects(effects);
+    });
 }
 
 bool WindowManager::sync_config_to_disk()

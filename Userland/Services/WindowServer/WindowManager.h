@@ -22,6 +22,7 @@
 #include <WindowServer/KeymapSwitcher.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/ScreenLayout.h>
+#include <WindowServer/SystemEffects.h>
 #include <WindowServer/WMConnectionFromClient.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
@@ -336,6 +337,10 @@ public:
 
     bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
+    void load_system_effects();
+    void apply_system_effects(Vector<bool>, ShowGeometry);
+    SystemEffects& system_effects() { return m_system_effects; }
+
     RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
 
 private:
@@ -478,6 +483,8 @@ private:
 
     WindowStack* m_switching_to_window_stack { nullptr };
     Vector<WeakPtr<Window>, 4> m_carry_window_to_new_stack;
+
+    SystemEffects m_system_effects;
 };
 
 template<typename Callback>
