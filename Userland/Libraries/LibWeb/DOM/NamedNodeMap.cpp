@@ -1,9 +1,14 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/NamedNodeMapPrototype.h>
+#include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
@@ -11,13 +16,15 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<NamedNodeMap> NamedNodeMap::create(Element& associated_element)
+NamedNodeMap* NamedNodeMap::create(Element& element)
 {
-    return adopt_ref(*new NamedNodeMap(associated_element));
+    auto& realm = element.document().preferred_window_object().realm();
+    return realm.heap().allocate<NamedNodeMap>(realm, element);
 }
 
-NamedNodeMap::NamedNodeMap(Element& associated_element)
-    : RefCountForwarder(associated_element)
+NamedNodeMap::NamedNodeMap(Element& element)
+    : Bindings::LegacyPlatformObject(element.document().preferred_window_object().ensure_web_prototype<Bindings::NamedNodeMapPrototype>("NamedNodeMap"))
+    , m_element(element)
 {
 }
 
@@ -211,6 +218,22 @@ Attribute const* NamedNodeMap::remove_attribute(StringView qualified_name)
 
     // 3. Return attr.
     return attribute;
+}
+
+JS::Value NamedNodeMap::item_value(size_t index) const
+{
+    auto const* node = item(index);
+    if (!node)
+        return JS::js_undefined();
+    return Bindings::wrap(shape().realm(), const_cast<Attribute&>(*node));
+}
+
+JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
+{
+    auto const* node = get_named_item(name);
+    if (!node)
+        return JS::js_undefined();
+    return Bindings::wrap(shape().realm(), const_cast<Attribute&>(*node));
 }
 
 }

@@ -59,7 +59,7 @@ public:
     void remove_attribute(FlyString const& name);
     DOM::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
-    NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
+    NamedNodeMap const* attributes() const { return m_attributes.cell(); }
     Vector<String> get_attribute_names() const;
 
     RefPtr<DOMTokenList> const& class_list();
@@ -150,7 +150,7 @@ private:
 
     QualifiedName m_qualified_name;
     String m_html_uppercased_qualified_name;
-    NonnullRefPtr<NamedNodeMap> m_attributes;
+    JS::Handle<NamedNodeMap> m_attributes;
 
     JS::Handle<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
 
