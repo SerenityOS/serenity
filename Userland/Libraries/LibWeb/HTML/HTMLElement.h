@@ -38,7 +38,8 @@ public:
 
     bool cannot_navigate() const;
 
-    NonnullRefPtr<DOMStringMap> dataset() const { return m_dataset; }
+    DOMStringMap* dataset() { return m_dataset.cell(); }
+    DOMStringMap const* dataset() const { return m_dataset.cell(); }
 
     void focus();
 
@@ -65,7 +66,7 @@ private:
     };
     ContentEditableState content_editable_state() const;
 
-    NonnullRefPtr<DOMStringMap> m_dataset;
+    JS::Handle<DOMStringMap> m_dataset;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
     bool m_locked_for_focus { false };

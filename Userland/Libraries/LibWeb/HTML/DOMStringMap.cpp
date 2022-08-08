@@ -5,13 +5,23 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <LibWeb/Bindings/DOMStringMapPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/DOMStringMap.h>
 
 namespace Web::HTML {
 
-DOMStringMap::DOMStringMap(DOM::Element& associated_element)
-    : m_associated_element(associated_element)
+DOMStringMap* DOMStringMap::create(DOM::Element& element)
+{
+    auto& realm = element.document().preferred_window_object().realm();
+    return realm.heap().allocate<DOMStringMap>(realm, element);
+}
+
+DOMStringMap::DOMStringMap(DOM::Element& element)
+    : PlatformObject(element.document().preferred_window_object().ensure_web_prototype<Bindings::DOMStringMapPrototype>("DOMStringMap"))
+    , m_associated_element(element)
 {
 }
 

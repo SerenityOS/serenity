@@ -10,7 +10,7 @@ namespace Web::SVG {
 
 SVGElement::SVGElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
-    , m_dataset(HTML::DOMStringMap::create(*this))
+    , m_dataset(JS::make_handle(HTML::DOMStringMap::create(*this)))
 {
 }
 

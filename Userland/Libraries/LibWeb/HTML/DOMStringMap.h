@@ -1,32 +1,28 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/dom.html#domstringmap
-class DOMStringMap final
-    : public RefCounted<DOMStringMap>
-    , public Weakable<DOMStringMap>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::DOMStringMapWrapper;
+class DOMStringMap final : public Bindings::PlatformObject {
+    JS_OBJECT(DOMStringMap, Bindings::PlatformObject);
 
-    static NonnullRefPtr<DOMStringMap> create(DOM::Element& associated_element)
-    {
-        return adopt_ref(*new DOMStringMap(associated_element));
-    }
+public:
+    static DOMStringMap* create(DOM::Element&);
+    explicit DOMStringMap(DOM::Element&);
 
     virtual ~DOMStringMap() override;
+
+    DOMStringMap& impl() { return *this; }
 
     Vector<String> supported_property_names() const;
 
@@ -38,8 +34,6 @@ public:
     bool delete_existing_named_property(String const&);
 
 private:
-    DOMStringMap(DOM::Element&);
-
     struct NameValuePair {
         String name;
         String value;
@@ -51,4 +45,9 @@ private:
     NonnullRefPtr<DOM::Element> m_associated_element;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::HTML::DOMStringMap& object) { return &object; }
+using DOMStringMapWrapper = Web::HTML::DOMStringMap;
 }

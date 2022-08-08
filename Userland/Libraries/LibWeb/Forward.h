@@ -471,7 +471,6 @@ class DOMPointReadOnlyWrapper;
 class DOMRectListWrapper;
 class DOMRectReadOnlyWrapper;
 class DOMRectWrapper;
-class DOMStringMapWrapper;
 class DOMTokenListWrapper;
 class ElementWrapper;
 class ErrorEventWrapper;
