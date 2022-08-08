@@ -10,8 +10,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/AbortSignal.h>
@@ -92,7 +90,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         auto& global = realm.global_object();
 
         // 7. Let currentEvent be undefined.
-        RefPtr<Event> current_event;
+        Event* current_event = nullptr;
 
         // 8. If global is a Window object, then:
         if (is<Bindings::WindowObject>(global)) {
@@ -207,10 +205,10 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
 }
 
 // https://dom.spec.whatwg.org/#concept-event-dispatch
-bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<Event> event, bool legacy_target_override)
+bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, Event& event, bool legacy_target_override)
 {
     // 1. Set event’s dispatch flag.
-    event->set_dispatched(true);
+    event.set_dispatched(true);
 
     // 2. Let targetOverride be target, if legacy target override flag is not given, and target’s associated Document otherwise. [HTML]
     // NOTE: legacy target override flag is only used by HTML and only when target is a Window object.
@@ -225,24 +223,24 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
     RefPtr<EventTarget> activation_target;
 
     // 4. Let relatedTarget be the result of retargeting event’s relatedTarget against target.
-    RefPtr<EventTarget> related_target = retarget(event->related_target(), target);
+    RefPtr<EventTarget> related_target = retarget(event.related_target(), target);
 
     bool clear_targets = false;
     // 5. If target is not relatedTarget or target is event’s relatedTarget, then:
-    if (related_target != target || event->related_target() == target) {
+    if (related_target != target || event.related_target() == target) {
         // 1. Let touchTargets be a new list.
         Event::TouchTargetList touch_targets;
 
         // 2. For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against target to touchTargets.
-        for (auto& touch_target : event->touch_target_list()) {
+        for (auto& touch_target : event.touch_target_list()) {
             touch_targets.append(retarget(touch_target, target));
         }
 
         // 3. Append to an event path with event, target, targetOverride, relatedTarget, touchTargets, and false.
-        event->append_to_path(*target, target_override, related_target, touch_targets, false);
+        event.append_to_path(*target, target_override, related_target, touch_targets, false);
 
         // 4. Let isActivationEvent be true, if event is a MouseEvent object and event’s type attribute is "click"; otherwise false.
-        bool is_activation_event = is<UIEvents::MouseEvent>(*event) && event->type() == HTML::EventNames::click;
+        bool is_activation_event = is<UIEvents::MouseEvent>(event) && event.type() == HTML::EventNames::click;
 
         // 5. If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
         if (is_activation_event && target->activation_behavior)
@@ -265,13 +263,13 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             // FIXME: 2. If parent is a slottable and is assigned, then set slottable to parent.
 
             // 3. Let relatedTarget be the result of retargeting event’s relatedTarget against parent.
-            related_target = retarget(event->related_target(), parent);
+            related_target = retarget(event.related_target(), parent);
 
             // 4. Let touchTargets be a new list.
             touch_targets.clear();
 
             // 5. For each touchTarget of event’s touch target list, append the result of retargeting touchTarget against parent to touchTargets.
-            for (auto& touch_target : event->touch_target_list()) {
+            for (auto& touch_target : event.touch_target_list()) {
                 touch_targets.append(retarget(touch_target, parent));
             }
 
@@ -279,11 +277,11 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             if (is<HTML::Window>(parent)
                 || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
                 // 1. If isActivationEvent is true, event’s bubbles attribute is true, activationTarget is null, and parent has activation behavior, then set activationTarget to parent.
-                if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behavior)
+                if (is_activation_event && event.bubbles() && !activation_target && parent->activation_behavior)
                     activation_target = parent;
 
                 // 2. Append to an event path with event, parent, null, relatedTarget, touchTargets, and slot-in-closed-tree.
-                event->append_to_path(*parent, nullptr, related_target, touch_targets, slot_in_closed_tree);
+                event.append_to_path(*parent, nullptr, related_target, touch_targets, slot_in_closed_tree);
 
             }
             // 7. Otherwise, if parent is relatedTarget, then set parent to null.
@@ -299,7 +297,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
                     activation_target = target;
 
                 // 2. Append to an event path with event, parent, target, relatedTarget, touchTargets, and slot-in-closed-tree.
-                event->append_to_path(*parent, target, related_target, touch_targets, slot_in_closed_tree);
+                event.append_to_path(*parent, target, related_target, touch_targets, slot_in_closed_tree);
             }
 
             // 9. If parent is non-null, then set parent to the result of invoking parent’s get the parent with event.
@@ -312,7 +310,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         }
 
         // 10. Let clearTargetsStruct be the last struct in event’s path whose shadow-adjusted target is non-null.
-        auto clear_targets_struct = event->path().last_matching([](auto& entry) {
+        auto clear_targets_struct = event.path().last_matching([](auto& entry) {
             return !entry.shadow_adjusted_target.is_null();
         });
 
@@ -349,32 +347,32 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             activation_target->legacy_pre_activation_behavior();
 
         // 13. For each struct in event’s path, in reverse order:
-        for (auto& entry : event->path().in_reverse()) {
+        for (auto& entry : event.path().in_reverse()) {
             // 1. If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
             if (entry.shadow_adjusted_target)
-                event->set_phase(Event::Phase::AtTarget);
+                event.set_phase(Event::Phase::AtTarget);
             // 2. Otherwise, set event’s eventPhase attribute to CAPTURING_PHASE.
             else
-                event->set_phase(Event::Phase::CapturingPhase);
+                event.set_phase(Event::Phase::CapturingPhase);
 
             // 3. Invoke with struct, event, "capturing", and legacyOutputDidListenersThrowFlag if given.
             invoke(entry, event, Event::Phase::CapturingPhase);
         }
 
         // 14. For each struct in event’s path:
-        for (auto& entry : event->path()) {
+        for (auto& entry : event.path()) {
             // 1. If struct’s shadow-adjusted target is non-null, then set event’s eventPhase attribute to AT_TARGET.
             if (entry.shadow_adjusted_target) {
-                event->set_phase(Event::Phase::AtTarget);
+                event.set_phase(Event::Phase::AtTarget);
             }
             // 2. Otherwise:
             else {
                 // 1. If event’s bubbles attribute is false, then continue.
-                if (!event->bubbles())
+                if (!event.bubbles())
                     continue;
 
                 // 2. Set event’s eventPhase attribute to BUBBLING_PHASE.
-                event->set_phase(Event::Phase::BubblingPhase);
+                event.set_phase(Event::Phase::BubblingPhase);
             }
 
             // 3. Invoke with struct, event, "bubbling", and legacyOutputDidListenersThrowFlag if given.
@@ -383,35 +381,35 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
     }
 
     // 6. Set event’s eventPhase attribute to NONE.
-    event->set_phase(Event::Phase::None);
+    event.set_phase(Event::Phase::None);
 
     // 7. Set event’s currentTarget attribute to null.
-    event->set_current_target(nullptr);
+    event.set_current_target(nullptr);
 
     // 8. Set event’s path to the empty list.
-    event->clear_path();
+    event.clear_path();
 
     // 9. Unset event’s dispatch flag, stop propagation flag, and stop immediate propagation flag.
-    event->set_dispatched(false);
-    event->set_stop_propagation(false);
-    event->set_stop_immediate_propagation(false);
+    event.set_dispatched(false);
+    event.set_stop_propagation(false);
+    event.set_stop_immediate_propagation(false);
 
     // 10. If clearTargets, then:
     if (clear_targets) {
         // 1. Set event’s target to null.
-        event->set_target(nullptr);
+        event.set_target(nullptr);
 
         // 2. Set event’s relatedTarget to null.
-        event->set_related_target(nullptr);
+        event.set_related_target(nullptr);
 
         // 3. Set event’s touch target list to the empty list.
-        event->clear_touch_target_list();
+        event.clear_touch_target_list();
     }
 
     // 11. If activationTarget is non-null, then:
     if (activation_target) {
         // 1. If event’s canceled flag is unset, then run activationTarget’s activation behavior with event.
-        if (!event->cancelled()) {
+        if (!event.cancelled()) {
             activation_target->activation_behavior(event);
             activation_target->legacy_cancelled_activation_behavior_was_not_called();
         }
@@ -422,7 +420,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
     }
 
     // 12. Return false if event’s canceled flag is set; otherwise true.
-    return !event->cancelled();
+    return !event.cancelled();
 }
 
 }

@@ -247,9 +247,9 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
         //    with related blur target as the related target.
         if (blur_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto blur_event = UIEvents::FocusEvent::create(HTML::EventNames::blur);
+            auto blur_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*blur_event_target).document().preferred_window_object(), HTML::EventNames::blur);
             blur_event->set_related_target(related_blur_target);
-            blur_event_target->dispatch_event(move(blur_event));
+            blur_event_target->dispatch_event(*blur_event);
         }
     }
 
@@ -290,9 +290,9 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
         //    with related focus target as the related target.
         if (focus_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto focus_event = UIEvents::FocusEvent::create(HTML::EventNames::focus);
+            auto focus_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*focus_event_target).document().preferred_window_object(), HTML::EventNames::focus);
             focus_event->set_related_target(related_focus_target);
-            focus_event_target->dispatch_event(move(focus_event));
+            focus_event_target->dispatch_event(*focus_event);
         }
     }
 }
@@ -411,7 +411,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(type);
+    auto event = UIEvents::MouseEvent::create(document().preferred_window_object(), type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
@@ -433,7 +433,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // FIXME: 8. event's getModifierState() method is to return values appropriately describing the current state of the key input device.
 
     // 9. Return the result of dispatching event at target.
-    return target.dispatch_event(move(event));
+    return target.dispatch_event(*event);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-click

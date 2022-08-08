@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,36 +18,32 @@ struct MessageEventInit : public DOM::EventInit {
 };
 
 class MessageEvent : public DOM::Event {
+    JS_OBJECT(MessageEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::MessageEventWrapper;
+    static MessageEvent* create(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init = {});
+    static MessageEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init);
 
-    static NonnullRefPtr<MessageEvent> create(FlyString const& event_name, MessageEventInit const& event_init = {})
-    {
-        return adopt_ref(*new MessageEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<MessageEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init)
-    {
-        return MessageEvent::create(event_name, event_init);
-    }
+    MessageEvent(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init);
+    virtual ~MessageEvent() override;
 
-    virtual ~MessageEvent() override = default;
+    MessageEvent& impl() { return *this; }
 
-    JS::Value data() const { return m_data.value(); }
+    JS::Value data() const { return m_data; }
     String const& origin() const { return m_origin; }
     String const& last_event_id() const { return m_last_event_id; }
 
-protected:
-    MessageEvent(FlyString const& event_name, MessageEventInit const& event_init)
-        : DOM::Event(event_name, event_init)
-        , m_data(JS::make_handle(event_init.data))
-        , m_origin(event_init.origin)
-        , m_last_event_id(event_init.last_event_id)
-    {
-    }
+private:
+    virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::Handle<JS::Value> m_data;
+    JS::Value m_data;
     String m_origin;
     String m_last_event_id;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::HTML::MessageEvent& object) { return &object; }
+using MessageEventWrapper = Web::HTML::MessageEvent;
 }

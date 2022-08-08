@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 
 namespace Web::DOM {
@@ -19,12 +19,10 @@ struct EventInit {
     bool composed { false };
 };
 
-class Event
-    : public RefCounted<Event>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::EventWrapper;
+class Event : public Bindings::PlatformObject {
+    JS_OBJECT(Event, Bindings::PlatformObject);
 
+public:
     enum Phase : u16 {
         None = 0,
         CapturingPhase = 1,
@@ -47,16 +45,15 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static NonnullRefPtr<Event> create(FlyString const& event_name, EventInit const& event_init = {})
-    {
-        return adopt_ref(*new Event(event_name, event_init));
-    }
-    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, EventInit const& event_init)
-    {
-        return Event::create(event_name, event_init);
-    }
+    static JS::NonnullGCPtr<Event> create(Bindings::WindowObject&, FlyString const& event_name, EventInit const& event_init = {});
+    static JS::NonnullGCPtr<Event> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, EventInit const& event_init);
+
+    Event(Bindings::WindowObject&, FlyString const& type);
+    Event(Bindings::WindowObject&, FlyString const& type, EventInit const& event_init);
 
     virtual ~Event() = default;
+
+    Event& impl() { return *this; }
 
     double time_stamp() const;
 
@@ -149,21 +146,7 @@ public:
     NonnullRefPtrVector<EventTarget> composed_path() const;
 
 protected:
-    explicit Event(FlyString const& type)
-        : m_type(type)
-        , m_initialized(true)
-    {
-    }
-    Event(FlyString const& type, EventInit const& event_init)
-        : m_type(type)
-        , m_bubbles(event_init.bubbles)
-        , m_cancelable(event_init.cancelable)
-        , m_composed(event_init.composed)
-        , m_initialized(true)
-    {
-    }
-
-    void initialize(String const&, bool, bool);
+    void initialize_event(String const&, bool, bool);
 
 private:
     FlyString m_type;
@@ -194,4 +177,9 @@ private:
     void set_cancelled_flag();
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::Event& object) { return &object; }
+using EventWrapper = Web::DOM::Event;
 }

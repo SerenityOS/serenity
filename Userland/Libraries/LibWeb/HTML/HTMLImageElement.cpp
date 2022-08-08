@@ -26,7 +26,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(DOM::Event::create(EventNames::load));
+            dispatch_event(*DOM::Event::create(this->document().preferred_window_object(), EventNames::load));
         });
     };
 
@@ -35,7 +35,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(DOM::Event::create(EventNames::error));
+            dispatch_event(*DOM::Event::create(this->document().preferred_window_object(), EventNames::error));
         });
     };
 

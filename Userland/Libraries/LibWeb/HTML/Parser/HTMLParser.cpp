@@ -236,9 +236,9 @@ void HTMLParser::the_end()
         // FIXME: 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
-        auto content_loaded_event = DOM::Event::create(HTML::EventNames::DOMContentLoaded);
+        auto content_loaded_event = DOM::Event::create(document->preferred_window_object(), HTML::EventNames::DOMContentLoaded);
         content_loaded_event->set_bubbles(true);
-        document->dispatch_event(content_loaded_event);
+        document->dispatch_event(*content_loaded_event);
 
         // FIXME: 3. Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
 
@@ -275,7 +275,7 @@ void HTMLParser::the_end()
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(DOM::Event::create(HTML::EventNames::load));
+        window->dispatch_event(*DOM::Event::create(document->preferred_window_object(), HTML::EventNames::load));
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 

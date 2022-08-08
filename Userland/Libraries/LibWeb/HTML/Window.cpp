@@ -279,7 +279,7 @@ void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String u
     browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
 }
 
-bool Window::dispatch_event(NonnullRefPtr<DOM::Event> event)
+bool Window::dispatch_event(DOM::Event& event)
 {
     return DOM::EventDispatcher::dispatch(*this, event, true);
 }
@@ -458,7 +458,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
     // with the persisted attribute initialized to persisted,
     HTML::PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(event_name, event_init);
+    auto event = HTML::PageTransitionEvent::create(associated_document().preferred_window_object(), event_name, event_init);
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
@@ -467,7 +467,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
     event->set_bubbles(true);
 
     // and legacy target override flag set.
-    dispatch_event(move(event));
+    dispatch_event(*event);
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
@@ -567,7 +567,9 @@ DOM::ExceptionOr<void> Window::post_message(JS::Value message, String const&)
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        strong_this->dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
+        auto* wrapper = static_cast<Bindings::WindowObject*>(strong_this->wrapper());
+        VERIFY(wrapper);
+        strong_this->dispatch_event(*HTML::MessageEvent::create(*wrapper, HTML::EventNames::message, event_init));
     });
     return {};
 }
@@ -686,6 +688,11 @@ void Window::cancel_idle_callback(u32 handle)
 void Window::set_associated_document(DOM::Document& document)
 {
     m_associated_document = document;
+}
+
+void Window::set_current_event(DOM::Event* event)
+{
+    m_current_event = JS::make_handle(event);
 }
 
 }

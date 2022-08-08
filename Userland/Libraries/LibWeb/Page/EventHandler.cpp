@@ -205,12 +205,12 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
             handled_event = true;
 
             bool run_activation_behavior = true;
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
-                run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
+                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
             }
 
             if (run_activation_behavior) {
@@ -334,7 +334,7 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
 
         m_mousedown_target = node;
         auto offset = compute_mouse_event_offset(position, *layout_node);
-        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
+        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -455,7 +455,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
@@ -543,7 +543,7 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
         return false;
 
     auto offset = compute_mouse_event_offset(position, *layout_node);
-    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
+    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
@@ -722,15 +722,15 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return true;
     }
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keydown, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->preferred_window_object(), UIEvents::EventNames::keydown, key, modifiers, code_point);
 
     if (RefPtr<DOM::Element> focused_element = document->focused_element())
-        return focused_element->dispatch_event(move(event));
+        return focused_element->dispatch_event(*event);
 
     if (RefPtr<HTML::HTMLElement> body = m_browsing_context.active_document()->body())
-        return body->dispatch_event(move(event));
+        return body->dispatch_event(*event);
 
-    return document->root().dispatch_event(move(event));
+    return document->root().dispatch_event(*event);
 }
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
@@ -739,15 +739,15 @@ bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
     if (!document)
         return false;
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(UIEvents::EventNames::keyup, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->preferred_window_object(), UIEvents::EventNames::keyup, key, modifiers, code_point);
 
     if (RefPtr<DOM::Element> focused_element = document->focused_element())
-        return document->focused_element()->dispatch_event(move(event));
+        return document->focused_element()->dispatch_event(*event);
 
     if (RefPtr<HTML::HTMLElement> body = document->body())
-        return body->dispatch_event(move(event));
+        return body->dispatch_event(*event);
 
-    return document->root().dispatch_event(move(event));
+    return document->root().dispatch_event(*event);
 }
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)

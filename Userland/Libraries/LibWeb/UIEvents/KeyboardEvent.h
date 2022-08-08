@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,21 +25,18 @@ struct KeyboardEventInit : public EventModifierInit {
 
 // https://www.w3.org/TR/uievents/#interface-keyboardevent
 class KeyboardEvent final : public UIEvent {
+    JS_OBJECT(KeyboardEvent, UIEvent);
+
 public:
-    using WrapperType = Bindings::KeyboardEventWrapper;
+    static KeyboardEvent* create(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
+    static KeyboardEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init);
+    static KeyboardEvent* create_from_platform_event(Bindings::WindowObject&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
 
-    static NonnullRefPtr<KeyboardEvent> create(FlyString const& event_name, KeyboardEventInit const& event_init = {})
-    {
-        return adopt_ref(*new KeyboardEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<KeyboardEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init)
-    {
-        return KeyboardEvent::create(event_name, event_init);
-    }
+    KeyboardEvent(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init);
 
-    static NonnullRefPtr<KeyboardEvent> create_from_platform_event(FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
+    virtual ~KeyboardEvent() override;
 
-    virtual ~KeyboardEvent() override = default;
+    KeyboardEvent& impl() { return *this; }
 
     u32 key_code() const { return m_key_code; }
     u32 char_code() const { return m_char_code; }
@@ -61,20 +58,6 @@ public:
     virtual u32 which() const override { return m_key_code; }
 
 private:
-    KeyboardEvent(FlyString const& event_name, KeyboardEventInit const& event_init)
-        : UIEvent(event_name, event_init)
-        , m_key(event_init.key)
-        , m_code(event_init.code)
-        , m_location(event_init.location)
-        , m_ctrl_key(event_init.ctrl_key)
-        , m_shift_key(event_init.shift_key)
-        , m_alt_key(event_init.alt_key)
-        , m_meta_key(event_init.meta_key)
-        , m_repeat(event_init.repeat)
-        , m_is_composing(event_init.is_composing)
-        , m_key_code(event_init.key_code)
-        , m_char_code(event_init.char_code) {};
-
     String m_key;
     String m_code;
     u32 m_location { 0 };
@@ -88,4 +71,9 @@ private:
     u32 m_char_code { 0 };
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::UIEvents::KeyboardEvent& object) { return &object; }
+using KeyboardEventWrapper = Web::UIEvents::KeyboardEvent;
 }

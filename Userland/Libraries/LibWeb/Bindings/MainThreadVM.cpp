@@ -134,8 +134,8 @@ JS::VM& main_thread_vm()
                         /* .promise = */ promise,
                         /* .reason = */ promise.cell()->result(),
                     };
-                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::EventNames::rejectionhandled, event_init);
-                    window.impl().dispatch_event(move(promise_rejection_event));
+                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(window, HTML::EventNames::rejectionhandled, event_init);
+                    window.impl().dispatch_event(*promise_rejection_event);
                 });
                 break;
             }

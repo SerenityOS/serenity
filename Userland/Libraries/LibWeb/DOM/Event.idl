@@ -1,5 +1,6 @@
 #import <DOM/EventTarget.idl>
 
+[NoInstanceWrapper]
 interface Event {
 
     constructor(DOMString type, optional EventInit eventInitDict = {});

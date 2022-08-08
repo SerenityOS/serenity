@@ -1,16 +1,46 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/TypeCasts.h>
+#include <LibWeb/Bindings/EventPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 
 namespace Web::DOM {
+
+JS::NonnullGCPtr<Event> Event::create(Bindings::WindowObject& window_object, FlyString const& event_name, EventInit const& event_init)
+{
+    return *window_object.heap().allocate<Event>(window_object.realm(), window_object, event_name, event_init);
+}
+
+JS::NonnullGCPtr<Event> Event::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, EventInit const& event_init)
+{
+    return create(window_object, event_name, event_init);
+}
+
+Event::Event(Bindings::WindowObject& window_object, FlyString const& type)
+    : PlatformObject(window_object.ensure_web_prototype<Bindings::EventPrototype>("Event"))
+    , m_type(type)
+    , m_initialized(true)
+{
+}
+
+Event::Event(Bindings::WindowObject& window_object, FlyString const& type, EventInit const& event_init)
+    : PlatformObject(window_object.ensure_web_prototype<Bindings::EventPrototype>("Event"))
+    , m_type(type)
+    , m_bubbles(event_init.bubbles)
+    , m_cancelable(event_init.cancelable)
+    , m_composed(event_init.composed)
+    , m_initialized(true)
+{
+}
 
 // https://dom.spec.whatwg.org/#concept-event-path-append
 void Event::append_to_path(EventTarget& invocation_target, RefPtr<EventTarget> shadow_adjusted_target, RefPtr<EventTarget> related_target, TouchTargetList& touch_targets, bool slot_in_closed_tree)
@@ -46,7 +76,7 @@ void Event::set_cancelled_flag()
 }
 
 // https://dom.spec.whatwg.org/#concept-event-initialize
-void Event::initialize(String const& type, bool bubbles, bool cancelable)
+void Event::initialize_event(String const& type, bool bubbles, bool cancelable)
 {
     // 1. Set event’s initialized flag.
     m_initialized = true;
@@ -80,7 +110,7 @@ void Event::init_event(String const& type, bool bubbles, bool cancelable)
         return;
 
     // 2. Initialize this with type, bubbles, and cancelable.
-    initialize(type, bubbles, cancelable);
+    initialize_event(type, bubbles, cancelable);
 }
 
 // https://dom.spec.whatwg.org/#dom-event-timestamp

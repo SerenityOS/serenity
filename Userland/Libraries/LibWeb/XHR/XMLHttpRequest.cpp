@@ -16,7 +16,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -53,7 +52,7 @@ XMLHttpRequest::~XMLHttpRequest() = default;
 void XMLHttpRequest::set_ready_state(ReadyState ready_state)
 {
     m_ready_state = ready_state;
-    dispatch_event(DOM::Event::create(EventNames::readystatechange));
+    dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), EventNames::readystatechange));
 }
 
 void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitted, u64 length)
@@ -62,7 +61,7 @@ void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitt
     event_init.length_computable = true;
     event_init.loaded = transmitted;
     event_init.total = length;
-    dispatch_event(ProgressEvent::create(event_name, event_init));
+    dispatch_event(*ProgressEvent::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), event_name, event_init));
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
@@ -469,7 +468,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         set_ready_state(ReadyState::Done);
-        dispatch_event(DOM::Event::create(HTML::EventNames::error));
+        dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), HTML::EventNames::error));
         return {};
     }
 
@@ -539,7 +538,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 xhr.m_status = status_code.value_or(0);
                 xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
-                xhr.dispatch_event(DOM::Event::create(EventNames::readystatechange));
+                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), EventNames::readystatechange));
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
@@ -551,7 +550,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
                 xhr.set_ready_state(ReadyState::Done);
                 xhr.set_status(status_code.value_or(0));
-                xhr.dispatch_event(DOM::Event::create(HTML::EventNames::error));
+                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), HTML::EventNames::error));
             },
             m_timeout,
             [weak_this = make_weak_ptr()] {
@@ -559,7 +558,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
-                xhr.dispatch_event(DOM::Event::create(EventNames::timeout));
+                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), EventNames::timeout));
             });
     } else {
         TODO();

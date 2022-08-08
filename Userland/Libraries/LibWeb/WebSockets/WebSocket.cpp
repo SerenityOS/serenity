@@ -8,7 +8,6 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/WebSocketWrapper.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -173,13 +172,13 @@ void WebSocket::on_open()
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(DOM::Event::create(HTML::EventNames::open));
+    dispatch_event(*DOM::Event::create(*m_window->wrapper(), HTML::EventNames::open));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(DOM::Event::create(HTML::EventNames::error));
+    dispatch_event(*DOM::Event::create(*m_window->wrapper(), HTML::EventNames::error));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -191,7 +190,7 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = move(reason);
-    dispatch_event(HTML::CloseEvent::create(HTML::EventNames::close, event_init));
+    dispatch_event(*HTML::CloseEvent::create(*m_window->wrapper(), HTML::EventNames::close, event_init));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -204,7 +203,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::js_string(wrapper()->vm(), text_message);
         event_init.origin = url();
-        dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*m_window->wrapper(), HTML::EventNames::message, event_init));
         return;
     }
 
@@ -218,7 +217,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::ArrayBuffer::create(realm, message);
         event_init.origin = url();
-        dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*m_window->wrapper(), HTML::EventNames::message, event_init));
         return;
     }
 

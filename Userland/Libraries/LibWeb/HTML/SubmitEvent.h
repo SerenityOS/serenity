@@ -17,29 +17,21 @@ struct SubmitEventInit : public DOM::EventInit {
 };
 
 class SubmitEvent final : public DOM::Event {
+    JS_OBJECT(SubmitEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::SubmitEventWrapper;
+    static SubmitEvent* create(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
+    static SubmitEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
 
-    static NonnullRefPtr<SubmitEvent> create(FlyString const& event_name, SubmitEventInit const& event_init)
-    {
-        return adopt_ref(*new SubmitEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<SubmitEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init)
-    {
-        return SubmitEvent::create(event_name, event_init);
-    }
+    virtual ~SubmitEvent() override;
 
-    virtual ~SubmitEvent() override = default;
+    SubmitEvent(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
+
+    SubmitEvent& impl() { return *this; }
 
     RefPtr<HTMLElement> submitter() const { return m_submitter; }
 
 private:
-    SubmitEvent(FlyString const& event_name, SubmitEventInit const& event_init)
-        : DOM::Event(event_name, event_init)
-        , m_submitter(event_init.submitter)
-    {
-    }
-
     RefPtr<HTMLElement> m_submitter;
 };
 

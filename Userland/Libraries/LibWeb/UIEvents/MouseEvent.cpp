@@ -1,26 +1,32 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/Event.h>
+#include <LibWeb/Bindings/MouseEventPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(FlyString const& event_name, MouseEventInit const& event_init)
-    : UIEvent(event_name, event_init)
+MouseEvent::MouseEvent(Bindings::WindowObject& window_object, FlyString const& event_name, MouseEventInit const& event_init)
+    : UIEvent(window_object, event_name, event_init)
     , m_offset_x(event_init.offset_x)
     , m_offset_y(event_init.offset_y)
     , m_client_x(event_init.client_x)
     , m_client_y(event_init.client_y)
     , m_button(event_init.button)
 {
+    set_prototype(&window_object.ensure_web_prototype<Bindings::MouseEventPrototype>("MouseEvent"));
     set_event_characteristics();
 }
+
+MouseEvent::~MouseEvent() = default;
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button
 static i16 determine_button(unsigned mouse_button)
@@ -41,7 +47,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-NonnullRefPtr<MouseEvent> MouseEvent::create_from_platform_event(FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
+MouseEvent* MouseEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, MouseEventInit const& event_init)
+{
+    return window_object.heap().allocate<MouseEvent>(window_object.realm(), window_object, event_name, event_init);
+}
+
+MouseEvent* MouseEvent::create_from_platform_event(Bindings::WindowObject& window_object, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = offset_x;
@@ -49,7 +60,7 @@ NonnullRefPtr<MouseEvent> MouseEvent::create_from_platform_event(FlyString const
     event_init.client_x = client_x;
     event_init.client_y = client_y;
     event_init.button = determine_button(mouse_button);
-    return MouseEvent::create(event_name, event_init);
+    return MouseEvent::create(window_object, event_name, event_init);
 }
 
 void MouseEvent::set_event_characteristics()

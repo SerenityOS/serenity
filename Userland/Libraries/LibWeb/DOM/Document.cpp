@@ -1160,51 +1160,53 @@ NonnullRefPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-DOM::ExceptionOr<NonnullRefPtr<Event>> Document::create_event(String const& interface)
+DOM::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
 {
+    auto& window_object = preferred_window_object();
+
     // NOTE: This is named event here, since we do step 5 and 6 as soon as possible for each case.
     // 1. Let constructor be null.
-    RefPtr<Event> event;
+    JS::GCPtr<Event> event;
 
     // 2. If interface is an ASCII case-insensitive match for any of the strings in the first column in the following table,
     //      then set constructor to the interface in the second column on the same row as the matching string:
     auto interface_lowercase = interface.to_lowercase();
     if (interface_lowercase == "beforeunloadevent") {
-        event = Event::create(""); // FIXME: Create BeforeUnloadEvent
+        event = Event::create(window_object, ""); // FIXME: Create BeforeUnloadEvent
     } else if (interface_lowercase == "compositionevent") {
-        event = Event::create(""); // FIXME: Create CompositionEvent
+        event = Event::create(window_object, ""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "customevent") {
-        event = CustomEvent::create("");
+        event = CustomEvent::create(window_object, "");
     } else if (interface_lowercase == "devicemotionevent") {
-        event = Event::create(""); // FIXME: Create DeviceMotionEvent
+        event = Event::create(window_object, ""); // FIXME: Create DeviceMotionEvent
     } else if (interface_lowercase == "deviceorientationevent") {
-        event = Event::create(""); // FIXME: Create DeviceOrientationEvent
+        event = Event::create(window_object, ""); // FIXME: Create DeviceOrientationEvent
     } else if (interface_lowercase == "dragevent") {
-        event = Event::create(""); // FIXME: Create DragEvent
+        event = Event::create(window_object, ""); // FIXME: Create DragEvent
     } else if (interface_lowercase.is_one_of("event", "events")) {
-        event = Event::create("");
+        event = Event::create(window_object, "");
     } else if (interface_lowercase == "focusevent") {
-        event = UIEvents::FocusEvent::create("");
+        event = UIEvents::FocusEvent::create(window_object, "");
     } else if (interface_lowercase == "hashchangeevent") {
-        event = Event::create(""); // FIXME: Create HashChangeEvent
+        event = Event::create(window_object, ""); // FIXME: Create HashChangeEvent
     } else if (interface_lowercase == "htmlevents") {
-        event = Event::create("");
+        event = Event::create(window_object, "");
     } else if (interface_lowercase == "keyboardevent") {
-        event = UIEvents::KeyboardEvent::create("");
+        event = UIEvents::KeyboardEvent::create(window_object, "");
     } else if (interface_lowercase == "messageevent") {
-        event = HTML::MessageEvent::create("");
+        event = HTML::MessageEvent::create(window_object, "");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create("");
+        event = UIEvents::MouseEvent::create(window_object, "");
     } else if (interface_lowercase == "storageevent") {
-        event = Event::create(""); // FIXME: Create StorageEvent
+        event = Event::create(window_object, ""); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
-        event = Event::create("");
+        event = Event::create(window_object, "");
     } else if (interface_lowercase == "textevent") {
-        event = Event::create(""); // FIXME: Create CompositionEvent
+        event = Event::create(window_object, ""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "touchevent") {
-        event = Event::create(""); // FIXME: Create TouchEvent
+        event = Event::create(window_object, ""); // FIXME: Create TouchEvent
     } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
-        event = UIEvents::UIEvent::create("");
+        event = UIEvents::UIEvent::create(window_object, "");
     }
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
@@ -1228,7 +1230,7 @@ DOM::ExceptionOr<NonnullRefPtr<Event>> Document::create_event(String const& inte
     event->set_initialized(false);
 
     // 10. Return event.
-    return event.release_nonnull();
+    return JS::NonnullGCPtr(*event);
 }
 
 void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)
@@ -1408,7 +1410,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     // FIXME:    3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0, then set document's load timing info's DOM interactive time to now.
 
     // 3. Fire an event named readystatechange at document.
-    dispatch_event(Event::create(HTML::EventNames::readystatechange));
+    dispatch_event(*Event::create(preferred_window_object(), HTML::EventNames::readystatechange));
 }
 
 Page* Document::page()
@@ -1448,8 +1450,8 @@ void Document::completely_finish_loading()
     }
     // Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
-        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
-            container->dispatch_event(DOM::Event::create(HTML::EventNames::load));
+        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container, this]() mutable {
+            container->dispatch_event(*DOM::Event::create(preferred_window_object(), HTML::EventNames::load));
         });
     }
 }
@@ -1560,7 +1562,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+    window().dispatch_event(*DOM::Event::create(preferred_window_object(), UIEvents::EventNames::resize));
 
     update_layout();
 }
@@ -1596,9 +1598,9 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = media_query_list->media();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(HTML::EventNames::change, init);
+            auto event = CSS::MediaQueryListEvent::create(preferred_window_object(), HTML::EventNames::change, init);
             event->set_is_trusted(true);
-            media_query_list->dispatch_event(event);
+            media_query_list->dispatch_event(*event);
         }
     }
 

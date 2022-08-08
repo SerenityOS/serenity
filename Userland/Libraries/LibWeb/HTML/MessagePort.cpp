@@ -80,7 +80,7 @@ void MessagePort::post_message(JS::Value message)
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        strong_port->dispatch_event(MessageEvent::create(HTML::EventNames::message, event_init));
+        strong_port->dispatch_event(*MessageEvent::create(verify_cast<Bindings::WindowObject>(strong_port->wrapper()->global_object()), HTML::EventNames::message, event_init));
     }));
 }
 

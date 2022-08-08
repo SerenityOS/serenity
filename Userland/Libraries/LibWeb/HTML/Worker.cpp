@@ -148,7 +148,8 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 MessageEventInit event_init {};
                 event_init.data = message;
                 event_init.origin = "<origin>";
-                dispatch_event(MessageEvent::create(HTML::EventNames::message, event_init));
+                // FIXME: The cast here is totally bogus, since workers don't have a WindowObject..
+                dispatch_event(*MessageEvent::create(verify_cast<Bindings::WindowObject>(*m_worker_scope), HTML::EventNames::message, event_init));
             }));
 
             return JS::js_undefined();
