@@ -505,16 +505,16 @@ void ProcessModel::update()
         }
     }
 
-    // FIXME: Also remove dead threads from processes
-    for (auto tid : tids_to_remove) {
-        m_threads.remove(tid);
-        for (size_t i = 0; i < m_processes.size(); ++i) {
-            auto& process = m_processes[i];
+    // Remove dead threads from processes and "zombie" processes without active thread
+    for (size_t i = 0; i < m_processes.size(); ++i) {
+        auto& process = m_processes[i];
+        for (auto tid : tids_to_remove) {
+            m_threads.remove(tid);
             process.threads.remove_all_matching([&](auto const& thread) { return thread->current_state.tid == tid; });
-            if (process.threads.size() == 0) {
-                m_processes.remove(i);
-                --i;
-            }
+        }
+        if (m_processes[i].threads.is_empty()) {
+            m_processes.remove(i);
+            --i;
         }
     }
 
