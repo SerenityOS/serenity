@@ -395,13 +395,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    RefPtr<@cpp_type@> @cpp_name@;
+    @cpp_type@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-        CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-        @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
+        auto* callback_type = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+        @cpp_name@ = @cpp_type@::create(realm, *callback_type).ptr();
     }
 )~~~");
         } else {
@@ -409,7 +409,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-    CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
+    auto* callback_type = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
     auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
 )~~~");
         }
@@ -758,13 +758,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
         if (callback_function.is_legacy_treat_non_object_as_null) {
             callback_function_generator.append(R"~~~(
-    Optional<Bindings::CallbackType> @cpp_name@;
+    Bindings::CallbackType* @cpp_name@ = nullptr;
     if (@js_name@@js_suffix@.is_object())
-        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+        @cpp_name@ = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
 )~~~");
         } else {
             callback_function_generator.append(R"~~~(
-    auto @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+    auto @cpp_name@ = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
 )~~~");
         }
     } else if (parameter.type->name == "sequence") {
@@ -1599,14 +1599,12 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
   if (!@value@) {
       @result_expression@ JS::js_null();
   } else {
-      VERIFY(!@value@->callback.is_null());
-      @result_expression@ @value@->callback.cell();
+      @result_expression@ &@value@->callback;
   }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-  VERIFY(!@value@->callback.is_null());
-  @result_expression@ @value@->callback.cell();
+  @result_expression@ &@value@->callback;
 )~~~");
         }
     } else if (interface.dictionaries.contains(type.name)) {

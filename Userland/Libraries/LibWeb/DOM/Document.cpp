@@ -1744,15 +1744,15 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
-NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, NodeFilter* filter)
 {
-    return NodeIterator::create(root, what_to_show, move(filter));
+    return NodeIterator::create(root, what_to_show, filter);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
-NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, NodeFilter* filter)
 {
-    return TreeWalker::create(root, what_to_show, move(filter));
+    return TreeWalker::create(root, what_to_show, filter);
 }
 
 void Document::register_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)

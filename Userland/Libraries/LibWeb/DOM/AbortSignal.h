@@ -47,7 +47,7 @@ public:
 
     void signal_abort(JS::Value reason);
 
-    void set_onabort(Optional<Bindings::CallbackType>);
+    void set_onabort(Bindings::CallbackType*);
     Bindings::CallbackType* onabort();
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-reason

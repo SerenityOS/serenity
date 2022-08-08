@@ -30,8 +30,8 @@ public:
     virtual ~XMLHttpRequestEventTarget() override {};
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                  \
-    void set_##attribute_name(Optional<Bindings::CallbackType>); \
+#define __ENUMERATE(attribute_name, event_name)         \
+    void set_##attribute_name(Bindings::CallbackType*); \
     Bindings::CallbackType* attribute_name();
     ENUMERATE_XML_HTTP_REQUEST_EVENT_TARGET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

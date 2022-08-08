@@ -63,9 +63,9 @@ void AbortSignal::signal_abort(JS::Value reason)
     dispatch_event(Event::create(HTML::EventNames::abort));
 }
 
-void AbortSignal::set_onabort(Optional<Bindings::CallbackType> event_handler)
+void AbortSignal::set_onabort(Bindings::CallbackType* event_handler)
 {
-    set_event_handler_attribute(HTML::EventNames::abort, move(event_handler));
+    set_event_handler_attribute(HTML::EventNames::abort, event_handler);
 }
 
 Bindings::CallbackType* AbortSignal::onabort()

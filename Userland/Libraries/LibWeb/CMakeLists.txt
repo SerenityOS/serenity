@@ -2,9 +2,9 @@ include(libweb_generators)
 
 set(SOURCES
     Bindings/AudioConstructor.cpp
-    Bindings/CrossOriginAbstractOperations.cpp
     Bindings/CSSNamespace.cpp
-    Bindings/EventListenerWrapper.cpp
+    Bindings/CallbackType.cpp
+    Bindings/CrossOriginAbstractOperations.cpp
     Bindings/EventTargetWrapperFactory.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
@@ -97,12 +97,14 @@ set(SOURCES
     DOM/EventDispatcher.cpp
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
+    DOM/IDLEventListener.cpp
     DOM/LiveNodeList.cpp
     DOM/MutationObserver.cpp
     DOM/MutationRecord.cpp
     DOM/MutationType.cpp
     DOM/NamedNodeMap.cpp
     DOM/Node.cpp
+    DOM/NodeFilter.cpp
     DOM/NodeIterator.cpp
     DOM/NodeOperations.cpp
     DOM/ParentNode.cpp
@@ -146,6 +148,7 @@ set(SOURCES
     HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
+    HTML/EventHandler.cpp
     HTML/EventLoop/EventLoop.cpp
     HTML/EventLoop/Task.cpp
     HTML/EventLoop/TaskQueue.cpp

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,23 +25,28 @@ struct AddEventListenerOptions : public EventListenerOptions {
     Optional<NonnullRefPtr<AbortSignal>> signal;
 };
 
-class IDLEventListener
-    : public RefCounted<IDLEventListener>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::EventListenerWrapper;
+class IDLEventListener final : public JS::Object {
+    JS_OBJECT(IDLEventListener, JS::Object);
 
-    explicit IDLEventListener(Bindings::CallbackType callback)
-        : m_callback(move(callback))
-    {
-    }
+public:
+    IDLEventListener& impl() { return *this; }
+
+    static JS::NonnullGCPtr<IDLEventListener> create(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
+    IDLEventListener(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
 
     virtual ~IDLEventListener() = default;
 
-    Bindings::CallbackType& callback() { return m_callback; }
+    Bindings::CallbackType& callback() { return *m_callback; }
 
 private:
-    Bindings::CallbackType m_callback;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<Bindings::CallbackType> m_callback;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::IDLEventListener& object) { return &object; }
+using EventListenerWrapper = Web::DOM::IDLEventListener;
 }

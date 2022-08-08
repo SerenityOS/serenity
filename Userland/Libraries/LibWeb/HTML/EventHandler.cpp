@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/DOMEventListener.h>
+#include <LibWeb/HTML/EventHandler.h>
+
+namespace Web::HTML {
+
+EventHandler::EventHandler(String s)
+    : value(move(s))
+{
+}
+
+EventHandler::EventHandler(Bindings::CallbackType& c)
+    : value(&c)
+{
+}
+
+void EventHandler::visit_edges(Cell::Visitor& visitor)
+{
+    Cell::visit_edges(visitor);
+    visitor.visit(listener);
+
+    if (auto* callback = value.get_pointer<Bindings::CallbackType*>())
+        visitor.visit(*callback);
+}
+
+}

@@ -34,9 +34,9 @@ class MutationObserver final
 public:
     using WrapperType = Bindings::MutationObserverWrapper;
 
-    static NonnullRefPtr<MutationObserver> create_with_global_object(Bindings::WindowObject& window_object, Bindings::CallbackType callback)
+    static NonnullRefPtr<MutationObserver> create_with_global_object(Bindings::WindowObject& window_object, Bindings::CallbackType* callback)
     {
-        return adopt_ref(*new MutationObserver(window_object, move(callback)));
+        return adopt_ref(*new MutationObserver(window_object, JS::make_handle(callback)));
     }
 
     virtual ~MutationObserver() override = default;
@@ -48,7 +48,7 @@ public:
     Vector<WeakPtr<Node>>& node_list() { return m_node_list; }
     Vector<WeakPtr<Node>> const& node_list() const { return m_node_list; }
 
-    Bindings::CallbackType& callback() { return m_callback; }
+    Bindings::CallbackType& callback() { return *m_callback; }
 
     void enqueue_record(Badge<Node>, NonnullRefPtr<MutationRecord> mutation_record)
     {
@@ -56,10 +56,10 @@ public:
     }
 
 private:
-    MutationObserver(Bindings::WindowObject& window_object, Bindings::CallbackType callback);
+    MutationObserver(Bindings::WindowObject& window_object, JS::Handle<Bindings::CallbackType> callback);
 
     // https://dom.spec.whatwg.org/#concept-mo-callback
-    Bindings::CallbackType m_callback;
+    JS::Handle<Bindings::CallbackType> m_callback;
 
     // https://dom.spec.whatwg.org/#mutationobserver-node-list
     Vector<WeakPtr<Node>> m_node_list;

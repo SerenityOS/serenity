@@ -26,7 +26,7 @@ NodeIterator::~NodeIterator()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
-NonnullRefPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+NonnullRefPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_show, NodeFilter* filter)
 {
     // 1. Let iterator be a new NodeIterator object.
     // 2. Set iterator’s root and iterator’s reference to root.
@@ -37,7 +37,7 @@ NonnullRefPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_sh
     iterator->m_what_to_show = what_to_show;
 
     // 5. Set iterator’s filter to filter.
-    iterator->m_filter = move(filter);
+    iterator->m_filter = JS::make_handle(filter);
 
     // 6. Return iterator.
     return iterator;
@@ -133,7 +133,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
         return NodeFilter::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
-    if (!m_filter)
+    if (!m_filter.cell())
         return NodeFilter::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.

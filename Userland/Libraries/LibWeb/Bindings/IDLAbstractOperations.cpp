@@ -92,11 +92,10 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
         this_argument = JS::js_undefined();
 
     // 3. Let F be the ECMAScript object corresponding to callable.
-    auto* function_object = callback.callback.cell();
-    VERIFY(function_object);
+    auto& function_object = callback.callback;
 
     // 4. If ! IsCallable(F) is false:
-    if (!function_object->is_function()) {
+    if (!function_object.is_function()) {
         // 1. Note: This is only possible when the callback function came from an attribute marked with [LegacyTreatNonObjectAsNull].
 
         // 2. Return the result of converting undefined to the callback function’s return type.
@@ -106,7 +105,7 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
 
     // 5. Let realm be F’s associated Realm.
     // See the comment about associated realm on step 4 of call_user_object_operation.
-    auto& realm = function_object->shape().realm();
+    auto& realm = function_object.shape().realm();
 
     // 6. Let relevant settings be realm’s settings object.
     auto& relevant_settings = verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined());
@@ -124,8 +123,8 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
     //        For simplicity, we currently make the caller do this. However, this means we can't throw exceptions at this point like the spec wants us to.
 
     // 11. Let callResult be Call(F, thisArg, esArgs).
-    auto& vm = function_object->vm();
-    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*function_object), this_argument.value(), move(args));
+    auto& vm = function_object.vm();
+    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(function_object), this_argument.value(), move(args));
 
     // 12. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {

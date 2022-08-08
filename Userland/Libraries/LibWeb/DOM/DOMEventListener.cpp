@@ -9,6 +9,14 @@
 #include <LibWeb/DOM/IDLEventListener.h>
 
 namespace Web::DOM {
+
 DOMEventListener::DOMEventListener() = default;
 DOMEventListener::~DOMEventListener() = default;
+
+void DOMEventListener::visit_edges(Cell::Visitor& visitor)
+{
+    Cell::visit_edges(visitor);
+    visitor.visit(callback.ptr());
+}
+
 }

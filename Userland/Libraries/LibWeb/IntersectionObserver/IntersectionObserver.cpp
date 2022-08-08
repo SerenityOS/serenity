@@ -10,7 +10,7 @@
 namespace Web::IntersectionObserver {
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-intersectionobserver
-NonnullRefPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(JS::GlobalObject& global_object, Bindings::CallbackType const& callback, IntersectionObserverInit const& options)
+NonnullRefPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(JS::GlobalObject& global_object, Bindings::CallbackType* callback, IntersectionObserverInit const& options)
 {
     // FIXME: Implement
     (void)global_object;

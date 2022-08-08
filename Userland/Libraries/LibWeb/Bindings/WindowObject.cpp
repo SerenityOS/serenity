@@ -229,7 +229,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
-        return Bindings::CallbackType(JS::make_handle<JS::Object>(handler.as_function()), HTML::incumbent_settings_object());
+        return JS::make_handle(vm.heap().allocate_without_realm<Bindings::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
     return TRY(handler.to_string(vm));
 }
 
@@ -311,8 +311,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
     auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
-    return JS::Value(impl->request_animation_frame(move(callback)));
+    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    return JS::Value(impl->request_animation_frame(*callback));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
@@ -334,9 +334,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
-    auto callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
-    impl->queue_microtask(move(callback));
+    impl->queue_microtask(*callback);
     return JS::js_undefined();
 }
 
@@ -350,9 +350,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_idle_callback)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     // FIXME: accept options object
 
-    auto callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
-    return JS::Value(impl->request_idle_callback(move(callback)));
+    return JS::Value(impl->request_idle_callback(*callback));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_idle_callback)
@@ -748,25 +748,26 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_setter)
     return JS::js_undefined();
 }
 
-#define __ENUMERATE(attribute, event_name)                                                                                 \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)                                                            \
-    {                                                                                                                      \
-        auto* impl = TRY(impl_from(vm));                                                                                   \
-        auto retval = impl->attribute();                                                                                   \
-        if (!retval)                                                                                                       \
-            return JS::js_null();                                                                                          \
-        return retval->callback.cell();                                                                                    \
-    }                                                                                                                      \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)                                                            \
-    {                                                                                                                      \
-        auto* impl = TRY(impl_from(vm));                                                                                   \
-        auto value = vm.argument(0);                                                                                       \
-        Optional<Bindings::CallbackType> cpp_value;                                                                        \
-        if (value.is_object()) {                                                                                           \
-            cpp_value = Bindings::CallbackType { JS::make_handle(&value.as_object()), HTML::incumbent_settings_object() }; \
-        }                                                                                                                  \
-        impl->set_##attribute(cpp_value);                                                                                  \
-        return JS::js_undefined();                                                                                         \
+#define __ENUMERATE(attribute, event_name)                                        \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)                   \
+    {                                                                             \
+        auto* impl = TRY(impl_from(vm));                                          \
+        auto retval = impl->attribute();                                          \
+        if (!retval)                                                              \
+            return JS::js_null();                                                 \
+        return &retval->callback;                                                 \
+    }                                                                             \
+    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)                   \
+    {                                                                             \
+        auto* impl = TRY(impl_from(vm));                                          \
+        auto value = vm.argument(0);                                              \
+        Bindings::CallbackType* cpp_value;                                        \
+        if (value.is_object()) {                                                  \
+            cpp_value = vm.heap().allocate_without_realm<Bindings::CallbackType>( \
+                value.as_object(), HTML::incumbent_settings_object());            \
+        }                                                                         \
+        impl->set_##attribute(cpp_value);                                         \
+        return JS::js_undefined();                                                \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)

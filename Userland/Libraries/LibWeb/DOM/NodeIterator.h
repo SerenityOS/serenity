@@ -21,14 +21,14 @@ public:
 
     virtual ~NodeIterator() override;
 
-    static NonnullRefPtr<NodeIterator> create(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
+    static NonnullRefPtr<NodeIterator> create(Node& root, unsigned what_to_show, NodeFilter*);
 
     NonnullRefPtr<Node> root() { return m_root; }
     NonnullRefPtr<Node> reference_node() { return m_reference.node; }
     bool pointer_before_reference_node() const { return m_reference.is_before_node; }
     unsigned what_to_show() const { return m_what_to_show; }
 
-    NodeFilter* filter() { return m_filter; }
+    NodeFilter* filter() { return m_filter.cell(); }
 
     JS::ThrowCompletionOr<RefPtr<Node>> next_node();
     JS::ThrowCompletionOr<RefPtr<Node>> previous_node();
@@ -72,7 +72,7 @@ private:
     unsigned m_what_to_show { 0 };
 
     // https://dom.spec.whatwg.org/#concept-traversal-filter
-    RefPtr<DOM::NodeFilter> m_filter;
+    JS::Handle<DOM::NodeFilter> m_filter;
 
     // https://dom.spec.whatwg.org/#concept-traversal-active
     bool m_active { false };

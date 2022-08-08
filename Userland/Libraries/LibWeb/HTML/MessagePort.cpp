@@ -106,14 +106,14 @@ void MessagePort::close()
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                    \
-    void MessagePort::set_##attribute_name(Optional<Bindings::CallbackType> value) \
-    {                                                                              \
-        set_event_handler_attribute(event_name, move(value));                      \
-    }                                                                              \
-    Bindings::CallbackType* MessagePort::attribute_name()                          \
-    {                                                                              \
-        return event_handler_attribute(event_name);                                \
+#define __ENUMERATE(attribute_name, event_name)                           \
+    void MessagePort::set_##attribute_name(Bindings::CallbackType* value) \
+    {                                                                     \
+        set_event_handler_attribute(event_name, value);                   \
+    }                                                                     \
+    Bindings::CallbackType* MessagePort::attribute_name()                 \
+    {                                                                     \
+        return event_handler_attribute(event_name);                       \
     }
 ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

@@ -54,7 +54,7 @@ JS::Completion call_user_object_operation(Bindings::CallbackType& callback, Stri
         this_argument = JS::js_undefined();
 
     // 3. Let O be the ECMAScript object corresponding to value.
-    auto& object = *callback.callback.cell();
+    auto& object = callback.callback;
 
     // 4. Let realm be O’s associated Realm.
     auto& realm = object.shape().realm();
@@ -126,8 +126,7 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
 template<typename... Args>
 JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Value> this_argument, Args&&... args)
 {
-    auto* function_object = callback.callback.cell();
-    VERIFY(function_object);
+    auto& function_object = callback.callback;
 
     JS::MarkedVector<JS::Value> arguments_list { function_object->vm().heap() };
     (arguments_list.append(forward<Args>(args)), ...);

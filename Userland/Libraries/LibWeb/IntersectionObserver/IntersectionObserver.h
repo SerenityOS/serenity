@@ -25,7 +25,7 @@ class IntersectionObserver
 public:
     using WrapperType = Bindings::IntersectionObserverWrapper;
 
-    static NonnullRefPtr<IntersectionObserver> create_with_global_object(JS::GlobalObject&, Bindings::CallbackType const& callback, IntersectionObserverInit const& options = {});
+    static NonnullRefPtr<IntersectionObserver> create_with_global_object(JS::GlobalObject&, Bindings::CallbackType* callback, IntersectionObserverInit const& options = {});
 
     void observe(DOM::Element& target);
     void unobserve(DOM::Element& target);

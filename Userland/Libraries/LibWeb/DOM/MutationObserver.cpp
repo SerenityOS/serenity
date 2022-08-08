@@ -12,7 +12,7 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
-MutationObserver::MutationObserver(Bindings::WindowObject& window_object, Bindings::CallbackType callback)
+MutationObserver::MutationObserver(Bindings::WindowObject& window_object, JS::Handle<Bindings::CallbackType> callback)
     : m_callback(move(callback))
 {
     // 1. Set this’s callback to callback.

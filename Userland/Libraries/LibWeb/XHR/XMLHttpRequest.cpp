@@ -577,9 +577,9 @@ Bindings::CallbackType* XMLHttpRequest::onreadystatechange()
     return event_handler_attribute(Web::XHR::EventNames::readystatechange);
 }
 
-void XMLHttpRequest::set_onreadystatechange(Optional<Bindings::CallbackType> value)
+void XMLHttpRequest::set_onreadystatechange(Bindings::CallbackType* value)
 {
-    set_event_handler_attribute(Web::XHR::EventNames::readystatechange, move(value));
+    set_event_handler_attribute(Web::XHR::EventNames::readystatechange, value);
 }
 
 // https://xhr.spec.whatwg.org/#the-getallresponseheaders()-method

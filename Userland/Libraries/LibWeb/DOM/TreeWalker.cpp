@@ -23,7 +23,7 @@ TreeWalker::TreeWalker(Node& root)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
-NonnullRefPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+NonnullRefPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_show, NodeFilter* filter)
 {
     // 1. Let walker be a new TreeWalker object.
     // 2. Set walker’s root and walker’s current to root.
@@ -33,7 +33,7 @@ NonnullRefPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_show, 
     walker->m_what_to_show = what_to_show;
 
     // 4. Set walker’s filter to filter.
-    walker->m_filter = move(filter);
+    walker->m_filter = JS::make_handle(filter);
 
     // 5. Return walker.
     return walker;
@@ -236,7 +236,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> TreeWalker::filter(Node& node)
         return NodeFilter::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
-    if (!m_filter)
+    if (!m_filter.cell())
         return NodeFilter::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.

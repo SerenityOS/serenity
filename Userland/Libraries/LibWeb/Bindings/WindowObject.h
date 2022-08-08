@@ -24,7 +24,7 @@ namespace Web {
 namespace Bindings {
 
 // https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<CallbackType, String>;
+using TimerHandler = Variant<JS::Handle<CallbackType>, String>;
 
 class WindowObject
     : public JS::GlobalObject
