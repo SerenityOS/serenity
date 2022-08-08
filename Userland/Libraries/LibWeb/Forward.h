@@ -564,8 +564,6 @@ class MessagePortWrapper;
 class MouseEventWrapper;
 class MutationObserverWrapper;
 class MutationRecordWrapper;
-class NodeFilterWrapper;
-class NodeIteratorWrapper;
 class NodeListWrapper;
 class NodeWrapper;
 class OptionConstructor;

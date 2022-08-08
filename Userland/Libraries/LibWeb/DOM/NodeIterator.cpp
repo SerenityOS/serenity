@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/Bindings/NodeIteratorPrototype.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/Node.h>
@@ -14,7 +15,8 @@
 namespace Web::DOM {
 
 NodeIterator::NodeIterator(Node& root)
-    : m_root(root)
+    : PlatformObject(root.document().preferred_window_object().ensure_web_prototype<Bindings::NodeIteratorPrototype>("NodeIterator"))
+    , m_root(root)
     , m_reference({ root })
 {
     root.document().register_node_iterator({}, *this);
@@ -25,22 +27,29 @@ NodeIterator::~NodeIterator()
     m_root->document().unregister_node_iterator({}, *this);
 }
 
+void NodeIterator::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_filter.ptr());
+}
+
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
-NonnullRefPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_show, NodeFilter* filter)
+JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
     // 1. Let iterator be a new NodeIterator object.
     // 2. Set iterator’s root and iterator’s reference to root.
     // 3. Set iterator’s pointer before reference to true.
-    auto iterator = adopt_ref(*new NodeIterator(root));
+    auto& window_object = root.document().preferred_window_object();
+    auto* iterator = window_object.heap().allocate<NodeIterator>(window_object.realm(), root);
 
     // 4. Set iterator’s whatToShow to whatToShow.
     iterator->m_what_to_show = what_to_show;
 
     // 5. Set iterator’s filter to filter.
-    iterator->m_filter = JS::make_handle(filter);
+    iterator->m_filter = filter;
 
     // 6. Return iterator.
-    return iterator;
+    return *iterator;
 }
 
 // https://dom.spec.whatwg.org/#dom-nodeiterator-detach
@@ -117,13 +126,9 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
 // https://dom.spec.whatwg.org/#concept-node-filter
 JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 {
-    VERIFY(wrapper());
-    auto& vm = wrapper()->vm();
-    auto& realm = *vm.current_realm();
-
     // 1. If traverser’s active flag is set, then throw an "InvalidStateError" DOMException.
     if (m_active)
-        return JS::throw_completion(wrap(realm, InvalidStateError::create("NodeIterator is already active")));
+        return JS::throw_completion(wrap(shape().realm(), InvalidStateError::create("NodeIterator is already active")));
 
     // 2. Let n be node’s nodeType attribute value − 1.
     auto n = node.node_type() - 1;
@@ -133,7 +138,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
         return NodeFilter::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
-    if (!m_filter.cell())
+    if (!m_filter)
         return NodeFilter::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.
@@ -141,7 +146,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 
     // 6. Let result be the return value of call a user object’s operation with traverser’s filter, "acceptNode", and « node ».
     //    If this throws an exception, then unset traverser’s active flag and rethrow the exception.
-    auto result = Bindings::IDL::call_user_object_operation(m_filter->callback(), "acceptNode", {}, wrap(realm, node));
+    auto result = Bindings::IDL::call_user_object_operation(m_filter->callback(), "acceptNode", {}, wrap(shape().realm(), node));
     if (result.is_abrupt()) {
         m_active = false;
         return result;
@@ -151,7 +156,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
     m_active = false;
 
     // 8. Return result.
-    auto result_value = TRY(result.value()->to_i32(vm));
+    auto result_value = TRY(result.value()->to_i32(vm()));
     return static_cast<NodeFilter::Result>(result_value);
 }
 
