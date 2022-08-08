@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Wrapper.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/WebGL/WebGLContextEvent.h>
 #include <LibWeb/WebGL/WebGLRenderingContext.h>
@@ -16,10 +17,10 @@ static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, Fl
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
-    auto event = WebGLContextEvent::create(type, WebGLContextEventInit {});
+    auto event = WebGLContextEvent::create(canvas_element.document().preferred_window_object(), type, WebGLContextEventInit {});
     event->set_is_trusted(true);
     event->set_cancelable(true);
-    canvas_element.dispatch_event(move(event));
+    canvas_element.dispatch_event(*event);
 }
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-creation-error

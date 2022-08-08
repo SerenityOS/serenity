@@ -15,8 +15,6 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/AbortSignal.h>
@@ -204,17 +202,17 @@ void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
-ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event)
+ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
 {
     // 1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
-    if (event->dispatched())
+    if (event.dispatched())
         return DOM::InvalidStateError::create("The event is already being dispatched.");
 
-    if (!event->initialized())
+    if (!event.initialized())
         return DOM::InvalidStateError::create("Cannot dispatch an uninitialized event.");
 
     // 2. Initialize event’s isTrusted attribute to false.
-    event->set_is_trusted(false);
+    event.set_is_trusted(false);
 
     // 3. Return the result of dispatching event to this.
     return dispatch_event(event);
@@ -736,9 +734,9 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     event_target->activate_event_handler(local_name, *event_handler);
 }
 
-bool EventTarget::dispatch_event(NonnullRefPtr<Event> event)
+bool EventTarget::dispatch_event(Event& event)
 {
-    return EventDispatcher::dispatch(*this, move(event));
+    return EventDispatcher::dispatch(*this, event);
 }
 
 }

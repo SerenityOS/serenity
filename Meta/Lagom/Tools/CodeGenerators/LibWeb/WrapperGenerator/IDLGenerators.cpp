@@ -300,8 +300,6 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
 static bool should_emit_wrapper_factory(IDL::Interface const& interface)
 {
     // FIXME: This is very hackish.
-    if (interface.name == "Event")
-        return false;
     if (interface.name == "EventTarget")
         return false;
     if (interface.name == "Node")
@@ -2042,6 +2040,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::UIEvents;
 using namespace Web::WebGL;
 
 namespace Web::Bindings {
@@ -2904,7 +2903,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
@@ -3208,8 +3206,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
-#include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -3253,6 +3249,7 @@ using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::SVG;
+using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
@@ -3712,6 +3709,7 @@ using namespace Web::IntersectionObserver;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::UIEvents;
 using namespace Web::WebGL;
 
 namespace Web::Bindings {
@@ -3830,6 +3828,7 @@ using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::XHR;
+using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::WebGL;
 

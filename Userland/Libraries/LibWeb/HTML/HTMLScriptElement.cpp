@@ -48,7 +48,7 @@ void HTMLScriptElement::execute_script()
     // 3. If the script's script is null for scriptElement, then fire an event named error at scriptElement, and return.
     if (!m_script) {
         dbgln("HTMLScriptElement: Refusing to run script because the script's script is null.");
-        dispatch_event(DOM::Event::create(HTML::EventNames::error));
+        dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
         return;
     }
 
@@ -95,7 +95,7 @@ void HTMLScriptElement::execute_script()
 
     // 7. If scriptElement is from an external file, then fire an event named load at scriptElement.
     if (m_from_an_external_file)
-        dispatch_event(DOM::Event::create(HTML::EventNames::load));
+        dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::load));
 }
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
@@ -259,7 +259,7 @@ void HTMLScriptElement::prepare_script()
         if (src.is_empty()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
             queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
-                dispatch_event(DOM::Event::create(HTML::EventNames::error));
+                dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
             });
             return;
         }
@@ -272,7 +272,7 @@ void HTMLScriptElement::prepare_script()
         if (!url.is_valid()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
             queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
-                dispatch_event(DOM::Event::create(HTML::EventNames::error));
+                dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
             });
             return;
         }

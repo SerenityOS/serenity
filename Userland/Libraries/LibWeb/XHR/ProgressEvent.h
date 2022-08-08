@@ -19,37 +19,32 @@ struct ProgressEventInit : public DOM::EventInit {
     u32 total { 0 };
 };
 
-class ProgressEvent : public DOM::Event {
+class ProgressEvent final : public DOM::Event {
+    JS_OBJECT(ProgressEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::ProgressEventWrapper;
+    static ProgressEvent* create(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
+    static ProgressEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
 
-    static NonnullRefPtr<ProgressEvent> create(FlyString const& event_name, ProgressEventInit const& event_init)
-    {
-        return adopt_ref(*new ProgressEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<ProgressEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init)
-    {
-        return ProgressEvent::create(event_name, event_init);
-    }
+    ProgressEvent(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
 
-    virtual ~ProgressEvent() override = default;
+    virtual ~ProgressEvent() override;
+
+    ProgressEvent& impl() { return *this; }
 
     bool length_computable() const { return m_length_computable; }
     u64 loaded() const { return m_loaded; }
     u64 total() const { return m_total; }
 
-protected:
-    ProgressEvent(FlyString const& event_name, ProgressEventInit const& event_init)
-        : Event(event_name, event_init)
-        , m_length_computable(event_init.length_computable)
-        , m_loaded(event_init.loaded)
-        , m_total(event_init.total)
-    {
-    }
-
+private:
     bool m_length_computable { false };
     u64 m_loaded { 0 };
     u64 m_total { 0 };
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::XHR::ProgressEvent& object) { return &object; }
+using ProgressEventWrapper = Web::XHR::ProgressEvent;
 }

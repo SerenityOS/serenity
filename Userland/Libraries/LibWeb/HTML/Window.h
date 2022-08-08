@@ -43,7 +43,7 @@ public:
 
     virtual void ref_event_target() override { RefCounted::ref(); }
     virtual void unref_event_target() override { RefCounted::unref(); }
-    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
+    virtual bool dispatch_event(DOM::Event&) override;
     virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     Page* page();
@@ -92,8 +92,9 @@ public:
 
     CSS::Screen& screen() { return *m_screen; }
 
-    DOM::Event const* current_event() const { return m_current_event; }
-    void set_current_event(DOM::Event* event) { m_current_event = event; }
+    DOM::Event* current_event() { return m_current_event.cell(); }
+    DOM::Event const* current_event() const { return m_current_event.cell(); }
+    void set_current_event(DOM::Event* event);
 
     CSS::CSSStyleDeclaration* get_computed_style(DOM::Element&) const;
     NonnullRefPtr<CSS::MediaQueryList> match_media(String);
@@ -157,7 +158,7 @@ private:
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
     NonnullOwnPtr<CSS::Screen> m_screen;
-    RefPtr<DOM::Event> m_current_event;
+    JS::Handle<DOM::Event> m_current_event;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 

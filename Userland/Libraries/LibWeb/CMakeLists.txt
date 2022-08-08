@@ -6,7 +6,6 @@ set(SOURCES
     Bindings/CallbackType.cpp
     Bindings/CrossOriginAbstractOperations.cpp
     Bindings/EventTargetWrapperFactory.cpp
-    Bindings/EventWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LegacyPlatformObject.cpp
@@ -47,6 +46,7 @@ set(SOURCES
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
+    CSS/MediaQueryListEvent.cpp
     CSS/Parser/Block.cpp
     CSS/Parser/ComponentValue.cpp
     CSS/Parser/Declaration.cpp
@@ -145,9 +145,11 @@ set(SOURCES
     HTML/Canvas/CanvasState.cpp
     HTML/CanvasGradient.cpp
     HTML/CanvasRenderingContext2D.cpp
+    HTML/CloseEvent.cpp
     HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
+    HTML/ErrorEvent.cpp
     HTML/EventHandler.cpp
     HTML/EventLoop/EventLoop.cpp
     HTML/EventLoop/Task.cpp
@@ -232,7 +234,9 @@ set(SOURCES
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
     HTML/MessageChannel.cpp
+    HTML/MessageEvent.cpp
     HTML/MessagePort.cpp
+    HTML/PageTransitionEvent.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLEncodingDetection.cpp
     HTML/Parser/HTMLParser.cpp
@@ -241,12 +245,14 @@ set(SOURCES
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Path2D.cpp
+    HTML/PromiseRejectionEvent.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/Storage.cpp
+    HTML/SubmitEvent.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
@@ -371,6 +377,7 @@ set(SOURCES
     UIEvents/FocusEvent.cpp
     UIEvents/KeyboardEvent.cpp
     UIEvents/MouseEvent.cpp
+    UIEvents/UIEvent.cpp
     URL/URL.cpp
     URL/URLSearchParams.cpp
     URL/URLSearchParamsIterator.cpp
@@ -386,10 +393,12 @@ set(SOURCES
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
     WebGL/WebGLContextAttributes.cpp
+    WebGL/WebGLContextEvent.cpp
     WebGL/WebGLRenderingContext.cpp
     WebGL/WebGLRenderingContextBase.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
+    XHR/ProgressEvent.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
     XML/XMLDocumentBuilder.cpp

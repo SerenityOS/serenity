@@ -19,8 +19,6 @@
 #include <LibWeb/Bindings/ElementWrapper.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
-#include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HistoryWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>

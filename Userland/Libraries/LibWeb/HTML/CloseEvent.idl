@@ -1,5 +1,6 @@
 #import <DOM/Event.idl>
 
+[NoInstanceWrapper]
 interface CloseEvent : Event {
     constructor(DOMString type, optional CloseEventInit eventInitDict = {});
 

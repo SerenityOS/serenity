@@ -36,8 +36,8 @@ public:
     void add_event_listener_without_options(FlyString const& type, IDLEventListener& callback);
     void remove_event_listener_without_options(FlyString const& type, IDLEventListener& callback);
 
-    virtual bool dispatch_event(NonnullRefPtr<Event>);
-    ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
+    virtual bool dispatch_event(Event&);
+    ExceptionOr<bool> dispatch_event_binding(Event&);
 
     virtual JS::Object* create_wrapper(JS::Realm&) = 0;
 

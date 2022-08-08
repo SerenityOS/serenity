@@ -18,20 +18,18 @@ struct UIEventInit : public DOM::EventInit {
 };
 
 class UIEvent : public DOM::Event {
+    JS_OBJECT(UIEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::UIEventWrapper;
+    static UIEvent* create(Bindings::WindowObject&, FlyString const& type);
+    static UIEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init);
 
-    static NonnullRefPtr<UIEvent> create(FlyString const& type)
-    {
-        return adopt_ref(*new UIEvent(type));
-    }
+    UIEvent(Bindings::WindowObject&, FlyString const& event_name);
+    UIEvent(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init);
 
-    static NonnullRefPtr<UIEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init)
-    {
-        return adopt_ref(*new UIEvent(event_name, event_init));
-    }
+    virtual ~UIEvent() override;
 
-    virtual ~UIEvent() override = default;
+    UIEvent& impl() { return *this; }
 
     HTML::Window const* view() const { return m_view; }
     int detail() const { return m_detail; }
@@ -45,19 +43,13 @@ public:
     }
 
 protected:
-    explicit UIEvent(FlyString const& event_name)
-        : Event(event_name)
-    {
-    }
-    UIEvent(FlyString const& event_name, UIEventInit const& event_init)
-        : Event(event_name, event_init)
-        , m_view(event_init.view)
-        , m_detail(event_init.detail)
-    {
-    }
-
     RefPtr<HTML::Window> m_view;
     int m_detail { 0 };
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::UIEvents::UIEvent& object) { return &object; }
+using UIEventWrapper = Web::UIEvents::UIEvent;
 }

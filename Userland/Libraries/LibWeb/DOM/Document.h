@@ -204,7 +204,7 @@ public:
     NonnullRefPtr<Text> create_text_node(String const& data);
     NonnullRefPtr<Comment> create_comment(String const& data);
     NonnullRefPtr<Range> create_range();
-    ExceptionOr<NonnullRefPtr<Event>> create_event(String const& interface);
+    ExceptionOr<JS::NonnullGCPtr<Event>> create_event(String const& interface);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }

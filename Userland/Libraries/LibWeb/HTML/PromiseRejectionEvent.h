@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,35 +18,33 @@ struct PromiseRejectionEventInit : public DOM::EventInit {
     JS::Value reason;
 };
 
-class PromiseRejectionEvent : public DOM::Event {
+class PromiseRejectionEvent final : public DOM::Event {
+    JS_OBJECT(PromiseRejectionEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::PromiseRejectionEventWrapper;
+    static PromiseRejectionEvent* create(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
+    static PromiseRejectionEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
-    static NonnullRefPtr<PromiseRejectionEvent> create(FlyString const& event_name, PromiseRejectionEventInit const& event_init = {})
-    {
-        return adopt_ref(*new PromiseRejectionEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<PromiseRejectionEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
-    {
-        return PromiseRejectionEvent::create(event_name, event_init);
-    }
+    PromiseRejectionEvent(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
-    virtual ~PromiseRejectionEvent() override = default;
+    virtual ~PromiseRejectionEvent() override;
+
+    PromiseRejectionEvent& impl() { return *this; }
 
     // Needs to return a pointer for the generated JS bindings to work.
-    JS::Promise const* promise() const { return m_promise.cell(); }
-    JS::Value reason() const { return m_reason.value(); }
+    JS::Promise const* promise() const { return m_promise; }
+    JS::Value reason() const { return m_reason; }
 
-protected:
-    PromiseRejectionEvent(FlyString const& event_name, PromiseRejectionEventInit const& event_init)
-        : DOM::Event(event_name, event_init)
-        , m_promise(event_init.promise)
-        , m_reason(JS::make_handle(event_init.reason))
-    {
-    }
+private:
+    virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::Handle<JS::Promise> m_promise;
-    JS::Handle<JS::Value> m_reason;
+    JS::Promise* m_promise { nullptr };
+    JS::Value m_reason;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::HTML::PromiseRejectionEvent& object) { return &object; }
+using PromiseRejectionEventWrapper = Web::HTML::PromiseRejectionEvent;
 }

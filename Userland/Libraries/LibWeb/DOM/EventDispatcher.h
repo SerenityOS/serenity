@@ -14,7 +14,7 @@ namespace Web::DOM {
 
 class EventDispatcher {
 public:
-    static bool dispatch(NonnullRefPtr<EventTarget>, NonnullRefPtr<Event>, bool legacy_target_override = false);
+    static bool dispatch(NonnullRefPtr<EventTarget>, Event&, bool legacy_target_override = false);
 
 private:
     static void invoke(Event::PathEntry&, Event&, Event::Phase);

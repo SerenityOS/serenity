@@ -1,5 +1,6 @@
 #import <DOM/Event.idl>
 
+[NoInstanceWrapper]
 interface ProgressEvent : Event {
     constructor(DOMString type, optional ProgressEventInit eventInitDict = {});
 

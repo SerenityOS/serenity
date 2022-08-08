@@ -60,7 +60,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     m_abort_algorithms.clear();
 
     // 5. Fire an event named abort at signal.
-    dispatch_event(Event::create(HTML::EventNames::abort));
+    dispatch_event(*Event::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), HTML::EventNames::abort));
 }
 
 void AbortSignal::set_onabort(Bindings::CallbackType* event_handler)

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,36 +18,31 @@ struct CloseEventInit : public DOM::EventInit {
 };
 
 class CloseEvent : public DOM::Event {
+    JS_OBJECT(CloseEvent, DOM::Event);
+
 public:
-    using WrapperType = Bindings::CloseEventWrapper;
+    static CloseEvent* create(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init = {});
+    static CloseEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init);
 
-    static NonnullRefPtr<CloseEvent> create(FlyString const& event_name, CloseEventInit const& event_init = {})
-    {
-        return adopt_ref(*new CloseEvent(event_name, event_init));
-    }
-    static NonnullRefPtr<CloseEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init)
-    {
-        return CloseEvent::create(event_name, event_init);
-    }
+    CloseEvent(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init);
 
-    virtual ~CloseEvent() override = default;
+    virtual ~CloseEvent() override;
+
+    CloseEvent& impl() { return *this; }
 
     bool was_clean() const { return m_was_clean; }
     u16 code() const { return m_code; }
     String reason() const { return m_reason; }
 
-protected:
-    CloseEvent(FlyString const& event_name, CloseEventInit const& event_init)
-        : DOM::Event(event_name, event_init)
-        , m_was_clean(event_init.was_clean)
-        , m_code(event_init.code)
-        , m_reason(event_init.reason)
-    {
-    }
-
+private:
     bool m_was_clean { false };
     u16 m_code { 0 };
     String m_reason;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::HTML::CloseEvent& object) { return &object; }
+using CloseEventWrapper = Web::HTML::CloseEvent;
 }

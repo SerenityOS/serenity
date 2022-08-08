@@ -217,12 +217,12 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
                 /* .promise = */ promise_handle,
                 /* .reason = */ promise.result(),
             };
-            auto promise_rejection_event = PromiseRejectionEvent::create(HTML::EventNames::unhandledrejection, event_init);
-
             // FIXME: This currently assumes that global is a WindowObject.
             auto& window = verify_cast<Bindings::WindowObject>(*global.cell());
 
-            bool not_handled = window.impl().dispatch_event(move(promise_rejection_event));
+            auto promise_rejection_event = PromiseRejectionEvent::create(window, HTML::EventNames::unhandledrejection, event_init);
+
+            bool not_handled = window.impl().dispatch_event(*promise_rejection_event);
 
             // 3. If notHandled is false, then the promise rejection is handled. Otherwise, the promise rejection is not handled.
 

@@ -1,15 +1,44 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CustomEventPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/CustomEvent.h>
 
 namespace Web::DOM {
 
+CustomEvent* CustomEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, CustomEventInit const& event_init)
+{
+    return window_object.heap().allocate<CustomEvent>(window_object.realm(), window_object, event_name, event_init);
+}
+
+CustomEvent* CustomEvent::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, CustomEventInit const& event_init)
+{
+    return create(window_object, event_name, event_init);
+}
+
+CustomEvent::CustomEvent(Bindings::WindowObject& window_object, FlyString const& event_name)
+    : Event(window_object, event_name)
+{
+    set_prototype(&window_object.ensure_web_prototype<Bindings::CustomEventPrototype>("CustomEvent"));
+}
+
+CustomEvent::CustomEvent(Bindings::WindowObject& window_object, FlyString const& event_name, CustomEventInit const& event_init)
+    : Event(window_object, event_name, event_init)
+    , m_detail(event_init.detail)
+{
+    set_prototype(&window_object.ensure_web_prototype<Bindings::CustomEventPrototype>("CustomEvent"));
+}
+
+CustomEvent::~CustomEvent() = default;
+
 void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_detail);
 }
 
@@ -21,7 +50,7 @@ void CustomEvent::init_custom_event(String const& type, bool bubbles, bool cance
         return;
 
     // 2. Initialize this with type, bubbles, and cancelable.
-    initialize(type, bubbles, cancelable);
+    initialize_event(type, bubbles, cancelable);
 
     // 3. Set this’s detail attribute to detail.
     m_detail = detail;

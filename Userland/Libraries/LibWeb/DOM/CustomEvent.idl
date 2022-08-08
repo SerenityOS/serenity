@@ -1,6 +1,6 @@
 #import <DOM/Event.idl>
 
-[Exposed=(Window,Worker), CustomVisit]
+[Exposed=(Window,Worker), NoInstanceWrapper]
 interface CustomEvent : Event {
     constructor(DOMString type, optional CustomEventInit eventInitDict = {});
 

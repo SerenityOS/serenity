@@ -15,18 +15,20 @@ struct FocusEventInit : public UIEventInit {
 };
 
 class FocusEvent final : public UIEvent {
-public:
-    using WrapperType = Bindings::FocusEventWrapper;
+    JS_OBJECT(FocusEvent, UIEvent);
 
+public:
+    static FocusEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, FocusEventInit const& event_init);
+
+    FocusEvent(Bindings::WindowObject&, FlyString const& event_name, FocusEventInit const&);
     virtual ~FocusEvent() override;
 
-    static NonnullRefPtr<FocusEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, FocusEventInit const& event_init)
-    {
-        return adopt_ref(*new FocusEvent(event_name, event_init));
-    }
-
-private:
-    FocusEvent(FlyString const& event_name, FocusEventInit const&);
+    FocusEvent& impl() { return *this; }
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::UIEvents::FocusEvent& object) { return &object; }
+using FocusEventWrapper = Web::UIEvents::FocusEvent;
 }
