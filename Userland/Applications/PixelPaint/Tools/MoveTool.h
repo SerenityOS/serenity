@@ -21,7 +21,7 @@ public:
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Move; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
 private:
     virtual StringView tool_name() const override { return "Move Tool"sv; }
@@ -29,6 +29,8 @@ private:
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;
+    bool m_scaling { false };
+    bool m_mouse_in_resize_corner { false };
 };
 
 }

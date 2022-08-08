@@ -29,8 +29,9 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
     auto& image_event = event.image_event();
     if (layer_event.button() != GUI::MouseButton::Primary)
         return;
-    if (!layer->rect().contains(layer_event.position()))
+    if (!layer->rect().contains(layer_event.position()) && !m_mouse_in_resize_corner)
         return;
+    m_scaling = m_mouse_in_resize_corner;
     m_layer_being_moved = *layer;
     m_event_origin = image_event.position();
     m_layer_origin = layer->location();
@@ -46,8 +47,17 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (!layer)
         return;
 
+    constexpr int sensitivity = 20;
+    Gfx::IntPoint grab_rect_position = Gfx::IntPoint(layer->location().x() + layer->size().width() - sensitivity / 2, layer->location().y() + layer->size().height() - sensitivity / 2);
+    Gfx::IntRect grab_rect = Gfx::IntRect(grab_rect_position, Gfx::IntSize(sensitivity, sensitivity));
+    auto updated_is_in_lower_right_corner = grab_rect.contains(event.image_event().position()); // check if the mouse is in the lower right corner
+    if (m_mouse_in_resize_corner != updated_is_in_lower_right_corner) {
+        m_mouse_in_resize_corner = updated_is_in_lower_right_corner;
+        m_editor->update_tool_cursor();
+    }
+
     auto& image_event = event.image_event();
-    if (!m_layer_being_moved)
+    if (!m_layer_being_moved || m_scaling)
         return;
     auto delta = image_event.position() - m_event_origin;
     m_layer_being_moved->set_location(m_layer_origin.translated(delta));
@@ -68,12 +78,26 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
     auto& layer_event = event.layer_event();
     if (layer_event.button() != GUI::MouseButton::Primary)
         return;
+
+    if (m_scaling) {
+        auto& cursor_location = event.image_event().position();
+
+        auto new_size = Gfx::IntSize(abs(m_layer_being_moved->location().x() - cursor_location.x()), abs(m_layer_being_moved->location().y() - cursor_location.y()));
+        // TODO: Change this according to which direction the user is scaling
+        auto new_location = Gfx::IntPoint(m_layer_being_moved->location().x(), m_layer_being_moved->location().y());
+        m_editor->active_layer()->resize(new_size, new_location, Gfx::Painter::ScalingMode::BilinearBlend);
+    }
+
+    m_scaling = false;
     m_layer_being_moved = nullptr;
     m_editor->did_complete_action(tool_name());
 }
 
 void MoveTool::on_keydown(GUI::KeyEvent& event)
 {
+    if (m_scaling)
+        return;
+
     if (event.modifiers() != 0)
         return;
 
@@ -102,6 +126,13 @@ void MoveTool::on_keydown(GUI::KeyEvent& event)
 
     layer->set_location(new_location);
     m_editor->layers_did_change();
+}
+
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
+{
+    if (m_mouse_in_resize_corner || m_scaling)
+        return Gfx::StandardCursor::ResizeDiagonalTLBR;
+    return Gfx::StandardCursor::Move;
 }
 
 }
