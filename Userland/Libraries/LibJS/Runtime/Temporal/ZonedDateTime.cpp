@@ -351,13 +351,10 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
         time_zone_string = String::formatted("[{}]", time_zone_id);
     }
 
-    // 14. Let calendarID be ? ToString(zonedDateTime.[[Calendar]]).
-    auto calendar_id = TRY(Value(&zoned_date_time.calendar()).to_string(vm));
+    // 14. Let calendarString be ? MaybeFormatCalendarAnnotation(zonedDateTime.[[Calendar]], showCalendar).
+    auto calendar_string = TRY(maybe_format_calendar_annotation(vm, &zoned_date_time.calendar(), show_calendar));
 
-    // 15. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
-
-    // 16. Return the string-concatenation of dateTimeString, offsetString, timeZoneString, and calendarString.
+    // 15. Return the string-concatenation of dateTimeString, offsetString, timeZoneString, and calendarString.
     return String::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string);
 }
 

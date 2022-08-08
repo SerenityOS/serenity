@@ -36,6 +36,23 @@ describe("correct behavior", () => {
         plainDate = new Temporal.PlainDate(-12345, 1, 1);
         expect(plainDate.toString()).toBe("-012345-01-01");
     });
+
+    test("doesn't call ToString on calendar if calenderName option is 'never'", () => {
+        let calledToString = false;
+        const calendar = {
+            toString() {
+                calledToString = true;
+                return "nocall";
+            },
+        };
+
+        const plainDate = new Temporal.PlainDate(2022, 8, 8, calendar);
+        const options = {
+            calendarName: "never",
+        };
+        expect(plainDate.toString(options)).toBe("2022-08-08");
+        expect(calledToString).toBeFalse();
+    });
 });
 
 describe("errors", () => {

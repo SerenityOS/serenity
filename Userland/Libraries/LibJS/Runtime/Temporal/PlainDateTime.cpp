@@ -281,13 +281,10 @@ ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 
     // 7. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
     auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
 
-    // 8. Let calendarID be ? ToString(calendar).
-    auto calendar_id = TRY(calendar.to_string(vm));
+    // 8. Let calendarString be ? MaybeFormatCalendarAnnotation(calendar, showCalendar).
+    auto calendar_string = TRY(maybe_format_calendar_annotation(vm, calendar, show_calendar));
 
-    // 9. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
-
-    // 10. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, 0x0054 (LATIN CAPITAL LETTER T), hour, the code unit 0x003A (COLON), minute, seconds, and calendarString.
+    // 9. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, 0x0054 (LATIN CAPITAL LETTER T), hour, the code unit 0x003A (COLON), minute, seconds, and calendarString.
     return String::formatted("{}-{:02}-{:02}T{:02}:{:02}{}{}", pad_iso_year(iso_year), iso_month, iso_day, hour, minute, seconds, calendar_string);
 }
 
