@@ -1,16 +1,25 @@
 /*
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/MediaListPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 
 namespace Web::CSS {
 
-MediaList::MediaList(NonnullRefPtrVector<MediaQuery>&& media)
-    : m_media(move(media))
+MediaList* MediaList::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<MediaQuery>&& media)
+{
+    return window_object.heap().allocate<MediaList>(window_object.realm(), window_object, move(media));
+}
+
+MediaList::MediaList(Bindings::WindowObject& window_object, NonnullRefPtrVector<MediaQuery>&& media)
+    : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::MediaListPrototype>("MediaList"))
+    , m_media(move(media))
 {
 }
 
@@ -81,6 +90,13 @@ bool MediaList::matches() const
             return true;
     }
     return false;
+}
+
+JS::Value MediaList::item_value(size_t index) const
+{
+    if (index >= m_media.size())
+        return JS::js_undefined();
+    return JS::js_string(vm(), m_media[index].to_string());
 }
 
 }
