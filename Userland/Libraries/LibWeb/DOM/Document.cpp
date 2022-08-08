@@ -1750,7 +1750,7 @@ JS::NonnullGCPtr<NodeIterator> Document::create_node_iterator(Node& root, unsign
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
-NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, NodeFilter* filter)
+JS::NonnullGCPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
     return TreeWalker::create(root, what_to_show, filter);
 }

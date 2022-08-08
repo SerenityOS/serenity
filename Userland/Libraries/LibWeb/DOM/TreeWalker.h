@@ -6,21 +6,21 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/NodeFilter.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#treewalker
-class TreeWalker
-    : public RefCounted<TreeWalker>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::TreeWalkerWrapper;
+class TreeWalker final : public Bindings::PlatformObject {
+    JS_OBJECT(TreeWalker, JS::Object);
 
-    static NonnullRefPtr<TreeWalker> create(Node& root, unsigned what_to_show, NodeFilter*);
-    virtual ~TreeWalker() override = default;
+public:
+    static JS::NonnullGCPtr<TreeWalker> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
+
+    explicit TreeWalker(Node& root);
+    virtual ~TreeWalker() override;
+
+    TreeWalker& impl() { return *this; }
 
     NonnullRefPtr<Node> current_node() const;
     void set_current_node(Node&);
@@ -35,12 +35,12 @@ public:
 
     NonnullRefPtr<Node> root() { return m_root; }
 
-    NodeFilter* filter() { return m_filter.cell(); }
+    NodeFilter* filter() { return m_filter.ptr(); }
 
     unsigned what_to_show() const { return m_what_to_show; }
 
 private:
-    TreeWalker(Node& root);
+    virtual void visit_edges(Cell::Visitor&) override;
 
     enum class ChildTraversalType {
         First,
@@ -66,10 +66,15 @@ private:
     unsigned m_what_to_show { 0 };
 
     // https://dom.spec.whatwg.org/#concept-traversal-filter
-    JS::Handle<DOM::NodeFilter> m_filter;
+    JS::GCPtr<DOM::NodeFilter> m_filter;
 
     // https://dom.spec.whatwg.org/#concept-traversal-active
     bool m_active { false };
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::TreeWalker& object) { return &object; }
+using TreeWalkerWrapper = Web::DOM::TreeWalker;
 }

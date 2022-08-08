@@ -604,7 +604,6 @@ class TextDecoderWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;
 class TextWrapper;
-class TreeWalkerWrapper;
 class UIEventWrapper;
 class URLConstructor;
 class URLPrototype;
