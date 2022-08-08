@@ -183,6 +183,7 @@ public:
     ResizeDirection resize_direction_of_window(Window const&);
 
     void greet_window_manager(WMConnectionFromClient&);
+    void tell_wm_greeting_is_over(WindowServer::WMConnectionFromClient&);
     void tell_wms_window_state_changed(Window&);
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);

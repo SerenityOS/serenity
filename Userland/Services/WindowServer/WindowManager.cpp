@@ -419,6 +419,14 @@ void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
     });
     if (auto* applet_area_window = AppletManager::the().window())
         tell_wms_applet_area_size_changed(applet_area_window->size());
+    tell_wm_greeting_is_over(conn);
+}
+
+void WindowManager::tell_wm_greeting_is_over(WMConnectionFromClient& conn)
+{
+    if (conn.wm_id() < 0)
+        return;
+    conn.async_greeting_is_over(conn.wm_id());
 }
 
 void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& window)

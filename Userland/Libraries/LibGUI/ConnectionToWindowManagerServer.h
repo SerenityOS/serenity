@@ -38,6 +38,7 @@ private:
     virtual void super_digit_key_pressed(i32, u8) override;
     virtual void workspace_changed(i32, u32, u32) override;
     virtual void keymap_changed(i32, String const&) override;
+    virtual void greeting_is_over(i32) override;
 };
 
 }

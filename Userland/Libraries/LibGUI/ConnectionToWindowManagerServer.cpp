@@ -87,4 +87,11 @@ void ConnectionToWindowManagerServer::keymap_changed(i32 wm_id, String const& ke
     if (auto* wm = WindowManager::from_wm_id(wm_id))
         Core::EventLoop::current().post_event(*wm, make<WMKeymapChangedEvent>(wm_id, keymap));
 }
+
+void ConnectionToWindowManagerServer::greeting_is_over(i32 wm_id)
+{
+    if (auto* wm = WindowManager::from_wm_id(wm_id))
+        Core::EventLoop::current().post_event(*wm, make<WMGreetingIsOver>(wm_id));
+}
+
 }

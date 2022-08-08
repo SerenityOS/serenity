@@ -71,6 +71,7 @@ public:
         WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
         WM_KeymapChanged,
+        WM_GreetingIsOver,
         __End_WM_Events,
     };
 
@@ -260,6 +261,12 @@ public:
 
 private:
     const String m_keymap;
+};
+
+class WMGreetingIsOver : public WMEvent {
+public:
+    explicit WMGreetingIsOver(int client_id)
+        : WMEvent(Event::Type::WM_GreetingIsOver, client_id, 0) {};
 };
 
 class MultiPaintEvent final : public Event {
