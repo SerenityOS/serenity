@@ -699,8 +699,10 @@ void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origi
     m_move_origin = origin;
     m_move_window_origin = window.position();
     m_move_window_cursor_position = window.is_tiled() ? to_floating_cursor_position(m_mouse_down_origin) : m_mouse_down_origin;
-    m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
-    m_geometry_overlay->set_enabled(true);
+    if (system_effects().geometry() == ShowGeometry::OnMoveAndResize || system_effects().geometry() == ShowGeometry::OnMoveOnly) {
+        m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
+        m_geometry_overlay->set_enabled(true);
+    }
     window.invalidate(true, true);
 }
 
@@ -740,8 +742,10 @@ void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& pos
     m_resize_window = window;
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
-    m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
-    m_geometry_overlay->set_enabled(true);
+    if (system_effects().geometry() == ShowGeometry::OnMoveAndResize || system_effects().geometry() == ShowGeometry::OnResizeOnly) {
+        m_geometry_overlay = Compositor::the().create_overlay<WindowGeometryOverlay>(window);
+        m_geometry_overlay->set_enabled(true);
+    }
 
     current_window_stack().set_active_input_tracking_window(nullptr);
 
@@ -843,8 +847,9 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 m_move_window_origin = m_move_window->position();
             }
         }
-
-        m_geometry_overlay->window_rect_changed();
+        if (system_effects().geometry() == ShowGeometry::OnMoveAndResize || system_effects().geometry() == ShowGeometry::OnMoveOnly) {
+            m_geometry_overlay->window_rect_changed();
+        }
     }
     return true;
 }
@@ -1017,7 +1022,9 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     dbgln_if(RESIZE_DEBUG, "[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
 
     m_resize_window->set_rect(new_rect);
-    m_geometry_overlay->window_rect_changed();
+    if (system_effects().geometry() == ShowGeometry::OnMoveAndResize || system_effects().geometry() == ShowGeometry::OnResizeOnly) {
+        m_geometry_overlay->window_rect_changed();
+    }
     Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(new_rect));
     return true;
 }

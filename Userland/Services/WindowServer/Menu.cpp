@@ -481,6 +481,8 @@ void Menu::clear_hovered_item()
 
 void Menu::start_activation_animation(MenuItem& item)
 {
+    if (!WindowManager::the().system_effects().animate_menus())
+        return;
     VERIFY(menu_window());
     VERIFY(menu_window()->backing_store());
     auto window = Window::construct(*this, WindowType::Menu);
