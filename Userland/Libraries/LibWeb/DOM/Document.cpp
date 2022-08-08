@@ -1154,7 +1154,7 @@ NonnullRefPtr<Comment> Document::create_comment(String const& data)
     return adopt_ref(*new Comment(*this, data));
 }
 
-NonnullRefPtr<Range> Document::create_range()
+JS::NonnullGCPtr<Range> Document::create_range()
 {
     return Range::create(*this);
 }

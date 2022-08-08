@@ -48,7 +48,7 @@ String Selection::type() const
     TODO();
 }
 
-NonnullRefPtr<DOM::Range> Selection::get_range_at(unsigned index)
+DOM::Range* Selection::get_range_at(unsigned index)
 {
     (void)index;
     TODO();

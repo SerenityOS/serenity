@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/Node.h>
 
@@ -48,7 +49,7 @@ public:
 
     LayoutRange normalized() const;
 
-    NonnullRefPtr<DOM::Range> to_dom_range() const;
+    JS::NonnullGCPtr<DOM::Range> to_dom_range() const;
 
 private:
     LayoutPosition m_start;

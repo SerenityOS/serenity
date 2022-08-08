@@ -76,6 +76,7 @@ set(SOURCES
     Cookie/ParsedCookie.cpp
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
+    DOM/AbstractRange.cpp
     DOM/Attribute.cpp
     DOM/Attribute.idl
     DOM/CDATASection.cpp
