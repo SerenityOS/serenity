@@ -45,10 +45,10 @@ public:
     virtual void unref_event_target() override { unref(); }
     virtual JS::Object* create_wrapper(JS::Realm&) override;
 
-    void add_listener(RefPtr<DOM::IDLEventListener> listener);
-    void remove_listener(RefPtr<DOM::IDLEventListener> listener);
+    void add_listener(DOM::IDLEventListener*);
+    void remove_listener(DOM::IDLEventListener*);
 
-    void set_onchange(Optional<Bindings::CallbackType>);
+    void set_onchange(Bindings::CallbackType*);
     Bindings::CallbackType* onchange();
 
 private:

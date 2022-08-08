@@ -19,7 +19,7 @@ class TreeWalker
 public:
     using WrapperType = Bindings::TreeWalkerWrapper;
 
-    static NonnullRefPtr<TreeWalker> create(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
+    static NonnullRefPtr<TreeWalker> create(Node& root, unsigned what_to_show, NodeFilter*);
     virtual ~TreeWalker() override = default;
 
     NonnullRefPtr<Node> current_node() const;
@@ -35,7 +35,7 @@ public:
 
     NonnullRefPtr<Node> root() { return m_root; }
 
-    NodeFilter* filter() { return m_filter; }
+    NodeFilter* filter() { return m_filter.cell(); }
 
     unsigned what_to_show() const { return m_what_to_show; }
 
@@ -66,7 +66,7 @@ private:
     unsigned m_what_to_show { 0 };
 
     // https://dom.spec.whatwg.org/#concept-traversal-filter
-    RefPtr<DOM::NodeFilter> m_filter;
+    JS::Handle<DOM::NodeFilter> m_filter;
 
     // https://dom.spec.whatwg.org/#concept-traversal-active
     bool m_active { false };

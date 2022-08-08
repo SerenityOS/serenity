@@ -173,8 +173,8 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
 
         handler.visit(
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
-            [&](Bindings::CallbackType& callback) {
-                if (auto result = Bindings::IDL::invoke_callback(callback, window->wrapper(), arguments); result.is_error())
+            [&](JS::Handle<Bindings::CallbackType> callback) {
+                if (auto result = Bindings::IDL::invoke_callback(*callback, window->wrapper(), arguments); result.is_error())
                     HTML::report_exception(result);
             },
             // 3. Otherwise:
@@ -237,9 +237,9 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
-i32 Window::request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback)
+i32 Window::request_animation_frame(Bindings::CallbackType& js_callback)
 {
-    return m_animation_frame_callback_driver.add([this, js_callback = move(js_callback)](auto) mutable {
+    return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) mutable {
         // 3. Invoke callback, passing now as the only argument,
         auto result = Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
 
@@ -471,10 +471,10 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask(NonnullOwnPtr<Bindings::CallbackType> callback)
+void Window::queue_microtask(Bindings::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [callback = move(callback)]() mutable {
+    HTML::queue_a_microtask(&associated_document(), [callback = JS::make_handle(callback)]() mutable {
         auto result = Bindings::IDL::invoke_callback(*callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
@@ -643,7 +643,7 @@ void Window::invoke_idle_callbacks()
 }
 
 // https://w3c.github.io/requestidlecallback/#the-requestidlecallback-method
-u32 Window::request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback)
+u32 Window::request_idle_callback(Bindings::CallbackType& callback)
 {
     // 1. Let window be this Window object.
     auto& window = *this;
@@ -652,8 +652,8 @@ u32 Window::request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback
     // 3. Let handle be the current value of window's idle callback identifier.
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
-    auto handler = [callback = move(callback)](NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        auto& realm = callback->callback.cell()->shape().realm();
+    auto handler = [callback = JS::make_handle(callback)](NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
+        auto& realm = callback->callback.shape().realm();
         auto* wrapped_deadline = Bindings::wrap(realm, *deadline);
         return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, JS::Value(wrapped_deadline));
     };

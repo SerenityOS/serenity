@@ -57,7 +57,7 @@ static EventTarget* retarget(EventTarget* left, EventTarget* right)
 }
 
 // https://dom.spec.whatwg.org/#concept-event-listener-inner-invoke
-bool EventDispatcher::inner_invoke(Event& event, Vector<NonnullRefPtr<DOM::DOMEventListener>>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)
+bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEventListener>>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)
 {
     // 1. Let found be false.
     bool found = false;
@@ -84,11 +84,11 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<NonnullRefPtr<DOM::DOMEv
 
         // 5. If listener’s once is true, then remove listener from event’s currentTarget attribute value’s event listener list.
         if (listener->once)
-            event.current_target()->remove_from_event_listener_list(listener);
+            event.current_target()->remove_from_event_listener_list(*listener);
 
         // 6. Let global be listener callback’s associated Realm’s global object.
         auto& callback = listener->callback->callback();
-        auto& realm = callback.callback->shape().realm();
+        auto& realm = callback.callback.shape().realm();
         auto& global = realm.global_object();
 
         // 7. Let currentEvent be undefined.

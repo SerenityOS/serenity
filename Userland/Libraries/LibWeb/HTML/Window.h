@@ -61,7 +61,7 @@ public:
     void alert(String const&);
     bool confirm(String const&);
     String prompt(String const&, String const&);
-    i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
+    i32 request_animation_frame(Bindings::CallbackType& js_callback);
     void cancel_animation_frame(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
@@ -70,7 +70,7 @@ public:
     void clear_timeout(i32);
     void clear_interval(i32);
 
-    void queue_microtask(NonnullOwnPtr<Bindings::CallbackType> callback);
+    void queue_microtask(Bindings::CallbackType& callback);
 
     int inner_width() const;
     int inner_height() const;
@@ -123,7 +123,7 @@ public:
 
     void start_an_idle_period();
 
-    u32 request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback);
+    u32 request_idle_callback(Bindings::CallbackType& callback);
     void cancel_idle_callback(u32);
 
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
