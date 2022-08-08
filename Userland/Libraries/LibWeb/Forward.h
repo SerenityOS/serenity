@@ -464,7 +464,6 @@ class DocumentFragmentWrapper;
 class DocumentTypeWrapper;
 class DocumentWrapper;
 class DOMExceptionWrapper;
-class DOMImplementationWrapper;
 class DOMParserWrapper;
 class DOMPointWrapper;
 class DOMPointReadOnlyWrapper;

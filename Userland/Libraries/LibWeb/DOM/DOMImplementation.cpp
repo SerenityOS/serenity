@@ -1,9 +1,12 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/DOMImplementationPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -14,9 +17,24 @@
 
 namespace Web::DOM {
 
-DOMImplementation::DOMImplementation(Document& document)
-    : RefCountForwarder(document)
+JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document)
 {
+    auto& window_object = document.preferred_window_object();
+    return *window_object.heap().allocate<DOMImplementation>(window_object.realm(), document);
+}
+
+DOMImplementation::DOMImplementation(Document& document)
+    : PlatformObject(document.preferred_window_object().ensure_web_prototype<Bindings::DOMImplementationPrototype>("DOMImplementation"))
+    , m_document(document)
+{
+}
+
+DOMImplementation::~DOMImplementation() = default;
+
+void DOMImplementation::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_document);
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
