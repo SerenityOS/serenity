@@ -8,6 +8,7 @@
 
 #include "BackgroundSettingsWidget.h"
 #include "DesktopSettingsWidget.h"
+#include "EffectsSettingsWidget.h"
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
 #include "ThemesSettingsWidget.h"
@@ -41,6 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"sv, "fonts"sv));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"sv, "monitor"sv));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"sv, "workspaces"sv));
+    (void)TRY(window->add_tab<GUI::DisplaySettings::EffectsSettingsWidget>("Effects"sv, "effects"sv));
     window->set_active_tab(selected_tab);
 
     window->set_icon(app_icon.bitmap_for_size(16));
