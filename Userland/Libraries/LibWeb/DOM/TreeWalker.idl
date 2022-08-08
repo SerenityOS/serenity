@@ -1,7 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/NodeFilter.idl>
 
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface TreeWalker {
 
     [SameObject] readonly attribute Node root;
