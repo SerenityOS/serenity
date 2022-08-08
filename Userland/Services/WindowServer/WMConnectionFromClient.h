@@ -29,9 +29,13 @@ public:
     virtual void set_window_taskbar_rect(i32, i32, Gfx::IntRect const&) override;
     virtual void set_applet_area_position(Gfx::IntPoint const&) override;
     virtual void set_event_mask(u32) override;
-    virtual void set_window_manager(i32) override;
+    virtual void set_window_manager(i32, bool) override;
     virtual void set_workspace(u32, u32) override;
     virtual void set_keymap(String const&) override;
+
+    virtual Messages::WindowManagerServer::WindowExistsResponse window_exists(i32) override;
+    virtual Messages::WindowManagerServer::GetWindowRectResponse get_window_rect(i32) override;
+    virtual void set_window_rect(i32, Gfx::IntRect const&) override;
 
     unsigned event_mask() const { return m_event_mask; }
     int wm_id() const { return m_wm_id; }
@@ -46,6 +50,7 @@ private:
     static HashMap<int, NonnullRefPtr<WMConnectionFromClient>> s_connections;
     unsigned m_event_mask { 0 };
     int m_wm_id { -1 };
+    bool m_manages_applets { false };
 
     // WindowManager needs to access the window manager clients to notify
     // about events.

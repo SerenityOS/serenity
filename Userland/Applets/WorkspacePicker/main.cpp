@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
                 WindowServer::WMEventMask::WorkspaceChanges);
-            GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
+            GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id(), false);
         }
     };
 

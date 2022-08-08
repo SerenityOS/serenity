@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         | WindowServer::WMEventMask::WindowRemovals
         | WindowServer::WMEventMask::WindowIconChanges
         | WindowServer::WMEventMask::WorkspaceChanges);
-    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id(), true);
 
     return app->exec();
 }

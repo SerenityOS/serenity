@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
         WindowServer::WMEventMask::KeymapChanged);
-    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id());
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(wm.wm_id(), false);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath getkeymap proc exec"));
 
