@@ -281,7 +281,6 @@ Document::Document(const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
     , m_window(HTML::Window::create_with_document(*this))
-    , m_implementation(DOMImplementation::create({}, *this))
     , m_history(HTML::History::create(*this))
 {
     m_style_sheets = JS::make_handle(CSS::StyleSheetList::create(*this));
@@ -1621,9 +1620,11 @@ void Document::evaluate_media_rules()
     }
 }
 
-NonnullRefPtr<DOMImplementation> Document::implementation() const
+DOMImplementation* Document::implementation()
 {
-    return *m_implementation;
+    if (!m_implementation.cell())
+        m_implementation = JS::make_handle(*DOMImplementation::create(*this));
+    return m_implementation.cell();
 }
 
 bool Document::has_focus() const
