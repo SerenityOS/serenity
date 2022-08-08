@@ -1684,7 +1684,7 @@ bool PositionStyleValue::equals(StyleValue const& other) const
 
 String RectStyleValue::to_string() const
 {
-    return String::formatted("top_edge: {}, right_edge: {}, bottom_edge: {}, left_edge: {}", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
+    return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
 }
 
 bool RectStyleValue::equals(StyleValue const& other) const
