@@ -110,7 +110,7 @@ while (true) {
         { "pad", optional_argument, nullptr, 'p' },
         { "verbose", no_argument, &verbose, 1 },
     };
-    int opt = getopt(argc, argv, short_options, long_options, nullptr);
+    int opt = getopt_long(argc, argv, short_options, long_options, nullptr);
     switch (opt) {
     case -1:
         // No more options.
