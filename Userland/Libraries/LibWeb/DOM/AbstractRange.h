@@ -1,23 +1,24 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::DOM {
 
-class AbstractRange
-    : public RefCounted<AbstractRange>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::AbstractRangeWrapper;
+class AbstractRange : public Bindings::PlatformObject {
+    JS_OBJECT(AbstractRange, Bindings::PlatformObject);
 
-    virtual ~AbstractRange() override = default;
+public:
+    virtual ~AbstractRange() override;
+
+    AbstractRange& impl() { return *this; }
 
     Node* start_container() { return m_start_container; }
     Node const* start_container() const { return m_start_container; }
@@ -35,13 +36,7 @@ public:
     }
 
 protected:
-    AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
-        : m_start_container(start_container)
-        , m_start_offset(start_offset)
-        , m_end_container(end_container)
-        , m_end_offset(end_offset)
-    {
-    }
+    AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
 
     NonnullRefPtr<Node> m_start_container;
     u32 m_start_offset;
@@ -50,4 +45,9 @@ protected:
     u32 m_end_offset;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::AbstractRange& object) { return &object; }
+using AbstractRangeWrapper = Web::DOM::AbstractRange;
 }

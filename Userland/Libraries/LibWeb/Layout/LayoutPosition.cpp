@@ -33,7 +33,7 @@ LayoutRange LayoutRange::normalized() const
     return { m_end, m_start };
 }
 
-NonnullRefPtr<DOM::Range> LayoutRange::to_dom_range() const
+JS::NonnullGCPtr<DOM::Range> LayoutRange::to_dom_range() const
 {
     VERIFY(is_valid());
 

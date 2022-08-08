@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -24,22 +25,24 @@ HashTable<Range*>& Range::live_ranges()
     return ranges;
 }
 
-NonnullRefPtr<Range> Range::create(HTML::Window& window)
+JS::NonnullGCPtr<Range> Range::create(HTML::Window& window)
 {
     return Range::create(window.associated_document());
 }
 
-NonnullRefPtr<Range> Range::create(Document& document)
+JS::NonnullGCPtr<Range> Range::create(Document& document)
 {
-    return adopt_ref(*new Range(document));
+    auto& window_object = document.preferred_window_object();
+    return *window_object.heap().allocate<Range>(window_object.realm(), document);
 }
 
-NonnullRefPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
 {
-    return adopt_ref(*new Range(start_container, start_offset, end_container, end_offset));
+    auto& window_object = start_container.document().preferred_window_object();
+    return *window_object.heap().allocate<Range>(window_object.realm(), start_container, start_offset, end_container, end_offset);
 }
 
-NonnullRefPtr<Range> Range::create_with_global_object(Bindings::WindowObject& window)
+JS::NonnullGCPtr<Range> Range::create_with_global_object(Bindings::WindowObject& window)
 {
     return Range::create(window.impl());
 }
@@ -47,11 +50,13 @@ NonnullRefPtr<Range> Range::create_with_global_object(Bindings::WindowObject& wi
 Range::Range(Document& document)
     : Range(document, 0, document, 0)
 {
+    set_prototype(&document.preferred_window_object().ensure_web_prototype<Bindings::RangePrototype>("Range"));
 }
 
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
+    set_prototype(&start_container.document().preferred_window_object().ensure_web_prototype<Bindings::RangePrototype>("Range"));
     live_ranges().set(this);
 }
 
@@ -400,17 +405,17 @@ ExceptionOr<void> Range::select_node_contents(Node const& node)
     return {};
 }
 
-NonnullRefPtr<Range> Range::clone_range() const
+JS::NonnullGCPtr<Range> Range::clone_range() const
 {
-    return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
+    return *heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset);
 }
 
-NonnullRefPtr<Range> Range::inverted() const
+JS::NonnullGCPtr<Range> Range::inverted() const
 {
-    return adopt_ref(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
+    return *heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset);
 }
 
-NonnullRefPtr<Range> Range::normalized() const
+JS::NonnullGCPtr<Range> Range::normalized() const
 {
     if (m_start_container.ptr() == m_end_container.ptr()) {
         if (m_start_offset <= m_end_offset)

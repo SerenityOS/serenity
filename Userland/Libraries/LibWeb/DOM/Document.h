@@ -203,8 +203,8 @@ public:
     NonnullRefPtr<DocumentFragment> create_document_fragment();
     NonnullRefPtr<Text> create_text_node(String const& data);
     NonnullRefPtr<Comment> create_comment(String const& data);
-    NonnullRefPtr<Range> create_range();
     ExceptionOr<JS::NonnullGCPtr<Event>> create_event(String const& interface);
+    JS::NonnullGCPtr<Range> create_range();
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }

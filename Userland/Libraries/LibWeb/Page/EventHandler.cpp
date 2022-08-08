@@ -660,11 +660,11 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             m_browsing_context.set_cursor_position({ *range->start_container(), range->start_offset() });
 
             if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
-                m_edit_event_handler->handle_delete(range);
+                m_edit_event_handler->handle_delete(*range);
                 return true;
             }
             if (!should_ignore_keydown_event(code_point)) {
-                m_edit_event_handler->handle_delete(range);
+                m_edit_event_handler->handle_delete(*range);
                 m_edit_event_handler->handle_insert(m_browsing_context.cursor_position(), code_point);
                 m_browsing_context.increment_cursor_position_offset();
                 return true;

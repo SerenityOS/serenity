@@ -27,7 +27,7 @@ public:
     bool is_collapsed() const;
     unsigned range_count() const;
     String type() const;
-    NonnullRefPtr<DOM::Range> get_range_at(unsigned index);
+    DOM::Range* get_range_at(unsigned index);
     void add_range(DOM::Range&);
     void remove_range(DOM::Range&);
     void remove_all_ranges();

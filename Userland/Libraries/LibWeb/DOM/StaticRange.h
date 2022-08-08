@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,15 +21,20 @@ struct StaticRangeInit {
 };
 
 class StaticRange final : public AbstractRange {
+    JS_OBJECT(StaticRange, JS::Object);
+
 public:
-    using WrapperType = Bindings::StaticRangeWrapper;
+    static ExceptionOr<StaticRange*> create_with_global_object(Bindings::WindowObject&, StaticRangeInit& init);
 
-    virtual ~StaticRange() override = default;
-
-    static ExceptionOr<NonnullRefPtr<StaticRange>> create_with_global_object(JS::GlobalObject&, StaticRangeInit& init);
-
-private:
     StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
+    virtual ~StaticRange() override;
+
+    StaticRange& impl() { return *this; }
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::StaticRange& object) { return &object; }
+using StaticRangeWrapper = Web::DOM::StaticRange;
 }

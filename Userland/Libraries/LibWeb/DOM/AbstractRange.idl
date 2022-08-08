@@ -1,4 +1,4 @@
-[Exposed=Window]
+[Exposed=Window, NoInstanceWrapper]
 interface AbstractRange {
     readonly attribute Node startContainer;
     readonly attribute unsigned long startOffset;

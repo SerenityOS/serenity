@@ -446,7 +446,6 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
-class AbstractRangeWrapper;
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
@@ -564,11 +563,9 @@ class PerformanceWrapper;
 class ProcessingInstructionWrapper;
 class RangeConstructor;
 class RangePrototype;
-class RangeWrapper;
 class ResizeObserverWrapper;
 class ScreenWrapper;
 class SelectionWrapper;
-class StaticRangeWrapper;
 class StorageWrapper;
 class SubtleCryptoWrapper;
 class SVGAnimatedLengthWrapper;

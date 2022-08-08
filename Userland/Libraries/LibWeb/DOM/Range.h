@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,15 +13,19 @@
 namespace Web::DOM {
 
 class Range final : public AbstractRange {
+    JS_OBJECT(Range, AbstractRange);
+
 public:
-    using WrapperType = Bindings::RangeWrapper;
+    Range& impl() { return *this; }
 
+    static JS::NonnullGCPtr<Range> create(Document&);
+    static JS::NonnullGCPtr<Range> create(HTML::Window&);
+    static JS::NonnullGCPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
+    static JS::NonnullGCPtr<Range> create_with_global_object(Bindings::WindowObject&);
+
+    explicit Range(Document&);
+    Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     virtual ~Range() override;
-
-    static NonnullRefPtr<Range> create(Document&);
-    static NonnullRefPtr<Range> create(HTML::Window&);
-    static NonnullRefPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
-    static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject&);
 
     // FIXME: There are a ton of methods missing here.
 
@@ -44,9 +49,9 @@ public:
 
     ExceptionOr<i16> compare_boundary_points(u16 how, Range const& source_range) const;
 
-    NonnullRefPtr<Range> inverted() const;
-    NonnullRefPtr<Range> normalized() const;
-    NonnullRefPtr<Range> clone_range() const;
+    JS::NonnullGCPtr<Range> inverted() const;
+    JS::NonnullGCPtr<Range> normalized() const;
+    JS::NonnullGCPtr<Range> clone_range() const;
 
     NonnullRefPtr<Node> common_ancestor_container() const;
 
@@ -73,10 +78,6 @@ public:
     static HashTable<Range*>& live_ranges();
 
 private:
-    explicit Range(Document&);
-
-    Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
-
     Node& root();
     Node const& root() const;
 
@@ -96,4 +97,9 @@ private:
     bool partially_contains_node(Node const&) const;
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::Range& object) { return &object; }
+using RangeWrapper = Web::DOM::Range;
 }
