@@ -199,8 +199,12 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
     case WindowType::Desktop:
         return nullptr;
     case WindowType::Menu:
+        if (!WindowManager::the().system_effects().menu_shadow())
+            return nullptr;
         return s_menu_shadow;
     case WindowType::Tooltip:
+        if (!WindowManager::the().system_effects().tooltip_shadow())
+            return nullptr;
         return s_tooltip_shadow;
     case WindowType::Taskbar:
         return s_taskbar_shadow;
@@ -209,6 +213,8 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
     case WindowType::WindowSwitcher:
         return nullptr;
     default:
+        if (!WindowManager::the().system_effects().window_shadow())
+            return nullptr;
         // FIXME: Support shadow for themes with border radius
         if (WindowManager::the().palette().window_border_radius() > 0)
             return nullptr;
