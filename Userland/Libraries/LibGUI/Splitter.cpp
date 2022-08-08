@@ -6,6 +6,7 @@
  */
 
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/UIDimensions.h>
@@ -60,10 +61,12 @@ void Splitter::paint_event(PaintEvent& event)
             auto& rect = grabbable.paint_rect;
             int primary = rect.center().primary_offset_for_orientation(m_orientation) - 1;
             int secondary = rect.center().secondary_offset_for_orientation(m_orientation) - (total_knurling_width / 2) + (i * (knurl_width + knurl_spacing));
-            if (m_orientation == Gfx::Orientation::Vertical)
-                paint_knurl(secondary, primary);
-            else
-                paint_knurl(primary, secondary);
+            if (Desktop::the().system_effects().splitter_knurls()) {
+                if (m_orientation == Gfx::Orientation::Vertical)
+                    paint_knurl(secondary, primary);
+                else
+                    paint_knurl(primary, secondary);
+            }
         }
     }
 }

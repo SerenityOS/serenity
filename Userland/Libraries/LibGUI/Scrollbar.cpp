@@ -6,6 +6,7 @@
  */
 
 #include <LibCore/Timer.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/CharacterBitmap.h>
@@ -98,14 +99,14 @@ void Scrollbar::set_value(int value, AllowCallback allow_callback, DoClamp do_cl
 
 void Scrollbar::set_target_value(int new_target_value)
 {
-    if (m_scroll_animation == Animation::CoarseScroll)
-        return set_value(new_target_value);
-
     new_target_value = clamp(new_target_value, min(), max());
 
     // If we are already at or scrolling to the new target then don't touch anything
     if (m_target_value == new_target_value)
         return;
+
+    if (m_scroll_animation == Animation::CoarseScroll || !Desktop::the().system_effects().smooth_scrolling())
+        return set_value(new_target_value);
 
     m_animation_time_elapsed = 0;
     m_start_value = value();
