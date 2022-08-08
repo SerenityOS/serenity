@@ -1234,6 +1234,8 @@ Menu& Window::add_menu(String name)
 
 void Window::flash_menubar_menu_for(MenuItem const& menu_item)
 {
+    if (!Desktop::the().system_effects().flash_menus())
+        return;
     auto menu_id = menu_item.menu_id();
     if (menu_id < 0)
         return;

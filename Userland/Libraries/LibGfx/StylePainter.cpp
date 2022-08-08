@@ -18,9 +18,9 @@ BaseStylePainter& StylePainter::current()
     return style;
 }
 
-void StylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window)
+void StylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented)
 {
-    current().paint_tab_button(painter, rect, palette, active, hovered, enabled, position, in_active_window);
+    current().paint_tab_button(painter, rect, palette, active, hovered, enabled, position, in_active_window, accented);
 }
 
 void StylePainter::paint_button(Painter& painter, IntRect const& rect, Palette const& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused, bool default_button)

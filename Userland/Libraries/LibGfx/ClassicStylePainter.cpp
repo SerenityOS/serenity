@@ -18,7 +18,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window)
+void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -41,7 +41,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
         // Top line
-        if (active) {
+        if (active && accented) {
             painter.draw_line({ 3, 0 }, { rect.width() - 3, 0 }, accent.darkened());
             painter.fill_rect_with_gradient({ 1, 1, rect.width() - 2, 2 }, accent, accent.lightened(1.5f));
             painter.set_pixel({ 2, 0 }, highlight_color2);
@@ -63,7 +63,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.fill_rect({ 0, 0, rect.width() - 1, rect.height() }, base_color);
 
         // Bottom line
-        if (active) {
+        if (active && accented) {
             painter.fill_rect_with_gradient({ 1, rect.height() - 3, rect.width() - 2, 2 }, accent, accent.lightened(1.5f));
             painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, accent.darkened());
         } else {
@@ -86,7 +86,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.draw_line({ 2, rect.height() - 1 }, { rect.width(), rect.height() - 1 }, shadow_color2);
 
         // If the tab is active, draw the accent line
-        if (active) {
+        if (active && accented) {
             painter.fill_rect_with_gradient({ 1, 1, 2, rect.height() - 2 }, accent, accent.lightened(1.5f));
             painter.draw_line({ 0, 2 }, { 0, rect.height() - 3 }, accent.darkened());
         } else {
@@ -105,7 +105,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 2, rect.height() - 1 }, shadow_color2);
 
         // If the tab is active, draw the accent line
-        if (active) {
+        if (active && accented) {
             painter.fill_rect_with_gradient({ rect.width() - 2, 1, 2, rect.height() - 2 }, accent.lightened(1.5f), accent);
             painter.draw_line({ rect.width(), 2 }, { rect.width(), rect.height() - 3 }, accent.darkened());
         } else {
