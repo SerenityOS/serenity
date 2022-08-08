@@ -59,6 +59,7 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(VM&, Object&);
 ThrowCompletionOr<PlainDate*> calendar_date_from_fields(VM&, Object& calendar, Object const& fields, Object const* options = nullptr);
 ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(VM&, Object& calendar, Object const& fields, Object const* options = nullptr);
 ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM&, Object& calendar, Object const& fields, Object const* options = nullptr);
+ThrowCompletionOr<String> maybe_format_calendar_annotation(VM&, Value calendar_object, StringView show_calendar);
 String format_calendar_annotation(StringView id, StringView show_calendar);
 ThrowCompletionOr<bool> calendar_equals(VM&, Object& one, Object& two);
 ThrowCompletionOr<Object*> consolidate_calendars(VM&, Object& one, Object& two);

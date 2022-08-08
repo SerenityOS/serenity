@@ -94,6 +94,37 @@ describe("correct behavior", () => {
             expect(zonedDateTime.toString(options)).toBe(expected);
         }
     });
+
+    test("doesn't call ToString on calendar if calenderName option is 'never'", () => {
+        let calledToString = false;
+        const calendar = {
+            toString() {
+                calledToString = true;
+                return "nocall";
+            },
+        };
+
+        const plainDateTime = new Temporal.PlainDateTime(
+            2022,
+            8,
+            8,
+            14,
+            38,
+            40,
+            100,
+            200,
+            300,
+            calendar
+        );
+        const timeZone = new Temporal.TimeZone("UTC");
+        const zonedDateTime = plainDateTime.toZonedDateTime(timeZone);
+
+        const options = {
+            calendarName: "never",
+        };
+        expect(zonedDateTime.toString(options)).toBe("2022-08-08T14:38:40.1002003+00:00[UTC]");
+        expect(calledToString).toBeFalse();
+    });
 });
 
 describe("errors", () => {

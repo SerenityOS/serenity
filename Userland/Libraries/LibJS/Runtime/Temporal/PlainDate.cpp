@@ -427,13 +427,10 @@ ThrowCompletionOr<String> temporal_date_to_string(VM& vm, PlainDate& temporal_da
     // 5. Let day be ToZeroPaddedDecimalString(monthDay.[[ISODay]], 2).
     auto day = String::formatted("{:02}", temporal_date.iso_day());
 
-    // 6. Let calendarID be ? ToString(temporalDate.[[Calendar]]).
-    auto calendar_id = TRY(Value(&temporal_date.calendar()).to_string(vm));
+    // 6. Let calendar be ? MaybeFormatCalendarAnnotation(temporalDate.[[Calendar]], showCalendar).
+    auto calendar = TRY(maybe_format_calendar_annotation(vm, &temporal_date.calendar(), show_calendar));
 
-    // 7. Let calendar be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar = format_calendar_annotation(calendar_id, show_calendar);
-
-    // 8. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, and calendar.
+    // 7. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, and calendar.
     return String::formatted("{}-{}-{}{}", year, month, day, calendar);
 }
 
