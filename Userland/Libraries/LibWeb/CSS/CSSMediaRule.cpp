@@ -11,26 +11,32 @@
 
 namespace Web::CSS {
 
-CSSMediaRule* CSSMediaRule::create(Bindings::WindowObject& window_object, NonnullRefPtr<MediaList>&& media_queries, CSSRuleList& rules)
+CSSMediaRule* CSSMediaRule::create(Bindings::WindowObject& window_object, MediaList& media_queries, CSSRuleList& rules)
 {
-    return window_object.heap().allocate<CSSMediaRule>(window_object.realm(), window_object, move(media_queries), rules);
+    return window_object.heap().allocate<CSSMediaRule>(window_object.realm(), window_object, media_queries, rules);
 }
 
-CSSMediaRule::CSSMediaRule(Bindings::WindowObject& window_object, NonnullRefPtr<MediaList>&& media, CSSRuleList& rules)
+CSSMediaRule::CSSMediaRule(Bindings::WindowObject& window_object, MediaList& media, CSSRuleList& rules)
     : CSSConditionRule(window_object, rules)
-    , m_media(move(media))
+    , m_media(media)
 {
     set_prototype(&window_object.ensure_web_prototype<Bindings::CSSMediaRulePrototype>("CSSMediaRule"));
 }
 
+void CSSMediaRule::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(&m_media);
+}
+
 String CSSMediaRule::condition_text() const
 {
-    return m_media->media_text();
+    return m_media.media_text();
 }
 
 void CSSMediaRule::set_condition_text(String text)
 {
-    m_media->set_media_text(text);
+    m_media.set_media_text(text);
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule

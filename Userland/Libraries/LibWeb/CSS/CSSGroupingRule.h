@@ -36,10 +36,9 @@ public:
 
 protected:
     explicit CSSGroupingRule(Bindings::WindowObject&, CSSRuleList&);
-
-private:
     virtual void visit_edges(Cell::Visitor&) override;
 
+private:
     CSSRuleList& m_rules;
 };
 

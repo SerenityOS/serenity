@@ -2648,7 +2648,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                     child_rules.append(child_rule);
             }
             auto* rule_list = CSSRuleList::create(m_context.window_object(), move(child_rules));
-            return CSSMediaRule::create(m_context.window_object(), MediaList::create(move(media_query_list)), *rule_list);
+            return CSSMediaRule::create(m_context.window_object(), *MediaList::create(m_context.window_object(), move(media_query_list)), *rule_list);
 
         } else if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
 
