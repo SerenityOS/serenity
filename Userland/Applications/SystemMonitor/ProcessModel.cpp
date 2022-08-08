@@ -416,7 +416,7 @@ void ProcessModel::update()
         m_has_total_scheduled_time = true;
 
         for (size_t i = 0; i < all_processes->processes.size(); ++i) {
-            auto const& process = all_processes->processes[i];
+            auto process = all_processes->processes[i];
             NonnullOwnPtr<Process>* process_state = nullptr;
             for (size_t i = 0; i < m_processes.size(); ++i) {
                 auto* other_process = &m_processes.ptr_at(i);
@@ -429,6 +429,16 @@ void ProcessModel::update()
                 m_processes.append(make<Process>());
                 process_state = &m_processes.ptr_at(m_processes.size() - 1);
             }
+
+            // Process with no active thread -> create a dummy thread for it
+            if (process.threads.is_empty()) {
+                Core::ThreadStatistics thread;
+                thread.tid = process.pid;
+                thread.name = process.name;
+                thread.state = "Zombie";
+                process.threads.append(move(thread));
+            }
+
             (*process_state)->pid = process.pid;
             for (auto& thread : process.threads) {
                 ThreadState state(**process_state);
