@@ -6,29 +6,29 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibJS/Runtime/Object.h>
 #include <LibWeb/DOM/NodeFilter.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#nodeiterator
-class NodeIterator
-    : public RefCounted<NodeIterator>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::NodeIteratorWrapper;
+class NodeIterator final : public Bindings::PlatformObject {
+    JS_OBJECT(NodeIterator, Bindings::PlatformObject);
 
+public:
+    static JS::NonnullGCPtr<NodeIterator> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
+
+    NodeIterator(Node& root);
     virtual ~NodeIterator() override;
 
-    static NonnullRefPtr<NodeIterator> create(Node& root, unsigned what_to_show, NodeFilter*);
+    NodeIterator& impl() { return *this; }
 
     NonnullRefPtr<Node> root() { return m_root; }
     NonnullRefPtr<Node> reference_node() { return m_reference.node; }
     bool pointer_before_reference_node() const { return m_reference.is_before_node; }
     unsigned what_to_show() const { return m_what_to_show; }
 
-    NodeFilter* filter() { return m_filter.cell(); }
+    NodeFilter* filter() { return m_filter.ptr(); }
 
     JS::ThrowCompletionOr<RefPtr<Node>> next_node();
     JS::ThrowCompletionOr<RefPtr<Node>> previous_node();
@@ -38,7 +38,7 @@ public:
     void run_pre_removing_steps(Node&);
 
 private:
-    NodeIterator(Node& root);
+    virtual void visit_edges(Cell::Visitor&) override;
 
     enum class Direction {
         Next,
@@ -72,10 +72,15 @@ private:
     unsigned m_what_to_show { 0 };
 
     // https://dom.spec.whatwg.org/#concept-traversal-filter
-    JS::Handle<DOM::NodeFilter> m_filter;
+    JS::GCPtr<DOM::NodeFilter> m_filter;
 
     // https://dom.spec.whatwg.org/#concept-traversal-active
     bool m_active { false };
 };
 
+}
+
+namespace Web::Bindings {
+inline JS::Object* wrap(JS::Realm&, Web::DOM::NodeIterator& object) { return &object; }
+using NodeIteratorWrapper = Web::DOM::NodeIterator;
 }

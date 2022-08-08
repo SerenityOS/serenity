@@ -1744,7 +1744,7 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
-NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, NodeFilter* filter)
+JS::NonnullGCPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
     return NodeIterator::create(root, what_to_show, filter);
 }
