@@ -62,7 +62,7 @@ public:
     NamedNodeMap const* attributes() const { return m_attributes.cell(); }
     Vector<String> get_attribute_names() const;
 
-    RefPtr<DOMTokenList> const& class_list();
+    DOMTokenList* class_list();
 
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
     DOM::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
@@ -157,7 +157,7 @@ private:
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
-    RefPtr<DOMTokenList> m_class_list;
+    JS::Handle<DOMTokenList> m_class_list;
     Vector<FlyString> m_classes;
 
     RefPtr<ShadowRoot> m_shadow_root;
