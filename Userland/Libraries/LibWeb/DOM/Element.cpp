@@ -307,7 +307,7 @@ void Element::parse_attribute(FlyString const& name, String const& value)
         for (auto& new_class : new_classes) {
             m_classes.unchecked_append(new_class);
         }
-        if (m_class_list)
+        if (m_class_list.cell())
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
         // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
@@ -412,11 +412,11 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
     return properties;
 }
 
-RefPtr<DOMTokenList> const& Element::class_list()
+DOMTokenList* Element::class_list()
 {
-    if (!m_class_list)
-        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
-    return m_class_list;
+    if (!m_class_list.cell())
+        m_class_list = JS::make_handle(DOMTokenList::create(*this, HTML::AttributeNames::class_));
+    return m_class_list.cell();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-matches

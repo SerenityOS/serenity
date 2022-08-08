@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,29 +9,30 @@
 
 #include <AK/FlyString.h>
 #include <AK/Optional.h>
-#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#domtokenlist
-class DOMTokenList final
-    : public RefCounted<DOMTokenList>
-    , public Bindings::Wrappable {
+class DOMTokenList final : public Bindings::LegacyPlatformObject {
+    JS_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
-    using WrapperType = Bindings::DOMTokenListWrapper;
-
-    static NonnullRefPtr<DOMTokenList> create(Element const& associated_element, FlyString associated_attribute);
+    static DOMTokenList* create(Element const& associated_element, FlyString associated_attribute);
+    DOMTokenList(Element const& associated_element, FlyString associated_attribute);
     ~DOMTokenList() = default;
 
+    DOMTokenList& impl() { return *this; }
+
     void associated_attribute_changed(StringView value);
-    bool is_supported_property_index(u32 index) const;
+
+    virtual bool is_supported_property_index(u32 index) const override;
+    virtual JS::Value item_value(size_t index) const override;
 
     size_t length() const { return m_token_set.size(); }
     String const& item(size_t index) const;
@@ -44,8 +46,6 @@ public:
     void set_value(String value);
 
 private:
-    DOMTokenList(Element const& associated_element, FlyString associated_attribute);
-
     ExceptionOr<void> validate_token(StringView token) const;
     void run_update_steps();
 
@@ -57,7 +57,6 @@ private:
 }
 
 namespace Web::Bindings {
-
-DOMTokenListWrapper* wrap(JS::Realm&, DOM::DOMTokenList&);
-
+inline JS::Object* wrap(JS::Realm&, Web::DOM::DOMTokenList& object) { return &object; }
+using DOMTokenListWrapper = Web::DOM::DOMTokenList;
 }

@@ -1,13 +1,17 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/DOMTokenListPrototype.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/DOMTokenList.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace {
@@ -50,14 +54,16 @@ inline void replace_in_ordered_set(Vector<String>& set, StringView item, String 
 
 namespace Web::DOM {
 
-NonnullRefPtr<DOMTokenList> DOMTokenList::create(Element const& associated_element, FlyString associated_attribute)
+DOMTokenList* DOMTokenList::create(Element const& associated_element, FlyString associated_attribute)
 {
-    return adopt_ref(*new DOMTokenList(associated_element, move(associated_attribute)));
+    auto& realm = associated_element.document().preferred_window_object().realm();
+    return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute));
 }
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
 DOMTokenList::DOMTokenList(Element const& associated_element, FlyString associated_attribute)
-    : m_associated_element(associated_element)
+    : Bindings::LegacyPlatformObject(associated_element.document().preferred_window_object().ensure_web_prototype<Bindings::DOMTokenListPrototype>("DOMTokenList"))
+    , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
     auto value = associated_element.get_attribute(m_associated_attribute);
@@ -248,6 +254,14 @@ void DOMTokenList::run_update_steps()
 
     // 2. Set an attribute value for the associated element using associated attribute’s local name and the result of running the ordered set serializer for token set.
     associated_element->set_attribute(m_associated_attribute, value());
+}
+
+JS::Value DOMTokenList::item_value(size_t index) const
+{
+    auto const& string = item(index);
+    if (string.is_null())
+        return JS::js_undefined();
+    return JS::js_string(vm(), string);
 }
 
 }
