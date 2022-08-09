@@ -62,19 +62,25 @@ steps:
   - ${{ if eq(parameters.with_remote_data_caches, true) }}:
     - task: Cache@2
       inputs:
-        key: '"time_zone_data" | Meta/CMake/time_zone_data.cmake'
+        key: '"time_zone_data" | Meta/CMake/time_zone_data.cmake | "$(timestamp)"'
+        restoreKeys: |
+            "time_zone_data" | Meta/CMake/time_zone_data.cmake
         path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/TZDB
       displayName: 'TimeZoneData Cache'
 
     - task: Cache@2
       inputs:
-        key: '"unicode_data" | Meta/CMake/unicode_data.cmake'
+        key: '"unicode_data" | Meta/CMake/unicode_data.cmake | "$(timestamp)"'
+        restoreKeys: |
+            "unicode_data" | Meta/CMake/unicode_data.cmake
         path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
       displayName: 'UnicodeData Cache'
 
     - task: Cache@2
       inputs:
-        key: '"unicode_locale" | Meta/CMake/unicode_data.cmake'
+        key: '"unicode_locale" | Meta/CMake/unicode_data.cmake | "$(timestamp)"'
+        restoreKeys: |
+            "unicode_locale" | Meta/CMake/unicode_data.cmake
         path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
       displayName: 'UnicodeLocale Cache'
 
