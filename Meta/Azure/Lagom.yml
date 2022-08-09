@@ -41,10 +41,7 @@ jobs:
         toolchain: '$(toolchain)'
         build_directory: 'Meta/Lagom/Build'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
-        ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
-          with_remote_data_caches: false
-        ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
-          with_remote_data_caches: true
+        with_remote_data_caches: true
         ${{ if eq(parameters.os, 'Android') }}:
           with_ndk_cache: true
           ndk_version: '$(ndk_version)'
