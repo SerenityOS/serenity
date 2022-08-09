@@ -949,7 +949,7 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
 ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
-    SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker mm_lock(s_mm_lock);
     size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
 
     // We need to make sure we don't touch pages that we have committed to
@@ -959,6 +959,12 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_ph
     for (auto& physical_region : m_physical_regions) {
         auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
         if (!physical_pages.is_empty()) {
+            // Note: The locking semantics are a bit awkward here, the region destructor can
+            // deadlock due to invalid lock ordering if we still hold the s_mm_lock when the
+            // region is constructed or destructed. Since we are now done enumerating anyway,
+            // it's safe to just unlock here and have MM.allocate_kernel_region do the right thing.
+            mm_lock.unlock();
+
             {
                 auto cleanup_region = TRY(MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * page_count, "MemoryManager Allocation Sanitization"sv, Region::Access::Read | Region::Access::Write));
                 memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
