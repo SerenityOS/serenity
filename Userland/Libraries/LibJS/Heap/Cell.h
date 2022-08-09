@@ -51,6 +51,10 @@ public:
             if (cell)
                 visit_impl(*cell);
         }
+        void visit(Cell& cell)
+        {
+            visit_impl(cell);
+        }
         void visit(Value);
 
     protected:
