@@ -186,7 +186,7 @@ static void activate_mmu()
     Aarch64::Asm::flush();
 }
 
-void init_prekernel_page_tables()
+void init_page_tables()
 {
     PageBumpAllocator allocator((u64*)page_tables_phys_start, (u64*)page_tables_phys_end);
     build_identity_map(allocator);

@@ -116,7 +116,7 @@ extern "C" [[noreturn]] void init()
     dbgln("Firmware version: {}", firmware_version);
 
     dbgln("Initialize MMU");
-    init_prekernel_page_tables();
+    init_page_tables();
 
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
