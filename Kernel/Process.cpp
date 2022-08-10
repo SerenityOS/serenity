@@ -627,13 +627,13 @@ void Process::finalize()
         if (m_should_generate_coredump) {
             auto result = dump_core();
             if (result.is_error()) {
-                critical_dmesgln("Failed to write coredump: {}", result.error());
+                dmesgln("Failed to write coredump for pid {}: {}", pid(), result.error());
             }
         }
         if (m_perf_event_buffer) {
             auto result = dump_perfcore();
             if (result.is_error())
-                critical_dmesgln("Failed to write perfcore: {}", result.error());
+                dmesgln("Failed to write perfcore for pid {}: {}", pid(), result.error());
             TimeManagement::the().disable_profile_timer();
         }
     }
