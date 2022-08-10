@@ -2,51 +2,56 @@
 <html>
 <head>
     <meta charset="UTF-8"/>
-    <title>CSS Clip test</title>
+    <title>CSS Clip Test Page</title>
     <style>
-        .box1 {
-          background-color: red;
-          height: 300px;
-          width: 400px;
-          position: absolute;
-        }
-        .box2 {
-          background-color: blue;
-          height: 300px;
-          width: 400px;
-          position: absolute;
-          clip: rect(auto, 150px, 8em, -5px);
-          color: white;
-        }
-        .box3 {
-          background-color: purple;
-          height: 300px;
-          width: 400px;
-          position: absolute;
-          clip: rect(0em, 0px, 0px, 0px);
-          top: 350px;
-          color: white;
-        }
+      .box {
+        height: 100px;
+        width: 100px;
+        position: absolute;
+        background-color: aquamarine;
+      }
+
+      .separate-tests {
+        height: 125px;
+        border-width: 0px;
+      }
     </style>
 </head>
 <body>
-    <h1>Clip with rect</h1>
+    <h2>This is a normal rect with auto clipping</h2>
+    <div class="separate-tests">
+      <div class="box" style="clip: rect(auto, auto, auto, auto);"></div>
+    </div>
 
-    <h2>Clip should look kind of like the American flag</h2>
-    <div class="box1">
-      <div class="box2">
-        <p>Hello this is some text</p>
-        <p>Hello this is some text</p>
-        <p>Hello this is some text</p>
-        <p>Hello this is some text</p>
+    <h2>This is a div with the left side clipped out</h2>
+    <div class="separate-tests">
+      <div class="box" style="clip: rect(auto, auto, auto, 50px);"></div>
+    </div>
+
+    <h2>One can create a rect with or without commas and the clip works</h2>
+    <div class="separate-tests">
+      <div class="box" style="clip: rect(4em auto auto auto);"></div>
+    </div>
+
+    <h2>Text and borders are clipped too</h2>
+    <div class="separate-tests">
+      <div class="box" style="clip: rect(-5px auto auto 50px); border: 2px solid black;">
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
       </div>
     </div>
 
-    <h2 style="margin-top: 350px;">Clip should not be visible</h2>
-    <div class="box3">
-      <p>Hello this is some text</p>
-      <p>Hello this is some text</p>
-      <p>Hello this is some text</p>
-      <p>Hello this is some text</p>
+    <h2>:yakgone:</h2>
+    <div class="separate-tests">
+      <div class="box" style="clip: rect(0px 0px 0px 0px); border: 2px solid black;">
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
+        Lots of text Lots of text
+      </div>
     </div>
 </body>
