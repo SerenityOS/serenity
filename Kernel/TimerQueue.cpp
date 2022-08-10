@@ -62,7 +62,7 @@ bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t cloc
 
     // Because timer handlers can execute on any processor and there is
     // a race between executing a timer handler and cancel_timer() this
-    // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
+    // *must* be a RefPtr<Timer>. Otherwise, calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
     timer->setup(clock_id, deadline, move(callback));
