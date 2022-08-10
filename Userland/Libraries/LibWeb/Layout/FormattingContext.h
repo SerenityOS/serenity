@@ -63,6 +63,8 @@ public:
 
     virtual void run_intrinsic_sizing(Box const&);
 
+    float compute_box_y_position_with_respect_to_siblings(Box const&, LayoutState::UsedValues const&);
+
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);
 
