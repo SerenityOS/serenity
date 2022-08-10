@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 
 #include <AK/NonnullOwnPtr.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>

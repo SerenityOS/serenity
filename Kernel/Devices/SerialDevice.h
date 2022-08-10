@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
 namespace Kernel {

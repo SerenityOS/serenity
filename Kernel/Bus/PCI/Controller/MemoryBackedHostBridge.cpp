@@ -5,7 +5,7 @@
  */
 
 #include <AK/ByteReader.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>

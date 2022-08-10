@@ -8,7 +8,7 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>

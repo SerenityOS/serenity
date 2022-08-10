@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/ATAPort.h>
 #include <Kernel/Storage/ATA/Definitions.h>

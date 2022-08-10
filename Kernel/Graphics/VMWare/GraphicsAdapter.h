@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VMWare/Definitions.h>

@@ -9,8 +9,8 @@
 #include "AK/Format.h"
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Arch/SafeMem.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>

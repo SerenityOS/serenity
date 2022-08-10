@@ -7,7 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>

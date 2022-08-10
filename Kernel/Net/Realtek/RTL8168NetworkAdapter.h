@@ -8,7 +8,7 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>

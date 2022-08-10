@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>

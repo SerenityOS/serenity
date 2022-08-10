@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
 #include <Kernel/Devices/HID/PS2MouseDevice.h>

@@ -5,7 +5,7 @@
  */
 
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Controller.h>

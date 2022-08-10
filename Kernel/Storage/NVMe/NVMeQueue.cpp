@@ -7,7 +7,7 @@
 #include "NVMeQueue.h"
 #include "Kernel/StdLib.h"
 #include "NVMeQueue.h"
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/IO.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/NVMe/NVMeInterruptQueue.h>
 #include <Kernel/Storage/NVMe/NVMePollQueue.h>
