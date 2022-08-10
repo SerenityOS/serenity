@@ -754,6 +754,16 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
 
     Gfx::FloatPoint used_offset;
 
+    auto* relevant_parent = box.first_ancestor_of_type<Layout::BlockContainer>();
+    while (relevant_parent != nullptr) {
+        if (!relevant_parent->is_absolutely_positioned() && !relevant_parent->is_floating()) {
+            break;
+        } else {
+            relevant_parent = relevant_parent->first_ancestor_of_type<Layout::BlockContainer>();
+        }
+    }
+    auto parent_location = absolute_content_rect(static_cast<Box const&>(*relevant_parent), m_state);
+
     if (!box.computed_values().inset().left.is_auto()) {
         float x_offset = box_state.inset_left
             + box_state.border_box_left();
@@ -764,7 +774,8 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
             - box_state.border_box_right();
         used_offset.set_x(width_of_containing_block + x_offset - box_state.content_width() - box_state.margin_right);
     } else {
-        float x_offset = box_state.margin_box_left();
+        float x_offset = box_state.margin_box_left()
+            + (relevant_parent->computed_values().position() == CSS::Position::Relative ? 0 : parent_location.x());
         used_offset.set_x(x_offset);
     }
 
@@ -778,7 +789,9 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
             - box_state.border_box_bottom();
         used_offset.set_y(height_of_containing_block + y_offset - box_state.content_height() - box_state.margin_bottom);
     } else {
-        float y_offset = box_state.margin_box_top();
+        float y_offset = box_state.margin_box_top()
+            + compute_box_y_position_with_respect_to_siblings(box, box_state)
+            + (relevant_parent->computed_values().position() == CSS::Position::Relative ? 0 : parent_location.y());
         used_offset.set_y(y_offset);
     }
 
