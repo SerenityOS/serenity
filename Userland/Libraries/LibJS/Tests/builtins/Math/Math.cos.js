@@ -11,4 +11,6 @@ test("basic functionality", () => {
     expect(Math.cos([1, 2, 3])).toBeNaN();
     expect(Math.cos({})).toBeNaN();
     expect(Math.cos("foo")).toBeNaN();
+    expect(Math.cos(-Infinity)).toBeNaN();
+    expect(Math.cos(Infinity)).toBeNaN();
 });

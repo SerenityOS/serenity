@@ -11,4 +11,6 @@ test("basic functionality", () => {
     expect(Math.tan([1, 2, 3])).toBeNaN();
     expect(Math.tan({})).toBeNaN();
     expect(Math.tan("foo")).toBeNaN();
+    expect(Math.tan(Infinity)).toBeNaN();
+    expect(Math.tan(-Infinity)).toBeNaN();
 });

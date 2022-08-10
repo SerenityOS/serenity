@@ -12,4 +12,6 @@ test("basic functionality", () => {
     expect(Math.sin([1, 2, 3])).toBeNaN();
     expect(Math.sin({})).toBeNaN();
     expect(Math.sin("foo")).toBeNaN();
+    expect(Math.sin(Infinity)).toBeNaN();
+    expect(Math.sin(-Infinity)).toBeNaN();
 });
