@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AnyOf.h>
 #include <AK/GenericLexer.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
@@ -48,6 +49,15 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
     return m_root_inode->identifier();
 }
 
+bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identifier)
+{
+    return m_mounts.with([&](auto& mounts) -> bool {
+        return any_of(mounts, [&inode_identifier](Mount const& existing_mount) {
+            return existing_mount.host() && existing_mount.host()->identifier() == inode_identifier;
+        });
+    });
+}
+
 ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
@@ -56,7 +66,10 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
             fs.class_name(),
             inode.identifier(),
             flags);
-        // FIXME: check that this is not already a mount point
+        if (mount_point_exists_at_inode(inode.identifier())) {
+            dbgln("VirtualFileSystem: Mounting unsuccessful - inode {} is already a mount-point.", inode.identifier());
+            return EBUSY;
+        }
         Mount mount { fs, &mount_point, flags };
         mounts.append(move(mount));
         return {};
@@ -66,8 +79,13 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
 ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
-        dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), mount_point.inode().identifier());
-        // FIXME: check that this is not already a mount point
+        auto& inode = mount_point.inode();
+        dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), inode.identifier());
+        if (mount_point_exists_at_inode(inode.identifier())) {
+            dbgln("VirtualFileSystem: Bind-mounting unsuccessful - inode {} is already a mount-point.",
+                mount_point.inode().identifier());
+            return EBUSY;
+        }
         Mount mount { source.inode(), mount_point, flags };
         mounts.append(move(mount));
         return {};
