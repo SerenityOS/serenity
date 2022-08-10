@@ -24,6 +24,9 @@ public:
         , m_source(source)
         , m_cursor(cursor)
     {
+        if (m_source.is_empty())
+            return;
+
         size_t offset = 0;
         for (auto ptr = m_source.end() - 1; ptr >= m_source.begin() && isspace(*ptr); --ptr)
             ++offset;
