@@ -935,7 +935,7 @@ public:
     virtual void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const {};
 
     virtual bool is_paintable() const = 0;
-    virtual void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const = 0;
+    virtual void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const = 0;
 };
 
 class ImageStyleValue final
@@ -956,7 +956,7 @@ public:
     Optional<int> natural_height() const override;
 
     bool is_paintable() const override { return !m_bitmap.is_null(); }
-    void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const override;
+    void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
 private:
     ImageStyleValue(AK::URL const&);
@@ -993,12 +993,12 @@ public:
         return m_color_stop_list;
     }
 
-    float angle_degrees(Gfx::FloatSize const& gradient_rect) const;
+    float angle_degrees(Gfx::FloatSize const& gradient_size) const;
 
     void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
 
     bool is_paintable() const override { return true; }
-    void paint(PaintContext& context, Gfx::IntRect const& dest_rect) const override;
+    void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
 private:
     LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)

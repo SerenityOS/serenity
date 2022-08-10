@@ -1457,10 +1457,10 @@ Optional<int> ImageStyleValue::natural_height() const
     return {};
 }
 
-void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect) const
+void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
     if (m_bitmap)
-        context.painter().draw_scaled_bitmap(dest_rect, *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+        context.painter().draw_scaled_bitmap(dest_rect, *m_bitmap, m_bitmap->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
 String LinearGradientStyleValue::to_string() const
@@ -1608,7 +1608,7 @@ void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::F
     m_resolved_data = Painting::resolve_linear_gradient_data(node, size, *this);
 }
 
-void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect) const
+void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved_data.has_value());
     Painting::paint_linear_gradient(context, dest_rect, *m_resolved_data);

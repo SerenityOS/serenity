@@ -18,7 +18,7 @@
 namespace Web::Painting {
 
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
     auto& painter = context.painter();
 
@@ -309,7 +309,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 image_rect.set_x(image_x);
                 auto int_image_rect = image_rect.to_rounded<int>();
                 if (int_image_rect != last_int_image_rect && int_image_rect.intersects(context.viewport_rect()))
-                    image.paint(context, int_image_rect);
+                    image.paint(context, int_image_rect, image_rendering);
                 last_int_image_rect = int_image_rect;
                 if (!repeat_x)
                     break;

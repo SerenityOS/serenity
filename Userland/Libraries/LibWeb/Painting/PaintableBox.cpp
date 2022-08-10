@@ -222,7 +222,7 @@ void PaintableBox::paint_background(PaintContext& context) const
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = absolute_border_box_rect();
 
-    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radii_data());
+    Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
 }
 
 void PaintableBox::paint_box_shadow(PaintContext& context) const
