@@ -43,6 +43,11 @@ public:
         DisplayOnly
     };
 
+    enum TypingMode {
+        Insert,
+        Overwrite
+    };
+
     enum WrappingMode {
         NoWrap,
         WrapAnywhere,
@@ -84,6 +89,9 @@ public:
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(Gfx::TextAlignment);
+
+    TypingMode typing_mode() const { return m_typing_mode; }
+    void set_typing_mode(TypingMode);
 
     Type type() const { return m_type; }
     bool is_single_line() const { return m_type == SingleLine; }
@@ -367,6 +375,7 @@ private:
 
     TextPosition m_cursor;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
+    TypingMode m_typing_mode { TypingMode::Insert };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };

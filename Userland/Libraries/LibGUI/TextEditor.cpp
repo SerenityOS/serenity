@@ -1513,7 +1513,10 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         && clear_length > 0
         && current_line().leading_spaces() == clear_length;
 
-    execute<InsertTextCommand>(text, m_cursor);
+    if (m_typing_mode == TypingMode::Insert)
+        execute<InsertTextCommand>(text, m_cursor);
+    else
+        execute<OverwriteTextCommand>(text, m_cursor);
 
     if (should_clear_last_line) { // If it does leave just whitespace, clear it.
         auto const original_cursor_position = cursor();
@@ -1724,6 +1727,12 @@ void TextEditor::set_text_alignment(Gfx::TextAlignment alignment)
     if (m_text_alignment == alignment)
         return;
     m_text_alignment = alignment;
+    update();
+}
+
+void TextEditor::set_typing_mode(TypingMode typing_mode)
+{
+    m_typing_mode = typing_mode;
     update();
 }
 

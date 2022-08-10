@@ -222,6 +222,16 @@ void TextDocumentLine::insert(TextDocument& document, size_t index, u32 code_poi
     document.update_views({});
 }
 
+void TextDocumentLine::replace_or_append(TextDocument& document, size_t index, u32 code_point)
+{
+    if (index == length()) {
+        m_text.append(code_point);
+    } else {
+        m_text[index] = code_point;
+    }
+    document.update_views({});
+}
+
 void TextDocumentLine::remove(TextDocument& document, size_t index)
 {
     if (index == length()) {
@@ -859,6 +869,55 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
+OverwriteTextCommand::OverwriteTextCommand(TextDocument& document, String const& text, TextPosition const& position)
+    : TextDocumentUndoCommand(document)
+    , m_text(text)
+    , m_range({ position, position })
+{
+}
+
+String OverwriteTextCommand::action_text() const
+{
+    return "Overwrite Text";
+}
+
+bool OverwriteTextCommand::merge_with(GUI::Command const& other)
+{
+    if (!is<OverwriteTextCommand>(other) || commit_time_expired())
+        return false;
+
+    auto const& typed_other = static_cast<OverwriteTextCommand const&>(other);
+    if (typed_other.m_text.is_whitespace() && !m_text.is_whitespace())
+        return false; // Skip if other is whitespace while this is not
+
+    if (m_range.end() != typed_other.m_range.start())
+        return false;
+    if (m_range.start().line() != m_range.end().line())
+        return false;
+
+    StringBuilder builder(m_text.length() + typed_other.m_text.length());
+    builder.append(m_text);
+    builder.append(typed_other.m_text);
+
+    m_text = builder.to_string();
+    m_range.set_end(typed_other.m_range.end());
+
+    m_timestamp = Time::now_monotonic();
+    return true;
+}
+
+void OverwriteTextCommand::redo()
+{
+    auto new_cursor = m_document.overwrite_at(m_range.start(), m_text, m_client);
+    m_range.set_end(new_cursor);
+    m_document.set_all_cursors(new_cursor);
+}
+
+void OverwriteTextCommand::undo()
+{
+    // FIXME: Not yet implemented
+}
+
 RemoveTextCommand::RemoveTextCommand(TextDocument& document, String const& text, TextRange const& range)
     : TextDocumentUndoCommand(document)
     , m_text(text)
@@ -1021,6 +1080,26 @@ TextPosition TextDocument::insert_at(TextPosition const& position, u32 code_poin
         notify_did_change();
         return { position.line(), position.column() + 1 };
     }
+}
+
+TextPosition TextDocument::overwrite_at(TextPosition const& position, StringView text, Client const*)
+{
+    TextPosition cursor = position;
+    Utf8View utf8_view(text);
+    for (auto code_point : utf8_view) {
+        if (code_point == '\n') {
+            if (position.line() == m_lines.size() - 1) {
+                auto new_line = make<TextDocumentLine>(*this);
+                insert_line(position.line() + 1, move(new_line));
+            }
+            return { position.line() + 1, 0 };
+        }
+
+        line(position.line()).replace_or_append(*this, position.column(), code_point);
+        notify_did_change();
+        return { position.line(), position.column() + 1 };
+    }
+    return cursor;
 }
 
 void TextDocument::remove(TextRange const& unnormalized_range)

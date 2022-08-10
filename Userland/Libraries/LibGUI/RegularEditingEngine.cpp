@@ -12,7 +12,7 @@ namespace GUI {
 
 CursorWidth RegularEditingEngine::cursor_width() const
 {
-    return CursorWidth::NARROW;
+    return m_editor->typing_mode() == TextEditor::TypingMode::Overwrite ? CursorWidth::WIDE : CursorWidth::NARROW;
 }
 
 bool RegularEditingEngine::on_key(KeyEvent const& event)
@@ -23,6 +23,12 @@ bool RegularEditingEngine::on_key(KeyEvent const& event)
     if (event.key() == KeyCode::Key_Escape) {
         if (m_editor->on_escape_pressed)
             m_editor->on_escape_pressed();
+        return true;
+    }
+
+    if (event.key() == KeyCode::Key_Insert) {
+        auto new_typing_mode = m_editor->typing_mode() == TextEditor::TypingMode::Insert ? TextEditor::TypingMode::Overwrite : TextEditor::TypingMode::Insert;
+        m_editor->set_typing_mode(new_typing_mode);
         return true;
     }
 

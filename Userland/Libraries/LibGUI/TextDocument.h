@@ -128,6 +128,7 @@ public:
 
     TextPosition insert_at(TextPosition const&, u32, Client const* = nullptr);
     TextPosition insert_at(TextPosition const&, StringView, Client const* = nullptr);
+    TextPosition overwrite_at(TextPosition const&, StringView, Client const* = nullptr);
     void remove(TextRange const&);
 
     virtual bool is_code_document() const { return false; }
@@ -174,6 +175,7 @@ public:
     void append(TextDocument&, u32);
     void prepend(TextDocument&, u32);
     void insert(TextDocument&, size_t index, u32);
+    void replace_or_append(TextDocument&, size_t index, u32);
     void remove(TextDocument&, size_t index);
     void append(TextDocument&, u32 const*, size_t);
     void truncate(TextDocument&, size_t length);
@@ -218,6 +220,22 @@ public:
     InsertTextCommand(TextDocument&, String const&, TextPosition const&);
     virtual ~InsertTextCommand() = default;
     virtual void perform_formatting(TextDocument::Client const&) override;
+    virtual void undo() override;
+    virtual void redo() override;
+    virtual bool merge_with(GUI::Command const&) override;
+    virtual String action_text() const override;
+    String const& text() const { return m_text; }
+    TextRange const& range() const { return m_range; }
+
+private:
+    String m_text;
+    TextRange m_range;
+};
+
+class OverwriteTextCommand : public TextDocumentUndoCommand {
+public:
+    OverwriteTextCommand(TextDocument&, String const&, TextPosition const&);
+    virtual ~OverwriteTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
     virtual bool merge_with(GUI::Command const&) override;
