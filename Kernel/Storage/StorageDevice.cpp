@@ -66,8 +66,6 @@ StringView StorageDevice::class_name() const
 StringView StorageDevice::command_set_to_string_view() const
 {
     switch (command_set()) {
-    case CommandSet::PlainMemory:
-        return "memory"sv;
     case CommandSet::SCSI:
         return "scsi"sv;
     case CommandSet::ATA:

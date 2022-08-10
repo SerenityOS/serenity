@@ -25,7 +25,6 @@
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/GUIDPartitionTable.h>
@@ -48,7 +47,6 @@ static constexpr StringView block_device_prefix = "block"sv;
 
 static constexpr StringView ata_device_prefix = "ata"sv;
 static constexpr StringView nvme_device_prefix = "nvme"sv;
-static constexpr StringView ramdisk_device_prefix = "ramdisk"sv;
 static constexpr StringView logical_unit_number_device_prefix = "lun"sv;
 
 UNMAP_AFTER_INIT StorageManagement::StorageManagement()
@@ -289,13 +287,6 @@ UNMAP_AFTER_INIT void StorageManagement::determine_nvme_boot_device()
     });
 }
 
-UNMAP_AFTER_INIT void StorageManagement::determine_ramdisk_boot_device()
-{
-    determine_hardware_relative_boot_device(ramdisk_device_prefix, [](StorageDevice const& device) -> bool {
-        return device.command_set() == StorageDevice::CommandSet::PlainMemory;
-    });
-}
-
 UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
 {
     VERIFY(m_boot_argument.starts_with(block_device_prefix));
@@ -352,11 +343,6 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 
     if (m_boot_argument.starts_with(ata_device_prefix)) {
         determine_ata_boot_device();
-        return;
-    }
-
-    if (m_boot_argument.starts_with(ramdisk_device_prefix)) {
-        determine_ramdisk_boot_device();
         return;
     }
 
@@ -442,9 +428,6 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     } else {
         enumerate_pci_controllers(force_pio, poll);
     }
-    // Note: Whether PCI bus is present on the system or not, always try to attach
-    // a given ramdisk.
-    m_controllers.append(RamdiskController::initialize());
     enumerate_storage_devices();
     enumerate_disk_partitions();
 
