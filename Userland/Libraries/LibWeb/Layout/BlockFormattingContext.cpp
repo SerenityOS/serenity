@@ -505,57 +505,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
     compute_vertical_box_model_metrics(child_box, containing_block);
 
-    float y = box_state.border_box_top();
-
-    Vector<float> collapsible_margins;
-
-    auto* relevant_sibling = child_box.previous_sibling_of_type<Layout::BlockContainer>();
-    while (relevant_sibling != nullptr) {
-        if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
-            auto const& relevant_sibling_state = m_state.get(*relevant_sibling);
-            collapsible_margins.append(relevant_sibling_state.margin_bottom);
-            // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
-            if (relevant_sibling_state.border_box_height() > 0)
-                break;
-            collapsible_margins.append(relevant_sibling_state.margin_top);
-        }
-        relevant_sibling = relevant_sibling->previous_sibling_of_type<Layout::BlockContainer>();
-    }
-
-    if (relevant_sibling) {
-        // Collapse top margin with the collapsed margin(s) of preceding siblings.
-        collapsible_margins.append(box_state.margin_top);
-
-        float smallest_margin = 0;
-        float largest_margin = 0;
-        size_t negative_margin_count = 0;
-        for (auto margin : collapsible_margins) {
-            if (margin < 0)
-                ++negative_margin_count;
-            largest_margin = max(largest_margin, margin);
-            smallest_margin = min(smallest_margin, margin);
-        }
-
-        float collapsed_margin = 0;
-        if (negative_margin_count == collapsible_margins.size()) {
-            // When all margins are negative, the size of the collapsed margin is the smallest (most negative) margin.
-            collapsed_margin = smallest_margin;
-        } else if (negative_margin_count > 0) {
-            // When negative margins are involved, the size of the collapsed margin is the sum of the largest positive margin and the smallest (most negative) negative margin.
-            collapsed_margin = largest_margin + smallest_margin;
-        } else {
-            // Otherwise, collapse all the adjacent margins by using only the largest one.
-            collapsed_margin = largest_margin;
-        }
-
-        auto const& relevant_sibling_state = m_state.get(*relevant_sibling);
-        y += relevant_sibling_state.offset.y()
-            + relevant_sibling_state.content_height()
-            + relevant_sibling_state.border_box_bottom()
-            + collapsed_margin;
-    } else {
-        y += box_state.margin_top;
-    }
+    auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box, box_state);
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
