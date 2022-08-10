@@ -22,6 +22,13 @@ static void console_out(char ch)
     }
 }
 
+static void critical_console_out(char ch)
+{
+    if (auto* boot_console = g_boot_console.load()) {
+        boot_console->write(ch, true);
+    }
+}
+
 void kernelputstr(char const* characters, size_t length)
 {
     if (!characters)
@@ -41,6 +48,9 @@ void kernelcriticalputstr(char const* characters, size_t length)
 
     auto& uart = Kernel::RPi::UART::the();
     uart.print_str(characters, length);
+
+    for (size_t i = 0; i < length; ++i)
+        critical_console_out(characters[i]);
 }
 
 void kernelearlyputstr(char const* characters, size_t length)
@@ -50,4 +60,7 @@ void kernelearlyputstr(char const* characters, size_t length)
 
     auto& uart = Kernel::RPi::UART::the();
     uart.print_str(characters, length);
+
+    for (size_t i = 0; i < length; ++i)
+        console_out(characters[i]);
 }
