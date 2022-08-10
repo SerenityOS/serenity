@@ -1494,7 +1494,7 @@ void Thread::track_lock_release(LockRank rank)
     // This is validated by toggling the least significant bit of the mask, and
     // then bit wise or-ing the rank we are trying to release with the resulting
     // mask. If the rank we are releasing is truly the highest rank then the mask
-    // we get back will be equal to the current mask of stored on the thread.
+    // we get back will be equal to the current mask stored on the thread.
     auto rank_is_in_order = [](auto mask_enum, auto rank_enum) -> bool {
         auto mask = to_underlying(mask_enum);
         auto rank = to_underlying(rank_enum);
