@@ -4,6 +4,7 @@
 #import <HTML/TextMetrics.idl>
 #import <HTML/CanvasGradient.idl>
 #import <HTML/Canvas/CanvasPath.idl>
+#import <HTML/Path2D.idl>
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
@@ -18,8 +19,12 @@ interface CanvasRenderingContext2D {
     undefined rotate(double radians);
 
     undefined beginPath();
+    // FIXME: `DOMString` should be `CanvasFillRule`
     undefined fill(optional DOMString fillRule = "nonzero");
+    // FIXME: `DOMString` should be `CanvasFillRule`
+    undefined fill(Path2D path, optional DOMString fillRule = "nonzero");
     undefined stroke();
+    undefined stroke(Path2D path);
 
     undefined fillText(DOMString text, double x, double y, optional double maxWidth);
     undefined strokeText(DOMString text, double x, double y, optional double maxWidth);

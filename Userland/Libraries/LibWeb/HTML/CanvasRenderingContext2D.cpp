@@ -320,33 +320,56 @@ void CanvasRenderingContext2D::begin_path()
     path().clear();
 }
 
-void CanvasRenderingContext2D::stroke()
+void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
-    painter->stroke_path(path(), m_drawing_state.stroke_style, m_drawing_state.line_width);
-    did_draw(path().bounding_box());
+    painter->stroke_path(path, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    did_draw(path.bounding_box());
 }
 
-void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
+void CanvasRenderingContext2D::stroke()
+{
+    stroke_internal(path());
+}
+
+void CanvasRenderingContext2D::stroke(Path2D const& path)
+{
+    auto transformed_path = path.path().copy_transformed(m_drawing_state.transform);
+    stroke_internal(transformed_path);
+}
+
+void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, String const& fill_rule)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
-    auto path = this->path();
     path.close_all_subpaths();
+
+    auto winding = Gfx::Painter::WindingRule::Nonzero;
+    if (fill_rule == "evenodd")
+        winding = Gfx::Painter::WindingRule::EvenOdd;
+    else if (fill_rule == "nonzero")
+        winding = Gfx::Painter::WindingRule::Nonzero;
+    else
+        dbgln("Unrecognized fillRule for CRC2D.fill() - this problem goes away once we pass an enum instead of a string");
+
     painter->fill_path(path, m_drawing_state.fill_style, winding);
     did_draw(path.bounding_box());
 }
 
 void CanvasRenderingContext2D::fill(String const& fill_rule)
 {
-    if (fill_rule == "evenodd")
-        return fill(Gfx::Painter::WindingRule::EvenOdd);
-    return fill(Gfx::Painter::WindingRule::Nonzero);
+    return fill_internal(path(), fill_rule);
+}
+
+void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
+{
+    auto transformed_path = path.path().copy_transformed(m_drawing_state.transform);
+    return fill_internal(transformed_path, fill_rule);
 }
 
 RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
