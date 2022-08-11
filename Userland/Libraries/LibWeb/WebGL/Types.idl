@@ -4,9 +4,8 @@ typedef unsigned long GLbitfield;
 typedef long GLint;
 typedef long GLsizei;
 
-// FIXME: These should be "unrestricted float"
-typedef float GLfloat;
-typedef float GLclampf;
+typedef unrestricted float GLfloat;
+typedef unrestricted float GLclampf;
 
 enum WebGLPowerPreference {
     "default",
