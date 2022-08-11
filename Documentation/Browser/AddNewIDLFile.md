@@ -44,3 +44,6 @@ interface CSSRule {
    - Elements: [`LibWeb/Bindings/NodeWrapperFactory.cpp`](../../Userland/Libraries/LibWeb/Bindings/NodeWrapperFactory.cpp)
 
    Open the relevant wrapper factory file, and add `#include` directives and an `if` statement for your new type.
+
+8. If your type isn't an Event or Element, you will need to add it to [`is_wrappable_type()`](../../Meta/Lagom/Tools/CodeGenerators/LibWeb/WrapperGenerator/IDLGenerators.cpp)
+   so that it can be accepted as an IDL parameter, attribute or return type.
