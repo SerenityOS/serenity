@@ -69,15 +69,14 @@
 
         #really-fancy-progress[value] {
             appearance: none;
-            width: 500px;
-            height: 40px;
+            width: 250px;
+            height: 20px;
         }
 
         #really-fancy-progress[value]::-webkit-progress-bar {
             background-color: #eee;
             border-radius: 2px;
-            /* FIXME: Should be an inset shadow (not supported yet) */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
         }
 
         #really-fancy-progress[value]::-webkit-progress-value {
@@ -89,8 +88,9 @@
                                         rgba(255, 255, 255, .25),
                                         rgba(0, 0, 0, .25)),
                 -webkit-linear-gradient(left, #09c, #f44);
+
             border-radius: 2px;
-            background-size: 70px 40px, 100% 100%, 100% 100%;
+            background-size: 35px 20px, 100% 100%, 100% 100%;
         }
     </style>
 
