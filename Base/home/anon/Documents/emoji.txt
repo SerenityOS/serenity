@@ -1,13 +1,18 @@
 Faces & Misc Emoji
 ------------------
 
+🌛 - U+1F31B FIRST QUARTER MOON FACE
+🌜 - U+1F31C LAST QUARTER MOON FACE
 🌻 - U+1F33B SUNFLOWER
 🍆 - U+1F346 EGGPLANT
+🍍 - U+1F34D PINEAPPLE
 🍎 - U+1F34E RED APPLE
 🍏 - U+1F34E GREEN APPLE
 🍐 - U+1F350 PEAR
 🍑 - U+1F351 PEACH
 🍒 - U+1F352 CHERRIES
+🍓 - U+1F353 STRAWBERRY
+🍔 - U+1F354 HAMBURGER
 🍕 - U+1F355 SLICE OF PIZZA
 🍩 - U+1F369 DOUGHNUT
 🍷 - U+1F377 WINE GLASS
@@ -20,11 +25,18 @@ Faces & Misc Emoji
 👀 - U+1F440 EYES
 👍 - U+1F44D THUMBS UP SIGN
 👎 - U+1F44E THUMBS DOWN SIGN
+👽 - U+1F47D ALIEN
 👑 - U+1F451 CROWN
 💡 - U+1F4A1 ELECTRIC LIGHT BULB
+💣 - U+1F4A3 BOMB
 💦 - U+1F4A6 SWEAT DROPLETS
+📌 - U+1F4CC PUSHPIN
+📍 - U+1F4CD ROUND PUSHPIN
 📵 - U+1F4F5 NO MOBILE PHONES
 🔥 - U+1F525 FIRE
+🕊 - U+1F54A DOVE
+🕯 - U+1F56F CANDLE
+🗽 - U+1F5FD STATUE OF LIBERTY
 😀 - U+1F600 GRINNING FACE
 😂 - U+1F602 FACE WITH TEARS OF JOY
 😃 - U+1F603 SMILING FACE WITH OPEN MOUTH
@@ -45,9 +57,11 @@ Faces & Misc Emoji
 🙂 - U+1F642 SLIGHTLY SMILING FACE
 🙃 - U+1F643 UPSIDE-DOWN FACE
 🚀 - U+1F680 ROCKET
+🛡 - U+1F6E1 SHIELD
 🤍 - U+1F90D WHITE HEART
 🤎 - U+1F90E BROWN HEART
 🤔 - U+1F914 THINKING FACE
+🤖 - U+1F916 ROBOT
 🤤 - U+1F924 DROOLING FACE
 🤦 - U+1F926 FACE PALM
 🥇 - U+1F947 FIRST PLACE MEDAL
@@ -60,6 +74,7 @@ Faces & Misc Emoji
 🦁 - U+1F981 LION FACE
 🦄 - U+1F984 UNICORN FACE
 🧋 - U+1F9CB BUBBLE TEA
+🧲 - U+1F9F2 MAGNET
 🩱 - U+1FA71 ONE-PIECE SWIMSUIT
 🩲 - U+1FA72 BRIEFS
 🩳 - U+1FA73 SHORTS
@@ -71,10 +86,17 @@ Faces & Misc Emoji
 ⚠ - U+26A0 WARNING SIGN
 ⚡ - U+26A1 HIGH VOLTAGE SIGN
 ⛔ - U+26D4 NO ENTRY
+⛽ - U+26FD FUEL PUMP
+✋ - U+270B RAISED HAND
 ✨ - U+2728 SPARKLES
 ❤ - U+2764 RED HEART
 ⬆ - U+2B06 UPWARDS BLACK ARROW
 ⬇ - U+2B07 DOWNWARDS BLACK ARROW
+
+ZWJ Sequence Emoji (limited cross-platform support)
+---------
+
+🐱‍🐶 - U+1F431 U+200D U+1F436 CATDOG FACE
 
 Yak Emoji (limited cross-platform support)
 ---------
@@ -152,13 +174,20 @@ ZWJ Sequence Flags
 Regional Indicator Symbol Flags
 -------------------------------
 
+🇦🇪 - U+1F1E6 U+1F1EA AE United Arab Emirates
 🇦🇲 - U+1F1E6 U+1F1F2 AM Armenia
 🇦🇶 - U+1F1E6 U+1F1F6 AQ Antarctica
 🇦🇹 - U+1F1E6 U+1F1F9 AT Austria
 🇦🇽 - U+1F1E6 U+1F1FD AX Åland Islands
+🇧🇮 - U+1F1E7 U+1F1EE BI Burundi
+🇧🇻 - U+1F1E7 U+1F1FB BV Bouvet Island
 🇨🇭 - U+1F1E8 U+1F1ED CH Switzerland
+🇨🇵 - U+1F1E8 U+1F1F5 CP Clipperton Island
+🇨🇷 - U+1F1E8 U+1F1F7 CR Costa Rica
+🇨🇺 - U+1F1E8 U+1F1FA CU Cuba
 🇩🇪 - U+1F1E9 U+1F1EA DE Germany
 🇩🇰 - U+1F1E9 U+1F1F0 DK Denmark
+🇩🇴 - U+1F1E9 U+1F1F4 DO Dominican Republic
 🇪🇺 - U+1F1EA U+1F1FA EU European Union
 🇫🇮 - U+1F1EB U+1F1EE FI Finland
 🇫🇴 - U+1F1EB U+1F1F4 FO Faroe Islands
@@ -170,14 +199,22 @@ Regional Indicator Symbol Flags
 🇮🇱 - U+1F1EE U+1F1F1 IL Israel
 🇮🇸 - U+1F1EE U+1F1F8 IS Iceland
 🇮🇷 - U+1F1EE U+1F1F7 IR Iran
+🇰🇳 - U+1F1F0 U+1F1F3 KN St. Kitts & Nevis
+🇱🇦 - U+1F1F1 U+1F1E6 LA Laos
+🇱🇧 - U+1F1F1 U+1F1E7 LB Lebanon
 🇲🇰 - U+1F1F2 U+1F1F0 MK North Macedonia
 🇳🇱 - U+1F1F3 U+1F1F1 NL Netherlands
 🇳🇴 - U+1F1F3 U+1F1F4 NO Norway
+🇵🇦 - U+1F1F5 U+1F1E6 PA Panama
 🇵🇭 - U+1F1F5 U+1F1ED PH Philippines
 🇵🇱 - U+1F1F5 U+1F1F1 PL Poland
 🇵🇸 - U+1F1F5 U+1F1F8 PS Palestine
+🇵🇼 - U+1F1F5 U+1F1FC PW Palau
 🇷🇺 - U+1F1F7 U+1F1FA RU Russia
 🇸🇪 - U+1F1F8 U+1F1EA SE Sweden
+🇸🇯 - U+1F1F8 U+1F1EF SJ Svalbard & Jan Mayen
+🇸🇹 - U+1F1F8 U+1F1F9 ST São Tomé & Príncipe
+🇸🇾 - U+1F1F8 U+1F1FE SY Syria
 🇹🇷 - U+1F1F9 U+1F1F7 TR Turkey
 🇹🇼 - U+1F1F9 U+1F1FC TW Taiwan
 🇺🇦 - U+1F1FA U+1F1E6 UA Ukraine
@@ -257,3 +294,4 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁵󠁡󠀷󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0031 U+E007F UA-71 Cherkashchyna
 🏴󠁵󠁡󠀷󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0034 U+E007F UA-74 Chernihivshchyna
 🏴󠁵󠁡󠀷󠀷󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0037 U+E007F UA-77 Chernivtsi Oblast
+
