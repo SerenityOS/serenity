@@ -3,7 +3,10 @@
 #import <HTML/ImageData.idl>
 #import <HTML/TextMetrics.idl>
 #import <HTML/CanvasGradient.idl>
+#import <HTML/Canvas/CanvasPath.idl>
 
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
+[Exposed=Window]
 interface CanvasRenderingContext2D {
 
     undefined fillRect(double x, double y, double w, double h);
@@ -15,17 +18,8 @@ interface CanvasRenderingContext2D {
     undefined rotate(double radians);
 
     undefined beginPath();
-    undefined closePath();
     undefined fill(optional DOMString fillRule = "nonzero");
     undefined stroke();
-    undefined moveTo(double x, double y);
-    undefined lineTo(double x, double y);
-    undefined quadraticCurveTo(double cpx, double cpy, double x, double y);
-    undefined bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
-
-    undefined arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean counterclockwise = false);
-    undefined ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, optional boolean counterclockwise = false);
-    undefined rect(double x, double y, double width, double height);
 
     undefined fillText(DOMString text, double x, double y, optional double maxWidth);
     undefined strokeText(DOMString text, double x, double y, optional double maxWidth);
@@ -65,3 +59,5 @@ interface CanvasRenderingContext2D {
     undefined clip();
 
 };
+
+CanvasRenderingContext2D includes CanvasPath;
