@@ -16,6 +16,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
@@ -28,7 +29,8 @@ using CanvasImageSource = Variant<NonnullRefPtr<HTMLImageElement>, NonnullRefPtr
 
 class CanvasRenderingContext2D
     : public RefCountForwarder<HTMLCanvasElement>
-    , public Bindings::Wrappable {
+    , public Bindings::Wrappable
+    , public CanvasPath {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -61,15 +63,6 @@ public:
     float line_width() const { return m_drawing_state.line_width; }
 
     void begin_path();
-    void close_path();
-    void move_to(float x, float y);
-    void line_to(float x, float y);
-    void quadratic_curve_to(float cx, float cy, float x, float y);
-    void bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
-
-    DOM::ExceptionOr<void> arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise);
-    DOM::ExceptionOr<void> ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise);
-    void rect(float x, float y, float width, float height);
     void stroke();
 
     void fill_text(String const&, float x, float y, Optional<double> max_width);
@@ -141,8 +134,6 @@ private:
 
     // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-context-lost
     bool m_context_lost { false };
-
-    Gfx::Path m_path;
 };
 
 enum class CanvasImageSourceUsability {
