@@ -279,6 +279,8 @@
 #include <LibWeb/Bindings/OptionConstructor.h>
 #include <LibWeb/Bindings/PageTransitionEventConstructor.h>
 #include <LibWeb/Bindings/PageTransitionEventPrototype.h>
+#include <LibWeb/Bindings/Path2DConstructor.h>
+#include <LibWeb/Bindings/Path2DPrototype.h>
 #include <LibWeb/Bindings/PerformanceConstructor.h>
 #include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/Bindings/PerformanceTimingConstructor.h>
@@ -518,6 +520,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(NodeIterator)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(NodeList)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(PageTransitionEvent)                                                \
+    ADD_WINDOW_OBJECT_INTERFACE(Path2D)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)                                              \

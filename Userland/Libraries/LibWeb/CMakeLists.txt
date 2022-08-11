@@ -232,6 +232,7 @@ set(SOURCES
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
+    HTML/Path2D.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp

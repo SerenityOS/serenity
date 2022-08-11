@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageData.h>
+#include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>

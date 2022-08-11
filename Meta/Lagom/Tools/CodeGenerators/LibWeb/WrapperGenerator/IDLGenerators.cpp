@@ -56,6 +56,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name == "Blob")
         return true;
+    if (type.name == "Path2D")
+        return true;
     return false;
 }
 
