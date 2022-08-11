@@ -64,13 +64,13 @@ public:
 
     void begin_path();
     void stroke();
+    void stroke(Path2D const& path);
 
     void fill_text(String const&, float x, float y, Optional<double> max_width);
     void stroke_text(String const&, float x, float y, Optional<double> max_width);
 
-    // FIXME: We should only have one fill(), really. Fix the wrapper generator!
-    void fill(Gfx::Painter::WindingRule);
     void fill(String const& fill_rule);
+    void fill(Path2D& path, String const& fill_rule);
 
     RefPtr<ImageData> create_image_data(int width, int height) const;
     DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
@@ -117,6 +117,9 @@ private:
 
     HTMLCanvasElement& canvas_element();
     HTMLCanvasElement const& canvas_element() const;
+
+    void stroke_internal(Gfx::Path const&);
+    void fill_internal(Gfx::Path&, String const& fill_rule);
 
     // https://html.spec.whatwg.org/multipage/canvas.html#drawing-state
     struct DrawingState {
