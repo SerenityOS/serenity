@@ -11,6 +11,7 @@ set(SOURCES
     Bindings/EventWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
+    Bindings/LegacyPlatformObject.cpp
     Bindings/LocationConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
