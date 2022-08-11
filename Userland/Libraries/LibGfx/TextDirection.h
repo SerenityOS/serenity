@@ -60,6 +60,8 @@ constexpr u32 get_mirror_char(u32 ch)
 enum class TextDirection {
     LTR,
     RTL,
+    TTB,
+    BTT,
 };
 
 constexpr TextDirection bidi_class_to_direction(BidirectionalClass class_)
