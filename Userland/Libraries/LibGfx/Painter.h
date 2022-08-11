@@ -54,6 +54,7 @@ public:
     void draw_focus_rect(IntRect const&, Color);
     void draw_bitmap(IntPoint const&, CharacterBitmap const&, Color = Color());
     void draw_bitmap(IntPoint const&, GlyphBitmap const&, Color = Color());
+    void draw_bitmap(IntPoint const&, Bitmap const&);
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_triangle(IntPoint const&, IntPoint const&, IntPoint const&, Color);

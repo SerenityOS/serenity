@@ -676,6 +676,28 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
     }
 }
 
+void Painter::draw_bitmap(IntPoint const& p, Bitmap const& bitmap)
+{
+    auto dst_rect = IntRect(p, bitmap.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    int const first_row = clipped_rect.top() - dst_rect.top();
+    int const last_row = clipped_rect.bottom() - dst_rect.top();
+    int const first_column = clipped_rect.left() - dst_rect.left();
+    int const last_column = clipped_rect.right() - dst_rect.left();
+
+    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int j = 0; j <= (last_column - first_column); ++j) {
+            dst[j] = Color::from_argb(dst[j]).blend(bitmap.get_pixel(j + first_column, row)).value();
+        }
+        dst += dst_skip;
+    }
+}
+
 void Painter::draw_triangle(IntPoint const& offset, Span<IntPoint const> control_points, Color color)
 {
     VERIFY(control_points.size() == 3);
@@ -1307,18 +1329,36 @@ FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Color co
     draw_glyph(point, code_point, font(), color, direction);
 }
 
-#define UNUSED(expr)  \
-    do {              \
-        (void)(expr); \
-    } while (0) // FIXME pls remove
-
 FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Font const& font, Color color, TextDirection direction)
 {
-    UNUSED(direction); // FIXME pls remove
     auto glyph = font.glyph(code_point);
     auto top_left = point + IntPoint(glyph.left_bearing(), 0);
 
-    if (glyph.is_glyph_bitmap()) {
+    if (glyph.is_glyph_bitmap() && direction == TextDirection::BTT) {
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { glyph.glyph_bitmap().height(), glyph.glyph_bitmap().width() }, 1);
+        if (bitmap_or_error.is_error())
+            return;
+        auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        for (int x = 0; x < glyph.glyph_bitmap().width(); x++) {
+            for (int y = 0; y < glyph.glyph_bitmap().height(); y++) {
+                if (glyph.glyph_bitmap().bit_at(x, y))
+                    new_bitmap->set_pixel(y, glyph.glyph_bitmap().width() - 1 - x, Color::Black);
+            }
+        }
+        draw_bitmap(top_left, new_bitmap);
+    } else if (glyph.is_glyph_bitmap() && direction == TextDirection::TTB) {
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { glyph.glyph_bitmap().height(), glyph.glyph_bitmap().width() }, 1);
+        if (bitmap_or_error.is_error())
+            return;
+        auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        for (int x = 0; x < glyph.glyph_bitmap().width(); x++) {
+            for (int y = 0; y < glyph.glyph_bitmap().height(); y++) {
+                if (glyph.glyph_bitmap().bit_at(x, y))
+                    new_bitmap->set_pixel(glyph.glyph_bitmap().height() - 1 - y, x, Color::Black);
+            }
+        }
+        draw_bitmap(top_left, new_bitmap);
+    } else if (glyph.is_glyph_bitmap()) {
         draw_bitmap(top_left, glyph.glyph_bitmap(), color);
     } else {
         blit_filtered(top_left, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
