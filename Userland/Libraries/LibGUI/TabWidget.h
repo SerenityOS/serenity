@@ -99,6 +99,9 @@ public:
     void set_reorder_allowed(bool reorder_allowed) { m_reorder_allowed = reorder_allowed; }
     bool reorder_allowed() const { return m_reorder_allowed; }
 
+    bool has_vertical_text() const { return has_side_tabs() && m_vertical_text; }
+    void set_vertical_text(bool vertical_text) { m_vertical_text = vertical_text; }
+
     Function<void(size_t)> on_tab_count_change;
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
@@ -150,6 +153,7 @@ private:
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
     bool m_close_button_enabled { false };
+    bool m_vertical_text { false };
 
     int m_max_tab_width { 160 };
     int m_min_tab_width { 24 };

@@ -36,3 +36,4 @@ Defines a GUI tab widget.
 | text_alignment     | text_alignment | Center, CenterLeft, CenterRight, TopLeft, TopRight, BottomLeft, BottomRight | Set the alignment of tab text        |
 | tab_position       | tab_position   | Top, Bottom, Left, Right                                                    | Set the tab position                 |
 | uniform_tabs       | bool           | true or false                                                               | Give all tabs the same width         |
+| vertical_text      | bool           | true or false                                                               | Draw the text vertically             |

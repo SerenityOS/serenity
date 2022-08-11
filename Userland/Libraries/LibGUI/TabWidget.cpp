@@ -32,6 +32,7 @@ TabWidget::TabWidget()
     REGISTER_BOOL_PROPERTY("show_tab_bar", is_bar_visible, set_bar_visible);
     REGISTER_BOOL_PROPERTY("reorder_allowed", reorder_allowed, set_reorder_allowed);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
+    REGISTER_BOOL_PROPERTY("vertical_text", has_vertical_text, set_vertical_text);
     REGISTER_ENUM_PROPERTY("tab_position", this->tab_position, set_tab_position, TabPosition,
         { TabPosition::Top, "Top" },
         { TabPosition::Bottom, "Bottom" },
