@@ -246,9 +246,7 @@ MinorNumber StorageManagement::generate_storage_minor_number()
 
 u32 StorageManagement::generate_controller_id()
 {
-    auto controller_id = s_controller_id.load();
-    s_controller_id++;
-    return controller_id;
+    return s_controller_id.fetch_add(1);
 }
 
 NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
