@@ -241,9 +241,7 @@ MajorNumber StorageManagement::storage_type_major_number()
 }
 MinorNumber StorageManagement::generate_storage_minor_number()
 {
-    auto minor_number = s_device_minor_number.load();
-    s_device_minor_number++;
-    return minor_number;
+    return s_device_minor_number.fetch_add(1);
 }
 
 u32 StorageManagement::generate_controller_id()
