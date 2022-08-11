@@ -58,28 +58,37 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
         ? last_stop.length->resolved(node, gradient_length).to_px(node)
         : gradient_length_px;
 
-    // FIXME: Handle transition hints
     // 2. If a color stop or transition hint has a position that is less than the
     //    specified position of any color stop or transition hint before it in the list,
     //    set its position to be equal to the largest specified position of any color stop
     //    or transition hint before it.
-    auto max_previous_color_stop = resolved_color_stops[0].position;
+    auto max_previous_color_stop_or_hint = resolved_color_stops[0].position;
     for (size_t i = 1; i < color_stop_list.size(); i++) {
         auto& stop = color_stop_list[i];
+        if (stop.transition_hint.has_value()) {
+            float value = stop.transition_hint->value.resolved(node, gradient_length).to_px(node);
+            value = max(value, max_previous_color_stop_or_hint);
+            resolved_color_stops[i].transition_hint = value;
+            max_previous_color_stop_or_hint = value;
+        }
         if (stop.color_stop.length.has_value()) {
             float value = stop.color_stop.length->resolved(node, gradient_length).to_px(node);
-            value = max(value, max_previous_color_stop);
+            value = max(value, max_previous_color_stop_or_hint);
             resolved_color_stops[i].position = value;
-            max_previous_color_stop = value;
+            max_previous_color_stop_or_hint = value;
         }
     }
 
     // 3. If any color stop still does not have a position, then, for each run of adjacent color stops
     //    without positions, set their positions so that they are evenly spaced between the preceding
     //    and following color stops with positions.
+    // Note: Though not mentioned anywhere in the specification transition hints are counted as "color stops with positions".
     size_t i = 1;
     auto find_run_end = [&] {
-        while (i < color_stop_list.size() - 1 && !color_stop_list[i].color_stop.length.has_value()) {
+        auto color_stop_has_position = [](auto& color_stop) {
+            return color_stop.transition_hint.has_value() || color_stop.color_stop.length.has_value();
+        };
+        while (i < color_stop_list.size() - 1 && !color_stop_has_position(color_stop_list[i])) {
             i++;
         }
         return i;
@@ -88,15 +97,27 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
         auto& stop = color_stop_list[i];
         if (!stop.color_stop.length.has_value()) {
             auto run_start = i - 1;
+            auto start_position = resolved_color_stops[i++].transition_hint.value_or(resolved_color_stops[run_start].position);
             auto run_end = find_run_end();
-            auto start_position = resolved_color_stops[run_start].position;
-            auto end_position = resolved_color_stops[run_end].position;
+            auto end_position = resolved_color_stops[run_end].transition_hint.value_or(resolved_color_stops[run_end].position);
             auto spacing = (end_position - start_position) / (run_end - run_start);
             for (auto j = run_start + 1; j < run_end; j++) {
                 resolved_color_stops[j].position = start_position + (j - run_start) * spacing;
             }
         }
         i++;
+    }
+
+    // Determine the location of the transition hint as a percentage of the distance between the two color stops,
+    // denoted as a number between 0 and 1, where 0 indicates the hint is placed right on the first color stop,
+    // and 1 indicates the hint is placed right on the second color stop.
+    for (size_t i = 1; i < resolved_color_stops.size(); i++) {
+        auto& color_stop = resolved_color_stops[i];
+        auto& previous_color_stop = resolved_color_stops[i - 1];
+        if (color_stop.transition_hint.has_value()) {
+            auto stop_length = color_stop.position - previous_color_stop.position;
+            color_stop.transition_hint = stop_length > 0 ? (*color_stop.transition_hint - previous_color_stop.position) / stop_length : 0;
+        }
     }
 
     return { gradient_angle, resolved_color_stops };
@@ -148,13 +169,26 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     // Rotate gradient line to be horizontal
     auto rotated_start_point_x = start_point.x() * cos_angle - start_point.y() * -sin_angle;
 
-    // FIXME: Handle transition hint interpolation
-    auto linear_step = [](float min, float max, float value) -> float {
-        if (value < min)
-            return 0.;
-        if (value > max)
-            return 1.;
-        return (value - min) / (max - min);
+    auto color_stop_step = [&](auto& previous_stop, auto& next_stop, float position) -> float {
+        if (position < previous_stop.position)
+            return 0;
+        if (position > next_stop.position)
+            return 1;
+        // For any given point between the two color stops,
+        // determine the point’s location as a percentage of the distance between the two color stops.
+        // Let this percentage be P.
+        auto p = (position - previous_stop.position) / (next_stop.position - previous_stop.position);
+        if (!next_stop.transition_hint.has_value())
+            return p;
+        if (*next_stop.transition_hint >= 1)
+            return 0;
+        if (*next_stop.transition_hint <= 0)
+            return 1;
+        // Let C, the color weighting at that point, be equal to P^(logH(.5)).
+        auto c = AK::pow(p, AK::log<float>(0.5) / AK::log(*next_stop.transition_hint));
+        // The color at that point is then a linear blend between the colors of the two color stops,
+        // blending (1 - C) of the first stop and C of the second stop.
+        return c;
     };
 
     Vector<Gfx::Color, 1024> gradient_line_colors;
@@ -165,17 +199,17 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
         Gfx::Color gradient_color = color_mix(
             color_stops[0].color,
             color_stops[1].color,
-            linear_step(
-                color_stops[0].position,
-                color_stops[1].position,
+            color_stop_step(
+                color_stops[0],
+                color_stops[1],
                 loc));
         for (size_t i = 1; i < color_stops.size() - 1; i++) {
             gradient_color = color_mix(
                 gradient_color,
                 color_stops[i + 1].color,
-                linear_step(
-                    color_stops[i].position,
-                    color_stops[i + 1].position,
+                color_stop_step(
+                    color_stops[i],
+                    color_stops[i + 1],
                     loc));
         }
         gradient_line_colors[loc] = gradient_color;

@@ -17,6 +17,7 @@ namespace Web::Painting {
 struct ColorStop {
     Gfx::Color color;
     float position = 0;
+    Optional<float> transition_hint = {};
 };
 
 using ColorStopList = Vector<ColorStop, 4>;
