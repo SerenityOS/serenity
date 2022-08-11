@@ -8,6 +8,7 @@
 #include <LibConfig/Client.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
@@ -19,7 +20,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 {
     set_title("Create new image");
     set_icon(parent_window->icon());
-    resize(200, 200);
+    resize(200, 220);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
@@ -47,11 +48,20 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     auto& height_spinbox = main_widget.add<GUI::SpinBox>();
 
+    auto& set_defaults_checkbox = main_widget.add<GUI::CheckBox>();
+    set_defaults_checkbox.set_text("Use these settings as default");
+
     auto& button_container = main_widget.add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& ok_button = button_container.add<GUI::Button>("OK");
-    ok_button.on_click = [this](auto) {
+    ok_button.on_click = [&](auto) {
+        if (set_defaults_checkbox.is_checked()) {
+            Config::write_string("PixelPaint"sv, "NewImage"sv, "Name"sv, m_image_name);
+            Config::write_i32("PixelPaint"sv, "NewImage"sv, "Width"sv, m_image_size.width());
+            Config::write_i32("PixelPaint"sv, "NewImage"sv, "Height"sv, m_image_size.height());
+        }
+
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
