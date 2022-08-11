@@ -332,4 +332,48 @@ void Path::segmentize_path()
     m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };
 }
 
+Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
+{
+    Path result;
+
+    for (auto const& segment : m_segments) {
+        switch (segment.type()) {
+        case Segment::Type::MoveTo:
+            result.move_to(transform.map(segment.point()));
+            break;
+        case Segment::Type::LineTo: {
+            result.line_to(transform.map(segment.point()));
+            break;
+        }
+        case Segment::Type::QuadraticBezierCurveTo: {
+            auto const& quadratic_segment = static_cast<QuadraticBezierCurveSegment const&>(segment);
+            result.quadratic_bezier_curve_to(transform.map(quadratic_segment.through()), transform.map(segment.point()));
+            break;
+        }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto const& cubic_segment = static_cast<CubicBezierCurveSegment const&>(segment);
+            result.cubic_bezier_curve_to(transform.map(cubic_segment.through_0()), transform.map(cubic_segment.through_1()), transform.map(segment.point()));
+            break;
+        }
+        case Segment::Type::EllipticalArcTo: {
+            auto const& arc_segment = static_cast<EllipticalArcSegment const&>(segment);
+            result.elliptical_arc_to(
+                transform.map(segment.point()),
+                transform.map(arc_segment.center()),
+                transform.map(arc_segment.radii()),
+                arc_segment.x_axis_rotation(),
+                arc_segment.theta_1(),
+                arc_segment.theta_delta(),
+                arc_segment.large_arc(),
+                arc_segment.sweep());
+            break;
+        }
+        case Segment::Type::Invalid:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    return result;
+}
+
 }

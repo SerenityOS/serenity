@@ -243,6 +243,8 @@ public:
         return m_bounding_box.value();
     }
 
+    Path copy_transformed(AffineTransform const&) const;
+
     String to_string() const;
 
 private:
