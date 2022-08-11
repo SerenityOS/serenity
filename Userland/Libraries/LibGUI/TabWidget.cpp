@@ -300,7 +300,7 @@ void TabWidget::paint_event(PaintEvent& event)
         auto button_rect = this->button_rect(i);
 
         if (m_dragging_active_tab) {
-            if (this->has_vertical_tabs())
+            if (this->has_side_tabs())
                 button_rect.set_y(m_mouse_pos - m_grab_offset);
             else
                 button_rect.set_x(m_mouse_pos - m_grab_offset);
@@ -345,7 +345,7 @@ void TabWidget::paint_event(PaintEvent& event)
         auto close_button_rect = this->close_button_rect(i);
 
         if (m_dragging_active_tab) {
-            if (this->has_vertical_tabs())
+            if (this->has_side_tabs())
                 close_button_rect.set_y((m_mouse_pos - m_grab_offset) + (close_button_rect.y() - button_rect(i).y()));
             else
                 close_button_rect.set_x((m_mouse_pos - m_grab_offset) + (close_button_rect.x() - button_rect(i).x()));
@@ -365,7 +365,7 @@ int TabWidget::uniform_tab_width() const
     int total_tab_width = m_tabs.size() * get_max_tab_width();
     int tab_width = get_max_tab_width();
 
-    if (this->has_vertical_tabs())
+    if (this->has_side_tabs())
         return tab_width;
 
     int available_width = width() - bar_margin() * 2;
@@ -384,12 +384,12 @@ void TabWidget::set_bar_visible(bool bar_visible)
 
 Gfx::IntRect TabWidget::button_rect(size_t index) const
 {
-    if (this->has_vertical_tabs())
-        return vertical_button_rect(index);
+    if (this->has_side_tabs())
+        return side_horizontal_button_rect(index);
     return horizontal_button_rect(index);
 }
 
-Gfx::IntRect TabWidget::vertical_button_rect(size_t index) const
+Gfx::IntRect TabWidget::side_horizontal_button_rect(size_t index) const
 {
     int offset = bar_margin() + (bar_height() * index);
     Gfx::IntRect rect { 0, offset, get_max_tab_width() - 1, bar_height() };
@@ -513,7 +513,7 @@ void TabWidget::mousemove_event(MouseEvent& event)
     Optional<size_t> hovered_tab = {};
     Optional<size_t> hovered_close_button = {};
 
-    m_mouse_pos = this->has_vertical_tabs() ? event.position().y() : event.position().x();
+    m_mouse_pos = this->has_side_tabs() ? event.position().y() : event.position().x();
     if (m_dragging_active_tab) {
         recalculate_tab_order();
         update_bar();
@@ -563,7 +563,7 @@ void TabWidget::set_tab_position(TabPosition tab_position)
     if (m_tab_position == tab_position)
         return;
     m_tab_position = tab_position;
-    if (this->has_vertical_tabs())
+    if (this->has_side_tabs())
         m_uniform_tabs = true;
     if (m_active_widget)
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
@@ -733,7 +733,7 @@ Optional<UISize> TabWidget::calculated_preferred_size() const
 void TabWidget::drag_tab(size_t index)
 {
     m_dragging_active_tab = m_reorder_allowed;
-    m_grab_offset = m_mouse_pos - (this->has_vertical_tabs() ? button_rect(index).y() : button_rect(index).x());
+    m_grab_offset = m_mouse_pos - (this->has_side_tabs() ? button_rect(index).y() : button_rect(index).x());
     m_hovered_tab_index = {};
     m_hovered_close_button_index = {};
 }
@@ -751,7 +751,7 @@ void TabWidget::recalculate_tab_order()
 
     size_t target;
     for (target = 0; target < active; ++target) {
-        auto button_pos = this->has_vertical_tabs() ? (this->button_rect(target)).y() : (this->button_rect(target)).x();
+        auto button_pos = this->has_side_tabs() ? (this->button_rect(target)).y() : (this->button_rect(target)).x();
         if (m_mouse_pos - m_grab_offset < button_pos) {
             break;
         }
@@ -759,7 +759,7 @@ void TabWidget::recalculate_tab_order()
 
     if (target == active) {
         for (target = m_tabs.size() - 1; target > active; --target) {
-            auto button_pos = this->has_vertical_tabs() ? (this->button_rect(target)).y() : (this->button_rect(target)).x();
+            auto button_pos = this->has_side_tabs() ? (this->button_rect(target)).y() : (this->button_rect(target)).x();
             if (m_mouse_pos - m_grab_offset > button_pos) {
                 break;
             }

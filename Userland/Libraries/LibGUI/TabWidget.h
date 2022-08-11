@@ -26,7 +26,7 @@ public:
 
     TabPosition tab_position() const { return m_tab_position; }
     void set_tab_position(TabPosition);
-    bool has_vertical_tabs() const { return m_tab_position == TabPosition::Left || m_tab_position == TabPosition::Right; }
+    bool has_side_tabs() const { return m_tab_position == TabPosition::Left || m_tab_position == TabPosition::Right; }
 
     Optional<size_t> active_tab_index() const;
     size_t tab_count() { return m_tabs.size(); }
@@ -123,7 +123,7 @@ protected:
 private:
     Gfx::IntRect child_rect_for_size(Gfx::IntSize const&) const;
     Gfx::IntRect button_rect(size_t index) const;
-    Gfx::IntRect vertical_button_rect(size_t index) const;
+    Gfx::IntRect side_horizontal_button_rect(size_t index) const;
     Gfx::IntRect horizontal_button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
     Gfx::IntRect bar_rect() const;
