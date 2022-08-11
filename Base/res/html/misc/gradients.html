@@ -102,6 +102,22 @@
             background-image: linear-gradient(to top left, red, green, blue);
             background-size: 30px 30px;
         }
+
+        .grad-hints {
+            background-image: linear-gradient(to right, hotpink, 50%, rebeccapurple);
+        }
+
+        .grad-rainbow {
+            background-image: linear-gradient(
+                to right,
+                tomato,
+                25%,
+                orange 0,
+                50%,
+                yellowgreen 0,
+                75%,
+                dodgerblue 0)
+        }
     </style>
   </head>
   <body>
@@ -112,13 +128,17 @@
     <div class="box grad-2"></div>
     <div class="box grad-3"></div>
     <div class="box grad-4"></div>
-    <b>Funky color hints:</b><br>
+    <b>Funky transition hints:</b><br>
     <div class="box grad-5"></div>
     <div class="box grad-6"></div>
+    <div class="box grad-rainbow"></div>
+    <b>Transition hint test (click to animate):</b><br>
+    <div id="gradient-hints" class="box grad-hints"></div>
     <b>Multiple color stops + arbitrary angles (click to spin!):</b><br>
     <div id="gradient-spin" class="rect grad-7"></div>
     <b>Default color stops:</b><br>
     <div class="box grad-8"></div>
+    <b>Cool pattern demo</b><br>
     <div class="box grad-9"></div>
     <b>Pre-multiplied alpha mixing test:</b><br>
     <div class="box grad-10"></div>
@@ -156,22 +176,29 @@
         })
     }
 
-    // Spinning gradient demo/test
-    let angle = 0;
-    let spinIntervalId = -1;
-    const gradientSpin = document.getElementById("gradient-spin");
-    gradientSpin.onclick = () => {
-        if (spinIntervalId <= -1) {
-            spinIntervalId = setInterval(() => {
-                gradientSpin.style.backgroundImage = `linear-gradient(${angle}deg, red 0%, black 20%, yellow 60%, cyan 100%)`;
-                angle += 1;
-                updateLabels();
-            }, 100)
-        }  else {
-            clearInterval(spinIntervalId);
-            spinIntervalId = -1;
+    const backgroundAnimateDemo = (id, newBackgroundCallback) => {
+        const el = document.getElementById(id);
+        let t = 0;
+        let demoIntervalId = -1;
+        el.onclick = () => {
+            if (demoIntervalId <= -1) {
+                demoIntervalId = setInterval(() => {
+                    el.style.backgroundImage = newBackgroundCallback(t);
+                    t += 1;
+                    updateLabels();
+                }, 100)
+            }  else {
+                clearInterval(demoIntervalId);
+                demoIntervalId = -1;
+            }
         }
     }
+
+    // Spinning gradient demo/test
+    backgroundAnimateDemo("gradient-spin", angle => `linear-gradient(${angle}deg, red 0%, black 20%, yellow 60%, cyan 100%)`)
+
+    // Transistion hints demo
+    backgroundAnimateDemo("gradient-hints", t => `linear-gradient(to right, hotpink, ${((Math.sin(t/4)+1)*50)|0}%, rebeccapurple)`)
 
     updateLabels();
   </script>
