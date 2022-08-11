@@ -20,9 +20,9 @@ struct Block {
     Utf8View characters;
 };
 
-IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
+IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing, bool is_vertical_text) const
 {
-    auto lines = wrap_lines(TextElision::None, wrapping, line_spacing, FitWithinRect::No);
+    auto lines = wrap_lines(TextElision::None, wrapping, line_spacing, FitWithinRect::No, is_vertical_text);
     if (!lines.size()) {
         return {};
     }
@@ -37,10 +37,15 @@ IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
             bounding_rect.set_width(line_width);
     }
 
+    if (is_vertical_text) {
+        auto width_copy = bounding_rect.width();
+        bounding_rect.set_width(bounding_rect.height());
+        bounding_rect.set_height(width_copy);
+    }
     return bounding_rect;
 }
 
-Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect) const
+Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect, bool is_vertical_text) const
 {
     Vector<Block> blocks;
 
@@ -106,12 +111,14 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
         });
     }
 
+    auto effective_height = is_vertical_text ? m_rect.width() : m_rect.height();
+    auto effective_width = is_vertical_text ? m_rect.height() : m_rect.width();
     size_t max_lines_that_can_fit = 0;
-    if (m_rect.height() >= m_font->glyph_height()) {
+    if (effective_height >= m_font->glyph_height()) {
         // NOTE: If glyph height is 10 and line spacing is 1, we can fit a
         // single line into a 10px rect and a 20px rect, but 2 lines into a
         // 21px rect.
-        max_lines_that_can_fit = 1 + (m_rect.height() - m_font->glyph_height()) / (m_font->glyph_height() + line_spacing);
+        max_lines_that_can_fit = 1 + (effective_height - m_font->glyph_height()) / (m_font->glyph_height() + line_spacing);
     }
 
     if (max_lines_that_can_fit == 0)
@@ -146,7 +153,7 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
                 block_width += font().glyph_spacing();
             }
 
-            if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
+            if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(effective_width)) {
                 lines.append(builder.to_string());
                 builder.clear();
                 line_width = 0;

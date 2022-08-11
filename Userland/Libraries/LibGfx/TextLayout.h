@@ -60,15 +60,15 @@ public:
     IntRect const& rect() const { return m_rect; }
     void set_rect(IntRect const& rect) { m_rect = rect; }
 
-    Vector<String, 32> lines(TextElision elision, TextWrapping wrapping, int line_spacing) const
+    Vector<String, 32> lines(TextElision elision, TextWrapping wrapping, int line_spacing, bool is_vertical_text = false) const
     {
-        return wrap_lines(elision, wrapping, line_spacing, FitWithinRect::Yes);
+        return wrap_lines(elision, wrapping, line_spacing, FitWithinRect::Yes, is_vertical_text);
     }
 
-    IntRect bounding_rect(TextWrapping wrapping, int line_spacing) const;
+    IntRect bounding_rect(TextWrapping wrapping, int line_spacing, bool is_vertical_text = false) const;
 
 private:
-    Vector<String, 32> wrap_lines(TextElision, TextWrapping, int line_spacing, FitWithinRect) const;
+    Vector<String, 32> wrap_lines(TextElision, TextWrapping, int line_spacing, FitWithinRect, bool is_vertical_text) const;
     String elide_text_from_right(Utf8View, bool force_elision) const;
 
     Font const* m_font;

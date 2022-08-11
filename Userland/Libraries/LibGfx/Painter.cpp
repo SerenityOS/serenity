@@ -1421,7 +1421,10 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     case TextAlignment::BottomCenter:
     case TextAlignment::Center: {
         auto shrunken_rect = rect;
-        shrunken_rect.set_width(font.width(text));
+        if (direction == TextDirection::BTT || direction == TextDirection::TTB)
+            shrunken_rect.set_height(font.width(text));
+        else
+            shrunken_rect.set_width(font.width(text));
         shrunken_rect.center_within(rect);
         rect = shrunken_rect;
         break;
@@ -1633,7 +1636,6 @@ bool Painter::text_contains_bidirectional_text(Utf8View const& text, TextDirecti
 template<typename DrawGlyphFunction>
 void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping, TextDirection direction, DrawGlyphFunction draw_glyph)
 {
-    UNUSED(direction); // FIXME pls remove
     if (draw_text_get_length(text) == 0)
         return;
 
@@ -1642,8 +1644,8 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     static int const line_spacing = 4;
     int line_height = font.pixel_size() + line_spacing;
 
-    auto lines = layout.lines(elision, wrapping, line_spacing);
-    auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
+    auto lines = layout.lines(elision, wrapping, line_spacing, (direction == TextDirection::BTT || direction == TextDirection::TTB) ? true : false);
+    auto bounding_rect = layout.bounding_rect(wrapping, line_spacing, (direction == TextDirection::BTT || direction == TextDirection::TTB) ? true : false);
 
     switch (alignment) {
     case TextAlignment::TopCenter:
@@ -1684,7 +1686,11 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     for (size_t i = 0; i < lines.size(); ++i) {
         auto line = Utf8View { lines[i] };
 
-        IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
+        IntRect line_rect { 0, 0, 0, 0 };
+        if (direction == TextDirection::BTT || direction == TextDirection::TTB)
+            line_rect = { bounding_rect.x() + static_cast<int>(i) * line_height, bounding_rect.y(), line_height, bounding_rect.height() };
+        else
+            line_rect = { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
         line_rect.intersect(rect);
 
         TextDirection line_direction = get_text_direction(line);
