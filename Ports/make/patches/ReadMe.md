@@ -10,8 +10,3 @@ Include ar.h for serenity as well
 Stub getdtablesize() for serenity
 
 
-## `0003-Implement-getprogname.patch`
-
-Implement getprogname()
-
-
