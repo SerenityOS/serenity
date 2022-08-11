@@ -180,6 +180,10 @@ NonnullRefPtr<Type> Parser::parse_type()
     if (unsigned_)
         consume_whitespace();
 
+    // FIXME: Actually treat "unrestricted" and normal floats/doubles differently.
+    if (lexer.consume_specific("unrestricted"))
+        consume_whitespace();
+
     auto name = lexer.consume_until([](auto ch) { return !is_ascii_alphanumeric(ch) && ch != '_'; });
 
     if (name.equals_ignoring_case("long"sv)) {
