@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasImageData.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
+#include <LibWeb/HTML/Canvas/CanvasPathDrawingStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/Canvas/CanvasText.h>
@@ -46,7 +47,8 @@ class CanvasRenderingContext2D
     , public CanvasDrawPath
     , public CanvasText
     , public CanvasDrawImage
-    , public CanvasImageData {
+    , public CanvasImageData
+    , public CanvasPathDrawingStyles<CanvasRenderingContext2D> {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -62,9 +64,6 @@ public:
     virtual void clear_rect(float x, float y, float width, float height) override;
 
     virtual DOM::ExceptionOr<void> draw_image_internal(CanvasImageSource const&, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height) override;
-
-    void set_line_width(float line_width) { drawing_state().line_width = line_width; }
-    float line_width() const { return drawing_state().line_width; }
 
     virtual void begin_path() override;
     virtual void stroke() override;

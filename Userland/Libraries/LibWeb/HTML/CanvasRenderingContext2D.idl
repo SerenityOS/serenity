@@ -4,6 +4,7 @@
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
 #import <HTML/Canvas/CanvasImageData.idl>
 #import <HTML/Canvas/CanvasPath.idl>
+#import <HTML/Canvas/CanvasPathDrawingStyles.idl>
 #import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Canvas/CanvasText.idl>
@@ -12,11 +13,7 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
 interface CanvasRenderingContext2D {
-
-    attribute double lineWidth;
-
     [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
-
 };
 
 CanvasRenderingContext2D includes CanvasState;
@@ -27,4 +24,5 @@ CanvasRenderingContext2D includes CanvasDrawPath;
 CanvasRenderingContext2D includes CanvasText;
 CanvasRenderingContext2D includes CanvasDrawImage;
 CanvasRenderingContext2D includes CanvasImageData;
+CanvasRenderingContext2D includes CanvasPathDrawingStyles;
 CanvasRenderingContext2D includes CanvasPath;
