@@ -18,11 +18,17 @@ interface CanvasRenderingContext2D {
 
 CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasTransform;
+// FIXME: CanvasRenderingContext2D includes CanvasCompositing;
+// FIXME: CanvasRenderingContext2D includes CanvasImageSmoothing;
 CanvasRenderingContext2D includes CanvasFillStrokeStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasShadowStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasFilters;
 CanvasRenderingContext2D includes CanvasRect;
 CanvasRenderingContext2D includes CanvasDrawPath;
+// FIXME: CanvasRenderingContext2D includes CanvasUserInterface;
 CanvasRenderingContext2D includes CanvasText;
 CanvasRenderingContext2D includes CanvasDrawImage;
 CanvasRenderingContext2D includes CanvasImageData;
 CanvasRenderingContext2D includes CanvasPathDrawingStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasTextDrawingStyles;
 CanvasRenderingContext2D includes CanvasPath;
