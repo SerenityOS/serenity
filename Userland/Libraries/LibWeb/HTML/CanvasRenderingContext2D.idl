@@ -1,20 +1,17 @@
 #import <HTML/HTMLCanvasElement.idl>
 #import <HTML/HTMLImageElement.idl>
 #import <HTML/ImageData.idl>
-#import <HTML/TextMetrics.idl>
 #import <HTML/Canvas/CanvasDrawPath.idl>
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
+#import <HTML/Canvas/CanvasText.idl>
 #import <HTML/Canvas/CanvasTransform.idl>
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
 interface CanvasRenderingContext2D {
-
-    undefined fillText(DOMString text, double x, double y, optional double maxWidth);
-    undefined strokeText(DOMString text, double x, double y, optional double maxWidth);
 
     undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double dx, double dy);
     undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double dx, double dy, double dw, double dh);
@@ -28,8 +25,6 @@ interface CanvasRenderingContext2D {
 
     [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 
-    TextMetrics measureText(DOMString text);
-
 };
 
 CanvasRenderingContext2D includes CanvasState;
@@ -37,4 +32,5 @@ CanvasRenderingContext2D includes CanvasTransform;
 CanvasRenderingContext2D includes CanvasFillStrokeStyles;
 CanvasRenderingContext2D includes CanvasRect;
 CanvasRenderingContext2D includes CanvasDrawPath;
+CanvasRenderingContext2D includes CanvasText;
 CanvasRenderingContext2D includes CanvasPath;

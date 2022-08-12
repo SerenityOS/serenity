@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
+#include <LibWeb/HTML/Canvas/CanvasText.h>
 #include <LibWeb/HTML/Canvas/CanvasTransform.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -40,7 +41,8 @@ class CanvasRenderingContext2D
     , public CanvasTransform<CanvasRenderingContext2D>
     , public CanvasFillStrokeStyles<CanvasRenderingContext2D>
     , public CanvasRect
-    , public CanvasDrawPath {
+    , public CanvasDrawPath
+    , public CanvasText {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -66,8 +68,8 @@ public:
     virtual void stroke() override;
     virtual void stroke(Path2D const& path) override;
 
-    void fill_text(String const&, float x, float y, Optional<double> max_width);
-    void stroke_text(String const&, float x, float y, Optional<double> max_width);
+    virtual void fill_text(String const&, float x, float y, Optional<double> max_width) override;
+    virtual void stroke_text(String const&, float x, float y, Optional<double> max_width) override;
 
     virtual void fill(String const& fill_rule) override;
     virtual void fill(Path2D& path, String const& fill_rule) override;
@@ -80,7 +82,7 @@ public:
 
     NonnullRefPtr<HTMLCanvasElement> canvas_for_binding() const;
 
-    RefPtr<TextMetrics> measure_text(String const& text);
+    virtual RefPtr<TextMetrics> measure_text(String const& text) override;
 
     virtual void clip() override;
 
