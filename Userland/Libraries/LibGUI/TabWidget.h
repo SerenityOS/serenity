@@ -126,6 +126,7 @@ protected:
 private:
     Gfx::IntRect child_rect_for_size(Gfx::IntSize const&) const;
     Gfx::IntRect button_rect(size_t index) const;
+    Gfx::IntRect side_vertical_button_rect(size_t index) const;
     Gfx::IntRect side_horizontal_button_rect(size_t index) const;
     Gfx::IntRect horizontal_button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
