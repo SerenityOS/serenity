@@ -81,37 +81,6 @@
                 title: "Network"
                 name: "network"
             }
-
-            @SystemMonitor::HardwareTabWidget {
-                title: "Hardware"
-                name: "hardware"
-                layout: @GUI::VerticalBoxLayout {
-                    margins: [4]
-                }
-
-                @GUI::GroupBox {
-                    title: "CPUs"
-                    fixed_height: 128
-                    layout: @GUI::VerticalBoxLayout {
-                        margins: [6]
-                    }
-
-                    @GUI::TableView {
-                        name: "cpus_table"
-                    }
-                }
-
-                @GUI::GroupBox {
-                    title: "PCI devices"
-                    layout: @GUI::VerticalBoxLayout {
-                        margins: [6]
-                    }
-
-                    @GUI::TableView {
-                        name: "pci_dev_table"
-                    }
-                }
-            }
         }
     }
 

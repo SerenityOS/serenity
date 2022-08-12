@@ -221,10 +221,6 @@ GML files can be found in the SerenityOS source tree with the `*.gml` extension.
                 title: "Network"
                 name: "network"
             }
-
-            @SystemMonitor::HardwareTabWidget {
-                // snip
-            }
         }
     }
 
