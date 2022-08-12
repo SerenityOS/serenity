@@ -712,19 +712,28 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
 endif()
 
-add_custom_command(
-    TARGET Kernel POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-    COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
-    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
-    COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
-    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
-    COMMAND $<TARGET_FILE:Lagom::ELFBaker> Kernel Kernel.drow
-    COMMAND gzip -fk Kernel.drow
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.drow ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
-)
+if ("${SERENITY_ARCH}" STREQUAL "i686")
+    set(KERNEL_ELF_OBJCOPY_TARGET "elf32-i386")
+elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(KERNEL_ELF_OBJCOPY_TARGET "elf64-x86-64")
+endif()
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.drow.gz" DESTINATION boot)
+# In x86_64 or i686 the Kernel is linked to the Pre-kernel binary.
+if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
+    add_custom_command(
+        TARGET Kernel POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+        COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+        COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
+        COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
+        COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
+        COMMAND $<TARGET_FILE:Lagom::ELFBaker> Kernel Kernel.drow.standalone
+        COMMAND ${CMAKE_OBJCOPY} --file-alignment=4096 -I binary -O ${KERNEL_ELF_OBJCOPY_TARGET} --adjust-vma 0x300000 --rename-section .data=.Kernel_drow --set-section-alignment .Kernel_drow=4096  --set-section-flags .Kernel_drow=load Kernel.drow.standalone Kernel.o
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.o ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    )
+endif()
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Prekernel/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 

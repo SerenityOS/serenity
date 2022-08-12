@@ -27,6 +27,9 @@ extern "C" [[noreturn]] void __stack_chk_fail();
 extern "C" u8 start_of_prekernel_image[];
 extern "C" u8 end_of_prekernel_image[];
 
+extern "C" u8 _binary_Kernel_drow_standalone_start[];
+extern "C" u8 end_of_prekernel_image_after_kernel_image[];
+
 extern "C" u8 gdt64ptr[];
 extern "C" u16 code64_sel;
 extern "C" u64 boot_pml4t[512];
@@ -87,9 +90,6 @@ static bool is_drow_kernel(ElfW(Phdr) & program_header)
 
 extern "C" [[noreturn]] void init()
 {
-    if (multiboot_info_ptr->mods_count < 1)
-        halt();
-
     multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
     for (size_t i = 0; i < multiboot_info_ptr->mods_count; i++) {
         // Note: We require the DROW kernel and other multiboot modules to be placed
@@ -97,8 +97,7 @@ extern "C" [[noreturn]] void init()
         if (kernel_module[i].start & (PAGE_SIZE - 1))
             halt();
     }
-
-    u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
+    u8* kernel_image = _binary_Kernel_drow_standalone_start;
     // copy the ELF header and program headers because we might end up overwriting them
     ElfW(Ehdr) kernel_elf_header = *(ElfW(Ehdr)*)kernel_image;
     ElfW(Phdr) kernel_program_headers[16];
@@ -181,9 +180,6 @@ extern "C" [[noreturn]] void init()
 
     reload_cr3();
 
-    multiboot_info_ptr->mods_count--;
-    multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
-
     auto adjust_by_mapping_base = [kernel_mapping_base](auto ptr) {
         return (decltype(ptr))((FlatPtr)ptr + kernel_mapping_base);
     };
@@ -207,8 +203,16 @@ extern "C" [[noreturn]] void init()
     info.multiboot_flags = multiboot_info_ptr->flags;
     info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);
     info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
-    info.multiboot_modules = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mods_addr);
+    info.multiboot_modules_physical_ptr = (FlatPtr)multiboot_info_ptr->mods_addr;
     info.multiboot_modules_count = multiboot_info_ptr->mods_count;
+
+    if (info.multiboot_modules_count > 0) {
+        auto* entry = reinterpret_cast<multiboot_module_entry*>(multiboot_info_ptr->mods_addr);
+        info.multiboot_module_ramdisk_physical_start = entry->start;
+        info.multiboot_module_ramdisk_physical_end = entry->end;
+        info.multiboot_module_ramdisk_physical_string_addr = entry->string_addr;
+    }
+
     if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
         info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
         info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
