@@ -45,12 +45,6 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
     // Validate the modes the user passed in.
     (void)s_the->panic_mode(Validate::Yes);
-    if (s_the->contains("boot_mode"sv)) {
-        // I know, we don't do legacy, but even though I eliminated 'boot_mode' from the codebase, there
-        // is a good chance that someone's still using it. Let's be nice and tell them where to look.
-        // TODO: Remove this in 2022.
-        PANIC("'boot_mode' is now split into panic=[halt|shutdown], graphics_subsystem_mode=[on|limited|off], and system_mode=[graphical|text|selftest].");
-    }
 }
 
 UNMAP_AFTER_INIT NonnullOwnPtr<KString> CommandLine::build_commandline(StringView cmdline_from_bootloader)
