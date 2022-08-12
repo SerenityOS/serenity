@@ -4,6 +4,7 @@
 #import <HTML/TextMetrics.idl>
 #import <HTML/CanvasGradient.idl>
 #import <HTML/Canvas/CanvasPath.idl>
+#import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Path2D.idl>
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
@@ -41,11 +42,6 @@ interface CanvasRenderingContext2D {
     ImageData getImageData(long sx, long sy, long sw, long sh);
     undefined putImageData(ImageData imagedata, double dx, double dy);
 
-    undefined save();
-    undefined restore();
-    undefined reset();
-    boolean isContextLost();
-
     [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 
     TextMetrics measureText(DOMString text);
@@ -65,4 +61,5 @@ interface CanvasRenderingContext2D {
 
 };
 
+CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasPath;

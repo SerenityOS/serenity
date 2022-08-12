@@ -49,12 +49,12 @@ NonnullRefPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding() 
 void CanvasRenderingContext2D::set_fill_style(String style)
 {
     // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
-    m_drawing_state.fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
+    drawing_state().fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
 String CanvasRenderingContext2D::fill_style() const
 {
-    return m_drawing_state.fill_style.to_string();
+    return drawing_state().fill_style.to_string();
 }
 
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
@@ -63,8 +63,10 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     if (!painter)
         return;
 
-    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-    painter->fill_rect(enclosing_int_rect(rect), m_drawing_state.fill_style);
+    auto& drawing_state = this->drawing_state();
+
+    auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
+    painter->fill_rect(enclosing_int_rect(rect), drawing_state.fill_style);
     did_draw(rect);
 }
 
@@ -74,7 +76,7 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
     if (!painter)
         return;
 
-    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
+    auto rect = drawing_state().transform.map(Gfx::FloatRect(x, y, width, height));
     painter->clear_rect(enclosing_int_rect(rect), Color());
     did_draw(rect);
 }
@@ -82,12 +84,12 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 void CanvasRenderingContext2D::set_stroke_style(String style)
 {
     // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
-    m_drawing_state.stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
+    drawing_state().stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
 String CanvasRenderingContext2D::stroke_style() const
 {
-    return m_drawing_state.stroke_style.to_string();
+    return drawing_state().stroke_style.to_string();
 }
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
@@ -96,17 +98,19 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     if (!painter)
         return;
 
-    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
+    auto& drawing_state = this->drawing_state();
 
-    auto top_left = m_drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_type<int>();
-    auto top_right = m_drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_type<int>();
-    auto bottom_left = m_drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_type<int>();
-    auto bottom_right = m_drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_type<int>();
+    auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
 
-    painter->draw_line(top_left, top_right, m_drawing_state.stroke_style, m_drawing_state.line_width);
-    painter->draw_line(top_right, bottom_right, m_drawing_state.stroke_style, m_drawing_state.line_width);
-    painter->draw_line(bottom_right, bottom_left, m_drawing_state.stroke_style, m_drawing_state.line_width);
-    painter->draw_line(bottom_left, top_left, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_type<int>();
+    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_type<int>();
+    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_type<int>();
+    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_type<int>();
+
+    painter->draw_line(top_left, top_right, drawing_state.stroke_style, drawing_state.line_width);
+    painter->draw_line(top_right, bottom_right, drawing_state.stroke_style, drawing_state.line_width);
+    painter->draw_line(bottom_right, bottom_left, drawing_state.stroke_style, drawing_state.line_width);
+    painter->draw_line(bottom_left, top_left, drawing_state.stroke_style, drawing_state.line_width);
 
     did_draw(rect);
 }
@@ -197,10 +201,12 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     if (!painter)
         return {};
 
-    if (m_drawing_state.transform.is_identity_or_translation()) {
-        painter->translate(m_drawing_state.transform.e(), m_drawing_state.transform.f());
+    auto& drawing_state = this->drawing_state();
+
+    if (drawing_state.transform.is_identity_or_translation()) {
+        painter->translate(drawing_state.transform.e(), drawing_state.transform.f());
         painter->draw_scaled_bitmap(destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
-        painter->translate(-m_drawing_state.transform.e(), -m_drawing_state.transform.f());
+        painter->translate(-drawing_state.transform.e(), -drawing_state.transform.f());
     } else {
         // The context has an affine transform, we have to draw through it!
 
@@ -215,11 +221,11 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
 
         // FIXME: Gfx::Painter should have an affine transform as part of its state and handle all of this instead.
 
-        auto inverse_transform = m_drawing_state.transform.inverse();
+        auto inverse_transform = drawing_state.transform.inverse();
         if (!inverse_transform.has_value())
             return {};
 
-        auto destination_quad = m_drawing_state.transform.map_to_quad(destination_rect);
+        auto destination_quad = drawing_state.transform.map_to_quad(destination_rect);
         auto destination_bounding_rect = destination_quad.bounding_rect().to_rounded<int>();
 
         Gfx::AffineTransform source_transform;
@@ -260,19 +266,19 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
 void CanvasRenderingContext2D::scale(float sx, float sy)
 {
     dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::scale({}, {})", sx, sy);
-    m_drawing_state.transform.scale(sx, sy);
+    drawing_state().transform.scale(sx, sy);
 }
 
 void CanvasRenderingContext2D::translate(float tx, float ty)
 {
     dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::translate({}, {})", tx, ty);
-    m_drawing_state.transform.translate(tx, ty);
+    drawing_state().transform.translate(tx, ty);
 }
 
 void CanvasRenderingContext2D::rotate(float radians)
 {
     dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::rotate({})", radians);
-    m_drawing_state.transform.rotate_radians(radians);
+    drawing_state().transform.rotate_radians(radians);
 }
 
 void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
@@ -302,10 +308,12 @@ void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, O
     if (!painter)
         return;
 
+    auto& drawing_state = this->drawing_state();
+
     // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
     auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().pixel_size());
-    auto transformed_rect = m_drawing_state.transform.map(text_rect);
-    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_drawing_state.fill_style);
+    auto transformed_rect = drawing_state.transform.map(text_rect);
+    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style);
     did_draw(transformed_rect.to_type<float>());
 }
 
@@ -326,7 +334,9 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
     if (!painter)
         return;
 
-    painter->stroke_path(path, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    auto& drawing_state = this->drawing_state();
+
+    painter->stroke_path(path, drawing_state.stroke_style, drawing_state.line_width);
     did_draw(path.bounding_box());
 }
 
@@ -337,7 +347,7 @@ void CanvasRenderingContext2D::stroke()
 
 void CanvasRenderingContext2D::stroke(Path2D const& path)
 {
-    auto transformed_path = path.path().copy_transformed(m_drawing_state.transform);
+    auto transformed_path = path.path().copy_transformed(drawing_state().transform);
     stroke_internal(transformed_path);
 }
 
@@ -357,7 +367,7 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, String const& fill
     else
         dbgln("Unrecognized fillRule for CRC2D.fill() - this problem goes away once we pass an enum instead of a string");
 
-    painter->fill_path(path, m_drawing_state.fill_style, winding);
+    painter->fill_path(path, drawing_state().fill_style, winding);
     did_draw(path.bounding_box());
 }
 
@@ -368,7 +378,7 @@ void CanvasRenderingContext2D::fill(String const& fill_rule)
 
 void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
 {
-    auto transformed_path = path.path().copy_transformed(m_drawing_state.transform);
+    auto transformed_path = path.path().copy_transformed(drawing_state().transform);
     return fill_internal(transformed_path, fill_rule);
 }
 
@@ -432,36 +442,6 @@ void CanvasRenderingContext2D::put_image_data(ImageData const& image_data, float
     did_draw(Gfx::FloatRect(x, y, image_data.width(), image_data.height()));
 }
 
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-save
-void CanvasRenderingContext2D::save()
-{
-    // The save() method steps are to push a copy of the current drawing state onto the drawing state stack.
-    m_drawing_state_stack.append(m_drawing_state);
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-restore
-void CanvasRenderingContext2D::restore()
-{
-    // The restore() method steps are to pop the top entry in the drawing state stack, and reset the drawing state it describes. If there is no saved state, then the method must do nothing.
-    if (m_drawing_state_stack.is_empty())
-        return;
-    m_drawing_state = m_drawing_state_stack.take_last();
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset
-void CanvasRenderingContext2D::reset()
-{
-    // The reset() method steps are to reset the rendering context to its default state.
-    reset_to_default_state();
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-iscontextlost
-bool CanvasRenderingContext2D::is_context_lost()
-{
-    // The isContextLost() method steps are to return this's context lost.
-    return m_context_lost;
-}
-
 // https://html.spec.whatwg.org/multipage/canvas.html#reset-the-rendering-context-to-its-default-state
 void CanvasRenderingContext2D::reset_to_default_state()
 {
@@ -475,10 +455,10 @@ void CanvasRenderingContext2D::reset_to_default_state()
     path().clear();
 
     // 3. Clear the context's drawing state stack.
-    m_drawing_state_stack.clear();
+    clear_drawing_state_stack();
 
     // 4. Reset everything that drawing state consists of to their initial values.
-    m_drawing_state = {};
+    reset_drawing_state();
 
     if (painter)
         did_draw(painter->target()->rect().to_type<float>());
@@ -632,7 +612,7 @@ void CanvasRenderingContext2D::transform(double a, double b, double c, double d,
     //    a c e
     //    b d f
     //    0 0 1
-    m_drawing_state.transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
+    drawing_state().transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
@@ -643,7 +623,7 @@ void CanvasRenderingContext2D::set_transform(double a, double b, double c, doubl
         return;
 
     // 2. Reset the current transformation matrix to the identity matrix.
-    m_drawing_state.transform = {};
+    drawing_state().transform = {};
 
     // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
     transform(a, b, c, d, e, f);
@@ -653,7 +633,7 @@ void CanvasRenderingContext2D::set_transform(double a, double b, double c, doubl
 void CanvasRenderingContext2D::reset_transform()
 {
     // The resetTransform() method, when invoked, must reset the current transformation matrix to the identity matrix.
-    m_drawing_state.transform = {};
+    drawing_state().transform = {};
 }
 
 void CanvasRenderingContext2D::clip()
