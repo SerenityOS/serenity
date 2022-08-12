@@ -161,10 +161,10 @@ struct ParameterizedType : public Type {
 
 static inline size_t get_shortest_function_length(Vector<Function&> const& overload_set)
 {
-    size_t longest_length = SIZE_MAX;
+    size_t shortest_length = SIZE_MAX;
     for (auto const& function : overload_set)
-        longest_length = min(function.length(), longest_length);
-    return longest_length;
+        shortest_length = min(function.length(), shortest_length);
+    return shortest_length;
 }
 
 class Interface {
