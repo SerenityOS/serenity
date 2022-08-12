@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
+#include <LibWeb/HTML/Canvas/CanvasImageData.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
@@ -44,7 +45,8 @@ class CanvasRenderingContext2D
     , public CanvasRect
     , public CanvasDrawPath
     , public CanvasText
-    , public CanvasDrawImage {
+    , public CanvasDrawImage
+    , public CanvasImageData {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -74,9 +76,9 @@ public:
     virtual void fill(String const& fill_rule) override;
     virtual void fill(Path2D& path, String const& fill_rule) override;
 
-    RefPtr<ImageData> create_image_data(int width, int height) const;
-    DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
-    void put_image_data(ImageData const&, float x, float y);
+    virtual RefPtr<ImageData> create_image_data(int width, int height) const override;
+    virtual DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
+    virtual void put_image_data(ImageData const&, float x, float y) override;
 
     virtual void reset_to_default_state() override;
 
