@@ -16,6 +16,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/Canvas/CanvasTransform.h>
@@ -34,7 +35,8 @@ class CanvasRenderingContext2D
     , public Bindings::Wrappable
     , public CanvasPath
     , public CanvasState
-    , public CanvasTransform<CanvasRenderingContext2D> {
+    , public CanvasTransform<CanvasRenderingContext2D>
+    , public CanvasFillStrokeStyles<CanvasRenderingContext2D> {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -44,12 +46,6 @@ public:
 
     static NonnullRefPtr<CanvasRenderingContext2D> create(HTMLCanvasElement& element) { return adopt_ref(*new CanvasRenderingContext2D(element)); }
     ~CanvasRenderingContext2D();
-
-    void set_fill_style(String);
-    String fill_style() const;
-
-    void set_stroke_style(String);
-    String stroke_style() const;
 
     void fill_rect(float x, float y, float width, float height);
     void stroke_rect(float x, float y, float width, float height);

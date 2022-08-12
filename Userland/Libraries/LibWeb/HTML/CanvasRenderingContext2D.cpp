@@ -46,17 +46,6 @@ NonnullRefPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding() 
     return canvas_element();
 }
 
-void CanvasRenderingContext2D::set_fill_style(String style)
-{
-    // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
-    drawing_state().fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
-}
-
-String CanvasRenderingContext2D::fill_style() const
-{
-    return drawing_state().fill_style.to_string();
-}
-
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
@@ -79,17 +68,6 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
     auto rect = drawing_state().transform.map(Gfx::FloatRect(x, y, width, height));
     painter->clear_rect(enclosing_int_rect(rect), Color());
     did_draw(rect);
-}
-
-void CanvasRenderingContext2D::set_stroke_style(String style)
-{
-    // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
-    drawing_state().stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
-}
-
-String CanvasRenderingContext2D::stroke_style() const
-{
-    return drawing_state().stroke_style.to_string();
 }
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)

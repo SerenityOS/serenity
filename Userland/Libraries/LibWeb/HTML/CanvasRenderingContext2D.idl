@@ -2,7 +2,7 @@
 #import <HTML/HTMLImageElement.idl>
 #import <HTML/ImageData.idl>
 #import <HTML/TextMetrics.idl>
-#import <HTML/CanvasGradient.idl>
+#import <HTML/Canvas/CanvasFillStrokeStyles.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Canvas/CanvasTransform.idl>
@@ -31,8 +31,6 @@ interface CanvasRenderingContext2D {
     undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double dx, double dy, double dw, double dh);
     undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
-    attribute DOMString fillStyle;
-    attribute DOMString strokeStyle;
     attribute double lineWidth;
 
     ImageData createImageData(long sw, long sh);
@@ -43,10 +41,6 @@ interface CanvasRenderingContext2D {
 
     TextMetrics measureText(DOMString text);
 
-    CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
-    CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
-    CanvasGradient createConicGradient(double startAngle, double x, double y);
-
     // undefined clip(optional CanvasFillRule fillRule = "nonzero");
     // undefined clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
     // FIXME: Replace this with the two definitions above.
@@ -56,4 +50,5 @@ interface CanvasRenderingContext2D {
 
 CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasTransform;
+CanvasRenderingContext2D includes CanvasFillStrokeStyles;
 CanvasRenderingContext2D includes CanvasPath;
