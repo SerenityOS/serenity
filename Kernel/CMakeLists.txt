@@ -179,6 +179,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/LoadBase.cpp
+    FileSystem/SysFS/Subsystems/Kernel/RootDevice.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemMode.cpp
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
