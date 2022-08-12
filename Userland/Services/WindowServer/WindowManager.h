@@ -347,6 +347,8 @@ public:
     Window const* automatic_cursor_tracking_window() const { return m_automatic_cursor_tracking_window; }
     void set_automatic_cursor_tracking_window(Window* window) { m_automatic_cursor_tracking_window = window; }
 
+    u8 last_processed_buttons() { return m_last_processed_buttons; }
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 
@@ -469,6 +471,7 @@ private:
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
     u8 m_keyboard_modifiers { 0 };
+    u8 m_last_processed_buttons { MouseButton::None };
 
     NonnullRefPtr<WindowSwitcher> m_switcher;
     NonnullRefPtr<KeymapSwitcher> m_keymap_switcher;
