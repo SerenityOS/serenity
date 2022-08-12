@@ -16,6 +16,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
@@ -38,7 +39,8 @@ class CanvasRenderingContext2D
     , public CanvasState
     , public CanvasTransform<CanvasRenderingContext2D>
     , public CanvasFillStrokeStyles<CanvasRenderingContext2D>
-    , public CanvasRect {
+    , public CanvasRect
+    , public CanvasDrawPath {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -60,15 +62,15 @@ public:
     void set_line_width(float line_width) { drawing_state().line_width = line_width; }
     float line_width() const { return drawing_state().line_width; }
 
-    void begin_path();
-    void stroke();
-    void stroke(Path2D const& path);
+    virtual void begin_path() override;
+    virtual void stroke() override;
+    virtual void stroke(Path2D const& path) override;
 
     void fill_text(String const&, float x, float y, Optional<double> max_width);
     void stroke_text(String const&, float x, float y, Optional<double> max_width);
 
-    void fill(String const& fill_rule);
-    void fill(Path2D& path, String const& fill_rule);
+    virtual void fill(String const& fill_rule) override;
+    virtual void fill(Path2D& path, String const& fill_rule) override;
 
     RefPtr<ImageData> create_image_data(int width, int height) const;
     DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
@@ -80,7 +82,7 @@ public:
 
     RefPtr<TextMetrics> measure_text(String const& text);
 
-    void clip();
+    virtual void clip() override;
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
