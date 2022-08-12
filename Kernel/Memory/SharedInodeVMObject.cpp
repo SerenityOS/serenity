@@ -53,6 +53,7 @@ ErrorOr<void> SharedInodeVMObject::sync(off_t offset_in_pages, size_t pages)
         u8 page_buffer[PAGE_SIZE];
         MM.copy_physical_page(*physical_page, page_buffer);
 
+        MutexLocker locker(m_inode->m_inode_lock);
         TRY(m_inode->write_bytes(page_index * PAGE_SIZE, PAGE_SIZE, UserOrKernelBuffer::for_kernel_buffer(page_buffer), nullptr));
     }
 
