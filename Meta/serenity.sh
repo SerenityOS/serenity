@@ -433,7 +433,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                 build_image
                 # In contrast to CI, we don't set 'panic=shutdown' here,
                 # in case the user wants to inspect qemu some more.
-                export SERENITY_KERNEL_CMDLINE="fbdev=off system_mode=self-test"
+                export SERENITY_KERNEL_CMDLINE="graphics_subsystem_mode=off system_mode=self-test"
                 export SERENITY_RUN="ci"
                 build_target run
             fi
