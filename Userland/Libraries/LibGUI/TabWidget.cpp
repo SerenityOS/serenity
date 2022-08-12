@@ -287,15 +287,20 @@ void TabWidget::paint_event(PaintEvent& event)
 
         auto tab_button_content_rect = button_rect.shrunken(8, 0);
 
-        if (has_vertical_text())
+        if (has_vertical_text()) {
             tab_button_content_rect.translate_by(1, 0);
+            if (m_close_button_enabled && m_tab_position == TabPosition::Left)
+                tab_button_content_rect.translate_by(0, 16);
+        }
 
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
-        tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
-        if (has_vertical_text())
+        if (has_vertical_text()) {
+            tab_button_content_rect.set_height(tab_button_content_rect.height() - (m_close_button_enabled ? 16 : 0));
             painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap, m_tab_position == TabPosition::Right ? Gfx::TextDirection::TTB : Gfx::TextDirection::BTT);
-        else
+        } else {
+            tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
             painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
+        }
     }
 
     if (m_close_button_enabled) {
@@ -305,7 +310,7 @@ void TabWidget::paint_event(PaintEvent& event)
 
             bool hovered_close_button = i == m_hovered_close_button_index;
             bool pressed_close_button = i == m_pressed_close_button_index;
-            auto close_button_rect = this->close_button_rect(i);
+            auto close_button_rect = has_vertical_text() ? this->vertical_close_button_rect(i) : this->close_button_rect(i);
 
             if (hovered_close_button)
                 Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
@@ -334,15 +339,17 @@ void TabWidget::paint_event(PaintEvent& event)
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position, window()->is_active(), accented);
 
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
-        tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
 
-        if (has_vertical_text())
+        if (has_vertical_text()) {
             tab_button_content_rect.translate_by(1, 0);
-
-        if (has_vertical_text())
+            if (m_close_button_enabled && m_tab_position == TabPosition::Left)
+                tab_button_content_rect.translate_by(0, 16);
+            tab_button_content_rect.set_height(tab_button_content_rect.height() - (m_close_button_enabled ? 16 : 0));
             painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap, m_tab_position == TabPosition::Right ? Gfx::TextDirection::TTB : Gfx::TextDirection::BTT);
-        else
+        } else {
+            tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 0));
             painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
+        }
 
         if (is_focused()) {
             Gfx::IntRect focus_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
@@ -372,7 +379,7 @@ void TabWidget::paint_event(PaintEvent& event)
 
         bool hovered_close_button = i == m_hovered_close_button_index;
         bool pressed_close_button = i == m_pressed_close_button_index;
-        auto close_button_rect = this->close_button_rect(i);
+        auto close_button_rect = has_vertical_text() ? this->vertical_close_button_rect(i) : this->close_button_rect(i);
 
         if (m_dragging_active_tab) {
             if (this->has_side_tabs())
@@ -424,11 +431,12 @@ Gfx::IntRect TabWidget::button_rect(size_t index) const
 Gfx::IntRect TabWidget::side_vertical_button_rect(size_t index) const
 {
     int y_offset = bar_margin();
+    int close_button_offset = m_close_button_enabled ? 16 : 0;
     for (size_t i = 0; i < index; ++i) {
-        auto tab_width = m_tabs[i].width(font());
+        auto tab_width = m_tabs[i].width(font()) + close_button_offset;
         y_offset += tab_width;
     }
-    Gfx::IntRect rect { 0, y_offset, bar_height() - 1, m_tabs[index].width(font()) };
+    Gfx::IntRect rect { 0, y_offset, bar_height() - 1, m_tabs[index].width(font()) + close_button_offset };
 
     if (m_tabs[index].widget != m_active_widget) {
         rect.translate_by(m_tab_position == TabPosition::Left ? 2 : 0, 0);
@@ -491,6 +499,19 @@ Gfx::IntRect TabWidget::close_button_rect(size_t index) const
     return close_button_rect;
 }
 
+Gfx::IntRect TabWidget::vertical_close_button_rect(size_t index) const
+{
+    auto rect = side_vertical_button_rect(index);
+    Gfx::IntRect close_button_rect { 0, 0, 12, 12 };
+
+    close_button_rect.translate_by(rect.left(), rect.top());
+    if (m_tab_position == TabPosition::Left)
+        close_button_rect.translate_by(close_button_rect.width() / 2, 4);
+    else
+        close_button_rect.translate_by(4, rect.height() - close_button_rect.height() - 4);
+    return close_button_rect;
+}
+
 int TabWidget::TabData::width(Gfx::Font const& font) const
 {
     auto width = 16 + font.width(title) + (icon ? (16 + 4) : 0);
@@ -511,7 +532,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
 {
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
-        auto close_button_rect = this->close_button_rect(i);
+        auto close_button_rect = has_vertical_text() ? this->vertical_close_button_rect(i) : this->close_button_rect(i);
 
         if (!button_rect.contains(event.position()))
             continue;
@@ -548,7 +569,7 @@ void TabWidget::mouseup_event(MouseEvent& event)
     if (!m_close_button_enabled || !m_pressed_close_button_index.has_value())
         return;
 
-    auto close_button_rect = this->close_button_rect(m_pressed_close_button_index.value());
+    auto close_button_rect = has_vertical_text() ? this->vertical_close_button_rect(m_pressed_close_button_index.value()) : this->close_button_rect(m_pressed_close_button_index.value());
     update_bar();
 
     if (close_button_rect.contains(event.position())) {
@@ -575,7 +596,7 @@ void TabWidget::mousemove_event(MouseEvent& event)
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
-        auto close_button_rect = this->close_button_rect(i);
+        auto close_button_rect = has_vertical_text() ? this->vertical_close_button_rect(i) : this->close_button_rect(i);
 
         if (close_button_rect.contains(event.position()))
             hovered_close_button = i;

@@ -130,6 +130,7 @@ private:
     Gfx::IntRect side_horizontal_button_rect(size_t index) const;
     Gfx::IntRect horizontal_button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
+    Gfx::IntRect vertical_close_button_rect(size_t index) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
     void update_bar();
