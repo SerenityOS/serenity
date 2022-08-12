@@ -857,7 +857,7 @@ Gfx::IntRect Compositor::current_cursor_rect() const
 
 void Compositor::invalidate_cursor(bool compose_immediately)
 {
-    if (m_invalidated_cursor)
+    if (m_invalidated_cursor && !compose_immediately)
         return;
     m_invalidated_cursor = true;
     m_invalidated_any = true;

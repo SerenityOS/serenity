@@ -2081,10 +2081,10 @@ void WindowManager::start_dnd_drag(ConnectionFromClient& client, String const& t
     VERIFY(!m_dnd_client);
     m_dnd_client = client;
     m_dnd_text = text;
+    Compositor::the().invalidate_cursor(true);
     m_dnd_overlay = Compositor::the().create_overlay<DndOverlay>(text, bitmap);
     m_dnd_overlay->set_enabled(true);
     m_dnd_mime_data = mime_data;
-    Compositor::the().invalidate_cursor();
     set_automatic_cursor_tracking_window(nullptr);
 }
 
