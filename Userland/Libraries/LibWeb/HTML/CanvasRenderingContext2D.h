@@ -18,6 +18,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
+#include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/Canvas/CanvasTransform.h>
 #include <LibWeb/HTML/CanvasGradient.h>
@@ -36,7 +37,8 @@ class CanvasRenderingContext2D
     , public CanvasPath
     , public CanvasState
     , public CanvasTransform<CanvasRenderingContext2D>
-    , public CanvasFillStrokeStyles<CanvasRenderingContext2D> {
+    , public CanvasFillStrokeStyles<CanvasRenderingContext2D>
+    , public CanvasRect {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -47,9 +49,9 @@ public:
     static NonnullRefPtr<CanvasRenderingContext2D> create(HTMLCanvasElement& element) { return adopt_ref(*new CanvasRenderingContext2D(element)); }
     ~CanvasRenderingContext2D();
 
-    void fill_rect(float x, float y, float width, float height);
-    void stroke_rect(float x, float y, float width, float height);
-    void clear_rect(float x, float y, float width, float height);
+    virtual void fill_rect(float x, float y, float width, float height) override;
+    virtual void stroke_rect(float x, float y, float width, float height) override;
+    virtual void clear_rect(float x, float y, float width, float height) override;
 
     DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y);
     DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y, float destination_width, float destination_height);
