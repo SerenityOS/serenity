@@ -17,6 +17,7 @@
 #include "Filters/Invert.h"
 #include "Filters/LaplaceCardinal.h"
 #include "Filters/LaplaceDiagonal.h"
+#include "Filters/Median.h"
 #include "Filters/Sepia.h"
 #include "Filters/Sharpen.h"
 #include <LibGUI/FileIconProvider.h>
@@ -51,6 +52,7 @@ ErrorOr<NonnullRefPtr<GUI::TreeViewModel>> create_filter_tree_model(ImageEditor*
     add_filter_node.template operator()<Filters::BoxBlur3>(blur_category);
     add_filter_node.template operator()<Filters::BoxBlur5>(blur_category);
     add_filter_node.template operator()<Filters::Sharpen>(blur_category);
+    add_filter_node.template operator()<Filters::Median>(blur_category);
 
     auto color_category = filter_tree_model->add_node("Color", directory_icon);
     add_filter_node.template operator()<Filters::Grayscale>(color_category);

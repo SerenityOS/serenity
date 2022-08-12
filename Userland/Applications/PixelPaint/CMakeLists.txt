@@ -10,6 +10,7 @@ compile_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
 compile_gml(FilterGallery.gml FilterGalleryGML.h filter_gallery_gml)
 compile_gml(ResizeImageDialog.gml ResizeImageDialogGML.h resize_image_dialog_gml)
 compile_gml(LevelsDialog.gml LevelsDialogGML.h levels_dialog_gml)
+compile_gml(Filters/MedianSettings.gml Filters/MedianSettingsGML.h median_settings_gml)
 
 set(SOURCES
     CreateNewImageDialog.cpp
@@ -31,6 +32,8 @@ set(SOURCES
     Filters/Invert.cpp
     Filters/LaplaceCardinal.cpp
     Filters/LaplaceDiagonal.cpp
+    Filters/Median.cpp
+    Filters/MedianSettingsGML.h
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
     HistogramWidget.cpp
