@@ -17,6 +17,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
+#include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
@@ -30,7 +31,8 @@ using CanvasImageSource = Variant<NonnullRefPtr<HTMLImageElement>, NonnullRefPtr
 class CanvasRenderingContext2D
     : public RefCountForwarder<HTMLCanvasElement>
     , public Bindings::Wrappable
-    , public CanvasPath {
+    , public CanvasPath
+    , public CanvasState {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -59,8 +61,8 @@ public:
     void translate(float x, float y);
     void rotate(float degrees);
 
-    void set_line_width(float line_width) { m_drawing_state.line_width = line_width; }
-    float line_width() const { return m_drawing_state.line_width; }
+    void set_line_width(float line_width) { drawing_state().line_width = line_width; }
+    float line_width() const { return drawing_state().line_width; }
 
     void begin_path();
     void stroke();
@@ -76,12 +78,7 @@ public:
     DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
     void put_image_data(ImageData const&, float x, float y);
 
-    void save();
-    void restore();
-    void reset();
-    bool is_context_lost();
-
-    void reset_to_default_state();
+    virtual void reset_to_default_state() override;
 
     NonnullRefPtr<HTMLCanvasElement> canvas_for_binding() const;
 
@@ -121,22 +118,8 @@ private:
     void stroke_internal(Gfx::Path const&);
     void fill_internal(Gfx::Path&, String const& fill_rule);
 
-    // https://html.spec.whatwg.org/multipage/canvas.html#drawing-state
-    struct DrawingState {
-        Gfx::AffineTransform transform;
-        Gfx::Color fill_style { Gfx::Color::Black };
-        Gfx::Color stroke_style { Gfx::Color::Black };
-        float line_width { 1 };
-    };
-
-    DrawingState m_drawing_state;
-    Vector<DrawingState> m_drawing_state_stack;
-
     // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-origin-clean
     bool m_origin_clean { true };
-
-    // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-context-lost
-    bool m_context_lost { false };
 };
 
 enum class CanvasImageSourceUsability {
