@@ -1459,6 +1459,7 @@ void WindowManager::event(Core::Event& event)
             m_previous_event_was_super_keydown = false;
 
         process_mouse_event(mouse_event);
+        m_last_processed_buttons = mouse_event.buttons();
         // TODO: handle transitioning between two stacks
         set_hovered_window(current_window_stack().window_at(mouse_event.position(), WindowStack::IncludeWindowFrame::No));
         return;

@@ -817,7 +817,7 @@ void ConnectionFromClient::start_window_resize(i32 window_id)
 Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(String const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
 {
     auto& wm = WindowManager::the();
-    if (wm.dnd_client())
+    if (wm.dnd_client() || !(wm.last_processed_buttons() & MouseButton::Primary))
         return false;
 
     wm.start_dnd_drag(*this, text, drag_bitmap.bitmap(), Core::MimeData::construct(mime_data));

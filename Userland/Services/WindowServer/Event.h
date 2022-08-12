@@ -48,7 +48,7 @@ public:
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 
-enum class MouseButton : u8 {
+enum MouseButton : u8 {
     None = 0,
     Primary = 1,
     Secondary = 2,
