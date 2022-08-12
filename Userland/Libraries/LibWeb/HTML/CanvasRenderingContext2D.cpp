@@ -546,21 +546,6 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     return prepared_text;
 }
 
-NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1)
-{
-    return CanvasGradient::create_radial(x0, y0, r0, x1, y1, r1);
-}
-
-NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(double x0, double y0, double x1, double y1)
-{
-    return CanvasGradient::create_linear(x0, y0, x1, y1);
-}
-
-NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
-{
-    return CanvasGradient::create_conic(start_angle, x, y);
-}
-
 void CanvasRenderingContext2D::clip()
 {
     // FIXME: Implement.
