@@ -56,7 +56,6 @@ framebuffer with 8x8 font glyphs.
 You can force capable multiboot bootloaders to boot Serenity into high resolution mode by editing **Kernel/Arch/i386/Boot/boot.S** and 
 adding **| MULTIBOOT_VIDEO_MODE** to the end of the **multiboot_flags** before building Serenity.
 
-Setting a boot argument of `fbdev=off` will force the kernel to not initialize any framebuffer devices, hence allowing the system
-to boot into console-only mode as `SystemServer` will detect this condition and will not initialize `WindowServer`.
+Setting a boot argument of `graphics_subsystem_mode=limited` will force the kernel to not initialize any framebuffer devices, hence allowing the system to boot into console-only mode as `SystemServer` will detect this condition and will not initialize `WindowServer`.
 
 If you do not see any output, it's possible that the Kernel panics before any video is initialized. In that case, you might try debugging the init sequence with the PC speaker to see where it gets stuck.

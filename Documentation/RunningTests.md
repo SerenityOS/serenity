@@ -116,6 +116,6 @@ the default value `halt` keeps qemu around, which allows you to inspect the stat
 
 ```sh
 export SERENITY_RUN=ci
-export SERENITY_KERNEL_CMDLINE="fbdev=off system_mode=self-test"
+export SERENITY_KERNEL_CMDLINE="graphics_subsystem_mode=off system_mode=self-test"
 ninja run
 ```

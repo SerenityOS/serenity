@@ -49,7 +49,7 @@ fi
 
 echo "Using 'ninja run' to generate manpages ..."
 export SERENITY_RUN="ci"
-export SERENITY_KERNEL_CMDLINE="fbdev=off panic=shutdown system_mode=generate-manpages"
+export SERENITY_KERNEL_CMDLINE="graphics_subsystem_mode=off panic=shutdown system_mode=generate-manpages"
 # The 'sed' gets rid of the clear-screen escape sequence.
 ninja -C "$BUILD_DIR" -- run | sed -re 's,''c,,'
 echo

@@ -49,7 +49,7 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
         // I know, we don't do legacy, but even though I eliminated 'boot_mode' from the codebase, there
         // is a good chance that someone's still using it. Let's be nice and tell them where to look.
         // TODO: Remove this in 2022.
-        PANIC("'boot_mode' is now split into panic=[halt|shutdown], fbdev=[on|off], and system_mode=[graphical|text|selftest].");
+        PANIC("'boot_mode' is now split into panic=[halt|shutdown], graphics_subsystem_mode=[on|limited|off], and system_mode=[graphical|text|selftest].");
     }
 }
 

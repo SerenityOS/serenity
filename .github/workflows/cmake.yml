@@ -191,7 +191,7 @@ jobs:
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
-          SERENITY_KERNEL_CMDLINE: "fbdev=off panic=shutdown system_mode=self-test"
+          SERENITY_KERNEL_CMDLINE: "graphics_subsystem_mode=off panic=shutdown system_mode=self-test"
           SERENITY_RUN: "ci"
         run: |
           echo "::group::ninja run # Qemu output"

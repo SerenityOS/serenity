@@ -87,7 +87,7 @@ menuentry 'SerenityOS - netboot diskless text mode' {
         set gfxkeep=text
         terminal_output console
         echo 'Loading prekernel...'
-        multiboot (tftp)/serenity/prekernel root=/dev/ramdisk0 fbdev=off
+        multiboot (tftp)/serenity/prekernel root=/dev/ramdisk0 graphics_subsystem_mode=off
         echo 'Loading kernel...'
         module (tftp)/serenity/kernel
         echo 'Loading ramdisk...'
@@ -179,7 +179,7 @@ For troubleshooting purposes, you can add the following command line arguments i
 - `disable_uhci_controller`
 
 Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,
-you might not see any output, so add the `fbdev=off` argument as well to boot into VGA text mode.
+you might not see any output, so add the `graphics_subsystem_mode=off` argument as well to boot into VGA text mode.
 
 Afterwards you will need to enable the `console` iPXE command by uncommenting the following line in `src/config/general.h`:
 ```c
