@@ -263,24 +263,6 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     return {};
 }
 
-void CanvasRenderingContext2D::scale(float sx, float sy)
-{
-    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::scale({}, {})", sx, sy);
-    drawing_state().transform.scale(sx, sy);
-}
-
-void CanvasRenderingContext2D::translate(float tx, float ty)
-{
-    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::translate({}, {})", tx, ty);
-    drawing_state().transform.translate(tx, ty);
-}
-
-void CanvasRenderingContext2D::rotate(float radians)
-{
-    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::rotate({})", radians);
-    drawing_state().transform.rotate_radians(radians);
-}
-
 void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
@@ -599,41 +581,6 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(d
 NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
 {
     return CanvasGradient::create_conic(start_angle, x, y);
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-transform
-void CanvasRenderingContext2D::transform(double a, double b, double c, double d, double e, double f)
-{
-    // 1. If any of the arguments are infinite or NaN, then return.
-    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
-        return;
-
-    // 2. Replace the current transformation matrix with the result of multiplying the current transformation matrix with the matrix described by:
-    //    a c e
-    //    b d f
-    //    0 0 1
-    drawing_state().transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
-void CanvasRenderingContext2D::set_transform(double a, double b, double c, double d, double e, double f)
-{
-    // 1. If any of the arguments are infinite or NaN, then return.
-    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
-        return;
-
-    // 2. Reset the current transformation matrix to the identity matrix.
-    drawing_state().transform = {};
-
-    // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
-    transform(a, b, c, d, e, f);
-}
-
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-resettransform
-void CanvasRenderingContext2D::reset_transform()
-{
-    // The resetTransform() method, when invoked, must reset the current transformation matrix to the identity matrix.
-    drawing_state().transform = {};
 }
 
 void CanvasRenderingContext2D::clip()

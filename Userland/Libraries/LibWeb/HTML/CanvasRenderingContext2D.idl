@@ -5,6 +5,7 @@
 #import <HTML/CanvasGradient.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasState.idl>
+#import <HTML/Canvas/CanvasTransform.idl>
 #import <HTML/Path2D.idl>
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
@@ -14,10 +15,6 @@ interface CanvasRenderingContext2D {
     undefined fillRect(double x, double y, double w, double h);
     undefined strokeRect(double x, double y, double w, double h);
     undefined clearRect(double x, double y, double w, double h);
-
-    undefined scale(double x, double y);
-    undefined translate(double x, double y);
-    undefined rotate(double radians);
 
     undefined beginPath();
     // FIXME: `DOMString` should be `CanvasFillRule`
@@ -50,10 +47,6 @@ interface CanvasRenderingContext2D {
     CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
     CanvasGradient createConicGradient(double startAngle, double x, double y);
 
-    undefined transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
-    undefined setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
-    undefined resetTransform();
-
     // undefined clip(optional CanvasFillRule fillRule = "nonzero");
     // undefined clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
     // FIXME: Replace this with the two definitions above.
@@ -62,4 +55,5 @@ interface CanvasRenderingContext2D {
 };
 
 CanvasRenderingContext2D includes CanvasState;
+CanvasRenderingContext2D includes CanvasTransform;
 CanvasRenderingContext2D includes CanvasPath;

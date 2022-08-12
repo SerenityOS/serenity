@@ -18,6 +18,7 @@
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
+#include <LibWeb/HTML/Canvas/CanvasTransform.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
@@ -32,7 +33,8 @@ class CanvasRenderingContext2D
     : public RefCountForwarder<HTMLCanvasElement>
     , public Bindings::Wrappable
     , public CanvasPath
-    , public CanvasState {
+    , public CanvasState
+    , public CanvasTransform<CanvasRenderingContext2D> {
 
     AK_MAKE_NONCOPYABLE(CanvasRenderingContext2D);
     AK_MAKE_NONMOVABLE(CanvasRenderingContext2D);
@@ -56,10 +58,6 @@ public:
     DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y);
     DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y, float destination_width, float destination_height);
     DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height);
-
-    void scale(float sx, float sy);
-    void translate(float x, float y);
-    void rotate(float degrees);
 
     void set_line_width(float line_width) { drawing_state().line_width = line_width; }
     float line_width() const { return drawing_state().line_width; }
@@ -88,9 +86,6 @@ public:
     NonnullRefPtr<CanvasGradient> create_linear_gradient(double x0, double y0, double x1, double y1);
     NonnullRefPtr<CanvasGradient> create_conic_gradient(double start_angle, double x, double y);
 
-    void transform(double a, double b, double c, double d, double e, double f);
-    void set_transform(double a, double b, double c, double d, double e, double f);
-    void reset_transform();
     void clip();
 
 private:
