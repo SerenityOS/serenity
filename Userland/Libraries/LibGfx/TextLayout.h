@@ -69,7 +69,7 @@ public:
 
 private:
     Vector<String, 32> wrap_lines(TextElision, TextWrapping, int line_spacing, FitWithinRect, bool is_vertical_text) const;
-    String elide_text_from_right(Utf8View, bool force_elision) const;
+    String elide_text_from_right(Utf8View, bool force_elision, bool is_vertical_text) const;
 
     Font const* m_font;
     Utf8View m_text;

@@ -1441,30 +1441,51 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
-    if (direction == TextDirection::RTL) {
+    switch (direction) {
+    case TextDirection::RTL:
         point.translate_by(rect.width(), 0); // Start drawing from the end
         space_width = -space_width;          // Draw spaces backwards
+        break;
+    case TextDirection::BTT:
+        point.translate_by(0, rect.height() + 1);
+        space_width = -space_width;
+        break;
+    default:
+        break;
     }
 
     u32 last_code_point { 0 };
     for (auto it = text.begin(); it != text.end(); ++it) {
         auto code_point = *it;
         if (should_paint_as_space(code_point)) {
-            point.translate_by(space_width, 0);
+            if (direction == TextDirection::BTT || direction == TextDirection::TTB)
+                point.translate_by(0, space_width);
+            else
+                point.translate_by(space_width, 0);
             last_code_point = code_point;
             continue;
         }
 
         int kerning = round_to<int>(font.glyphs_horizontal_kerning(last_code_point, code_point));
         if (kerning != 0.f)
-            point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
+            point.translate_by(direction != TextDirection::RTL ? kerning : -kerning, 0);
 
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
-        if (direction == TextDirection::RTL)
+        switch (direction) {
+        case TextDirection::RTL:
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
+            break;
+        case TextDirection::BTT:
+            point.translate_by(0, -glyph_size.width());
+            break;
+        default:
+            break;
+        }
         draw_glyph({ point, glyph_size }, it, direction);
         if (direction == TextDirection::LTR)
             point.translate_by(glyph_size.width(), 0);
+        if (direction == TextDirection::TTB)
+            point.translate_by(0, glyph_size.width());
         // The callback function might have exhausted the iterator.
         if (it == text.end())
             break;
@@ -1715,6 +1736,8 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
                     current_dx += run_width;
             }
         } else {
+            if (direction != TextDirection::LTR)
+                line_direction = direction;
             draw_text_line(line_rect, line, font, alignment, line_direction, draw_glyph);
         }
     }

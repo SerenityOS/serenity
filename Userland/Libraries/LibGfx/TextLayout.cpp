@@ -182,7 +182,7 @@ blocks_processed:
     case TextElision::None:
         break;
     case TextElision::Right: {
-        lines.at(lines.size() - 1) = elide_text_from_right(Utf8View { lines.at(lines.size() - 1) }, did_not_finish);
+        lines.at(lines.size() - 1) = elide_text_from_right(Utf8View { lines.at(lines.size() - 1) }, did_not_finish, is_vertical_text);
         break;
     }
     }
@@ -190,10 +190,11 @@ blocks_processed:
     return lines;
 }
 
-String TextLayout::elide_text_from_right(Utf8View text, bool force_elision) const
+String TextLayout::elide_text_from_right(Utf8View text, bool force_elision, bool is_vertical_text) const
 {
+    auto effective_width = is_vertical_text ? m_rect.height() : m_rect.width();
     size_t text_width = m_font->width(text);
-    if (force_elision || text_width > static_cast<unsigned>(m_rect.width())) {
+    if (force_elision || text_width > static_cast<unsigned>(effective_width)) {
         size_t ellipsis_width = m_font->width("..."sv);
         size_t current_width = ellipsis_width;
         size_t glyph_spacing = m_font->glyph_spacing();
@@ -210,7 +211,7 @@ String TextLayout::elide_text_from_right(Utf8View text, bool force_elision) cons
                 //       but since we are here because the last glyph does not actually fit on the line,
                 //       we don't have to worry about spacing.
                 int width_with_this_glyph_included = current_width + glyph_width + glyph_spacing;
-                if (width_with_this_glyph_included > m_rect.width())
+                if (width_with_this_glyph_included > effective_width)
                     break;
                 current_width += glyph_width + glyph_spacing;
                 offset = text.iterator_offset(it);
