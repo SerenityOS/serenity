@@ -44,4 +44,13 @@ SECTIONS
     } :bss
 
     end_of_prekernel_image = .;
+
+    .Kernel_drow ALIGN(4K) : AT (ADDR(.Kernel_drow))
+    {
+        _binary_Kernel_drow_standalone_start = .;
+        KEEP(*(.Kernel_drow))
+    }
+
+    end_of_prekernel_image_after_kernel_image = .;
+
 }
