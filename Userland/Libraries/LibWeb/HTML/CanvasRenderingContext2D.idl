@@ -4,6 +4,7 @@
 #import <HTML/TextMetrics.idl>
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
 #import <HTML/Canvas/CanvasPath.idl>
+#import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Canvas/CanvasTransform.idl>
 #import <HTML/Path2D.idl>
@@ -11,10 +12,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
 interface CanvasRenderingContext2D {
-
-    undefined fillRect(double x, double y, double w, double h);
-    undefined strokeRect(double x, double y, double w, double h);
-    undefined clearRect(double x, double y, double w, double h);
 
     undefined beginPath();
     // FIXME: `DOMString` should be `CanvasFillRule`
@@ -51,4 +48,5 @@ interface CanvasRenderingContext2D {
 CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasTransform;
 CanvasRenderingContext2D includes CanvasFillStrokeStyles;
+CanvasRenderingContext2D includes CanvasRect;
 CanvasRenderingContext2D includes CanvasPath;
