@@ -135,6 +135,7 @@ set(SOURCES
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextContainer.cpp
+    HTML/Canvas/CanvasDrawImage.cpp
     HTML/Canvas/CanvasPath.cpp
     HTML/Canvas/CanvasState.cpp
     HTML/CanvasGradient.cpp
