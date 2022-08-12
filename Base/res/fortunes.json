@@ -232,7 +232,7 @@
   },
   {
     "quote": "science man make picture of bright light",
-    "author":"Andrew Kaster",
+    "author": "Andrew Kaster",
     "url": "https://discord.com/channels/830522505605283862/831544568767578162/959570790393733160",
     "utc_time": 1648849904,
     "context": "Explaining state-of-the-art astronomy research"
@@ -249,5 +249,12 @@
     "url": "https://github.com/SerenityOS/serenity/pull/14343",
     "utc_time": 1655726258,
     "context": "We're not quite sure where the first two books are, but the third one was a $NEWSPAPER best-seller"
+  },
+  {
+    "quote": "If escalation is so bad, why do so many places have escalators? Take that, security community!",
+    "author": "AtkinsSJ",
+    "url": "https://discord.com/channels/830522505605283862/830522505605283866/1007765914722238534",
+    "utc_time": 1660340460,
+    "context": "Dynamic implementations of drivers and interfaces (Kernel-modules, OpenGL, ...) dlopen-ing and executing random files if you ask them \"nicely\", and StylePainter potentially having to do the same, leading to Filiph Sandström saying \"Potential privilege escalation, it's not a bug it's a feature™\""
   }
 ]
