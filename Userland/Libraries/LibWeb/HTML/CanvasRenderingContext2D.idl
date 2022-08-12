@@ -1,8 +1,8 @@
 #import <HTML/HTMLCanvasElement.idl>
-#import <HTML/ImageData.idl>
 #import <HTML/Canvas/CanvasDrawImage.idl>
 #import <HTML/Canvas/CanvasDrawPath.idl>
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
+#import <HTML/Canvas/CanvasImageData.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
@@ -15,10 +15,6 @@ interface CanvasRenderingContext2D {
 
     attribute double lineWidth;
 
-    ImageData createImageData(long sw, long sh);
-    ImageData getImageData(long sx, long sy, long sw, long sh);
-    undefined putImageData(ImageData imagedata, double dx, double dy);
-
     [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 
 };
@@ -30,4 +26,5 @@ CanvasRenderingContext2D includes CanvasRect;
 CanvasRenderingContext2D includes CanvasDrawPath;
 CanvasRenderingContext2D includes CanvasText;
 CanvasRenderingContext2D includes CanvasDrawImage;
+CanvasRenderingContext2D includes CanvasImageData;
 CanvasRenderingContext2D includes CanvasPath;
