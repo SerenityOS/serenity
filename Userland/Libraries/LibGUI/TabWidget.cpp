@@ -402,7 +402,7 @@ int TabWidget::uniform_tab_width() const
     int total_tab_width = m_tabs.size() * get_max_tab_width();
     int tab_width = get_max_tab_width();
 
-    if (this->has_side_tabs())
+    if (this->has_side_tabs() && !this->has_vertical_text())
         return tab_width;
 
     int available_width = width() - bar_margin() * 2;
@@ -433,10 +433,10 @@ Gfx::IntRect TabWidget::side_vertical_button_rect(size_t index) const
     int y_offset = bar_margin();
     int close_button_offset = m_close_button_enabled ? 16 : 0;
     for (size_t i = 0; i < index; ++i) {
-        auto tab_width = m_tabs[i].width(font()) + close_button_offset;
+        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font()) + close_button_offset;
         y_offset += tab_width;
     }
-    Gfx::IntRect rect { 0, y_offset, bar_height() - 1, m_tabs[index].width(font()) + close_button_offset };
+    Gfx::IntRect rect { 0, y_offset, bar_height() - 1, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()) + close_button_offset };
 
     if (m_tabs[index].widget != m_active_widget) {
         rect.translate_by(m_tab_position == TabPosition::Left ? 2 : 0, 0);
