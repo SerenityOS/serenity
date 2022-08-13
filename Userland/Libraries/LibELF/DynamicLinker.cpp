@@ -19,13 +19,13 @@
 #include <LibC/link.h>
 #include <LibC/sys/mman.h>
 #include <LibC/unistd.h>
-#include <LibDl/dlfcn.h>
-#include <LibDl/dlfcn_integration.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
+#include <dlfcn.h>
+#include <dlfcn_integration.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>

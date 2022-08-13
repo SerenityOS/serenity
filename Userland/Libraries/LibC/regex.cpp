@@ -5,8 +5,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <LibDl/dlfcn.h>
-#include <LibDl/dlfcn_integration.h>
+#include <dlfcn.h>
+#include <dlfcn_integration.h>
 #include <pthread.h>
 #include <regex.h>
 

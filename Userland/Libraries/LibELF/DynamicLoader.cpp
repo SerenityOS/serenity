@@ -11,13 +11,13 @@
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <LibDl/dlfcn.h>
-#include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Hashes.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
+#include <dlfcn.h>
+#include <dlfcn_integration.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

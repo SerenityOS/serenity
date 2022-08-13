@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibDl/dlfcn.h>
 #include <LibTest/TestCase.h>
+#include <dlfcn.h>
 
 TEST_CASE(test_dlopen)
 {
