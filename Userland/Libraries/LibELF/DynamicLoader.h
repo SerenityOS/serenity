@@ -12,9 +12,9 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibC/elf.h>
-#include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
+#include <dlfcn_integration.h>
 #include <sys/mman.h>
 
 namespace ELF {

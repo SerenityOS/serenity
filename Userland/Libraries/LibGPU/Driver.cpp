@@ -7,12 +7,8 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#ifdef __serenity__
-#    include <LibDl/dlfcn.h>
-#else
-#    include <dlfcn.h>
-#endif
 #include <LibGPU/Driver.h>
+#include <dlfcn.h>
 
 namespace GPU {
 

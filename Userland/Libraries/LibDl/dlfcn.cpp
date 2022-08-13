@@ -6,8 +6,8 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibDl/dlfcn.h>
-#include <LibDl/dlfcn_integration.h>
+#include <dlfcn.h>
+#include <dlfcn_integration.h>
 #include <string.h>
 
 // FIXME: use thread_local and a String once TLS works
