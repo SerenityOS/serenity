@@ -15,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     app->set_quit_when_last_window_deleted(false);
@@ -23,7 +23,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::ConnectionToWindowManagerServer::the();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec"));
+
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin/DisplaySettings", "x"));
 
     auto window = TRY(DesktopStatusWindow::try_create());
     window->set_title("WorkspacePicker");
