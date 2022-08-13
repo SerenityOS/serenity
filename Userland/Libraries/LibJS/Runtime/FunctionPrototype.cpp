@@ -21,14 +21,14 @@
 namespace JS {
 
 FunctionPrototype::FunctionPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : FunctionObject(*global_object.object_prototype())
 {
 }
 
 void FunctionPrototype::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Base::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.apply, apply, 2, attr);
     define_native_function(vm.names.bind, bind, 1, attr);
@@ -37,6 +37,13 @@ void FunctionPrototype::initialize(GlobalObject& global_object)
     define_native_function(*vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
     define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
+}
+
+ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Value>)
+{
+    // The Function prototype object:
+    // - accepts any arguments and returns undefined when invoked.
+    return js_undefined();
 }
 
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
