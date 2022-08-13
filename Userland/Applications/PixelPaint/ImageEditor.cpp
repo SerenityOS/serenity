@@ -30,6 +30,7 @@ constexpr int marching_ant_length = 4;
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
     , m_title("Untitled")
+    , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     m_undo_stack.push(make<ImageUndoCommand>(*m_image, String()));
