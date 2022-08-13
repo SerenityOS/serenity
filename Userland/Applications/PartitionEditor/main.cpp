@@ -39,8 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    // FIXME: PartitionEditor needs its own icon.
-    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-space-analyzer"sv));
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-partition-editor"sv));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Partition Editor");
