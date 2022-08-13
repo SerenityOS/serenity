@@ -35,9 +35,11 @@ fi
 if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
     rsync -aH --chown=0:0 --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
     rsync -aH --chown=0:0 --inplace --update Root/ mnt/
+    rsync -aH --chown=0:0 --inplace --update initramfs.serecpio mnt/boot/initramfs.serecpio
 else
     rsync -aH --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
     rsync -aH --inplace --update Root/ mnt/
+    rsync -aH --inplace --update initramfs.serecpio mnt/boot/initramfs.serecpio
     chown -R 0:0 mnt/
 fi
 

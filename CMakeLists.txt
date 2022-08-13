@@ -82,7 +82,21 @@ add_custom_target(image
     DEPENDS qemu-image
 )
 
+add_custom_target(initramfs-directory
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-initramfs-image.sh"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/InitRootFS"
+    USES_TERMINAL
+)
+
+add_custom_target(initramfs-image
+    COMMAND $<TARGET_FILE:Lagom::InitRAMFSTool> --force-uid 0 --force-gid 0 -f initramfs.serecpio InitRootFS/
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/initramfs.serecpio"
+    USES_TERMINAL
+)
+
 add_custom_target(qemu-image
+    COMMAND ${CMAKE_MAKE_PROGRAM} initramfs-directory
+    COMMAND ${CMAKE_MAKE_PROGRAM} initramfs-image
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
     BYPRODUCTS "${CMAKE_BINARY_DIR}/_disk_image"
     USES_TERMINAL
