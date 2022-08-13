@@ -124,6 +124,21 @@ VM::VM(OwnPtr<CustomData> custom_data)
         return {};
     };
 
+    host_ensure_can_add_private_element = [](Object&) -> ThrowCompletionOr<void> {
+        // The host-defined abstract operation HostEnsureCanAddPrivateElement takes argument O (an Object)
+        // and returns either a normal completion containing unused or a throw completion.
+        // It allows host environments to prevent the addition of private elements to particular host-defined exotic objects.
+        // An implementation of HostEnsureCanAddPrivateElement must conform to the following requirements:
+        // - If O is not a host-defined exotic object, this abstract operation must return NormalCompletion(unused) and perform no other steps.
+        // - Any two calls of this abstract operation with the same argument must return the same kind of Completion Record.
+        // The default implementation of HostEnsureCanAddPrivateElement is to return NormalCompletion(unused).
+        return {};
+
+        // This abstract operation is only invoked by ECMAScript hosts that are web browsers.
+        // NOTE: Since LibJS has no way of knowing whether the current environment is a browser we always
+        //       call HostEnsureCanAddPrivateElement when needed.
+    };
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
