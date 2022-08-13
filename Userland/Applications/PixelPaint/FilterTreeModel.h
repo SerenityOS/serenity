@@ -16,7 +16,7 @@ namespace PixelPaint {
 
 class FilterNode final : public GUI::TreeViewModel::Node {
 public:
-    FilterNode(String text, Optional<GUI::Icon> icon, Node* parent_node, NonnullOwnPtr<Filter> filter)
+    FilterNode(String text, Optional<GUI::Icon> icon, Node* parent_node, NonnullRefPtr<Filter> filter)
         : Node(move(text), move(icon), parent_node)
         , m_filter(move(filter))
     {
@@ -26,7 +26,7 @@ public:
     Filter& filter() { return *m_filter; }
 
 private:
-    NonnullOwnPtr<Filter> m_filter;
+    NonnullRefPtr<Filter> m_filter;
 };
 
 ErrorOr<NonnullRefPtr<GUI::TreeViewModel>> create_filter_tree_model(ImageEditor*);
