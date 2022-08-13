@@ -40,6 +40,7 @@ set(SOURCES
     IconBag.cpp
     Image.cpp
     ImageEditor.cpp
+    ImageProcessor.cpp
     Layer.cpp
     LayerListWidget.cpp
     LayerPropertiesWidget.cpp
