@@ -259,6 +259,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
 
             for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
+                dbgln("Used memory range for boot module: {} - {}", PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end));
                 global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
             }
         }
