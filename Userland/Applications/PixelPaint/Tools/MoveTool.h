@@ -21,6 +21,7 @@ public:
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
+    virtual void on_keyup(GUI::KeyEvent&) override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
 private:
@@ -29,8 +30,11 @@ private:
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;
+    Gfx::IntPoint m_new_scaled_layer_location;
+    Gfx::IntSize m_new_layer_size;
     bool m_scaling { false };
     bool m_mouse_in_resize_corner { false };
+    bool m_keep_ascept_ratio { false };
 };
 
 }
