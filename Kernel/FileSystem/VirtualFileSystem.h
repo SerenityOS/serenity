@@ -90,6 +90,8 @@ private:
 
     ErrorOr<void> traverse_directory_inode(Inode&, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>);
 
+    bool mount_point_exists_at_inode(InodeIdentifier inode);
+
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
