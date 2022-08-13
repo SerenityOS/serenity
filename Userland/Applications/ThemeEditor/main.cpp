@@ -17,9 +17,9 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    char const* file_to_edit = nullptr;
+    StringView file_to_edit;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
@@ -35,16 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<String> path = {};
 
-    if (file_to_edit) {
+    if (!file_to_edit.is_empty())
         path = Core::File::absolute_path(file_to_edit);
-        if (Core::File::exists(*path)) {
-            dbgln("unveil for: {}", *path);
-            if (unveil(path->characters(), "r") < 0) {
-                perror("unveil");
-                return 1;
-            }
-        }
-    }
 
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
@@ -55,8 +47,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
 
     auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>());
-    if (path.has_value())
-        main_widget->load_from_file(TRY(Core::File::open(*path, Core::OpenMode::ReadOnly)));
+
+    if (path.has_value()) {
+        // Note: This is deferred to ensure that the window has already popped and thus proper window stealing can be performed.
+        app->event_loop().deferred_invoke(
+            [&window, &path, &main_widget]() {
+                auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path.value());
+                if (response.is_error())
+                    GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
+                else
+                    main_widget->load_from_file(response.release_value());
+            });
+    }
+
     TRY(main_widget->initialize_menubar(window));
     main_widget->update_title();
 
