@@ -229,6 +229,7 @@ public:
     Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
     Function<JobCallback(FunctionObject&)> host_make_job_callback;
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
+    Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
 
 private:
     explicit VM(OwnPtr<CustomData>);

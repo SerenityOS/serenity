@@ -462,23 +462,49 @@ PrivateElement* Object::private_element_find(PrivateName const& name)
 // 7.3.28 PrivateFieldAdd ( O, P, value ), https://tc39.es/ecma262/#sec-privatefieldadd
 ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value value)
 {
+    // 1. If the host is a web browser, then
+    //    a. Perform ? HostEnsureCanAddPrivateElement(O).
+    // NOTE: Since LibJS has no way of knowing whether it is in a browser we just always call the hook.
+    TRY(vm().host_ensure_can_add_private_element(*this));
+
+    // 2. Let entry be PrivateElementFind(O, P).
+    // 3. If entry is not empty, throw a TypeError exception.
     if (auto* entry = private_element_find(name); entry)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, name.description);
+
     if (!m_private_elements)
         m_private_elements = make<Vector<PrivateElement>>();
+
+    // 4. Append PrivateElement { [[Key]]: P, [[Kind]]: field, [[Value]]: value } to O.[[PrivateElements]].
     m_private_elements->empend(name, PrivateElement::Kind::Field, value);
+
+    // 5. Return unused.
     return {};
 }
 
 // 7.3.29 PrivateMethodOrAccessorAdd ( O, method ), https://tc39.es/ecma262/#sec-privatemethodoraccessoradd
 ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement element)
 {
+    // 1. Assert: method.[[Kind]] is either method or accessor.
     VERIFY(element.kind == PrivateElement::Kind::Method || element.kind == PrivateElement::Kind::Accessor);
+
+    // 2. If the host is a web browser, then
+    //    a. Perform ? HostEnsureCanAddPrivateElement(O).
+    // NOTE: Since LibJS has no way of knowing whether it is in a browser we just always call the hook.
+    TRY(vm().host_ensure_can_add_private_element(*this));
+
+    // 3. Let entry be PrivateElementFind(O, method.[[Key]]).
+    // 4. If entry is not empty, throw a TypeError exception.
     if (auto* entry = private_element_find(element.key); entry)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, element.key.description);
+
     if (!m_private_elements)
         m_private_elements = make<Vector<PrivateElement>>();
+
+    // 5. Append method to O.[[PrivateElements]].
     m_private_elements->append(move(element));
+
+    // 6. Return unused.
     return {};
 }
 
