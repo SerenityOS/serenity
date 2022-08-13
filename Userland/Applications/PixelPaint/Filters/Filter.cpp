@@ -6,6 +6,7 @@
  */
 
 #include "Filter.h"
+#include "../ImageProcessor.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 
@@ -40,11 +41,10 @@ void Filter::apply() const
 {
     if (!m_editor)
         return;
-    if (auto* layer = m_editor->active_layer()) {
-        apply(layer->content_bitmap(), layer->content_bitmap());
-        layer->did_modify_bitmap(layer->rect());
-        m_editor->did_complete_action(String::formatted("Filter {}", filter_name()));
-    }
+    // FIXME: I am not thread-safe!
+    // If you try to edit the bitmap while the image processor is still running... :yaksplode:
+    if (auto* layer = m_editor->active_layer())
+        MUST(ImageProcessor::the()->enqueue_command(make_ref_counted<FilterApplicationCommand>(*this, *layer)));
 }
 
 void Filter::update_preview()
