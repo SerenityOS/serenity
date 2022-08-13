@@ -201,6 +201,10 @@ ln -sf checksum mnt/bin/sha256sum
 ln -sf checksum mnt/bin/sha512sum
 echo "done"
 
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+"$script_path/build-initramfs-image.sh"
+rsync -aH --chown=0:0 --inplace --update initramfs.cpio Root/boot/initramfs.cpio
+
 # Run local sync script, if it exists
 if [ -f "${SERENITY_SOURCE_DIR}/sync-local.sh" ]; then
     sh "${SERENITY_SOURCE_DIR}/sync-local.sh"
