@@ -1,12 +1,11 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/IterationDecision.h"
-#include "LibCore/FileWatcher.h"
-#include <AK/StringBuilder.h>
+#include <AK/IterationDecision.h>
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/CookieJar.h>
@@ -15,6 +14,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -63,10 +63,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
 
-    char const* specified_url = nullptr;
+    Vector<String> specified_urls;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::try_create(arguments));
@@ -118,14 +118,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    URL first_url = Browser::url_from_user_input(Browser::g_home_url);
-    if (specified_url) {
-        if (Core::File::exists(specified_url)) {
-            first_url = URL::create_with_file_protocol(Core::File::real_path_for(specified_url));
-        } else {
-            first_url = Browser::url_from_user_input(specified_url);
+    auto url_from_argument_string = [](String const& string) -> URL {
+        if (Core::File::exists(string)) {
+            return URL::create_with_file_protocol(Core::File::real_path_for(string));
         }
-    }
+        return Browser::url_from_user_input(string);
+    };
+
+    URL first_url = Browser::url_from_user_input(Browser::g_home_url);
+    if (!specified_urls.is_empty())
+        first_url = url_from_argument_string(specified_urls.first());
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
@@ -159,6 +161,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             tab->action_left(action);
         }
     };
+
+    for (size_t i = 1; i < specified_urls.size(); ++i)
+        window->create_new_tab(url_from_argument_string(specified_urls[i]), false);
 
     window->show();
 
