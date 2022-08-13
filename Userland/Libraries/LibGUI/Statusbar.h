@@ -76,6 +76,8 @@ private:
     void update_segment(size_t);
     NonnullRefPtr<Segment> create_segment();
 
+    virtual void child_event(Core::ChildEvent&) override;
+
     NonnullRefPtrVector<Segment> m_segments;
     RefPtr<ResizeCorner> m_corner;
 };
