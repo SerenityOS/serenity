@@ -13,7 +13,7 @@
 
 namespace PixelPaint {
 
-class Filter {
+class Filter : public RefCounted<Filter> {
 public:
     virtual void apply() const;
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const = 0;

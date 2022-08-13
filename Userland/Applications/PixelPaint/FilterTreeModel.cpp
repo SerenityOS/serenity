@@ -32,7 +32,7 @@ ErrorOr<NonnullRefPtr<GUI::TreeViewModel>> create_filter_tree_model(ImageEditor*
     auto filter_tree_model = GUI::TreeViewModel::create();
 
     auto add_filter_node = [&]<typename FilterType>(GUI::TreeViewModel::Node& node) {
-        auto filter = adopt_own(*new FilterType(editor));
+        auto filter = make_ref_counted<FilterType>(editor);
         (void)node.add_node<FilterNode>(filter->filter_name(), filter_icon, move(filter));
     };
 
