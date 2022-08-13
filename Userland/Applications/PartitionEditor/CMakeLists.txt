@@ -11,5 +11,5 @@ set(SOURCES
     PartitionModel.cpp
 )
 
-serenity_app(PartitionEditor ICON app-space-analyzer)
+serenity_app(PartitionEditor ICON app-partition-editor)
 target_link_libraries(PartitionEditor LibMain LibGUI LibPartition)
