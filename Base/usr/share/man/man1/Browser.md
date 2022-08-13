@@ -7,9 +7,7 @@
 ## Synopsis
 
 ```**sh
-$ Browser
-$ Browser [options]
-$ Browser [url]
+$ Browser [options] [urls]
 ```
 
 ## Description
@@ -23,7 +21,7 @@ $ Browser [url]
 
 ## Arguments
 
-* `url`: URL to open
+* `urls`: A list of urls to open, one per tab. If none are specified, then the homepage will be opened instead.
 
 ## Examples
 
@@ -31,4 +29,5 @@ $ Browser [url]
 $ Browser
 $ Browser --help
 $ Browser https://serenityos.org/
+$ Browser https://serenityos.org/ /res/html/misc/welcome.html github.com/serenityos/serenity
 ```
