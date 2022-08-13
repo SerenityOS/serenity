@@ -13,7 +13,11 @@
 
 namespace PixelPaint {
 
+class FilterApplicationCommand;
+
 class Filter : public RefCounted<Filter> {
+    friend class FilterApplicationCommand;
+
 public:
     virtual void apply() const;
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const = 0;
