@@ -12,6 +12,7 @@
 #include "Image.h"
 #include "Selection.h"
 #include <AK/Variant.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/AbstractZoomPanWidget.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/UndoStack.h>
@@ -114,6 +115,8 @@ public:
     void draw_marching_ants(Gfx::Painter&, Gfx::IntRect const&) const;
     void draw_marching_ants(Gfx::Painter&, Mask const&) const;
 
+    Core::EventLoop& gui_event_loop() { return m_gui_event_loop; }
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -179,6 +182,8 @@ private:
     int m_marching_ants_offset { 0 };
 
     void draw_marching_ants_pixel(Gfx::Painter&, int x, int y) const;
+
+    Core::EventLoop& m_gui_event_loop;
 };
 
 }
