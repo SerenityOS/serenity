@@ -9,11 +9,10 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_state, LayoutMode layout_mode)
+LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_state)
     : m_context(context)
     , m_layout_state(layout_state)
     , m_containing_block_state(layout_state.get_mutable(context.containing_block()))
-    , m_layout_mode(layout_mode)
 {
     begin_new_line(false);
 }

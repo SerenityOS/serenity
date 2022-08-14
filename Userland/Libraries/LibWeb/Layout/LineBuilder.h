@@ -15,7 +15,7 @@ class LineBuilder {
     AK_MAKE_NONMOVABLE(LineBuilder);
 
 public:
-    LineBuilder(InlineFormattingContext&, LayoutState&, LayoutMode);
+    LineBuilder(InlineFormattingContext&, LayoutState&);
     ~LineBuilder();
 
     void break_line();
@@ -52,7 +52,6 @@ private:
     InlineFormattingContext& m_context;
     LayoutState& m_layout_state;
     LayoutState::UsedValues& m_containing_block_state;
-    LayoutMode m_layout_mode {};
     float m_available_width_for_current_line { 0 };
     float m_current_y { 0 };
     float m_max_height_on_current_line { 0 };

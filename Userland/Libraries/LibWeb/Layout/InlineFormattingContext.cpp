@@ -217,7 +217,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     line_boxes.clear_with_capacity();
 
     InlineLevelIterator iterator(*this, m_state, containing_block(), layout_mode);
-    LineBuilder line_builder(*this, m_state, layout_mode);
+    LineBuilder line_builder(*this, m_state);
 
     for (;;) {
         auto item_opt = iterator.next(line_builder.available_width_for_current_line());
