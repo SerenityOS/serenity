@@ -34,7 +34,7 @@
 #include <unistd.h>
 
 static ErrorOr<Vector<String>> discover_apps_and_categories();
-struct WindowRefence {
+struct WindowReference {
     GUI::Window* window { nullptr };
     GUI::Window* get()
     {
@@ -42,7 +42,7 @@ struct WindowRefence {
         return window;
     }
 };
-static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence&);
+static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowReference&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // FIXME: Have to awkwardly pass a reference to the window pointer to build_system_menu(), that will be resolved later.
     // (It is always valid at use)
-    WindowRefence window_ref {};
+    WindowReference window_ref {};
     auto menu = TRY(build_system_menu(window_ref));
     menu->realize_menu_if_needed();
 
@@ -118,7 +118,7 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
     return sorted_app_categories;
 }
 
-ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
+ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowReference& window_ref)
 {
     Vector<String> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
