@@ -930,7 +930,7 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
             return IterationDecision::Continue;
         });
         if (!page) {
-            dmesgln("MM: no user physical pages available");
+            dmesgln("MM: no physical pages available");
             return ENOMEM;
         }
     }
@@ -975,7 +975,7 @@ ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_ph
         }
     }
 
-    dmesgln("MM: no contiguous user physical pages available");
+    dmesgln("MM: no contiguous physical pages available");
     return ENOMEM;
 }
 
