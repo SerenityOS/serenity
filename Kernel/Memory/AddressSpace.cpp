@@ -217,7 +217,14 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAdd
         SpinlockLocker mm_locker(s_mm_lock);
         region->set_page_directory(page_directory());
     } else {
-        TRY(region->map(page_directory(), ShouldFlushTLB::No));
+        auto result = region->map(page_directory(), ShouldFlushTLB::No);
+        if (result.is_error()) [[unlikely]] {
+            // At this point the region is already part of the Process region tree, so we have to make sure
+            // we remove it from the tree before returning this error, or else the Region tree will contain
+            // a dangling pointer to the free'd Region instance
+            m_region_tree.remove(*region);
+            return result.release_error();
+        }
     }
     return region.leak_ptr();
 }
