@@ -67,6 +67,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     };
 
     window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"));
+    window->m_apply_button->set_enabled(false);
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
         window->apply_settings();
     };
