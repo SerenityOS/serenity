@@ -55,7 +55,7 @@ index 9b94fd71e..51e45878f 100755
  
 +  serenity*)
 +    lt_cv_dlopen="dlopen"
-+    lt_cv_dlopen_libs="-ldl"
++    lt_cv_dlopen_libs=""
 +    ;;
 +
    darwin*)
