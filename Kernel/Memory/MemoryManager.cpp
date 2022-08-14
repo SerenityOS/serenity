@@ -828,8 +828,21 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
 {
     VERIFY(page_count > 0);
     SpinlockLocker lock(s_mm_lock);
-    if (m_system_memory_info.physical_pages_uncommitted < page_count)
+    if (m_system_memory_info.physical_pages_uncommitted < page_count) {
+        dbgln("MM: Unable to commit {} pages, have only {}", page_count, m_system_memory_info.physical_pages_uncommitted);
+
+        Process::for_each([&](Process const& process) {
+            dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
+                process.name(),
+                process.pid(),
+                process.address_space().amount_resident() / PAGE_SIZE,
+                process.address_space().amount_shared() / PAGE_SIZE,
+                process.address_space().amount_virtual() / PAGE_SIZE);
+            return IterationDecision::Continue;
+        });
+
         return ENOMEM;
+    }
 
     m_system_memory_info.physical_pages_uncommitted -= page_count;
     m_system_memory_info.physical_pages_committed += page_count;
