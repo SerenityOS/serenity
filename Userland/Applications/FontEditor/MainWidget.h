@@ -55,6 +55,7 @@ public:
     void set_show_statusbar(bool);
 
     void set_highlight_modifications(bool);
+    void set_show_system_emoji(bool);
 
 private:
     MainWidget();
@@ -118,6 +119,7 @@ private:
     RefPtr<GUI::Action> m_show_toolbar_action;
     RefPtr<GUI::Action> m_show_statusbar_action;
     RefPtr<GUI::Action> m_highlight_modifications_action;
+    RefPtr<GUI::Action> m_show_system_emoji_action;
 
     GUI::ActionGroup m_glyph_editor_scale_actions;
     RefPtr<GUI::Action> m_scale_five_action;

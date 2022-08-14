@@ -144,7 +144,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
             if (font().contains_glyph(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
-            else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph))
+            else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph); emoji && m_show_system_emoji)
                 painter.draw_emoji(inner_rect.location(), *emoji, font());
         } else if (font().contains_glyph(glyph)) {
             if (m_highlight_modifications && m_modified_glyphs.contains(glyph)) {
@@ -165,8 +165,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
                 painter.fill_rect(outer_rect, palette().base());
             }
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
-        } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph)) {
-            painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
+        } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph); emoji && m_show_system_emoji) {
             painter.draw_emoji(inner_rect.location(), *emoji, font());
         } else {
             if (m_highlight_modifications && m_original_font->contains_glyph(glyph)) {
@@ -433,6 +432,14 @@ void GlyphMapWidget::set_highlight_modifications(bool highlight_modifications)
         return;
 
     m_highlight_modifications = highlight_modifications;
+    update();
+}
+
+void GlyphMapWidget::set_show_system_emoji(bool show)
+{
+    if (m_show_system_emoji == show)
+        return;
+    m_show_system_emoji = show;
     update();
 }
 

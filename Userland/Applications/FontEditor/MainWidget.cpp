@@ -222,14 +222,23 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_statusbar_action->set_checked(show_statusbar);
     m_show_statusbar_action->set_status_tip("Show or hide the status bar");
 
-    bool highlight_modifications = Config::read_bool("FontEditor"sv, "Display"sv, "HighlightModifications"sv, true);
+    bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
     set_highlight_modifications(highlight_modifications);
     m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [&](auto& action) {
         set_highlight_modifications(action.is_checked());
-        Config::write_bool("FontEditor"sv, "Display"sv, "HighlightModifications"sv, action.is_checked());
+        Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
     m_highlight_modifications_action->set_checked(highlight_modifications);
     m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs. (Green = New, Blue = Modified, Red = Deleted)");
+
+    bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
+    set_show_system_emoji(show_system_emoji);
+    m_show_system_emoji_action = GUI::Action::create_checkable("System &Emoji", { Mod_Ctrl, Key_E }, [&](auto& action) {
+        set_show_system_emoji(action.is_checked());
+        Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
+    });
+    m_show_system_emoji_action->set_checked(show_system_emoji);
+    m_show_system_emoji_action->set_status_tip("Show or hide system emoji");
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         String input;
@@ -684,6 +693,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_open_preview_action));
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(*m_highlight_modifications_action));
+    TRY(view_menu->try_add_action(*m_show_system_emoji_action));
     TRY(view_menu->try_add_separator());
     auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"));
     TRY(scale_menu->try_add_action(*m_scale_five_action));
@@ -746,6 +756,11 @@ void MainWidget::set_show_unicode_blocks(bool show)
 void MainWidget::set_highlight_modifications(bool highlight_modifications)
 {
     m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
+}
+
+void MainWidget::set_show_system_emoji(bool show)
+{
+    m_glyph_map_widget->set_show_system_emoji(show);
 }
 
 ErrorOr<void> MainWidget::open_file(String const& path)
