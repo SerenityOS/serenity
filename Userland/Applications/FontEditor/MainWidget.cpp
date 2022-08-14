@@ -275,11 +275,11 @@ ErrorOr<void> MainWidget::create_actions()
     m_glyph_tool_actions.set_exclusive(true);
 
     m_rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
-        m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Counterclockwise);
+        m_glyph_editor_widget->rotate_90(Gfx::RotationDirection::CounterClockwise);
     });
 
     m_rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
-        m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Clockwise);
+        m_glyph_editor_widget->rotate_90(Gfx::RotationDirection::Clockwise);
     });
 
     m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), [&](auto&) {
