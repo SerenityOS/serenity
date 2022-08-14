@@ -338,7 +338,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_scroll_bar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
     terminal->set_show_scrollbar(show_scroll_bar);
 
-    auto open_settings_action = GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)),
+    auto open_settings_action = GUI::Action::create("Terminal &Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)),
         [&](auto&) {
             GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings"sv);
         });
