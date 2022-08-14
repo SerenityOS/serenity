@@ -20,6 +20,7 @@ public:
     };
 
     MCTSTree(Chess::Board const& board, MCTSTree* parent = nullptr);
+    MCTSTree(MCTSTree&&);
 
     MCTSTree& select_leaf();
     MCTSTree& expand();
@@ -28,7 +29,11 @@ public:
     void apply_result(int game_score);
     void do_round();
 
-    Chess::Move best_move() const;
+    Optional<MCTSTree&> child_with_move(Chess::Move);
+
+    MCTSTree& best_node();
+
+    Chess::Move last_move() const;
     double expected_value() const;
     double uct(Chess::Color color) const;
     bool expanded() const;

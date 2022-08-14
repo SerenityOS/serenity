@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "MCTSTree.h"
 #include <LibChess/Chess.h>
 #include <LibChess/UCIEndpoint.h>
 
@@ -26,4 +27,5 @@ private:
     }
 
     Chess::Board m_board;
+    Optional<MCTSTree> m_last_tree;
 };
