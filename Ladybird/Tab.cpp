@@ -7,11 +7,11 @@
 
 #include "Tab.h"
 #include "BrowserWindow.h"
-#include "Settings.h"
 #include "History.h"
+#include "Settings.h"
 #include <QCoreApplication>
-#include <QToolTip>
 #include <QPoint>
+#include <QToolTip>
 
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
@@ -51,7 +51,7 @@ Tab::Tab(QMainWindow* window)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
-    QObject::connect(m_view, &WebView::linkHovered, [this](const QString& title) {
+    QObject::connect(m_view, &WebView::linkHovered, [this](QString const& title) {
         const QPoint* pos = new QPoint(0, size().height() - 15);
         QToolTip::showText(*pos, title, this);
     });
@@ -77,9 +77,7 @@ Tab::Tab(QMainWindow* window)
 
 void Tab::navigate(QString url)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) &&
-        !url.startsWith("https://", Qt::CaseInsensitive) &&
-        !url.startsWith("file://", Qt::CaseInsensitive))
+    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
         url = "http://" + url;
     view().load(url.toUtf8().data());
 }
