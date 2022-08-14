@@ -466,7 +466,8 @@ void Widget::handle_leave_event(Core::Event& event)
 {
     if (auto* window = this->window())
         window->update_cursor({});
-    Application::the()->hide_tooltip();
+    if (Application::the()->tooltip_source_widget() == this)
+        Application::the()->hide_tooltip();
     leave_event(event);
 }
 
