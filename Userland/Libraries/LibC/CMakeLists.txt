@@ -182,3 +182,8 @@ add_dependencies(LibC LibM LibSystem LibCStatic)
 
 # Provide a linker script instead of LibPthread that tells everything to link against LibC.
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
+
+# Provide a dummy target and a linker script for LibDl that tells everything to link against LibC instead.
+add_library(LibDl INTERFACE)
+target_link_libraries(LibDl INTERFACE LibC)
+file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libdl.so" "INPUT(libc.so)")
