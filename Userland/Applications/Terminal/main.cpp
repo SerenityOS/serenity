@@ -89,6 +89,7 @@ public:
             if (font.is_null())
                 font = Gfx::FontDatabase::default_fixed_width_font();
             m_parent_terminal.set_font_and_resize_to_fit(*font);
+            m_parent_terminal.apply_size_increments_to_window(*m_parent_terminal.window());
             m_parent_terminal.window()->resize(m_parent_terminal.size());
         } else if (group == "Cursor" && key == "Shape") {
             auto cursor_shape = VT::TerminalWidget::parse_cursor_shape(value).value_or(VT::CursorShape::Block);
