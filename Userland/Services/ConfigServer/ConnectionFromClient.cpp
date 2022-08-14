@@ -9,6 +9,8 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/Icon.h>
+#include <LibGUI/Notification.h>
 
 namespace ConfigServer {
 
@@ -21,6 +23,7 @@ struct CachedDomain {
 };
 
 static HashMap<String, NonnullOwnPtr<CachedDomain>> s_cache;
+static bool s_user_informed_of_read_only_file_system { false };
 static constexpr int s_disk_sync_delay_ms = 5'000;
 
 static void for_each_monitoring_connection(String const& domain, ConnectionFromClient* excluded_connection, Function<void(ConnectionFromClient&)> callback)
@@ -31,20 +34,38 @@ static void for_each_monitoring_connection(String const& domain, ConnectionFromC
     }
 }
 
+static void notify_user_of_read_only_file_system()
+{
+    if (!s_user_informed_of_read_only_file_system) {
+        s_user_informed_of_read_only_file_system = true;
+        auto notification = GUI::Notification::construct();
+        notification->set_title("Can't write configuration");
+        notification->set_text("The home directory is part of a read-only file system. Your configuration will only persist while you are logged in.");
+        notification->set_icon(GUI::Icon::default_icon("filetype-ini"sv).bitmap_for_size(16));
+        notification->show();
+    }
+}
+
 static Core::ConfigFile& ensure_domain_config(String const& domain)
 {
     auto it = s_cache.find(domain);
     if (it != s_cache.end())
         return *it->value->config;
 
-    auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
+    auto maybe_config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes);
+    // If we are on a read-only file system, message the user about this fact, but do not crash.
+    if (maybe_config.is_error() && maybe_config.error().code() == EROFS) {
+        maybe_config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::No);
+        notify_user_of_read_only_file_system();
+    }
+    auto config = maybe_config.release_value_but_fixme_should_propagate_errors();
     // FIXME: Use a single FileWatcher with multiple watches inside.
     auto watcher_or_error = Core::FileWatcher::create(InodeWatcherFlags::Nonblock);
     VERIFY(!watcher_or_error.is_error());
     auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());
     watcher_or_error.value()->on_change = [config, domain](auto&) {
-        auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
+        auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::No).release_value_but_fixme_should_propagate_errors();
         for (auto& group : config->groups()) {
             for (auto& key : config->keys(group)) {
                 if (!new_config->has_key(group, key)) {
