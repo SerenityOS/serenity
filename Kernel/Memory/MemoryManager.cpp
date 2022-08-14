@@ -929,6 +929,20 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
             }
             return IterationDecision::Continue;
         });
+        // Second, we look for a file-backed VMObject with clean pages.
+        for_each_vmobject([&](auto& vmobject) {
+            if (!vmobject.is_inode())
+                return IterationDecision::Continue;
+            auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject);
+            // FIXME: It seems excessive to release *all* clean pages from the inode when we only need one.
+            if (auto released_page_count = inode_vmobject.release_all_clean_pages()) {
+                dbgln("MM: Clean inode release saved the day! Released {} pages from InodeVMObject", released_page_count);
+                page = find_free_physical_page(false);
+                VERIFY(page);
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
         if (!page) {
             dmesgln("MM: no physical pages available");
             return ENOMEM;
