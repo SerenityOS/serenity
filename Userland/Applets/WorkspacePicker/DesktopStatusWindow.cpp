@@ -52,8 +52,10 @@ public:
 
         for (unsigned row = 0; row < desktop.workspace_rows(); ++row) {
             for (unsigned column = 0; column < desktop.workspace_columns(); ++column) {
-                painter.fill_rect(rect_for_desktop(row, column),
+                auto rect = rect_for_desktop(row, column);
+                painter.fill_rect(rect,
                     (row == current_row() && column == current_column()) ? active_color : inactive_color);
+                Gfx::StylePainter::current().paint_frame(painter, rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 1);
             }
         }
     }
