@@ -117,6 +117,7 @@ struct Move {
 class Board {
 public:
     Board();
+    Board clone_without_history() const;
 
     Piece get_piece(Square const&) const;
     Piece set_piece(Square const&, Piece const&);

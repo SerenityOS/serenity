@@ -259,6 +259,16 @@ Board::Board()
     set_piece(Square("h8"), { Color::Black, Type::Rook });
 }
 
+Board Board::clone_without_history() const
+{
+    // Note: When used in the MCTSTree, the board doesn't need to have all information about previous states.
+    // It spares a huge amount of memory.
+    auto result = *this;
+    result.m_moves.clear();
+    result.m_previous_states.clear();
+    return result;
+}
+
 String Board::to_fen() const
 {
     StringBuilder builder;

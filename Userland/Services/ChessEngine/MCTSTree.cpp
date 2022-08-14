@@ -39,10 +39,10 @@ MCTSTree& MCTSTree::expand()
     VERIFY(!expanded() || m_children.size() == 0);
 
     if (!m_moves_generated) {
-        m_board->generate_moves([&](Chess::Move move) {
-            Chess::Board clone = *m_board;
-            clone.apply_move(move);
-            m_children.append(make<MCTSTree>(clone, this));
+        m_board->generate_moves([&](Chess::Move chess_move) {
+            auto clone = m_board->clone_without_history();
+            clone.apply_move(chess_move);
+            m_children.append(make<MCTSTree>(move(clone), this));
             return IterationDecision::Continue;
         });
         m_moves_generated = true;
