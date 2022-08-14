@@ -29,6 +29,10 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     auto child_name = TRY(m_name->try_clone());
     auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, current_directory(), m_executable, m_tty, this));
+
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
+    child->ref();
+
     TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
         return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
             child_unveil_data.state = parent_unveil_data.state;
@@ -142,9 +146,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_first_thread->set_state(Thread::State::Runnable);
 
     auto child_pid = child->pid().value();
-
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    (void)child.leak_ref();
 
     return child_pid;
 }
