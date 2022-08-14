@@ -63,6 +63,8 @@ public:
     void update_glyph(int);
 
     void set_highlight_modifications(bool);
+    void set_show_system_emoji(bool);
+
     void set_glyph_modified(u32 glyph, bool modified);
     bool glyph_is_modified(u32 glyph);
 
@@ -105,6 +107,7 @@ private:
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
     bool m_highlight_modifications { false };
+    bool m_show_system_emoji { false };
     HashTable<u32> m_modified_glyphs;
     Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
