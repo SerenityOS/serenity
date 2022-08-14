@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <dlfcn.h>
-#include <dlfcn_integration.h>
 #include <pthread.h>
 #include <regex.h>
 
@@ -22,12 +21,20 @@ static void ensure_libregex()
 {
     pthread_mutex_lock(&s_libregex_lock);
     if (!s_libregex) {
-        s_libregex = __dlopen("libregex.so", RTLD_NOW).value();
+        s_libregex = dlopen("libregex.so", RTLD_NOW);
+        VERIFY(s_libregex);
 
-        s_regcomp = reinterpret_cast<int (*)(regex_t*, char const*, int)>(__dlsym(s_libregex, "regcomp").value());
-        s_regexec = reinterpret_cast<int (*)(regex_t const*, char const*, size_t, regmatch_t[], int)>(__dlsym(s_libregex, "regexec").value());
-        s_regerror = reinterpret_cast<size_t (*)(int, regex_t const*, char*, size_t)>(__dlsym(s_libregex, "regerror").value());
-        s_regfree = reinterpret_cast<void (*)(regex_t*)>(__dlsym(s_libregex, "regfree").value());
+        s_regcomp = reinterpret_cast<int (*)(regex_t*, char const*, int)>(dlsym(s_libregex, "regcomp"));
+        VERIFY(s_regcomp);
+
+        s_regexec = reinterpret_cast<int (*)(regex_t const*, char const*, size_t, regmatch_t[], int)>(dlsym(s_libregex, "regexec"));
+        VERIFY(s_regexec);
+
+        s_regerror = reinterpret_cast<size_t (*)(int, regex_t const*, char*, size_t)>(dlsym(s_libregex, "regerror"));
+        VERIFY(s_regerror);
+
+        s_regfree = reinterpret_cast<void (*)(regex_t*)>(dlsym(s_libregex, "regfree"));
+        VERIFY(s_regerror);
     }
     pthread_mutex_unlock(&s_libregex_lock);
 }
