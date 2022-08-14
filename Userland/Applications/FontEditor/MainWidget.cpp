@@ -204,6 +204,24 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
 
+    bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
+    set_show_toolbar(show_toolbar);
+    m_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
+        set_show_toolbar(action.is_checked());
+        Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
+    });
+    m_show_toolbar_action->set_checked(show_toolbar);
+    m_show_toolbar_action->set_status_tip("Show or hide the toolbar");
+
+    bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
+    set_show_statusbar(show_statusbar);
+    m_show_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
+        set_show_statusbar(action.is_checked());
+        Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
+    });
+    m_show_statusbar_action->set_checked(show_statusbar);
+    m_show_statusbar_action->set_status_tip("Show or hide the status bar");
+
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "Display"sv, "HighlightModifications"sv, true);
     set_highlight_modifications(highlight_modifications);
     m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [&](auto& action) {
@@ -395,6 +413,7 @@ MainWidget::MainWidget()
 
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
+    m_toolbar_container = find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
 
     m_glyph_map_widget = find_descendant_of_type_named<GUI::GlyphMapWidget>("glyph_map_widget");
     m_glyph_editor_widget = find_descendant_of_type_named<GlyphEditorWidget>("glyph_editor_widget");
@@ -656,10 +675,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_to_glyph_action));
 
     auto view_menu = TRY(window.try_add_menu("&View"));
-    TRY(view_menu->try_add_action(*m_open_preview_action));
+    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
+    TRY(layout_menu->try_add_action(*m_show_toolbar_action));
+    TRY(layout_menu->try_add_action(*m_show_statusbar_action));
+    TRY(layout_menu->try_add_action(*m_show_metadata_action));
+    TRY(layout_menu->try_add_action(*m_show_unicode_blocks_action));
     TRY(view_menu->try_add_separator());
-    TRY(view_menu->try_add_action(*m_show_metadata_action));
-    TRY(view_menu->try_add_action(*m_show_unicode_blocks_action));
+    TRY(view_menu->try_add_action(*m_open_preview_action));
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(*m_highlight_modifications_action));
     TRY(view_menu->try_add_separator());
@@ -687,6 +709,22 @@ ErrorOr<void> MainWidget::save_file(String const& path)
     window()->set_modified(false);
     update_title();
     return {};
+}
+
+void MainWidget::set_show_toolbar(bool show)
+{
+    if (m_toolbar_container->is_visible() == show)
+        return;
+    m_toolbar_container->set_visible(show);
+}
+
+void MainWidget::set_show_statusbar(bool show)
+{
+    if (m_statusbar->is_visible() == show)
+        return;
+    m_statusbar->set_visible(show);
+    if (show)
+        update_statusbar();
 }
 
 void MainWidget::set_show_font_metadata(bool show)
@@ -838,6 +876,9 @@ void MainWidget::did_modify_font()
 
 void MainWidget::update_statusbar()
 {
+    if (!m_statusbar->is_visible())
+        return;
+
     auto glyph = m_glyph_map_widget->active_glyph();
     StringBuilder builder;
     builder.appendff("U+{:04X} (", glyph);
