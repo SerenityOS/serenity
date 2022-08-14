@@ -19,6 +19,7 @@
             font_weight: "Bold"
             text_alignment: "CenterLeft"
             text: "This is the process name."
+            preferred_width: "grow"
         }
     }
 
