@@ -425,332 +425,128 @@ unsigned get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
 
 KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
 {
-    auto key = (KeyCode)event.nativeScanCode();
-    key = Key_Insert;
+    struct Mapping {
+        constexpr Mapping(Qt::Key q, KeyCode s)
+            : qt_key(q)
+            , serenity_key(s)
+        {
+        }
 
-    switch (event.key()) {
-    case Qt::Key_Escape:
-        key = Key_Escape;
-        break;
-    case Qt::Key_Tab:
-        key = Key_Tab;
-        break;
-    case Qt::Key_Backspace:
-        key = Key_Backspace;
-        break;
-    case Qt::Key_Return:
-        key = Key_Return;
-        break;
-    case Qt::Key_Insert:
-        key = Key_Insert;
-        break;
-    case Qt::Key_Delete:
-        key = Key_Delete;
-        break;
-    case Qt::Key_Print:
-        key = Key_PrintScreen;
-        break;
-    case Qt::Key_SysReq:
-        key = Key_SysRq;
-        break;
-    case Qt::Key_Home:
-        key = Key_Home;
-        break;
-    case Qt::Key_End:
-        key = Key_End;
-        break;
-    case Qt::Key_Left:
-        key = Key_Left;
-        break;
-    case Qt::Key_Up:
-        key = Key_Up;
-        break;
-    case Qt::Key_Right:
-        key = Key_Right;
-        break;
-    case Qt::Key_Down:
-        key = Key_Down;
-        break;
-    case Qt::Key_PageUp:
-        key = Key_PageUp;
-        break;
-    case Qt::Key_PageDown:
-        key = Key_PageDown;
-        break;
-    case Qt::Key_Shift:
-        key = Key_LeftShift;
-        break;
-        // TODO: On Serenity/AK - we distinghuish the shift by the modifiers flag.
-        //        case Qt::Key_Shift:
-        //            key = Key_RightShift;
-        //            break;
-    case Qt::Key_Control:
-        key = Key_Control;
-        break;
-    case Qt::Key_Alt:
-        key = Key_Alt;
-        break;
-    case Qt::Key_CapsLock:
-        key = Key_CapsLock;
-        break;
-    case Qt::Key_NumLock:
-        key = Key_NumLock;
-        break;
-    case Qt::Key_ScrollLock:
-        key = Key_ScrollLock;
-        break;
-    case Qt::Key_F1:
-        key = Key_F1;
-        break;
-    case Qt::Key_F2:
-        key = Key_F2;
-        break;
-    case Qt::Key_F3:
-        key = Key_F3;
-        break;
-    case Qt::Key_F4:
-        key = Key_F4;
-        break;
-    case Qt::Key_F5:
-        key = Key_F5;
-        break;
-    case Qt::Key_F6:
-        key = Key_F6;
-        break;
-    case Qt::Key_F7:
-        key = Key_F7;
-        break;
-    case Qt::Key_F8:
-        key = Key_F8;
-        break;
-    case Qt::Key_F9:
-        key = Key_F9;
-        break;
-    case Qt::Key_F10:
-        key = Key_F10;
-        break;
-    case Qt::Key_F11:
-        key = Key_F11;
-        break;
-    case Qt::Key_F12:
-        key = Key_F12;
-        break;
-    case Qt::Key_Space:
-        key = Key_Space;
-        break;
-    case Qt::Key_exclamdown:
-        key = Key_ExclamationPoint;
-        break;
-    case Qt::Key_QuoteDbl:
-        key = Key_DoubleQuote;
-        break;
-        //        case Qt::Key_: ????
-        //            key = Key_Hashtag;
-        //            break;
-    case Qt::Key_Dollar:
-        key = Key_Dollar;
-        break;
-    case Qt::Key_Percent:
-        key = Key_Percent;
-        break;
-    case Qt::Key_Ampersand:
-        key = Key_Ampersand;
-        break;
-    case Qt::Key_Apostrophe:
-        key = Key_Apostrophe;
-        break;
-    case Qt::Key_ParenLeft:
-        key = Key_LeftParen;
-        break;
-    case Qt::Key_ParenRight:
-        key = Key_RightParen;
-        break;
-    case Qt::Key_Asterisk:
-        key = Key_Asterisk;
-        break;
-    case Qt::Key_Plus:
-        key = Key_Plus;
-        break;
-    case Qt::Key_Comma:
-        key = Key_Comma;
-        break;
-    case Qt::Key_Minus:
-        key = Key_Minus;
-        break;
-    case Qt::Key_Period:
-        key = Key_Period;
-        break;
-    case Qt::Key_Slash:
-        key = Key_Slash;
-        break;
-    case Qt::Key_0:
-        key = Key_0;
-        break;
-    case Qt::Key_1:
-        key = Key_1;
-        break;
-    case Qt::Key_2:
-        key = Key_2;
-        break;
-    case Qt::Key_3:
-        key = Key_3;
-        break;
-    case Qt::Key_4:
-        key = Key_4;
-        break;
-    case Qt::Key_5:
-        key = Key_5;
-        break;
-    case Qt::Key_6:
-        key = Key_6;
-        break;
-    case Qt::Key_7:
-        key = Key_7;
-        break;
-    case Qt::Key_8:
-        key = Key_8;
-        break;
-    case Qt::Key_9:
-        key = Key_9;
-        break;
-    case Qt::Key_Colon:
-        key = Key_Colon;
-        break;
-    case Qt::Key_Semicolon:
-        key = Key_Semicolon;
-        break;
-    case Qt::Key_Less:
-        key = Key_LessThan;
-        break;
-    case Qt::Key_Equal:
-        key = Key_Equal;
-        break;
-    case Qt::Key_Greater:
-        key = Key_GreaterThan;
-        break;
-    case Qt::Key_Question:
-        key = Key_QuestionMark;
-        break;
-    case Qt::Key_At:
-        key = Key_AtSign;
-        break;
-    case Qt::Key_A:
-        key = Key_A;
-        break;
-    case Qt::Key_B:
-        key = Key_B;
-        break;
-    case Qt::Key_C:
-        key = Key_C;
-        break;
-    case Qt::Key_D:
-        key = Key_D;
-        break;
-    case Qt::Key_E:
-        key = Key_E;
-        break;
-    case Qt::Key_F:
-        key = Key_F;
-        break;
-    case Qt::Key_G:
-        key = Key_G;
-        break;
-    case Qt::Key_H:
-        key = Key_H;
-        break;
-    case Qt::Key_I:
-        key = Key_I;
-        break;
-    case Qt::Key_J:
-        key = Key_J;
-        break;
-    case Qt::Key_K:
-        key = Key_K;
-        break;
-    case Qt::Key_L:
-        key = Key_L;
-        break;
-    case Qt::Key_M:
-        key = Key_M;
-        break;
-    case Qt::Key_N:
-        key = Key_N;
-        break;
-    case Qt::Key_O:
-        key = Key_O;
-        break;
-    case Qt::Key_P:
-        key = Key_P;
-        break;
-    case Qt::Key_Q:
-        key = Key_Q;
-        break;
-    case Qt::Key_R:
-        key = Key_R;
-        break;
-    case Qt::Key_S:
-        key = Key_S;
-        break;
-    case Qt::Key_T:
-        key = Key_T;
-        break;
-    case Qt::Key_U:
-        key = Key_U;
-        break;
-    case Qt::Key_V:
-        key = Key_V;
-        break;
-    case Qt::Key_W:
-        key = Key_W;
-        break;
-    case Qt::Key_X:
-        key = Key_X;
-        break;
-    case Qt::Key_Y:
-        key = Key_Y;
-        break;
-    case Qt::Key_Z:
-        key = Key_Z;
-        break;
-    case Qt::Key_BracketLeft:
-        key = Key_LeftBracket;
-        break;
-    case Qt::Key_BracketRight:
-        key = Key_RightBracket;
-        break;
-    case Qt::Key_Backslash:
-        key = Key_Backslash;
-        break;
-        //        case Qt::Key_fk: ???
-        //            key = Key_Circumflex;
-        //            break;
-    case Qt::Key_Underscore:
-        key = Key_Underscore;
-        break;
-    case Qt::Key_BraceLeft:
-        key = Key_LeftBrace;
-        break;
-    case Qt::Key_BraceRight:
-        key = Key_RightBrace;
-        break;
-    case Qt::Key_Bar:
-        key = Key_Pipe;
-        break;
-    case Qt::Key_AsciiTilde: //? Unsure about it
-        key = Key_Tilde;
-        break;
-        //        case Qt::Key_AsciiTilde: ???
-        //            key = Key_Backtick;
-        //            break;
-        // On serenity - super/meta R/L are distinguished by key modifiers
-    case Qt::Key_Super_L:
-        key = Key_Super;
-        break;
-    case Qt::Key_Menu:
-        key = Key_Menu;
-        break;
+        Qt::Key qt_key;
+        KeyCode serenity_key;
+    };
+
+    constexpr Mapping mappings[] = {
+        { Qt::Key_0, Key_0 },
+        { Qt::Key_1, Key_1 },
+        { Qt::Key_2, Key_2 },
+        { Qt::Key_3, Key_3 },
+        { Qt::Key_4, Key_4 },
+        { Qt::Key_5, Key_5 },
+        { Qt::Key_6, Key_6 },
+        { Qt::Key_7, Key_7 },
+        { Qt::Key_8, Key_8 },
+        { Qt::Key_9, Key_9 },
+        { Qt::Key_A, Key_A },
+        { Qt::Key_Alt, Key_Alt },
+        { Qt::Key_Ampersand, Key_Ampersand },
+        { Qt::Key_Apostrophe, Key_Apostrophe },
+        { Qt::Key_AsciiCircum, Key_Circumflex },
+        { Qt::Key_AsciiTilde, Key_Tilde },
+        { Qt::Key_Asterisk, Key_Asterisk },
+        { Qt::Key_At, Key_AtSign },
+        { Qt::Key_B, Key_B },
+        { Qt::Key_Backslash, Key_Backslash },
+        { Qt::Key_Backspace, Key_Backspace },
+        { Qt::Key_Bar, Key_Pipe },
+        { Qt::Key_BraceLeft, Key_LeftBrace },
+        { Qt::Key_BraceRight, Key_RightBrace },
+        { Qt::Key_BracketLeft, Key_LeftBracket },
+        { Qt::Key_BracketRight, Key_RightBracket },
+        { Qt::Key_C, Key_C },
+        { Qt::Key_CapsLock, Key_CapsLock },
+        { Qt::Key_Colon, Key_Colon },
+        { Qt::Key_Comma, Key_Comma },
+        { Qt::Key_Control, Key_Control },
+        { Qt::Key_D, Key_D },
+        { Qt::Key_Delete, Key_Delete },
+        { Qt::Key_Dollar, Key_Dollar },
+        { Qt::Key_Down, Key_Down },
+        { Qt::Key_E, Key_E },
+        { Qt::Key_End, Key_End },
+        { Qt::Key_Equal, Key_Equal },
+        { Qt::Key_Escape, Key_Escape },
+        { Qt::Key_exclamdown, Key_ExclamationPoint },
+        { Qt::Key_F, Key_F },
+        { Qt::Key_F1, Key_F1 },
+        { Qt::Key_F10, Key_F10 },
+        { Qt::Key_F11, Key_F11 },
+        { Qt::Key_F12, Key_F12 },
+        { Qt::Key_F2, Key_F2 },
+        { Qt::Key_F3, Key_F3 },
+        { Qt::Key_F4, Key_F4 },
+        { Qt::Key_F5, Key_F5 },
+        { Qt::Key_F6, Key_F6 },
+        { Qt::Key_F7, Key_F7 },
+        { Qt::Key_F8, Key_F8 },
+        { Qt::Key_F9, Key_F9 },
+        { Qt::Key_G, Key_G },
+        { Qt::Key_Greater, Key_GreaterThan },
+        { Qt::Key_H, Key_H },
+        { Qt::Key_Home, Key_Home },
+        { Qt::Key_I, Key_I },
+        { Qt::Key_Insert, Key_Insert },
+        { Qt::Key_J, Key_J },
+        { Qt::Key_K, Key_K },
+        { Qt::Key_L, Key_L },
+        { Qt::Key_Left, Key_Left },
+        { Qt::Key_Less, Key_LessThan },
+        { Qt::Key_M, Key_M },
+        { Qt::Key_Menu, Key_Menu },
+        { Qt::Key_Minus, Key_Minus },
+        { Qt::Key_N, Key_N },
+        { Qt::Key_NumLock, Key_NumLock },
+        { Qt::Key_O, Key_O },
+        { Qt::Key_P, Key_P },
+        { Qt::Key_PageDown, Key_PageDown },
+        { Qt::Key_PageUp, Key_PageUp },
+        { Qt::Key_ParenLeft, Key_LeftParen },
+        { Qt::Key_ParenRight, Key_RightParen },
+        { Qt::Key_Percent, Key_Percent },
+        { Qt::Key_Period, Key_Period },
+        { Qt::Key_Plus, Key_Plus },
+        { Qt::Key_Print, Key_PrintScreen },
+        { Qt::Key_Q, Key_Q },
+        { Qt::Key_Question, Key_QuestionMark },
+        { Qt::Key_QuoteDbl, Key_DoubleQuote },
+        { Qt::Key_R, Key_R },
+        { Qt::Key_Return, Key_Return },
+        { Qt::Key_Right, Key_Right },
+        { Qt::Key_S, Key_S },
+        { Qt::Key_ScrollLock, Key_ScrollLock },
+        { Qt::Key_Semicolon, Key_Semicolon },
+        { Qt::Key_Shift, Key_LeftShift },
+        { Qt::Key_Slash, Key_Slash },
+        { Qt::Key_Space, Key_Space },
+        { Qt::Key_Super_L, Key_Super },
+        { Qt::Key_SysReq, Key_SysRq },
+        { Qt::Key_T, Key_T },
+        { Qt::Key_Tab, Key_Tab },
+        { Qt::Key_U, Key_U },
+        { Qt::Key_Underscore, Key_Underscore },
+        { Qt::Key_Up, Key_Up },
+        { Qt::Key_V, Key_V },
+        { Qt::Key_W, Key_W },
+        { Qt::Key_X, Key_X },
+        { Qt::Key_Y, Key_Y },
+        { Qt::Key_Z, Key_Z },
+    };
+
+    for (auto const& mapping : mappings) {
+        if (event.key() == mapping.qt_key)
+            return mapping.serenity_key;
     }
-    return key;
+    return Key_Invalid;
 }
 
 void WebView::mouseMoveEvent(QMouseEvent* event)
