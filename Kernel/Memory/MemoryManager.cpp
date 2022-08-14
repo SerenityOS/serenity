@@ -942,6 +942,8 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
             }
             return IterationDecision::Continue;
         });
+    }
+    if (!page) {
         // Second, we look for a file-backed VMObject with clean pages.
         for_each_vmobject([&](auto& vmobject) {
             if (!vmobject.is_inode())
@@ -956,10 +958,10 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
             }
             return IterationDecision::Continue;
         });
-        if (!page) {
-            dmesgln("MM: no physical pages available");
-            return ENOMEM;
-        }
+    }
+    if (!page) {
+        dmesgln("MM: no physical pages available");
+        return ENOMEM;
     }
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
