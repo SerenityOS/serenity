@@ -24,5 +24,5 @@ set(TEST_SOURCES
 )
 
 foreach(source IN LISTS TEST_SOURCES)
-    serenity_test("${source}" LibELF LIBS LibDl)
+    serenity_test("${source}" LibELF)
 endforeach()
