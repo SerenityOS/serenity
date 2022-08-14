@@ -6,8 +6,8 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
-#include <dlfcn_integration.h>
 #include <string.h>
 
 // These are filled in by the dynamic loader.

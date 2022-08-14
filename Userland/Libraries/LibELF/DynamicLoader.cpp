@@ -16,8 +16,8 @@
 #include <LibELF/Hashes.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
+#include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
-#include <dlfcn_integration.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
