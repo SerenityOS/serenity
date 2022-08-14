@@ -239,7 +239,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
     i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
-    set_scale(scale);
+    m_glyph_editor_widget->set_scale(scale);
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
         set_scale_and_save(5);
     });
@@ -897,15 +897,10 @@ void MainWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
-void MainWidget::set_scale(i32 scale)
-{
-    m_glyph_editor_widget->set_scale(scale);
-}
-
 void MainWidget::set_scale_and_save(i32 scale)
 {
-    set_scale(scale);
     Config::write_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, scale);
+    m_glyph_editor_widget->set_scale(scale);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 }
 

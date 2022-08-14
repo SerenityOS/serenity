@@ -70,7 +70,6 @@ private:
     void did_modify_font();
     void update_statusbar();
     void update_preview();
-    void set_scale(i32);
     void set_scale_and_save(i32);
 
     ErrorOr<void> copy_selected_glyphs();
