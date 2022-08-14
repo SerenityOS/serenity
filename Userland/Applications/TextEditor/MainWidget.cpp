@@ -201,16 +201,22 @@ MainWidget::MainWidget()
     m_vim_emulation_setting_action->set_checked(false);
 
     m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
-        m_find_replace_widget->set_visible(true);
-        m_find_widget->set_visible(true);
-        m_replace_widget->set_visible(true);
-        m_find_textbox->set_focus(true);
+        if (!m_find_replace_widget->is_visible()) {
+            m_find_replace_widget->set_visible(true);
+            m_find_widget->set_visible(true);
+            m_replace_widget->set_visible(true);
+            m_find_textbox->set_focus(true);
 
-        if (m_editor->has_selection()) {
-            auto selected_text = m_editor->document().text_in_range(m_editor->normalized_selection());
-            m_find_textbox->set_text(selected_text);
+            if (m_editor->has_selection()) {
+                auto selected_text = m_editor->document().text_in_range(m_editor->normalized_selection());
+                m_find_textbox->set_text(selected_text);
+            }
+            m_find_textbox->select_all();
+        } else {
+            m_find_replace_widget->set_visible(false);
+            m_editor->set_focus(true);
+            m_editor->reset_search_results();
         }
-        m_find_textbox->select_all();
     });
 
     m_editor->add_custom_context_menu_action(*m_find_replace_action);
