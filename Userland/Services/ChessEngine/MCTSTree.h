@@ -37,6 +37,7 @@ private:
     // While static parameters are less configurable, they don't take up any
     // memory in the tree, which I believe to be a worthy tradeoff.
     static constexpr double s_exploration_parameter { M_SQRT2 };
+    static constexpr int s_number_of_visit_parameter { 1 };
     // FIXME: Optimize simulations enough for use.
     static constexpr EvalMethod s_eval_method { EvalMethod::Heuristic };
 

@@ -98,7 +98,15 @@ void MCTSTree::apply_result(int game_score)
 
 void MCTSTree::do_round()
 {
-    auto& node = select_leaf().expand();
+
+    // Note: Limit expansion to spare some memory
+    //       Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search.
+    //       Rémi Coulom.
+    auto* node_ptr = &select_leaf();
+    if (node_ptr->m_simulations > s_number_of_visit_parameter)
+        node_ptr = &select_leaf().expand();
+
+    auto& node = *node_ptr;
 
     int result;
     if constexpr (s_eval_method == EvalMethod::Simulation) {
