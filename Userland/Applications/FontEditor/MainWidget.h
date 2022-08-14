@@ -51,6 +51,9 @@ public:
     bool is_showing_unicode_blocks() { return m_unicode_blocks; }
     void set_show_unicode_blocks(bool);
 
+    void set_show_toolbar(bool);
+    void set_show_statusbar(bool);
+
     void set_highlight_modifications(bool);
 
 private:
@@ -112,6 +115,8 @@ private:
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;
     RefPtr<GUI::Action> m_show_unicode_blocks_action;
+    RefPtr<GUI::Action> m_show_toolbar_action;
+    RefPtr<GUI::Action> m_show_statusbar_action;
     RefPtr<GUI::Action> m_highlight_modifications_action;
 
     GUI::ActionGroup m_glyph_editor_scale_actions;
@@ -129,6 +134,7 @@ private:
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
 
     RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::ToolbarContainer> m_toolbar_container;
     RefPtr<GUI::Widget> m_unicode_block_container;
     RefPtr<GUI::ComboBox> m_weight_combobox;
     RefPtr<GUI::ComboBox> m_slope_combobox;
