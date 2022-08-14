@@ -50,7 +50,7 @@ static constexpr Array pangrams = {
     "pack my box with five dozen liquor jugs"sv,
     "quick brown fox jumps over the lazy dog"sv,
     "waxy and quivering jocks fumble the pizza"sv,
-    "~#:[@_1%]*{$2.3}/4^(5'6\"sv)-&|7+8!=<9,0\\>?;"sv,
+    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;"sv,
     "byxfjärmat föl gick på duvshowen"sv,
     "         "sv,
     "float Fox.quick(h){ is_brown && it_jumps_over(doges.lazy) }"sv,
