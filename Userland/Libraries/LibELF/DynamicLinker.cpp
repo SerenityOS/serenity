@@ -24,8 +24,8 @@
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
+#include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
-#include <dlfcn_integration.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>

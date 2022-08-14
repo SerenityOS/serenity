@@ -14,7 +14,7 @@
 #include <LibC/elf.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
-#include <dlfcn_integration.h>
+#include <bits/dlfcn_integration.h>
 #include <sys/mman.h>
 
 namespace ELF {
