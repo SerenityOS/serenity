@@ -42,8 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath exec id"));
 
-    TRY(Core::System::setgid(0));
-    TRY(Core::System::setuid(as_user_uid));
+    TRY(as_user.login());
 
     TRY(Core::System::pledge("stdio rpath exec"));
 
