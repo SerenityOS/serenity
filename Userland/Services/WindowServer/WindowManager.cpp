@@ -747,7 +747,7 @@ void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& pos
         m_geometry_overlay->set_enabled(true);
     }
 
-    current_window_stack().set_automatic_cursor_tracking_window(nullptr);
+    set_automatic_cursor_tracking_window(nullptr);
 
     window.invalidate(true, true);
 
@@ -1206,8 +1206,7 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent const& event,
 
 bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent const& event)
 {
-    auto& window_stack = current_window_stack();
-    auto* input_tracking_window = window_stack.automatic_cursor_tracking_window();
+    auto* input_tracking_window = automatic_cursor_tracking_window();
     if (!input_tracking_window)
         return false;
 
@@ -1220,7 +1219,7 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent const& e
     deliver_mouse_event(*input_tracking_window, event, true);
 
     if (event.type() == Event::MouseUp && event.buttons() == 0)
-        window_stack.set_automatic_cursor_tracking_window(nullptr);
+        set_automatic_cursor_tracking_window(nullptr);
 
     return true;
 }
@@ -1291,7 +1290,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     }
 
     if (event.type() == Event::MouseDown)
-        current_window_stack().set_automatic_cursor_tracking_window(&window);
+        set_automatic_cursor_tracking_window(&window);
 }
 
 void WindowManager::process_mouse_event(MouseEvent& event)
@@ -1312,9 +1311,8 @@ void WindowManager::process_mouse_event(MouseEvent& event)
     });
     // The automatic cursor tracking window is excluded here because we're sending the event to it
     // in the next step.
-    auto& window_stack = current_window_stack();
     for_each_visible_window_from_front_to_back([&](Window& window) {
-        if (window.is_automatic_cursor_tracking() && &window != window_stack.automatic_cursor_tracking_window())
+        if (window.is_automatic_cursor_tracking() && &window != automatic_cursor_tracking_window())
             deliver_mouse_event(window, event, false);
         return IterationDecision::Continue;
     });
@@ -1615,7 +1613,7 @@ void WindowManager::process_key_event(KeyEvent& event)
         m_previous_event_was_super_keydown = true;
     } else if (m_previous_event_was_super_keydown) {
         m_previous_event_was_super_keydown = false;
-        if (!m_dnd_client && !current_window_stack().automatic_cursor_tracking_window() && event.type() == Event::KeyUp && event.key() == Key_Super) {
+        if (!m_dnd_client && !automatic_cursor_tracking_window() && event.type() == Event::KeyUp && event.key() == Key_Super) {
             tell_wms_super_key_pressed();
             return;
         }
@@ -1891,7 +1889,7 @@ void WindowManager::set_active_window(Window* new_active_window, bool make_input
 
     if (auto* previously_active_window = window_stack.active_window()) {
         window_stack.set_active_window(nullptr);
-        window_stack.set_automatic_cursor_tracking_window(nullptr);
+        set_automatic_cursor_tracking_window(nullptr);
         notify_previous_active_window(*previously_active_window);
     }
 
@@ -2083,7 +2081,7 @@ void WindowManager::start_dnd_drag(ConnectionFromClient& client, String const& t
     m_dnd_overlay->set_enabled(true);
     m_dnd_mime_data = mime_data;
     Compositor::the().invalidate_cursor();
-    current_window_stack().set_automatic_cursor_tracking_window(nullptr);
+    set_automatic_cursor_tracking_window(nullptr);
 }
 
 void WindowManager::end_dnd_drag()
@@ -2164,11 +2162,11 @@ void WindowManager::clear_theme_override()
 void WindowManager::did_popup_a_menu(Badge<Menu>)
 {
     // Clear any ongoing input gesture
-    auto* automatic_cursor_tracking_window = current_window_stack().automatic_cursor_tracking_window();
-    if (!automatic_cursor_tracking_window)
+    auto* window = automatic_cursor_tracking_window();
+    if (!window)
         return;
-    automatic_cursor_tracking_window->set_automatic_cursor_tracking_enabled(false);
-    current_window_stack().set_automatic_cursor_tracking_window(nullptr);
+    window->set_automatic_cursor_tracking_enabled(false);
+    set_automatic_cursor_tracking_window(nullptr);
 }
 
 void WindowManager::minimize_windows(Window& window, bool minimized)

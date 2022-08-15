@@ -343,6 +343,10 @@ public:
 
     RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
 
+    Window* automatic_cursor_tracking_window() { return m_automatic_cursor_tracking_window; }
+    Window const* automatic_cursor_tracking_window() const { return m_automatic_cursor_tracking_window; }
+    void set_automatic_cursor_tracking_window(Window* window) { m_automatic_cursor_tracking_window = window; }
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 
@@ -448,6 +452,7 @@ private:
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_window_with_active_menu;
+    WeakPtr<Window> m_automatic_cursor_tracking_window;
 
     OwnPtr<WindowGeometryOverlay> m_geometry_overlay;
     WeakPtr<Window> m_move_window;
