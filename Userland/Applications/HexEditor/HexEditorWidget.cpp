@@ -288,7 +288,18 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, String::number(static_cast<i8>(unsigned_byte_value)));
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, String::number(unsigned_byte_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, String::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
+        if (m_editor->selection_size() > 1) {
+            StringBuilder ascii_string_builder;
+            for (u8 byte : m_editor->selected_bytes()) {
+                char c = static_cast<char>(byte);
+                if (is_ascii(c))
+                    ascii_string_builder.append(c);
+                else
+                    ascii_string_builder.append(' ');
+            }
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, ascii_string_builder.build());
+        } else
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, String::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
     } else {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
