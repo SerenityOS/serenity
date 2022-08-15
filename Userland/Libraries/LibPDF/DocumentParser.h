@@ -85,6 +85,7 @@ private:
     PDFErrorOr<NonnullRefPtr<XRefTable>> parse_xref_stream();
     PDFErrorOr<NonnullRefPtr<XRefTable>> parse_xref_table();
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_file_trailer();
+    PDFErrorOr<Value> parse_compressed_object_with_index(u32 index);
 
     bool navigate_to_before_eof_marker();
     bool navigate_to_after_startxref();
