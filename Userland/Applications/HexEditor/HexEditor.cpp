@@ -149,6 +149,14 @@ size_t HexEditor::selection_size()
     return m_selection_end - m_selection_start;
 }
 
+Vector<u8> HexEditor::selected_bytes()
+{
+    Vector<u8> selection;
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
+        selection.append(m_document->get(i).value);
+    return selection;
+}
+
 bool HexEditor::copy_selected_hex_to_clipboard()
 {
     if (!has_selection())

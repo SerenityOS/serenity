@@ -43,6 +43,7 @@ public:
     void select_all();
     bool has_selection() const { return m_selection_start < m_selection_end && m_document->size() > 0; }
     size_t selection_size();
+    Vector<u8> selected_bytes();
     size_t selection_start_offset() const { return m_selection_start; }
     bool copy_selected_text_to_clipboard();
     bool copy_selected_hex_to_clipboard();
