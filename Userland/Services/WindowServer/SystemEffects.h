@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Array.h>
 #include <AK/Types.h>
 
 namespace WindowServer {
