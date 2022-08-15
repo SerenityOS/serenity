@@ -310,6 +310,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(GlobalObject& global_object, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let duration be ? ToTemporalDuration(temporalDurationLike).
     auto* duration = TRY(to_temporal_duration(global_object, temporal_duration_like));
@@ -364,7 +365,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 14. Let optionsCopy be OrdinaryObjectCreate(null).
-    auto* options_copy = Object::create(global_object, nullptr);
+    auto* options_copy = Object::create(realm, nullptr);
 
     // 15. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
     auto entries = TRY(options->enumerable_own_property_names(Object::PropertyKind::KeyAndValue));

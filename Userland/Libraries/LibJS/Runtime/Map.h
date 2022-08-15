@@ -20,7 +20,7 @@ class Map : public Object {
     JS_OBJECT(Map, Object);
 
 public:
-    static Map* create(GlobalObject&);
+    static Map* create(Realm&);
 
     explicit Map(Object& prototype);
     virtual ~Map() override = default;

@@ -55,6 +55,8 @@ void LocalePrototype::initialize(Realm& realm)
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     auto* locale_object = TRY(typed_this_object(global_object));
@@ -67,12 +69,14 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
         locale->language_id = maximal.release_value();
 
     // 4. Return ! Construct(%Locale%, maximal).
-    return Locale::create(global_object, *locale);
+    return Locale::create(realm, *locale);
 }
 
 // 14.3.4 Intl.Locale.prototype.minimize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.minimize
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     auto* locale_object = TRY(typed_this_object(global_object));
@@ -85,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
         locale->language_id = minimal.release_value();
 
     // 4. Return ! Construct(%Locale%, minimal).
-    return Locale::create(global_object, *locale);
+    return Locale::create(realm, *locale);
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString
@@ -247,12 +251,14 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
 // 1.4.21 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     auto* locale_object = TRY(typed_this_object(global_object));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
-    auto* info = Object::create(global_object, global_object.object_prototype());
+    auto* info = Object::create(realm, global_object.object_prototype());
 
     // 4. Let dir be ! CharacterDirectionOfLocale(loc).
     auto direction = character_direction_of_locale(*locale_object);
@@ -267,18 +273,20 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
 // 1.4.22 get Intl.Locale.prototype.weekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.weekInfo
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     [[maybe_unused]] auto* locale_object = TRY(typed_this_object(global_object));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
-    auto* info = Object::create(global_object, global_object.object_prototype());
+    auto* info = Object::create(realm, global_object.object_prototype());
 
     // 4. Let wi be ! WeekInfoOfLocale(loc).
     auto week_info = week_info_of_locale(*locale_object);
 
     // 5. Let we be ! CreateArrayFromList( wi.[[Weekend]] ).
-    auto weekend = Array::create_from<u8>(global_object, week_info.weekend, [](auto day) { return Value(day); });
+    auto weekend = Array::create_from<u8>(realm, week_info.weekend, [](auto day) { return Value(day); });
 
     // 6. Perform ! CreateDataPropertyOrThrow(info, "firstDay", wi.[[FirstDay]]).
     MUST(info->create_data_property_or_throw(vm.names.firstDay, Value(week_info.first_day)));

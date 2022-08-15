@@ -83,6 +83,7 @@ DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {
     auto& global_object = wrapper()->global_object();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If this’s response type is the empty string or "text", then:
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
@@ -108,7 +109,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 5. If this’s response type is "arraybuffer",
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Arraybuffer) {
         // then set this’s response object to a new ArrayBuffer object representing this’s received bytes. If this throws an exception, then set this’s response object to failure and return null.
-        auto buffer_result = JS::ArrayBuffer::create(global_object, m_received_bytes.size());
+        auto buffer_result = JS::ArrayBuffer::create(realm, m_received_bytes.size());
         if (buffer_result.is_error()) {
             m_response_object = Failure();
             return JS::js_null();

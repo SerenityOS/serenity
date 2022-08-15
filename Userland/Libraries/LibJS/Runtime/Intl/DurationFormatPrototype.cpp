@@ -64,6 +64,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
 // 1.4.4 Intl.DurationFormat.prototype.formatToParts ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.formatToParts
 JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let df be this value.
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
     auto* duration_format = TRY(typed_this_object(global_object));
@@ -79,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
 
     // 6. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(global_object, 0));
+    auto* result = MUST(Array::create(realm, 0));
 
     // 7. Let n be 0.
     // 8. For each element part in formatted, in List order, do
@@ -87,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
         auto const& part = formatted[n];
 
         // a. Let obj be ! OrdinaryObjectCreate(%ObjectPrototype%).
-        auto* object = Object::create(global_object, global_object.object_prototype());
+        auto* object = Object::create(realm, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
@@ -108,12 +110,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
 // 1.4.5 Intl.DurationFormat.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.resolvedOptions
 JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let df be the this value.
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
     auto* duration_format = TRY(typed_this_object(global_object));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 4. For each row of Table 2, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

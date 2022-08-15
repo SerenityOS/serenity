@@ -27,7 +27,7 @@ public:
         Handle,
     };
 
-    static Promise* create(GlobalObject&);
+    static Promise* create(Realm&);
 
     explicit Promise(Object& prototype);
     virtual ~Promise() = default;

@@ -128,6 +128,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_instant_for)
 // 11.4.8 Temporal.TimeZone.prototype.getPossibleInstantsFor ( dateTime ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getpossibleinstantsfor
 JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimezone]]).
     auto* time_zone = TRY(typed_this_object(global_object));
@@ -169,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
     }
 
     // 8. Return CreateArrayFromList(possibleInstants).
-    return Array::create_from(global_object, possible_instants);
+    return Array::create_from(realm, possible_instants);
 }
 
 // 11.4.9 Temporal.TimeZone.prototype.getNextTransition ( startingPoint ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getnexttransition

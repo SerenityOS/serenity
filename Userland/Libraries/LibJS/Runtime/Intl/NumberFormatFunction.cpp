@@ -12,9 +12,9 @@ namespace JS::Intl {
 
 // 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
 // 1.1.4 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
-NumberFormatFunction* NumberFormatFunction::create(GlobalObject& global_object, NumberFormat& number_format)
+NumberFormatFunction* NumberFormatFunction::create(Realm& realm, NumberFormat& number_format)
 {
-    return global_object.heap().allocate<NumberFormatFunction>(global_object, number_format, *global_object.function_prototype());
+    return realm.heap().allocate<NumberFormatFunction>(realm.global_object(), number_format, *realm.global_object().function_prototype());
 }
 
 NumberFormatFunction::NumberFormatFunction(NumberFormat& number_format, Object& prototype)

@@ -70,9 +70,11 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 // 24.2.3.5 Set.prototype.entries ( ), https://tc39.es/ecma262/#sec-set.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* set = TRY(typed_this_object(global_object));
 
-    return SetIterator::create(global_object, *set, Object::PropertyKind::KeyAndValue);
+    return SetIterator::create(realm, *set, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-set.prototype.foreach
@@ -97,9 +99,11 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 // 24.2.3.10 Set.prototype.values ( ), https://tc39.es/ecma262/#sec-set.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* set = TRY(typed_this_object(global_object));
 
-    return SetIterator::create(global_object, *set, Object::PropertyKind::Value);
+    return SetIterator::create(realm, *set, Object::PropertyKind::Value);
 }
 
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size

@@ -119,12 +119,13 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
 static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             // 1. Let valuesArray be CreateArrayFromList(values).
-            auto* values_array = Array::create_from(global_object, values.values());
+            auto* values_array = Array::create_from(realm, values.values());
 
             // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
             TRY(call(global_object, *result_capability.resolve, js_undefined(), values_array));
@@ -141,7 +142,7 @@ static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object,
             // o. Set onFulfilled.[[Values]] to values.
             // p. Set onFulfilled.[[Capability]] to resultCapability.
             // q. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
-            auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            auto* on_fulfilled = PromiseAllResolveElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
             on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
@@ -153,11 +154,12 @@ static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object,
 static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global_object, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
-            auto* values_array = Array::create_from(global_object, values.values());
+            auto* values_array = Array::create_from(realm, values.values());
 
             TRY(call(global_object, *result_capability.resolve, js_undefined(), values_array));
 
@@ -173,7 +175,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
             // p. Set onFulfilled.[[Values]] to values.
             // q. Set onFulfilled.[[Capability]] to resultCapability.
             // r. Set onFulfilled.[[RemainingElements]] to remainingElementsCount.
-            auto* on_fulfilled = PromiseAllSettledResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            auto* on_fulfilled = PromiseAllSettledResolveElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
             on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Let stepsRejected be the algorithm steps defined in Promise.allSettled Reject Element Functions.
@@ -184,7 +186,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
             // x. Set onRejected.[[Values]] to values.
             // y. Set onRejected.[[Capability]] to resultCapability.
             // z. Set onRejected.[[RemainingElements]] to remainingElementsCount.
-            auto* on_rejected = PromiseAllSettledRejectElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
+            auto* on_rejected = PromiseAllSettledRejectElementFunction::create(realm, index, values, result_capability, remaining_elements_count);
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
@@ -196,15 +198,16 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
 static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& errors) -> ThrowCompletionOr<Value> {
             // 1. Let error be a newly created AggregateError object.
-            auto* error = AggregateError::create(global_object);
+            auto* error = AggregateError::create(realm);
 
             // 2. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errors) }).
-            auto* errors_array = Array::create_from(global_object, errors.values());
+            auto* errors_array = Array::create_from(realm, errors.values());
             MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
             // 3. Return ThrowCompletion(error).
@@ -219,7 +222,7 @@ static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object,
             // o. Set onRejected.[[Errors]] to errors.
             // p. Set onRejected.[[Capability]] to resultCapability.
             // q. Set onRejected.[[RemainingElements]] to remainingElementsCount.
-            auto* on_rejected = PromiseAnyRejectElementFunction::create(global_object, index, errors, result_capability, remaining_elements_count);
+            auto* on_rejected = PromiseAnyRejectElementFunction::create(realm, index, errors, result_capability, remaining_elements_count);
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).

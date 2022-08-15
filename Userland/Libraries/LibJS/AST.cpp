@@ -231,7 +231,7 @@ Completion BlockStatement::execute(Interpreter& interpreter, GlobalObject& globa
     if (has_lexical_declarations()) {
         old_environment = vm.running_execution_context().lexical_environment;
         auto* block_environment = new_declarative_environment(*old_environment);
-        block_declaration_instantiation(global_object, block_environment);
+        block_declaration_instantiation(interpreter, global_object, block_environment);
         vm.running_execution_context().lexical_environment = block_environment;
     } else {
         restore_environment.disarm();
@@ -287,6 +287,8 @@ Completion FunctionExpression::execute(Interpreter& interpreter, GlobalObject& g
 // 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
 Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, GlobalObject& global_object, FlyString given_name) const
 {
+    auto& realm = *global_object.associated_realm();
+
     if (given_name.is_empty())
         given_name = "";
     auto has_own_name = !name().is_empty();
@@ -301,7 +303,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
 
     auto* private_environment = interpreter.vm().running_execution_context().private_environment;
 
-    auto closure = ECMAScriptFunctionObject::create(global_object, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(realm, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
@@ -1639,6 +1641,8 @@ private:
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& target) const
 {
+    auto& realm = *global_object.associated_realm();
+
     auto property_key_or_private_name = TRY(class_key_to_property_name(interpreter, global_object, *m_key));
     Handle<ECMAScriptFunctionObject> initializer {};
     if (m_initializer) {
@@ -1653,7 +1657,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
 
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
-        initializer = make_handle(ECMAScriptFunctionObject::create(interpreter.global_object(), String::empty(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
+        initializer = make_handle(ECMAScriptFunctionObject::create(realm, String::empty(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
         initializer->make_method(target);
     }
 
@@ -1685,6 +1689,8 @@ Optional<FlyString> ClassMethod::private_bound_identifier() const
 // 15.7.11 Runtime Semantics: ClassStaticBlockDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& home_object) const
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let lex be the running execution context's LexicalEnvironment.
     auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
@@ -1695,7 +1701,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
     // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto* body_function = ECMAScriptFunctionObject::create(global_object, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto* body_function = ECMAScriptFunctionObject::create(realm, String::empty(), String::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -1775,6 +1781,8 @@ Completion ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& glo
 ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(Interpreter& interpreter, GlobalObject& global_object, FlyString const& binding_name, FlyString const& class_name) const
 {
     auto& vm = interpreter.vm();
+    auto& realm = *global_object.associated_realm();
+
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
     auto* class_environment = new_declarative_environment(*environment);
@@ -1833,7 +1841,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         }
     }
 
-    auto* prototype = Object::create(global_object, proto_parent);
+    auto* prototype = Object::create(realm, proto_parent);
     VERIFY(prototype);
 
     vm.running_execution_context().lexical_environment = class_environment;
@@ -2994,9 +3002,10 @@ Completion ObjectProperty::execute(Interpreter& interpreter, GlobalObject&) cons
 Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(global_object, global_object.object_prototype());
+    auto* object = Object::create(realm, global_object.object_prototype());
 
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with argument obj.
     for (auto& property : m_properties) {
@@ -3205,6 +3214,7 @@ void MetaProperty::dump(int indent) const
 Completion MetaProperty::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& realm = *global_object.associated_realm();
 
     // NewTarget : new . target
     if (m_type == MetaProperty::Type::NewTarget) {
@@ -3229,7 +3239,7 @@ Completion MetaProperty::execute(Interpreter& interpreter, GlobalObject& global_
         // 4. If importMeta is empty, then
         if (import_meta == nullptr) {
             // a. Set importMeta to OrdinaryObjectCreate(null).
-            import_meta = Object::create(global_object, nullptr);
+            import_meta = Object::create(realm, nullptr);
 
             // b. Let importMetaValues be HostGetImportMetaProperties(module).
             auto import_meta_values = interpreter.vm().host_get_import_meta_properties(module);
@@ -3279,6 +3289,7 @@ void ImportCall::dump(int indent) const
 Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& realm = *global_object.associated_realm();
 
     // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
     //  1. Let referencingScriptOrModule be GetActiveScriptOrModule().
@@ -3313,7 +3324,7 @@ Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_ob
     if (!options_value.is_undefined()) {
         // a. If Type(options) is not Object,
         if (!options_value.is_object()) {
-            auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
+            auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
             MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
 
@@ -3329,7 +3340,7 @@ Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (!assertion_object.is_undefined()) {
             // i. If Type(assertionsObj) is not Object,
             if (!assertion_object.is_object()) {
-                auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
+                auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
                 // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
                 MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
 
@@ -3354,7 +3365,7 @@ Completion ImportCall::execute(Interpreter& interpreter, GlobalObject& global_ob
 
                 // 3. If Type(value) is not String, then
                 if (!value.is_string()) {
-                    auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
+                    auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
                     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
                     MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
 
@@ -3449,6 +3460,7 @@ void RegExpLiteral::dump(int indent) const
 Completion RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let pattern be CodePointsToString(BodyText of RegularExpressionLiteral).
     auto pattern = this->pattern();
@@ -3458,7 +3470,7 @@ Completion RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global
 
     // 3. Return ! RegExpCreate(pattern, flags).
     Regex<ECMA262> regex(parsed_regex(), parsed_pattern(), parsed_flags());
-    return Value { RegExpObject::create(global_object, move(regex), move(pattern), move(flags)) };
+    return Value { RegExpObject::create(realm, move(regex), move(pattern), move(flags)) };
 }
 
 void ArrayExpression::dump(int indent) const
@@ -3478,9 +3490,10 @@ void ArrayExpression::dump(int indent) const
 Completion ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let array be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(realm, 0));
 
     // 2. Perform ? ArrayAccumulation of ElementList with arguments array and 0.
 
@@ -3593,7 +3606,7 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject
 ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter& interpreter, GlobalObject& global_object) const
 {
     // 1. Let realm be the current Realm Record.
-    auto* realm = global_object.associated_realm();
+    auto& realm = *global_object.associated_realm();
 
     // 2. Let templateRegistry be realm.[[TemplateMap]].
     // 3. For each element e of templateRegistry, do
@@ -3601,7 +3614,7 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     //        i. Return e.[[Array]].
     // NOTE: Instead of caching on the realm we cache on the Parse Node side as
     //       this makes it easier to track whether it is the same parse node.
-    if (auto cached_value_or_end = m_cached_values.find(realm); cached_value_or_end != m_cached_values.end())
+    if (auto cached_value_or_end = m_cached_values.find(&realm); cached_value_or_end != m_cached_values.end())
         return Value { cached_value_or_end->value.cell() };
 
     // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
@@ -3622,10 +3635,10 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     // 8. Let template be ! ArrayCreate(count).
     // NOTE: We don't set count since we push the values using append which
     //       would then append after count. Same for 9.
-    auto* template_ = MUST(Array::create(global_object, 0));
+    auto* template_ = MUST(Array::create(realm, 0));
 
     // 9. Let rawObj be ! ArrayCreate(count).
-    auto* raw_obj = MUST(Array::create(global_object, 0));
+    auto* raw_obj = MUST(Array::create(realm, 0));
 
     // 10. Let index be 0.
     // 11. Repeat, while index < count,
@@ -3661,7 +3674,7 @@ ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter&
     MUST(template_->set_integrity_level(Object::IntegrityLevel::Frozen));
 
     // 15. Append the Record { [[Site]]: templateLiteral, [[Array]]: template } to templateRegistry.
-    m_cached_values.set(realm, make_handle(template_));
+    m_cached_values.set(&realm, make_handle(template_));
 
     // 16. Return template.
     return template_;
@@ -4047,7 +4060,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter, GlobalObject&
         auto* block_environment = new_declarative_environment(*old_environment);
 
         // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-        block_declaration_instantiation(global_object, block_environment);
+        block_declaration_instantiation(interpreter, global_object, block_environment);
 
         // 6. Set the running execution context's LexicalEnvironment to blockEnv.
         vm.running_execution_context().lexical_environment = block_environment;
@@ -4455,9 +4468,11 @@ bool ImportStatement::has_bound_name(FlyString const& name) const
 }
 
 // 14.2.3 BlockDeclarationInstantiation ( code, env ), https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
-void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Environment* environment) const
+void ScopeNode::block_declaration_instantiation(Interpreter&, GlobalObject& global_object, Environment* environment) const
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
+    auto& realm = *global_object.associated_realm();
+
     VERIFY(environment);
     auto* private_environment = global_object.vm().running_execution_context().private_environment;
     // Note: All the calls here are ! and thus we do not need to TRY this callback.
@@ -4474,7 +4489,7 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-            auto* function = ECMAScriptFunctionObject::create(global_object, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
+            auto* function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
             VERIFY(is<DeclarativeEnvironment>(*environment));
             static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, global_object, function_declaration.name(), function);
         }
@@ -4484,6 +4499,8 @@ void ScopeNode::block_declaration_instantiation(GlobalObject& global_object, Env
 // 16.1.7 GlobalDeclarationInstantiation ( script, env ), https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
 ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& interpreter, GlobalObject& global_object, GlobalEnvironment& global_environment) const
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
     // 2. Let varNames be the VarDeclaredNames of script.
     // 3. For each element name of lexNames, do
@@ -4661,7 +4678,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     for (auto& declaration : functions_to_initialize) {
         // a. Let fn be the sole element of the BoundNames of f.
         // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+        auto* function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
 
         // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
         TRY(global_environment.create_global_function_binding(declaration.name(), function, false));

@@ -501,6 +501,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 // NOTE: This is the minimum fields implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto fields = vm.argument(0);
 
     // 1. Let calendar be the this value.
@@ -561,7 +563,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     }
 
     // 8. Return CreateArrayFromList(fieldNames).
-    return Array::create_from(global_object, field_names);
+    return Array::create_from(realm, field_names);
 }
 
 // 12.4.22 Temporal.Calendar.prototype.mergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.mergefields

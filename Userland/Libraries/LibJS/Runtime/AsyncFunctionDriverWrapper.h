@@ -18,7 +18,7 @@ class AsyncFunctionDriverWrapper final : public Promise {
     JS_OBJECT(AsyncFunctionDriverWrapper, Promise);
 
 public:
-    static ThrowCompletionOr<Value> create(GlobalObject&, GeneratorObject*);
+    static ThrowCompletionOr<Value> create(Realm&, GeneratorObject*);
     explicit AsyncFunctionDriverWrapper(Realm&, GeneratorObject*);
 
     virtual ~AsyncFunctionDriverWrapper() override = default;

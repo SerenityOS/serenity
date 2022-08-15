@@ -369,6 +369,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
 // 9.3.21 Temporal.PlainYearMonth.prototype.toPlainDate ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.toplaindate
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto item = vm.argument(0);
 
     // 1. Let yearMonth be the this value.
@@ -406,7 +408,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, Vector<StringView> {}));
 
     // 12. Let options be OrdinaryObjectCreate(null).
-    auto* options = Object::create(global_object, nullptr);
+    auto* options = Object::create(realm, nullptr);
 
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
     MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
@@ -418,12 +420,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
 // 9.3.22 Temporal.PlainYearMonth.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.getisofields
 JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(global_object, global_object.object_prototype());
+    auto* fields = Object::create(realm, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", yearMonth.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&year_month->calendar())));

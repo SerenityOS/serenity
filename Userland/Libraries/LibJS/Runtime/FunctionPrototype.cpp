@@ -82,6 +82,8 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 // 3.1.2.1 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/proposal-shadowrealm/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto this_argument = vm.argument(0);
 
     // 1. Let Target be the this value.
@@ -100,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     }
 
     // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
-    auto* function = TRY(BoundFunction::create(global_object, target, this_argument, move(arguments)));
+    auto* function = TRY(BoundFunction::create(realm, target, this_argument, move(arguments)));
 
     // 4. Let argCount be the number of elements in args.
     auto arg_count = vm.argument_count() > 0 ? vm.argument_count() - 1 : 0;

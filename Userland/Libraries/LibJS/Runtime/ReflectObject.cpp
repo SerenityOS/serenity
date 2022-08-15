@@ -215,6 +215,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 // 28.1.10 Reflect.ownKeys ( target ), https://tc39.es/ecma262/#sec-reflect.ownkeys
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto target = vm.argument(0);
 
     // 1. If Type(target) is not Object, throw a TypeError exception.
@@ -225,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     auto keys = TRY(target.as_object().internal_own_property_keys());
 
     // 3. Return CreateArrayFromList(keys).
-    return Array::create_from(global_object, keys);
+    return Array::create_from(realm, keys);
 }
 
 // 28.1.11 Reflect.preventExtensions ( target ), https://tc39.es/ecma262/#sec-reflect.preventextensions

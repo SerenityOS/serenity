@@ -13,22 +13,21 @@
 
 namespace JS {
 
-ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::RegisterWindow frame)
+ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::RegisterWindow frame)
 {
-    auto& realm = *global_object.associated_realm();
-
+    auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
     Value generating_function_prototype;
     if (generating_function->kind() == FunctionKind::Async) {
         // We implement async functions by transforming them to generator function in the bytecode
         // interpreter. However an async function does not have a prototype and should not be
         // changed thus we hardcode the prototype.
-        generating_function_prototype = global_object.generator_prototype();
+        generating_function_prototype = realm.global_object().generator_prototype();
     } else {
-        generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
+        generating_function_prototype = TRY(generating_function->get(vm.names.prototype));
     }
-    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(global_object));
-    auto object = global_object.heap().allocate<GeneratorObject>(global_object, realm, *generating_function_prototype_object, move(execution_context));
+    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(realm.global_object()));
+    auto object = realm.heap().allocate<GeneratorObject>(realm.global_object(), realm, *generating_function_prototype_object, move(execution_context));
     object->m_generating_function = generating_function;
     object->m_frame = move(frame);
     object->m_previous_value = initial_value;
@@ -54,6 +53,7 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 
 ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> next_argument, Optional<Value> value_to_throw)
 {
+    auto& realm = *global_object.associated_realm();
     auto bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
 
@@ -73,7 +73,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
 
     auto previous_generated_value = TRY(generated_value(m_previous_value));
 
-    auto result = Object::create(global_object, global_object.object_prototype());
+    auto result = Object::create(realm, global_object.object_prototype());
     result->define_direct_property("value", previous_generated_value, default_attributes);
 
     if (m_done) {

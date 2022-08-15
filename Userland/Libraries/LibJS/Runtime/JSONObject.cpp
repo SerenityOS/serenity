@@ -45,6 +45,8 @@ void JSONObject::initialize(Realm& realm)
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
 ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object, Value value, Value replacer, Value space)
 {
+    auto& realm = *global_object.associated_realm();
+
     StringifyState state;
 
     if (replacer.is_object()) {
@@ -99,7 +101,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create(global_object, global_object.object_prototype());
+    auto* wrapper = Object::create(realm, global_object.object_prototype());
     MUST(wrapper->create_data_property_or_throw(String::empty(), value));
     return serialize_json_property(global_object, state, String::empty(), wrapper);
 }
@@ -392,6 +394,8 @@ String JSONObject::quote_json_string(String string)
 // 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto string = TRY(vm.argument(0).to_string(global_object));
     auto reviver = vm.argument(1);
 
@@ -400,7 +404,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         return vm.throw_completion<SyntaxError>(global_object, ErrorType::JsonMalformed);
     Value unfiltered = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
-        auto* root = Object::create(global_object, global_object.object_prototype());
+        auto* root = Object::create(realm, global_object.object_prototype());
         auto root_name = String::empty();
         MUST(root->create_data_property_or_throw(root_name, unfiltered));
         return internalize_json_property(global_object, root, root_name, reviver.as_function());
@@ -429,7 +433,8 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, JsonValue const&
 
 Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject const& json_object)
 {
-    auto* object = Object::create(global_object, global_object.object_prototype());
+    auto& realm = *global_object.associated_realm();
+    auto* object = Object::create(realm, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
         object->define_direct_property(key, parse_json_value(global_object, value), default_attributes);
     });
@@ -438,7 +443,8 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject co
 
 Array* JSONObject::parse_json_array(GlobalObject& global_object, JsonArray const& json_array)
 {
-    auto* array = MUST(Array::create(global_object, 0));
+    auto& realm = *global_object.associated_realm();
+    auto* array = MUST(Array::create(realm, 0));
     size_t index = 0;
     json_array.for_each([&](auto& value) {
         array->define_direct_property(index++, parse_json_value(global_object, value), default_attributes);

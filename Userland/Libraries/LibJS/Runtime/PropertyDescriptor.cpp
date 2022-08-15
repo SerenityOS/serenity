@@ -67,10 +67,11 @@ bool PropertyDescriptor::is_generic_descriptor() const
 // 6.2.5.4 FromPropertyDescriptor ( Desc ), https://tc39.es/ecma262/#sec-frompropertydescriptor
 Value from_property_descriptor(GlobalObject& global_object, Optional<PropertyDescriptor> const& property_descriptor)
 {
+    auto& realm = *global_object.associated_realm();
     if (!property_descriptor.has_value())
         return js_undefined();
     auto& vm = global_object.vm();
-    auto* object = Object::create(global_object, global_object.object_prototype());
+    auto* object = Object::create(realm, global_object.object_prototype());
     if (property_descriptor->value.has_value())
         MUST(object->create_data_property_or_throw(vm.names.value, *property_descriptor->value));
     if (property_descriptor->writable.has_value())

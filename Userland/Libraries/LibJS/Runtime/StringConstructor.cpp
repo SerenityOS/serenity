@@ -51,15 +51,17 @@ ThrowCompletionOr<Value> StringConstructor::call()
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
 ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_target)
 {
-    auto& vm = global_object().vm();
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     PrimitiveString* primitive_string;
     if (!vm.argument_count())
         primitive_string = js_string(vm, "");
     else
-        primitive_string = TRY(vm.argument(0).to_primitive_string(global_object()));
-    auto* prototype = TRY(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype));
-    return StringObject::create(global_object(), *primitive_string, *prototype);
+        primitive_string = TRY(vm.argument(0).to_primitive_string(global_object));
+    auto* prototype = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::string_prototype));
+    return StringObject::create(realm, *primitive_string, *prototype);
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw

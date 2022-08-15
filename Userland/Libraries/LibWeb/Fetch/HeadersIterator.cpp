@@ -17,6 +17,7 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
 {
     auto& global_object = wrapper()->global_object();
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
@@ -39,7 +40,7 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
     case JS::Object::PropertyKind::Value:
         return create_iterator_result_object(global_object, JS::js_string(vm, StringView { pair.value }), false);
     case JS::Object::PropertyKind::KeyAndValue: {
-        auto* array = JS::Array::create_from(global_object, { JS::js_string(vm, StringView { pair.name }), JS::js_string(vm, StringView { pair.value }) });
+        auto* array = JS::Array::create_from(realm, { JS::js_string(vm, StringView { pair.name }), JS::js_string(vm, StringView { pair.value }) });
         return create_iterator_result_object(global_object, array, false);
     }
     default:

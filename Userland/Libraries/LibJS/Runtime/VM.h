@@ -165,7 +165,8 @@ public:
     template<typename T, typename... Args>
     Completion throw_completion(GlobalObject& global_object, Args&&... args)
     {
-        return JS::throw_completion(T::create(global_object, forward<Args>(args)...));
+        auto& realm = realm_from_global_object(global_object);
+        return JS::throw_completion(T::create(realm, forward<Args>(args)...));
     }
 
     template<typename T, typename... Args>

@@ -24,14 +24,14 @@
 namespace JS {
 
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
-Object* Object::create(GlobalObject& global_object, Object* prototype)
+Object* Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return global_object.heap().allocate<Object>(global_object, *global_object.empty_object_shape());
-    else if (prototype == global_object.object_prototype())
-        return global_object.heap().allocate<Object>(global_object, *global_object.new_object_shape());
+        return realm.heap().allocate<Object>(realm.global_object(), *realm.global_object().empty_object_shape());
+    else if (prototype == realm.global_object().object_prototype())
+        return realm.heap().allocate<Object>(realm.global_object(), *realm.global_object().new_object_shape());
     else
-        return global_object.heap().allocate<Object>(global_object, *prototype);
+        return realm.heap().allocate<Object>(realm.global_object(), *prototype);
 }
 
 GlobalObject& Object::global_object() const
@@ -368,6 +368,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
     //       spec text have been replaced with `continue`s in the loop below.
 
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let ownKeys be ? O.[[OwnPropertyKeys]]().
     auto own_keys = TRY(internal_own_property_keys());
@@ -408,7 +409,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
             VERIFY(kind == PropertyKind::KeyAndValue);
 
             // ii. Let entry be CreateArrayFromList(« key, value »).
-            auto entry = Array::create_from(global_object, { key, value });
+            auto entry = Array::create_from(realm, { key, value });
 
             // iii. Append entry to properties.
             properties.append(entry);
@@ -1057,12 +1058,13 @@ void Object::set_prototype(Object* new_prototype)
 
 void Object::define_native_accessor(PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
+    auto& realm = *global_object().associated_realm();
     FunctionObject* getter_function = nullptr;
     if (getter)
-        getter_function = NativeFunction::create(global_object(), move(getter), 0, property_key, {}, {}, "get"sv);
+        getter_function = NativeFunction::create(realm, move(getter), 0, property_key, &realm, {}, "get"sv);
     FunctionObject* setter_function = nullptr;
     if (setter)
-        setter_function = NativeFunction::create(global_object(), move(setter), 1, property_key, {}, {}, "set"sv);
+        setter_function = NativeFunction::create(realm, move(setter), 1, property_key, &realm, {}, "set"sv);
     return define_direct_accessor(property_key, getter_function, setter_function, attribute);
 }
 
@@ -1106,7 +1108,8 @@ Value Object::get_without_side_effects(PropertyKey const& property_key) const
 
 void Object::define_native_function(PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
-    auto* function = NativeFunction::create(global_object(), move(native_function), length, property_key);
+    auto& realm = *global_object().associated_realm();
+    auto* function = NativeFunction::create(realm, move(native_function), length, property_key, &realm);
     define_direct_property(property_key, function, attribute);
 }
 

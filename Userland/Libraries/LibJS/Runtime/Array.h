@@ -21,18 +21,18 @@ class Array : public Object {
     JS_OBJECT(Array, Object);
 
 public:
-    static ThrowCompletionOr<Array*> create(GlobalObject&, u64 length, Object* prototype = nullptr);
-    static Array* create_from(GlobalObject&, Vector<Value> const&);
+    static ThrowCompletionOr<Array*> create(Realm&, u64 length, Object* prototype = nullptr);
+    static Array* create_from(Realm&, Vector<Value> const&);
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
-    static Array* create_from(GlobalObject& global_object, Span<T const> elements, Function<Value(T const&)> map_fn)
+    static Array* create_from(Realm& realm, Span<T const> elements, Function<Value(T const&)> map_fn)
     {
-        auto values = MarkedVector<Value> { global_object.heap() };
+        auto values = MarkedVector<Value> { realm.heap() };
         values.ensure_capacity(elements.size());
         for (auto const& element : elements)
             values.append(map_fn(element));
 
-        return Array::create_from(global_object, values);
+        return Array::create_from(realm, values);
     }
 
     explicit Array(Object& prototype);

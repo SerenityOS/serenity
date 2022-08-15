@@ -951,6 +951,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
 // 6.3.39 Temporal.ZonedDateTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
     auto* zoned_date_time = TRY(typed_this_object(global_object));
@@ -968,7 +970,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
         // a. Let paramString be roundTo.
 
         // b. Set roundTo to OrdinaryObjectCreate(null).
-        round_to = Object::create(global_object, nullptr);
+        round_to = Object::create(realm, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).
         MUST(round_to->create_data_property_or_throw(vm.names.smallestUnit, vm.argument(0)));
@@ -1282,12 +1284,14 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 // 6.3.52 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
     auto* zoned_date_time = TRY(typed_this_object(global_object));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(global_object, global_object.object_prototype());
+    auto* fields = Object::create(realm, global_object.object_prototype());
 
     // 4. Let timeZone be zonedDateTime.[[TimeZone]].
     auto& time_zone = zoned_date_time->time_zone();

@@ -28,7 +28,7 @@ void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
     Object::initialize(realm);
 
     VERIFY(!m_exports_object);
-    m_exports_object = create(realm.global_object(), nullptr);
+    m_exports_object = create(realm, nullptr);
     auto& instance = this->instance();
     auto& cache = this->cache();
     for (auto& export_ : instance.exports()) {

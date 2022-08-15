@@ -14,9 +14,9 @@
 
 namespace JS::Intl {
 
-Locale* Locale::create(GlobalObject& global_object, Unicode::LocaleID const& locale_id)
+Locale* Locale::create(Realm& realm, Unicode::LocaleID const& locale_id)
 {
-    return global_object.heap().allocate<Locale>(global_object, locale_id, *global_object.intl_locale_prototype());
+    return realm.heap().allocate<Locale>(realm.global_object(), locale_id, *realm.global_object().intl_locale_prototype());
 }
 
 // 14 Locale Objects, https://tc39.es/ecma402/#locale-objects
@@ -58,6 +58,7 @@ Locale::Locale(Unicode::LocaleID const& locale_id, Object& prototype)
 static Array* create_array_from_list_or_restricted(GlobalObject& global_object, Vector<StringView> list, Optional<String> restricted)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If restricted is not undefined, then
     if (restricted.has_value()) {
@@ -66,7 +67,7 @@ static Array* create_array_from_list_or_restricted(GlobalObject& global_object, 
     }
 
     // 2. Return ! CreateArrayFromList( list ).
-    return Array::create_from<StringView>(global_object, list, [&vm](auto value) {
+    return Array::create_from<StringView>(realm, list, [&vm](auto value) {
         return js_string(vm, value);
     });
 }
@@ -152,6 +153,7 @@ Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& lo
 Array* time_zones_of_locale(GlobalObject& global_object, StringView region)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let locale be loc.[[Locale]].
     // 2. Assert: locale matches the unicode_locale_id production.
@@ -162,7 +164,7 @@ Array* time_zones_of_locale(GlobalObject& global_object, StringView region)
     quick_sort(list);
 
     // 5. Return ! CreateArrayFromList( list ).
-    return Array::create_from<StringView>(global_object, list, [&vm](auto value) {
+    return Array::create_from<StringView>(realm, list, [&vm](auto value) {
         return js_string(vm, value);
     });
 }

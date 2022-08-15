@@ -21,7 +21,7 @@ class Locale final : public Object {
     JS_OBJECT(Locale, Object);
 
 public:
-    static Locale* create(GlobalObject&, Unicode::LocaleID const&);
+    static Locale* create(Realm&, Unicode::LocaleID const&);
 
     static constexpr auto relevant_extension_keys()
     {

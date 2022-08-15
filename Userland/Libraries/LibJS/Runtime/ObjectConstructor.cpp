@@ -68,12 +68,13 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     if (&new_target != this)
         return TRY(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create(global_object, global_object.object_prototype());
+        return Object::create(realm, global_object.object_prototype());
     return value.to_object(global_object);
 }
 
@@ -112,15 +113,19 @@ static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(GlobalObject
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
-    return Array::create_from(global_object, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String)));
+    return Array::create_from(realm, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String)));
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
-    return Array::create_from(global_object, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
+    return Array::create_from(realm, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
@@ -218,9 +223,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
 // 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 {
+    auto& realm = *global_object.associated_realm();
     auto iterable = TRY(require_object_coercible(global_object, vm.argument(0)));
 
-    auto* object = Object::create(global_object, global_object.object_prototype());
+    auto* object = Object::create(realm, global_object.object_prototype());
 
     (void)TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
@@ -262,6 +268,8 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 // 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY(vm.argument(0).to_object(global_object));
 
@@ -269,7 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto own_keys = TRY(object->internal_own_property_keys());
 
     // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
-    auto* descriptors = Object::create(global_object, global_object.object_prototype());
+    auto* descriptors = Object::create(realm, global_object.object_prototype());
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
@@ -324,30 +332,38 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 // 20.1.2.18 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* object = TRY(vm.argument(0).to_object(global_object));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
-    return Array::create_from(global_object, name_list);
+    return Array::create_from(realm, name_list);
 }
 
 // 20.1.2.23 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* object = TRY(vm.argument(0).to_object(global_object));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
-    return Array::create_from(global_object, name_list);
+    return Array::create_from(realm, name_list);
 }
 
 // 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* object = TRY(vm.argument(0).to_object(global_object));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
-    return Array::create_from(global_object, name_list);
+    return Array::create_from(realm, name_list);
 }
 
 // 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto proto = vm.argument(0);
     auto properties = vm.argument(1);
 
@@ -356,7 +372,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
         return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
 
     // 2. Let obj be OrdinaryObjectCreate(O).
-    auto* object = Object::create(global_object, proto.is_null() ? nullptr : &proto.as_object());
+    auto* object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());
 
     // 3. If Properties is not undefined, then
     if (!properties.is_undefined()) {

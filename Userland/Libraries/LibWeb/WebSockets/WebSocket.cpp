@@ -214,8 +214,9 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     } else if (m_binary_type == "arraybuffer") {
         // type indicates that the data is Binary and binaryType is "arraybuffer"
         auto& global_object = wrapper()->global_object();
+        auto& realm = *global_object.associated_realm();
         HTML::MessageEventInit event_init;
-        event_init.data = JS::ArrayBuffer::create(global_object, message);
+        event_init.data = JS::ArrayBuffer::create(realm, message);
         event_init.origin = url();
         dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
         return;

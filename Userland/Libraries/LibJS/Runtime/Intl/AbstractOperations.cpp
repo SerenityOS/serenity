@@ -186,6 +186,7 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_object, Value locales)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
@@ -200,7 +201,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
     if (locales.is_string() || (locales.is_object() && is<Locale>(locales.as_object()))) {
         // a. Let O be CreateArrayFromList(« locales »).
-        object = Array::create_from(global_object, { locales });
+        object = Array::create_from(realm, { locales });
     }
     // 4. Else,
     else {
@@ -568,6 +569,7 @@ Vector<String> best_fit_supported_locales(Vector<String> const& requested_locale
 ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<String> const& requested_locales, Value options)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Set options to ? CoerceOptionsToObject(options).
     auto* options_object = TRY(coerce_options_to_object(global_object, options));
@@ -589,16 +591,18 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
     }
 
     // 5. Return CreateArrayFromList(supportedLocales).
-    return Array::create_from<String>(global_object, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
+    return Array::create_from<String>(realm, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
 ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return OrdinaryObjectCreate(null).
-        return Object::create(global_object, nullptr);
+        return Object::create(realm, nullptr);
     }
 
     // 2. Return ? ToObject(options).

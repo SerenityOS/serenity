@@ -14,15 +14,15 @@
 
 namespace JS {
 
-Error* Error::create(GlobalObject& global_object)
+Error* Error::create(Realm& realm)
 {
-    return global_object.heap().allocate<Error>(global_object, *global_object.error_prototype());
+    return realm.heap().allocate<Error>(realm.global_object(), *realm.global_object().error_prototype());
 }
 
-Error* Error::create(GlobalObject& global_object, String const& message)
+Error* Error::create(Realm& realm, String const& message)
 {
-    auto& vm = global_object.vm();
-    auto* error = Error::create(global_object);
+    auto& vm = realm.vm();
+    auto* error = Error::create(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     error->define_direct_property(vm.names.message, js_string(vm, message), attr);
     return error;
@@ -97,15 +97,16 @@ String Error::stack_string() const
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
-    ClassName* ClassName::create(GlobalObject& global_object)                                                    \
+    ClassName* ClassName::create(Realm& realm)                                                                   \
     {                                                                                                            \
-        return global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype()); \
+        return realm.heap().allocate<ClassName>(                                                                 \
+            realm.global_object(), *realm.global_object().snake_name##_prototype()); /*                       */ \
     }                                                                                                            \
                                                                                                                  \
-    ClassName* ClassName::create(GlobalObject& global_object, String const& message)                             \
+    ClassName* ClassName::create(Realm& realm, String const& message)                                            \
     {                                                                                                            \
-        auto& vm = global_object.vm();                                                                           \
-        auto* error = ClassName::create(global_object);                                                          \
+        auto& vm = realm.vm();                                                                                   \
+        auto* error = ClassName::create(realm);                                                                  \
         u8 attr = Attribute::Writable | Attribute::Configurable;                                                 \
         error->define_direct_property(vm.names.message, js_string(vm, message), attr);                           \
         return error;                                                                                            \

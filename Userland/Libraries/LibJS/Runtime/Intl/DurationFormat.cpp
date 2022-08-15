@@ -311,6 +311,7 @@ static String convert_number_format_pattern_to_duration_format_template(Unicode:
 ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(GlobalObject& global_object, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -349,7 +350,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
         }
 
         // h. Let nfOpts be ! OrdinaryObjectCreate(null).
-        auto* number_format_options = Object::create(global_object, nullptr);
+        auto* number_format_options = Object::create(realm, nullptr);
 
         // i. Let value be 0.
         auto value = Value(0);

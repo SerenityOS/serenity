@@ -122,14 +122,14 @@ ThrowCompletionOr<String> parse_regex_pattern(StringView pattern, VM& vm, Global
     return result.release_value();
 }
 
-RegExpObject* RegExpObject::create(GlobalObject& global_object)
+RegExpObject* RegExpObject::create(Realm& realm)
 {
-    return global_object.heap().allocate<RegExpObject>(global_object, *global_object.regexp_prototype());
+    return realm.heap().allocate<RegExpObject>(realm.global_object(), *realm.global_object().regexp_prototype());
 }
 
-RegExpObject* RegExpObject::create(GlobalObject& global_object, Regex<ECMA262> regex, String pattern, String flags)
+RegExpObject* RegExpObject::create(Realm& realm, Regex<ECMA262> regex, String pattern, String flags)
 {
-    return global_object.heap().allocate<RegExpObject>(global_object, move(regex), move(pattern), move(flags), *global_object.regexp_prototype());
+    return realm.heap().allocate<RegExpObject>(realm.global_object(), move(regex), move(pattern), move(flags), *realm.global_object().regexp_prototype());
 }
 
 RegExpObject::RegExpObject(Object& prototype)
@@ -207,7 +207,8 @@ String RegExpObject::escape_regexp_pattern() const
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
 ThrowCompletionOr<RegExpObject*> regexp_create(GlobalObject& global_object, Value pattern, Value flags)
 {
-    auto* regexp_object = RegExpObject::create(global_object);
+    auto& realm = *global_object.associated_realm();
+    auto* regexp_object = RegExpObject::create(realm);
     return TRY(regexp_object->regexp_initialize(global_object, pattern, flags));
 }
 

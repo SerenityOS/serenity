@@ -16,7 +16,7 @@ class SetIterator final : public Object {
     JS_OBJECT(SetIterator, Object);
 
 public:
-    static SetIterator* create(GlobalObject&, Set& set, Object::PropertyKind iteration_kind);
+    static SetIterator* create(Realm&, Set& set, Object::PropertyKind iteration_kind);
 
     explicit SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~SetIterator() override = default;

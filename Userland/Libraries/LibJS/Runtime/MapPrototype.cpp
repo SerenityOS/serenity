@@ -57,9 +57,11 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 // 24.1.3.4 Map.prototype.entries ( ), https://tc39.es/ecma262/#sec-map.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* map = TRY(typed_this_object(global_object));
 
-    return MapIterator::create(global_object, *map, Object::PropertyKind::KeyAndValue);
+    return MapIterator::create(realm, *map, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-map.prototype.foreach
@@ -94,9 +96,11 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 // 24.1.3.8 Map.prototype.keys ( ), https://tc39.es/ecma262/#sec-map.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* map = TRY(typed_this_object(global_object));
 
-    return MapIterator::create(global_object, *map, Object::PropertyKind::Key);
+    return MapIterator::create(realm, *map, Object::PropertyKind::Key);
 }
 
 // 24.1.3.9 Map.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-map.prototype.set
@@ -113,9 +117,11 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 // 24.1.3.11 Map.prototype.values ( ), https://tc39.es/ecma262/#sec-map.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* map = TRY(typed_this_object(global_object));
 
-    return MapIterator::create(global_object, *map, Object::PropertyKind::Value);
+    return MapIterator::create(realm, *map, Object::PropertyKind::Value);
 }
 
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size

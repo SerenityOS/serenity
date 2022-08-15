@@ -240,6 +240,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
     if (!is<SheetGlobalObject>(this_object))
@@ -256,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     if (!position.has_value())
         return JS::js_undefined();
 
-    auto object = JS::Object::create(global_object, global_object.object_prototype());
+    auto object = JS::Object::create(realm, global_object.object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.value().row), JS::default_attributes);
 
@@ -265,6 +267,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 {
+    auto& realm = *global_object.associated_realm();
+
     if (vm.argument_count() != 0)
         return vm.throw_completion<JS::TypeError>(global_object, "Expected no arguments to current_cell_position()");
 
@@ -280,7 +284,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 
     auto position = current_cell->position();
 
-    auto object = JS::Object::create(global_object, global_object.object_prototype());
+    auto object = JS::Object::create(realm, global_object.object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.row), JS::default_attributes);
 

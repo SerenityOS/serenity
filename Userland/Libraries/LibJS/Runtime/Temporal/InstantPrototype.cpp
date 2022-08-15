@@ -175,6 +175,8 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 // 8.3.11 Temporal.Instant.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
     auto* instant = TRY(typed_this_object(global_object));
@@ -192,7 +194,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         // a. Let paramString be roundTo.
 
         // b. Set roundTo to OrdinaryObjectCreate(null).
-        round_to = Object::create(global_object, nullptr);
+        round_to = Object::create(realm, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).
         MUST(round_to->create_data_property_or_throw(vm.names.smallestUnit, vm.argument(0)));

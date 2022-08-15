@@ -461,9 +461,9 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
     public:                                                                                 \
         virtual ~ClassName();                                                               \
         static ThrowCompletionOr<ClassName*> create(                                        \
-            GlobalObject&, u32 length, FunctionObject& new_target);                         \
-        static ThrowCompletionOr<ClassName*> create(GlobalObject&, u32 length);             \
-        static ClassName* create(GlobalObject&, u32 length, ArrayBuffer& buffer);           \
+            Realm&, u32 length, FunctionObject& new_target);                                \
+        static ThrowCompletionOr<ClassName*> create(Realm&, u32 length);                    \
+        static ClassName* create(Realm&, u32 length, ArrayBuffer& buffer);                  \
         ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
         virtual FlyString const& element_name() const override;                             \
     };                                                                                      \

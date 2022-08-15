@@ -33,6 +33,8 @@ void AsyncFromSyncIteratorPrototype::initialize(Realm& realm)
 // 27.1.4.4 AsyncFromSyncIteratorContinuation ( result, promiseCapability ), https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation
 static Object* async_from_sync_iterator_continuation(GlobalObject& global_object, Object& result, PromiseCapability& promise_capability)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. NOTE: Because promiseCapability is derived from the intrinsic %Promise%, the calls to promiseCapability.[[Reject]] entailed by the use IfAbruptRejectPromise below are guaranteed not to throw.
     // 2. Let done be Completion(IteratorComplete(result)).
     // 3. IfAbruptRejectPromise(done, promiseCapability).
@@ -54,7 +56,7 @@ static Object* async_from_sync_iterator_continuation(GlobalObject& global_object
 
     // 9. Let onFulfilled be CreateBuiltinFunction(unwrap, 1, "", « »).
     // 10. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
-    auto* on_fulfilled = NativeFunction::create(global_object, move(unwrap), 1, "");
+    auto* on_fulfilled = NativeFunction::create(realm, move(unwrap), 1, "");
 
     // 11. Perform PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
     verify_cast<Promise>(value_wrapper)->perform_then(move(on_fulfilled), js_undefined(), promise_capability);
@@ -92,6 +94,8 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
 // 27.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
 JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
     auto* this_object = MUST(typed_this_object(global_object));
@@ -129,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 
     // 11. If Type(result) is not Object, then
     if (!result.is_object()) {
-        auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorReturnResult"));
+        auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorReturnResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
         MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
         // b. Return promiseCapability.[[Promise]].
@@ -143,6 +147,8 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 // 27.1.4.2.3 %AsyncFromSyncIteratorPrototype%.throw ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw
 JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
     auto* this_object = MUST(typed_this_object(global_object));
@@ -175,7 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 
     // 11. If Type(result) is not Object, then
     if (!result.is_object()) {
-        auto* error = TypeError::create(global_object, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorThrowResult"));
+        auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorThrowResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
         MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
 
@@ -191,10 +197,11 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 Iterator create_async_from_sync_iterator(GlobalObject& global_object, Iterator sync_iterator_record)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let asyncIterator be OrdinaryObjectCreate(%AsyncFromSyncIteratorPrototype%, « [[SyncIteratorRecord]] »).
     // 2. Set asyncIterator.[[SyncIteratorRecord]] to syncIteratorRecord.
-    auto* async_iterator = AsyncFromSyncIterator::create(global_object, sync_iterator_record);
+    auto* async_iterator = AsyncFromSyncIterator::create(realm, sync_iterator_record);
 
     // 3. Let nextMethod be ! Get(asyncIterator, "next").
     auto next_method = MUST(async_iterator->get(vm.names.next));

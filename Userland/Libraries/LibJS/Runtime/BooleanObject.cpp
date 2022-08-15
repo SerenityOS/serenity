@@ -9,9 +9,9 @@
 
 namespace JS {
 
-BooleanObject* BooleanObject::create(GlobalObject& global_object, bool value)
+BooleanObject* BooleanObject::create(Realm& realm, bool value)
 {
-    return global_object.heap().allocate<BooleanObject>(global_object, value, *global_object.boolean_prototype());
+    return realm.heap().allocate<BooleanObject>(realm.global_object(), value, *realm.global_object().boolean_prototype());
 }
 
 BooleanObject::BooleanObject(bool value, Object& prototype)

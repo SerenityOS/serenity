@@ -17,7 +17,7 @@ class Set : public Object {
     JS_OBJECT(Set, Object);
 
 public:
-    static Set* create(GlobalObject&);
+    static Set* create(Realm&);
 
     explicit Set(Object& prototype);
     virtual ~Set() override = default;

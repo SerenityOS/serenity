@@ -79,12 +79,14 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 // 1.4.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
     auto* plural_rules = TRY(typed_this_object(global_object));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 4. For each row of Table 13, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.
@@ -106,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
     auto available_categories = Unicode::available_plural_categories(plural_rules->locale(), plural_rules->type());
 
-    auto* plural_categories = Array::create_from<Unicode::PluralCategory>(global_object, available_categories, [&](auto category) {
+    auto* plural_categories = Array::create_from<Unicode::PluralCategory>(realm, available_categories, [&](auto category) {
         return js_string(vm, Unicode::plural_category_to_string(category));
     });
 

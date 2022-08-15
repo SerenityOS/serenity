@@ -28,7 +28,7 @@ class PromiseResolvingFunction final : public NativeFunction {
 public:
     using FunctionType = Function<ThrowCompletionOr<Value>(VM&, GlobalObject&, Promise&, AlreadyResolved&)>;
 
-    static PromiseResolvingFunction* create(GlobalObject&, Promise&, AlreadyResolved&, FunctionType);
+    static PromiseResolvingFunction* create(Realm&, Promise&, AlreadyResolved&, FunctionType);
 
     explicit PromiseResolvingFunction(Promise&, AlreadyResolved&, FunctionType, Object& prototype);
     virtual void initialize(Realm&) override;

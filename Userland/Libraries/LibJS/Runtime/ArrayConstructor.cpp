@@ -50,29 +50,31 @@ ThrowCompletionOr<Value> ArrayConstructor::call()
 ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
-    auto* proto = TRY(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype));
+    auto* proto = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::array_prototype));
 
     if (vm.argument_count() == 0)
-        return MUST(Array::create(global_object(), 0, proto));
+        return MUST(Array::create(realm, 0, proto));
 
     if (vm.argument_count() == 1) {
         auto length = vm.argument(0);
-        auto* array = MUST(Array::create(global_object(), 0, proto));
+        auto* array = MUST(Array::create(realm, 0, proto));
         size_t int_length;
         if (!length.is_number()) {
             MUST(array->create_data_property_or_throw(0, length));
             int_length = 1;
         } else {
-            int_length = MUST(length.to_u32(global_object()));
+            int_length = MUST(length.to_u32(global_object));
             if (int_length != length.as_double())
-                return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "array");
+                return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
         }
         TRY(array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes));
         return array;
     }
 
-    auto* array = TRY(Array::create(global_object(), vm.argument_count(), proto));
+    auto* array = TRY(Array::create(realm, vm.argument_count(), proto));
 
     for (size_t k = 0; k < vm.argument_count(); ++k)
         MUST(array->create_data_property_or_throw(k, vm.argument(k)));
@@ -83,6 +85,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
+    auto& realm = *global_object.associated_realm();
     auto constructor = vm.this_value(global_object);
 
     FunctionObject* map_fn = nullptr;
@@ -102,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         if (constructor.is_constructor())
             array = TRY(JS::construct(global_object, constructor.as_function(), {}));
         else
-            array = MUST(Array::create(global_object, 0));
+            array = MUST(Array::create(realm, 0));
 
         auto iterator = TRY(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
 
@@ -147,7 +150,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     if (constructor.is_constructor())
         array = TRY(JS::construct(global_object, constructor.as_function(), Value(length)));
     else
-        array = TRY(Array::create(global_object, length));
+        array = TRY(Array::create(realm, length));
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = TRY(array_like->get(k));
@@ -174,12 +177,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
+    auto& realm = *global_object.associated_realm();
     auto this_value = vm.this_value(global_object);
     Object* array;
     if (this_value.is_constructor())
         array = TRY(JS::construct(global_object, this_value.as_function(), Value(vm.argument_count())));
     else
-        array = TRY(Array::create(global_object, vm.argument_count()));
+        array = TRY(Array::create(realm, vm.argument_count()));
     for (size_t k = 0; k < vm.argument_count(); ++k)
         TRY(array->create_data_property_or_throw(k, vm.argument(k)));
     TRY(array->set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));

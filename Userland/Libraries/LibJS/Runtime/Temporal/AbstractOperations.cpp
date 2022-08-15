@@ -82,11 +82,12 @@ ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject& gl
 ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value options)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If options is undefined, then
     if (options.is_undefined()) {
         // a. Return OrdinaryObjectCreate(null).
-        return Object::create(global_object, nullptr);
+        return Object::create(realm, nullptr);
     }
 
     // 2. If Type(options) is Object, then
@@ -552,6 +553,7 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object, Object const& options)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Assert: Type(options) is Object.
 
@@ -603,7 +605,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, Vector<StringView> {}));
 
         // f. Let dateOptions be OrdinaryObjectCreate(null).
-        auto* date_options = Object::create(global_object, nullptr);
+        auto* date_options = Object::create(realm, nullptr);
 
         // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
         MUST(date_options->create_data_property_or_throw(vm.names.overflow, js_string(vm, "constrain"sv)));
@@ -743,9 +745,10 @@ StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object, Object const& options, String largest_unit)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let merged be OrdinaryObjectCreate(null).
-    auto* merged = Object::create(global_object, nullptr);
+    auto* merged = Object::create(realm, nullptr);
 
     // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
     auto keys = TRY(options.enumerable_own_property_names(Object::PropertyKind::Key));
@@ -1769,9 +1772,10 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let result be OrdinaryObjectCreate(null).
-    auto* result = Object::create(global_object, nullptr);
+    auto* result = Object::create(realm, nullptr);
     VERIFY(result);
 
     // 2. Let any be false.

@@ -124,12 +124,14 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 // 12.3.4 Intl.DisplayNames.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.resolvedOptions
 JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
     auto* display_names = TRY(typed_this_object(global_object));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 4. For each row of Table 8, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

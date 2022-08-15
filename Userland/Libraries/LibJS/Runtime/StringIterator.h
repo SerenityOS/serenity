@@ -15,7 +15,7 @@ class StringIterator final : public Object {
     JS_OBJECT(StringIterator, Object);
 
 public:
-    static StringIterator* create(GlobalObject&, String string);
+    static StringIterator* create(Realm&, String string);
 
     explicit StringIterator(String string, Object& prototype);
     virtual ~StringIterator() override = default;

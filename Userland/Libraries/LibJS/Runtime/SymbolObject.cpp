@@ -10,9 +10,9 @@
 
 namespace JS {
 
-SymbolObject* SymbolObject::create(GlobalObject& global_object, Symbol& primitive_symbol)
+SymbolObject* SymbolObject::create(Realm& realm, Symbol& primitive_symbol)
 {
-    return global_object.heap().allocate<SymbolObject>(global_object, primitive_symbol, *global_object.symbol_prototype());
+    return realm.heap().allocate<SymbolObject>(realm.global_object(), primitive_symbol, *realm.global_object().symbol_prototype());
 }
 
 SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)

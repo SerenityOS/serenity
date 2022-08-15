@@ -40,6 +40,8 @@ void DateTimeFormatPrototype::initialize(Realm& realm)
 // 11.3.3 get Intl.DateTimeFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let dtf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set dtf to ? UnwrapDateTimeFormat(dtf).
@@ -50,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
     if (!date_time_format->bound_format()) {
         // a. Let F be a new built-in function object as defined in DateTime Format Functions (11.1.6).
         // b. Set F.[[DateTimeFormat]] to dtf.
-        auto* bound_format = DateTimeFormatFunction::create(global_object, *date_time_format);
+        auto* bound_format = DateTimeFormatFunction::create(realm, *date_time_format);
 
         // c. Set dtf.[[BoundFormat]] to F.
         date_time_format->set_bound_format(bound_format);
@@ -142,6 +144,8 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
 // 11.3.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let dtf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set dtf to ? UnwrapDateTimeFormat(dtf).
@@ -149,7 +153,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     auto* date_time_format = TRY(typed_this_object(global_object));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 5. For each row of Table 5, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

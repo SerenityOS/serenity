@@ -16,6 +16,7 @@ JS::Object* URLSearchParamsIterator::next()
 {
     auto& global_object = wrapper()->global_object();
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     if (m_index >= m_url_search_params.m_list.size())
         return create_iterator_result_object(global_object, JS::js_undefined(), true);
@@ -26,7 +27,7 @@ JS::Object* URLSearchParamsIterator::next()
     else if (m_iteration_kind == JS::Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, JS::js_string(vm, entry.value), false);
 
-    return create_iterator_result_object(global_object, JS::Array::create_from(global_object, { JS::js_string(vm, entry.name), JS::js_string(vm, entry.value) }), false);
+    return create_iterator_result_object(global_object, JS::Array::create_from(realm, { JS::js_string(vm, entry.name), JS::js_string(vm, entry.value) }), false);
 }
 
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)

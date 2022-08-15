@@ -18,6 +18,7 @@ namespace Web::Crypto {
 JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {
     auto& global_object = wrapper()->global_object();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
@@ -25,7 +26,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
         auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to copy bytes from ArrayBuffer"));
-        auto* promise = JS::Promise::create(global_object);
+        auto* promise = JS::Promise::create(realm);
         promise->reject(error);
         return promise;
     }
@@ -46,13 +47,13 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
         auto* error = wrap(wrapper()->global_object(), DOM::NotSupportedError::create(String::formatted("Invalid hash function '{}'", algorithm)));
-        auto* promise = JS::Promise::create(global_object);
+        auto* promise = JS::Promise::create(realm);
         promise->reject(error);
         return promise;
     }
 
     // 5. Let promise be a new Promise.
-    auto* promise = JS::Promise::create(global_object);
+    auto* promise = JS::Promise::create(realm);
 
     // 6. Return promise and perform the remaining steps in parallel.
     // FIXME: We don't have a good abstraction for this yet, so we do it in sync.
@@ -71,7 +72,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
         return promise;
     }
 
-    auto* result = JS::ArrayBuffer::create(global_object, result_buffer.release_value());
+    auto* result = JS::ArrayBuffer::create(realm, result_buffer.release_value());
 
     // 9. Resolve promise with result.
     promise->fulfill(result);

@@ -437,7 +437,7 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
 
         //  6. Return scope. (NOTE: Not necessary)
 
-        auto* function = JS::ECMAScriptFunctionObject::create(global_object, name, builder.to_string(), program->body(), program->parameters(), program->function_length(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
+        auto* function = JS::ECMAScriptFunctionObject::create(realm, name, builder.to_string(), program->body(), program->parameters(), program->function_length(), scope, nullptr, JS::FunctionKind::Normal, program->is_strict_mode(), program->might_need_arguments_object(), is_arrow_function);
         VERIFY(function);
 
         // 10. Remove settings object's realm execution context from the JavaScript execution context stack.
@@ -488,7 +488,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, Optional<Bi
         // Optimization: We pass in the event handler here instead of having activate_event_handler do another hash map lookup just to get the same object.
         //               This handles a new event handler while the other path handles an existing event handler. As such, both paths must have their own
         //               unique call to activate_event_handler.
-        event_target->activate_event_handler(name, new_event_handler, IsAttribute::No);
+        event_target->activate_event_handler(name, new_event_handler);
 
         handler_map.set(name, move(new_event_handler));
         return;
@@ -500,12 +500,14 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, Optional<Bi
 
     //  4. Activate an event handler given eventTarget and name.
     //  NOTE: See the optimization comment above.
-    event_target->activate_event_handler(name, event_handler, IsAttribute::No);
+    event_target->activate_event_handler(name, event_handler);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#activate-an-event-handler
-void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler, IsAttribute is_attribute)
+void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler)
 {
+    auto& realm = *Bindings::main_thread_vm().current_realm();
+
     // 1. Let handlerMap be eventTarget's event handler map.
     // 2. Let eventHandler be handlerMap[name].
     // NOTE: These are achieved by using the passed in event handler.
@@ -517,36 +519,12 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     // 4. Let callback be the result of creating a Web IDL EventListener instance representing a reference to a function of one argument that executes the steps of the event handler processing algorithm, given eventTarget, name, and its argument.
     //    The EventListener's callback context can be arbitrary; it does not impact the steps of the event handler processing algorithm. [DOM]
 
-    // FIXME: This is guess work on what global object the NativeFunction should be allocated on.
-    //        For <body> or <frameset> elements who just had an element attribute set, it will be this's wrapper, as `this` is the result of determine_target_of_event_handler
-    //        returning the element's document's global object, which is the HTML::Window object.
-    //        For any other HTMLElement who just had an element attribute set, `this` will be that HTMLElement, so the global object is this's document's realm's global object.
-    //        For anything else, it came from JavaScript, so use the global object of the provided callback function.
-    JS::GlobalObject* global_object = nullptr;
-    if (is_attribute == IsAttribute::Yes) {
-        if (is<HTML::Window>(this)) {
-            auto& window = verify_cast<HTML::Window>(*this);
-            // If an element attribute is set on a <body> element before any script is run, Window::wrapper() will be null.
-            // Force creation of the global object via the Document::interpreter() lazy initialization mechanism.
-            if (window.wrapper() == nullptr)
-                window.associated_document().interpreter();
-            global_object = static_cast<JS::GlobalObject*>(window.wrapper());
-        } else {
-            auto& html_element = verify_cast<HTML::HTMLElement>(*this);
-            global_object = &html_element.document().realm().global_object();
-        }
-    } else {
-        global_object = &event_handler.value.get<Bindings::CallbackType>().callback.cell()->global_object();
-    }
-
-    VERIFY(global_object);
-
     // NOTE: The callback must keep `this` alive. For example:
     //          document.body.onunload = () => { console.log("onunload called!"); }
     //          document.body.remove();
     //          location.reload();
     //       The body element is no longer in the DOM and there is no variable holding onto it. However, the onunload handler is still called, meaning the callback keeps the body element alive.
-    auto callback_function = JS::NativeFunction::create(*global_object, "", [event_target = NonnullRefPtr(*this), name](JS::VM& vm, auto&) mutable -> JS::ThrowCompletionOr<JS::Value> {
+    auto callback_function = JS::NativeFunction::create(realm, "", [event_target = NonnullRefPtr(*this), name](JS::VM& vm, auto&) mutable -> JS::ThrowCompletionOr<JS::Value> {
         // The event dispatcher should only call this with one argument.
         VERIFY(vm.argument_count() == 1);
 
@@ -561,7 +539,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     });
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    Bindings::CallbackType callback { JS::make_handle(static_cast<JS::Object*>(callback_function)), verify_cast<HTML::EnvironmentSettingsObject>(*global_object->associated_realm()->host_defined()) };
+    Bindings::CallbackType callback { JS::make_handle(static_cast<JS::Object*>(callback_function)), verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()) };
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto listener = adopt_ref(*new DOMEventListener);
@@ -725,7 +703,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
         HTML::EventHandler new_event_handler { value };
 
         //  6. Activate an event handler given eventTarget and name.
-        event_target->activate_event_handler(local_name, new_event_handler, IsAttribute::Yes);
+        event_target->activate_event_handler(local_name, new_event_handler);
 
         handler_map.set(local_name, move(new_event_handler));
         return;
@@ -735,7 +713,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
 
     //  6. Activate an event handler given eventTarget and name.
     event_handler.value = value;
-    event_target->activate_event_handler(local_name, event_handler, IsAttribute::Yes);
+    event_target->activate_event_handler(local_name, event_handler);
 }
 
 bool EventTarget::dispatch_event(NonnullRefPtr<Event> event)

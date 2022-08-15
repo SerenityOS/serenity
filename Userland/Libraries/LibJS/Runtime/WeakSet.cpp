@@ -8,9 +8,9 @@
 
 namespace JS {
 
-WeakSet* WeakSet::create(GlobalObject& global_object)
+WeakSet* WeakSet::create(Realm& realm)
 {
-    return global_object.heap().allocate<WeakSet>(global_object, *global_object.weak_set_prototype());
+    return realm.heap().allocate<WeakSet>(realm.global_object(), *realm.global_object().weak_set_prototype());
 }
 
 WeakSet::WeakSet(Object& prototype)

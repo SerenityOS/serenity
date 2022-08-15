@@ -71,7 +71,7 @@ class PromiseAllResolveElementFunction final : public PromiseResolvingElementFun
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllResolveElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllResolveElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
 
     explicit PromiseAllResolveElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
     virtual ~PromiseAllResolveElementFunction() override = default;
@@ -85,7 +85,7 @@ class PromiseAllSettledResolveElementFunction final : public PromiseResolvingEle
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllSettledResolveElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllSettledResolveElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
 
     explicit PromiseAllSettledResolveElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
     virtual ~PromiseAllSettledResolveElementFunction() override = default;
@@ -99,7 +99,7 @@ class PromiseAllSettledRejectElementFunction final : public PromiseResolvingElem
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAllSettledRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllSettledRejectElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
 
     explicit PromiseAllSettledRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
     virtual ~PromiseAllSettledRejectElementFunction() override = default;
@@ -113,7 +113,7 @@ class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunc
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAnyRejectElementFunction* create(GlobalObject&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAnyRejectElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
 
     explicit PromiseAnyRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
     virtual ~PromiseAnyRejectElementFunction() override = default;

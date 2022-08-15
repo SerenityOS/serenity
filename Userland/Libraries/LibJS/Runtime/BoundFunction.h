@@ -15,7 +15,7 @@ class BoundFunction final : public FunctionObject {
     JS_OBJECT(BoundFunction, FunctionObject);
 
 public:
-    static ThrowCompletionOr<BoundFunction*> create(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);
+    static ThrowCompletionOr<BoundFunction*> create(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);
 
     BoundFunction(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
     virtual ~BoundFunction() override = default;

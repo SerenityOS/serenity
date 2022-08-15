@@ -32,6 +32,7 @@ Completion::Completion(ThrowCompletionOr<Value> const& throw_completion_or_value
 ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let asyncContext be the running execution context.
     // NOTE: This is not needed, as we don't suspend anything.
@@ -63,7 +64,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
     };
 
     // 4. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-    auto* on_fulfilled = NativeFunction::create(global_object, move(fulfilled_closure), 1, "");
+    auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 1, "");
 
     // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
     auto rejected_closure = [&success, &result](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
@@ -87,7 +88,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
     };
 
     // 6. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-    auto* on_rejected = NativeFunction::create(global_object, move(rejected_closure), 1, "");
+    auto* on_rejected = NativeFunction::create(realm, move(rejected_closure), 1, "");
 
     // 7. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
     auto* promise = verify_cast<Promise>(promise_object);

@@ -40,6 +40,8 @@ void NumberFormatPrototype::initialize(Realm& realm)
 // 15.3.3 get Intl.NumberFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.numberformat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let nf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
@@ -50,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
     if (!number_format->bound_format()) {
         // a. Let F be a new built-in function object as defined in Number Format Functions (15.1.4).
         // b. Set F.[[NumberFormat]] to nf.
-        auto* bound_format = NumberFormatFunction::create(global_object, *number_format);
+        auto* bound_format = NumberFormatFunction::create(realm, *number_format);
 
         // c. Set nf.[[BoundFormat]] to F.
         number_format->set_bound_format(bound_format);
@@ -134,6 +136,8 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let nf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
@@ -141,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     auto* number_format = TRY(typed_this_object(global_object));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 5. For each row of Table 11, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

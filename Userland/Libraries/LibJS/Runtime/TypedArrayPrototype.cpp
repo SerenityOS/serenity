@@ -386,8 +386,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 // 23.2.3.7 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
-    return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::KeyAndValue);
+    return ArrayIterator::create(realm, typed_array, Object::PropertyKind::KeyAndValue);
 }
 
 // 23.2.3.8 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
@@ -686,8 +688,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 // 23.2.3.19 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
-    return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
+    return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Key);
 }
 
 // 23.2.3.20 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
@@ -1622,8 +1626,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 // 23.2.3.33 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* typed_array = TRY(typed_array_from_this(global_object));
-    return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Value);
+    return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Value);
 }
 
 // 23.2.3.35 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag

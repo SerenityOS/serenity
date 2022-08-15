@@ -255,7 +255,7 @@ public:
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
-    void block_declaration_instantiation(GlobalObject& global_object, Environment* environment) const;
+    void block_declaration_instantiation(Interpreter&, GlobalObject&, Environment*) const;
 
     ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
 
@@ -495,7 +495,7 @@ public:
     bool has_top_level_await() const { return m_has_top_level_await; }
     void set_has_top_level_await() { m_has_top_level_await = true; }
 
-    ThrowCompletionOr<void> global_declaration_instantiation(Interpreter& interpreter, GlobalObject& global_object, GlobalEnvironment& global_environment) const;
+    ThrowCompletionOr<void> global_declaration_instantiation(Interpreter&, GlobalObject&, GlobalEnvironment&) const;
 
 private:
     virtual bool is_program() const override { return true; }

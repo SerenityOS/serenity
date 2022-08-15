@@ -16,7 +16,7 @@ class DataView : public Object {
     JS_OBJECT(DataView, Object);
 
 public:
-    static DataView* create(GlobalObject&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
+    static DataView* create(Realm&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
 
     explicit DataView(ArrayBuffer*, size_t byte_length, size_t byte_offset, Object& prototype);
     virtual ~DataView() override = default;

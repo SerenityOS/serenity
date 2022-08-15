@@ -9,9 +9,9 @@
 
 namespace JS {
 
-MapIterator* MapIterator::create(GlobalObject& global_object, Map& map, Object::PropertyKind iteration_kind)
+MapIterator* MapIterator::create(Realm& realm, Map& map, Object::PropertyKind iteration_kind)
 {
-    return global_object.heap().allocate<MapIterator>(global_object, map, iteration_kind, *global_object.map_iterator_prototype());
+    return realm.heap().allocate<MapIterator>(realm.global_object(), map, iteration_kind, *realm.global_object().map_iterator_prototype());
 }
 
 MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype)
