@@ -6,6 +6,7 @@
 
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
+#include <AK/Tuple.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/DocumentParser.h>
@@ -178,7 +179,8 @@ PDFErrorOr<void> DocumentParser::initialize_linearized_xref_table()
     // The linearization parameter dictionary has just been parsed, and the xref table
     // comes immediately after it. We are in the correct spot.
     m_xref_table = TRY(parse_xref_table());
-    m_trailer = TRY(parse_file_trailer());
+    if (!m_trailer)
+        m_trailer = TRY(parse_file_trailer());
 
     // Also parse the main xref table and merge into the first-page xref table. Note
     // that we don't use the main xref table offset from the linearization dict because
@@ -188,6 +190,7 @@ PDFErrorOr<void> DocumentParser::initialize_linearized_xref_table()
     m_reader.move_to(main_xref_table_offset);
     auto main_xref_table = TRY(parse_xref_table());
     TRY(m_xref_table->merge(move(*main_xref_table)));
+
     return {};
 }
 
@@ -264,14 +267,96 @@ PDFErrorOr<void> DocumentParser::initialize_non_linearized_xref_table()
 
     m_reader.move_to(xref_offset);
     m_xref_table = TRY(parse_xref_table());
-    m_trailer = TRY(parse_file_trailer());
+    if (!m_trailer)
+        m_trailer = TRY(parse_file_trailer());
     return {};
+}
+
+PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
+{
+    auto first_number = TRY(parse_number());
+    auto second_number = TRY(parse_number());
+
+    if (!m_reader.matches("obj"))
+        return error("Malformed xref object");
+    m_reader.move_by(3);
+    if (m_reader.matches_eol())
+        m_reader.consume_eol();
+
+    auto dict = TRY(parse_dict());
+    auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
+    if (type != "XRef")
+        return error("Malformed xref dictionary");
+
+    auto field_sizes = TRY(dict->get_array(m_document, "W"));
+    if (field_sizes->size() != 3)
+        return error("Malformed xref dictionary");
+
+    auto object_count = dict->get_value("Size").get<int>();
+
+    Vector<Tuple<int, int>> subsection_indices;
+    if (dict->contains(CommonNames::Index)) {
+        auto index_array = TRY(dict->get_array(m_document, CommonNames::Index));
+        if (index_array->size() % 2 != 0)
+            return error("Malformed xref dictionary");
+
+        for (size_t i = 0; i < index_array->size(); i += 2)
+            subsection_indices.append({ index_array->at(i).get<int>(), index_array->at(i + 1).get<int>() - 1 });
+    } else {
+        subsection_indices.append({ 0, object_count - 1 });
+    }
+    auto stream = TRY(parse_stream(dict));
+    auto table = adopt_ref(*new XRefTable());
+
+    auto field_to_long = [](Span<const u8> field) -> long {
+        long value = 0;
+        const u8 max = (field.size() - 1) * 8;
+        for (size_t i = 0; i < field.size(); ++i) {
+            value |= static_cast<long>(field[i]) << (max - (i * 8));
+        }
+        return value;
+    };
+
+    size_t byte_index = 0;
+    size_t subsection_index = 0;
+
+    Vector<XRefEntry> entries;
+
+    for (int entry_index = 0; entry_index < object_count; ++entry_index) {
+        Array<long, 3> fields;
+        for (size_t field_index = 0; field_index < 3; ++field_index) {
+            auto field_size = field_sizes->at(field_index).get_u32();
+            auto field = stream->bytes().slice(byte_index, field_size);
+            fields[field_index] = field_to_long(field);
+            byte_index += field_size;
+        }
+
+        u8 type = fields[0];
+        if (!field_sizes->at(0).get_u32())
+            type = 1;
+
+        entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
+
+        auto indices = subsection_indices[subsection_index];
+        if (entry_index >= indices.get<1>()) {
+            table->add_section({ indices.get<0>(), indices.get<1>(), entries });
+            entries.clear();
+            subsection_index++;
+        }
+    }
+
+    m_trailer = dict;
+
+    return table;
 }
 
 PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
 {
-    if (!m_reader.matches("xref"))
-        return error("Expected \"xref\"");
+    if (!m_reader.matches("xref")) {
+        // Since version 1.5, there may be a cross-reference stream instead
+        return parse_xref_stream();
+    }
+
     m_reader.move_by(4);
     if (!m_reader.consume_eol())
         return error("Expected newline after \"xref\"");
