@@ -12,8 +12,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyMemoryConstructor::WebAssemblyMemoryConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+WebAssemblyMemoryConstructor::WebAssemblyMemoryConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 
@@ -28,6 +28,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     auto descriptor = TRY(vm.argument(0).to_object(global_object));
     auto initial_value = TRY(descriptor->get("initial"));
@@ -50,7 +51,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     if (!WebAssemblyObject::s_abstract_machine.store().get(*address)->grow(initial))
         return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Wasm Memory grow failed: {}", initial));
 
-    return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, *address);
+    return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, realm, *address);
 }
 
 void WebAssemblyMemoryConstructor::initialize(JS::GlobalObject& global_object)

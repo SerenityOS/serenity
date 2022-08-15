@@ -15,7 +15,7 @@ class DisplayNamesPrototype final : public PrototypeObject<DisplayNamesPrototype
     JS_PROTOTYPE_OBJECT(DisplayNamesPrototype, DisplayNames, Intl.DisplayNames);
 
 public:
-    explicit DisplayNamesPrototype(GlobalObject&);
+    explicit DisplayNamesPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DisplayNamesPrototype() override = default;
 

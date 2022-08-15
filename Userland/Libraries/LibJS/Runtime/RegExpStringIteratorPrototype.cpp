@@ -12,8 +12,8 @@
 
 namespace JS {
 
-RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

@@ -13,8 +13,8 @@
 
 namespace JS {
 
-WeakSetConstructor::WeakSetConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.WeakSet.as_string(), *global_object.function_prototype())
+WeakSetConstructor::WeakSetConstructor(Realm& realm)
+    : NativeFunction(vm().names.WeakSet.as_string(), *realm.global_object().function_prototype())
 {
 }
 

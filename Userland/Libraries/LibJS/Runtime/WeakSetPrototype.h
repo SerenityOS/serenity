@@ -15,7 +15,7 @@ class WeakSetPrototype final : public PrototypeObject<WeakSetPrototype, WeakSet>
     JS_PROTOTYPE_OBJECT(WeakSetPrototype, WeakSet, WeakSet);
 
 public:
-    WeakSetPrototype(GlobalObject&);
+    WeakSetPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~WeakSetPrototype() override = default;
 

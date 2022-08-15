@@ -13,8 +13,8 @@
 namespace JS::Intl {
 
 // 18.6.2 The %SegmentIteratorPrototype% Object, https://tc39.es/ecma402/#sec-%segmentiteratorprototype%-object
-SegmentIteratorPrototype::SegmentIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+SegmentIteratorPrototype::SegmentIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

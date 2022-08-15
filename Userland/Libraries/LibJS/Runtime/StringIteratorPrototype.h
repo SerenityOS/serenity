@@ -16,7 +16,7 @@ class StringIteratorPrototype final : public PrototypeObject<StringIteratorProto
     JS_PROTOTYPE_OBJECT(StringIteratorPrototype, StringIterator, StringIterator);
 
 public:
-    StringIteratorPrototype(GlobalObject&);
+    StringIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~StringIteratorPrototype() override = default;
 

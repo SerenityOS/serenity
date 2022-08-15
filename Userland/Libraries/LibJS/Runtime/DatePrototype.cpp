@@ -30,8 +30,8 @@
 
 namespace JS {
 
-DatePrototype::DatePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+DatePrototype::DatePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

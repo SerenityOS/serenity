@@ -14,7 +14,7 @@ class DurationConstructor final : public NativeFunction {
     JS_OBJECT(DurationConstructor, NativeFunction);
 
 public:
-    explicit DurationConstructor(GlobalObject&);
+    explicit DurationConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DurationConstructor() override = default;
 

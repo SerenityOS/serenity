@@ -14,7 +14,7 @@ class ArrayConstructor final : public NativeFunction {
     JS_OBJECT(ArrayConstructor, NativeFunction);
 
 public:
-    explicit ArrayConstructor(GlobalObject&);
+    explicit ArrayConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ArrayConstructor() override = default;
 

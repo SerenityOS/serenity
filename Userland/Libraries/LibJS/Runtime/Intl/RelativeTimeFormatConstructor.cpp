@@ -19,8 +19,8 @@
 namespace JS::Intl {
 
 // 17.1 The Intl.RelativeTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-relativetimeformat-constructor
-RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.RelativeTimeFormat.as_string(), *global_object.function_prototype())
+RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
+    : NativeFunction(vm().names.RelativeTimeFormat.as_string(), *realm.global_object().function_prototype())
 {
 }
 

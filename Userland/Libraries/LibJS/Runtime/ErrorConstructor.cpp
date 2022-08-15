@@ -11,8 +11,8 @@
 
 namespace JS {
 
-ErrorConstructor::ErrorConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Error.as_string(), *global_object.function_prototype())
+ErrorConstructor::ErrorConstructor(Realm& realm)
+    : NativeFunction(vm().names.Error.as_string(), *realm.global_object().function_prototype())
 {
 }
 
@@ -63,8 +63,8 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                                  \
-    ConstructorName::ConstructorName(GlobalObject& global_object)                                                                         \
-        : NativeFunction(vm().names.ClassName.as_string(), *static_cast<Object*>(global_object.error_constructor()))                      \
+    ConstructorName::ConstructorName(Realm& realm)                                                                                        \
+        : NativeFunction(vm().names.ClassName.as_string(), *static_cast<Object*>(realm.global_object().error_constructor()))              \
     {                                                                                                                                     \
     }                                                                                                                                     \
                                                                                                                                           \

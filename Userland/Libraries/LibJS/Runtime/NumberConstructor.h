@@ -14,7 +14,7 @@ class NumberConstructor final : public NativeFunction {
     JS_OBJECT(NumberConstructor, NativeFunction);
 
 public:
-    explicit NumberConstructor(GlobalObject&);
+    explicit NumberConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~NumberConstructor() override = default;
 

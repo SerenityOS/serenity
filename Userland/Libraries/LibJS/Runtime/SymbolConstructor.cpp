@@ -10,8 +10,8 @@
 
 namespace JS {
 
-SymbolConstructor::SymbolConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Symbol.as_string(), *global_object.function_prototype())
+SymbolConstructor::SymbolConstructor(Realm& realm)
+    : NativeFunction(vm().names.Symbol.as_string(), *realm.global_object().function_prototype())
 {
 }
 

@@ -17,8 +17,8 @@ namespace JS {
 
 static const Crypto::SignedBigInteger BIGINT_ONE { 1 };
 
-BigIntConstructor::BigIntConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.BigInt.as_string(), *global_object.function_prototype())
+BigIntConstructor::BigIntConstructor(Realm& realm)
+    : NativeFunction(vm().names.BigInt.as_string(), *realm.global_object().function_prototype())
 {
 }
 

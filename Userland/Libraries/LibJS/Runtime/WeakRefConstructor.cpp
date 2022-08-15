@@ -12,8 +12,8 @@
 
 namespace JS {
 
-WeakRefConstructor::WeakRefConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.WeakRef.as_string(), *global_object.function_prototype())
+WeakRefConstructor::WeakRefConstructor(Realm& realm)
+    : NativeFunction(vm().names.WeakRef.as_string(), *realm.global_object().function_prototype())
 {
 }
 

@@ -15,8 +15,8 @@
 namespace JS::Temporal {
 
 // 10.3 Properties of the Temporal.PlainMonthDay Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plainmonthday-prototype-object
-PlainMonthDayPrototype::PlainMonthDayPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+PlainMonthDayPrototype::PlainMonthDayPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

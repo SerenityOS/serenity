@@ -14,7 +14,7 @@ class DateTimeFormatConstructor final : public NativeFunction {
     JS_OBJECT(DateTimeFormatConstructor, NativeFunction);
 
 public:
-    explicit DateTimeFormatConstructor(GlobalObject&);
+    explicit DateTimeFormatConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DateTimeFormatConstructor() override = default;
 

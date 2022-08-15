@@ -12,8 +12,8 @@
 
 namespace JS {
 
-SetPrototype::SetPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+SetPrototype::SetPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

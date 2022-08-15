@@ -11,8 +11,8 @@
 
 namespace JS {
 
-AsyncGeneratorFunctionPrototype::AsyncGeneratorFunctionPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.function_prototype())
+AsyncGeneratorFunctionPrototype::AsyncGeneratorFunctionPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().function_prototype())
 {
 }
 

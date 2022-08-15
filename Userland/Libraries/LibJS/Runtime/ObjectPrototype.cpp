@@ -21,8 +21,8 @@
 
 namespace JS {
 
-ObjectPrototype::ObjectPrototype(GlobalObject& global_object)
-    : Object(Object::ConstructWithoutPrototypeTag::Tag, global_object)
+ObjectPrototype::ObjectPrototype(Realm& realm)
+    : Object(Object::ConstructWithoutPrototypeTag::Tag, realm)
 {
 }
 

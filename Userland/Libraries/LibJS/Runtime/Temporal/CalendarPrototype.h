@@ -15,7 +15,7 @@ class CalendarPrototype final : public PrototypeObject<CalendarPrototype, Calend
     JS_PROTOTYPE_OBJECT(CalendarPrototype, Calendar, Temporal.Calendar);
 
 public:
-    explicit CalendarPrototype(GlobalObject&);
+    explicit CalendarPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~CalendarPrototype() override = default;
 

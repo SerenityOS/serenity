@@ -20,8 +20,8 @@
 namespace JS::Temporal {
 
 // 6.3 Properties of the Temporal.ZonedDateTime Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-zoneddatetime-prototype-object
-ZonedDateTimePrototype::ZonedDateTimePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

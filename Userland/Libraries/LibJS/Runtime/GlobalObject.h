@@ -177,7 +177,8 @@ template<typename ConstructorType>
 inline void GlobalObject::initialize_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype, PropertyAttributes attributes)
 {
     auto& vm = this->vm();
-    constructor = heap().allocate<ConstructorType>(*this, *this);
+    auto& realm = *associated_realm();
+    constructor = heap().allocate<ConstructorType>(*this, realm);
     constructor->define_direct_property(vm.names.name, js_string(heap(), property_key.as_string()), Attribute::Configurable);
     if (prototype)
         prototype->define_direct_property(vm.names.constructor, constructor, attributes);

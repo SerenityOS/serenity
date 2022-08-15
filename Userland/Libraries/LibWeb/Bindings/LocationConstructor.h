@@ -14,7 +14,7 @@ class LocationConstructor : public JS::NativeFunction {
     JS_OBJECT(LocationConstructor, JS::NativeFunction);
 
 public:
-    explicit LocationConstructor(JS::GlobalObject&);
+    explicit LocationConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~LocationConstructor() override;
 

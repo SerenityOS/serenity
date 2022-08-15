@@ -459,19 +459,23 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             m_content_type = ContentType::Number;                                                                                      \
     }                                                                                                                                  \
                                                                                                                                        \
-    ClassName::~ClassName() { }                                                                                                        \
+    ClassName::~ClassName()                                                                                                            \
+    {                                                                                                                                  \
+    }                                                                                                                                  \
                                                                                                                                        \
     FlyString const& ClassName::element_name() const                                                                                   \
     {                                                                                                                                  \
         return vm().names.ClassName.as_string();                                                                                       \
     }                                                                                                                                  \
                                                                                                                                        \
-    PrototypeName::PrototypeName(GlobalObject& global_object)                                                                          \
-        : Object(*global_object.typed_array_prototype())                                                                               \
+    PrototypeName::PrototypeName(Realm& realm)                                                                                         \
+        : Object(*realm.global_object().typed_array_prototype())                                                                       \
     {                                                                                                                                  \
     }                                                                                                                                  \
                                                                                                                                        \
-    PrototypeName::~PrototypeName() { }                                                                                                \
+    PrototypeName::~PrototypeName()                                                                                                    \
+    {                                                                                                                                  \
+    }                                                                                                                                  \
                                                                                                                                        \
     void PrototypeName::initialize(GlobalObject& global_object)                                                                        \
     {                                                                                                                                  \
@@ -480,12 +484,14 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \
     }                                                                                                                                  \
                                                                                                                                        \
-    ConstructorName::ConstructorName(GlobalObject& global_object)                                                                      \
-        : TypedArrayConstructor(vm().names.ClassName.as_string(), *global_object.typed_array_constructor())                            \
+    ConstructorName::ConstructorName(Realm& realm)                                                                                     \
+        : TypedArrayConstructor(vm().names.ClassName.as_string(), *realm.global_object().typed_array_constructor())                    \
     {                                                                                                                                  \
     }                                                                                                                                  \
                                                                                                                                        \
-    ConstructorName::~ConstructorName() { }                                                                                            \
+    ConstructorName::~ConstructorName()                                                                                                \
+    {                                                                                                                                  \
+    }                                                                                                                                  \
                                                                                                                                        \
     void ConstructorName::initialize(GlobalObject& global_object)                                                                      \
     {                                                                                                                                  \

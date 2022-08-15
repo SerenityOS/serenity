@@ -17,8 +17,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::GlobalObject& global_object, size_t index)
-    : Object(static_cast<Web::Bindings::WindowObject&>(global_object).ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"))
+WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::Realm& realm, size_t index)
+    : Object(static_cast<Web::Bindings::WindowObject&>(realm.global_object()).ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"))
     , m_index(index)
 {
 }
@@ -26,6 +26,8 @@ WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::GlobalObject& global_ob
 void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& realm = *global_object.associated_realm();
 
     VERIFY(!m_exports_object);
     m_exports_object = create(global_object, nullptr);
@@ -44,7 +46,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
             [&](Wasm::MemoryAddress const& address) {
                 Optional<WebAssemblyMemoryObject*> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(global_object, global_object, address);
+                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(global_object, realm, address);
                     cache.memory_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);

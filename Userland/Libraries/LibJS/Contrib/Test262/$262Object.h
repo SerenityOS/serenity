@@ -17,7 +17,7 @@ class $262Object final : public Object {
     JS_OBJECT($262Object, Object);
 
 public:
-    $262Object(JS::GlobalObject&);
+    explicit $262Object(Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~$262Object() override = default;
 

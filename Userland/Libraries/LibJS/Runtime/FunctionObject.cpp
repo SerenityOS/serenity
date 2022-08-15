@@ -11,8 +11,8 @@
 
 namespace JS {
 
-FunctionObject::FunctionObject(GlobalObject& global_object, Object* prototype)
-    : Object(global_object, prototype)
+FunctionObject::FunctionObject(Realm& realm, Object* prototype)
+    : Object(realm, prototype)
 {
 }
 

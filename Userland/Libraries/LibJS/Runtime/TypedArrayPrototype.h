@@ -15,7 +15,7 @@ class TypedArrayPrototype final : public Object {
     JS_OBJECT(TypedArrayPrototype, Object);
 
 public:
-    explicit TypedArrayPrototype(GlobalObject&);
+    explicit TypedArrayPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~TypedArrayPrototype() override = default;
 

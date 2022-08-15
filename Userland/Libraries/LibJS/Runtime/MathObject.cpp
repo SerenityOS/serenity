@@ -15,8 +15,8 @@
 
 namespace JS {
 
-MathObject::MathObject(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+MathObject::MathObject(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

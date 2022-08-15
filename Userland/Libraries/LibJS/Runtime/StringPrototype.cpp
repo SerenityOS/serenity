@@ -102,8 +102,8 @@ static Optional<size_t> string_index_of(Utf16View const& string, Utf16View const
     return {};
 }
 
-StringPrototype::StringPrototype(GlobalObject& global_object)
-    : StringObject(*js_string(global_object.heap(), String::empty()), *global_object.object_prototype())
+StringPrototype::StringPrototype(Realm& realm)
+    : StringObject(*js_string(realm.vm(), String::empty()), *realm.global_object().object_prototype())
 {
 }
 

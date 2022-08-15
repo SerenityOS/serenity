@@ -13,7 +13,7 @@ namespace Web::Bindings {
 
 class OptionConstructor final : public JS::NativeFunction {
 public:
-    explicit OptionConstructor(JS::GlobalObject&);
+    explicit OptionConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~OptionConstructor() override = default;
 

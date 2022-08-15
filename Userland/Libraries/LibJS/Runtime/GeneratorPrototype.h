@@ -16,7 +16,7 @@ class GeneratorPrototype final : public PrototypeObject<GeneratorPrototype, Gene
     JS_PROTOTYPE_OBJECT(GeneratorPrototype, GeneratorObject, Generator);
 
 public:
-    explicit GeneratorPrototype(GlobalObject&);
+    explicit GeneratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~GeneratorPrototype() override = default;
 

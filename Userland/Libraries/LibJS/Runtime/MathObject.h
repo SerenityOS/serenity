@@ -14,7 +14,7 @@ class MathObject final : public Object {
     JS_OBJECT(MathObject, Object);
 
 public:
-    explicit MathObject(GlobalObject&);
+    explicit MathObject(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~MathObject() override = default;
 

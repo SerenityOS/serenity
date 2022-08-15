@@ -18,7 +18,7 @@ class WebAssemblyModuleObject final : public JS::Object {
     JS_OBJECT(WebAssemblyModuleObject, Object);
 
 public:
-    explicit WebAssemblyModuleObject(JS::GlobalObject&, size_t index);
+    explicit WebAssemblyModuleObject(JS::Realm&, size_t index);
     virtual ~WebAssemblyModuleObject() override = default;
 
     size_t index() const { return m_index; }

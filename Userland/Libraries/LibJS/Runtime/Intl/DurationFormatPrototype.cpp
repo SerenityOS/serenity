@@ -11,8 +11,8 @@
 namespace JS::Intl {
 
 // 1.4 Properties of the Intl.DurationFormat Prototype Object, https://tc39.es/proposal-intl-duration-format/#sec-properties-of-intl-durationformat-prototype-object
-DurationFormatPrototype::DurationFormatPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

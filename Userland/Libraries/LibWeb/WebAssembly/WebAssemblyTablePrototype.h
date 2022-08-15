@@ -19,8 +19,8 @@ class WebAssemblyTablePrototype final : public JS::Object {
     JS_OBJECT(WebAssemblyTablePrototype, JS::Object);
 
 public:
-    explicit WebAssemblyTablePrototype(JS::GlobalObject& global_object)
-        : JS::Object(*global_object.object_prototype())
+    explicit WebAssemblyTablePrototype(JS::Realm& realm)
+        : JS::Object(*realm.global_object().object_prototype())
     {
     }
 

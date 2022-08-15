@@ -45,15 +45,14 @@ Object::Object(GlobalObjectTag, Realm& realm)
     m_shape = heap().allocate_without_global_object<Shape>(realm);
 }
 
-Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
+Object::Object(ConstructWithoutPrototypeTag, Realm& realm)
 {
-    VERIFY(global_object.associated_realm());
-    m_shape = heap().allocate_without_global_object<Shape>(*global_object.associated_realm());
+    m_shape = heap().allocate_without_global_object<Shape>(realm);
 }
 
-Object::Object(GlobalObject& global_object, Object* prototype)
+Object::Object(Realm& realm, Object* prototype)
 {
-    m_shape = global_object.empty_object_shape();
+    m_shape = realm.global_object().empty_object_shape();
     if (prototype != nullptr)
         set_prototype(prototype);
 }

@@ -20,8 +20,8 @@
 
 namespace JS {
 
-FunctionPrototype::FunctionPrototype(GlobalObject& global_object)
-    : FunctionObject(*global_object.object_prototype())
+FunctionPrototype::FunctionPrototype(Realm& realm)
+    : FunctionObject(*realm.global_object().object_prototype())
 {
 }
 

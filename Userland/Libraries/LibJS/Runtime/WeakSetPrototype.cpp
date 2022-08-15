@@ -11,8 +11,8 @@
 
 namespace JS {
 
-WeakSetPrototype::WeakSetPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+WeakSetPrototype::WeakSetPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

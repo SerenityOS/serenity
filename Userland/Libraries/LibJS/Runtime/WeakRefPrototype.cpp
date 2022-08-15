@@ -9,8 +9,8 @@
 
 namespace JS {
 
-WeakRefPrototype::WeakRefPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+WeakRefPrototype::WeakRefPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

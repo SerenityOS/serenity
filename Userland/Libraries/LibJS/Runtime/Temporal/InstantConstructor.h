@@ -14,7 +14,7 @@ class InstantConstructor final : public NativeFunction {
     JS_OBJECT(InstantConstructor, NativeFunction);
 
 public:
-    explicit InstantConstructor(GlobalObject&);
+    explicit InstantConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~InstantConstructor() override = default;
 

@@ -15,7 +15,7 @@ class Now final : public Object {
     JS_OBJECT(Now, Object);
 
 public:
-    explicit Now(GlobalObject&);
+    explicit Now(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~Now() override = default;
 

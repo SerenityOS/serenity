@@ -13,8 +13,8 @@
 namespace JS::Temporal {
 
 // 4.1 The Temporal.PlainTime Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plaintime-constructor
-PlainTimeConstructor::PlainTimeConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.PlainTime.as_string(), *global_object.function_prototype())
+PlainTimeConstructor::PlainTimeConstructor(Realm& realm)
+    : NativeFunction(vm().names.PlainTime.as_string(), *realm.global_object().function_prototype())
 {
 }
 

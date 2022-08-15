@@ -18,8 +18,8 @@ class LocationPrototype final : public JS::Object {
     JS_OBJECT(LocationPrototype, JS::Object);
 
 public:
-    explicit LocationPrototype(JS::GlobalObject& global_object)
-        : JS::Object(*global_object.object_prototype())
+    explicit LocationPrototype(JS::Realm& realm)
+        : JS::Object(*realm.global_object().object_prototype())
     {
     }
 };

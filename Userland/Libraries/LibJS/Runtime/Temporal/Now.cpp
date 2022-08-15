@@ -20,8 +20,8 @@
 namespace JS::Temporal {
 
 // 2 The Temporal.Now Object, https://tc39.es/proposal-temporal/#sec-temporal-now-object
-Now::Now(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+Now::Now(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

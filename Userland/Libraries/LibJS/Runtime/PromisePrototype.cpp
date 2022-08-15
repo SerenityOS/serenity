@@ -16,8 +16,8 @@
 
 namespace JS {
 
-PromisePrototype::PromisePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+PromisePrototype::PromisePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

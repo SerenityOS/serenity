@@ -14,7 +14,7 @@ class ReflectObject final : public Object {
     JS_OBJECT(ReflectObject, Object);
 
 public:
-    explicit ReflectObject(GlobalObject&);
+    explicit ReflectObject(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ReflectObject() override = default;
 

@@ -14,7 +14,7 @@ class AtomicsObject : public Object {
     JS_OBJECT(AtomicsObject, Object);
 
 public:
-    explicit AtomicsObject(GlobalObject&);
+    explicit AtomicsObject(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~AtomicsObject() override = default;
 

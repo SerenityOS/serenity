@@ -13,8 +13,8 @@
 
 namespace JS {
 
-SetIteratorPrototype::SetIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+SetIteratorPrototype::SetIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

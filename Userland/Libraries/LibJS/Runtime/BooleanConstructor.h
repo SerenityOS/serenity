@@ -14,7 +14,7 @@ class BooleanConstructor final : public NativeFunction {
     JS_OBJECT(BooleanConstructor, NativeFunction);
 
 public:
-    explicit BooleanConstructor(GlobalObject&);
+    explicit BooleanConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~BooleanConstructor() override = default;
 

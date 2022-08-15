@@ -9,8 +9,8 @@
 
 namespace JS {
 
-FinalizationRegistryPrototype::FinalizationRegistryPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+FinalizationRegistryPrototype::FinalizationRegistryPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

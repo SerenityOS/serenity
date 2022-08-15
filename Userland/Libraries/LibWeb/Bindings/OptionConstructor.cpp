@@ -15,8 +15,8 @@
 
 namespace Web::Bindings {
 
-OptionConstructor::OptionConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+OptionConstructor::OptionConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 

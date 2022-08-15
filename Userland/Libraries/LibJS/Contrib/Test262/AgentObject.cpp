@@ -12,8 +12,8 @@
 
 namespace JS::Test262 {
 
-AgentObject::AgentObject(JS::GlobalObject& global_object)
-    : Object(Object::ConstructWithoutPrototypeTag::Tag, global_object)
+AgentObject::AgentObject(Realm& realm)
+    : Object(Object::ConstructWithoutPrototypeTag::Tag, realm)
 {
 }
 

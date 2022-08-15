@@ -21,8 +21,8 @@
 namespace JS::Temporal {
 
 // 1 The Temporal Object, https://tc39.es/proposal-temporal/#sec-temporal-objects
-Temporal::Temporal(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+Temporal::Temporal(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 
@@ -31,12 +31,13 @@ void Temporal::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     auto& vm = this->vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1.1.1 Temporal [ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.Now, heap().allocate<Now>(global_object, global_object), attr);
+    define_direct_property(vm.names.Now, heap().allocate<Now>(global_object, realm), attr);
     define_direct_property(vm.names.Calendar, global_object.temporal_calendar_constructor(), attr);
     define_direct_property(vm.names.Duration, global_object.temporal_duration_constructor(), attr);
     define_direct_property(vm.names.Instant, global_object.temporal_instant_constructor(), attr);

@@ -14,7 +14,7 @@ class RelativeTimeFormatConstructor final : public NativeFunction {
     JS_OBJECT(RelativeTimeFormatConstructor, NativeFunction);
 
 public:
-    explicit RelativeTimeFormatConstructor(GlobalObject&);
+    explicit RelativeTimeFormatConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~RelativeTimeFormatConstructor() override = default;
 

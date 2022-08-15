@@ -9,8 +9,8 @@
 
 namespace JS {
 
-GeneratorPrototype::GeneratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+GeneratorPrototype::GeneratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

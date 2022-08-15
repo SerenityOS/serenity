@@ -19,8 +19,8 @@ class WebAssemblyModulePrototype final : public JS::Object {
     JS_OBJECT(WebAssemblyModulePrototype, JS::Object);
 
 public:
-    explicit WebAssemblyModulePrototype(JS::GlobalObject& global_object)
-        : JS::Object(*global_object.object_prototype())
+    explicit WebAssemblyModulePrototype(JS::Realm& realm)
+        : JS::Object(*realm.global_object().object_prototype())
     {
     }
 };

@@ -28,8 +28,9 @@ private:
 template<class NativeObject>
 inline Wrapper* wrap_impl(JS::GlobalObject& global_object, NativeObject& native_object)
 {
+    auto& realm = *global_object.associated_realm();
     if (!native_object.wrapper()) {
-        native_object.set_wrapper(*global_object.heap().allocate<typename NativeObject::WrapperType>(global_object, global_object, native_object));
+        native_object.set_wrapper(*global_object.heap().allocate<typename NativeObject::WrapperType>(global_object, realm, native_object));
     }
     return native_object.wrapper();
 }

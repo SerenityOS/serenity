@@ -40,7 +40,7 @@ public:
     virtual Realm* realm() const { return nullptr; }
 
 protected:
-    explicit FunctionObject(GlobalObject&, Object* prototype);
+    explicit FunctionObject(Realm&, Object* prototype);
     explicit FunctionObject(Object& prototype);
 
 private:

@@ -15,8 +15,8 @@
 namespace JS::Intl {
 
 // 18.1 The Intl.Segmenter Constructor, https://tc39.es/ecma402/#sec-intl-segmenter-constructor
-SegmenterConstructor::SegmenterConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Segmenter.as_string(), *global_object.function_prototype())
+SegmenterConstructor::SegmenterConstructor(Realm& realm)
+    : NativeFunction(vm().names.Segmenter.as_string(), *realm.global_object().function_prototype())
 {
 }
 

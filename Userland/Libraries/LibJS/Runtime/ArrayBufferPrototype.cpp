@@ -14,8 +14,8 @@
 
 namespace JS {
 
-ArrayBufferPrototype::ArrayBufferPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+ArrayBufferPrototype::ArrayBufferPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

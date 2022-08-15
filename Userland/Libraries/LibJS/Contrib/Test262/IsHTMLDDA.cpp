@@ -9,9 +9,9 @@
 
 namespace JS::Test262 {
 
-IsHTMLDDA::IsHTMLDDA(JS::GlobalObject& global_object)
+IsHTMLDDA::IsHTMLDDA(Realm& realm)
     // NativeFunction without prototype is currently not possible (only due to the lack of a ctor that supports it)
-    : NativeFunction("IsHTMLDDA", *global_object.function_prototype())
+    : NativeFunction("IsHTMLDDA", *realm.global_object().function_prototype())
 {
 }
 

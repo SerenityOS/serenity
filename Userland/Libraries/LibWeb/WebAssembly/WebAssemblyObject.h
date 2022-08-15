@@ -23,7 +23,7 @@ class WebAssemblyObject final : public JS::Object {
     JS_OBJECT(WebAssemblyObject, JS::Object);
 
 public:
-    explicit WebAssemblyObject(JS::GlobalObject&);
+    explicit WebAssemblyObject(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WebAssemblyObject() override = default;
 
@@ -69,7 +69,7 @@ class WebAssemblyMemoryObject final : public JS::Object {
     JS_OBJECT(WebAssemblyMemoryObject, JS::Object);
 
 public:
-    explicit WebAssemblyMemoryObject(JS::GlobalObject&, Wasm::MemoryAddress);
+    WebAssemblyMemoryObject(JS::Realm&, Wasm::MemoryAddress);
     virtual ~WebAssemblyMemoryObject() override = default;
 
     auto address() const { return m_address; }

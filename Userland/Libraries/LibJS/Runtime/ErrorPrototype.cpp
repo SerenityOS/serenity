@@ -15,8 +15,8 @@
 
 namespace JS {
 
-ErrorPrototype::ErrorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+ErrorPrototype::ErrorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 
@@ -124,8 +124,8 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    PrototypeName::PrototypeName(GlobalObject& global_object)                            \
-        : PrototypeObject(*global_object.error_prototype())                              \
+    PrototypeName::PrototypeName(Realm& realm)                                           \
+        : PrototypeObject(*realm.global_object().error_prototype())                      \
     {                                                                                    \
     }                                                                                    \
                                                                                          \

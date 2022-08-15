@@ -23,8 +23,8 @@ constexpr double const MIN_SAFE_INTEGER_VALUE { -(__builtin_exp2(53) - 1) };
 
 namespace JS {
 
-NumberConstructor::NumberConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Number.as_string(), *global_object.function_prototype())
+NumberConstructor::NumberConstructor(Realm& realm)
+    : NativeFunction(vm().names.Number.as_string(), *realm.global_object().function_prototype())
 {
 }
 

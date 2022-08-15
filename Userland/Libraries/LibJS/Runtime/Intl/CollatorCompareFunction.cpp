@@ -13,11 +13,12 @@ namespace JS::Intl {
 
 CollatorCompareFunction* CollatorCompareFunction::create(GlobalObject& global_object, Collator& collator)
 {
-    return global_object.heap().allocate<CollatorCompareFunction>(global_object, global_object, collator);
+    auto& realm = *global_object.associated_realm();
+    return global_object.heap().allocate<CollatorCompareFunction>(global_object, realm, collator);
 }
 
-CollatorCompareFunction::CollatorCompareFunction(GlobalObject& global_object, Collator& collator)
-    : NativeFunction(*global_object.function_prototype())
+CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collator)
+    : NativeFunction(*realm.global_object().function_prototype())
     , m_collator(collator)
 {
 }

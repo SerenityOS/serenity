@@ -19,8 +19,8 @@ class WindowPrototype final : public JS::Object {
     JS_OBJECT(WindowPrototype, JS::Object);
 
 public:
-    explicit WindowPrototype(JS::GlobalObject& global_object)
-        : JS::Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<EventTargetPrototype>("EventTarget"))
+    explicit WindowPrototype(JS::Realm& realm)
+        : JS::Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<EventTargetPrototype>("EventTarget"))
     {
     }
 };

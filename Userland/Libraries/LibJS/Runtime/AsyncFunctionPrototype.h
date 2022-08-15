@@ -14,7 +14,7 @@ class AsyncFunctionPrototype final : public Object {
     JS_OBJECT(AsyncFunctionPrototype, Object);
 
 public:
-    explicit AsyncFunctionPrototype(GlobalObject&);
+    explicit AsyncFunctionPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~AsyncFunctionPrototype() override = default;
 };

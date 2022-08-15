@@ -9,8 +9,8 @@
 namespace JS {
 
 // 27.6.1 Properties of the AsyncGenerator Prototype Object, https://tc39.es/ecma262/#sec-properties-of-asyncgenerator-prototype
-AsyncGeneratorPrototype::AsyncGeneratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.async_iterator_prototype())
+AsyncGeneratorPrototype::AsyncGeneratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().async_iterator_prototype())
 {
 }
 

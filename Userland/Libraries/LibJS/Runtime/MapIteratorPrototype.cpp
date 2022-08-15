@@ -13,8 +13,8 @@
 
 namespace JS {
 
-MapIteratorPrototype::MapIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+MapIteratorPrototype::MapIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

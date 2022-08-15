@@ -24,7 +24,7 @@ class StringPrototype final : public StringObject {
     JS_OBJECT(StringPrototype, StringObject);
 
 public:
-    explicit StringPrototype(GlobalObject&);
+    explicit StringPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~StringPrototype() override = default;
 

@@ -14,7 +14,7 @@ class CollatorConstructor final : public NativeFunction {
     JS_OBJECT(CollatorConstructor, NativeFunction);
 
 public:
-    explicit CollatorConstructor(GlobalObject&);
+    explicit CollatorConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~CollatorConstructor() override = default;
 

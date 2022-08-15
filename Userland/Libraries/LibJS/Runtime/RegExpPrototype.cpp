@@ -21,8 +21,8 @@
 
 namespace JS {
 
-RegExpPrototype::RegExpPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+RegExpPrototype::RegExpPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

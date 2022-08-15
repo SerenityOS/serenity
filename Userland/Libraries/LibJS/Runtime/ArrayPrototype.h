@@ -15,7 +15,7 @@ class ArrayPrototype final : public Array {
     JS_OBJECT(ArrayPrototype, Array);
 
 public:
-    ArrayPrototype(GlobalObject&);
+    ArrayPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ArrayPrototype() override = default;
 

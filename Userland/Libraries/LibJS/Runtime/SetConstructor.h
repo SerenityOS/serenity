@@ -14,7 +14,7 @@ class SetConstructor final : public NativeFunction {
     JS_OBJECT(SetConstructor, NativeFunction);
 
 public:
-    explicit SetConstructor(GlobalObject&);
+    explicit SetConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SetConstructor() override = default;
 

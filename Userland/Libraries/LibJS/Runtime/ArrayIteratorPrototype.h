@@ -15,7 +15,7 @@ class ArrayIteratorPrototype final : public PrototypeObject<ArrayIteratorPrototy
     JS_PROTOTYPE_OBJECT(ArrayIteratorPrototype, ArrayIterator, ArrayIterator);
 
 public:
-    ArrayIteratorPrototype(GlobalObject&);
+    ArrayIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ArrayIteratorPrototype() override = default;
 

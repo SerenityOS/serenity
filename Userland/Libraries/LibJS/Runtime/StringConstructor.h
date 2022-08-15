@@ -14,7 +14,7 @@ class StringConstructor final : public NativeFunction {
     JS_OBJECT(StringConstructor, NativeFunction);
 
 public:
-    explicit StringConstructor(GlobalObject&);
+    explicit StringConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~StringConstructor() override = default;
 

@@ -10,8 +10,8 @@
 
 namespace JS {
 
-ArgumentsObject::ArgumentsObject(GlobalObject& global_object, Environment& environment)
-    : Object(*global_object.object_prototype())
+ArgumentsObject::ArgumentsObject(Realm& realm, Environment& environment)
+    : Object(*realm.global_object().object_prototype())
     , m_environment(environment)
 {
 }

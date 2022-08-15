@@ -14,7 +14,7 @@ class ConsoleObject final : public Object {
     JS_OBJECT(ConsoleObject, Object);
 
 public:
-    explicit ConsoleObject(GlobalObject&);
+    explicit ConsoleObject(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ConsoleObject() override = default;
 

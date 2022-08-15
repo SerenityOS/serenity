@@ -15,7 +15,7 @@ class PlainYearMonthPrototype final : public PrototypeObject<PlainYearMonthProto
     JS_PROTOTYPE_OBJECT(PlainYearMonthPrototype, PlainYearMonth, Temporal.PlainYearMonth);
 
 public:
-    explicit PlainYearMonthPrototype(GlobalObject&);
+    explicit PlainYearMonthPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainYearMonthPrototype() override = default;
 

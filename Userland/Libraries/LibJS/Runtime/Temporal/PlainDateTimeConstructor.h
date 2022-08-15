@@ -14,7 +14,7 @@ class PlainDateTimeConstructor final : public NativeFunction {
     JS_OBJECT(PlainDateTimeConstructor, NativeFunction);
 
 public:
-    explicit PlainDateTimeConstructor(GlobalObject&);
+    explicit PlainDateTimeConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainDateTimeConstructor() override = default;
 

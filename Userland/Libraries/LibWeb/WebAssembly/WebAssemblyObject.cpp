@@ -25,8 +25,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyObject::WebAssemblyObject(JS::GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
     s_abstract_machine.enable_instruction_count_limit();
 }
@@ -156,6 +156,8 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
 {
+    auto& realm = *global_object.associated_realm();
+
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
     JS::Value rejection_value;
@@ -172,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
-        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result.release_value()));
+        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(global_object, realm, result.release_value()));
     return promise;
 }
 
@@ -317,6 +319,8 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 {
+    auto& realm = *global_object.associated_realm();
+
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
     auto promise = JS::Promise::create(global_object);
@@ -350,10 +354,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, result.release_value());
+        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, realm, result.release_value());
         if (should_return_module) {
             auto object = JS::Object::create(global_object, nullptr);
-            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, s_compiled_modules.size() - 1), JS::default_attributes);
+            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, realm, s_compiled_modules.size() - 1), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {
@@ -477,8 +481,8 @@ JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm
     return function;
 }
 
-WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::GlobalObject& global_object, Wasm::MemoryAddress address)
-    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
+WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::Realm& realm, Wasm::MemoryAddress address)
+    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
     , m_address(address)
 {
 }

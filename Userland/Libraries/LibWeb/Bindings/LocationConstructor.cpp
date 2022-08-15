@@ -11,8 +11,8 @@
 
 namespace Web::Bindings {
 
-LocationConstructor::LocationConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+LocationConstructor::LocationConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 

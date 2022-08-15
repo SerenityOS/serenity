@@ -17,8 +17,8 @@
 
 namespace JS {
 
-BigIntPrototype::BigIntPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+BigIntPrototype::BigIntPrototype(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

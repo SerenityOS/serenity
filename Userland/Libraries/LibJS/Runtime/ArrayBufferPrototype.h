@@ -15,7 +15,7 @@ class ArrayBufferPrototype final : public PrototypeObject<ArrayBufferPrototype, 
     JS_PROTOTYPE_OBJECT(ArrayBufferPrototype, ArrayBuffer, ArrayBuffer);
 
 public:
-    explicit ArrayBufferPrototype(GlobalObject&);
+    explicit ArrayBufferPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ArrayBufferPrototype() override = default;
 

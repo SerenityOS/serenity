@@ -18,7 +18,7 @@ class WebAssemblyTableObject final : public JS::Object {
     JS_OBJECT(WebAssemblyTableObject, Object);
 
 public:
-    explicit WebAssemblyTableObject(JS::GlobalObject&, Wasm::TableAddress);
+    WebAssemblyTableObject(JS::Realm&, Wasm::TableAddress);
     virtual ~WebAssemblyTableObject() override = default;
 
     Wasm::TableAddress address() const { return m_address; }

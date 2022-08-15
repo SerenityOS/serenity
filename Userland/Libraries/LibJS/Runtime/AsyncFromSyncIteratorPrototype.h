@@ -19,7 +19,7 @@ class AsyncFromSyncIteratorPrototype final : public PrototypeObject<AsyncFromSyn
     JS_PROTOTYPE_OBJECT(AsyncFromSyncIteratorPrototype, AsyncFromSyncIterator, AsyncFromSyncIterator);
 
 public:
-    explicit AsyncFromSyncIteratorPrototype(GlobalObject&);
+    explicit AsyncFromSyncIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~AsyncFromSyncIteratorPrototype() override = default;
 

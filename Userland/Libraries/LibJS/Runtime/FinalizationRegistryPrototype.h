@@ -15,7 +15,7 @@ class FinalizationRegistryPrototype final : public PrototypeObject<FinalizationR
     JS_PROTOTYPE_OBJECT(FinalizationRegistryPrototype, FinalizationRegistry, FinalizationRegistry);
 
 public:
-    FinalizationRegistryPrototype(GlobalObject&);
+    FinalizationRegistryPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~FinalizationRegistryPrototype() override = default;
 
