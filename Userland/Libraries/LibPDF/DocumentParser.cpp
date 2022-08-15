@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Julian Offenhäuser <offenhaeuser@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -51,6 +52,11 @@ PDFErrorOr<void> DocumentParser::initialize()
 PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
 {
     VERIFY(m_xref_table->has_object(index));
+
+    if (m_xref_table->is_object_compressed(index))
+        // The object can be found in a object stream
+        return parse_compressed_object_with_index(index);
+
     auto byte_offset = m_xref_table->byte_offset_for_object(index);
     m_reader.move_to(byte_offset);
     auto indirect_value = TRY(parse_indirect_value());
@@ -438,6 +444,51 @@ PDFErrorOr<NonnullRefPtr<DictObject>> DocumentParser::parse_file_trailer()
     m_reader.move_by(5);
     m_reader.consume_whitespace();
     return dict;
+}
+
+PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
+{
+    auto object_stream_index = m_xref_table->object_stream_for_object(index);
+    auto stream_offset = m_xref_table->byte_offset_for_object(object_stream_index);
+
+    m_reader.move_to(stream_offset);
+
+    auto first_number = TRY(parse_number());
+    auto second_number = TRY(parse_number());
+
+    if (first_number.get<int>() != object_stream_index)
+        return error("Mismatching object stream index");
+    if (second_number.get<int>() != 0)
+        return error("Non-zero object stream generation number");
+
+    if (!m_reader.matches("obj"))
+        return error("Malformed object stream");
+    m_reader.move_by(3);
+    if (m_reader.matches_eol())
+        m_reader.consume_eol();
+
+    auto dict = TRY(parse_dict());
+    auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
+    if (type != "ObjStm")
+        return error("Invalid object stream type");
+
+    auto object_count = dict->get_value("N").get_u32();
+    auto first_object_offset = dict->get_value("First").get_u32();
+
+    auto stream = TRY(parse_stream(dict));
+    Parser stream_parser(m_document, stream->bytes());
+
+    for (u32 i = 0; i < object_count; ++i) {
+        auto object_number = TRY(stream_parser.parse_number());
+        auto object_offset = TRY(stream_parser.parse_number());
+
+        if (object_number.get_u32() == index) {
+            stream_parser.move_to(first_object_offset + object_offset.get_u32());
+            break;
+        }
+    }
+
+    return TRY(stream_parser.parse_value());
 }
 
 PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes)

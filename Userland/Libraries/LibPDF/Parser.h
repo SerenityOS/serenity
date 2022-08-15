@@ -35,6 +35,9 @@ public:
 
     String parse_comment();
 
+    void move_by(size_t count) { m_reader.move_by(count); }
+    void move_to(size_t offset) { m_reader.move_to(offset); }
+
     PDFErrorOr<Value> parse_value();
     PDFErrorOr<Value> parse_possible_indirect_value_or_ref();
     PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value(u32 index, u32 generation);
