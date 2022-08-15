@@ -19,7 +19,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(GlobalObject& global
 }
 
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(GlobalObject& global_object, GeneratorObject* generator_object)
-    : Promise(global_object)
+    : Promise(*global_object.promise_prototype())
     , m_generator_object(generator_object)
     , m_on_fulfillment(NativeFunction::create(global_object, "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
         return react_to_async_task_completion(vm, global_object, vm.argument(0), true);
