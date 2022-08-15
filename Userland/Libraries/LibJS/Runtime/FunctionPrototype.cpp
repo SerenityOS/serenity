@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     auto* function = TRY(BoundFunction::create(global_object, target, this_argument, move(arguments)));
 
     // 4. Let argCount be the number of elements in args.
-    auto arg_count = vm.argument_count() - 1;
+    auto arg_count = vm.argument_count() > 0 ? vm.argument_count() - 1 : 0;
 
     // 5. Perform ? CopyNameAndLength(F, Target, "bound", argCount).
     TRY(copy_name_and_length(global_object, *function, target, "bound"sv, arg_count));

@@ -126,6 +126,19 @@ describe("bound function |this|", () => {
     test("arrow functions cannot be bound", () => {
         expect((() => this).bind("foo")()).toBe(globalThis);
     });
+
+    test("length of original function is used for bound function", () => {
+        [0, 1, 2147483647, 2147483648, 2147483649].forEach(value => {
+            function emptyFunction() {}
+
+            Object.defineProperty(emptyFunction, "length", { value });
+
+            expect(emptyFunction.bind().length).toBe(value);
+            expect(emptyFunction.bind(null).length).toBe(value);
+            expect(emptyFunction.bind(null, 0).length).toBe(Math.max(0, value - 1));
+            expect(emptyFunction.bind(null, 0, 1, 2).length).toBe(Math.max(0, value - 3));
+        });
+    });
 });
 
 describe("bound function constructors", () => {
