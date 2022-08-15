@@ -16,7 +16,7 @@ namespace JS {
 
 Error* Error::create(Realm& realm)
 {
-    return realm.heap().allocate<Error>(realm.global_object(), *realm.global_object().error_prototype());
+    return realm.heap().allocate<Error>(realm, *realm.global_object().error_prototype());
 }
 
 Error* Error::create(Realm& realm, String const& message)
@@ -99,8 +99,7 @@ String Error::stack_string() const
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
     ClassName* ClassName::create(Realm& realm)                                                                   \
     {                                                                                                            \
-        return realm.heap().allocate<ClassName>(                                                                 \
-            realm.global_object(), *realm.global_object().snake_name##_prototype()); /*                       */ \
+        return realm.heap().allocate<ClassName>(realm, *realm.global_object().snake_name##_prototype()); /*   */ \
     }                                                                                                            \
                                                                                                                  \
     ClassName* ClassName::create(Realm& realm, String const& message)                                            \

@@ -17,7 +17,7 @@ namespace JS {
 // 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
 StringObject* StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
 {
-    return realm.heap().allocate<StringObject>(realm.global_object(), primitive_string, prototype);
+    return realm.heap().allocate<StringObject>(realm, primitive_string, prototype);
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)

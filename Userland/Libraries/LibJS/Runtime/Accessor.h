@@ -17,7 +17,7 @@ class Accessor final : public Cell {
 public:
     static Accessor* create(VM& vm, FunctionObject* getter, FunctionObject* setter)
     {
-        return vm.heap().allocate_without_global_object<Accessor>(getter, setter);
+        return vm.heap().allocate_without_realm<Accessor>(getter, setter);
     }
 
     Accessor(FunctionObject* getter, FunctionObject* setter)

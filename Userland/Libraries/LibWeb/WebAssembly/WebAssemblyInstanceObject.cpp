@@ -44,7 +44,7 @@ void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
             [&](Wasm::MemoryAddress const& address) {
                 Optional<WebAssemblyMemoryObject*> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm.global_object(), realm, address);
+                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm, realm, address);
                     cache.memory_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);

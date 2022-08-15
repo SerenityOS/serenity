@@ -17,7 +17,7 @@ namespace JS {
 // 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
 Realm* Realm::create(VM& vm)
 {
-    return vm.heap().allocate_without_global_object<Realm>();
+    return vm.heap().allocate_without_realm<Realm>();
 }
 
 // 9.6 InitializeHostDefinedRealm ( ), https://tc39.es/ecma262/#sec-initializehostdefinedrealm
@@ -79,7 +79,7 @@ void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_va
         // b. Set globalObj to OrdinaryObjectCreate(intrinsics.[[%Object.prototype%]]).
         // NOTE: We allocate a proper GlobalObject directly as this plain object is
         //       turned into one via SetDefaultGlobalBindings in the spec.
-        global_object = heap().allocate_without_global_object<GlobalObject>(*this);
+        global_object = heap().allocate_without_realm<GlobalObject>(*this);
     }
 
     // 2. Assert: Type(globalObj) is Object.
@@ -100,7 +100,7 @@ void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_va
 
     // 5. Let newGlobalEnv be NewGlobalEnvironment(globalObj, thisValue).
     // 6. Set realmRec.[[GlobalEnv]] to newGlobalEnv.
-    m_global_environment = m_global_object->heap().allocate_without_global_object<GlobalEnvironment>(*global_object, *this_value);
+    m_global_environment = m_global_object->heap().allocate_without_realm<GlobalEnvironment>(*global_object, *this_value);
 
     // 7. Return unused.
 }

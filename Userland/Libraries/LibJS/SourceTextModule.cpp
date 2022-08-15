@@ -328,7 +328,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     auto& global_object = realm().global_object();
 
     // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    auto* environment = vm.heap().allocate_without_global_object<ModuleEnvironment>(&realm().global_environment());
+    auto* environment = vm.heap().allocate_without_realm<ModuleEnvironment>(&realm().global_environment());
 
     // 6. Set module.[[Environment]] to env.
     set_environment(environment);

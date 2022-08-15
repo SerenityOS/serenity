@@ -12,7 +12,7 @@ namespace JS {
 
 AggregateError* AggregateError::create(Realm& realm)
 {
-    return realm.heap().allocate<AggregateError>(realm.global_object(), *realm.global_object().aggregate_error_prototype());
+    return realm.heap().allocate<AggregateError>(realm, *realm.global_object().aggregate_error_prototype());
 }
 
 AggregateError::AggregateError(Object& prototype)

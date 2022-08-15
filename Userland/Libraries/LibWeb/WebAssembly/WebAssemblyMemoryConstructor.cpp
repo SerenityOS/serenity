@@ -51,7 +51,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     if (!WebAssemblyObject::s_abstract_machine.store().get(*address)->grow(initial))
         return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Wasm Memory grow failed: {}", initial));
 
-    return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, realm, *address);
+    return vm.heap().allocate<WebAssemblyMemoryObject>(realm, realm, *address);
 }
 
 void WebAssemblyMemoryConstructor::initialize(JS::Realm& realm)

@@ -27,8 +27,8 @@ void $262Object::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
 
-    m_agent = vm().heap().allocate<AgentObject>(realm.global_object(), realm);
-    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm.global_object(), realm);
+    m_agent = vm().heap().allocate<AgentObject>(realm, realm);
+    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm, realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("clearKeptObjects", clear_kept_objects, 0, attr);
@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::create_realm)
 {
     auto* realm = Realm::create(vm);
     VERIFY(realm);
-    auto* realm_global_object = vm.heap().allocate_without_global_object<GlobalObject>(*realm);
+    auto* realm_global_object = vm.heap().allocate_without_realm<GlobalObject>(*realm);
     VERIFY(realm_global_object);
     realm->set_global_object(realm_global_object, nullptr);
     realm_global_object->set_associated_realm(*realm);

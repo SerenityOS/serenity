@@ -36,7 +36,7 @@ void Temporal::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.Now, heap().allocate<Now>(realm.global_object(), realm), attr);
+    define_direct_property(vm.names.Now, heap().allocate<Now>(realm, realm), attr);
     define_direct_property(vm.names.Calendar, realm.global_object().temporal_calendar_constructor(), attr);
     define_direct_property(vm.names.Duration, realm.global_object().temporal_duration_constructor(), attr);
     define_direct_property(vm.names.Instant, realm.global_object().temporal_instant_constructor(), attr);

@@ -87,6 +87,8 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
 // 10.4.6.12 ModuleNamespaceCreate ( module, exports ), https://tc39.es/ecma262/#sec-modulenamespacecreate
 Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_names)
 {
+    auto& realm = this->realm();
+
     // 1. Assert: module.[[Namespace]] is empty.
     VERIFY(m_namespace.is_null());
 
@@ -97,7 +99,7 @@ Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_na
     // 6. Let sortedExports be a List whose elements are the elements of exports ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn.
     // 7. Set M.[[Exports]] to sortedExports.
     // 8. Create own properties of M corresponding to the definitions in 28.3.
-    Object* module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm().global_object(), realm(), this, move(unambiguous_names));
+    Object* module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm, realm, this, move(unambiguous_names));
 
     // 9. Set module.[[Namespace]] to M.
     m_namespace = make_handle(module_namespace);

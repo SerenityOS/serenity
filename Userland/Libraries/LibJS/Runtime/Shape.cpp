@@ -12,7 +12,7 @@ namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    auto* new_shape = heap().allocate_without_global_object<Shape>(m_realm);
+    auto* new_shape = heap().allocate_without_realm<Shape>(m_realm);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
     ensure_property_table();
@@ -57,7 +57,7 @@ Shape* Shape::create_put_transition(StringOrSymbol const& property_key, Property
     TransitionKey key { property_key, attributes };
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
-    auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_key, attributes, TransitionType::Put);
+    auto* new_shape = heap().allocate_without_realm<Shape>(*this, property_key, attributes, TransitionType::Put);
     if (!m_forward_transitions)
         m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
     m_forward_transitions->set(key, new_shape);
@@ -69,7 +69,7 @@ Shape* Shape::create_configure_transition(StringOrSymbol const& property_key, Pr
     TransitionKey key { property_key, attributes };
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
-    auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_key, attributes, TransitionType::Configure);
+    auto* new_shape = heap().allocate_without_realm<Shape>(*this, property_key, attributes, TransitionType::Configure);
     if (!m_forward_transitions)
         m_forward_transitions = make<HashMap<TransitionKey, WeakPtr<Shape>>>();
     m_forward_transitions->set(key, new_shape);
@@ -80,7 +80,7 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
 {
     if (auto* existing_shape = get_or_prune_cached_prototype_transition(new_prototype))
         return existing_shape;
-    auto* new_shape = heap().allocate_without_global_object<Shape>(*this, new_prototype);
+    auto* new_shape = heap().allocate_without_realm<Shape>(*this, new_prototype);
     if (!m_prototype_transitions)
         m_prototype_transitions = make<HashMap<Object*, WeakPtr<Shape>>>();
     m_prototype_transitions->set(new_prototype, new_shape);

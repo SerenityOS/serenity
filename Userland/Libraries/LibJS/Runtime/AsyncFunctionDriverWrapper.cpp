@@ -14,7 +14,7 @@ namespace JS {
 
 ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
 {
-    auto wrapper = realm.heap().allocate<AsyncFunctionDriverWrapper>(realm.global_object(), realm, generator_object);
+    auto wrapper = realm.heap().allocate<AsyncFunctionDriverWrapper>(realm, realm, generator_object);
     return wrapper->react_to_async_task_completion(realm.vm(), realm.global_object(), js_undefined(), true);
 }
 

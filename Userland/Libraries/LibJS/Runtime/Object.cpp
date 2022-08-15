@@ -27,11 +27,11 @@ namespace JS {
 Object* Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm.global_object(), *realm.global_object().empty_object_shape());
+        return realm.heap().allocate<Object>(realm, *realm.global_object().empty_object_shape());
     else if (prototype == realm.global_object().object_prototype())
-        return realm.heap().allocate<Object>(realm.global_object(), *realm.global_object().new_object_shape());
+        return realm.heap().allocate<Object>(realm, *realm.global_object().new_object_shape());
     else
-        return realm.heap().allocate<Object>(realm.global_object(), *prototype);
+        return realm.heap().allocate<Object>(realm, *prototype);
 }
 
 GlobalObject& Object::global_object() const
@@ -42,12 +42,12 @@ GlobalObject& Object::global_object() const
 Object::Object(GlobalObjectTag, Realm& realm)
 {
     // This is the global object
-    m_shape = heap().allocate_without_global_object<Shape>(realm);
+    m_shape = heap().allocate_without_realm<Shape>(realm);
 }
 
 Object::Object(ConstructWithoutPrototypeTag, Realm& realm)
 {
-    m_shape = heap().allocate_without_global_object<Shape>(realm);
+    m_shape = heap().allocate_without_realm<Shape>(realm);
 }
 
 Object::Object(Realm& realm, Object* prototype)

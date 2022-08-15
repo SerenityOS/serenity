@@ -48,10 +48,10 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
     VERIFY(promise_resolve.is_function());
 
     // 1. Let values be a new empty List.
-    auto* values = vm.heap().allocate_without_global_object<PromiseValueList>();
+    auto* values = vm.heap().allocate_without_realm<PromiseValueList>();
 
     // 2. Let remainingElementsCount be the Record { [[Value]]: 1 }.
-    auto* remaining_elements_count = vm.heap().allocate_without_global_object<RemainingElements>(1);
+    auto* remaining_elements_count = vm.heap().allocate_without_realm<RemainingElements>(1);
 
     // 3. Let index be 0.
     size_t index = 0;

@@ -57,7 +57,7 @@ void PromiseResolvingElementFunction::visit_edges(Cell::Visitor& visitor)
 
 PromiseAllResolveElementFunction* PromiseAllResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm.global_object(), index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
 }
 
 PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -90,7 +90,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
 
 PromiseAllSettledResolveElementFunction* PromiseAllSettledResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm.global_object(), index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
 }
 
 PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -132,7 +132,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
 
 PromiseAllSettledRejectElementFunction* PromiseAllSettledRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm.global_object(), index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
 }
 
 PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -174,7 +174,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
 
 PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm.global_object(), index, errors, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.global_object().function_prototype());
 }
 
 PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)

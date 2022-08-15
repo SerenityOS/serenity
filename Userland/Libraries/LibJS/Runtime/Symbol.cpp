@@ -18,7 +18,7 @@ Symbol::Symbol(Optional<String> description, bool is_global)
 
 Symbol* js_symbol(Heap& heap, Optional<String> description, bool is_global)
 {
-    return heap.allocate_without_global_object<Symbol>(move(description), is_global);
+    return heap.allocate_without_realm<Symbol>(move(description), is_global);
 }
 
 Symbol* js_symbol(VM& vm, Optional<String> description, bool is_global)

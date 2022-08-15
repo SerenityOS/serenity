@@ -26,7 +26,7 @@ ThrowCompletionOr<BoundFunction*> BoundFunction::create(Realm& realm, FunctionOb
     // 7. Set obj.[[BoundTargetFunction]] to targetFunction.
     // 8. Set obj.[[BoundThis]] to boundThis.
     // 9. Set obj.[[BoundArguments]] to boundArgs.
-    auto* object = realm.heap().allocate<BoundFunction>(realm.global_object(), realm, target_function, bound_this, move(bound_arguments), prototype);
+    auto* object = realm.heap().allocate<BoundFunction>(realm, realm, target_function, bound_this, move(bound_arguments), prototype);
 
     // 10. Return obj.
     return object;

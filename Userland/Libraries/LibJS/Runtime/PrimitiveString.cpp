@@ -128,7 +128,7 @@ PrimitiveString* js_string(Heap& heap, Utf16String string)
             return &heap.vm().single_ascii_character_string(static_cast<u8>(code_unit));
     }
 
-    return heap.allocate_without_global_object<PrimitiveString>(move(string));
+    return heap.allocate_without_realm<PrimitiveString>(move(string));
 }
 
 PrimitiveString* js_string(VM& vm, Utf16String string)
@@ -150,7 +150,7 @@ PrimitiveString* js_string(Heap& heap, String string)
     auto& string_cache = heap.vm().string_cache();
     auto it = string_cache.find(string);
     if (it == string_cache.end()) {
-        auto* new_string = heap.allocate_without_global_object<PrimitiveString>(string);
+        auto* new_string = heap.allocate_without_realm<PrimitiveString>(string);
         string_cache.set(move(string), new_string);
         return new_string;
     }
@@ -179,7 +179,7 @@ PrimitiveString* js_rope_string(VM& vm, PrimitiveString& lhs, PrimitiveString& r
     if (rhs_empty)
         return &lhs;
 
-    return vm.heap().allocate_without_global_object<PrimitiveString>(lhs, rhs);
+    return vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
 }
 
 void PrimitiveString::resolve_rope_if_needed() const

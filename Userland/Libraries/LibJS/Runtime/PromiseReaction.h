@@ -73,7 +73,7 @@ public:
 
     static PromiseReaction* create(VM& vm, Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler)
     {
-        return vm.heap().allocate_without_global_object<PromiseReaction>(type, capability, move(handler));
+        return vm.heap().allocate_without_realm<PromiseReaction>(type, capability, move(handler));
     }
 
     PromiseReaction(Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler);

@@ -400,14 +400,14 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_o
 // 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
 DeclarativeEnvironment* new_declarative_environment(Environment& environment)
 {
-    return environment.heap().allocate_without_global_object<DeclarativeEnvironment>(&environment);
+    return environment.heap().allocate_without_realm<DeclarativeEnvironment>(&environment);
 }
 
 // 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
 ObjectEnvironment* new_object_environment(Object& object, bool is_with_environment, Environment* environment)
 {
     auto& heap = object.heap();
-    return heap.allocate_without_global_object<ObjectEnvironment>(object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
+    return heap.allocate_without_realm<ObjectEnvironment>(object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
 }
 
 // 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
@@ -416,7 +416,7 @@ FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function
     auto& heap = function.heap();
 
     // 1. Let env be a new function Environment Record containing no bindings.
-    auto* env = heap.allocate_without_global_object<FunctionEnvironment>(function.environment());
+    auto* env = heap.allocate_without_realm<FunctionEnvironment>(function.environment());
 
     // 2. Set env.[[FunctionObject]] to F.
     env->set_function_object(function);
@@ -443,7 +443,7 @@ PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
 {
     // 1. Let names be a new empty List.
     // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
-    return vm.heap().allocate_without_global_object<PrivateEnvironment>(outer);
+    return vm.heap().allocate_without_realm<PrivateEnvironment>(outer);
 }
 
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
@@ -1093,7 +1093,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     // 7. Set obj.[[Set]] as specified in 10.4.4.4.
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
-    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, realm, environment);
+    auto* object = vm.heap().allocate<ArgumentsObject>(realm, realm, environment);
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,
