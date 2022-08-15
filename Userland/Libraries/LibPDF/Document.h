@@ -11,10 +11,10 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Color.h>
+#include <LibPDF/DocumentParser.h>
 #include <LibPDF/Encryption.h>
 #include <LibPDF/Error.h>
 #include <LibPDF/ObjectDerivatives.h>
-#include <LibPDF/Parser.h>
 
 namespace PDF {
 
@@ -133,7 +133,7 @@ public:
     }
 
 private:
-    explicit Document(NonnullRefPtr<Parser> const& parser);
+    explicit Document(NonnullRefPtr<DocumentParser> const& parser);
 
     // FIXME: Currently, to improve performance, we don't load any pages at Document
     // construction, rather we just load the page structure and populate
@@ -150,7 +150,7 @@ private:
 
     PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>);
 
-    NonnullRefPtr<Parser> m_parser;
+    NonnullRefPtr<DocumentParser> m_parser;
     RefPtr<DictObject> m_catalog;
     RefPtr<DictObject> m_trailer;
     Vector<u32> m_page_object_indices;

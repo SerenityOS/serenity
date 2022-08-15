@@ -36,7 +36,7 @@ String OutlineItem::to_string(int indent) const
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
 {
-    auto parser = adopt_ref(*new Parser({}, bytes));
+    auto parser = adopt_ref(*new DocumentParser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
 
     TRY(parser->initialize());
@@ -57,7 +57,7 @@ PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
     return document;
 }
 
-Document::Document(NonnullRefPtr<Parser> const& parser)
+Document::Document(NonnullRefPtr<DocumentParser> const& parser)
     : m_parser(parser)
 {
     m_parser->set_document(this);
