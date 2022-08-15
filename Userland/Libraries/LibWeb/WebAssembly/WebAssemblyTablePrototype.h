@@ -20,7 +20,7 @@ class WebAssemblyTablePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyTablePrototype(JS::GlobalObject& global_object)
-        : JS::Object(global_object)
+        : JS::Object(*global_object.object_prototype())
     {
     }
 

@@ -20,7 +20,7 @@ class WebAssemblyModulePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyModulePrototype(JS::GlobalObject& global_object)
-        : JS::Object(global_object)
+        : JS::Object(*global_object.object_prototype())
     {
     }
 };
