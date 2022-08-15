@@ -47,8 +47,8 @@ public:
 
         auto& desktop = GUI::Desktop::the();
 
-        auto active_color = palette().active_window_border1();
-        auto inactive_color = palette().inactive_window_border1();
+        auto active_color = palette().selection();
+        auto inactive_color = palette().window().darkened(0.9f);
 
         for (unsigned row = 0; row < desktop.workspace_rows(); ++row) {
             for (unsigned column = 0; column < desktop.workspace_columns(); ++column) {
