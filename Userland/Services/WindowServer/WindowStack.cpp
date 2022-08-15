@@ -40,8 +40,8 @@ void WindowStack::remove(Window& window)
         m_active_window = nullptr;
     if (m_active_input_window == &window)
         m_active_input_window = nullptr;
-    if (m_active_input_tracking_window == &window)
-        m_active_input_tracking_window = nullptr;
+    if (m_automatic_cursor_tracking_window == &window)
+        m_automatic_cursor_tracking_window = nullptr;
 }
 
 void WindowStack::move_to_front(Window& window)
@@ -102,7 +102,7 @@ void WindowStack::move_all_windows(WindowStack& new_window_stack, Vector<Window*
     }
     m_active_window = nullptr;
     m_active_input_window = nullptr;
-    m_active_input_tracking_window = nullptr;
+    m_automatic_cursor_tracking_window = nullptr;
 }
 
 Window* WindowStack::window_at(Gfx::IntPoint const& position, IncludeWindowFrame include_window_frame) const
