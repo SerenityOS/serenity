@@ -61,6 +61,8 @@ void Intl::initialize(Realm& realm)
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales
 JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto locales = vm.argument(0);
 
     // 1. Let ll be ? CanonicalizeLocaleList(locales).
@@ -72,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
         marked_locale_list.append(js_string(vm, move(locale)));
 
     // 2. Return CreateArrayFromList(ll).
-    return Array::create_from(global_object, marked_locale_list);
+    return Array::create_from(realm, marked_locale_list);
 }
 
 // 1.4.4 AvailableTimeZones (), https://tc39.es/proposal-intl-enumeration/#sec-availablecurrencies
@@ -107,6 +109,8 @@ static Vector<StringView> available_time_zones()
 // 2.2.2 Intl.supportedValuesOf ( key ), https://tc39.es/proposal-intl-enumeration/#sec-intl.supportedvaluesof
 JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let key be ? ToString(key).
     auto key = TRY(vm.argument(0).to_string(global_object));
 
@@ -151,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     }
 
     // 9. Return CreateArrayFromList( list ).
-    return Array::create_from<StringView>(global_object, list, [&](auto value) { return js_string(vm, value); });
+    return Array::create_from<StringView>(realm, list, [&](auto value) { return js_string(vm, value); });
 }
 
 }

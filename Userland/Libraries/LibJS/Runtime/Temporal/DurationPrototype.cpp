@@ -322,6 +322,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::subtract)
 // 7.3.20 Temporal.Duration.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
@@ -339,7 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
         // a. Let paramString be roundTo.
 
         // b. Set roundTo to OrdinaryObjectCreate(null).
-        round_to = Object::create(global_object, nullptr);
+        round_to = Object::create(realm, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).
         MUST(round_to->create_data_property_or_throw(vm.names.smallestUnit, vm.argument(0)));
@@ -444,6 +446,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 // 7.3.21 Temporal.Duration.prototype.total ( totalOf ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
@@ -459,7 +463,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
         // a. Let paramString be totalOf.
 
         // b. Set totalOf to OrdinaryObjectCreate(null).
-        total_of = Object::create(global_object, nullptr);
+        total_of = Object::create(realm, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(totalOf, "unit", paramString).
         MUST(total_of->create_data_property_or_throw(vm.names.unit, vm.argument(0)));

@@ -14,7 +14,7 @@ class CollatorCompareFunction : public NativeFunction {
     JS_OBJECT(CollatorCompareFunction, NativeFunction);
 
 public:
-    static CollatorCompareFunction* create(GlobalObject&, Collator&);
+    static CollatorCompareFunction* create(Realm&, Collator&);
 
     CollatorCompareFunction(Realm&, Collator&);
     virtual void initialize(Realm&) override;

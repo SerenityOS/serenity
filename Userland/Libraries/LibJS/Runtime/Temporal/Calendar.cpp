@@ -102,6 +102,7 @@ Calendar* get_iso8601_calendar(GlobalObject& global_object)
 ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, Object& calendar, Vector<StringView> const& field_names)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let fields be ? GetMethod(calendar, "fields").
     auto fields = TRY(Value(&calendar).get_method(global_object, vm.names.fields));
@@ -110,7 +111,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     auto field_names_values = MarkedVector<Value> { vm.heap() };
     for (auto& field_name : field_names)
         field_names_values.append(js_string(vm, field_name));
-    Value fields_array = Array::create_from(global_object, field_names_values);
+    Value fields_array = Array::create_from(realm, field_names_values);
 
     // 3. If fields is not undefined, then
     if (fields) {
@@ -925,9 +926,10 @@ u8 iso_day(Object& temporal_object)
 ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
-    auto* merged = Object::create(global_object, global_object.object_prototype());
+    auto* merged = Object::create(realm, global_object.object_prototype());
 
     // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
     auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));

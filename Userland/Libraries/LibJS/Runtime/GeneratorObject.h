@@ -16,7 +16,7 @@ class GeneratorObject final : public Object {
     JS_OBJECT(GeneratorObject, Object);
 
 public:
-    static ThrowCompletionOr<GeneratorObject*> create(GlobalObject&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
+    static ThrowCompletionOr<GeneratorObject*> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
     GeneratorObject(Realm&, Object& prototype, ExecutionContext);
     virtual void initialize(Realm&) override;
     virtual ~GeneratorObject() override = default;

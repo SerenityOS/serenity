@@ -164,7 +164,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (buffer_or_error.is_error())
         rejection_value = *buffer_or_error.throw_completion().value();
 
-    auto promise = JS::Promise::create(global_object);
+    auto promise = JS::Promise::create(realm);
     if (!rejection_value.is_empty()) {
         promise->reject(rejection_value);
         return promise;
@@ -323,7 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
-    auto promise = JS::Promise::create(global_object);
+    auto promise = JS::Promise::create(realm);
     bool should_return_module = false;
     if (buffer_or_error.is_error()) {
         auto rejection_value = *buffer_or_error.throw_completion().value();
@@ -344,7 +344,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     } else if (is<WebAssemblyModuleObject>(buffer)) {
         module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
     } else {
-        auto error = JS::TypeError::create(global_object, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
+        auto error = JS::TypeError::create(realm, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
         promise->reject(error);
         return promise;
     }
@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     } else {
         auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, realm, result.release_value());
         if (should_return_module) {
-            auto object = JS::Object::create(global_object, nullptr);
+            auto object = JS::Object::create(realm, nullptr);
             object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, realm, s_compiled_modules.size() - 1), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
@@ -442,15 +442,17 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global
 
 JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm::FunctionAddress address, String const& name)
 {
+    auto& realm = *global_object.associated_realm();
     Optional<Wasm::FunctionType> type;
     WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](auto const& value) { type = value.type(); });
     if (auto entry = WebAssemblyObject::s_global_cache.function_instances.get(address); entry.has_value())
         return *entry;
 
     auto function = JS::NativeFunction::create(
-        global_object,
+        realm,
         name,
         [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
+            auto& realm = *global_object.associated_realm();
             Vector<Wasm::Value> values;
             values.ensure_capacity(type.parameters().size());
 
@@ -474,7 +476,7 @@ JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm
             for (auto& entry : result.values())
                 result_values.append(to_js_value(global_object, entry));
 
-            return JS::Value(JS::Array::create_from(global_object, result_values));
+            return JS::Value(JS::Array::create_from(realm, result_values));
         });
 
     WebAssemblyObject::s_global_cache.function_instances.set(address, function);

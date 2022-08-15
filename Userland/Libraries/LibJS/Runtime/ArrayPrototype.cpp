@@ -89,7 +89,7 @@ void ArrayPrototype::initialize(Realm& realm)
     // 23.1.3.37 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
     // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
-    auto* unscopable_list = Object::create(realm.global_object(), nullptr);
+    auto* unscopable_list = Object::create(realm, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true)));
@@ -116,11 +116,12 @@ void ArrayPrototype::initialize(Realm& realm)
 static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     auto is_array = TRY(Value(&original_array).is_array(global_object));
 
     if (!is_array)
-        return TRY(Array::create(global_object, length));
+        return TRY(Array::create(realm, length));
 
     auto constructor = TRY(original_array.get(vm.names.constructor));
     if (constructor.is_constructor()) {
@@ -140,7 +141,7 @@ static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_obje
     }
 
     if (constructor.is_undefined())
-        return TRY(Array::create(global_object, length));
+        return TRY(Array::create(realm, length));
 
     if (!constructor.is_constructor())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
@@ -295,9 +296,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 // 23.1.3.5 Array.prototype.entries ( ), https://tc39.es/ecma262/#sec-array.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    return ArrayIterator::create(global_object, this_object, Object::PropertyKind::KeyAndValue);
+    return ArrayIterator::create(realm, this_object, Object::PropertyKind::KeyAndValue);
 }
 
 // 23.1.3.6 Array.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.every
@@ -752,6 +755,8 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
 // 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.group
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
 
@@ -788,12 +793,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
     }
 
     // 7. Let obj be OrdinaryObjectCreate(null).
-    auto* object = Object::create(global_object, nullptr);
+    auto* object = Object::create(realm, nullptr);
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
         // a. Let elements be CreateArrayFromList(g.[[Elements]]).
-        auto* elements = Array::create_from(global_object, group.value);
+        auto* elements = Array::create_from(realm, group.value);
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
         MUST(object->create_data_property_or_throw(group.key, elements));
@@ -806,6 +811,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 // 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.grouptomap
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
 
@@ -858,12 +865,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
     }
 
     // 7. Let map be ! Construct(%Map%).
-    auto* map = Map::create(global_object);
+    auto* map = Map::create(realm);
 
     // 8. For each Record { [[Key]], [[Elements]] } g of groups, do
     for (auto& group : groups) {
         // a. Let elements be CreateArrayFromList(g.[[Elements]]).
-        auto* elements = Array::create_from(global_object, group.value);
+        auto* elements = Array::create_from(realm, group.value);
 
         // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
         // c. Append entry as the last element of map.[[MapData]].
@@ -1013,9 +1020,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 // 23.1.3.19 Array.prototype.keys ( ), https://tc39.es/ecma262/#sec-array.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Key);
+    return ArrayIterator::create(realm, this_object, Object::PropertyKind::Key);
 }
 
 // 23.1.3.20 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-array.prototype.lastindexof
@@ -1744,6 +1753,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 // 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let O be ? ToObject(this value).
     auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
@@ -1751,7 +1762,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
     auto length = TRY(length_of_array_like(global_object, *object));
 
     // 3. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(global_object, length));
+    auto* array = TRY(Array::create(realm, length));
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -1778,6 +1789,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
 // 1.1.1.5 Array.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSorted
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto comparefn = vm.argument(0);
 
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
@@ -1791,7 +1804,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
     auto length = TRY(length_of_array_like(global_object, *object));
 
     // 4. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(global_object, length));
+    auto* array = TRY(Array::create(realm, length));
 
     // 5. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
@@ -1818,6 +1831,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 // 1.1.1.6 Array.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSpliced
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto start = vm.argument(0);
     auto delete_count = vm.argument(1);
 
@@ -1882,7 +1897,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     auto new_length = static_cast<u64>(new_length_double);
 
     // 13. Let A be ? ArrayCreate(𝔽(newLen)).
-    auto* array = TRY(Array::create(global_object, new_length));
+    auto* array = TRY(Array::create(realm, new_length));
 
     // 14. Let i be 0.
     size_t i = 0;
@@ -1996,14 +2011,18 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 // 23.1.3.35 Array.prototype.values ( ), https://tc39.es/ecma262/#sec-array.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Value);
+    return ArrayIterator::create(realm, this_object, Object::PropertyKind::Value);
 }
 
 // 1.1.1.7 Array.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto index = vm.argument(0);
     auto value = vm.argument(1);
 
@@ -2030,7 +2049,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
         return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, actual_index, length);
 
     // 7. Let A be ? ArrayCreate(𝔽(len)).
-    auto* array = TRY(Array::create(global_object, length));
+    auto* array = TRY(Array::create(realm, length));
 
     // 8. Let k be 0.
     // 9. Repeat, while k < len,

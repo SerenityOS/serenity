@@ -1264,15 +1264,17 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
 static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly))
         return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file->fd()));
-    auto* object = JS::Object::create(global_object, global_object.object_prototype());
+    auto* object = JS::Object::create(realm, global_object.object_prototype());
     for (auto const& group : config_file->groups()) {
-        auto* group_object = JS::Object::create(global_object, global_object.object_prototype());
+        auto* group_object = JS::Object::create(realm, global_object.object_prototype());
         for (auto const& key : config_file->keys(group)) {
             auto entry = config_file->read_entry(group, key);
             group_object->define_direct_property(key, js_string(vm, move(entry)), JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable);

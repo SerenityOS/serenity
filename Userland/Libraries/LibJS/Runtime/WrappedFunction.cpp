@@ -11,9 +11,9 @@
 namespace JS {
 
 // 3.1.1 WrappedFunctionCreate ( callerRealm: a Realm Record, Target: a function object, ), https://tc39.es/proposal-shadowrealm/#sec-wrappedfunctioncreate
-ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(GlobalObject& global_object, Realm& caller_realm, FunctionObject& target)
+ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm& caller_realm, FunctionObject& target)
 {
-    auto& vm = global_object.vm();
+    auto& vm = realm.vm();
 
     // 1. Let internalSlotsList be the internal slots listed in Table 2, plus [[Prototype]] and [[Extensible]].
     // 2. Let wrapped be MakeBasicObject(internalSlotsList).
@@ -22,14 +22,14 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(GlobalObject& global
     // 5. Set wrapped.[[WrappedTargetFunction]] to Target.
     // 6. Set wrapped.[[Realm]] to callerRealm.
     auto& prototype = *caller_realm.global_object().function_prototype();
-    auto* wrapped = global_object.heap().allocate<WrappedFunction>(global_object, caller_realm, target, prototype);
+    auto* wrapped = vm.heap().allocate<WrappedFunction>(realm.global_object(), caller_realm, target, prototype);
 
     // 7. Let result be CopyNameAndLength(wrapped, Target).
-    auto result = copy_name_and_length(global_object, *wrapped, target);
+    auto result = copy_name_and_length(realm.global_object(), *wrapped, target);
 
     // 8. If result is an Abrupt Completion, throw a TypeError exception.
     if (result.is_throw_completion())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
+        return vm.throw_completion<TypeError>(realm.global_object(), ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
 
     // 9. Return wrapped.
     return wrapped;

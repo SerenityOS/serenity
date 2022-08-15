@@ -30,6 +30,8 @@ void MapIteratorPrototype::initialize(Realm& realm)
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* map_iterator = TRY(typed_this_value(global_object));
     if (map_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
@@ -48,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, entry.value, false);
 
-    return create_iterator_result_object(global_object, Array::create_from(global_object, { entry.key, entry.value }), false);
+    return create_iterator_result_object(global_object, Array::create_from(realm, { entry.key, entry.value }), false);
 }
 
 }

@@ -109,7 +109,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
 
     // 12. Return Completion(result).
     // Note: Because we expect it to return a promise we convert this here.
-    auto* promise = Promise::create(realm().global_object());
+    auto* promise = Promise::create(realm());
     if (result.is_error()) {
         VERIFY(result.throw_completion().value().has_value());
         promise->reject(*result.throw_completion().value());

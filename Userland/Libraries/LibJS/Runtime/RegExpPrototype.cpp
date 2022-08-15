@@ -82,6 +82,8 @@ struct Match {
 // 22.2.5.2.7 GetMatchIndexPair ( S, match ), https://tc39.es/ecma262/#sec-getmatchindexpair
 static Value get_match_index_par(GlobalObject& global_object, Utf16View const& string, Match const& match)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
     VERIFY(match.start_index <= string.length_in_code_units());
 
@@ -90,7 +92,7 @@ static Value get_match_index_par(GlobalObject& global_object, Utf16View const& s
     VERIFY(match.end_index <= string.length_in_code_units());
 
     // 3. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
-    return Array::create_from(global_object, { Value(match.start_index), Value(match.end_index) });
+    return Array::create_from(realm, { Value(match.start_index), Value(match.end_index) });
 }
 
 // 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
@@ -111,6 +113,7 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
     // names align with the indices. The end result is the same.
 
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let n be the number of elements in indices.
     // 2. Assert: n < 2^32-1.
@@ -120,13 +123,13 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
     // 4. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
 
     // 5. Set A to ! ArrayCreate(n).
-    auto* array = MUST(Array::create(global_object, indices.size()));
+    auto* array = MUST(Array::create(realm, indices.size()));
 
     // 6. If hasGroups is true, then
     //     a. Let groups be ! ObjectCreate(null).
     // 7. Else,
     //     a. Let groups be undefined.
-    auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
+    auto groups = has_groups ? Object::create(realm, nullptr) : js_undefined();
 
     // 9. For each integer i such that i ≥ 0 and i < n, do
     for (size_t i = 0; i < indices.size(); ++i) {
@@ -166,6 +169,7 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
 static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let length be the length of S.
     // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
@@ -251,7 +255,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
 
     // 19. Let A be ! ArrayCreate(n + 1).
-    auto* array = MUST(Array::create(global_object, result.n_named_capture_groups + 1));
+    auto* array = MUST(Array::create(realm, result.n_named_capture_groups + 1));
 
     // 20. Assert: The mathematical value of A's "length" property is n + 1.
 
@@ -281,7 +285,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     //     a. Let groups be undefined.
     //     b. Let hasGroups be false.
     bool has_groups = result.n_named_capture_groups != 0;
-    Object* groups_object = has_groups ? Object::create(global_object, nullptr) : nullptr;
+    Object* groups_object = has_groups ? Object::create(realm, nullptr) : nullptr;
 
     // 32. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
     for (size_t i = 1; i <= result.n_capture_groups; ++i) {
@@ -489,6 +493,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%2540%2540match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
@@ -519,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     // e. Let A be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(realm, 0));
 
     // f. Let n be 0.
     size_t n = 0;
@@ -563,6 +569,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
@@ -598,7 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     TRY(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
     // 13. Return CreateRegExpStringIterator(matcher, S, global, fullUnicode).
-    return RegExpStringIterator::create(global_object, *matcher, move(string), global, full_unicode);
+    return RegExpStringIterator::create(realm, *matcher, move(string), global, full_unicode);
 }
 
 // 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
@@ -861,6 +869,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 // 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
@@ -887,7 +897,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto* splitter = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(realm, 0));
 
     // 12. Let lengthA be 0.
     size_t array_length = 0;

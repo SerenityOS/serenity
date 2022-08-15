@@ -726,6 +726,7 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
+    auto& realm = *global_object.associated_realm();
     GlobalEnvironment* global_var_environment = variable_environment->is_global_environment() ? static_cast<GlobalEnvironment*>(variable_environment) : nullptr;
 
     // 1. Let varNames be the VarDeclaredNames of body.
@@ -974,7 +975,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
     for (auto& declaration : functions_to_initialize) {
         // a. Let fn be the sole element of the BoundNames of f.
         // b. Let fo be InstantiateFunctionObject of f with arguments lexEnv and privateEnv.
-        auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
+        auto* function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
 
         // c. If varEnv is a global Environment Record, then
         if (global_var_environment) {
@@ -1036,13 +1037,14 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value> arguments)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let len be the number of elements in argumentsList.
     auto length = arguments.size();
 
     // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
-    auto* object = Object::create(global_object, global_object.object_prototype());
+    auto* object = Object::create(realm, global_object.object_prototype());
     object->set_has_parameter_map();
 
     // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).

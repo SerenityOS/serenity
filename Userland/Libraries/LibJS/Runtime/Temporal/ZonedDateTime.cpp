@@ -447,6 +447,7 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
 ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& global_object, Crypto::SignedBigInteger nanoseconds, Value relative_to_value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let dayLengthNs be nsPerDay.
     auto day_length_ns = ns_per_day_bigint;
@@ -497,7 +498,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to.time_zone(), *end_instant, relative_to.calendar()));
 
     // 12. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], relativeTo.[[Calendar]], "day", OrdinaryObjectCreate(null)).
-    auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), relative_to.calendar(), "day"sv, *Object::create(global_object, nullptr)));
+    auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), relative_to.calendar(), "day"sv, *Object::create(realm, nullptr)));
 
     // 13. Let days be dateDifference.[[Days]].
     auto days = date_difference.days;

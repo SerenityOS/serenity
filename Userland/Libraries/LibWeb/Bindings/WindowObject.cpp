@@ -618,6 +618,8 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollby
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* impl = TRY(impl_from(vm, global_object));
     if (!impl->page())
         return JS::js_undefined();
@@ -626,12 +628,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     JS::Object* options = nullptr;
 
     if (vm.argument_count() == 0) {
-        options = JS::Object::create(global_object, nullptr);
+        options = JS::Object::create(realm, nullptr);
     } else if (vm.argument_count() == 1) {
         options = TRY(vm.argument(0).to_object(global_object));
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
-        options = JS::Object::create(global_object, nullptr);
+        options = JS::Object::create(realm, nullptr);
         MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
         MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
         MUST(options->set("behavior", JS::js_string(vm, "auto"), ShouldThrowExceptions::No));

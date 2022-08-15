@@ -8,9 +8,9 @@
 
 namespace JS {
 
-Set* Set::create(GlobalObject& global_object)
+Set* Set::create(Realm& realm)
 {
-    return global_object.heap().allocate<Set>(global_object, *global_object.set_prototype());
+    return realm.heap().allocate<Set>(realm.global_object(), *realm.global_object().set_prototype());
 }
 
 Set::Set(Object& prototype)

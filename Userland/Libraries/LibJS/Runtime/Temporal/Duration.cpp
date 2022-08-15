@@ -572,6 +572,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
 ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& global_object, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If largestUnit is "year", or years, months, weeks, and days are all 0, then
     if (largest_unit == "year"sv || (years == 0 && months == 0 && weeks == 0 && days == 0)) {
@@ -631,7 +632,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
             auto* new_relative_to = TRY(calendar_date_add(global_object, *calendar, relative_to, *one_year, nullptr, date_add));
 
             // ii. Let untilOptions be OrdinaryObjectCreate(null).
-            auto* until_options = Object::create(global_object, nullptr);
+            auto* until_options = Object::create(realm, nullptr);
 
             // iii. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
             MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "month"sv)));
@@ -755,6 +756,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
 ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& global_object, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to_value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If largestUnit is not one of "year", "month", or "week", or years, months, weeks, and days are all 0, then
     if (!largest_unit.is_one_of("year"sv, "month"sv, "week"sv) || (years == 0 && months == 0 && weeks == 0 && days == 0)) {
@@ -861,7 +863,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         auto* date_until = TRY(Value(&calendar).get_method(global_object, vm.names.dateUntil));
 
         // l. Let untilOptions be OrdinaryObjectCreate(null).
-        auto* until_options = Object::create(global_object, nullptr);
+        auto* until_options = Object::create(realm, nullptr);
 
         // m. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "month"sv)));
@@ -887,7 +889,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             new_relative_to = TRY(calendar_date_add(global_object, calendar, relative_to, *one_year, nullptr, date_add));
 
             // v. Set untilOptions to OrdinaryObjectCreate(null).
-            until_options = Object::create(global_object, nullptr);
+            until_options = Object::create(realm, nullptr);
 
             // vi. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
             MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "month"sv)));
@@ -975,6 +977,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
 ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     VERIFY(all_of(AK::Array { years1, months1, weeks1, days1, hours1, minutes1, seconds1, milliseconds1, microseconds1, nanoseconds1, years2, months2, weeks2, days2, hours2, minutes2, seconds2, milliseconds2, microseconds2, nanoseconds2 }, [](auto value) { return value == trunc(value); }));
 
@@ -1029,7 +1032,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
         // h. Let differenceOptions be OrdinaryObjectCreate(null).
-        auto* difference_options = Object::create(global_object, nullptr);
+        auto* difference_options = Object::create(realm, nullptr);
 
         // i. Perform ! CreateDataPropertyOrThrow(differenceOptions, "largestUnit", dateLargestUnit).
         MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, date_largest_unit)));
@@ -1075,7 +1078,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
     }
 
     // 12. Return ? DifferenceZonedDateTime(relativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit, OrdinaryObjectCreate(null)).
-    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(global_object, nullptr));
+    return difference_zoned_date_time(global_object, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(realm, nullptr));
 }
 
 // 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
@@ -1105,6 +1108,7 @@ ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject& gl
 ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     Object* calendar = nullptr;
     double fractional_seconds = 0;
@@ -1225,7 +1229,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto* days_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *days_duration, nullptr, date_add));
 
         // k. Let untilOptions be OrdinaryObjectCreate(null).
-        auto* until_options = Object::create(global_object, nullptr);
+        auto* until_options = Object::create(realm, nullptr);
 
         // l. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "year"sv)));

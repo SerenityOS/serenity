@@ -9,9 +9,9 @@
 
 namespace JS {
 
-ArrayIterator* ArrayIterator::create(GlobalObject& global_object, Value array, Object::PropertyKind iteration_kind)
+ArrayIterator* ArrayIterator::create(Realm& realm, Value array, Object::PropertyKind iteration_kind)
 {
-    return global_object.heap().allocate<ArrayIterator>(global_object, array, iteration_kind, *global_object.array_iterator_prototype());
+    return realm.heap().allocate<ArrayIterator>(realm.global_object(), array, iteration_kind, *realm.global_object().array_iterator_prototype());
 }
 
 ArrayIterator::ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype)

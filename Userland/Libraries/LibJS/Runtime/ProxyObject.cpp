@@ -15,9 +15,9 @@
 
 namespace JS {
 
-ProxyObject* ProxyObject::create(GlobalObject& global_object, Object& target, Object& handler)
+ProxyObject* ProxyObject::create(Realm& realm, Object& target, Object& handler)
 {
-    return global_object.heap().allocate<ProxyObject>(global_object, target, handler, *global_object.object_prototype());
+    return realm.heap().allocate<ProxyObject>(realm.global_object(), target, handler, *realm.global_object().object_prototype());
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
@@ -756,6 +756,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     // A Proxy exotic object only has a [[Call]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Call]] internal method.
     // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
@@ -783,7 +784,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     }
 
     // 7. Let argArray be CreateArrayFromList(argumentsList).
-    auto* arguments_array = Array::create_from(global_object, arguments_list);
+    auto* arguments_array = Array::create_from(realm, arguments_list);
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
     return call(global_object, trap, &m_handler, &m_target, this_argument, arguments_array);
@@ -804,6 +805,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     // A Proxy exotic object only has a [[Construct]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Construct]] internal method.
     // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
@@ -831,7 +833,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).
-    auto* arguments_array = Array::create_from(global_object, arguments_list);
+    auto* arguments_array = Array::create_from(realm, arguments_list);
 
     // 9. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
     auto new_object = TRY(call(global_object, trap, &m_handler, &m_target, arguments_array, &new_target));

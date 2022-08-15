@@ -168,7 +168,7 @@ ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* array = MUST(Array::create(interpreter.global_object(), 0));
+    auto* array = MUST(Array::create(interpreter.realm(), 0));
     for (size_t i = 0; i < m_element_count; i++) {
         auto& value = interpreter.reg(Register(m_elements[0].index() + i));
         array->indexed_properties().put(i, value, default_attributes);
@@ -182,7 +182,8 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 static Object* iterator_to_object(GlobalObject& global_object, Iterator iterator)
 {
     auto& vm = global_object.vm();
-    auto* object = Object::create(global_object, nullptr);
+    auto& realm = *global_object.associated_realm();
+    auto* object = Object::create(realm, nullptr);
     object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
     object->define_direct_property(vm.names.next, iterator.next_method, 0);
     object->define_direct_property(vm.names.done, Value(iterator.done), 0);
@@ -205,7 +206,7 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
     auto iterator_object = TRY(interpreter.accumulator().to_object(global_object));
     auto iterator = object_to_iterator(global_object, *iterator_object);
 
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(interpreter.realm(), 0));
     size_t index = 0;
 
     while (true) {
@@ -234,7 +235,7 @@ ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+    interpreter.accumulator() = Object::create(interpreter.realm(), interpreter.global_object().object_prototype());
     return {};
 }
 
@@ -251,7 +252,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 {
     auto* from_object = TRY(interpreter.reg(m_from_object).to_object(interpreter.global_object()));
 
-    auto* to_object = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+    auto* to_object = Object::create(interpreter.realm(), interpreter.global_object().object_prototype());
 
     HashTable<Value, ValueTraits> excluded_names;
     for (size_t i = 0; i < m_excluded_names_count; ++i)
@@ -506,7 +507,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
     return {};
 }
 
@@ -610,7 +611,7 @@ ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Inter
 ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
-    auto object = JS::Object::create(interpreter.global_object(), nullptr);
+    auto object = Object::create(interpreter.realm(), nullptr);
     object->define_direct_property("result", yielded_value, JS::default_attributes);
     if (m_continuation_label.has_value())
         object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))), JS::default_attributes);
@@ -693,14 +694,15 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
     Iterator iterator {
         .iterator = object,
         .next_method = NativeFunction::create(
-            interpreter.global_object(),
+            interpreter.realm(),
             [seen_items = HashTable<PropertyKey>(), items = move(properties)](VM& vm, GlobalObject& global_object) mutable -> ThrowCompletionOr<Value> {
+                auto& realm = *global_object.associated_realm();
                 auto iterated_object_value = vm.this_value(global_object);
                 if (!iterated_object_value.is_object())
                     return vm.throw_completion<InternalError>(global_object, "Invalid state for GetObjectPropertyIterator.next");
 
                 auto& iterated_object = iterated_object_value.as_object();
-                auto* result_object = Object::create(global_object, nullptr);
+                auto* result_object = Object::create(realm, nullptr);
                 while (true) {
                     if (items.is_empty()) {
                         result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);

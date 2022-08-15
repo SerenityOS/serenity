@@ -47,7 +47,7 @@ struct PrivateElement {
 
 class Object : public Cell {
 public:
-    static Object* create(GlobalObject&, Object* prototype);
+    static Object* create(Realm&, Object* prototype);
 
     Object(Realm&, Object* prototype);
     explicit Object(Object& prototype);

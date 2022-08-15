@@ -217,16 +217,16 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     auto* prototype = TRY(get_prototype_from_constructor(global_object, *new_target, fallback_prototype));
 
     // 25. Let realmF be the current Realm Record.
-    auto* realm = vm.current_realm();
+    auto& realm = *vm.current_realm();
 
     // 26. Let env be realmF.[[GlobalEnv]].
-    auto* environment = &realm->global_environment();
+    auto& environment = realm.global_environment();
 
     // 27. Let privateEnv be null.
     PrivateEnvironment* private_environment = nullptr;
 
     // 28. Let F be OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, env, privateEnv).
-    auto* function = ECMAScriptFunctionObject::create(global_object, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), environment, private_environment, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
+    auto* function = ECMAScriptFunctionObject::create(realm, "anonymous", *prototype, move(source_text), expr->body(), expr->parameters(), expr->function_length(), &environment, private_environment, expr->kind(), expr->is_strict_mode(), expr->might_need_arguments_object(), contains_direct_call_to_eval);
 
     // FIXME: Remove the name argument from create() and do this instead.
     // 29. Perform SetFunctionName(F, "anonymous").
@@ -234,7 +234,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 30. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-        prototype = Object::create(global_object, global_object.generator_function_prototype_prototype());
+        prototype = Object::create(realm, global_object.generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -242,7 +242,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 31. Else if kind is asyncGenerator, then
     else if (kind == FunctionKind::AsyncGenerator) {
         // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-        prototype = Object::create(global_object, global_object.async_generator_function_prototype_prototype());
+        prototype = Object::create(realm, global_object.async_generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -250,7 +250,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 32. Else if kind is normal, perform MakeConstructor(F).
     else if (kind == FunctionKind::Normal) {
         // FIXME: Implement MakeConstructor
-        prototype = Object::create(global_object, global_object.object_prototype());
+        prototype = Object::create(realm, global_object.object_prototype());
         prototype->define_direct_property(vm.names.constructor, function, Attribute::Writable | Attribute::Configurable);
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }

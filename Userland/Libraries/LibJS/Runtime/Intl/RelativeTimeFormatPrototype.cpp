@@ -69,12 +69,14 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
 // 17.3.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::resolved_options)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let relativeTimeFormat be the this value.
     // 2. Perform ? RequireInternalSlot(relativeTimeFormat, [[InitializedRelativeTimeFormat]]).
     auto* relative_time_format = TRY(typed_this_object(global_object));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(global_object, global_object.object_prototype());
+    auto* options = Object::create(realm, global_object.object_prototype());
 
     // 4. For each row of Table 15, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

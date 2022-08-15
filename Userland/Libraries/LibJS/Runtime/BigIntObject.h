@@ -15,7 +15,7 @@ class BigIntObject final : public Object {
     JS_OBJECT(BigIntObject, Object);
 
 public:
-    static BigIntObject* create(GlobalObject&, BigInt&);
+    static BigIntObject* create(Realm&, BigInt&);
 
     BigIntObject(BigInt&, Object& prototype);
     virtual ~BigIntObject() override = default;

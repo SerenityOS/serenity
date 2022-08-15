@@ -442,22 +442,23 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
 // 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
 ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 {
+    auto& realm = *global_object.associated_realm();
     VERIFY(!is_empty());
     if (is_number())
-        return NumberObject::create(global_object, as_double());
+        return NumberObject::create(realm, as_double());
 
     switch (m_value.tag) {
     case UNDEFINED_TAG:
     case NULL_TAG:
         return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
     case BOOLEAN_TAG:
-        return BooleanObject::create(global_object, as_bool());
+        return BooleanObject::create(realm, as_bool());
     case STRING_TAG:
-        return StringObject::create(global_object, const_cast<JS::PrimitiveString&>(as_string()), *global_object.string_prototype());
+        return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *global_object.string_prototype());
     case SYMBOL_TAG:
-        return SymbolObject::create(global_object, const_cast<JS::Symbol&>(as_symbol()));
+        return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
     case BIGINT_TAG:
-        return BigIntObject::create(global_object, const_cast<JS::BigInt&>(as_bigint()));
+        return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint()));
     case OBJECT_TAG:
         return &const_cast<Object&>(as_object());
     default:

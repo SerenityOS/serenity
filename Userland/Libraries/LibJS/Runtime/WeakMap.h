@@ -19,7 +19,7 @@ class WeakMap final
     JS_OBJECT(WeakMap, Object);
 
 public:
-    static WeakMap* create(GlobalObject&);
+    static WeakMap* create(Realm&);
 
     explicit WeakMap(Object& prototype);
     virtual ~WeakMap() override = default;

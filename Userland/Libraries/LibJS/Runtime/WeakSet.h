@@ -19,7 +19,7 @@ class WeakSet final
     JS_OBJECT(WeakSet, Object);
 
 public:
-    static WeakSet* create(GlobalObject&);
+    static WeakSet* create(Realm&);
 
     explicit WeakSet(Object& prototype);
     virtual ~WeakSet() override = default;

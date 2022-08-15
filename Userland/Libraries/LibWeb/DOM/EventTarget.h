@@ -75,13 +75,8 @@ private:
     // Spec Note: The order of the entries of event handler map could be arbitrary. It is not observable through any algorithms that operate on the map.
     HashMap<FlyString, HTML::EventHandler> m_event_handler_map;
 
-    enum class IsAttribute {
-        No,
-        Yes,
-    };
-
     Bindings::CallbackType* get_current_value_of_event_handler(FlyString const& name);
-    void activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler, IsAttribute is_attribute);
+    void activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler);
     void deactivate_event_handler(FlyString const& name);
     JS::ThrowCompletionOr<void> process_event_handler_for_event(FlyString const& name, Event& event);
 };

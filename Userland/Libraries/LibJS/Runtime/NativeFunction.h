@@ -20,8 +20,8 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NativeFunction* create(GlobalObject&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NativeFunction* create(GlobalObject&, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>);
+    static NativeFunction* create(Realm&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
+    static NativeFunction* create(Realm&, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>);
 
     NativeFunction(Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object* prototype, Realm& realm);
     NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object& prototype);

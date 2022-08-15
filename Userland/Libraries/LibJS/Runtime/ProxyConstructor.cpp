@@ -17,11 +17,12 @@ namespace JS {
 static ThrowCompletionOr<ProxyObject*> proxy_create(GlobalObject& global_object, Value target, Value handler)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
     if (!target.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
     if (!handler.is_object())
         return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
-    return ProxyObject::create(global_object, target.as_object(), handler.as_object());
+    return ProxyObject::create(realm, target.as_object(), handler.as_object());
 }
 
 ProxyConstructor::ProxyConstructor(Realm& realm)
@@ -56,6 +57,8 @@ ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let p be ? ProxyCreate(target, handler).
     auto* proxy = TRY(proxy_create(global_object, vm.argument(0), vm.argument(1)));
 
@@ -82,10 +85,10 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 
     // 3. Let revoker be CreateBuiltinFunction(revokerClosure, 0, "", « [[RevocableProxy]] »).
     // 4. Set revoker.[[RevocableProxy]] to p.
-    auto* revoker = NativeFunction::create(global_object, move(revoker_closure), 0, "");
+    auto* revoker = NativeFunction::create(realm, move(revoker_closure), 0, "");
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(global_object, global_object.object_prototype());
+    auto* result = Object::create(realm, global_object.object_prototype());
 
     // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
     MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));

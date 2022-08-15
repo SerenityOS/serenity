@@ -14,7 +14,7 @@ class ArrayIterator final : public Object {
     JS_OBJECT(ArrayIterator, Object);
 
 public:
-    static ArrayIterator* create(GlobalObject&, Value array, Object::PropertyKind iteration_kind);
+    static ArrayIterator* create(Realm&, Value array, Object::PropertyKind iteration_kind);
 
     explicit ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~ArrayIterator() override = default;

@@ -433,13 +433,14 @@ ThrowCompletionOr<void> CyclicModule::execute_module(VM&, Optional<PromiseCapabi
 // 16.2.1.5.2.2 ExecuteAsyncModule ( module ), https://tc39.es/ecma262/#sec-execute-async-module
 void CyclicModule::execute_async_module(VM& vm)
 {
+    auto& global_object = realm().global_object();
+    auto& realm = *global_object.associated_realm();
+
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] executing async module {}", filename());
     // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
     VERIFY(m_status == ModuleStatus::Evaluating || m_status == ModuleStatus::EvaluatingAsync);
     // 2. Assert: module.[[HasTLA]] is true.
     VERIFY(m_has_top_level_await);
-
-    auto& global_object = realm().global_object();
 
     // 3. Let capability be ! NewPromiseCapability(%Promise%).
     auto capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
@@ -454,7 +455,7 @@ void CyclicModule::execute_async_module(VM& vm)
     };
 
     // 5. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    auto* on_fulfilled = NativeFunction::create(global_object, move(fulfilled_closure), 0, "");
+    auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
     auto rejected_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
@@ -468,7 +469,7 @@ void CyclicModule::execute_async_module(VM& vm)
     };
 
     // 7. Let onRejected be CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-    auto* on_rejected = NativeFunction::create(global_object, move(rejected_closure), 0, "");
+    auto* on_rejected = NativeFunction::create(realm, move(rejected_closure), 0, "");
 
     VERIFY(is<Promise>(*capability.promise));
 

@@ -18,8 +18,8 @@ class WeakRef final
     JS_OBJECT(WeakRef, Object);
 
 public:
-    static WeakRef* create(GlobalObject&, Object&);
-    static WeakRef* create(GlobalObject&, Symbol&);
+    static WeakRef* create(Realm&, Object&);
+    static WeakRef* create(Realm&, Symbol&);
 
     explicit WeakRef(Object&, Object& prototype);
     explicit WeakRef(Symbol&, Object& prototype);

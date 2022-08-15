@@ -16,9 +16,9 @@ namespace JS {
 
 // 10.3.3 CreateBuiltinFunction ( behaviour, length, name, additionalInternalSlotsList [ , realm [ , prototype [ , prefix ] ] ] ), https://tc39.es/ecma262/#sec-createbuiltinfunction
 // NOTE: This doesn't consider additionalInternalSlotsList, which is rarely used, and can either be implemented using only the `function` lambda, or needs a NativeFunction subclass.
-NativeFunction* NativeFunction::create(GlobalObject& global_object, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> realm, Optional<Object*> prototype, Optional<StringView> const& prefix)
+NativeFunction* NativeFunction::create(Realm& allocating_realm, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> realm, Optional<Object*> prototype, Optional<StringView> const& prefix)
 {
-    auto& vm = global_object.vm();
+    auto& vm = allocating_realm.vm();
 
     // 1. If realm is not present, set realm to the current Realm Record.
     if (!realm.has_value())
@@ -36,7 +36,7 @@ NativeFunction* NativeFunction::create(GlobalObject& global_object, Function<Thr
     // 7. Set func.[[Extensible]] to true.
     // 8. Set func.[[Realm]] to realm.
     // 9. Set func.[[InitialName]] to null.
-    auto* function = global_object.heap().allocate<NativeFunction>(global_object, move(behaviour), prototype.value(), *realm.value());
+    auto* function = allocating_realm.heap().allocate<NativeFunction>(allocating_realm.global_object(), move(behaviour), prototype.value(), *realm.value());
 
     // 10. Perform SetFunctionLength(func, length).
     function->set_function_length(length);
@@ -51,10 +51,9 @@ NativeFunction* NativeFunction::create(GlobalObject& global_object, Function<Thr
     return function;
 }
 
-NativeFunction* NativeFunction::create(GlobalObject& global_object, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> function)
+NativeFunction* NativeFunction::create(Realm& realm, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> function)
 {
-    auto& realm = *global_object.associated_realm();
-    return global_object.heap().allocate<NativeFunction>(global_object, name, move(function), *realm.global_object().function_prototype());
+    return realm.heap().allocate<NativeFunction>(realm.global_object(), name, move(function), *realm.global_object().function_prototype());
 }
 
 NativeFunction::NativeFunction(Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, Object* prototype, Realm& realm)

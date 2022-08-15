@@ -319,12 +319,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
 // 3.3.18 Temporal.PlainDate.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.getisofields
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::get_iso_fields)
 {
+    auto& realm = *global_object.associated_realm();
+
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(global_object, global_object.object_prototype());
+    auto* fields = Object::create(realm, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", temporalDate.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&temporal_date->calendar())));

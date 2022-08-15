@@ -15,7 +15,7 @@ class Date final : public Object {
     JS_OBJECT(Date, Object);
 
 public:
-    static Date* create(GlobalObject&, double date_value);
+    static Date* create(Realm&, double date_value);
     static Date* now(GlobalObject&);
 
     Date(double date_value, Object& prototype);

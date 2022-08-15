@@ -16,7 +16,7 @@ class RegExpStringIterator final : public Object {
     JS_OBJECT(RegExpStringIterator, Object);
 
 public:
-    static RegExpStringIterator* create(GlobalObject&, Object& regexp_object, Utf16String string, bool global, bool unicode);
+    static RegExpStringIterator* create(Realm&, Object& regexp_object, Utf16String string, bool global, bool unicode);
 
     explicit RegExpStringIterator(Object& prototype, Object& regexp_object, Utf16String string, bool global, bool unicode);
     virtual ~RegExpStringIterator() override = default;

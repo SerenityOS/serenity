@@ -20,7 +20,7 @@ void ArgumentsObject::initialize(Realm& realm)
 {
     Base::initialize(realm);
     set_has_parameter_map();
-    m_parameter_map = Object::create(realm.global_object(), nullptr);
+    m_parameter_map = Object::create(realm, nullptr);
 }
 
 void ArgumentsObject::visit_edges(Cell::Visitor& visitor)

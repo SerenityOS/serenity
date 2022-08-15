@@ -431,22 +431,24 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 }
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                             \
-    ThrowCompletionOr<ClassName*> ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)               \
+    ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)                              \
     {                                                                                                                                  \
-        auto* prototype = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::snake_name##_prototype));       \
-        auto* array_buffer = TRY(ArrayBuffer::create(global_object, length * sizeof(UnderlyingBufferDataType)));                       \
-        return global_object.heap().allocate<ClassName>(global_object, *prototype, length, *array_buffer);                             \
+        auto* prototype = TRY(get_prototype_from_constructor(                                                                          \
+            realm.global_object(), new_target, &GlobalObject::snake_name##_prototype));                                                \
+        auto* array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                               \
+        return realm.heap().allocate<ClassName>(realm.global_object(), *prototype, length, *array_buffer);                             \
     }                                                                                                                                  \
                                                                                                                                        \
-    ThrowCompletionOr<ClassName*> ClassName::create(GlobalObject& global_object, u32 length)                                           \
+    ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length)                                                          \
     {                                                                                                                                  \
-        auto* array_buffer = TRY(ArrayBuffer::create(global_object, length * sizeof(UnderlyingBufferDataType)));                       \
-        return create(global_object, length, *array_buffer);                                                                           \
+        auto* array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                               \
+        return create(realm, length, *array_buffer);                                                                                   \
     }                                                                                                                                  \
                                                                                                                                        \
-    ClassName* ClassName::create(GlobalObject& global_object, u32 length, ArrayBuffer& array_buffer)                                   \
+    ClassName* ClassName::create(Realm& realm, u32 length, ArrayBuffer& array_buffer)                                                  \
     {                                                                                                                                  \
-        return global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype(), length, array_buffer); \
+        return realm.heap().allocate<ClassName>(                                                                                       \
+            realm.global_object(), *realm.global_object().snake_name##_prototype(), length, array_buffer); /*                       */ \
     }                                                                                                                                  \
                                                                                                                                        \
     ClassName::ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer)                                                     \
@@ -518,47 +520,50 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                                  \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
+        auto& global_object = this->global_object();                                                                                   \
+        auto& realm = *global_object.associated_realm();                                                                               \
+                                                                                                                                       \
         if (vm.argument_count() == 0)                                                                                                  \
-            return TRY(ClassName::create(global_object(), 0, new_target));                                                             \
+            return TRY(ClassName::create(realm, 0, new_target));                                                                       \
                                                                                                                                        \
         auto first_argument = vm.argument(0);                                                                                          \
         if (first_argument.is_object()) {                                                                                              \
-            auto* typed_array = TRY(ClassName::create(global_object(), 0, new_target));                                                \
+            auto* typed_array = TRY(ClassName::create(realm, 0, new_target));                                                          \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
-                TRY(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));                          \
+                TRY(initialize_typed_array_from_typed_array(global_object, *typed_array, arg_typed_array));                            \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
-                TRY(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer,                              \
+                TRY(initialize_typed_array_from_array_buffer(global_object, *typed_array, array_buffer,                                \
                     vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
-                auto iterator = TRY(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));                     \
+                auto iterator = TRY(first_argument.get_method(global_object, *vm.well_known_symbol_iterator()));                       \
                 if (iterator) {                                                                                                        \
-                    auto values = TRY(iterable_to_list(global_object(), first_argument, iterator));                                    \
-                    TRY(initialize_typed_array_from_list(global_object(), *typed_array, values));                                      \
+                    auto values = TRY(iterable_to_list(global_object, first_argument, iterator));                                      \
+                    TRY(initialize_typed_array_from_list(global_object, *typed_array, values));                                        \
                 } else {                                                                                                               \
-                    TRY(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object()));            \
+                    TRY(initialize_typed_array_from_array_like(global_object, *typed_array, first_argument.as_object()));              \
                 }                                                                                                                      \
             }                                                                                                                          \
             return typed_array;                                                                                                        \
         }                                                                                                                              \
                                                                                                                                        \
-        auto array_length_or_error = first_argument.to_index(global_object());                                                         \
+        auto array_length_or_error = first_argument.to_index(global_object);                                                           \
         if (array_length_or_error.is_error()) {                                                                                        \
             auto error = array_length_or_error.release_error();                                                                        \
             if (error.value()->is_object() && is<RangeError>(error.value()->as_object())) {                                            \
                 /* Re-throw more specific RangeError */                                                                                \
-                return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                      \
+                return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                        \
             }                                                                                                                          \
             return error;                                                                                                              \
         }                                                                                                                              \
         auto array_length = array_length_or_error.release_value();                                                                     \
         if (array_length > NumericLimits<i32>::max() / sizeof(Type))                                                                   \
-            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                          \
+            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                            \
         /* FIXME: What is the best/correct behavior here? */                                                                           \
         if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                                   \
-            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                          \
-        return TRY(ClassName::create(global_object(), array_length, new_target));                                                      \
+            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                            \
+        return TRY(ClassName::create(realm, array_length, new_target));                                                                \
     }
 
 #undef __JS_ENUMERATE

@@ -70,6 +70,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto on_finally = vm.argument(0);
 
     // 1. Let promise be the this value.
@@ -100,6 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     else {
         // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
         auto then_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+            auto& realm = *global_object.associated_realm();
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
@@ -117,17 +120,18 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             };
 
             // iv. Let valueThunk be CreateBuiltinFunction(returnValue, 0, "", « »).
-            auto* value_thunk = NativeFunction::create(global_object, move(return_value), 0, "");
+            auto* value_thunk = NativeFunction::create(realm, move(return_value), 0, "");
 
             // v. Return ? Invoke(promise, "then", « valueThunk »).
             return TRY(Value(promise).invoke(global_object, vm.names.then, value_thunk));
         };
 
         // b. Let thenFinally be CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
-        then_finally = NativeFunction::create(global_object, move(then_finally_closure), 1, "");
+        then_finally = NativeFunction::create(realm, move(then_finally_closure), 1, "");
 
         // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
         auto catch_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+            auto& realm = *global_object.associated_realm();
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
@@ -145,14 +149,14 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             };
 
             // iv. Let thrower be CreateBuiltinFunction(throwReason, 0, "", « »).
-            auto* thrower = NativeFunction::create(global_object, move(throw_reason), 0, "");
+            auto* thrower = NativeFunction::create(realm, move(throw_reason), 0, "");
 
             // v. Return ? Invoke(promise, "then", « thrower »).
             return TRY(Value(promise).invoke(global_object, vm.names.then, thrower));
         };
 
         // d. Let catchFinally be CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
-        catch_finally = NativeFunction::create(global_object, move(catch_finally_closure), 1, "");
+        catch_finally = NativeFunction::create(realm, move(catch_finally_closure), 1, "");
     }
 
     // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).

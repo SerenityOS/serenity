@@ -74,19 +74,19 @@ VM::VM(OwnPtr<CustomData> custom_data)
     host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability promise_capability) {
         // By default, we throw on dynamic imports this is to prevent arbitrary file access by scripts.
         VERIFY(current_realm());
-        auto& global_object = current_realm()->global_object();
-        auto* promise = Promise::create(global_object);
+        auto& realm = *current_realm();
+        auto* promise = Promise::create(realm);
 
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
         // vm.enable_default_host_import_module_dynamically_hook().
-        promise->reject(Error::create(global_object, ErrorType::DynamicImportNotAllowed.message()));
+        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()));
 
         promise->perform_then(
-            NativeFunction::create(global_object, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
+            NativeFunction::create(realm, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
                 VERIFY_NOT_REACHED();
             }),
-            NativeFunction::create(global_object, "", [reject = make_handle(promise_capability.reject)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+            NativeFunction::create(realm, "", [reject = make_handle(promise_capability.reject)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
                 auto error = vm.argument(0);
 
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
@@ -314,6 +314,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object)
 {
+    auto& realm = *global_object.associated_realm();
     auto* object = TRY(value.to_object(global_object));
 
     HashTable<PropertyKey> seen_names;
@@ -331,7 +332,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 VERIFY_NOT_REACHED();
             }
 
-            auto* rest_object = Object::create(global_object, global_object.object_prototype());
+            auto* rest_object = Object::create(realm, global_object.object_prototype());
             VERIFY(rest_object);
 
             TRY(rest_object->copy_data_properties(object, seen_names, global_object));
@@ -406,6 +407,8 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
 ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object)
 {
+    auto& realm = *global_object.associated_realm();
+
     // FIXME: this method is nearly identical to destructuring assignment!
     for (size_t i = 0; i < binding.entries.size(); i++) {
         auto& entry = binding.entries[i];
@@ -427,7 +430,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             VERIFY(i == binding.entries.size() - 1);
 
             // 2. Let A be ! ArrayCreate(0).
-            auto* array = MUST(Array::create(global_object, 0));
+            auto* array = MUST(Array::create(realm, 0));
 
             // 3. Let n be 0.
             // 4. Repeat,
@@ -955,7 +958,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 // 16.2.1.8 HostImportModuleDynamically ( referencingScriptOrModule, specifier, promiseCapability ), https://tc39.es/ecma262/#sec-hostimportmoduledynamically
 void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability)
 {
-    auto& global_object = current_realm()->global_object();
+    auto& realm = *current_realm();
 
     // Success path:
     //  - At some future time, the host environment must perform FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
@@ -969,7 +972,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
     //    FinishDynamicImport(referencingScriptOrModule, moduleRequest, promiseCapability, promise),
     //    where promise is a Promise rejected with an error representing the cause of failure.
 
-    auto* promise = Promise::create(global_object);
+    auto* promise = Promise::create(realm);
 
     ScopeGuard finish_dynamic_import = [&] {
         host_finish_dynamic_import(referencing_script_or_module, move(module_request), promise_capability, promise);
@@ -983,7 +986,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(global_object, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
+            promise->reject(InternalError::create(realm, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
             return;
         }
     }
@@ -1015,6 +1018,8 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] finish_dynamic_import on {}", module_request.module_specifier);
 
+    auto& realm = *current_realm();
+
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
     auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
@@ -1045,7 +1050,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     };
 
     // 2. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    auto* on_fulfilled = NativeFunction::create(current_realm()->global_object(), move(fulfilled_closure), 0, "");
+    auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
     auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
@@ -1059,7 +1064,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     };
 
     // 4. Let onRejected be CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-    auto* on_rejected = NativeFunction::create(current_realm()->global_object(), move(rejected_closure), 0, "");
+    auto* on_rejected = NativeFunction::create(realm, move(rejected_closure), 0, "");
 
     // 5. Perform PerformPromiseThen(innerPromise, onFulfilled, onRejected).
     inner_promise->perform_then(on_fulfilled, on_rejected, {});

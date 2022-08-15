@@ -14,6 +14,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
+    auto& realm = *global_object.associated_realm();
     auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
@@ -23,7 +24,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
     if (file_size.is_error())
         return vm.throw_completion<JS::TypeError>(global_object, strerror(file_size.error().code()));
 
-    auto* array = TRY(JS::Uint8Array::create(global_object, file_size.value()));
+    auto* array = TRY(JS::Uint8Array::create(realm, file_size.value()));
 
     auto read = file.value()->read(array->data());
     if (read.is_error())
@@ -46,20 +47,20 @@ public:
     Wasm::Module& module() { return *m_module; }
     Wasm::ModuleInstance& module_instance() { return *m_module_instance; }
 
-    static JS::ThrowCompletionOr<WebAssemblyModule*> create(JS::GlobalObject& global_object, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
+    static JS::ThrowCompletionOr<WebAssemblyModule*> create(JS::Realm& realm, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
     {
-        auto& vm = global_object.vm();
-        auto* instance = global_object.heap().allocate<WebAssemblyModule>(global_object, *global_object.object_prototype());
+        auto& vm = realm.vm();
+        auto* instance = realm.heap().allocate<WebAssemblyModule>(realm.global_object(), *realm.global_object().object_prototype());
         instance->m_module = move(module);
         Wasm::Linker linker(*instance->m_module);
         linker.link(imports);
         linker.link(spec_test_namespace());
         auto link_result = linker.finish();
         if (link_result.is_error())
-            return vm.throw_completion<JS::TypeError>(global_object, "Link failed");
+            return vm.throw_completion<JS::TypeError>(realm.global_object(), "Link failed");
         auto result = machine().instantiate(*instance->m_module, link_result.release_value());
         if (result.is_error())
-            return vm.throw_completion<JS::TypeError>(global_object, result.release_error().error);
+            return vm.throw_completion<JS::TypeError>(realm.global_object(), result.release_error().error);
         instance->m_module_instance = result.release_value();
         return instance;
     }
@@ -99,6 +100,7 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
+    auto& realm = *global_object.associated_realm();
     auto* object = TRY(vm.argument(0).to_object(global_object));
     if (!is<JS::Uint8Array>(object))
         return vm.throw_completion<JS::TypeError>(global_object, "Expected a Uint8Array argument to parse_webassembly_module");
@@ -132,7 +134,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
         }
     }
 
-    return JS::Value(TRY(WebAssemblyModule::create(global_object, result.release_value(), imports)));
+    return JS::Value(TRY(WebAssemblyModule::create(realm, result.release_value(), imports)));
 }
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)

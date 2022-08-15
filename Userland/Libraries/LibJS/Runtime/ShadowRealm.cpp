@@ -205,6 +205,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
 ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
 
@@ -261,14 +262,14 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
 
     // 10. Let onFulfilled be CreateBuiltinFunction(steps, 1, "", « [[ExportNameString]] », callerRealm).
     // 11. Set onFulfilled.[[ExportNameString]] to exportNameString.
-    auto* on_fulfilled = NativeFunction::create(global_object, move(steps), 1, "", &caller_realm);
+    auto* on_fulfilled = NativeFunction::create(realm, move(steps), 1, "", &caller_realm);
 
     // 12. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
-    auto* throw_type_error = NativeFunction::create(global_object, {}, [](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+    auto* throw_type_error = NativeFunction::create(realm, {}, [](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         return vm.template throw_completion<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
     });
 
@@ -280,6 +281,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
 ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& caller_realm, Value value)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If Type(value) is Object, then
     if (value.is_object()) {
@@ -288,7 +290,7 @@ ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& c
             return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmWrappedValueNonFunctionObject, value);
 
         // b. Return ? WrappedFunctionCreate(callerRealm, value).
-        return TRY(WrappedFunction::create(global_object, caller_realm, value.as_function()));
+        return TRY(WrappedFunction::create(realm, caller_realm, value.as_function()));
     }
 
     // 2. Return value.

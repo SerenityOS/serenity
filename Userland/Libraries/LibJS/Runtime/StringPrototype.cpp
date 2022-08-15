@@ -650,6 +650,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 // 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
 
     auto separator_argument = vm.argument(0);
@@ -663,7 +665,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 
     auto string = TRY(object.to_utf16_string(global_object));
 
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(realm, 0));
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
@@ -771,9 +773,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 // 22.1.3.34 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto this_object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
     auto string = TRY(this_object.to_string(global_object));
-    return StringIterator::create(global_object, string);
+    return StringIterator::create(realm, string);
 }
 
 // 22.1.3.12 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match

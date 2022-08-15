@@ -15,7 +15,7 @@ class SymbolObject : public Object {
     JS_OBJECT(SymbolObject, Object);
 
 public:
-    static SymbolObject* create(GlobalObject&, Symbol&);
+    static SymbolObject* create(Realm&, Symbol&);
 
     SymbolObject(Symbol&, Object& prototype);
     virtual ~SymbolObject() override = default;

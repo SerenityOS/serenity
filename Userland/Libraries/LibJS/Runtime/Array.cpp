@@ -17,22 +17,22 @@
 namespace JS {
 
 // 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
-ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, u64 length, Object* prototype)
+ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* prototype)
 {
-    auto& vm = global_object.vm();
+    auto& vm = realm.vm();
 
     // 1. If length > 2^32 - 1, throw a RangeError exception.
     if (length > NumericLimits<u32>::max())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
+        return vm.throw_completion<RangeError>(realm.global_object(), ErrorType::InvalidLength, "array");
 
     // 2. If proto is not present, set proto to %Array.prototype%.
     if (!prototype)
-        prototype = global_object.array_prototype();
+        prototype = realm.global_object().array_prototype();
 
     // 3. Let A be MakeBasicObject(« [[Prototype]], [[Extensible]] »).
     // 4. Set A.[[Prototype]] to proto.
     // 5. Set A.[[DefineOwnProperty]] as specified in 10.4.2.1.
-    auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
+    auto* array = realm.heap().allocate<Array>(realm.global_object(), *prototype);
 
     // 6. Perform ! OrdinaryDefineOwnProperty(A, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));
@@ -42,10 +42,10 @@ ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, u64 length,
 }
 
 // 7.3.18 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
-Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elements)
+Array* Array::create_from(Realm& realm, Vector<Value> const& elements)
 {
     // 1. Let array be ! ArrayCreate(0).
-    auto* array = MUST(Array::create(global_object, 0));
+    auto* array = MUST(Array::create(realm, 0));
 
     // 2. Let n be 0.
     // 3. For each element e of elements, do

@@ -36,8 +36,8 @@ public:
         | regex::ECMAScriptFlags::BrowserExtended
     };
 
-    static RegExpObject* create(GlobalObject&);
-    static RegExpObject* create(GlobalObject&, Regex<ECMA262> regex, String pattern, String flags);
+    static RegExpObject* create(Realm&);
+    static RegExpObject* create(Realm&, Regex<ECMA262> regex, String pattern, String flags);
 
     RegExpObject(Object& prototype);
     RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);

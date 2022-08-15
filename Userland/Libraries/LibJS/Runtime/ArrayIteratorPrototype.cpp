@@ -34,6 +34,8 @@ void ArrayIteratorPrototype::initialize(Realm& realm)
 // FIXME: This seems to be CreateArrayIterator (https://tc39.es/ecma262/#sec-createarrayiterator) instead of %ArrayIteratorPrototype%.next.
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto* iterator = TRY(typed_this_value(global_object));
     auto target_array = iterator->array();
     if (target_array.is_undefined())
@@ -71,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, value, false);
 
-    return create_iterator_result_object(global_object, Array::create_from(global_object, { Value(static_cast<i32>(index)), value }), false);
+    return create_iterator_result_object(global_object, Array::create_from(realm, { Value(static_cast<i32>(index)), value }), false);
 }
 
 }

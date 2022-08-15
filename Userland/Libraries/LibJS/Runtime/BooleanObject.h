@@ -14,7 +14,7 @@ class BooleanObject : public Object {
     JS_OBJECT(BooleanObject, Object);
 
 public:
-    static BooleanObject* create(GlobalObject&, bool);
+    static BooleanObject* create(Realm&, bool);
 
     BooleanObject(bool, Object& prototype);
     virtual ~BooleanObject() override = default;

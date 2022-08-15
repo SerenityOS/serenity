@@ -299,7 +299,6 @@ JS::VM& main_thread_vm()
 // https://dom.spec.whatwg.org/#queue-a-mutation-observer-compound-microtask
 void queue_mutation_observer_microtask(DOM::Document& document)
 {
-    // FIXME: Is this the correct VM?
     auto& vm = main_thread_vm();
     auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());
 
@@ -345,8 +344,9 @@ void queue_mutation_observer_microtask(DOM::Document& document)
             if (!records.is_empty()) {
                 auto& callback = mutation_observer.callback();
                 auto& global_object = callback.callback_context.global_object();
+                auto& realm = callback.callback_context.realm();
 
-                auto* wrapped_records = MUST(JS::Array::create(global_object, 0));
+                auto* wrapped_records = MUST(JS::Array::create(realm, 0));
                 for (size_t i = 0; i < records.size(); ++i) {
                     auto& record = records.at(i);
                     auto* wrapped_record = Bindings::wrap(global_object, record);

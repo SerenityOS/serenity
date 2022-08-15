@@ -12,20 +12,19 @@
 
 namespace JS {
 
-ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(GlobalObject& global_object, GeneratorObject* generator_object)
+ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
 {
-    auto& realm = *global_object.associated_realm();
-    auto wrapper = global_object.heap().allocate<AsyncFunctionDriverWrapper>(global_object, realm, generator_object);
-    return wrapper->react_to_async_task_completion(global_object.vm(), global_object, js_undefined(), true);
+    auto wrapper = realm.heap().allocate<AsyncFunctionDriverWrapper>(realm.global_object(), realm, generator_object);
+    return wrapper->react_to_async_task_completion(realm.vm(), realm.global_object(), js_undefined(), true);
 }
 
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, GeneratorObject* generator_object)
     : Promise(*realm.global_object().promise_prototype())
     , m_generator_object(generator_object)
-    , m_on_fulfillment(NativeFunction::create(realm.global_object(), "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
+    , m_on_fulfillment(NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
         return react_to_async_task_completion(vm, global_object, vm.argument(0), true);
     }))
-    , m_on_rejection(NativeFunction::create(realm.global_object(), "async.on_rejection"sv, [this](VM& vm, GlobalObject& global_object) {
+    , m_on_rejection(NativeFunction::create(realm, "async.on_rejection"sv, [this](VM& vm, GlobalObject& global_object) {
         return react_to_async_task_completion(vm, global_object, vm.argument(0), false);
     }))
 {
@@ -33,13 +32,15 @@ AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, GeneratorOb
 
 ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_completion(VM& vm, GlobalObject& global_object, Value value, bool is_successful)
 {
+    auto& realm = *global_object.associated_realm();
+
     auto generator_result = is_successful
         ? m_generator_object->next_impl(vm, global_object, value, {})
         : m_generator_object->next_impl(vm, global_object, {}, value);
 
     if (generator_result.is_throw_completion()) {
         VERIFY(generator_result.throw_completion().type() == Completion::Type::Throw);
-        auto promise = Promise::create(global_object);
+        auto promise = Promise::create(realm);
         promise->reject(*generator_result.throw_completion().value());
         return promise;
     }
@@ -49,7 +50,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
 
     auto promise_value = TRY(result.get(global_object, vm.names.value));
     if (!promise_value.is_object() || !is<Promise>(promise_value.as_object())) {
-        auto promise = Promise::create(global_object);
+        auto promise = Promise::create(realm);
         promise->fulfill(promise_value);
         return promise;
     }

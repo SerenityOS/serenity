@@ -11,9 +11,9 @@
 
 namespace JS {
 
-PromiseResolvingFunction* PromiseResolvingFunction::create(GlobalObject& global_object, Promise& promise, AlreadyResolved& already_resolved, FunctionType function)
+PromiseResolvingFunction* PromiseResolvingFunction::create(Realm& realm, Promise& promise, AlreadyResolved& already_resolved, FunctionType function)
 {
-    return global_object.heap().allocate<PromiseResolvingFunction>(global_object, promise, already_resolved, move(function), *global_object.function_prototype());
+    return realm.heap().allocate<PromiseResolvingFunction>(realm.global_object(), promise, already_resolved, move(function), *realm.global_object().function_prototype());
 }
 
 PromiseResolvingFunction::PromiseResolvingFunction(Promise& promise, AlreadyResolved& already_resolved, FunctionType native_function, Object& prototype)

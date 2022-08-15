@@ -557,7 +557,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // anything of this sort. Both Gecko and Blink do it, however, so I'm sure it's correct.
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !is<JS::Promise>(@js_name@@js_suffix@.as_object())) {
-        auto* new_promise = JS::Promise::create(global_object);
+        auto* new_promise = JS::Promise::create(realm);
         new_promise->fulfill(@js_name@@js_suffix@);
         @js_name@@js_suffix@ = new_promise;
     }
@@ -1444,7 +1444,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto& sequence_generic_type = verify_cast<IDL::ParameterizedType>(type);
 
         scoped_generator.append(R"~~~(
-    auto* new_array@recursion_depth@ = MUST(JS::Array::create(global_object, 0));
+    auto* new_array@recursion_depth@ = MUST(JS::Array::create(realm, 0));
 )~~~");
 
         if (!type.nullable) {
@@ -1572,7 +1572,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto dictionary_generator = scoped_generator.fork();
 
         dictionary_generator.append(R"~~~(
-    auto* dictionary_object@recursion_depth@ = JS::Object::create(global_object, global_object.object_prototype());
+    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, global_object.object_prototype());
 )~~~");
 
         auto* current_dictionary = &interface.dictionaries.find(type.name)->value;
@@ -1664,6 +1664,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffix@)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
     if (is_static_function == StaticFunction::No) {
@@ -1748,6 +1749,7 @@ static void generate_overload_arbiter(SourceGenerator& generator, auto const& ov
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
     auto minimum_argument_count = get_shortest_function_length(overload_set.value);
@@ -1835,7 +1837,7 @@ namespace Web::Bindings {
 class @wrapper_class@ : public @wrapper_base_class@ {
     JS_OBJECT(@name@, @wrapper_base_class@);
 public:
-    static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
+    static @wrapper_class@* create(JS::Realm&, @fully_qualified_name@&);
 
     @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
     virtual void initialize(JS::Realm&) override;
@@ -2002,10 +2004,9 @@ using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
-@wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+@wrapper_class@* @wrapper_class@::create(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    auto& realm = *global_object.associated_realm();
-    return global_object.heap().allocate<@wrapper_class@>(global_object, realm, impl);
+    return realm.heap().allocate<@wrapper_class@>(realm.global_object(), realm, impl);
 }
 
 )~~~");
@@ -2164,6 +2165,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
 
             get_own_property_generator.append(R"~~~(
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
             // 1. If O supports indexed properties...
@@ -2432,6 +2434,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
 JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
         // The step 1 if statement will be empty if the interface has no setters, so don't generate the if statement if there's no setters.
@@ -2491,6 +2494,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 {
     [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
         // 1. If O supports indexed properties...
@@ -2610,6 +2614,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const& property_name)
 {
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
         // 1. If O supports indexed properties...
@@ -2961,6 +2966,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
         generator.append(R"~~~(
     [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
 
     auto& window = static_cast<WindowObject&>(global_object);
 )~~~");
@@ -3247,7 +3253,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
     if (interface.has_unscopable_member) {
         generator.append(R"~~~(
-    auto* unscopable_object = JS::Object::create(realm.global_object(), nullptr);
+    auto* unscopable_object = JS::Object::create(realm, nullptr);
 )~~~");
     }
 
@@ -3413,6 +3419,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
         attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 )~~~");
 
@@ -3442,6 +3449,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
     auto value = vm.argument(0);
@@ -3493,6 +3501,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
         stringifier_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
 )~~~");
@@ -3524,6 +3533,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 {
+    [[maybe_unused]] auto& realm = *global_object.associated_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
     auto callback = vm.argument(0);
@@ -3586,7 +3596,7 @@ namespace Web::Bindings {
 class @wrapper_class@ : public Wrapper {
     JS_OBJECT(@name@, Wrapper);
 public:
-    static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
+    static @wrapper_class@* create(JS::Realm&, @fully_qualified_name@&);
 
     @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
     virtual void initialize(JS::Realm&) override;
@@ -3658,10 +3668,9 @@ using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
-@wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+@wrapper_class@* @wrapper_class@::create(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    auto& realm = *global_object.associated_realm();
-    return global_object.heap().allocate<@wrapper_class@>(global_object, realm, impl);
+    return realm.heap().allocate<@wrapper_class@>(realm.global_object(), realm, impl);
 }
 
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)

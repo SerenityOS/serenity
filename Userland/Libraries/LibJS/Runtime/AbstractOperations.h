@@ -133,8 +133,9 @@ ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, 
 template<typename T, typename... Args>
 ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
 {
+    auto& realm = *global_object.associated_realm();
     auto* prototype = TRY(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
-    return global_object.heap().allocate<T>(global_object, forward<Args>(args)..., *prototype);
+    return realm.heap().allocate<T>(realm.global_object(), forward<Args>(args)..., *prototype);
 }
 
 // 14.1 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists

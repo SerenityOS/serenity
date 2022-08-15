@@ -67,6 +67,7 @@ StringView DateTimeFormat::style_to_string(Style style)
 ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired required, OptionDefaults defaults)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. If options is undefined, let options be null; otherwise let options be ? ToObject(options).
     Object* options = nullptr;
@@ -74,7 +75,7 @@ ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Val
         options = TRY(options_value.to_object(global_object));
 
     // 2. Let options be OrdinaryObjectCreate(options).
-    options = Object::create(global_object, options);
+    options = Object::create(realm, options);
 
     // 3. Let needDefaults be true.
     bool needs_defaults = true;
@@ -532,6 +533,7 @@ static Optional<StringView> resolve_day_period(StringView locale, StringView cal
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let x be TimeClip(x).
     time = time_clip(time);
@@ -550,7 +552,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     };
 
     // 4. Let nfOptions be OrdinaryObjectCreate(null).
-    auto* number_format_options = Object::create(global_object, nullptr);
+    auto* number_format_options = Object::create(realm, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(nfOptions, "useGrouping", false).
     MUST(number_format_options->create_data_property_or_throw(vm.names.useGrouping, Value(false)));
@@ -559,7 +561,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     auto* number_format = TRY(construct_number_format(number_format_options));
 
     // 7. Let nf2Options be OrdinaryObjectCreate(null).
-    auto* number_format_options2 = Object::create(global_object, nullptr);
+    auto* number_format_options2 = Object::create(realm, nullptr);
 
     // 8. Perform ! CreateDataPropertyOrThrow(nf2Options, "minimumIntegerDigits", 2).
     MUST(number_format_options2->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(2)));
@@ -579,7 +581,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
         fractional_second_digits = date_time_format.fractional_second_digits();
 
         // a. Let nf3Options be OrdinaryObjectCreate(null).
-        auto* number_format_options3 = Object::create(global_object, nullptr);
+        auto* number_format_options3 = Object::create(realm, nullptr);
 
         // b. Perform ! CreateDataPropertyOrThrow(nf3Options, "minimumIntegerDigits", fractionalSecondDigits).
         MUST(number_format_options3->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(*fractional_second_digits)));
@@ -848,12 +850,13 @@ ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTime
 ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double time)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
     auto parts = TRY(partition_date_time_pattern(global_object, date_time_format, time));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(global_object, 0));
+    auto* result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -861,7 +864,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object,
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(global_object, global_object.object_prototype());
+        auto* object = Object::create(realm, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
@@ -1164,12 +1167,13 @@ ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, Da
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
     auto parts = TRY(partition_date_time_range_pattern(global_object, date_time_format, start, end));
 
     // 2. Let result be ! ArrayCreate(0).
-    auto* result = MUST(Array::create(global_object, 0));
+    auto* result = MUST(Array::create(realm, 0));
 
     // 3. Let n be 0.
     size_t n = 0;
@@ -1177,7 +1181,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_o
     // 4. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%ObjectPrototype%).
-        auto* object = Object::create(global_object, global_object.object_prototype());
+        auto* object = Object::create(realm, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));

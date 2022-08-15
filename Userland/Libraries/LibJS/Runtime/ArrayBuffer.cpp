@@ -11,23 +11,23 @@
 
 namespace JS {
 
-ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(GlobalObject& global_object, size_t byte_length)
+ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(Realm& realm, size_t byte_length)
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);
     if (buffer.is_error())
-        return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
+        return realm.vm().throw_completion<RangeError>(realm.global_object(), ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    return global_object.heap().allocate<ArrayBuffer>(global_object, buffer.release_value(), *global_object.array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), buffer.release_value(), *realm.global_object().array_buffer_prototype());
 }
 
-ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer buffer)
+ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
 {
-    return global_object.heap().allocate<ArrayBuffer>(global_object, move(buffer), *global_object.array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), move(buffer), *realm.global_object().array_buffer_prototype());
 }
 
-ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer* buffer)
+ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 {
-    return global_object.heap().allocate<ArrayBuffer>(global_object, buffer, *global_object.array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), buffer, *realm.global_object().array_buffer_prototype());
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
