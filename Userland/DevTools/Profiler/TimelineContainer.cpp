@@ -24,7 +24,7 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     update_widget_positions();
 
     int initial_height = min(300, timeline_view.height() + 16 + frame_thickness() * 2);
-    set_fixed_height(initial_height);
+    set_preferred_height(initial_height);
 
     m_timeline_view->on_scale_change = [this] {
         update_widget_sizes();
