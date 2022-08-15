@@ -132,7 +132,8 @@ FontDatabase::FontDatabase()
         auto path = dir_iterator.next_full_path();
 
         if (path.ends_with(".font"sv)) {
-            if (auto font = Gfx::BitmapFont::load_from_file(path)) {
+            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
                 m_private->full_name_to_font_map.set(font->qualified_name(), *font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
