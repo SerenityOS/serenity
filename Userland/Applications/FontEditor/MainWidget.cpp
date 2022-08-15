@@ -583,6 +583,8 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
     if (m_edited_font == edited_font)
         return {};
 
+    TRY(m_glyph_map_widget->set_font(*edited_font));
+
     auto selection = m_glyph_map_widget->selection().normalized();
     m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font, *m_glyph_map_widget));
     m_undo_stack->clear();
@@ -593,7 +595,6 @@ ErrorOr<void> MainWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>
     if (m_preview_label)
         m_preview_label->set_font(*m_edited_font);
 
-    m_glyph_map_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
 

@@ -166,7 +166,8 @@ void CharacterMapWidget::initialize_menubar(GUI::Window& window)
 
 void CharacterMapWidget::did_change_font()
 {
-    m_glyph_map->set_font(font());
+    // No need to track glyph modifications by cloning
+    m_glyph_map->GUI::AbstractScrollableWidget::set_font(font());
     m_font_name_label->set_text(font().human_readable_name());
     m_output_box->set_font(font());
 }
