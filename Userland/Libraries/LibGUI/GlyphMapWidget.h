@@ -21,7 +21,7 @@ class GlyphMapWidget final : public AbstractScrollableWidget {
 public:
     virtual ~GlyphMapWidget() override = default;
 
-    void set_font(Gfx::Font const&);
+    ErrorOr<void> set_font(Gfx::Font const&);
 
     class Selection {
     public:

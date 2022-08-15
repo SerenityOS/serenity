@@ -456,11 +456,12 @@ bool GlyphMapWidget::glyph_is_modified(u32 glyph)
     return m_modified_glyphs.contains(glyph);
 }
 
-void GlyphMapWidget::set_font(Gfx::Font const& font)
+ErrorOr<void> GlyphMapWidget::set_font(Gfx::Font const& font)
 {
-    AbstractScrollableWidget::set_font(font);
-    m_original_font = font.clone();
+    m_original_font = TRY(font.try_clone());
     m_modified_glyphs.clear();
+    AbstractScrollableWidget::set_font(font);
+    return {};
 }
 
 }
