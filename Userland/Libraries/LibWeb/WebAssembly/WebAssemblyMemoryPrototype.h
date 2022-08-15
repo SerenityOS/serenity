@@ -20,7 +20,7 @@ class WebAssemblyMemoryPrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyMemoryPrototype(JS::GlobalObject& global_object)
-        : JS::Object(global_object)
+        : JS::Object(*global_object.object_prototype())
     {
     }
 

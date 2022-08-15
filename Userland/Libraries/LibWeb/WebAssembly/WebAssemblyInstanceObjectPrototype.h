@@ -18,7 +18,7 @@ class WebAssemblyInstancePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyInstancePrototype(JS::GlobalObject& global_object)
-        : Object(global_object)
+        : JS::Object(*global_object.object_prototype())
     {
     }
 
