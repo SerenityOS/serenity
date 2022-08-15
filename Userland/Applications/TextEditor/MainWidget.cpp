@@ -102,11 +102,11 @@ MainWidget::MainWidget()
     m_wrap_around_checkbox->set_checked(true);
 
     m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
-        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResutls::Yes);
+        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResults::Yes);
     });
 
     m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
-        find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResutls::Yes);
+        find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResults::Yes);
     });
 
     m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
@@ -174,7 +174,7 @@ MainWidget::MainWidget()
 
     m_find_textbox->on_change = [this] {
         m_editor->reset_search_results();
-        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResutls::No);
+        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResults::No);
     };
 
     m_replace_button = *find_descendant_of_type_named<GUI::Button>("replace_button");
@@ -848,7 +848,7 @@ void MainWidget::update_statusbar()
     m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
 }
 
-void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResutls show_message)
+void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResults show_message)
 {
     auto needle = m_find_textbox->text();
     if (needle.is_empty())
@@ -860,7 +860,7 @@ void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessa
         m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No,
         m_use_regex, m_match_case);
 
-    if (!result.is_valid() && show_message == ShowMessageIfNoResutls::Yes) {
+    if (!result.is_valid() && show_message == ShowMessageIfNoResults::Yes) {
         GUI::MessageBox::show(window(),
             String::formatted("Not found: \"{}\"", needle),
             "Not found"sv,
