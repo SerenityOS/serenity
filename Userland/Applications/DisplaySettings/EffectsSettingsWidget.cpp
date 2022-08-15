@@ -68,6 +68,12 @@ EffectsSettingsWidget::EffectsSettingsWidget()
         m_system_effects.effects().at(Effects::SplitterKnurls) = checked;
         set_modified(true);
     };
+    auto& tooltips = *find_descendant_of_type_named<GUI::CheckBox>("tooltips_checkbox");
+    tooltips.set_checked(m_system_effects.tooltips());
+    tooltips.on_checked = [this](bool checked) {
+        m_system_effects.effects().at(Effects::Tooltips) = checked;
+        set_modified(true);
+    };
     auto& menu_shadow = *find_descendant_of_type_named<GUI::CheckBox>("menu_shadow_checkbox");
     menu_shadow.set_checked(m_system_effects.menu_shadow());
     menu_shadow.on_checked = [this](bool checked) {
@@ -98,6 +104,7 @@ ErrorOr<void> EffectsSettingsWidget::load_settings()
         ws_config->read_bool_entry("Effects", "SmoothScrolling", true),
         ws_config->read_bool_entry("Effects", "TabAccents", true),
         ws_config->read_bool_entry("Effects", "SplitterKnurls", true),
+        ws_config->read_bool_entry("Effects", "Tooltips", true),
         ws_config->read_bool_entry("Effects", "MenuShadow", true),
         ws_config->read_bool_entry("Effects", "WindowShadow", true),
         ws_config->read_bool_entry("Effects", "TooltipShadow", true),

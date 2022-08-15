@@ -96,6 +96,11 @@
                     text: "Show knurls on splitters"
                 }
 
+                @GUI::CheckBox {
+                    name: "tooltips_checkbox"
+                    text: "Show tooltips"
+                }
+
                 @GUI::Widget {
                     fixed_height: 4
                 }

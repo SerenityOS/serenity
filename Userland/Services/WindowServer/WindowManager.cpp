@@ -2354,6 +2354,7 @@ void WindowManager::apply_system_effects(Vector<bool> effects, ShowGeometry geom
     m_config->write_bool_entry("Effects", "SmoothScrolling", m_system_effects.smooth_scrolling());
     m_config->write_bool_entry("Effects", "TabAccents", m_system_effects.tab_accents());
     m_config->write_bool_entry("Effects", "SplitterKnurls", m_system_effects.splitter_knurls());
+    m_config->write_bool_entry("Effects", "Tooltips", m_system_effects.tooltips());
     m_config->write_bool_entry("Effects", "MenuShadow", m_system_effects.menu_shadow());
     m_config->write_bool_entry("Effects", "WindowShadow", m_system_effects.window_shadow());
     m_config->write_bool_entry("Effects", "TooltipShadow", m_system_effects.tooltip_shadow());
@@ -2370,6 +2371,7 @@ void WindowManager::load_system_effects()
         m_config->read_bool_entry("Effects", "SmoothScrolling", true),
         m_config->read_bool_entry("Effects", "TabAccents", true),
         m_config->read_bool_entry("Effects", "SplitterKnurls", true),
+        m_config->read_bool_entry("Effects", "Tooltips", true),
         m_config->read_bool_entry("Effects", "MenuShadow", true),
         m_config->read_bool_entry("Effects", "WindowShadow", true),
         m_config->read_bool_entry("Effects", "TooltipShadow", true)

@@ -24,6 +24,7 @@ enum Effects : size_t {
     SmoothScrolling,
     TabAccents,
     SplitterKnurls,
+    Tooltips,
     MenuShadow,
     WindowShadow,
     TooltipShadow,
@@ -85,6 +86,7 @@ public:
 
     bool tab_accents() const { return m_effects[TabAccents]; }
     bool splitter_knurls() const { return m_effects[SplitterKnurls]; }
+    bool tooltips() const { return m_effects[Tooltips]; }
 
     bool menu_shadow() const { return m_effects[MenuShadow]; }
     bool window_shadow() const { return m_effects[WindowShadow]; }
