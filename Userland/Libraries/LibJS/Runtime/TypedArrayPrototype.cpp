@@ -15,8 +15,8 @@
 
 namespace JS {
 
-TypedArrayPrototype::TypedArrayPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

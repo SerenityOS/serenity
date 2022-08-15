@@ -14,7 +14,7 @@ class JSONObject final : public Object {
     JS_OBJECT(JSONObject, Object);
 
 public:
-    explicit JSONObject(GlobalObject&);
+    explicit JSONObject(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~JSONObject() override = default;
 

@@ -15,7 +15,7 @@ class NumberFormatPrototype final : public PrototypeObject<NumberFormatPrototype
     JS_PROTOTYPE_OBJECT(NumberFormatPrototype, NumberFormat, Intl.NumberFormat);
 
 public:
-    explicit NumberFormatPrototype(GlobalObject&);
+    explicit NumberFormatPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~NumberFormatPrototype() override = default;
 

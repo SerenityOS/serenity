@@ -16,8 +16,8 @@
 namespace JS::Intl {
 
 // 12.1 The Intl.DisplayNames Constructor, https://tc39.es/ecma402/#sec-intl-displaynames-constructor
-DisplayNamesConstructor::DisplayNamesConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.DisplayNames.as_string(), *global_object.function_prototype())
+DisplayNamesConstructor::DisplayNamesConstructor(Realm& realm)
+    : NativeFunction(vm().names.DisplayNames.as_string(), *realm.global_object().function_prototype())
 {
 }
 

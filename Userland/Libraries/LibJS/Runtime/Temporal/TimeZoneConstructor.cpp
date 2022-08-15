@@ -11,8 +11,8 @@
 namespace JS::Temporal {
 
 // 11.2 The Temporal.TimeZone Constructor, https://tc39.es/proposal-temporal/#sec-temporal-timezone-constructor
-TimeZoneConstructor::TimeZoneConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.TimeZone.as_string(), *global_object.function_prototype())
+TimeZoneConstructor::TimeZoneConstructor(Realm& realm)
+    : NativeFunction(vm().names.TimeZone.as_string(), *realm.global_object().function_prototype())
 {
 }
 

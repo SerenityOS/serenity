@@ -14,7 +14,7 @@ class CalendarConstructor final : public NativeFunction {
     JS_OBJECT(CalendarConstructor, NativeFunction);
 
 public:
-    explicit CalendarConstructor(GlobalObject&);
+    explicit CalendarConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~CalendarConstructor() override = default;
 

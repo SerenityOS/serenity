@@ -11,8 +11,8 @@
 
 namespace JS {
 
-WeakMapPrototype::WeakMapPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+WeakMapPrototype::WeakMapPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

@@ -9,8 +9,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyModuleObject::WebAssemblyModuleObject(JS::GlobalObject& global_object, size_t index)
-    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype"))
+WebAssemblyModuleObject::WebAssemblyModuleObject(JS::Realm& realm, size_t index)
+    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype"))
     , m_index(index)
 {
 }

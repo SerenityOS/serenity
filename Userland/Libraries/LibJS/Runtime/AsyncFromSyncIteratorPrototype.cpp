@@ -14,8 +14,8 @@
 
 namespace JS {
 
-AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.async_iterator_prototype())
+AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().async_iterator_prototype())
 {
 }
 

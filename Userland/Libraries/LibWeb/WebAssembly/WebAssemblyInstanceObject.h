@@ -19,7 +19,7 @@ class WebAssemblyInstanceObject final : public JS::Object {
     JS_OBJECT(WebAssemblyInstanceObject, Object);
 
 public:
-    explicit WebAssemblyInstanceObject(JS::GlobalObject&, size_t index);
+    explicit WebAssemblyInstanceObject(JS::Realm&, size_t index);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WebAssemblyInstanceObject() override = default;
 

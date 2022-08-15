@@ -15,7 +15,7 @@ class ObjectConstructor final : public NativeFunction {
     JS_OBJECT(ObjectConstructor, NativeFunction);
 
 public:
-    explicit ObjectConstructor(GlobalObject&);
+    explicit ObjectConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ObjectConstructor() override = default;
 

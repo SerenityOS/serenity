@@ -15,7 +15,7 @@ class DateTimeFormatPrototype final : public PrototypeObject<DateTimeFormatProto
     JS_PROTOTYPE_OBJECT(DateTimeFormatPrototype, DateTimeFormat, Intl.DateTimeFormat);
 
 public:
-    explicit DateTimeFormatPrototype(GlobalObject&);
+    explicit DateTimeFormatPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DateTimeFormatPrototype() override = default;
 

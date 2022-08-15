@@ -8,8 +8,8 @@
 
 namespace JS {
 
-AsyncIteratorPrototype::AsyncIteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+AsyncIteratorPrototype::AsyncIteratorPrototype(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

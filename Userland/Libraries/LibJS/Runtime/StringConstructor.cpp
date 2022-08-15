@@ -17,8 +17,8 @@
 
 namespace JS {
 
-StringConstructor::StringConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.String.as_string(), *global_object.function_prototype())
+StringConstructor::StringConstructor(Realm& realm)
+    : NativeFunction(vm().names.String.as_string(), *realm.global_object().function_prototype())
 {
 }
 

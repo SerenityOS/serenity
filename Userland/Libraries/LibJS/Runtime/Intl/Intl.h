@@ -14,7 +14,7 @@ class Intl final : public Object {
     JS_OBJECT(Intl, Object);
 
 public:
-    explicit Intl(GlobalObject&);
+    explicit Intl(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~Intl() override = default;
 

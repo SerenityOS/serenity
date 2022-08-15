@@ -15,7 +15,7 @@ class SetPrototype final : public PrototypeObject<SetPrototype, Set> {
     JS_PROTOTYPE_OBJECT(SetPrototype, Set, Set);
 
 public:
-    SetPrototype(GlobalObject&);
+    SetPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SetPrototype() override = default;
 

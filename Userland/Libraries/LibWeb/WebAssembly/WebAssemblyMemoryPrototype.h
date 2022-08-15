@@ -19,8 +19,8 @@ class WebAssemblyMemoryPrototype final : public JS::Object {
     JS_OBJECT(WebAssemblyMemoryPrototype, JS::Object);
 
 public:
-    explicit WebAssemblyMemoryPrototype(JS::GlobalObject& global_object)
-        : JS::Object(*global_object.object_prototype())
+    explicit WebAssemblyMemoryPrototype(JS::Realm& realm)
+        : JS::Object(*realm.global_object().object_prototype())
     {
     }
 

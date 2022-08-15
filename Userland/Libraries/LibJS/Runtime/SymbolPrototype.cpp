@@ -18,8 +18,8 @@
 
 namespace JS {
 
-SymbolPrototype::SymbolPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+SymbolPrototype::SymbolPrototype(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

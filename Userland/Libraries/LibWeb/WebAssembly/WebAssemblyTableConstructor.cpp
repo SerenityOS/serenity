@@ -14,8 +14,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyTableConstructor::WebAssemblyTableConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+WebAssemblyTableConstructor::WebAssemblyTableConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 
@@ -30,6 +30,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     auto descriptor = TRY(vm.argument(0).to_object(global_object));
     auto element_value = TRY(descriptor->get("element"));
@@ -77,7 +78,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     for (auto& element : table.elements())
         element = reference;
 
-    return vm.heap().allocate<WebAssemblyTableObject>(global_object, global_object, *address);
+    return vm.heap().allocate<WebAssemblyTableObject>(global_object, realm, *address);
 }
 
 void WebAssemblyTableConstructor::initialize(JS::GlobalObject& global_object)

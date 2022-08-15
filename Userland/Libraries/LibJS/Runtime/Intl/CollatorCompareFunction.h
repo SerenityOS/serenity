@@ -16,7 +16,7 @@ class CollatorCompareFunction : public NativeFunction {
 public:
     static CollatorCompareFunction* create(GlobalObject&, Collator&);
 
-    explicit CollatorCompareFunction(GlobalObject&, Collator&);
+    CollatorCompareFunction(Realm&, Collator&);
     virtual void initialize(GlobalObject&) override;
     virtual ~CollatorCompareFunction() override = default;
 

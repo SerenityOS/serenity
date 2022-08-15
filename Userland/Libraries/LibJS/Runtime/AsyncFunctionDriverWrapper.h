@@ -19,7 +19,7 @@ class AsyncFunctionDriverWrapper final : public Promise {
 
 public:
     static ThrowCompletionOr<Value> create(GlobalObject&, GeneratorObject*);
-    explicit AsyncFunctionDriverWrapper(GlobalObject&, GeneratorObject*);
+    explicit AsyncFunctionDriverWrapper(Realm&, GeneratorObject*);
 
     virtual ~AsyncFunctionDriverWrapper() override = default;
     void visit_edges(Cell::Visitor&) override;

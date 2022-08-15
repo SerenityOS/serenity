@@ -14,8 +14,8 @@
 
 namespace JS {
 
-ArrayIteratorPrototype::ArrayIteratorPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.iterator_prototype())
+ArrayIteratorPrototype::ArrayIteratorPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().iterator_prototype())
 {
 }
 

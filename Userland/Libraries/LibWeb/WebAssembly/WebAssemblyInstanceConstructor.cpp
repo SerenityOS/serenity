@@ -14,8 +14,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyInstanceConstructor::WebAssemblyInstanceConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+WebAssemblyInstanceConstructor::WebAssemblyInstanceConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 
@@ -30,12 +30,14 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(Fun
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
+
     auto* module_argument = TRY(vm.argument(0).to_object(global_object));
     if (!is<WebAssemblyModuleObject>(module_argument))
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(module_object.module(), vm, global_object));
-    return heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, result);
+    return heap().allocate<WebAssemblyInstanceObject>(global_object, realm, result);
 }
 
 void WebAssemblyInstanceConstructor::initialize(JS::GlobalObject& global_object)

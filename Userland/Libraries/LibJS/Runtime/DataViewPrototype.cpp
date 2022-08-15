@@ -10,8 +10,8 @@
 
 namespace JS {
 
-DataViewPrototype::DataViewPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+DataViewPrototype::DataViewPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

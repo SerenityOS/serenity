@@ -14,8 +14,8 @@
 
 namespace JS {
 
-AggregateErrorConstructor::AggregateErrorConstructor(GlobalObject& global_object)
-    : NativeFunction(*static_cast<Object*>(global_object.error_constructor()))
+AggregateErrorConstructor::AggregateErrorConstructor(Realm& realm)
+    : NativeFunction(static_cast<Object&>(*realm.global_object().error_constructor()))
 {
 }
 

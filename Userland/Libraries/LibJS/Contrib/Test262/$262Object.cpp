@@ -18,8 +18,8 @@
 
 namespace JS::Test262 {
 
-$262Object::$262Object(JS::GlobalObject& global_object)
-    : Object(Object::ConstructWithoutPrototypeTag::Tag, global_object)
+$262Object::$262Object(Realm& realm)
+    : Object(Object::ConstructWithoutPrototypeTag::Tag, realm)
 {
 }
 
@@ -27,8 +27,9 @@ void $262Object::initialize(JS::GlobalObject& global_object)
 {
     Base::initialize(global_object);
 
-    m_agent = vm().heap().allocate<AgentObject>(global_object, global_object);
-    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(global_object, global_object);
+    auto& realm = *global_object.associated_realm();
+    m_agent = vm().heap().allocate<AgentObject>(global_object, realm);
+    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(global_object, realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("clearKeptObjects", clear_kept_objects, 0, attr);

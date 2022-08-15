@@ -9,8 +9,8 @@
 
 namespace JS {
 
-AsyncFunctionPrototype::AsyncFunctionPrototype(GlobalObject& global_object)
-    : Object(*global_object.function_prototype())
+AsyncFunctionPrototype::AsyncFunctionPrototype(Realm& realm)
+    : Object(*realm.global_object().function_prototype())
 {
 }
 

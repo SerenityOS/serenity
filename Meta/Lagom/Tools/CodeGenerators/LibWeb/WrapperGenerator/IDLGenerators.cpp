@@ -1837,7 +1837,7 @@ class @wrapper_class@ : public @wrapper_base_class@ {
 public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
-    @wrapper_class@(JS::GlobalObject&, @fully_qualified_name@&);
+    @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@wrapper_class@() override;
 )~~~");
@@ -2004,25 +2004,26 @@ namespace Web::Bindings {
 
 @wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
-    return global_object.heap().allocate<@wrapper_class@>(global_object, global_object, impl);
+    auto& realm = *global_object.associated_realm();
+    return global_object.heap().allocate<@wrapper_class@>(global_object, realm, impl);
 }
 
 )~~~");
 
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
-@wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-    : Wrapper(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"))
+@wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
+    : Wrapper(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
     , m_impl(impl)
 {
 }
 )~~~");
     } else {
         generator.append(R"~~~(
-@wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-    : @wrapper_base_class@(global_object, impl)
+@wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
+    : @wrapper_base_class@(realm, impl)
 {
-    set_prototype(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"));
+    set_prototype(&static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"));
 }
 )~~~");
     }
@@ -2798,7 +2799,7 @@ namespace Web::Bindings {
 class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
 public:
-    explicit @constructor_class@(JS::GlobalObject&);
+    explicit @constructor_class@(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@constructor_class@() override;
 
@@ -2927,8 +2928,8 @@ using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
-@constructor_class@::@constructor_class@(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+@constructor_class@::@constructor_class@(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 
@@ -3065,7 +3066,7 @@ namespace Web::Bindings {
 class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
-    explicit @prototype_class@(JS::GlobalObject&);
+    explicit @prototype_class@(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@prototype_class@() override;
 private:
@@ -3210,20 +3211,20 @@ using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
-@prototype_class@::@prototype_class@([[maybe_unused]] JS::GlobalObject& global_object))~~~");
+@prototype_class@::@prototype_class@([[maybe_unused]] JS::Realm& realm))~~~");
     if (interface.name == "DOMException") {
         // https://webidl.spec.whatwg.org/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    : Object(*global_object.error_prototype())
+    : Object(*realm.global_object().error_prototype())
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@"))
+    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_base_class@>("@parent_name@"))
 )~~~");
     } else {
         generator.append(R"~~~(
-    : Object(*global_object.object_prototype())
+    : Object(*realm.global_object().object_prototype())
 )~~~");
     }
 
@@ -3587,7 +3588,7 @@ class @wrapper_class@ : public Wrapper {
 public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
-    @wrapper_class@(JS::GlobalObject&, @fully_qualified_name@&);
+    @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@wrapper_class@() override;
 
@@ -3659,11 +3660,12 @@ namespace Web::Bindings {
 
 @wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
-    return global_object.heap().allocate<@wrapper_class@>(global_object, global_object, impl);
+    auto& realm = *global_object.associated_realm();
+    return global_object.heap().allocate<@wrapper_class@>(global_object, realm, impl);
 }
 
-@wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-    : Wrapper(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"))
+@wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
+    : Wrapper(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
     , m_impl(impl)
 {
 }
@@ -3712,7 +3714,7 @@ namespace Web::Bindings {
 class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
-    explicit @prototype_class@(JS::GlobalObject&);
+    explicit @prototype_class@(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@prototype_class@() override;
 
@@ -3776,8 +3778,8 @@ using namespace Web::WebGL;
 
 namespace Web::Bindings {
 
-@prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
-    : Object(*global_object.iterator_prototype())
+@prototype_class@::@prototype_class@(JS::Realm& realm)
+    : Object(*realm.global_object().iterator_prototype())
 {
 }
 

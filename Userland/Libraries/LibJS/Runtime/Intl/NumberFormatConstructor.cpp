@@ -14,8 +14,8 @@
 namespace JS::Intl {
 
 // 15.1 The Intl.NumberFormat Constructor, https://tc39.es/ecma402/#sec-intl-numberformat-constructor
-NumberFormatConstructor::NumberFormatConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.NumberFormat.as_string(), *global_object.function_prototype())
+NumberFormatConstructor::NumberFormatConstructor(Realm& realm)
+    : NativeFunction(vm().names.NumberFormat.as_string(), *realm.global_object().function_prototype())
 {
 }
 

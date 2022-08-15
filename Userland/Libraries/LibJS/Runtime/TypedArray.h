@@ -471,7 +471,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
         JS_OBJECT(PrototypeName, Object);                                                   \
                                                                                             \
     public:                                                                                 \
-        PrototypeName(GlobalObject&);                                                       \
+        PrototypeName(Realm&);                                                              \
         virtual void initialize(GlobalObject&) override;                                    \
         virtual ~PrototypeName() override;                                                  \
     };                                                                                      \
@@ -479,7 +479,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
         JS_OBJECT(ConstructorName, TypedArrayConstructor);                                  \
                                                                                             \
     public:                                                                                 \
-        explicit ConstructorName(GlobalObject&);                                            \
+        explicit ConstructorName(Realm&);                                                   \
         virtual void initialize(GlobalObject&) override;                                    \
         virtual ~ConstructorName() override;                                                \
                                                                                             \

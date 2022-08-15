@@ -12,8 +12,8 @@
 
 namespace JS {
 
-ConsoleObject::ConsoleObject(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+ConsoleObject::ConsoleObject(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

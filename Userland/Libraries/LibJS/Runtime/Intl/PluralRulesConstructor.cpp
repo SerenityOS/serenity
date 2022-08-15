@@ -16,8 +16,8 @@
 namespace JS::Intl {
 
 // 16.1 The Intl.PluralRules Constructor, https://tc39.es/ecma402/#sec-intl-pluralrules-constructor
-PluralRulesConstructor::PluralRulesConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.PluralRules.as_string(), *global_object.function_prototype())
+PluralRulesConstructor::PluralRulesConstructor(Realm& realm)
+    : NativeFunction(vm().names.PluralRules.as_string(), *realm.global_object().function_prototype())
 {
 }
 

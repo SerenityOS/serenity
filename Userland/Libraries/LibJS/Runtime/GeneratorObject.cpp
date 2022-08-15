@@ -15,6 +15,8 @@ namespace JS {
 
 ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::RegisterWindow frame)
 {
+    auto& realm = *global_object.associated_realm();
+
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
     Value generating_function_prototype;
     if (generating_function->kind() == FunctionKind::Async) {
@@ -26,14 +28,14 @@ ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global
         generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
     }
     auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(global_object));
-    auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_prototype_object, move(execution_context));
+    auto object = global_object.heap().allocate<GeneratorObject>(global_object, realm, *generating_function_prototype_object, move(execution_context));
     object->m_generating_function = generating_function;
     object->m_frame = move(frame);
     object->m_previous_value = initial_value;
     return object;
 }
 
-GeneratorObject::GeneratorObject(GlobalObject&, Object& prototype, ExecutionContext context)
+GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext context)
     : Object(prototype)
     , m_execution_context(move(context))
 {

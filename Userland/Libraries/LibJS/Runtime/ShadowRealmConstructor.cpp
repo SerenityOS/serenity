@@ -11,8 +11,8 @@
 namespace JS {
 
 // 3.2 The ShadowRealm Constructor, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm-constructor
-ShadowRealmConstructor::ShadowRealmConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.ShadowRealm.as_string(), *global_object.function_prototype())
+ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
+    : NativeFunction(vm().names.ShadowRealm.as_string(), *realm.global_object().function_prototype())
 {
 }
 

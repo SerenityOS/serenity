@@ -10,8 +10,8 @@
 
 namespace JS {
 
-AggregateErrorPrototype::AggregateErrorPrototype(GlobalObject& global_object)
-    : Object(*global_object.error_prototype())
+AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
+    : Object(*realm.global_object().error_prototype())
 {
 }
 

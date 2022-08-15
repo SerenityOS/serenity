@@ -162,8 +162,8 @@ static double parse_date_string(String const& date_string)
     return NAN;
 }
 
-DateConstructor::DateConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Date.as_string(), *global_object.function_prototype())
+DateConstructor::DateConstructor(Realm& realm)
+    : NativeFunction(vm().names.Date.as_string(), *realm.global_object().function_prototype())
 {
 }
 

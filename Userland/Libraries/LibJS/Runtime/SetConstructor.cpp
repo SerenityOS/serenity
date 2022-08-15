@@ -13,8 +13,8 @@
 
 namespace JS {
 
-SetConstructor::SetConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Set.as_string(), *global_object.function_prototype())
+SetConstructor::SetConstructor(Realm& realm)
+    : NativeFunction(vm().names.Set.as_string(), *realm.global_object().function_prototype())
 {
 }
 

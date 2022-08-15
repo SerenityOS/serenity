@@ -14,8 +14,8 @@
 namespace JS::Intl {
 
 // 14.3 Properties of the Intl.Locale Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-locale-prototype-object
-LocalePrototype::LocalePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+LocalePrototype::LocalePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

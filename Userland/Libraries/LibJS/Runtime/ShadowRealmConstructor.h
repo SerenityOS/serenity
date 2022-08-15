@@ -14,7 +14,7 @@ class ShadowRealmConstructor final : public NativeFunction {
     JS_OBJECT(ShadowRealmConstructor, NativeFunction);
 
 public:
-    explicit ShadowRealmConstructor(GlobalObject&);
+    explicit ShadowRealmConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ShadowRealmConstructor() override = default;
 

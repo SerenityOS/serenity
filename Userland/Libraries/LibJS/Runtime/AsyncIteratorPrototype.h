@@ -14,7 +14,7 @@ class AsyncIteratorPrototype final : public Object {
     JS_OBJECT(AsyncIteratorPrototype, Object)
 
 public:
-    explicit AsyncIteratorPrototype(GlobalObject&);
+    explicit AsyncIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~AsyncIteratorPrototype() override = default;
 

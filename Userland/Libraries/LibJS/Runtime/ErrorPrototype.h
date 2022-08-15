@@ -16,7 +16,7 @@ class ErrorPrototype final : public PrototypeObject<ErrorPrototype, Error> {
     JS_PROTOTYPE_OBJECT(ErrorPrototype, Error, Error);
 
 public:
-    explicit ErrorPrototype(GlobalObject&);
+    explicit ErrorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ErrorPrototype() override = default;
 
@@ -31,7 +31,7 @@ private:
         JS_PROTOTYPE_OBJECT(PrototypeName, ClassName, ClassName);                             \
                                                                                               \
     public:                                                                                   \
-        explicit PrototypeName(GlobalObject&);                                                \
+        explicit PrototypeName(Realm&);                                                       \
         virtual void initialize(GlobalObject&) override;                                      \
         virtual ~PrototypeName() override = default;                                          \
     };

@@ -13,8 +13,8 @@
 
 namespace JS {
 
-ArrayBufferConstructor::ArrayBufferConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.ArrayBuffer.as_string(), *global_object.function_prototype())
+ArrayBufferConstructor::ArrayBufferConstructor(Realm& realm)
+    : NativeFunction(vm().names.ArrayBuffer.as_string(), *realm.global_object().function_prototype())
 {
 }
 

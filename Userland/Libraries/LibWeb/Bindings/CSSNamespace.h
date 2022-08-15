@@ -16,7 +16,7 @@ class CSSNamespace final : public JS::Object {
     JS_OBJECT(CSSNamespace, JS::Object)
 
 public:
-    explicit CSSNamespace(JS::GlobalObject&);
+    explicit CSSNamespace(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~CSSNamespace() override = default;
 

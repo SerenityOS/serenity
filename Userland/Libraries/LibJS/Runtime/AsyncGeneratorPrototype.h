@@ -15,7 +15,7 @@ class AsyncGeneratorPrototype final : public PrototypeObject<AsyncGeneratorProto
     JS_PROTOTYPE_OBJECT(AsyncGeneratorPrototype, AsyncGenerator, AsyncGenerator)
 
 public:
-    explicit AsyncGeneratorPrototype(GlobalObject&);
+    explicit AsyncGeneratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~AsyncGeneratorPrototype() override = default;
 };

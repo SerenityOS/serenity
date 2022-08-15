@@ -14,7 +14,7 @@ class BigIntPrototype final : public Object {
     JS_OBJECT(BigIntPrototype, Object);
 
 public:
-    explicit BigIntPrototype(GlobalObject&);
+    explicit BigIntPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~BigIntPrototype() override = default;
 

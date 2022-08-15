@@ -15,7 +15,7 @@ class InstantPrototype final : public PrototypeObject<InstantPrototype, Instant>
     JS_PROTOTYPE_OBJECT(InstantPrototype, Instant, Temporal.Instant);
 
 public:
-    explicit InstantPrototype(GlobalObject&);
+    explicit InstantPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~InstantPrototype() override = default;
 

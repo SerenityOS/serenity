@@ -15,7 +15,7 @@ class SetIteratorPrototype final : public PrototypeObject<SetIteratorPrototype, 
     JS_PROTOTYPE_OBJECT(SetIteratorPrototype, SetIterator, SetIterator);
 
 public:
-    SetIteratorPrototype(GlobalObject&);
+    SetIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SetIteratorPrototype() override = default;
 

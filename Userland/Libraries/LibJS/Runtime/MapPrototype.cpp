@@ -12,8 +12,8 @@
 
 namespace JS {
 
-MapPrototype::MapPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+MapPrototype::MapPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

@@ -14,8 +14,8 @@
 
 namespace Web::Bindings {
 
-WebAssemblyModuleConstructor::WebAssemblyModuleConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+WebAssemblyModuleConstructor::WebAssemblyModuleConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 
@@ -30,11 +30,12 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(Funct
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto& realm = *global_object.associated_realm();
 
     auto* buffer_object = TRY(vm.argument(0).to_object(global_object));
     auto result = TRY(parse_module(global_object, buffer_object));
 
-    return heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result);
+    return heap().allocate<WebAssemblyModuleObject>(global_object, realm, result);
 }
 
 void WebAssemblyModuleConstructor::initialize(JS::GlobalObject& global_object)

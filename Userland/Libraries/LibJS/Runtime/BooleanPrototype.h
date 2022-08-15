@@ -14,7 +14,7 @@ class BooleanPrototype final : public BooleanObject {
     JS_OBJECT(BooleanPrototype, BooleanObject);
 
 public:
-    explicit BooleanPrototype(GlobalObject&);
+    explicit BooleanPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~BooleanPrototype() override = default;
 

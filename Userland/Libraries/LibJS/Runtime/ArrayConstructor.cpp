@@ -16,8 +16,8 @@
 
 namespace JS {
 
-ArrayConstructor::ArrayConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Array.as_string(), *global_object.function_prototype())
+ArrayConstructor::ArrayConstructor(Realm& realm)
+    : NativeFunction(vm().names.Array.as_string(), *realm.global_object().function_prototype())
 {
 }
 

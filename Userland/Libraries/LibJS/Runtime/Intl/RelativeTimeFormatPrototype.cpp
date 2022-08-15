@@ -11,8 +11,8 @@
 namespace JS::Intl {
 
 // 17.3 Properties of the Intl.RelativeTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-relativetimeformat-prototype-object
-RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

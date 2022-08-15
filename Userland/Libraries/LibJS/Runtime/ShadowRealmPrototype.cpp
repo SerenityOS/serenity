@@ -11,8 +11,8 @@
 namespace JS {
 
 // 3.4 Properties of the ShadowRealm Prototype Object, https://tc39.es/proposal-shadowrealm/#sec-properties-of-the-shadowrealm-prototype-object
-ShadowRealmPrototype::ShadowRealmPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+ShadowRealmPrototype::ShadowRealmPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

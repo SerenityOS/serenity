@@ -14,7 +14,7 @@ class FunctionPrototype final : public FunctionObject {
     JS_OBJECT(FunctionPrototype, FunctionObject);
 
 public:
-    explicit FunctionPrototype(GlobalObject&);
+    explicit FunctionPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~FunctionPrototype() override = default;
 

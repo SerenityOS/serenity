@@ -15,7 +15,7 @@ class RegExpStringIteratorPrototype final : public PrototypeObject<RegExpStringI
     JS_PROTOTYPE_OBJECT(RegExpStringIteratorPrototype, RegExpStringIterator, RegExpStringIterator);
 
 public:
-    explicit RegExpStringIteratorPrototype(GlobalObject&);
+    explicit RegExpStringIteratorPrototype(Realm&);
     virtual ~RegExpStringIteratorPrototype() override = default;
 
     virtual void initialize(GlobalObject&) override;

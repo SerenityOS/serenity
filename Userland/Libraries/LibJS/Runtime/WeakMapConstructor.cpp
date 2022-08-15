@@ -13,8 +13,8 @@
 
 namespace JS {
 
-WeakMapConstructor::WeakMapConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.WeakMap.as_string(), *global_object.function_prototype())
+WeakMapConstructor::WeakMapConstructor(Realm& realm)
+    : NativeFunction(vm().names.WeakMap.as_string(), *realm.global_object().function_prototype())
 {
 }
 

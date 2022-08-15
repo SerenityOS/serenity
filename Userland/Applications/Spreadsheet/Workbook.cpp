@@ -29,7 +29,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     , m_main_execution_context(m_vm->heap())
     , m_parent_window(parent_window)
 {
-    m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), *this, m_interpreter->global_object());
+    m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), m_interpreter->realm(), *this);
     m_interpreter->global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
     m_main_execution_context.current_node = nullptr;

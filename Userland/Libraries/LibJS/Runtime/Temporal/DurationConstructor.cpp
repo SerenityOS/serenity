@@ -14,8 +14,8 @@
 namespace JS::Temporal {
 
 // 7.1 The Temporal.Duration Constructor, https://tc39.es/proposal-temporal/#sec-temporal-duration-constructor
-DurationConstructor::DurationConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Duration.as_string(), *global_object.function_prototype())
+DurationConstructor::DurationConstructor(Realm& realm)
+    : NativeFunction(vm().names.Duration.as_string(), *realm.global_object().function_prototype())
 {
 }
 

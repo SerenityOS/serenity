@@ -15,7 +15,7 @@ class LocalePrototype final : public PrototypeObject<LocalePrototype, Locale> {
     JS_PROTOTYPE_OBJECT(LocalePrototype, Locale, Intl.Locale);
 
 public:
-    explicit LocalePrototype(GlobalObject&);
+    explicit LocalePrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~LocalePrototype() override = default;
 

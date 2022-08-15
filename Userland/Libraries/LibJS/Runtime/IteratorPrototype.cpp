@@ -11,8 +11,8 @@
 namespace JS {
 
 // 27.1.2 The %IteratorPrototype% Object, https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-IteratorPrototype::IteratorPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+IteratorPrototype::IteratorPrototype(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

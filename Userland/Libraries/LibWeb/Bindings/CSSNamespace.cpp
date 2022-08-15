@@ -13,8 +13,8 @@
 
 namespace Web::Bindings {
 
-CSSNamespace::CSSNamespace(JS::GlobalObject& global_object)
-    : JS::Object(*global_object.object_prototype())
+CSSNamespace::CSSNamespace(JS::Realm& realm)
+    : JS::Object(*realm.global_object().object_prototype())
 {
 }
 

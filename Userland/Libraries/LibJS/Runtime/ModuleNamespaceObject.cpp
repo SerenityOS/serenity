@@ -10,8 +10,8 @@
 
 namespace JS {
 
-ModuleNamespaceObject::ModuleNamespaceObject(GlobalObject& global_object, Module* module, Vector<FlyString> exports)
-    : Object(*global_object.object_prototype())
+ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vector<FlyString> exports)
+    : Object(*realm.global_object().object_prototype())
     , m_module(module)
     , m_exports(move(exports))
 {

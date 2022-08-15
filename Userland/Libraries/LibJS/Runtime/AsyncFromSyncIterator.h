@@ -19,7 +19,7 @@ class AsyncFromSyncIterator final : public Object {
 public:
     static AsyncFromSyncIterator* create(GlobalObject&, Iterator sync_iterator_record);
 
-    explicit AsyncFromSyncIterator(GlobalObject&, Iterator sync_iterator_record);
+    explicit AsyncFromSyncIterator(Realm&, Iterator sync_iterator_record);
     virtual void initialize(GlobalObject&) override;
     virtual ~AsyncFromSyncIterator() override = default;
 

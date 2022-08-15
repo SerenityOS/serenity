@@ -14,8 +14,8 @@
 namespace JS::Temporal {
 
 // 10.1 The Temporal.PlainMonthDay Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plainmonthday-constructor
-PlainMonthDayConstructor::PlainMonthDayConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.PlainMonthDay.as_string(), *global_object.function_prototype())
+PlainMonthDayConstructor::PlainMonthDayConstructor(Realm& realm)
+    : NativeFunction(vm().names.PlainMonthDay.as_string(), *realm.global_object().function_prototype())
 {
 }
 

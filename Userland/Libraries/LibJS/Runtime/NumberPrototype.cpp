@@ -83,8 +83,8 @@ static size_t compute_fraction_digits(double number, int exponent)
     return fraction_digits;
 }
 
-NumberPrototype::NumberPrototype(GlobalObject& global_object)
-    : NumberObject(0, *global_object.object_prototype())
+NumberPrototype::NumberPrototype(Realm& realm)
+    : NumberObject(0, *realm.global_object().object_prototype())
 {
 }
 

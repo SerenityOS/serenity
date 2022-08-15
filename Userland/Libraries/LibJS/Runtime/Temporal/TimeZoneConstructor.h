@@ -14,7 +14,7 @@ class TimeZoneConstructor final : public NativeFunction {
     JS_OBJECT(TimeZoneConstructor, NativeFunction);
 
 public:
-    explicit TimeZoneConstructor(GlobalObject&);
+    explicit TimeZoneConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~TimeZoneConstructor() override = default;
 

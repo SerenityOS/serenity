@@ -14,7 +14,7 @@ class WindowConstructor : public JS::NativeFunction {
     JS_OBJECT(WindowConstructor, JS::NativeFunction);
 
 public:
-    explicit WindowConstructor(JS::GlobalObject&);
+    explicit WindowConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WindowConstructor() override;
 

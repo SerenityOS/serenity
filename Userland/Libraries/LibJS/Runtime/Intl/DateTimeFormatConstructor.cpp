@@ -17,8 +17,8 @@
 namespace JS::Intl {
 
 // 11.1 The Intl.DateTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-datetimeformat-constructor
-DateTimeFormatConstructor::DateTimeFormatConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.DateTimeFormat.as_string(), *global_object.function_prototype())
+DateTimeFormatConstructor::DateTimeFormatConstructor(Realm& realm)
+    : NativeFunction(vm().names.DateTimeFormat.as_string(), *realm.global_object().function_prototype())
 {
 }
 

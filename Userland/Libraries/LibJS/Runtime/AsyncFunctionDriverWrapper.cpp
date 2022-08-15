@@ -14,17 +14,18 @@ namespace JS {
 
 ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(GlobalObject& global_object, GeneratorObject* generator_object)
 {
-    auto wrapper = global_object.heap().allocate<AsyncFunctionDriverWrapper>(global_object, global_object, generator_object);
+    auto& realm = *global_object.associated_realm();
+    auto wrapper = global_object.heap().allocate<AsyncFunctionDriverWrapper>(global_object, realm, generator_object);
     return wrapper->react_to_async_task_completion(global_object.vm(), global_object, js_undefined(), true);
 }
 
-AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(GlobalObject& global_object, GeneratorObject* generator_object)
-    : Promise(*global_object.promise_prototype())
+AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, GeneratorObject* generator_object)
+    : Promise(*realm.global_object().promise_prototype())
     , m_generator_object(generator_object)
-    , m_on_fulfillment(NativeFunction::create(global_object, "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
+    , m_on_fulfillment(NativeFunction::create(realm.global_object(), "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
         return react_to_async_task_completion(vm, global_object, vm.argument(0), true);
     }))
-    , m_on_rejection(NativeFunction::create(global_object, "async.on_rejection"sv, [this](VM& vm, GlobalObject& global_object) {
+    , m_on_rejection(NativeFunction::create(realm.global_object(), "async.on_rejection"sv, [this](VM& vm, GlobalObject& global_object) {
         return react_to_async_task_completion(vm, global_object, vm.argument(0), false);
     }))
 {

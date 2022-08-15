@@ -13,8 +13,8 @@
 
 namespace JS {
 
-MapConstructor::MapConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Map.as_string(), *global_object.function_prototype())
+MapConstructor::MapConstructor(Realm& realm)
+    : NativeFunction(vm().names.Map.as_string(), *realm.global_object().function_prototype())
 {
 }
 

@@ -25,8 +25,8 @@
 
 namespace JS {
 
-JSONObject::JSONObject(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+JSONObject::JSONObject(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

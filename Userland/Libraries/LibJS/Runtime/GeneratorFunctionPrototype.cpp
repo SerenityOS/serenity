@@ -10,8 +10,8 @@
 
 namespace JS {
 
-GeneratorFunctionPrototype::GeneratorFunctionPrototype(GlobalObject& global_object)
-    : Object(*global_object.function_prototype())
+GeneratorFunctionPrototype::GeneratorFunctionPrototype(Realm& realm)
+    : Object(*realm.global_object().function_prototype())
 {
 }
 

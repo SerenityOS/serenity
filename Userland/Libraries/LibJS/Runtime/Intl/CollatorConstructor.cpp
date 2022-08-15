@@ -132,8 +132,8 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
 }
 
 // 10.1 The Intl.Collator Constructor, https://tc39.es/ecma402/#sec-the-intl-collator-constructor
-CollatorConstructor::CollatorConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Collator.as_string(), *global_object.function_prototype())
+CollatorConstructor::CollatorConstructor(Realm& realm)
+    : NativeFunction(vm().names.Collator.as_string(), *realm.global_object().function_prototype())
 {
 }
 

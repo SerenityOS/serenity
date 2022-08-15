@@ -12,8 +12,8 @@
 
 namespace JS {
 
-BooleanPrototype::BooleanPrototype(GlobalObject& global_object)
-    : BooleanObject(false, *global_object.object_prototype())
+BooleanPrototype::BooleanPrototype(Realm& realm)
+    : BooleanObject(false, *realm.global_object().object_prototype())
 {
 }
 

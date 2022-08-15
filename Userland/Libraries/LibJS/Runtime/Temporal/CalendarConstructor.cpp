@@ -11,8 +11,8 @@
 namespace JS::Temporal {
 
 // 12.2 The Temporal.Calendar Constructor, https://tc39.es/proposal-temporal/#sec-temporal-calendar-constructor
-CalendarConstructor::CalendarConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Calendar.as_string(), *global_object.function_prototype())
+CalendarConstructor::CalendarConstructor(Realm& realm)
+    : NativeFunction(vm().names.Calendar.as_string(), *realm.global_object().function_prototype())
 {
 }
 

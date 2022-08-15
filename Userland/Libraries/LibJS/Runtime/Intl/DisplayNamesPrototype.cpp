@@ -14,8 +14,8 @@
 namespace JS::Intl {
 
 // 12.3 Properties of the Intl.DisplayNames Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-displaynames-prototype-object
-DisplayNamesPrototype::DisplayNamesPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+DisplayNamesPrototype::DisplayNamesPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

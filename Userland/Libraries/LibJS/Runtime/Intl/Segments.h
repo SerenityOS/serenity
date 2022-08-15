@@ -18,7 +18,7 @@ class Segments final : public Object {
 public:
     static Segments* create(GlobalObject&, Segmenter&, Utf16String);
 
-    Segments(GlobalObject&, Segmenter&, Utf16String);
+    Segments(Realm&, Segmenter&, Utf16String);
     virtual ~Segments() override = default;
 
     Segmenter& segments_segmenter() const { return m_segments_segmenter; }

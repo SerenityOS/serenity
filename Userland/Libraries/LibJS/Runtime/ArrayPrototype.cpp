@@ -28,8 +28,8 @@ namespace JS {
 
 static HashTable<Object*> s_array_join_seen_objects;
 
-ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
-    : Array(*global_object.object_prototype())
+ArrayPrototype::ArrayPrototype(Realm& realm)
+    : Array(*realm.global_object().object_prototype())
 {
 }
 

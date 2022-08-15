@@ -14,7 +14,7 @@ class WebAssemblyTableConstructor : public JS::NativeFunction {
     JS_OBJECT(WebAssemblyTableConstructor, JS::NativeFunction);
 
 public:
-    explicit WebAssemblyTableConstructor(JS::GlobalObject&);
+    explicit WebAssemblyTableConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WebAssemblyTableConstructor() override;
 

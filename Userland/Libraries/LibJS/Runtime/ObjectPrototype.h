@@ -15,7 +15,7 @@ class ObjectPrototype final : public Object {
     JS_OBJECT(ObjectPrototype, Object);
 
 public:
-    explicit ObjectPrototype(GlobalObject&);
+    explicit ObjectPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ObjectPrototype() override = default;
 

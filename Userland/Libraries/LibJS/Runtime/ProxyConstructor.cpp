@@ -24,8 +24,8 @@ static ThrowCompletionOr<ProxyObject*> proxy_create(GlobalObject& global_object,
     return ProxyObject::create(global_object, target.as_object(), handler.as_object());
 }
 
-ProxyConstructor::ProxyConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Proxy.as_string(), *global_object.function_prototype())
+ProxyConstructor::ProxyConstructor(Realm& realm)
+    : NativeFunction(vm().names.Proxy.as_string(), *realm.global_object().function_prototype())
 {
 }
 

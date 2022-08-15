@@ -15,7 +15,7 @@ class WeakRefPrototype final : public PrototypeObject<WeakRefPrototype, WeakRef>
     JS_PROTOTYPE_OBJECT(WeakRefPrototype, WeakRef, WeakRef);
 
 public:
-    WeakRefPrototype(GlobalObject&);
+    WeakRefPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~WeakRefPrototype() override = default;
 

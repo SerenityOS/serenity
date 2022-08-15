@@ -14,8 +14,8 @@
 
 namespace Web::Bindings {
 
-AudioConstructor::AudioConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+AudioConstructor::AudioConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 

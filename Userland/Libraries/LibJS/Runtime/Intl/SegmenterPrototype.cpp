@@ -12,8 +12,8 @@
 namespace JS::Intl {
 
 // 18.3 Properties of the Intl.Segmenter Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-segmenter-prototype-object
-SegmenterPrototype::SegmenterPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+SegmenterPrototype::SegmenterPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

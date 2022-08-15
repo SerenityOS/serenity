@@ -14,7 +14,7 @@ class SymbolConstructor final : public NativeFunction {
     JS_OBJECT(SymbolConstructor, NativeFunction);
 
 public:
-    explicit SymbolConstructor(GlobalObject&);
+    explicit SymbolConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SymbolConstructor() override = default;
 

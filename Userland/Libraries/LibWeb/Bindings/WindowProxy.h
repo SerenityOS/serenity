@@ -17,7 +17,7 @@ class WindowProxy final : public JS::Object {
     JS_OBJECT(WindowProxy, JS::Object);
 
 public:
-    WindowProxy(JS::GlobalObject&, WindowObject&);
+    WindowProxy(JS::Realm&, WindowObject&);
     virtual ~WindowProxy() override = default;
 
     virtual JS::ThrowCompletionOr<JS::Object*> internal_get_prototype_of() const override;

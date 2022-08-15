@@ -21,8 +21,8 @@
 namespace JS::Temporal {
 
 // 5.3 Properties of the Temporal.PlainDateTime Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindatetime-prototype-object
-PlainDateTimePrototype::PlainDateTimePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+PlainDateTimePrototype::PlainDateTimePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

@@ -15,7 +15,7 @@ class DatePrototype final : public PrototypeObject<DatePrototype, Date> {
     JS_PROTOTYPE_OBJECT(DatePrototype, Date, Date);
 
 public:
-    explicit DatePrototype(GlobalObject&);
+    explicit DatePrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DatePrototype() override = default;
 

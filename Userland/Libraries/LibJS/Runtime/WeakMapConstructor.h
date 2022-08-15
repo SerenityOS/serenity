@@ -14,7 +14,7 @@ class WeakMapConstructor final : public NativeFunction {
     JS_OBJECT(WeakMapConstructor, NativeFunction);
 
 public:
-    explicit WeakMapConstructor(GlobalObject&);
+    explicit WeakMapConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~WeakMapConstructor() override = default;
 

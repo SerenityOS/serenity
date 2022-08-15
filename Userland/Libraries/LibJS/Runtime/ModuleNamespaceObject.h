@@ -16,7 +16,7 @@ class ModuleNamespaceObject final : public Object {
     JS_OBJECT(ModuleNamespaceObject, Object);
 
 public:
-    ModuleNamespaceObject(GlobalObject&, Module* module, Vector<FlyString> exports);
+    ModuleNamespaceObject(Realm&, Module* module, Vector<FlyString> exports);
 
     // 10.4.6 Module Namespace Exotic Objects, https://tc39.es/ecma262/#sec-module-namespace-exotic-objects
 

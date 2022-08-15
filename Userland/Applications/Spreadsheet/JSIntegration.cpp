@@ -365,8 +365,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
     return JS::Value(bounds.row);
 }
 
-WorkbookObject::WorkbookObject(Workbook& workbook, JS::GlobalObject& global_object)
-    : JS::Object(*JS::Object::create(global_object, global_object.object_prototype()))
+WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
+    : JS::Object(*realm.global_object().object_prototype())
     , m_workbook(workbook)
 {
 }

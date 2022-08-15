@@ -17,8 +17,8 @@
 namespace JS::Temporal {
 
 // 11.4 Properties of the Temporal.TimeZone Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-timezone-prototype-object
-TimeZonePrototype::TimeZonePrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+TimeZonePrototype::TimeZonePrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

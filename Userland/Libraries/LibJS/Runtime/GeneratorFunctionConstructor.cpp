@@ -11,8 +11,8 @@
 
 namespace JS {
 
-GeneratorFunctionConstructor::GeneratorFunctionConstructor(GlobalObject& global_object)
-    : NativeFunction(*static_cast<Object*>(global_object.function_constructor()))
+GeneratorFunctionConstructor::GeneratorFunctionConstructor(Realm& realm)
+    : NativeFunction(static_cast<Object&>(*realm.global_object().function_constructor()))
 {
 }
 

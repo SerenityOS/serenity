@@ -14,7 +14,7 @@ class WebAssemblyModuleConstructor : public JS::NativeFunction {
     JS_OBJECT(WebAssemblyModuleConstructor, JS::NativeFunction);
 
 public:
-    explicit WebAssemblyModuleConstructor(JS::GlobalObject&);
+    explicit WebAssemblyModuleConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WebAssemblyModuleConstructor() override;
 

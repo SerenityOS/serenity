@@ -12,8 +12,8 @@
 
 namespace JS {
 
-AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.AsyncGeneratorFunction.as_string(), *global_object.function_prototype())
+AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(Realm& realm)
+    : NativeFunction(vm().names.AsyncGeneratorFunction.as_string(), *realm.global_object().function_prototype())
 {
 }
 

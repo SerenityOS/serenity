@@ -14,7 +14,7 @@ class SegmenterConstructor final : public NativeFunction {
     JS_OBJECT(SegmenterConstructor, NativeFunction);
 
 public:
-    explicit SegmenterConstructor(GlobalObject&);
+    explicit SegmenterConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SegmenterConstructor() override = default;
 

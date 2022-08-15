@@ -11,8 +11,8 @@
 
 namespace Web::Bindings {
 
-WindowConstructor::WindowConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+WindowConstructor::WindowConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 

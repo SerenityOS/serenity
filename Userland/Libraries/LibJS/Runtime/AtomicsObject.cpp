@@ -129,8 +129,8 @@ static ThrowCompletionOr<Value> perform_atomic_operation(GlobalObject& global_ob
     return atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper));
 }
 
-AtomicsObject::AtomicsObject(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+AtomicsObject::AtomicsObject(Realm& realm)
+    : Object(*realm.global_object().object_prototype())
 {
 }
 

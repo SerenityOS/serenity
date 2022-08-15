@@ -14,8 +14,8 @@
 
 namespace Web::Bindings {
 
-ImageConstructor::ImageConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
+ImageConstructor::ImageConstructor(JS::Realm& realm)
+    : NativeFunction(*realm.global_object().function_prototype())
 {
 }
 

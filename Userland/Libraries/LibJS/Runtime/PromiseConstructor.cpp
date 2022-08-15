@@ -244,8 +244,8 @@ static ThrowCompletionOr<Value> perform_promise_race(GlobalObject& global_object
         });
 }
 
-PromiseConstructor::PromiseConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Promise.as_string(), *global_object.function_prototype())
+PromiseConstructor::PromiseConstructor(Realm& realm)
+    : NativeFunction(vm().names.Promise.as_string(), *realm.global_object().function_prototype())
 {
 }
 

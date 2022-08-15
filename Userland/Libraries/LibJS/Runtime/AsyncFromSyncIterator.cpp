@@ -13,11 +13,12 @@ namespace JS {
 
 AsyncFromSyncIterator* AsyncFromSyncIterator::create(GlobalObject& global_object, Iterator sync_iterator_record)
 {
-    return global_object.heap().allocate<AsyncFromSyncIterator>(global_object, global_object, sync_iterator_record);
+    auto& realm = *global_object.associated_realm();
+    return global_object.heap().allocate<AsyncFromSyncIterator>(global_object, realm, sync_iterator_record);
 }
 
-AsyncFromSyncIterator::AsyncFromSyncIterator(GlobalObject& global_object, Iterator sync_iterator_record)
-    : Object(*global_object.async_from_sync_iterator_prototype())
+AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterator_record)
+    : Object(*realm.global_object().async_from_sync_iterator_prototype())
     , m_sync_iterator_record(sync_iterator_record)
 {
 }

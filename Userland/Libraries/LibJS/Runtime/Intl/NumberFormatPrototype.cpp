@@ -14,8 +14,8 @@
 namespace JS::Intl {
 
 // 15.3 Properties of the Intl.NumberFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-numberformat-prototype-object
-NumberFormatPrototype::NumberFormatPrototype(GlobalObject& global_object)
-    : PrototypeObject(*global_object.object_prototype())
+NumberFormatPrototype::NumberFormatPrototype(Realm& realm)
+    : PrototypeObject(*realm.global_object().object_prototype())
 {
 }
 

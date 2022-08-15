@@ -22,8 +22,8 @@
 namespace Web::Bindings {
 
 // 7.4 The WindowProxy exotic object, https://html.spec.whatwg.org/multipage/window-object.html#the-windowproxy-exotic-object
-WindowProxy::WindowProxy(JS::GlobalObject& global_object, WindowObject& window)
-    : JS::Object(global_object, nullptr)
+WindowProxy::WindowProxy(JS::Realm& realm, WindowObject& window)
+    : JS::Object(realm, nullptr)
     , m_window(&window)
 {
 }

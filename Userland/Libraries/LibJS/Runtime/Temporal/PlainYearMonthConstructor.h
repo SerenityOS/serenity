@@ -14,7 +14,7 @@ class PlainYearMonthConstructor final : public NativeFunction {
     JS_OBJECT(PlainYearMonthConstructor, NativeFunction);
 
 public:
-    explicit PlainYearMonthConstructor(GlobalObject&);
+    explicit PlainYearMonthConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainYearMonthConstructor() override = default;
 

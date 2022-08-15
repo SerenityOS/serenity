@@ -13,8 +13,8 @@
 namespace JS::Temporal {
 
 // 8.1 The Temporal.Instant Constructor, https://tc39.es/proposal-temporal/#sec-temporal-instant-constructor
-InstantConstructor::InstantConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Instant.as_string(), *global_object.function_prototype())
+InstantConstructor::InstantConstructor(Realm& realm)
+    : NativeFunction(vm().names.Instant.as_string(), *realm.global_object().function_prototype())
 {
 }
 

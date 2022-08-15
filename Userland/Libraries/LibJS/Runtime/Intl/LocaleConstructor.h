@@ -14,7 +14,7 @@ class LocaleConstructor final : public NativeFunction {
     JS_OBJECT(LocaleConstructor, NativeFunction);
 
 public:
-    explicit LocaleConstructor(GlobalObject&);
+    explicit LocaleConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~LocaleConstructor() override = default;
 

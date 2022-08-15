@@ -1076,6 +1076,7 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
 Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Span<Value> arguments, Environment& environment)
 {
     auto& vm = global_object.vm();
+    auto& realm = *global_object.associated_realm();
 
     // 1. Assert: formals does not contain a rest parameter, any binding patterns, or any initializers. It may contain duplicate identifiers.
 
@@ -1090,7 +1091,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     // 7. Set obj.[[Set]] as specified in 10.4.4.4.
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
-    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object, environment);
+    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, realm, environment);
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,

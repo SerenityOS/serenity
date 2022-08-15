@@ -14,8 +14,8 @@
 namespace JS::Intl {
 
 // 1.2 The Intl.DurationFormat Constructor, https://tc39.es/proposal-intl-duration-format/#sec-intl-durationformat-constructor
-DurationFormatConstructor::DurationFormatConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.DurationFormat.as_string(), *global_object.function_prototype())
+DurationFormatConstructor::DurationFormatConstructor(Realm& realm)
+    : NativeFunction(vm().names.DurationFormat.as_string(), *realm.global_object().function_prototype())
 {
 }
 

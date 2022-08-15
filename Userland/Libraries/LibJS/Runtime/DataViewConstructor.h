@@ -14,7 +14,7 @@ class DataViewConstructor final : public NativeFunction {
     JS_OBJECT(DataViewConstructor, NativeFunction);
 
 public:
-    explicit DataViewConstructor(GlobalObject&);
+    explicit DataViewConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DataViewConstructor() override = default;
 

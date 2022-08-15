@@ -13,8 +13,8 @@
 
 namespace JS {
 
-FinalizationRegistryConstructor::FinalizationRegistryConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.FinalizationRegistry.as_string(), *global_object.function_prototype())
+FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
+    : NativeFunction(vm().names.FinalizationRegistry.as_string(), *realm.global_object().function_prototype())
 {
 }
 

@@ -49,7 +49,7 @@ class Object : public Cell {
 public:
     static Object* create(GlobalObject&, Object* prototype);
 
-    Object(GlobalObject&, Object* prototype);
+    Object(Realm&, Object* prototype);
     explicit Object(Object& prototype);
     explicit Object(Shape&);
     virtual void initialize(GlobalObject&) override;
@@ -196,8 +196,8 @@ public:
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
-    explicit Object(GlobalObjectTag, Realm&);
-    Object(ConstructWithoutPrototypeTag, GlobalObject&);
+    Object(GlobalObjectTag, Realm&);
+    Object(ConstructWithoutPrototypeTag, Realm&);
 
     void set_prototype(Object*);
 

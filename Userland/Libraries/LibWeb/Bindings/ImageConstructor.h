@@ -13,7 +13,7 @@ namespace Web::Bindings {
 
 class ImageConstructor final : public JS::NativeFunction {
 public:
-    explicit ImageConstructor(JS::GlobalObject&);
+    explicit ImageConstructor(JS::Realm&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~ImageConstructor() override = default;
 

@@ -17,7 +17,7 @@ class BoundFunction final : public FunctionObject {
 public:
     static ThrowCompletionOr<BoundFunction*> create(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);
 
-    BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
+    BoundFunction(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
     virtual ~BoundFunction() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;

@@ -14,7 +14,7 @@ class IteratorPrototype : public Object {
     JS_OBJECT(IteratorPrototype, Object)
 
 public:
-    IteratorPrototype(GlobalObject&);
+    IteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~IteratorPrototype() override = default;
 

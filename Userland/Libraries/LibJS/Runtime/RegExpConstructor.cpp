@@ -11,8 +11,8 @@
 
 namespace JS {
 
-RegExpConstructor::RegExpConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.RegExp.as_string(), *global_object.function_prototype())
+RegExpConstructor::RegExpConstructor(Realm& realm)
+    : NativeFunction(vm().names.RegExp.as_string(), *realm.global_object().function_prototype())
 {
 }
 

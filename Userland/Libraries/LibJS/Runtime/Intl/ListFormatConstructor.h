@@ -14,7 +14,7 @@ class ListFormatConstructor final : public NativeFunction {
     JS_OBJECT(ListFormatConstructor, NativeFunction);
 
 public:
-    explicit ListFormatConstructor(GlobalObject&);
+    explicit ListFormatConstructor(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~ListFormatConstructor() override = default;
 

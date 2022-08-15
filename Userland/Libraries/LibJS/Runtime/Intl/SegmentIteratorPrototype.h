@@ -15,7 +15,7 @@ class SegmentIteratorPrototype final : public PrototypeObject<SegmentIteratorPro
     JS_PROTOTYPE_OBJECT(SegmentIteratorPrototype, SegmentIterator, SegmentIterator);
 
 public:
-    explicit SegmentIteratorPrototype(GlobalObject&);
+    explicit SegmentIteratorPrototype(Realm&);
     virtual void initialize(GlobalObject&) override;
     virtual ~SegmentIteratorPrototype() override = default;
 
