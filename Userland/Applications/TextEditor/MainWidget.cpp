@@ -139,11 +139,18 @@ MainWidget::MainWidget()
             m_editor->document().update_regex_matches(needle);
 
         auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
-        while (found_range.is_valid()) {
-            m_editor->set_selection(found_range);
-            m_editor->insert_at_cursor_or_replace_selection(substitute);
-            auto next_start = GUI::TextPosition(found_range.end().line(), found_range.end().column() + length_delta);
-            found_range = m_editor->document().find_next(needle, next_start, GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
+        if (found_range.is_valid()) {
+            while (found_range.is_valid()) {
+                m_editor->set_selection(found_range);
+                m_editor->insert_at_cursor_or_replace_selection(substitute);
+                auto next_start = GUI::TextPosition(found_range.end().line(), found_range.end().column() + length_delta);
+                found_range = m_editor->document().find_next(needle, next_start, GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
+            }
+        } else {
+            GUI::MessageBox::show(window(),
+                String::formatted("Not found: \"{}\"", needle),
+                "Not found"sv,
+                GUI::MessageBox::Type::Information);
         }
     });
 
