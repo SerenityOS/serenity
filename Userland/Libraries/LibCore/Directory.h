@@ -43,6 +43,8 @@ public:
 
     ErrorOr<LexicalPath> path() const;
 
+    ErrorOr<void> chown(uid_t, gid_t);
+
     static ErrorOr<bool> is_valid_directory(int fd);
 
 private:

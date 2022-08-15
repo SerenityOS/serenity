@@ -152,8 +152,8 @@ bool Account::authenticate(SecretString const& password) const
 ErrorOr<void> Account::create_user_temporary_directory_if_needed() const
 {
     auto const temporary_directory = String::formatted("/tmp/user/{}", m_uid);
-    TRY(Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::Yes));
-    TRY(Core::System::chown(temporary_directory, m_uid, m_gid));
+    auto directory = TRY(Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::Yes));
+    TRY(directory.chown(m_uid, m_gid));
     return {};
 }
 

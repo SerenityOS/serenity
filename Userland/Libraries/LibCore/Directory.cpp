@@ -31,6 +31,14 @@ Directory::~Directory()
         MUST(System::close(m_directory_fd));
 }
 
+ErrorOr<void> Directory::chown(uid_t uid, gid_t gid)
+{
+    if (m_directory_fd == -1)
+        return Error::from_syscall("fchown"sv, -EBADF);
+    TRY(Core::System::fchown(m_directory_fd, uid, gid));
+    return {};
+}
+
 ErrorOr<bool> Directory::is_valid_directory(int fd)
 {
     auto stat = TRY(System::fstat(fd));
