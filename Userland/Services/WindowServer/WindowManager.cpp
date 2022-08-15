@@ -1971,7 +1971,10 @@ Cursor const& WindowManager::active_cursor() const
         }
     }
 
-    if (m_hovered_window) {
+    if (m_automatic_cursor_tracking_window) {
+        if (m_automatic_cursor_tracking_window->cursor())
+            return *m_automatic_cursor_tracking_window->cursor();
+    } else if (m_hovered_window) {
         if (auto* modal_window = const_cast<Window&>(*m_hovered_window).blocking_modal_window()) {
             if (modal_window->cursor())
                 return *modal_window->cursor();
