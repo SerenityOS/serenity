@@ -67,6 +67,25 @@ int InodeVMObject::release_all_clean_pages()
     return count;
 }
 
+int InodeVMObject::try_release_clean_pages(int page_amount)
+{
+    SpinlockLocker locker(m_lock);
+
+    int count = 0;
+    for (size_t i = 0; i < page_count() && count < page_amount; ++i) {
+        if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
+            m_physical_pages[i] = nullptr;
+            ++count;
+        }
+    }
+    if (count) {
+        for_each_region([](auto& region) {
+            region.remap();
+        });
+    }
+    return count;
+}
+
 u32 InodeVMObject::writable_mappings() const
 {
     u32 count = 0;
