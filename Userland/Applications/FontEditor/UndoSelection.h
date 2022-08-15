@@ -82,12 +82,10 @@ public:
     virtual void undo() override
     {
         if (!m_redo_state) {
-            if (auto maybe_state = m_undo_state->save_state(); !maybe_state.is_error()) {
-                auto state = maybe_state.release_value();
-                m_redo_state = move(state);
-            } else {
-                warnln("Failed to save redo state: {}", maybe_state.error());
-            }
+            if (auto maybe_state = m_undo_state->save_state(); !maybe_state.is_error())
+                m_redo_state = move(maybe_state.value());
+            else
+                warnln("Saving redo state failed: {}", maybe_state.error());
         }
         m_undo_selection.restore_state(*m_undo_state);
     }
@@ -96,7 +94,7 @@ public:
         if (m_redo_state)
             m_undo_selection.restore_state(*m_redo_state);
         else
-            warnln("Failed to restore state");
+            warnln("Restoring state failed");
     }
 
 private:

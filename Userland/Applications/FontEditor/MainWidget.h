@@ -84,7 +84,7 @@ private:
     void push_undo();
     void reset_selection_and_push_undo();
 
-    void show_error(StringView preface, Error);
+    void show_error(Error, StringView action, StringView basename = {});
 
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
