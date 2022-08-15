@@ -16,7 +16,7 @@ class PluralRulesPrototype final : public PrototypeObject<PluralRulesPrototype, 
 
 public:
     explicit PluralRulesPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PluralRulesPrototype() override = default;
 
 private:

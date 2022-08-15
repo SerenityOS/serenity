@@ -23,9 +23,9 @@ CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collato
 {
 }
 
-void CollatorCompareFunction::initialize(GlobalObject& global_object)
+void CollatorCompareFunction::initialize(Realm&)
 {
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
     define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 }

@@ -16,7 +16,7 @@ class TypedArrayPrototype final : public Object {
 
 public:
     explicit TypedArrayPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~TypedArrayPrototype() override = default;
 
 private:

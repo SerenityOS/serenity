@@ -22,13 +22,13 @@ ObjectConstructor::ObjectConstructor(Realm& realm)
 {
 }
 
-void ObjectConstructor::initialize(GlobalObject& global_object)
+void ObjectConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 20.1.2.19 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
-    define_direct_property(vm.names.prototype, global_object.object_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().object_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.defineProperty, define_property, 3, attr);

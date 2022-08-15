@@ -10,9 +10,9 @@
 
 namespace Web::Bindings {
 
-void WebAssemblyTablePrototype::initialize(JS::GlobalObject& global_object)
+void WebAssemblyTablePrototype::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_native_accessor("length", length_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function("grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function("get", get, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);

@@ -15,7 +15,7 @@ class PromiseConstructor final : public NativeFunction {
 
 public:
     explicit PromiseConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PromiseConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

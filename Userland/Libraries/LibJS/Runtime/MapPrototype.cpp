@@ -17,10 +17,10 @@ MapPrototype::MapPrototype(Realm& realm)
 {
 }
 
-void MapPrototype::initialize(GlobalObject& global_object)
+void MapPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.clear, clear, 0, attr);
@@ -36,7 +36,7 @@ void MapPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), attr);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Map.as_string()), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Map.as_string()), Attribute::Configurable);
 }
 
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear

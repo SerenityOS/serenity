@@ -15,7 +15,7 @@ class AggregateErrorConstructor final : public NativeFunction {
 
 public:
     explicit AggregateErrorConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AggregateErrorConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

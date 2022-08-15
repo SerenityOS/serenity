@@ -15,7 +15,7 @@ class PromisePrototype final : public PrototypeObject<PromisePrototype, Promise>
 
 public:
     PromisePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PromisePrototype() override = default;
 
 private:

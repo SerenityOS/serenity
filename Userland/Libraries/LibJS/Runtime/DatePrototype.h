@@ -16,7 +16,7 @@ class DatePrototype final : public PrototypeObject<DatePrototype, Date> {
 
 public:
     explicit DatePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DatePrototype() override = default;
 
 private:

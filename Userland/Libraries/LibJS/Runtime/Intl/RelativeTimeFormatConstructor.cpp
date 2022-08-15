@@ -24,14 +24,14 @@ RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
 {
 }
 
-void RelativeTimeFormatConstructor::initialize(GlobalObject& global_object)
+void RelativeTimeFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 17.2.1 Intl.RelativeTimeFormat.prototype, https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_relative_time_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_relative_time_format_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

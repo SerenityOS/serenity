@@ -477,10 +477,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                                  \
     }                                                                                                                                  \
                                                                                                                                        \
-    void PrototypeName::initialize(GlobalObject& global_object)                                                                        \
+    void PrototypeName::initialize(Realm& realm)                                                                                       \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
-        Object::initialize(global_object);                                                                                             \
+        Object::initialize(realm);                                                                                                     \
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \
     }                                                                                                                                  \
                                                                                                                                        \
@@ -493,13 +493,13 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                                  \
     }                                                                                                                                  \
                                                                                                                                        \
-    void ConstructorName::initialize(GlobalObject& global_object)                                                                      \
+    void ConstructorName::initialize(Realm& realm)                                                                                     \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
-        NativeFunction::initialize(global_object);                                                                                     \
+        NativeFunction::initialize(realm);                                                                                             \
                                                                                                                                        \
         /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                                         \
-        define_direct_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                         \
+        define_direct_property(vm.names.prototype, realm.global_object().snake_name##_prototype(), 0);                                 \
                                                                                                                                        \
         /* 23.2.6.1 TypedArray.BYTES_PER_ELEMENT, https://tc39.es/ecma262/#sec-typedarray.bytes_per_element */                         \
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \

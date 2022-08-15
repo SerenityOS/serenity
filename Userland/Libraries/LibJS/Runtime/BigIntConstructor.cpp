@@ -22,13 +22,13 @@ BigIntConstructor::BigIntConstructor(Realm& realm)
 {
 }
 
-void BigIntConstructor::initialize(GlobalObject& global_object)
+void BigIntConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 21.2.2.3 BigInt.prototype, https://tc39.es/ecma262/#sec-bigint.prototype
-    define_direct_property(vm.names.prototype, global_object.bigint_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().bigint_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.asIntN, as_int_n, 2, attr);

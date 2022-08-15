@@ -15,7 +15,7 @@ class RegExpConstructor final : public NativeFunction {
 
 public:
     explicit RegExpConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RegExpConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

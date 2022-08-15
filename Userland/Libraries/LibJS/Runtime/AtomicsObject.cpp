@@ -134,9 +134,9 @@ AtomicsObject::AtomicsObject(Realm& realm)
 {
 }
 
-void AtomicsObject::initialize(GlobalObject& global_object)
+void AtomicsObject::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -152,7 +152,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.xor_, xor_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Atomics"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Atomics"), Attribute::Configurable);
 }
 
 // 25.4.3 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add

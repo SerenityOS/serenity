@@ -16,7 +16,7 @@ class DisplayNamesPrototype final : public PrototypeObject<DisplayNamesPrototype
 
 public:
     explicit DisplayNamesPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DisplayNamesPrototype() override = default;
 
 private:

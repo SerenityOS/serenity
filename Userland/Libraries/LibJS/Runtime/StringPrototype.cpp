@@ -107,10 +107,10 @@ StringPrototype::StringPrototype(Realm& realm)
 {
 }
 
-void StringPrototype::initialize(GlobalObject& global_object)
+void StringPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    StringObject::initialize(global_object);
+    StringObject::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.charAt, char_at, 1, attr);

@@ -15,7 +15,7 @@ class PlainDateConstructor final : public NativeFunction {
 
 public:
     explicit PlainDateConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainDateConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

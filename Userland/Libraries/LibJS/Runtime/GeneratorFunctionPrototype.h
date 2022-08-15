@@ -17,7 +17,7 @@ class GeneratorFunctionPrototype final : public Object {
 
 public:
     explicit GeneratorFunctionPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GeneratorFunctionPrototype() override = default;
 };
 

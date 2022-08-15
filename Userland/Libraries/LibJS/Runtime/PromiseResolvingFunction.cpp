@@ -24,9 +24,9 @@ PromiseResolvingFunction::PromiseResolvingFunction(Promise& promise, AlreadyReso
 {
 }
 
-void PromiseResolvingFunction::initialize(GlobalObject& global_object)
+void PromiseResolvingFunction::initialize(Realm& realm)
 {
-    Base::initialize(global_object);
+    Base::initialize(realm);
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
 }
 

@@ -15,7 +15,7 @@ class NumberConstructor final : public NativeFunction {
 
 public:
     explicit NumberConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

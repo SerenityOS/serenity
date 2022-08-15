@@ -20,7 +20,7 @@ public:
 
     explicit NumberFormatFunction(NumberFormat&, Object& prototype);
     virtual ~NumberFormatFunction() override = default;
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
 

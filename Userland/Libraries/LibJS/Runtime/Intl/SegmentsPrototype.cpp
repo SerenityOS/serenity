@@ -17,9 +17,9 @@ SegmentsPrototype::SegmentsPrototype(Realm& realm)
 {
 }
 
-void SegmentsPrototype::initialize(GlobalObject& global_object)
+void SegmentsPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

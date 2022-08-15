@@ -22,9 +22,9 @@ ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vecto
     });
 }
 
-void ModuleNamespaceObject::initialize(GlobalObject& global_object)
+void ModuleNamespaceObject::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     // 28.3.1 @@toStringTag, https://tc39.es/ecma262/#sec-@@tostringtag
     define_direct_property(*vm().well_known_symbol_to_string_tag(), js_string(vm(), "Module"sv), 0);

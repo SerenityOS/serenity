@@ -18,14 +18,14 @@ InstantConstructor::InstantConstructor(Realm& realm)
 {
 }
 
-void InstantConstructor::initialize(GlobalObject& global_object)
+void InstantConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 8.2.1 Temporal.Instant.prototype, https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_instant_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_instant_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

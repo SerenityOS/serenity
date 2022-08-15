@@ -19,10 +19,10 @@ AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
 {
 }
 
-void AsyncFromSyncIteratorPrototype::initialize(GlobalObject& global_object)
+void AsyncFromSyncIteratorPrototype::initialize(Realm& realm)
 {
-    auto& vm = global_object.vm();
-    Object::initialize(global_object);
+    auto& vm = this->vm();
+    Object::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.next, next, 1, attr);

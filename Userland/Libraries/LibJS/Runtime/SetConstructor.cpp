@@ -18,13 +18,13 @@ SetConstructor::SetConstructor(Realm& realm)
 {
 }
 
-void SetConstructor::initialize(GlobalObject& global_object)
+void SetConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 24.2.2.1 Set.prototype, https://tc39.es/ecma262/#sec-set.prototype
-    define_direct_property(vm.names.prototype, global_object.set_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().set_prototype(), 0);
 
     define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 

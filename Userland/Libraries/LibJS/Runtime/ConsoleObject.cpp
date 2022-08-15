@@ -17,10 +17,10 @@ ConsoleObject::ConsoleObject(Realm& realm)
 {
 }
 
-void ConsoleObject::initialize(GlobalObject& global_object)
+void ConsoleObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
     define_native_function(vm.names.log, log, 0, attr);
     define_native_function(vm.names.debug, debug, 0, attr);

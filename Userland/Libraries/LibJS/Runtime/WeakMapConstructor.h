@@ -15,7 +15,7 @@ class WeakMapConstructor final : public NativeFunction {
 
 public:
     explicit WeakMapConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakMapConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

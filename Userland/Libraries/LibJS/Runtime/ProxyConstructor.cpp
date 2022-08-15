@@ -29,10 +29,10 @@ ProxyConstructor::ProxyConstructor(Realm& realm)
 {
 }
 
-void ProxyConstructor::initialize(GlobalObject& global_object)
+void ProxyConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.revocable, revocable, 2, attr);
 

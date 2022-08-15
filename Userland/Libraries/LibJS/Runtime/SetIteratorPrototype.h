@@ -16,7 +16,7 @@ class SetIteratorPrototype final : public PrototypeObject<SetIteratorPrototype, 
 
 public:
     SetIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SetIteratorPrototype() override = default;
 
 private:

@@ -16,7 +16,7 @@ class RelativeTimeFormatPrototype final : public PrototypeObject<RelativeTimeFor
 
 public:
     explicit RelativeTimeFormatPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RelativeTimeFormatPrototype() override = default;
 
 private:

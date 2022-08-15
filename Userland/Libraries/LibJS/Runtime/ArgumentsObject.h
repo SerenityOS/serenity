@@ -18,7 +18,7 @@ class ArgumentsObject final : public Object {
 public:
     ArgumentsObject(Realm&, Environment&);
 
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArgumentsObject() override = default;
 
     Environment& environment() { return m_environment; }

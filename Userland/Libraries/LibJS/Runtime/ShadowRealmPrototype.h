@@ -16,7 +16,7 @@ class ShadowRealmPrototype final : public PrototypeObject<ShadowRealmPrototype, 
 
 public:
     explicit ShadowRealmPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ShadowRealmPrototype() override = default;
 
 private:

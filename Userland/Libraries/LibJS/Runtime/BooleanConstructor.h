@@ -15,7 +15,7 @@ class BooleanConstructor final : public NativeFunction {
 
 public:
     explicit BooleanConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~BooleanConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

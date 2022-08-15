@@ -18,7 +18,7 @@ public:
     static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args);
 
     explicit FunctionConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~FunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

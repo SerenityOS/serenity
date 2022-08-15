@@ -15,7 +15,7 @@ class AggregateErrorPrototype final : public Object {
 
 public:
     explicit AggregateErrorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AggregateErrorPrototype() override = default;
 };
 

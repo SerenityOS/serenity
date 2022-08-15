@@ -25,6 +25,8 @@
 
 namespace JS {
 
+Realm& realm_from_global_object(GlobalObject&);
+
 class Heap {
     AK_MAKE_NONCOPYABLE(Heap);
     AK_MAKE_NONMOVABLE(Heap);
@@ -47,7 +49,8 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-        cell->initialize(global_object);
+        auto& realm = realm_from_global_object(global_object);
+        memory->initialize(realm);
         return cell;
     }
 

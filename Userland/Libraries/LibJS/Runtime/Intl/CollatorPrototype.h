@@ -16,7 +16,7 @@ class CollatorPrototype final : public PrototypeObject<CollatorPrototype, Collat
 
 public:
     explicit CollatorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CollatorPrototype() override = default;
 
 private:

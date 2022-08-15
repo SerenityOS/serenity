@@ -23,14 +23,12 @@ WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::Realm& realm, size_t in
 {
 }
 
-void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
+void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
-
-    auto& realm = *global_object.associated_realm();
+    Object::initialize(realm);
 
     VERIFY(!m_exports_object);
-    m_exports_object = create(global_object, nullptr);
+    m_exports_object = create(realm.global_object(), nullptr);
     auto& instance = this->instance();
     auto& cache = this->cache();
     for (auto& export_ : instance.exports()) {
@@ -38,7 +36,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
             [&](Wasm::FunctionAddress const& address) {
                 Optional<JS::FunctionObject*> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
-                    object = create_native_function(global_object, address, export_.name());
+                    object = create_native_function(realm.global_object(), address, export_.name());
                     cache.function_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
@@ -46,7 +44,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
             [&](Wasm::MemoryAddress const& address) {
                 Optional<WebAssemblyMemoryObject*> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(global_object, realm, address);
+                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm.global_object(), realm, address);
                     cache.memory_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);

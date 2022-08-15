@@ -19,14 +19,14 @@ NumberFormatConstructor::NumberFormatConstructor(Realm& realm)
 {
 }
 
-void NumberFormatConstructor::initialize(GlobalObject& global_object)
+void NumberFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 15.2.1 Intl.NumberFormat.prototype, https://tc39.es/ecma402/#sec-intl.numberformat.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_number_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_number_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);

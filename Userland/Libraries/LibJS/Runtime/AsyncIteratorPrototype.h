@@ -15,7 +15,7 @@ class AsyncIteratorPrototype final : public Object {
 
 public:
     explicit AsyncIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncIteratorPrototype() override = default;
 
 private:

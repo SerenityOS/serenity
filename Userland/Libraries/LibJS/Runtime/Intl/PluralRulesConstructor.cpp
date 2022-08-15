@@ -21,14 +21,14 @@ PluralRulesConstructor::PluralRulesConstructor(Realm& realm)
 {
 }
 
-void PluralRulesConstructor::initialize(GlobalObject& global_object)
+void PluralRulesConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 16.2.1 Intl.PluralRules.prototype, https://tc39.es/ecma402/#sec-intl.pluralrules.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_plural_rules_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_plural_rules_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

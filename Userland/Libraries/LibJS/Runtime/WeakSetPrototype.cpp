@@ -16,10 +16,10 @@ WeakSetPrototype::WeakSetPrototype(Realm& realm)
 {
 }
 
-void WeakSetPrototype::initialize(GlobalObject& global_object)
+void WeakSetPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.add, add, 1, attr);
@@ -27,7 +27,7 @@ void WeakSetPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.has, has, 1, attr);
 
     // 24.4.3.5 WeakSet.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-weakset.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.WeakSet.as_string()), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.WeakSet.as_string()), Attribute::Configurable);
 }
 
 // 24.4.3.1 WeakSet.prototype.add ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.add

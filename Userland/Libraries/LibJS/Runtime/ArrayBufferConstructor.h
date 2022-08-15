@@ -15,7 +15,7 @@ class ArrayBufferConstructor final : public NativeFunction {
 
 public:
     explicit ArrayBufferConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArrayBufferConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

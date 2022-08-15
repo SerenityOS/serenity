@@ -16,7 +16,7 @@ class CalendarPrototype final : public PrototypeObject<CalendarPrototype, Calend
 
 public:
     explicit CalendarPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CalendarPrototype() override = default;
 
 private:

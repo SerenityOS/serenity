@@ -15,7 +15,7 @@ class ConsoleObject final : public Object {
 
 public:
     explicit ConsoleObject(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ConsoleObject() override = default;
 
 private:

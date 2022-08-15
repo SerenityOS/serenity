@@ -16,10 +16,10 @@ IteratorPrototype::IteratorPrototype(Realm& realm)
 {
 }
 
-void IteratorPrototype::initialize(GlobalObject& global_object)
+void IteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(*vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }

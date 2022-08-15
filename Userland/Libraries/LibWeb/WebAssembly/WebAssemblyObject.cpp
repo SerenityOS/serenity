@@ -31,18 +31,18 @@ WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
     s_abstract_machine.enable_instruction_count_limit();
 }
 
-void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
+void WebAssemblyObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function("validate", validate, 1, attr);
     define_native_function("compile", compile, 1, attr);
     define_native_function("instantiate", instantiate, 1, attr);
 
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
     auto& memory_constructor = window.ensure_web_constructor<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
     memory_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
     auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");

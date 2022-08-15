@@ -15,7 +15,7 @@ class BigIntConstructor final : public NativeFunction {
 
 public:
     explicit BigIntConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~BigIntConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

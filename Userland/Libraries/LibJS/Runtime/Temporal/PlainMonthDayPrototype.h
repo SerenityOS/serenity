@@ -16,7 +16,7 @@ class PlainMonthDayPrototype final : public PrototypeObject<PlainMonthDayPrototy
 
 public:
     explicit PlainMonthDayPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainMonthDayPrototype() override = default;
 
 private:

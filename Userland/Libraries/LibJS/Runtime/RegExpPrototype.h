@@ -20,7 +20,7 @@ class RegExpPrototype final : public PrototypeObject<RegExpPrototype, RegExpObje
 
 public:
     explicit RegExpPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RegExpPrototype() override = default;
 
 private:

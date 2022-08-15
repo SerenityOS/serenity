@@ -16,7 +16,7 @@ class DurationFormatPrototype final : public PrototypeObject<DurationFormatProto
 
 public:
     explicit DurationFormatPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DurationFormatPrototype() override = default;
 
 private:

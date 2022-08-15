@@ -16,9 +16,9 @@ DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
 {
 }
 
-void DurationFormatPrototype::initialize(GlobalObject& global_object)
+void DurationFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

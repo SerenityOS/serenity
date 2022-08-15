@@ -19,13 +19,13 @@ AggregateErrorConstructor::AggregateErrorConstructor(Realm& realm)
 {
 }
 
-void AggregateErrorConstructor::initialize(GlobalObject& global_object)
+void AggregateErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 20.5.7.2.1 AggregateError.prototype, https://tc39.es/ecma262/#sec-aggregate-error.prototype
-    define_direct_property(vm.names.prototype, global_object.aggregate_error_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().aggregate_error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }

@@ -16,7 +16,7 @@ class DateTimeFormatPrototype final : public PrototypeObject<DateTimeFormatProto
 
 public:
     explicit DateTimeFormatPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DateTimeFormatPrototype() override = default;
 
 private:

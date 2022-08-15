@@ -16,7 +16,7 @@ class InstantPrototype final : public PrototypeObject<InstantPrototype, Instant>
 
 public:
     explicit InstantPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~InstantPrototype() override = default;
 
 private:

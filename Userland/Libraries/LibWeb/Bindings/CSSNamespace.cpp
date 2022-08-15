@@ -18,9 +18,9 @@ CSSNamespace::CSSNamespace(JS::Realm& realm)
 {
 }
 
-void CSSNamespace::initialize(JS::GlobalObject& global_object)
+void CSSNamespace::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = JS::Attribute::Enumerable;
     define_native_function("escape", escape, 1, attr);
     define_native_function("supports", supports, 2, attr);

@@ -15,7 +15,7 @@ class ListFormatConstructor final : public NativeFunction {
 
 public:
     explicit ListFormatConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ListFormatConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

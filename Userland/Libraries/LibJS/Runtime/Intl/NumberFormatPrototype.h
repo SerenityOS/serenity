@@ -16,7 +16,7 @@ class NumberFormatPrototype final : public PrototypeObject<NumberFormatPrototype
 
 public:
     explicit NumberFormatPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberFormatPrototype() override = default;
 
 private:

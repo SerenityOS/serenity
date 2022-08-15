@@ -17,7 +17,7 @@ public:
     static StringObject* create(GlobalObject&, PrimitiveString&, Object& prototype);
 
     StringObject(PrimitiveString&, Object& prototype);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~StringObject() override = default;
 
     PrimitiveString const& primitive_string() const { return m_string; }

@@ -15,10 +15,10 @@ AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
 {
 }
 
-void AggregateErrorPrototype::initialize(GlobalObject& global_object)
+void AggregateErrorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, js_string(vm, "AggregateError"), attr);
     define_direct_property(vm.names.message, js_string(vm, ""), attr);

@@ -97,10 +97,10 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source
     });
 }
 
-void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
+void ECMAScriptFunctionObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Base::initialize(global_object);
+    Base::initialize(realm);
     // Note: The ordering of these properties must be: length, name, prototype which is the order
     //       they are defined in the spec: https://tc39.es/ecma262/#sec-function-instances .
     //       This is observable through something like: https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
@@ -114,17 +114,17 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
+            prototype = vm.heap().allocate<Object>(realm.global_object(), *realm.global_object().new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = Object::create(global_object, global_object.generator_function_prototype_prototype());
+            prototype = Object::create(realm.global_object(), realm.global_object().generator_function_prototype_prototype());
             break;
         case FunctionKind::Async:
             break;
         case FunctionKind::AsyncGenerator:
-            prototype = Object::create(global_object, global_object.async_generator_function_prototype_prototype());
+            prototype = Object::create(realm.global_object(), realm.global_object().async_generator_function_prototype_prototype());
             break;
         }
         // 27.7.4 AsyncFunction Instances, https://tc39.es/ecma262/#sec-async-function-instances

@@ -15,7 +15,7 @@ class BooleanPrototype final : public BooleanObject {
 
 public:
     explicit BooleanPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~BooleanPrototype() override = default;
 
 private:

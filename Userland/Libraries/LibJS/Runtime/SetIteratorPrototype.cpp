@@ -18,15 +18,15 @@ SetIteratorPrototype::SetIteratorPrototype(Realm& realm)
 {
 }
 
-void SetIteratorPrototype::initialize(GlobalObject& global_object)
+void SetIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
 
     // 24.2.5.2.2 %SetIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%setiteratorprototype%-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Set Iterator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Set Iterator"), Attribute::Configurable);
 }
 
 // 24.2.5.2.1 %SetIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%setiteratorprototype%.next

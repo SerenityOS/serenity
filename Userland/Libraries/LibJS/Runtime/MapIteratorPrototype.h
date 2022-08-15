@@ -16,7 +16,7 @@ class MapIteratorPrototype final : public PrototypeObject<MapIteratorPrototype, 
 
 public:
     MapIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MapIteratorPrototype() override = default;
 
 private:

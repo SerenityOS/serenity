@@ -18,13 +18,13 @@ WeakMapConstructor::WeakMapConstructor(Realm& realm)
 {
 }
 
-void WeakMapConstructor::initialize(GlobalObject& global_object)
+void WeakMapConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 24.3.2.1 WeakMap.prototype, https://tc39.es/ecma262/#sec-weakmap.prototype
-    define_direct_property(vm.names.prototype, global_object.weak_map_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().weak_map_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

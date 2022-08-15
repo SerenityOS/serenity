@@ -16,7 +16,7 @@ class ListFormatPrototype final : public PrototypeObject<ListFormatPrototype, Li
 
 public:
     explicit ListFormatPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ListFormatPrototype() override = default;
 
 private:

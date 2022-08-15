@@ -15,7 +15,7 @@ class ShadowRealmConstructor final : public NativeFunction {
 
 public:
     explicit ShadowRealmConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ShadowRealmConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

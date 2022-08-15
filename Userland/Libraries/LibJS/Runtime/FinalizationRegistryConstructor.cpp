@@ -18,13 +18,13 @@ FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
 {
 }
 
-void FinalizationRegistryConstructor::initialize(GlobalObject& global_object)
+void FinalizationRegistryConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 26.2.2.1 FinalizationRegistry.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
-    define_direct_property(vm.names.prototype, global_object.finalization_registry_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().finalization_registry_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

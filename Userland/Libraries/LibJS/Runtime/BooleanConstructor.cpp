@@ -16,13 +16,13 @@ BooleanConstructor::BooleanConstructor(Realm& realm)
 {
 }
 
-void BooleanConstructor::initialize(GlobalObject& global_object)
+void BooleanConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 20.3.2.1 Boolean.prototype, https://tc39.es/ecma262/#sec-boolean.prototype
-    define_direct_property(vm.names.prototype, global_object.boolean_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().boolean_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

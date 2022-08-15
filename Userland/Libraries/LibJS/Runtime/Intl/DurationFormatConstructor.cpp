@@ -19,14 +19,14 @@ DurationFormatConstructor::DurationFormatConstructor(Realm& realm)
 {
 }
 
-void DurationFormatConstructor::initialize(GlobalObject& global_object)
+void DurationFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 1.3.1 Intl.DurationFormat.prototype, https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_duration_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_duration_format_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

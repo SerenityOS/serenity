@@ -23,9 +23,9 @@ AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterato
 {
 }
 
-void AsyncFromSyncIterator::initialize(GlobalObject& global_object)
+void AsyncFromSyncIterator::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 }
 
 void AsyncFromSyncIterator::visit_edges(Cell::Visitor& visitor)

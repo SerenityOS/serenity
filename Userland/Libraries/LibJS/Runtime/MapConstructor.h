@@ -15,7 +15,7 @@ class MapConstructor final : public NativeFunction {
 
 public:
     explicit MapConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MapConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

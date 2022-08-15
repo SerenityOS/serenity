@@ -21,14 +21,14 @@ ZonedDateTimeConstructor::ZonedDateTimeConstructor(Realm& realm)
 {
 }
 
-void ZonedDateTimeConstructor::initialize(GlobalObject& global_object)
+void ZonedDateTimeConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 6.2.1 Temporal.ZonedDateTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_zoned_date_time_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_zoned_date_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

@@ -54,12 +54,12 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, realm, *address);
 }
 
-void WebAssemblyMemoryConstructor::initialize(JS::GlobalObject& global_object)
+void WebAssemblyMemoryConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
 
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }

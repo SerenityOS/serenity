@@ -15,7 +15,7 @@ class CalendarConstructor final : public NativeFunction {
 
 public:
     explicit CalendarConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CalendarConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

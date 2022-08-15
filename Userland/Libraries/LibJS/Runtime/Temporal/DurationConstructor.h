@@ -15,7 +15,7 @@ class DurationConstructor final : public NativeFunction {
 
 public:
     explicit DurationConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DurationConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

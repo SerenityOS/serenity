@@ -28,21 +28,22 @@ NumberConstructor::NumberConstructor(Realm& realm)
 {
 }
 
-void NumberConstructor::initialize(GlobalObject& global_object)
+void NumberConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 21.1.2.15 Number.prototype, https://tc39.es/ecma262/#sec-number.prototype
-    define_direct_property(vm.names.prototype, global_object.number_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().number_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.isInteger, is_integer, 1, attr);
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
-    define_direct_property(vm.names.parseInt, global_object.get_without_side_effects(vm.names.parseInt), attr);
-    define_direct_property(vm.names.parseFloat, global_object.get_without_side_effects(vm.names.parseFloat), attr);
+    // FIXME: Store these as intrinsics (`parse_int_function()`) instead of getting them from the global object
+    define_direct_property(vm.names.parseInt, realm.global_object().get_without_side_effects(vm.names.parseInt), attr);
+    define_direct_property(vm.names.parseFloat, realm.global_object().get_without_side_effects(vm.names.parseFloat), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
     define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);

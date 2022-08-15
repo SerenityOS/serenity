@@ -15,7 +15,7 @@ class SymbolConstructor final : public NativeFunction {
 
 public:
     explicit SymbolConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SymbolConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

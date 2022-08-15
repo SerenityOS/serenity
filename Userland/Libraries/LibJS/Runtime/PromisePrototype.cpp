@@ -21,10 +21,10 @@ PromisePrototype::PromisePrototype(Realm& realm)
 {
 }
 
-void PromisePrototype::initialize(GlobalObject& global_object)
+void PromisePrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.then, then, 2, attr);

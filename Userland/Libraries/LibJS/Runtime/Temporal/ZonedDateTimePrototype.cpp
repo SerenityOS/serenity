@@ -25,9 +25,9 @@ ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
 {
 }
 
-void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
+void ZonedDateTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

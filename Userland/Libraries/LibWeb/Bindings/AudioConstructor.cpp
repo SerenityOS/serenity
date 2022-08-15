@@ -19,11 +19,11 @@ AudioConstructor::AudioConstructor(JS::Realm& realm)
 {
 }
 
-void AudioConstructor::initialize(JS::GlobalObject& global_object)
+void AudioConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(global_object);
-    NativeFunction::initialize(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
+    NativeFunction::initialize(realm);
 
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<HTMLAudioElementPrototype>("HTMLAudioElement"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);

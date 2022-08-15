@@ -167,13 +167,13 @@ DateConstructor::DateConstructor(Realm& realm)
 {
 }
 
-void DateConstructor::initialize(GlobalObject& global_object)
+void DateConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
-    define_direct_property(vm.names.prototype, global_object.date_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.now, now, 0, attr);

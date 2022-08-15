@@ -16,7 +16,7 @@ class AsyncGeneratorPrototype final : public PrototypeObject<AsyncGeneratorProto
 
 public:
     explicit AsyncGeneratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncGeneratorPrototype() override = default;
 };
 

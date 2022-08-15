@@ -17,7 +17,7 @@ class NavigatorObject final : public JS::Object {
 
 public:
     NavigatorObject(JS::Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~NavigatorObject() override = default;
 
 private:

@@ -20,7 +20,7 @@ class AsyncFromSyncIteratorPrototype final : public PrototypeObject<AsyncFromSyn
 
 public:
     explicit AsyncFromSyncIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIteratorPrototype() override = default;
 
 private:

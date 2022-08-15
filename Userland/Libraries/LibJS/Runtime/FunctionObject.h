@@ -20,7 +20,7 @@ class FunctionObject : public Object {
 
 public:
     virtual ~FunctionObject() = default;
-    virtual void initialize(GlobalObject&) override { }
+    virtual void initialize(Realm&) override { }
 
     // Table 7: Additional Essential Internal Methods of Function Objects, https://tc39.es/ecma262/#table-additional-essential-internal-methods-of-function-objects
 

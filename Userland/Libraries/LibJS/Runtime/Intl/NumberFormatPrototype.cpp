@@ -19,9 +19,9 @@ NumberFormatPrototype::NumberFormatPrototype(Realm& realm)
 {
 }
 
-void NumberFormatPrototype::initialize(GlobalObject& global_object)
+void NumberFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

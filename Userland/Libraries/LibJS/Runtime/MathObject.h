@@ -15,7 +15,7 @@ class MathObject final : public Object {
 
 public:
     explicit MathObject(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MathObject() override = default;
 
 private:

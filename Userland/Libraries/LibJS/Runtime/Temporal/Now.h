@@ -16,7 +16,7 @@ class Now final : public Object {
 
 public:
     explicit Now(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Now() override = default;
 
 private:

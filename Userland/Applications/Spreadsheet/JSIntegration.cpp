@@ -371,9 +371,9 @@ WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
 {
 }
 
-void WorkbookObject::initialize(JS::GlobalObject& global_object)
+void WorkbookObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_native_function("sheet", sheet, 1, JS::default_attributes);
 }
 

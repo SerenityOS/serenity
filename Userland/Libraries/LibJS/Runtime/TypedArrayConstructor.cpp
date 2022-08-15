@@ -21,13 +21,13 @@ TypedArrayConstructor::TypedArrayConstructor(Realm& realm)
 {
 }
 
-void TypedArrayConstructor::initialize(GlobalObject& global_object)
+void TypedArrayConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 23.2.2.3 %TypedArray%.prototype, https://tc39.es/ecma262/#sec-%typedarray%.prototype
-    define_direct_property(vm.names.prototype, global_object.typed_array_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().typed_array_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

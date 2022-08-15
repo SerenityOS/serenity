@@ -15,7 +15,7 @@ class BigIntPrototype final : public Object {
 
 public:
     explicit BigIntPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~BigIntPrototype() override = default;
 
 private:

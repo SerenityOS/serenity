@@ -14,10 +14,10 @@ GeneratorPrototype::GeneratorPrototype(Realm& realm)
 {
 }
 
-void GeneratorPrototype::initialize(GlobalObject& global_object)
+void GeneratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.next, next, 1, attr);
     define_native_function(vm.names.return_, return_, 1, attr);

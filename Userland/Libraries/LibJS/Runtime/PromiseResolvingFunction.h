@@ -31,7 +31,7 @@ public:
     static PromiseResolvingFunction* create(GlobalObject&, Promise&, AlreadyResolved&, FunctionType);
 
     explicit PromiseResolvingFunction(Promise&, AlreadyResolved&, FunctionType, Object& prototype);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PromiseResolvingFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

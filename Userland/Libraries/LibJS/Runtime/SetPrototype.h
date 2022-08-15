@@ -16,7 +16,7 @@ class SetPrototype final : public PrototypeObject<SetPrototype, Set> {
 
 public:
     SetPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SetPrototype() override = default;
 
 private:

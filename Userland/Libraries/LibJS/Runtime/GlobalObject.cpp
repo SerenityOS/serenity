@@ -166,10 +166,8 @@ void GlobalObject::initialize_global_object()
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
     // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_global_object().
-
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
-
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
+    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm);
+    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm);
 
     Object::set_prototype(m_object_prototype);
 

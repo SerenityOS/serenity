@@ -15,7 +15,7 @@ class DateTimeFormatConstructor final : public NativeFunction {
 
 public:
     explicit DateTimeFormatConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DateTimeFormatConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

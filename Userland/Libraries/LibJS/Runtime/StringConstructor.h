@@ -15,7 +15,7 @@ class StringConstructor final : public NativeFunction {
 
 public:
     explicit StringConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~StringConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

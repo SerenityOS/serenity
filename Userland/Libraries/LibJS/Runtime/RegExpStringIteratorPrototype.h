@@ -18,7 +18,7 @@ public:
     explicit RegExpStringIteratorPrototype(Realm&);
     virtual ~RegExpStringIteratorPrototype() override = default;
 
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(next);

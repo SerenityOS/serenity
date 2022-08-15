@@ -26,10 +26,10 @@ StringObject::StringObject(PrimitiveString& string, Object& prototype)
 {
 }
 
-void StringObject::initialize(GlobalObject& global_object)
+void StringObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_direct_property(vm.names.length, Value(m_string.utf16_string_view().length_in_code_units()), 0);
 }
 

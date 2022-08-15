@@ -25,10 +25,10 @@ FunctionPrototype::FunctionPrototype(Realm& realm)
 {
 }
 
-void FunctionPrototype::initialize(GlobalObject& global_object)
+void FunctionPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Base::initialize(global_object);
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.apply, apply, 2, attr);
     define_native_function(vm.names.bind, bind, 1, attr);

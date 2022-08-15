@@ -25,9 +25,9 @@ CalendarPrototype::CalendarPrototype(Realm& realm)
 {
 }
 
-void CalendarPrototype::initialize(GlobalObject& global_object)
+void CalendarPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

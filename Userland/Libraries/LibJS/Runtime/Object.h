@@ -52,7 +52,7 @@ public:
     Object(Realm&, Object* prototype);
     explicit Object(Object& prototype);
     explicit Object(Shape&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Object() = default;
 
     enum class PropertyKind {

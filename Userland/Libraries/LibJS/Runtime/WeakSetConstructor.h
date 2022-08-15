@@ -15,7 +15,7 @@ class WeakSetConstructor final : public NativeFunction {
 
 public:
     explicit WeakSetConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakSetConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

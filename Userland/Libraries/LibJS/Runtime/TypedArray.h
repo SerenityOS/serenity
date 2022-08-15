@@ -472,7 +472,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
                                                                                             \
     public:                                                                                 \
         PrototypeName(Realm&);                                                              \
-        virtual void initialize(GlobalObject&) override;                                    \
+        virtual void initialize(Realm&) override;                                           \
         virtual ~PrototypeName() override;                                                  \
     };                                                                                      \
     class ConstructorName final : public TypedArrayConstructor {                            \
@@ -480,7 +480,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
                                                                                             \
     public:                                                                                 \
         explicit ConstructorName(Realm&);                                                   \
-        virtual void initialize(GlobalObject&) override;                                    \
+        virtual void initialize(Realm&) override;                                           \
         virtual ~ConstructorName() override;                                                \
                                                                                             \
         virtual ThrowCompletionOr<Value> call() override;                                   \

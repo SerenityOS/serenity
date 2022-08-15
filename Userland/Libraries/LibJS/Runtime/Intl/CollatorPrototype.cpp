@@ -17,9 +17,9 @@ CollatorPrototype::CollatorPrototype(Realm& realm)
 {
 }
 
-void CollatorPrototype::initialize(GlobalObject& global_object)
+void CollatorPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

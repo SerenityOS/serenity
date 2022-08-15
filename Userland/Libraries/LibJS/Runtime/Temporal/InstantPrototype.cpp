@@ -24,9 +24,9 @@ InstantPrototype::InstantPrototype(Realm& realm)
 {
 }
 
-void InstantPrototype::initialize(GlobalObject& global_object)
+void InstantPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

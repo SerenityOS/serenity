@@ -15,7 +15,7 @@ class FinalizationRegistryConstructor final : public NativeFunction {
 
 public:
     explicit FinalizationRegistryConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~FinalizationRegistryConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

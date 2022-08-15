@@ -16,7 +16,7 @@ class AsyncFunctionConstructor final : public NativeFunction {
 
 public:
     explicit AsyncFunctionConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncFunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

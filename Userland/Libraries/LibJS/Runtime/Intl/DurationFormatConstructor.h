@@ -15,7 +15,7 @@ class DurationFormatConstructor final : public NativeFunction {
 
 public:
     explicit DurationFormatConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DurationFormatConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

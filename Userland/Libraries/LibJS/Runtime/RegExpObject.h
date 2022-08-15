@@ -45,7 +45,7 @@ public:
     ThrowCompletionOr<RegExpObject*> regexp_initialize(GlobalObject&, Value pattern, Value flags);
     String escape_regexp_pattern() const;
 
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RegExpObject() override = default;
 
     String const& pattern() const { return m_pattern; }

@@ -19,10 +19,10 @@ ArrayBufferPrototype::ArrayBufferPrototype(Realm& realm)
 {
 }
 
-void ArrayBufferPrototype::initialize(GlobalObject& global_object)
+void ArrayBufferPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.slice, slice, 2, attr);
     define_native_accessor(vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);

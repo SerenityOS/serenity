@@ -18,14 +18,14 @@ PlainTimeConstructor::PlainTimeConstructor(Realm& realm)
 {
 }
 
-void PlainTimeConstructor::initialize(GlobalObject& global_object)
+void PlainTimeConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 4.2.1 Temporal.PlainTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_plain_time_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_plain_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

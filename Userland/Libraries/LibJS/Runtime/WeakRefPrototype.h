@@ -16,7 +16,7 @@ class WeakRefPrototype final : public PrototypeObject<WeakRefPrototype, WeakRef>
 
 public:
     WeakRefPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakRefPrototype() override = default;
 
 private:

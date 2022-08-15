@@ -17,13 +17,13 @@ AsyncFunctionConstructor::AsyncFunctionConstructor(Realm& realm)
 {
 }
 
-void AsyncFunctionConstructor::initialize(GlobalObject& global_object)
+void AsyncFunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 27.7.2.2 AsyncFunction.prototype, https://tc39.es/ecma262/#sec-async-function-constructor-prototype
-    define_direct_property(vm.names.prototype, global_object.async_function_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().async_function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
