@@ -218,7 +218,7 @@ struct RelativeTimeFormatImpl {
     {
         RelativeTimeFormat relative_time_format {};
         relative_time_format.plurality = plurality;
-        relative_time_format.pattern = s_string_list[pattern];
+        relative_time_format.pattern = decode_string(pattern);
 
         return relative_time_format;
     }
@@ -271,7 +271,7 @@ Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, 
             continue;
         if (locale_format.style != style)
             continue;
-        if (s_string_list[locale_format.tense_or_number] != tense_or_number)
+        if (decode_string(locale_format.tense_or_number) != tense_or_number)
             continue;
 
         formats.append(locale_format.to_relative_time_format());

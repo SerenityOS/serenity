@@ -1117,8 +1117,8 @@ struct DisplayPatternImpl {
     DisplayPattern to_display_pattern() const
     {
         DisplayPattern display_patterns {};
-        display_patterns.locale_pattern = s_string_list[locale_pattern];
-        display_patterns.locale_separator = s_string_list[locale_separator];
+        display_patterns.locale_pattern = decode_string(locale_pattern);
+        display_patterns.locale_separator = decode_string(locale_separator);
 
         return display_patterns;
     }
@@ -1266,13 +1266,13 @@ struct CanonicalLanguageID {
         LanguageID language_id {};
         language_id.variants.ensure_capacity(variants_size);
 
-        language_id.language = s_string_list[language];
+        language_id.language = decode_string(language);
         if (script != 0)
-            language_id.script = s_string_list[script];
+            language_id.script = decode_string(script);
         if (region != 0)
-            language_id.region = s_string_list[region];
+            language_id.region = decode_string(region);
         for (size_t i = 0; i < variants_size; ++i)
-            language_id.variants.append(s_string_list[variants[i]]);
+            language_id.variants.append(decode_string(variants[i]));
 
         return language_id;
     }
@@ -1284,7 +1284,7 @@ struct CanonicalLanguageID {
             return false;
 
         for (size_t i = 0; i < variants_size; ++i) {
-            if (s_string_list[variants[i]] != other_variants[i])
+            if (decode_string(variants[i]) != other_variants[i])
                 return false;
         }
 
@@ -1415,9 +1415,9 @@ static LanguageMapping const* resolve_likely_subtag(LanguageID const& language_i
         }
 
         for (auto const& map : s_likely_subtags) {
-            auto const& key_language = s_string_list[map.key.language];
-            auto const& key_script = s_string_list[map.key.script];
-            auto const& key_region  = s_string_list[map.key.region];
+            auto const& key_language = decode_string(map.key.language);
+            auto const& key_script = decode_string(map.key.script);
+            auto const& key_region  = decode_string(map.key.region);
 
             if (key_language != search_key.language)
                 continue;
@@ -1463,7 +1463,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     auto const& mappings = @unique_list@.at(mapping_index);
 
     auto @enum_snake@_string_index = mappings.at(@enum_snake@_index);
-    auto @enum_snake@_mapping = s_string_list.at(@enum_snake@_string_index);
+    auto @enum_snake@_mapping = decode_string(@enum_snake@_string_index);
 
     if (@enum_snake@_mapping.is_empty())
         return {};
@@ -1493,7 +1493,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
         ValueFromStringOptions options {};
         options.return_type = "StringView"sv;
-        options.return_format = "s_string_list[{}]"sv;
+        options.return_format = "decode_string({})"sv;
 
         generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), options);
     };
@@ -1606,7 +1606,7 @@ Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, S
     if (keyword_indices.is_empty())
         return {};
 
-    return s_string_list[keyword_indices[0]];
+    return decode_string(keyword_indices[0]);
 }
 
 Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
@@ -1636,7 +1636,7 @@ Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
     keywords.ensure_capacity(keyword_indices.size());
 
     for (auto keyword : keyword_indices)
-        keywords.unchecked_append(s_string_list[keyword]);
+        keywords.unchecked_append(decode_string(keyword));
 
     return keywords;
 }
@@ -1673,10 +1673,10 @@ Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView li
         auto const& list_patterns = s_list_patterns.at(list_patterns_index);
 
         if ((list_patterns.type == type_value) && (list_patterns.style == list_pattern_style)) {
-            auto const& start = s_string_list[list_patterns.start];
-            auto const& middle = s_string_list[list_patterns.middle];
-            auto const& end = s_string_list[list_patterns.end];
-            auto const& pair = s_string_list[list_patterns.pair];
+            auto const& start = decode_string(list_patterns.start);
+            auto const& middle = decode_string(list_patterns.middle);
+            auto const& end = decode_string(list_patterns.end);
+            auto const& pair = decode_string(list_patterns.pair);
 
             return ListPatterns { start, middle, end, pair };
         }
@@ -1707,9 +1707,9 @@ Optional<CharacterOrder> character_order_for_locale(StringView locale)
 void resolve_complex_language_aliases(LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
-        auto const& key_language = s_string_list[map.key.language];
-        auto const& key_script = s_string_list[map.key.script];
-        auto const& key_region  = s_string_list[map.key.region];
+        auto const& key_language = decode_string(map.key.language);
+        auto const& key_script = decode_string(map.key.script);
+        auto const& key_region  = decode_string(map.key.region);
 
         if ((key_language != language_id.language) && (key_language != "und"sv))
             continue;
@@ -1745,12 +1745,12 @@ Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
 
     auto maximized = language_id;
 
-    auto const& key_script = s_string_list[likely_subtag->key.script];
-    auto const& key_region = s_string_list[likely_subtag->key.region];
+    auto const& key_script = decode_string(likely_subtag->key.script);
+    auto const& key_region = decode_string(likely_subtag->key.region);
 
-    auto const& alias_language = s_string_list[likely_subtag->alias.language];
-    auto const& alias_script = s_string_list[likely_subtag->alias.script];
-    auto const& alias_region = s_string_list[likely_subtag->alias.region];
+    auto const& alias_language = decode_string(likely_subtag->alias.language);
+    auto const& alias_script = decode_string(likely_subtag->alias.script);
+    auto const& alias_region = decode_string(likely_subtag->alias.region);
 
     if (maximized.language == "und"sv)
         maximized.language = alias_language;
@@ -1765,7 +1765,7 @@ Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
 Optional<String> resolve_most_likely_territory(LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
-        return s_string_list[likely_subtag->alias.region];
+        return decode_string(likely_subtag->alias.region);
     return {};
 }
 

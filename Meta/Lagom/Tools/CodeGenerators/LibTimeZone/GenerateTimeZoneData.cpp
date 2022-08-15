@@ -724,8 +724,8 @@ Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, 
 
     auto format_name = [](auto format, auto offset) -> String {
         if (offset == 0)
-            return s_string_list[format].replace("{}"sv, ""sv, ReplaceMode::FirstOnly);
-        return String::formatted(s_string_list[format], s_string_list[offset]);
+            return decode_string(format).replace("{}"sv, ""sv, ReplaceMode::FirstOnly);
+        return String::formatted(decode_string(format), decode_string(offset));
     };
 
     auto set_named_offset = [&](auto& named_offset, auto dst_offset, auto in_dst, auto format, auto offset) {
@@ -776,7 +776,7 @@ Vector<StringView> time_zones_in_region(StringView region)
     time_zones.ensure_capacity(regional_time_zones.size());
 
     for (auto time_zone : regional_time_zones)
-        time_zones.unchecked_append(s_string_list[time_zone]);
+        time_zones.unchecked_append(decode_string(time_zone));
 
     return time_zones;
 }
