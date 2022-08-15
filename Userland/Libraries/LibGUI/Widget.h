@@ -345,7 +345,7 @@ public:
 
     virtual Gfx::IntRect children_clip_rect() const;
 
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> override_cursor() const { return m_override_cursor; }
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& override_cursor() const { return m_override_cursor; }
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     bool load_from_gml(StringView);
