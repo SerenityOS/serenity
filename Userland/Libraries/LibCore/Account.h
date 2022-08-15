@@ -42,6 +42,8 @@ public:
     bool authenticate(SecretString const& password) const;
     bool login() const;
 
+    ErrorOr<void> create_user_temporary_directory_if_needed() const;
+
     String username() const { return m_username; }
     String password_hash() const { return m_password_hash; }
 

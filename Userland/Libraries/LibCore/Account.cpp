@@ -149,17 +149,16 @@ bool Account::authenticate(SecretString const& password) const
     return hash != nullptr && AK::timing_safe_compare(hash, m_password_hash.characters(), m_password_hash.length());
 }
 
-bool Account::login() const
+ErrorOr<void> Account::create_user_temporary_directory_if_needed() const
 {
     auto const temporary_directory = String::formatted("/tmp/user/{}", m_uid);
-    if (auto result = Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::Yes); result.is_error()) {
-        dbgln("{}", result.release_error());
-        return false;
-    }
+    TRY(Core::Directory::create(temporary_directory, Core::Directory::CreateDirectories::Yes));
+    TRY(Core::System::chown(temporary_directory, m_uid, m_gid));
+    return {};
+}
 
-    if (chown(temporary_directory.characters(), m_uid, m_gid) < 0)
-        return false;
-
+bool Account::login() const
+{
     if (setgroups(m_extra_gids.size(), m_extra_gids.data()) < 0)
         return false;
 
