@@ -19,8 +19,8 @@ GlobalEnvironment::GlobalEnvironment(GlobalObject& global_object, Object& this_v
     : Environment(nullptr)
     , m_global_this_value(&this_value)
 {
-    m_object_record = global_object.heap().allocate_without_global_object<ObjectEnvironment>(global_object, ObjectEnvironment::IsWithEnvironment::No, nullptr);
-    m_declarative_record = global_object.heap().allocate_without_global_object<DeclarativeEnvironment>();
+    m_object_record = global_object.heap().allocate_without_realm<ObjectEnvironment>(global_object, ObjectEnvironment::IsWithEnvironment::No, nullptr);
+    m_declarative_record = global_object.heap().allocate_without_realm<DeclarativeEnvironment>();
 }
 
 void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)

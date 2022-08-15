@@ -154,47 +154,47 @@ void GlobalObject::initialize_global_object()
     // These are done first since other prototypes depend on their presence.
     VERIFY(associated_realm());
     auto& realm = *associated_realm();
-    m_empty_object_shape = heap().allocate_without_global_object<Shape>(realm);
-    m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(realm);
-    m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(realm);
+    m_empty_object_shape = heap().allocate_without_realm<Shape>(realm);
+    m_object_prototype = heap().allocate_without_realm<ObjectPrototype>(realm);
+    m_function_prototype = heap().allocate_without_realm<FunctionPrototype>(realm);
 
-    m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(realm);
+    m_new_object_shape = vm.heap().allocate_without_realm<Shape>(realm);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
 
-    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(realm);
+    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_realm<Shape>(realm);
     m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
-    // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_global_object().
+    // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_realm().
     static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm);
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm);
 
     Object::set_prototype(m_object_prototype);
 
     // This must be initialized before allocating AggregateErrorPrototype, which uses ErrorPrototype as its prototype.
-    m_error_prototype = heap().allocate<ErrorPrototype>(*this, realm);
+    m_error_prototype = heap().allocate<ErrorPrototype>(realm, realm);
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
     if (!m_##snake_name##_prototype)          \
-        m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(*this, realm);
+        m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(realm, realm);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 
     // These must be initialized separately as they have no companion constructor
-    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, realm);
-    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(*this, realm);
-    m_generator_prototype = heap().allocate<GeneratorPrototype>(*this, realm);
-    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(*this, realm);
+    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(realm, realm);
+    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm);
+    m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm);
+    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     if (!m_##snake_name##_prototype)                                                     \
-        m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, realm);
+        m_##snake_name##_prototype = heap().allocate<PrototypeName>(realm, realm);
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_intl_##snake_name##_prototype)                                     \
-        m_intl_##snake_name##_prototype = heap().allocate<Intl::PrototypeName>(*this, realm);
+        m_intl_##snake_name##_prototype = heap().allocate<Intl::PrototypeName>(realm, realm);
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
@@ -206,7 +206,7 @@ void GlobalObject::initialize_global_object()
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_temporal_##snake_name##_prototype)                                 \
-        m_temporal_##snake_name##_prototype = heap().allocate<Temporal::PrototypeName>(*this, realm);
+        m_temporal_##snake_name##_prototype = heap().allocate<Temporal::PrototypeName>(realm, realm);
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
@@ -250,13 +250,13 @@ void GlobalObject::initialize_global_object()
     define_direct_property(vm.names.undefined, js_undefined(), 0);
 
     define_direct_property(vm.names.globalThis, this, attr);
-    define_direct_property(vm.names.console, heap().allocate<ConsoleObject>(*this, realm), attr);
-    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(*this, realm), attr);
-    define_direct_property(vm.names.Math, heap().allocate<MathObject>(*this, realm), attr);
-    define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(*this, realm), attr);
-    define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, realm), attr);
-    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(*this, realm), attr);
-    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(*this, realm), attr);
+    define_direct_property(vm.names.console, heap().allocate<ConsoleObject>(realm, realm), attr);
+    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(realm, realm), attr);
+    define_direct_property(vm.names.Math, heap().allocate<MathObject>(realm, realm), attr);
+    define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(realm, realm), attr);
+    define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(realm, realm), attr);
+    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(realm, realm), attr);
+    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
 
     // This must be initialized before allocating AggregateErrorConstructor, which uses ErrorConstructor as its prototype.
     initialize_constructor(vm.names.Error, m_error_constructor, m_error_prototype);

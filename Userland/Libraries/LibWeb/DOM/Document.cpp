@@ -171,7 +171,7 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
             [&](JS::Realm& realm) -> JS::GlobalObject* {
                 // - For the global object, create a new Window object.
                 window = HTML::Window::create();
-                auto* global_object = realm.heap().allocate_without_global_object<Bindings::WindowObject>(realm, *window);
+                auto* global_object = realm.heap().allocate_without_realm<Bindings::WindowObject>(realm, *window);
                 VERIFY(window->wrapper() == global_object);
                 return global_object;
             },

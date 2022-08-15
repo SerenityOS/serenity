@@ -19,7 +19,7 @@ BigInt::BigInt(Crypto::SignedBigInteger big_integer)
 
 BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
 {
-    return heap.allocate_without_global_object<BigInt>(move(big_integer));
+    return heap.allocate_without_realm<BigInt>(move(big_integer));
 }
 
 BigInt* js_bigint(VM& vm, Crypto::SignedBigInteger big_integer)

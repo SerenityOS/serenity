@@ -36,7 +36,7 @@ NativeFunction* NativeFunction::create(Realm& allocating_realm, Function<ThrowCo
     // 7. Set func.[[Extensible]] to true.
     // 8. Set func.[[Realm]] to realm.
     // 9. Set func.[[InitialName]] to null.
-    auto* function = allocating_realm.heap().allocate<NativeFunction>(allocating_realm.global_object(), move(behaviour), prototype.value(), *realm.value());
+    auto* function = allocating_realm.heap().allocate<NativeFunction>(allocating_realm, move(behaviour), prototype.value(), *realm.value());
 
     // 10. Perform SetFunctionLength(func, length).
     function->set_function_length(length);
@@ -53,7 +53,7 @@ NativeFunction* NativeFunction::create(Realm& allocating_realm, Function<ThrowCo
 
 NativeFunction* NativeFunction::create(Realm& realm, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> function)
 {
-    return realm.heap().allocate<NativeFunction>(realm.global_object(), name, move(function), *realm.global_object().function_prototype());
+    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.global_object().function_prototype());
 }
 
 NativeFunction::NativeFunction(Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, Object* prototype, Realm& realm)

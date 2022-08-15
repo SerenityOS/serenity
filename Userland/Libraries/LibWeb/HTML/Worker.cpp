@@ -110,7 +110,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 TODO();
             // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
             //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
-            m_worker_scope = m_worker_vm->heap().allocate_without_global_object<JS::GlobalObject>(realm);
+            m_worker_scope = m_worker_vm->heap().allocate_without_realm<JS::GlobalObject>(realm);
             return m_worker_scope;
         },
         nullptr);

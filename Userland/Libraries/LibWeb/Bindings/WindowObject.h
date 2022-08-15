@@ -54,7 +54,7 @@ public:
         if (it != m_prototypes.end())
             return *it->value;
         auto& realm = *associated_realm();
-        auto* prototype = heap().allocate<T>(*this, realm);
+        auto* prototype = heap().allocate<T>(realm, realm);
         m_prototypes.set(class_name, prototype);
         return *prototype;
     }
@@ -66,7 +66,7 @@ public:
         if (it != m_constructors.end())
             return *it->value;
         auto& realm = *associated_realm();
-        auto* constructor = heap().allocate<T>(*this, realm);
+        auto* constructor = heap().allocate<T>(realm, realm);
         m_constructors.set(class_name, constructor);
         define_direct_property(class_name, JS::Value(constructor), JS::Attribute::Writable | JS::Attribute::Configurable);
         return *constructor;

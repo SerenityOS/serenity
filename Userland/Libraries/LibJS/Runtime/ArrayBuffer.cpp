@@ -17,17 +17,17 @@ ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(Realm& realm, size_t byte_le
     if (buffer.is_error())
         return realm.vm().throw_completion<RangeError>(realm.global_object(), ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), buffer.release_value(), *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.global_object().array_buffer_prototype());
 }
 
 ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), move(buffer), *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.global_object().array_buffer_prototype());
 }
 
 ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm.global_object(), buffer, *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.global_object().array_buffer_prototype());
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)

@@ -10,7 +10,7 @@ namespace JS {
 
 WeakMap* WeakMap::create(Realm& realm)
 {
-    return realm.heap().allocate<WeakMap>(realm.global_object(), *realm.global_object().weak_map_prototype());
+    return realm.heap().allocate<WeakMap>(realm, *realm.global_object().weak_map_prototype());
 }
 
 WeakMap::WeakMap(Object& prototype)

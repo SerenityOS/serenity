@@ -119,7 +119,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("screenLeft", screen_left_getter, {}, attr);
     define_native_accessor("screenTop", screen_top_getter, {}, attr);
 
-    define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, realm), 0);
+    define_direct_property("CSS", heap().allocate<CSSNamespace>(realm, realm), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
     define_native_accessor("sessionStorage", session_storage_getter, {}, attr);
@@ -128,9 +128,9 @@ void WindowObject::initialize_global_object()
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    m_location_object = heap().allocate<LocationObject>(*this, realm);
+    m_location_object = heap().allocate<LocationObject>(realm, realm);
 
-    auto* m_navigator_object = heap().allocate<NavigatorObject>(*this, realm);
+    auto* m_navigator_object = heap().allocate<NavigatorObject>(realm, realm);
     define_direct_property("navigator", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property("clientInformation", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
@@ -138,7 +138,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("location", location_getter, location_setter, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
-    define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, realm), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(realm, realm), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \

@@ -124,12 +124,12 @@ ThrowCompletionOr<String> parse_regex_pattern(StringView pattern, VM& vm, Global
 
 RegExpObject* RegExpObject::create(Realm& realm)
 {
-    return realm.heap().allocate<RegExpObject>(realm.global_object(), *realm.global_object().regexp_prototype());
+    return realm.heap().allocate<RegExpObject>(realm, *realm.global_object().regexp_prototype());
 }
 
 RegExpObject* RegExpObject::create(Realm& realm, Regex<ECMA262> regex, String pattern, String flags)
 {
-    return realm.heap().allocate<RegExpObject>(realm.global_object(), move(regex), move(pattern), move(flags), *realm.global_object().regexp_prototype());
+    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), *realm.global_object().regexp_prototype());
 }
 
 RegExpObject::RegExpObject(Object& prototype)

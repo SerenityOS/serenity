@@ -2006,7 +2006,7 @@ namespace Web::Bindings {
 
 @wrapper_class@* @wrapper_class@::create(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    return realm.heap().allocate<@wrapper_class@>(realm.global_object(), realm, impl);
+    return realm.heap().allocate<@wrapper_class@>(realm, realm, impl);
 }
 
 )~~~");
@@ -3670,7 +3670,7 @@ namespace Web::Bindings {
 
 @wrapper_class@* @wrapper_class@::create(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    return realm.heap().allocate<@wrapper_class@>(realm.global_object(), realm, impl);
+    return realm.heap().allocate<@wrapper_class@>(realm, realm, impl);
 }
 
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)

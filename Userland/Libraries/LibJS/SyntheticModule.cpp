@@ -53,7 +53,7 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
     auto& global_object = realm().global_object();
 
     // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    auto* environment = vm.heap().allocate_without_global_object<ModuleEnvironment>(&realm().global_environment());
+    auto* environment = vm.heap().allocate_without_realm<ModuleEnvironment>(&realm().global_environment());
 
     // 4. Set module.[[Environment]] to env.
     set_environment(environment);

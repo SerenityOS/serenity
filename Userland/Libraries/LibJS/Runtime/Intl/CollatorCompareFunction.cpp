@@ -13,7 +13,7 @@ namespace JS::Intl {
 
 CollatorCompareFunction* CollatorCompareFunction::create(Realm& realm, Collator& collator)
 {
-    return realm.heap().allocate<CollatorCompareFunction>(realm.global_object(), realm, collator);
+    return realm.heap().allocate<CollatorCompareFunction>(realm, realm, collator);
 }
 
 CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collator)

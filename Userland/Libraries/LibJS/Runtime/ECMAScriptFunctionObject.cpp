@@ -45,12 +45,12 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(Realm& realm, FlyStri
         prototype = realm.global_object().async_generator_function_prototype();
         break;
     }
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm.global_object(), move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
 ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(Realm& realm, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm.global_object(), move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
 }
 
 ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> formal_parameters, i32 function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
@@ -114,7 +114,7 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = vm.heap().allocate<Object>(realm.global_object(), *realm.global_object().new_ordinary_function_prototype_object_shape());
+            prototype = vm.heap().allocate<Object>(realm, *realm.global_object().new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:

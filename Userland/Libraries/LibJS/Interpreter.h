@@ -48,7 +48,7 @@ public:
         interpreter->m_global_execution_context = MUST(Realm::initialize_host_defined_realm(
             vm,
             [&](Realm& realm) -> GlobalObject* {
-                global_object = interpreter->heap().allocate_without_global_object<GlobalObjectType>(realm, forward<Args>(args)...);
+                global_object = interpreter->heap().allocate_without_realm<GlobalObjectType>(realm, forward<Args>(args)...);
                 return global_object;
             },
             nullptr));

@@ -14,7 +14,7 @@ namespace JS::Intl {
 // 1.1.4 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
 NumberFormatFunction* NumberFormatFunction::create(Realm& realm, NumberFormat& number_format)
 {
-    return realm.heap().allocate<NumberFormatFunction>(realm.global_object(), number_format, *realm.global_object().function_prototype());
+    return realm.heap().allocate<NumberFormatFunction>(realm, number_format, *realm.global_object().function_prototype());
 }
 
 NumberFormatFunction::NumberFormatFunction(NumberFormat& number_format, Object& prototype)

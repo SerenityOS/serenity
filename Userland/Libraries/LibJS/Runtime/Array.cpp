@@ -32,7 +32,7 @@ ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* protot
     // 3. Let A be MakeBasicObject(« [[Prototype]], [[Extensible]] »).
     // 4. Set A.[[Prototype]] to proto.
     // 5. Set A.[[DefineOwnProperty]] as specified in 10.4.2.1.
-    auto* array = realm.heap().allocate<Array>(realm.global_object(), *prototype);
+    auto* array = realm.heap().allocate<Array>(realm, *prototype);
 
     // 6. Perform ! OrdinaryDefineOwnProperty(A, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));

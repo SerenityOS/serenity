@@ -135,7 +135,7 @@ ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_obje
 {
     auto& realm = *global_object.associated_realm();
     auto* prototype = TRY(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
-    return realm.heap().allocate<T>(realm.global_object(), forward<Args>(args)..., *prototype);
+    return realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype);
 }
 
 // 14.1 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists

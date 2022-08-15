@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
-        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(global_object, realm, result.release_value()));
+        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value()));
     return promise;
 }
 
@@ -354,10 +354,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, realm, result.release_value());
+        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value());
         if (should_return_module) {
             auto object = JS::Object::create(realm, nullptr);
-            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, realm, s_compiled_modules.size() - 1), JS::default_attributes);
+            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {
@@ -369,9 +369,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 
 JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
 {
+    auto& realm = *global_object.associated_realm();
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        return global_object.heap().allocate<JS::BigInt>(global_object, ::Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
+        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:
