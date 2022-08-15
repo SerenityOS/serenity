@@ -644,7 +644,7 @@ void TreeView::auto_resize_column(int column)
 
     int header_width = column_header().font().width(model.column_name(column));
     if (column == m_key_column && model.is_column_sortable(column))
-        header_width += font().width(" \xE2\xAC\x86"sv);
+        header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
     int column_width = header_width;
 
     bool is_empty = true;
@@ -689,7 +689,7 @@ void TreeView::update_column_sizes()
             continue;
         int header_width = column_header().font().width(model.column_name(column));
         if (column == m_key_column && model.is_column_sortable(column))
-            header_width += font().width(" \xE2\xAC\x86"sv);
+            header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
         int column_width = header_width;
         traverse_in_paint_order([&](ModelIndex const& index, Gfx::IntRect const&, Gfx::IntRect const&, int) {
             auto cell_data = model.index(index.row(), column, index.parent()).data();
@@ -710,7 +710,7 @@ void TreeView::update_column_sizes()
 
     int tree_column_header_width = column_header().font().width(model.column_name(tree_column));
     if (tree_column == m_key_column && model.is_column_sortable(tree_column))
-        tree_column_header_width += font().width(" \xE2\xAC\x86"sv);
+        tree_column_header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
     int tree_column_width = tree_column_header_width;
     traverse_in_paint_order([&](ModelIndex const& index, Gfx::IntRect const&, Gfx::IntRect const&, int indent_level) {
         auto cell_data = model.index(index.row(), tree_column, index.parent()).data();

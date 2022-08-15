@@ -41,6 +41,21 @@ public:
 
     Function<void(int section)> on_resize_doubleclick;
 
+    static constexpr auto const sorting_arrow_offset = 3;
+    static constexpr auto const sorting_arrow_width = 6;
+
+    static constexpr auto const ascending_arrow_coordinates = Array {
+        Gfx::IntPoint { 4, 2 },
+        Gfx::IntPoint { 1, 5 },
+        Gfx::IntPoint { 7, 5 },
+    };
+
+    static constexpr auto const descending_arrow_coordinates = Array {
+        Gfx::IntPoint { 1, 3 },
+        Gfx::IntPoint { 7, 3 },
+        Gfx::IntPoint { 4, 6 },
+    };
+
 private:
     HeaderView(AbstractTableView&, Gfx::Orientation);
 

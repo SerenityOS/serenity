@@ -264,22 +264,22 @@ void HeaderView::paint_horizontal(Painter& painter)
         bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
         bool hovered = section == m_hovered_section && model()->is_column_sortable(section);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
-        String text;
-        if (is_key_column) {
-            StringBuilder builder;
-            builder.append(model()->column_name(section));
-            if (m_table_view.sort_order() == SortOrder::Ascending)
-                builder.append(" \xE2\xAC\x86"sv); // UPWARDS BLACK ARROW
-            else if (m_table_view.sort_order() == SortOrder::Descending)
-                builder.append(" \xE2\xAC\x87"sv); // DOWNWARDS BLACK ARROW
-            text = builder.to_string();
-        } else {
-            text = model()->column_name(section);
-        }
+
+        auto text = model()->column_name(section);
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.translate_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_data.alignment, palette().button_text());
+
+        if (is_key_column && (m_table_view.sort_order() != SortOrder::None)) {
+            Gfx::IntPoint offset { text_rect.x() + font().width(text) + sorting_arrow_offset, sorting_arrow_offset };
+            auto coordinates = m_table_view.sort_order() == SortOrder::Ascending
+                ? ascending_arrow_coordinates.span()
+                : descending_arrow_coordinates.span();
+
+            painter.draw_triangle(offset, coordinates, palette().button_text());
+        }
+
         x_offset += section_width + m_table_view.horizontal_padding() * 2;
     }
 
