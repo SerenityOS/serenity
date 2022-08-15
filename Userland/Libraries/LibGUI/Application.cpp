@@ -147,6 +147,8 @@ Action* Application::action_for_shortcut(Shortcut const& shortcut) const
 
 void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widget)
 {
+    if (!Desktop::the().system_effects().tooltips())
+        return;
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
@@ -166,6 +168,8 @@ void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widg
 
 void Application::show_tooltip_immediately(String tooltip, Widget const* tooltip_source_widget)
 {
+    if (!Desktop::the().system_effects().tooltips())
+        return;
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
