@@ -16,7 +16,7 @@ class WeakSetPrototype final : public PrototypeObject<WeakSetPrototype, WeakSet>
 
 public:
     WeakSetPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakSetPrototype() override = default;
 
 private:

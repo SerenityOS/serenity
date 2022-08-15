@@ -20,10 +20,10 @@ ReflectObject::ReflectObject(Realm& realm)
 {
 }
 
-void ReflectObject::initialize(GlobalObject& global_object)
+void ReflectObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.apply, apply, 3, attr);
     define_native_function(vm.names.construct, construct, 2, attr);

@@ -16,7 +16,7 @@ class NumberFormatConstructor final : public NativeFunction {
 
 public:
     explicit NumberFormatConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberFormatConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

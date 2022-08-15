@@ -81,12 +81,12 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     return vm.heap().allocate<WebAssemblyTableObject>(global_object, realm, *address);
 }
 
-void WebAssemblyTableConstructor::initialize(JS::GlobalObject& global_object)
+void WebAssemblyTableConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
 
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyTablePrototype>("WebAssemblyTablePrototype"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }

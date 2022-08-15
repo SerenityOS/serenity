@@ -14,10 +14,10 @@ WeakRefPrototype::WeakRefPrototype(Realm& realm)
 {
 }
 
-void WeakRefPrototype::initialize(GlobalObject& global_object)
+void WeakRefPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     define_native_function(vm.names.deref, deref, 0, Attribute::Writable | Attribute::Configurable);
 

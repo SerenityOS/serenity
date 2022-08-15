@@ -15,7 +15,7 @@ class InstantConstructor final : public NativeFunction {
 
 public:
     explicit InstantConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~InstantConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

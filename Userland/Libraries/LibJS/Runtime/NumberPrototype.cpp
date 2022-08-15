@@ -88,10 +88,10 @@ NumberPrototype::NumberPrototype(Realm& realm)
 {
 }
 
-void NumberPrototype::initialize(GlobalObject& object)
+void NumberPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(object);
+    Object::initialize(realm);
     u8 attr = Attribute::Configurable | Attribute::Writable;
     define_native_function(vm.names.toExponential, to_exponential, 1, attr);
     define_native_function(vm.names.toFixed, to_fixed, 1, attr);

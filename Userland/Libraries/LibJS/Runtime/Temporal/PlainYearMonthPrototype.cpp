@@ -22,9 +22,9 @@ PlainYearMonthPrototype::PlainYearMonthPrototype(Realm& realm)
 {
 }
 
-void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
+void PlainYearMonthPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

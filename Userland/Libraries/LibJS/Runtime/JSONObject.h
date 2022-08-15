@@ -15,7 +15,7 @@ class JSONObject final : public Object {
 
 public:
     explicit JSONObject(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~JSONObject() override = default;
 
     // The base implementation of stringify is exposed because it is used by

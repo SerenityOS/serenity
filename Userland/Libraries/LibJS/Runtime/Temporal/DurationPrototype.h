@@ -16,7 +16,7 @@ class DurationPrototype final : public PrototypeObject<DurationPrototype, Durati
 
 public:
     explicit DurationPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DurationPrototype() override = default;
 
 private:

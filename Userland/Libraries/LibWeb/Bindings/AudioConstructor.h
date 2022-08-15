@@ -14,7 +14,7 @@ namespace Web::Bindings {
 class AudioConstructor final : public JS::NativeFunction {
 public:
     explicit AudioConstructor(JS::Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~AudioConstructor() override = default;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;

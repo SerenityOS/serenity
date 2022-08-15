@@ -16,14 +16,14 @@ CalendarConstructor::CalendarConstructor(Realm& realm)
 {
 }
 
-void CalendarConstructor::initialize(GlobalObject& global_object)
+void CalendarConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 12.3.1 Temporal.Calendar.prototype, https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_calendar_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_calendar_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

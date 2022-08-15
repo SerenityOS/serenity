@@ -16,7 +16,7 @@ class LocalePrototype final : public PrototypeObject<LocalePrototype, Locale> {
 
 public:
     explicit LocalePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~LocalePrototype() override = default;
 
 private:

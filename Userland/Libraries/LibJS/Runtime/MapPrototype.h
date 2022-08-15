@@ -16,7 +16,7 @@ class MapPrototype final : public PrototypeObject<MapPrototype, Map> {
 
 public:
     MapPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MapPrototype() override = default;
 
 private:

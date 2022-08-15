@@ -20,10 +20,10 @@ ErrorPrototype::ErrorPrototype(Realm& realm)
 {
 }
 
-void ErrorPrototype::initialize(GlobalObject& global_object)
+void ErrorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, js_string(vm, "Error"), attr);
     define_direct_property(vm.names.message, js_string(vm, ""), attr);
@@ -129,10 +129,10 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
     {                                                                                    \
     }                                                                                    \
                                                                                          \
-    void PrototypeName::initialize(GlobalObject& global_object)                          \
+    void PrototypeName::initialize(Realm& realm)                                         \
     {                                                                                    \
         auto& vm = this->vm();                                                           \
-        Object::initialize(global_object);                                               \
+        Object::initialize(realm);                                                       \
         u8 attr = Attribute::Writable | Attribute::Configurable;                         \
         define_direct_property(vm.names.name, js_string(vm, #ClassName), attr);          \
         define_direct_property(vm.names.message, js_string(vm, ""), attr);               \

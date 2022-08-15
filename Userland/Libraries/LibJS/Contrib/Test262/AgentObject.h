@@ -16,7 +16,7 @@ class AgentObject final : public Object {
 
 public:
     explicit AgentObject(Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~AgentObject() override = default;
 
 private:

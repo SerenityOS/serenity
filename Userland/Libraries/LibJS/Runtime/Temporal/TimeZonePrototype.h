@@ -16,7 +16,7 @@ class TimeZonePrototype final : public PrototypeObject<TimeZonePrototype, TimeZo
 
 public:
     explicit TimeZonePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~TimeZonePrototype() override = default;
 
 private:

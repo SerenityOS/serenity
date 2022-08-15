@@ -20,14 +20,14 @@ PlainDateConstructor::PlainDateConstructor(Realm& realm)
 {
 }
 
-void PlainDateConstructor::initialize(GlobalObject& global_object)
+void PlainDateConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_plain_date_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_plain_date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

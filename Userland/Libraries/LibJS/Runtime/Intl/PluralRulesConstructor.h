@@ -15,7 +15,7 @@ class PluralRulesConstructor final : public NativeFunction {
 
 public:
     explicit PluralRulesConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PluralRulesConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -16,7 +16,7 @@ class SegmenterPrototype final : public PrototypeObject<SegmenterPrototype, Segm
 
 public:
     explicit SegmenterPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SegmenterPrototype() override = default;
 
 private:

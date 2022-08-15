@@ -15,7 +15,7 @@ class Temporal final : public Object {
 
 public:
     explicit Temporal(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Temporal() override = default;
 };
 

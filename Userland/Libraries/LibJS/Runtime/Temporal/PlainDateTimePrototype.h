@@ -16,7 +16,7 @@ class PlainDateTimePrototype final : public PrototypeObject<PlainDateTimePrototy
 
 public:
     explicit PlainDateTimePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainDateTimePrototype() override = default;
 
 private:

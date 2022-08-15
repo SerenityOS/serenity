@@ -16,10 +16,10 @@ WeakMapPrototype::WeakMapPrototype(Realm& realm)
 {
 }
 
-void WeakMapPrototype::initialize(GlobalObject& global_object)
+void WeakMapPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.delete_, delete_, 1, attr);

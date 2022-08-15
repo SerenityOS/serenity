@@ -15,7 +15,7 @@ class LocaleConstructor final : public NativeFunction {
 
 public:
     explicit LocaleConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~LocaleConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

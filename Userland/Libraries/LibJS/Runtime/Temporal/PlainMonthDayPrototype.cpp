@@ -20,9 +20,9 @@ PlainMonthDayPrototype::PlainMonthDayPrototype(Realm& realm)
 {
 }
 
-void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
+void PlainMonthDayPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

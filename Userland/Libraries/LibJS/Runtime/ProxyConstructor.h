@@ -16,7 +16,7 @@ class ProxyConstructor final : public NativeFunction {
 
 public:
     explicit ProxyConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ProxyConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -17,7 +17,7 @@ public:
     static CollatorCompareFunction* create(GlobalObject&, Collator&);
 
     CollatorCompareFunction(Realm&, Collator&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CollatorCompareFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

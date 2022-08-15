@@ -1838,7 +1838,7 @@ public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
     @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@wrapper_class@() override;
 )~~~");
 
@@ -2029,11 +2029,11 @@ namespace Web::Bindings {
     }
 
     generator.append(R"~~~(
-void @wrapper_class@::initialize(JS::GlobalObject& global_object)
+void @wrapper_class@::initialize(JS::Realm& realm)
 {
-    @wrapper_base_class@::initialize(global_object);
+    @wrapper_base_class@::initialize(realm);
 
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
     define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::js_string(vm, "@name@"), JS::Attribute::Configurable);
 }
 
@@ -2800,7 +2800,7 @@ class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
 public:
     explicit @constructor_class@(JS::Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@constructor_class@() override;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;
@@ -2991,13 +2991,13 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
     generator.append(R"~~~(
 }
 
-void @constructor_class@::initialize(JS::GlobalObject& global_object)
+void @constructor_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
@@ -3067,7 +3067,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 private:
 )~~~");
@@ -3238,7 +3238,7 @@ namespace Web::Bindings {
 {
 }
 
-void @prototype_class@::initialize(JS::GlobalObject& global_object)
+void @prototype_class@::initialize(JS::Realm& realm)
 {
     [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
@@ -3247,7 +3247,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
     if (interface.has_unscopable_member) {
         generator.append(R"~~~(
-    auto* unscopable_object = JS::Object::create(global_object, nullptr);
+    auto* unscopable_object = JS::Object::create(realm.global_object(), nullptr);
 )~~~");
     }
 
@@ -3320,15 +3320,15 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     if (interface.indexed_property_getter.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(*vm.well_known_symbol_iterator(), realm.global_object().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
 
         if (interface.value_iterator_type.has_value()) {
             iterator_generator.append(R"~~~(
-    define_direct_property(vm.names.entries, global_object.array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
-    define_direct_property(vm.names.keys, global_object.array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
-    define_direct_property(vm.names.values, global_object.array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
-    define_direct_property(vm.names.forEach, global_object.array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
+    define_direct_property(vm.names.entries, realm.global_object().array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
+    define_direct_property(vm.names.keys, realm.global_object().array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
+    define_direct_property(vm.names.values, realm.global_object().array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
+    define_direct_property(vm.names.forEach, realm.global_object().array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
 )~~~");
         }
     }
@@ -3354,7 +3354,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     }
 
     generator.append(R"~~~(
-    Object::initialize(global_object);
+    Object::initialize(realm);
 }
 )~~~");
 
@@ -3589,7 +3589,7 @@ public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
     @wrapper_class@(JS::Realm&, @fully_qualified_name@&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@wrapper_class@() override;
 
     @fully_qualified_name@& impl() { return *m_impl; }
@@ -3670,9 +3670,9 @@ namespace Web::Bindings {
 {
 }
 
-void @wrapper_class@::initialize(JS::GlobalObject& global_object)
+void @wrapper_class@::initialize(JS::Realm& realm)
 {
-    Wrapper::initialize(global_object);
+    Wrapper::initialize(realm);
 }
 
 @wrapper_class@::~@wrapper_class@()
@@ -3715,7 +3715,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 
 private:
@@ -3787,10 +3787,10 @@ namespace Web::Bindings {
 {
 }
 
-void @prototype_class@::initialize(JS::GlobalObject& global_object)
+void @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     define_native_function(vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);

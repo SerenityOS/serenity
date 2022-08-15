@@ -15,7 +15,7 @@ class WeakRefConstructor final : public NativeFunction {
 
 public:
     explicit WeakRefConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakRefConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

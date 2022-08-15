@@ -16,7 +16,7 @@ class WeakMapPrototype final : public PrototypeObject<WeakMapPrototype, WeakMap>
 
 public:
     WeakMapPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakMapPrototype() override = default;
 
 private:

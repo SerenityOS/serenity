@@ -16,14 +16,14 @@ TimeZoneConstructor::TimeZoneConstructor(Realm& realm)
 {
 }
 
-void TimeZoneConstructor::initialize(GlobalObject& global_object)
+void TimeZoneConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 11.3.1 Temporal.TimeZone.prototype, https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype
-    define_direct_property(vm.names.prototype, global_object.temporal_time_zone_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().temporal_time_zone_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

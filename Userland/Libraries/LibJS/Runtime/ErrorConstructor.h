@@ -16,7 +16,7 @@ class ErrorConstructor final : public NativeFunction {
 
 public:
     explicit ErrorConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ErrorConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
@@ -32,7 +32,7 @@ private:
                                                                                                 \
     public:                                                                                     \
         explicit ConstructorName(Realm&);                                                       \
-        virtual void initialize(GlobalObject&) override;                                        \
+        virtual void initialize(Realm&) override;                                               \
         virtual ~ConstructorName() override;                                                    \
         virtual ThrowCompletionOr<Value> call() override;                                       \
         virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;      \

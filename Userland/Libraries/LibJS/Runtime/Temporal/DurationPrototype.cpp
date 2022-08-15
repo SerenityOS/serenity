@@ -20,9 +20,9 @@ DurationPrototype::DurationPrototype(Realm& realm)
 {
 }
 
-void DurationPrototype::initialize(GlobalObject& global_object)
+void DurationPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

@@ -25,9 +25,9 @@ Now::Now(Realm& realm)
 {
 }
 
-void Now::initialize(GlobalObject& global_object)
+void Now::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

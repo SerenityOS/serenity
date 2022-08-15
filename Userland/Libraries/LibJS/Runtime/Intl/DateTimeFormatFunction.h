@@ -20,7 +20,7 @@ public:
 
     explicit DateTimeFormatFunction(DateTimeFormat&, Object& prototype);
     virtual ~DateTimeFormatFunction() override = default;
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
 

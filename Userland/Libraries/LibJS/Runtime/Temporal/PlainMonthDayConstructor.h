@@ -15,7 +15,7 @@ class PlainMonthDayConstructor final : public NativeFunction {
 
 public:
     explicit PlainMonthDayConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainMonthDayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -16,7 +16,7 @@ class ObjectConstructor final : public NativeFunction {
 
 public:
     explicit ObjectConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ObjectConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -28,12 +28,12 @@ JS::ThrowCompletionOr<JS::Object*> NavigatorConstructor::construct(FunctionObjec
     return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "Navigator");
 }
 
-void NavigatorConstructor::initialize(JS::GlobalObject& global_object)
+void NavigatorConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
 
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<NavigatorPrototype>("Navigator"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }

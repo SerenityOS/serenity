@@ -15,7 +15,7 @@ class ReflectObject final : public Object {
 
 public:
     explicit ReflectObject(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ReflectObject() override = default;
 
 private:

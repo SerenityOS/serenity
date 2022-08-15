@@ -16,7 +16,7 @@ class FinalizationRegistryPrototype final : public PrototypeObject<FinalizationR
 
 public:
     FinalizationRegistryPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~FinalizationRegistryPrototype() override = default;
 
 private:

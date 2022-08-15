@@ -16,13 +16,13 @@ ErrorConstructor::ErrorConstructor(Realm& realm)
 {
 }
 
-void ErrorConstructor::initialize(GlobalObject& global_object)
+void ErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 20.5.2.1 Error.prototype, https://tc39.es/ecma262/#sec-error.prototype
-    define_direct_property(vm.names.prototype, global_object.error_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -68,13 +68,13 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     {                                                                                                                                     \
     }                                                                                                                                     \
                                                                                                                                           \
-    void ConstructorName::initialize(GlobalObject& global_object)                                                                         \
+    void ConstructorName::initialize(Realm& realm)                                                                                        \
     {                                                                                                                                     \
         auto& vm = this->vm();                                                                                                            \
-        NativeFunction::initialize(global_object);                                                                                        \
+        NativeFunction::initialize(realm);                                                                                                \
                                                                                                                                           \
         /* 20.5.6.2.1 NativeError.prototype, https://tc39.es/ecma262/#sec-nativeerror.prototype */                                        \
-        define_direct_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                            \
+        define_direct_property(vm.names.prototype, realm.global_object().snake_name##_prototype(), 0);                                    \
                                                                                                                                           \
         define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                                                       \
     }                                                                                                                                     \

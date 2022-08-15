@@ -15,7 +15,7 @@ class CollatorConstructor final : public NativeFunction {
 
 public:
     explicit CollatorConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CollatorConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -15,7 +15,7 @@ class DisplayNamesConstructor final : public NativeFunction {
 
 public:
     explicit DisplayNamesConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DisplayNamesConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

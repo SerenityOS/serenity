@@ -19,7 +19,7 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual void initialize(GlobalObject&) { }
+    virtual void initialize(Realm&) { }
     virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }

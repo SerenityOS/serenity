@@ -15,7 +15,7 @@ class SegmenterConstructor final : public NativeFunction {
 
 public:
     explicit SegmenterConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SegmenterConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

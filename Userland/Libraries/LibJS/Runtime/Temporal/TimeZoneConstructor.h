@@ -15,7 +15,7 @@ class TimeZoneConstructor final : public NativeFunction {
 
 public:
     explicit TimeZoneConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~TimeZoneConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -15,7 +15,7 @@ class SymbolPrototype final : public Object {
 
 public:
     explicit SymbolPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SymbolPrototype() override = default;
 
 private:

@@ -22,14 +22,14 @@ DateTimeFormatConstructor::DateTimeFormatConstructor(Realm& realm)
 {
 }
 
-void DateTimeFormatConstructor::initialize(GlobalObject& global_object)
+void DateTimeFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 11.2.1 Intl.DateTimeFormat.prototype, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_date_time_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_date_time_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);

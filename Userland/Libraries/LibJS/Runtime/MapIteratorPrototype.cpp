@@ -18,13 +18,13 @@ MapIteratorPrototype::MapIteratorPrototype(Realm& realm)
 {
 }
 
-void MapIteratorPrototype::initialize(GlobalObject& global_object)
+void MapIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Map Iterator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Map Iterator"), Attribute::Configurable);
 }
 
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next

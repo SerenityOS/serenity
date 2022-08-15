@@ -29,11 +29,11 @@ LocationObject::LocationObject(JS::Realm& realm)
 {
 }
 
-void LocationObject::initialize(JS::GlobalObject& global_object)
+void LocationObject::initialize(JS::Realm& realm)
 {
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_accessor("href", href_getter, href_setter, attr);
     define_native_accessor("host", host_getter, {}, attr);

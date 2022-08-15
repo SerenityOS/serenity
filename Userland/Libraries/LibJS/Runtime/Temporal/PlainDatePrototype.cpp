@@ -25,9 +25,9 @@ PlainDatePrototype::PlainDatePrototype(Realm& realm)
 {
 }
 
-void PlainDatePrototype::initialize(GlobalObject& global_object)
+void PlainDatePrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

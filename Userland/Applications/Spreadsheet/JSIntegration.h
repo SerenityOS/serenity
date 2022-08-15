@@ -54,7 +54,7 @@ public:
 
     virtual ~WorkbookObject() override = default;
 
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
 
     JS_DECLARE_NATIVE_FUNCTION(sheet);
 

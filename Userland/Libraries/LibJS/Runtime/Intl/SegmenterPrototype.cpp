@@ -17,9 +17,9 @@ SegmenterPrototype::SegmenterPrototype(Realm& realm)
 {
 }
 
-void SegmenterPrototype::initialize(GlobalObject& global_object)
+void SegmenterPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

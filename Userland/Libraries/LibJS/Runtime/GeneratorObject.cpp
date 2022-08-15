@@ -41,7 +41,7 @@ GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext con
 {
 }
 
-void GeneratorObject::initialize(GlobalObject&)
+void GeneratorObject::initialize(Realm&)
 {
 }
 

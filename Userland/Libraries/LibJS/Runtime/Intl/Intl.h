@@ -15,7 +15,7 @@ class Intl final : public Object {
 
 public:
     explicit Intl(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Intl() override = default;
 
 private:

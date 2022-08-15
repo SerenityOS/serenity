@@ -33,10 +33,10 @@ ArrayPrototype::ArrayPrototype(Realm& realm)
 {
 }
 
-void ArrayPrototype::initialize(GlobalObject& global_object)
+void ArrayPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Array::initialize(global_object);
+    Array::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.at, at, 1, attr);
@@ -89,7 +89,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // 23.1.3.37 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
     // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
-    auto* unscopable_list = Object::create(global_object, nullptr);
+    auto* unscopable_list = Object::create(realm.global_object(), nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true)));

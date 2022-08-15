@@ -146,10 +146,10 @@ RegExpObject::RegExpObject(Regex<ECMA262> regex, String pattern, String flags, O
     VERIFY(m_regex->parser_result.error == regex::Error::NoError);
 }
 
-void RegExpObject::initialize(GlobalObject& global_object)
+void RegExpObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_direct_property(vm.names.lastIndex, Value(0), Attribute::Writable);
 }
 

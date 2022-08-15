@@ -16,7 +16,7 @@ class PlainTimePrototype final : public PrototypeObject<PlainTimePrototype, Plai
 
 public:
     explicit PlainTimePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainTimePrototype() override = default;
 
 private:

@@ -25,11 +25,11 @@ DateTimeFormatFunction::DateTimeFormatFunction(DateTimeFormat& date_time_format,
 {
 }
 
-void DateTimeFormatFunction::initialize(GlobalObject& global_object)
+void DateTimeFormatFunction::initialize(Realm& realm)
 {
     auto& vm = this->vm();
 
-    Base::initialize(global_object);
+    Base::initialize(realm);
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 }

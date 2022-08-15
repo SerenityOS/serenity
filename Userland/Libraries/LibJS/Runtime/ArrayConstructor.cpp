@@ -21,13 +21,13 @@ ArrayConstructor::ArrayConstructor(Realm& realm)
 {
 }
 
-void ArrayConstructor::initialize(GlobalObject& global_object)
+void ArrayConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 23.1.2.4 Array.prototype, https://tc39.es/ecma262/#sec-array.prototype
-    define_direct_property(vm.names.prototype, global_object.array_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().array_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);

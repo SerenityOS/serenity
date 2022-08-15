@@ -17,7 +17,7 @@ class StringIteratorPrototype final : public PrototypeObject<StringIteratorProto
 
 public:
     StringIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~StringIteratorPrototype() override = default;
 
 private:

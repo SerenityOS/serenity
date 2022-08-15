@@ -15,7 +15,7 @@ class DateConstructor final : public NativeFunction {
 
 public:
     explicit DateConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DateConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

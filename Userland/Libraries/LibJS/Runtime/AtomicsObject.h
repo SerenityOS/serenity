@@ -15,7 +15,7 @@ class AtomicsObject : public Object {
 
 public:
     explicit AtomicsObject(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AtomicsObject() override = default;
 
 private:

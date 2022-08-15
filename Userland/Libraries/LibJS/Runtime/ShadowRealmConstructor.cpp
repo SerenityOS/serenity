@@ -16,13 +16,13 @@ ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
 {
 }
 
-void ShadowRealmConstructor::initialize(GlobalObject& global_object)
+void ShadowRealmConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 3.3.1 ShadowRealm.prototype, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype
-    define_direct_property(vm.names.prototype, global_object.shadow_realm_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().shadow_realm_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

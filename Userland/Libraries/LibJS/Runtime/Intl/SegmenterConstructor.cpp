@@ -20,14 +20,14 @@ SegmenterConstructor::SegmenterConstructor(Realm& realm)
 {
 }
 
-void SegmenterConstructor::initialize(GlobalObject& global_object)
+void SegmenterConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 18.2.1 Intl.Segmenter.prototype, https://tc39.es/ecma402/#sec-intl.segmenter.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_segmenter_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_segmenter_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;

@@ -16,7 +16,7 @@ class SegmentsPrototype final : public PrototypeObject<SegmentsPrototype, Segmen
 
 public:
     explicit SegmentsPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SegmentsPrototype() override = default;
 
 private:

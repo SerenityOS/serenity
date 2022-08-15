@@ -15,7 +15,7 @@ class RelativeTimeFormatConstructor final : public NativeFunction {
 
 public:
     explicit RelativeTimeFormatConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RelativeTimeFormatConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

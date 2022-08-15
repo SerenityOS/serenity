@@ -18,9 +18,9 @@ ListFormatPrototype::ListFormatPrototype(Realm& realm)
 {
 }
 
-void ListFormatPrototype::initialize(GlobalObject& global_object)
+void ListFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

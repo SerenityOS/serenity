@@ -18,13 +18,13 @@ WeakSetConstructor::WeakSetConstructor(Realm& realm)
 {
 }
 
-void WeakSetConstructor::initialize(GlobalObject& global_object)
+void WeakSetConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 24.4.2.1 WeakSet.prototype, https://tc39.es/ecma262/#sec-weakset.prototype
-    define_direct_property(vm.names.prototype, global_object.weak_set_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().weak_set_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

@@ -16,10 +16,10 @@ ShadowRealmPrototype::ShadowRealmPrototype(Realm& realm)
 {
 }
 
-void ShadowRealmPrototype::initialize(GlobalObject& global_object)
+void ShadowRealmPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.evaluate, evaluate, 1, attr);

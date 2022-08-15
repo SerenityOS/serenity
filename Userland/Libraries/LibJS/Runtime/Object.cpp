@@ -69,7 +69,7 @@ Object::Object(Shape& shape)
     m_storage.resize(shape.property_count());
 }
 
-void Object::initialize(GlobalObject&)
+void Object::initialize(Realm&)
 {
 }
 

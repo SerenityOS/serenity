@@ -16,7 +16,7 @@ class ArrayIteratorPrototype final : public PrototypeObject<ArrayIteratorPrototy
 
 public:
     ArrayIteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArrayIteratorPrototype() override = default;
 
 private:

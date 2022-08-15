@@ -17,7 +17,7 @@ class GeneratorPrototype final : public PrototypeObject<GeneratorPrototype, Gene
 
 public:
     explicit GeneratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GeneratorPrototype() override = default;
 
 private:

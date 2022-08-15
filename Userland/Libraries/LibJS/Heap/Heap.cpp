@@ -349,4 +349,11 @@ void Heap::uproot_cell(Cell* cell)
     m_uprooted_cells.append(cell);
 }
 
+// Temporary helper function as we can't pass a realm directly until Heap::allocate<T>() receives one.
+// Heap.h only has a forward declaration of the GlobalObject, so no inlined member access possible.
+Realm& realm_from_global_object(GlobalObject& global_object)
+{
+    return *global_object.associated_realm();
+}
+
 }

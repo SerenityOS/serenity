@@ -15,7 +15,7 @@ class NumberPrototype final : public NumberObject {
 
 public:
     explicit NumberPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberPrototype() override = default;
 
     JS_DECLARE_NATIVE_FUNCTION(to_exponential);

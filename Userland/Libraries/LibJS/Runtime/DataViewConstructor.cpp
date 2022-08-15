@@ -18,13 +18,13 @@ DataViewConstructor::DataViewConstructor(Realm& realm)
 {
 }
 
-void DataViewConstructor::initialize(GlobalObject& global_object)
+void DataViewConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 25.3.3.1 DataView.prototype, https://tc39.es/ecma262/#sec-dataview.prototype
-    define_direct_property(vm.names.prototype, global_object.data_view_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().data_view_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

@@ -23,13 +23,12 @@ $262Object::$262Object(Realm& realm)
 {
 }
 
-void $262Object::initialize(JS::GlobalObject& global_object)
+void $262Object::initialize(JS::Realm& realm)
 {
-    Base::initialize(global_object);
+    Base::initialize(realm);
 
-    auto& realm = *global_object.associated_realm();
-    m_agent = vm().heap().allocate<AgentObject>(global_object, realm);
-    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(global_object, realm);
+    m_agent = vm().heap().allocate<AgentObject>(realm.global_object(), realm);
+    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm.global_object(), realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("clearKeptObjects", clear_kept_objects, 0, attr);
@@ -38,8 +37,8 @@ void $262Object::initialize(JS::GlobalObject& global_object)
     define_native_function("evalScript", eval_script, 1, attr);
 
     define_direct_property("agent", m_agent, attr);
-    define_direct_property("gc", global_object.get_without_side_effects("gc"), attr);
-    define_direct_property("global", &global_object, attr);
+    define_direct_property("gc", realm.global_object().get_without_side_effects("gc"), attr);
+    define_direct_property("global", &realm.global_object(), attr);
     define_direct_property("IsHTMLDDA", m_is_htmldda, attr);
 }
 

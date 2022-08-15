@@ -24,7 +24,7 @@ public:
     {
     }
 
-    virtual void initialize(JS::GlobalObject& global_object) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(grow);

@@ -22,7 +22,7 @@ public:
     {
     }
 
-    virtual void initialize(JS::GlobalObject&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(exports_getter);

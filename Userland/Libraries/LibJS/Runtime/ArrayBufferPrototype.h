@@ -16,7 +16,7 @@ class ArrayBufferPrototype final : public PrototypeObject<ArrayBufferPrototype, 
 
 public:
     explicit ArrayBufferPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArrayBufferPrototype() override = default;
 
 private:

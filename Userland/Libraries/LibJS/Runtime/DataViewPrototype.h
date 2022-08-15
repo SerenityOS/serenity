@@ -16,7 +16,7 @@ class DataViewPrototype final : public PrototypeObject<DataViewPrototype, DataVi
 
 public:
     DataViewPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DataViewPrototype() override = default;
 
 private:

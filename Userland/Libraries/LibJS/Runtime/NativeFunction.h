@@ -25,7 +25,7 @@ public:
 
     NativeFunction(Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object* prototype, Realm& realm);
     NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object& prototype);
-    virtual void initialize(GlobalObject&) override { }
+    virtual void initialize(Realm&) override { }
     virtual ~NativeFunction() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;

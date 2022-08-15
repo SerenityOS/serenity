@@ -31,7 +31,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
-    virtual void initialize(GlobalObject& object) override;
+    virtual void initialize(Realm&) override;
 
 private:
     // FIXME: UHHH how do we want to store this to avoid cycles but be safe??

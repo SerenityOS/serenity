@@ -25,9 +25,9 @@ PlainTimePrototype::PlainTimePrototype(Realm& realm)
 {
 }
 
-void PlainTimePrototype::initialize(GlobalObject& global_object)
+void PlainTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

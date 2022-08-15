@@ -20,7 +20,7 @@ public:
     static AsyncFromSyncIterator* create(GlobalObject&, Iterator sync_iterator_record);
 
     explicit AsyncFromSyncIterator(Realm&, Iterator sync_iterator_record);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIterator() override = default;
 
     void visit_edges(Visitor& visitor) override;

@@ -10,9 +10,9 @@
 
 namespace Web::Bindings {
 
-void WebAssemblyMemoryPrototype::initialize(JS::GlobalObject& global_object)
+void WebAssemblyMemoryPrototype::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_native_accessor("buffer", buffer_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function("grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }

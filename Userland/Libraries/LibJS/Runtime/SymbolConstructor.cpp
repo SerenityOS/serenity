@@ -15,13 +15,13 @@ SymbolConstructor::SymbolConstructor(Realm& realm)
 {
 }
 
-void SymbolConstructor::initialize(GlobalObject& global_object)
+void SymbolConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
-    define_direct_property(vm.names.prototype, global_object.symbol_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().symbol_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.for_, for_, 1, attr);

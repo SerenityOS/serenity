@@ -20,10 +20,10 @@ MathObject::MathObject(Realm& realm)
 {
 }
 
-void MathObject::initialize(GlobalObject& global_object)
+void MathObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.abs, abs, 1, attr);
     define_native_function(vm.names.random, random, 0, attr);

@@ -249,13 +249,13 @@ PromiseConstructor::PromiseConstructor(Realm& realm)
 {
 }
 
-void PromiseConstructor::initialize(GlobalObject& global_object)
+void PromiseConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
-    define_direct_property(vm.names.prototype, global_object.promise_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().promise_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.all, all, 1, attr);

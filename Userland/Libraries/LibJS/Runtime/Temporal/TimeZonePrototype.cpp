@@ -22,9 +22,9 @@ TimeZonePrototype::TimeZonePrototype(Realm& realm)
 {
 }
 
-void TimeZonePrototype::initialize(GlobalObject& global_object)
+void TimeZonePrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

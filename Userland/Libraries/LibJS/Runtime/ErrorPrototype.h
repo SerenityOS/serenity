@@ -17,7 +17,7 @@ class ErrorPrototype final : public PrototypeObject<ErrorPrototype, Error> {
 
 public:
     explicit ErrorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ErrorPrototype() override = default;
 
 private:
@@ -32,7 +32,7 @@ private:
                                                                                               \
     public:                                                                                   \
         explicit PrototypeName(Realm&);                                                       \
-        virtual void initialize(GlobalObject&) override;                                      \
+        virtual void initialize(Realm&) override;                                             \
         virtual ~PrototypeName() override = default;                                          \
     };
 

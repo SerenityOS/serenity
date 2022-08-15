@@ -16,7 +16,7 @@ class ZonedDateTimePrototype final : public PrototypeObject<ZonedDateTimePrototy
 
 public:
     explicit ZonedDateTimePrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ZonedDateTimePrototype() override = default;
 
 private:

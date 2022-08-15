@@ -17,10 +17,10 @@ BooleanPrototype::BooleanPrototype(Realm& realm)
 {
 }
 
-void BooleanPrototype::initialize(GlobalObject& global_object)
+void BooleanPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    BooleanObject::initialize(global_object);
+    BooleanObject::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);

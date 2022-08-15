@@ -25,7 +25,7 @@ class StringPrototype final : public StringObject {
 
 public:
     explicit StringPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~StringPrototype() override = default;
 
 private:

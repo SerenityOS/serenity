@@ -15,7 +15,7 @@ class SetConstructor final : public NativeFunction {
 
 public:
     explicit SetConstructor(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SetConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

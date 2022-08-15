@@ -29,9 +29,9 @@ PromiseResolvingElementFunction::PromiseResolvingElementFunction(size_t index, P
 {
 }
 
-void PromiseResolvingElementFunction::initialize(GlobalObject& global_object)
+void PromiseResolvingElementFunction::initialize(Realm& realm)
 {
-    Base::initialize(global_object);
+    Base::initialize(realm);
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
 }
 

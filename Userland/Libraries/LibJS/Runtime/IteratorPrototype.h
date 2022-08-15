@@ -15,7 +15,7 @@ class IteratorPrototype : public Object {
 
 public:
     IteratorPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~IteratorPrototype() override = default;
 
 private:

@@ -16,15 +16,15 @@ AsyncGeneratorFunctionPrototype::AsyncGeneratorFunctionPrototype(Realm& realm)
 {
 }
 
-void AsyncGeneratorFunctionPrototype::initialize(GlobalObject& global_object)
+void AsyncGeneratorFunctionPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     // The constructor cannot be set at this point since it has not been initialized.
 
     // 27.4.3.2 AsyncGeneratorFunction.prototype.prototype, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype-prototype
-    define_direct_property(vm.names.prototype, global_object.async_generator_prototype(), Attribute::Configurable);
+    define_direct_property(vm.names.prototype, realm.global_object().async_generator_prototype(), Attribute::Configurable);
 
     // 27.4.3.3 AsyncGeneratorFunction.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype-tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.AsyncGeneratorFunction.as_string()), Attribute::Configurable);

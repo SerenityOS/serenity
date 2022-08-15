@@ -26,10 +26,10 @@ ObjectPrototype::ObjectPrototype(Realm& realm)
 {
 }
 
-void ObjectPrototype::initialize(GlobalObject& global_object)
+void ObjectPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Object::initialize(realm);
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;

@@ -16,7 +16,7 @@ class ArrayPrototype final : public Array {
 
 public:
     ArrayPrototype(Realm&);
-    virtual void initialize(GlobalObject&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArrayPrototype() override = default;
 
 private:

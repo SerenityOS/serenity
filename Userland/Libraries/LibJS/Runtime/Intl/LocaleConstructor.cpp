@@ -225,14 +225,14 @@ LocaleConstructor::LocaleConstructor(Realm& realm)
 {
 }
 
-void LocaleConstructor::initialize(GlobalObject& global_object)
+void LocaleConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(global_object);
+    NativeFunction::initialize(realm);
 
     auto& vm = this->vm();
 
     // 14.2.1 Intl.Locale.prototype, https://tc39.es/ecma402/#sec-Intl.Locale.prototype
-    define_direct_property(vm.names.prototype, global_object.intl_locale_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.global_object().intl_locale_prototype(), 0);
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 

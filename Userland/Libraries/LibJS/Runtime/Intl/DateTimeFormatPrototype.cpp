@@ -19,9 +19,9 @@ DateTimeFormatPrototype::DateTimeFormatPrototype(Realm& realm)
 {
 }
 
-void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
+void DateTimeFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 

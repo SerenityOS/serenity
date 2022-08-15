@@ -10,9 +10,9 @@
 
 namespace Web::Bindings {
 
-void WebAssemblyInstancePrototype::initialize(JS::GlobalObject& global_object)
+void WebAssemblyInstancePrototype::initialize(JS::Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
     define_native_accessor("exports", exports_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 

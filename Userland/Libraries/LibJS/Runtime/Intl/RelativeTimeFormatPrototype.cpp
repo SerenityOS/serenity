@@ -16,9 +16,9 @@ RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
 {
 }
 
-void RelativeTimeFormatPrototype::initialize(GlobalObject& global_object)
+void RelativeTimeFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(global_object);
+    Object::initialize(realm);
 
     auto& vm = this->vm();
 
