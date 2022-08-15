@@ -16,6 +16,7 @@
 #include <Kernel/API/POSIX/unistd.h>
 #include <fd_set.h>
 #include <limits.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

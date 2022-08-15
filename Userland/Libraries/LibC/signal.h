@@ -10,6 +10,7 @@
 #include <Kernel/API/POSIX/ucontext.h>
 #include <bits/sighow.h>
 #include <signal_numbers.h>
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

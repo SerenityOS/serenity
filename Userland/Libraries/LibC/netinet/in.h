@@ -8,6 +8,7 @@
 
 #include <Kernel/API/POSIX/netinet/in.h>
 #include <endian.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/time.h>
+#include <sys/cdefs.h>
 #include <time.h>
 
 __BEGIN_DECLS

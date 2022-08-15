@@ -9,6 +9,7 @@
 #include <Kernel/API/POSIX/futex.h>
 #include <Kernel/API/POSIX/serenity.h>
 #include <stdio.h>
+#include <sys/cdefs.h>
 #include <time.h>
 #include <unistd.h>
 
