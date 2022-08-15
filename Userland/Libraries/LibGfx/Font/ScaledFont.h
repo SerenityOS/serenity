@@ -33,7 +33,8 @@ public:
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id) const;
 
     // ^Gfx::Font
-    virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented
+    virtual NonnullRefPtr<Font> clone() const override { return MUST(try_clone()); } // FIXME: clone() should not need to be implemented
+    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return *this; }
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual int pixel_size() const override { return m_point_height * 1.33333333f; }
     virtual float point_size() const override { return m_point_height; }
