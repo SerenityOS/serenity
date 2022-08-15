@@ -1811,10 +1811,10 @@ struct CalendarPatternImpl {
     CalendarPattern to_unicode_calendar_pattern() const {
         CalendarPattern calendar_pattern {};
 
-        calendar_pattern.skeleton = s_string_list[skeleton];
-        calendar_pattern.pattern = s_string_list[pattern];
+        calendar_pattern.skeleton = decode_string(skeleton);
+        calendar_pattern.pattern = decode_string(pattern);
         if (pattern12 != 0)
-            calendar_pattern.pattern12 = s_string_list[pattern12];
+            calendar_pattern.pattern12 = decode_string(pattern12);
 
         convert_calendar_fields(*this, calendar_pattern);
         return calendar_pattern;
@@ -1843,9 +1843,9 @@ struct CalendarRangePatternImpl {
 
         if (field != -1)
             calendar_range_pattern.field = static_cast<CalendarRangePattern::Field>(field);
-        calendar_range_pattern.start_range = s_string_list[start_range];
-        calendar_range_pattern.separator = s_string_list[separator];
-        calendar_range_pattern.end_range = s_string_list[end_range];
+        calendar_range_pattern.start_range = decode_string(start_range);
+        calendar_range_pattern.separator = decode_string(separator);
+        calendar_range_pattern.end_range = decode_string(end_range);
 
         convert_calendar_fields(*this, calendar_range_pattern);
         return calendar_range_pattern;
@@ -1929,12 +1929,12 @@ struct TimeZoneFormatImpl {
     TimeZoneFormat to_time_zone_format() const {
         TimeZoneFormat time_zone_format {};
 
-        time_zone_format.symbol_ahead_sign = s_string_list[symbol_ahead_sign];
-        time_zone_format.symbol_ahead_separator = s_string_list[symbol_ahead_separator];
-        time_zone_format.symbol_behind_sign = s_string_list[symbol_behind_sign];
-        time_zone_format.symbol_behind_separator = s_string_list[symbol_behind_separator];
-        time_zone_format.gmt_format = s_string_list[gmt_format];
-        time_zone_format.gmt_zero_format = s_string_list[gmt_zero_format];
+        time_zone_format.symbol_ahead_sign = decode_string(symbol_ahead_sign);
+        time_zone_format.symbol_ahead_separator = decode_string(symbol_ahead_separator);
+        time_zone_format.symbol_behind_sign = decode_string(symbol_behind_sign);
+        time_zone_format.symbol_behind_separator = decode_string(symbol_behind_separator);
+        time_zone_format.gmt_format = decode_string(gmt_format);
+        time_zone_format.gmt_zero_format = decode_string(gmt_zero_format);
 
         return time_zone_format;
     }
@@ -2200,7 +2200,7 @@ Vector<CalendarRangePattern> get_calendar_range_formats(StringView locale, Strin
         for (auto format : range_formats) {
             auto const& pattern = s_calendar_range_patterns[format];
 
-            if (skeleton == s_string_list[pattern.skeleton])
+            if (skeleton == decode_string(pattern.skeleton))
                 result.append(pattern.to_unicode_calendar_range_pattern());
         }
     }
@@ -2218,7 +2218,7 @@ Vector<CalendarRangePattern> get_calendar_range12_formats(StringView locale, Str
         for (auto format : range12_formats) {
             auto const& pattern = s_calendar_range_patterns[format];
 
-            if (skeleton == s_string_list[pattern.skeleton])
+            if (skeleton == decode_string(pattern.skeleton))
                 result.append(pattern.to_unicode_calendar_range_pattern());
         }
     }
@@ -2263,7 +2263,7 @@ Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calen
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return s_string_list[symbol_index];
+            return decode_string(symbol_index);
     }
 
     return {};
@@ -2275,7 +2275,7 @@ Optional<StringView> get_calendar_month_symbol(StringView locale, StringView cal
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return s_string_list[symbol_index];
+            return decode_string(symbol_index);
     }
 
     return {};
@@ -2287,7 +2287,7 @@ Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView c
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return s_string_list[symbol_index];
+            return decode_string(symbol_index);
     }
 
     return {};
@@ -2299,7 +2299,7 @@ Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringVie
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return s_string_list[symbol_index];
+            return decode_string(symbol_index);
     }
 
     return {};
@@ -2400,7 +2400,7 @@ Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone,
         }
 
         if (name_index != 0)
-            return s_string_list[name_index];
+            return decode_string(name_index);
     }
 
     return {};

@@ -825,13 +825,13 @@ struct NumberFormatImpl {
         number_format.magnitude = magnitude;
         number_format.exponent = exponent;
         number_format.plurality = static_cast<PluralCategory>(plurality);
-        number_format.zero_format = s_string_list[zero_format];
-        number_format.positive_format = s_string_list[positive_format];
-        number_format.negative_format = s_string_list[negative_format];
+        number_format.zero_format = decode_string(zero_format);
+        number_format.positive_format = decode_string(positive_format);
+        number_format.negative_format = decode_string(negative_format);
 
         number_format.identifiers.ensure_capacity(identifiers.size());
         for (@string_index_type@ identifier : identifiers)
-            number_format.identifiers.append(s_string_list[identifier]);
+            number_format.identifiers.append(decode_string(identifier));
 
         return number_format;
     }
@@ -996,7 +996,7 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
         if (symbol_index >= symbols.size())
             return {};
 
-        return s_string_list[symbols[symbol_index]];
+        return decode_string(symbols[symbol_index]);
     }
 
     return {};
@@ -1088,7 +1088,7 @@ static Unit const* find_units(StringView locale, StringView unit)
     for (auto unit_index : locale_units) {
         auto const& units = s_units.at(unit_index);
 
-        if (unit == s_string_list[units.unit])
+        if (unit == decode_string(units.unit))
             return &units;
     };
 
