@@ -949,8 +949,7 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
             if (!vmobject.is_inode())
                 return IterationDecision::Continue;
             auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject);
-            // FIXME: It seems excessive to release *all* clean pages from the inode when we only need one.
-            if (auto released_page_count = inode_vmobject.release_all_clean_pages()) {
+            if (auto released_page_count = inode_vmobject.try_release_clean_pages(1)) {
                 dbgln("MM: Clean inode release saved the day! Released {} pages from InodeVMObject", released_page_count);
                 page = find_free_physical_page(false);
                 VERIFY(page);
