@@ -8,6 +8,7 @@
 
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/sys/wait.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

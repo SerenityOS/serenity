@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/statvfs.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

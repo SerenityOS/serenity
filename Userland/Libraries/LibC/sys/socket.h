@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/socket.h>
+#include <sys/cdefs.h>
 #include <sys/un.h>
 
 __BEGIN_DECLS

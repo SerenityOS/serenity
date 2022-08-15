@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <sys/cdefs.h>
 #include <wchar.h>
 
 __BEGIN_DECLS

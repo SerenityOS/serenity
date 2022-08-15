@@ -8,6 +8,7 @@
 
 #include <Kernel/API/POSIX/poll.h>
 #include <signal.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
