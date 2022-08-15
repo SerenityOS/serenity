@@ -11,6 +11,7 @@ set(SOURCES
     Fonts/Type1Font.cpp
     ObjectDerivatives.cpp
     Parser.cpp
+    Reader.cpp
     Renderer.cpp
     Value.cpp
     )

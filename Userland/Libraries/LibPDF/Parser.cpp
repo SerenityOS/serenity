@@ -108,7 +108,7 @@ PDFErrorOr<void> Parser::parse_header()
     if (minor_ver < '0' || minor_ver > '7')
         return error(String::formatted("Unknown minor version \"{}\"", minor_ver));
 
-    consume_eol();
+    m_reader.consume_eol();
 
     // Parse optional high-byte comment, which signifies a binary file
     // FIXME: Do something with this?
@@ -300,7 +300,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
     if (!m_reader.matches("xref"))
         return error("Expected \"xref\"");
     m_reader.move_by(4);
-    if (!consume_eol())
+    if (!m_reader.consume_eol())
         return error("Expected newline after \"xref\"");
 
     auto table = adopt_ref(*new XRefTable());
@@ -319,12 +319,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
         for (int i = 0; i < object_count; i++) {
             auto offset_string = String(m_reader.bytes().slice(m_reader.offset(), 10));
             m_reader.move_by(10);
-            if (!consume(' '))
+            if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
 
             auto generation_string = String(m_reader.bytes().slice(m_reader.offset(), 5));
             m_reader.move_by(5);
-            if (!consume(' '))
+            if (!m_reader.consume(' '))
                 return error("Malformed xref entry");
 
             auto letter = m_reader.read();
@@ -334,8 +334,8 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
             // The line ending sequence can be one of the following:
             // SP CR, SP LF, or CR LF
             if (m_reader.matches(' ')) {
-                consume();
-                auto ch = consume();
+                m_reader.consume();
+                auto ch = m_reader.consume();
                 if (ch != '\r' && ch != '\n')
                     return error("Malformed xref entry");
             } else {
@@ -351,34 +351,34 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
         }
 
         table->add_section({ starting_index, object_count, entries });
-    } while (matches_number());
+    } while (m_reader.matches_number());
 
     return table;
 }
 
 PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_file_trailer()
 {
-    while (matches_eol())
-        consume_eol();
+    while (m_reader.matches_eol())
+        m_reader.consume_eol();
 
     if (!m_reader.matches("trailer"))
         return error("Expected \"trailer\" keyword");
     m_reader.move_by(7);
-    consume_whitespace();
+    m_reader.consume_whitespace();
     auto dict = TRY(parse_dict());
 
     if (!m_reader.matches("startxref"))
         return error("Expected \"startxref\"");
     m_reader.move_by(9);
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
-    m_reader.move_until([&](auto) { return matches_eol(); });
-    VERIFY(consume_eol());
+    m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
+    VERIFY(m_reader.consume_eol());
     if (!m_reader.matches("%%EOF"))
         return error("Expected \"%%EOF\"");
 
     m_reader.move_by(5);
-    consume_whitespace();
+    m_reader.consume_whitespace();
     return dict;
 }
 
@@ -492,18 +492,18 @@ bool Parser::navigate_to_before_eof_marker()
     m_reader.set_reading_backwards();
 
     while (!m_reader.done()) {
-        m_reader.move_until([&](auto) { return matches_eol(); });
+        m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
         if (m_reader.done())
             return false;
 
-        consume_eol();
+        m_reader.consume_eol();
         if (!m_reader.matches("%%EOF"))
             continue;
 
         m_reader.move_by(5);
-        if (!matches_eol())
+        if (!m_reader.matches_eol())
             continue;
-        consume_eol();
+        m_reader.consume_eol();
         return true;
     }
 
@@ -515,15 +515,15 @@ bool Parser::navigate_to_after_startxref()
     m_reader.set_reading_backwards();
 
     while (!m_reader.done()) {
-        m_reader.move_until([&](auto) { return matches_eol(); });
+        m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
         auto offset = m_reader.offset() + 1;
 
-        consume_eol();
+        m_reader.consume_eol();
         if (!m_reader.matches("startxref"))
             continue;
 
         m_reader.move_by(9);
-        if (!matches_eol())
+        if (!m_reader.matches_eol())
             continue;
 
         m_reader.move_to(offset);
@@ -538,14 +538,14 @@ String Parser::parse_comment()
     if (!m_reader.matches('%'))
         return {};
 
-    consume();
+    m_reader.consume();
     auto comment_start_offset = m_reader.offset();
     m_reader.move_until([&](auto) {
-        return matches_eol();
+        return m_reader.matches_eol();
     });
     String str = StringView(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
-    consume_eol();
-    consume_whitespace();
+    m_reader.consume_eol();
+    m_reader.consume_whitespace();
     return str;
 }
 
@@ -555,23 +555,23 @@ PDFErrorOr<Value> Parser::parse_value()
 
     if (m_reader.matches("null")) {
         m_reader.move_by(4);
-        consume_whitespace();
+        m_reader.consume_whitespace();
         return Value(nullptr);
     }
 
     if (m_reader.matches("true")) {
         m_reader.move_by(4);
-        consume_whitespace();
+        m_reader.consume_whitespace();
         return Value(true);
     }
 
     if (m_reader.matches("false")) {
         m_reader.move_by(5);
-        consume_whitespace();
+        m_reader.consume_whitespace();
         return Value(false);
     }
 
-    if (matches_number())
+    if (m_reader.matches_number())
         return parse_possible_indirect_value_or_ref();
 
     if (m_reader.matches('/'))
@@ -596,7 +596,7 @@ PDFErrorOr<Value> Parser::parse_value()
 PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
 {
     auto first_number = TRY(parse_number());
-    if (!matches_number())
+    if (!m_reader.matches_number())
         return first_number;
 
     m_reader.save();
@@ -608,8 +608,8 @@ PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
 
     if (m_reader.matches('R')) {
         m_reader.discard();
-        consume();
-        consume_whitespace();
+        m_reader.consume();
+        m_reader.consume_whitespace();
         return Value(Reference(first_number.get<int>(), second_number.value().get<int>()));
     }
 
@@ -631,16 +631,16 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index,
     if (!m_reader.matches("obj"))
         return error("Expected \"obj\" at beginning of indirect value");
     m_reader.move_by(3);
-    if (matches_eol())
-        consume_eol();
+    if (m_reader.matches_eol())
+        m_reader.consume_eol();
 
     push_reference({ index, generation });
     auto value = TRY(parse_value());
     if (!m_reader.matches("endobj"))
         return error("Expected \"endobj\" at end of indirect value");
 
-    consume(6);
-    consume_whitespace();
+    m_reader.consume(6);
+    m_reader.consume_whitespace();
 
     pop_reference();
 
@@ -665,16 +665,16 @@ PDFErrorOr<Value> Parser::parse_number()
     bool consumed_digit = false;
 
     if (m_reader.matches('+') || m_reader.matches('-'))
-        consume();
+        m_reader.consume();
 
     while (!m_reader.done()) {
         if (m_reader.matches('.')) {
             if (is_float)
                 break;
             is_float = true;
-            consume();
+            m_reader.consume();
         } else if (isdigit(m_reader.peek())) {
-            consume();
+            m_reader.consume();
             consumed_digit = true;
         } else {
             break;
@@ -684,7 +684,7 @@ PDFErrorOr<Value> Parser::parse_number()
     if (!consumed_digit)
         return error("Invalid number");
 
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
     auto string = String(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
     float f = strtof(string.characters(), nullptr);
@@ -697,19 +697,19 @@ PDFErrorOr<Value> Parser::parse_number()
 
 PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
 {
-    if (!consume('/'))
+    if (!m_reader.consume('/'))
         return error("Expected Name object to start with \"/\"");
 
     StringBuilder builder;
 
     while (true) {
-        if (!matches_regular_character())
+        if (!m_reader.matches_regular_character())
             break;
 
         if (m_reader.matches('#')) {
             int hex_value = 0;
             for (int i = 0; i < 2; i++) {
-                auto ch = consume();
+                auto ch = m_reader.consume();
                 VERIFY(isxdigit(ch));
                 hex_value *= 16;
                 if (ch <= '9') {
@@ -722,17 +722,17 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
             continue;
         }
 
-        builder.append(consume());
+        builder.append(m_reader.consume());
     }
 
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
     return make_object<NameObject>(builder.to_string());
 }
 
 NonnullRefPtr<StringObject> Parser::parse_string()
 {
-    ScopeGuard guard([&] { consume_whitespace(); });
+    ScopeGuard guard([&] { m_reader.consume_whitespace(); });
 
     String string;
     bool is_binary_string;
@@ -768,31 +768,31 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
 String Parser::parse_literal_string()
 {
-    VERIFY(consume('('));
+    VERIFY(m_reader.consume('('));
     StringBuilder builder;
     auto opened_parens = 0;
 
     while (true) {
         if (m_reader.matches('(')) {
             opened_parens++;
-            builder.append(consume());
+            builder.append(m_reader.consume());
         } else if (m_reader.matches(')')) {
-            consume();
+            m_reader.consume();
             if (opened_parens == 0)
                 break;
             opened_parens--;
             builder.append(')');
         } else if (m_reader.matches('\\')) {
-            consume();
-            if (matches_eol()) {
-                consume_eol();
+            m_reader.consume();
+            if (m_reader.matches_eol()) {
+                m_reader.consume_eol();
                 continue;
             }
 
             if (m_reader.done())
                 return {};
 
-            auto ch = consume();
+            auto ch = m_reader.consume();
             switch (ch) {
             case 'n':
                 builder.append('\n');
@@ -822,7 +822,7 @@ String Parser::parse_literal_string()
                 if (ch >= '0' && ch <= '7') {
                     int octal_value = ch - '0';
                     for (int i = 0; i < 2; i++) {
-                        auto octal_ch = consume();
+                        auto octal_ch = m_reader.consume();
                         if (octal_ch < '0' || octal_ch > '7')
                             break;
                         octal_value = octal_value * 8 + (octal_ch - '0');
@@ -833,11 +833,11 @@ String Parser::parse_literal_string()
                 }
             }
             }
-        } else if (matches_eol()) {
-            consume_eol();
+        } else if (m_reader.matches_eol()) {
+            m_reader.consume_eol();
             builder.append('\n');
         } else {
-            builder.append(consume());
+            builder.append(m_reader.consume());
         }
     }
 
@@ -846,23 +846,23 @@ String Parser::parse_literal_string()
 
 String Parser::parse_hex_string()
 {
-    VERIFY(consume('<'));
+    VERIFY(m_reader.consume('<'));
 
     StringBuilder builder;
 
     while (true) {
         if (m_reader.matches('>')) {
-            consume();
+            m_reader.consume();
             return builder.to_string();
         } else {
             int hex_value = 0;
 
             for (int i = 0; i < 2; i++) {
-                auto ch = consume();
+                auto ch = m_reader.consume();
                 if (ch == '>') {
                     // The hex string contains an odd number of characters, and the last character
                     // is assumed to be '0'
-                    consume();
+                    m_reader.consume();
                     hex_value *= 16;
                     builder.append(static_cast<char>(hex_value));
                     return builder.to_string();
@@ -887,26 +887,26 @@ String Parser::parse_hex_string()
 
 PDFErrorOr<NonnullRefPtr<ArrayObject>> Parser::parse_array()
 {
-    if (!consume('['))
+    if (!m_reader.consume('['))
         return error("Expected array to start with \"[\"");
-    consume_whitespace();
+    m_reader.consume_whitespace();
     Vector<Value> values;
 
     while (!m_reader.matches(']'))
         values.append(TRY(parse_value()));
 
-    VERIFY(consume(']'));
-    consume_whitespace();
+    VERIFY(m_reader.consume(']'));
+    m_reader.consume_whitespace();
 
     return make_object<ArrayObject>(values);
 }
 
 PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
 {
-    if (!consume('<') || !consume('<'))
+    if (!m_reader.consume('<') || !m_reader.consume('<'))
         return error("Expected dict to start with \"<<\"");
 
-    consume_whitespace();
+    m_reader.consume_whitespace();
     HashMap<FlyString, Value> map;
 
     while (!m_reader.done()) {
@@ -917,9 +917,9 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
         map.set(name, value);
     }
 
-    if (!consume('>') || !consume('>'))
+    if (!m_reader.consume('>') || !m_reader.consume('>'))
         return error("Expected dict to end with \">>\"");
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
     return make_object<DictObject>(map);
 }
@@ -936,11 +936,11 @@ PDFErrorOr<RefPtr<DictObject>> Parser::conditionally_parse_page_tree_node(u32 ob
         return error(String::formatted("Invalid page tree offset {}", object_index));
 
     m_reader.move_by(3);
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
-    VERIFY(consume('<') && consume('<'));
+    VERIFY(m_reader.consume('<') && m_reader.consume('<'));
 
-    consume_whitespace();
+    m_reader.consume_whitespace();
     HashMap<FlyString, Value> map;
 
     while (true) {
@@ -967,8 +967,8 @@ PDFErrorOr<RefPtr<DictObject>> Parser::conditionally_parse_page_tree_node(u32 ob
         map.set(name->name(), value);
     }
 
-    VERIFY(consume('>') && consume('>'));
-    consume_whitespace();
+    VERIFY(m_reader.consume('>') && m_reader.consume('>'));
+    m_reader.consume_whitespace();
 
     return make_object<DictObject>(map);
 }
@@ -978,7 +978,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     if (!m_reader.matches("stream"))
         return error("Expected stream to start with \"stream\"");
     m_reader.move_by(6);
-    if (!consume_eol())
+    if (!m_reader.consume_eol())
         return error("Expected \"stream\" to be followed by a newline");
 
     ReadonlyBytes bytes;
@@ -991,15 +991,15 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
         m_reader.load();
         bytes = m_reader.bytes().slice(m_reader.offset(), length);
         m_reader.move_by(length);
-        consume_whitespace();
+        m_reader.consume_whitespace();
     } else {
         // We have to look for the endstream keyword
         auto stream_start = m_reader.offset();
 
         while (true) {
-            m_reader.move_until([&](auto) { return matches_eol(); });
+            m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
             auto potential_stream_end = m_reader.offset();
-            consume_eol();
+            m_reader.consume_eol();
             if (!m_reader.matches("endstream"))
                 continue;
 
@@ -1009,7 +1009,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     }
 
     m_reader.move_by(9);
-    consume_whitespace();
+    m_reader.consume_whitespace();
 
     auto stream_object = make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
 
@@ -1043,7 +1043,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
         if (is_operator_char(ch)) {
             auto operator_start = m_reader.offset();
             while (is_operator_char(ch)) {
-                consume();
+                m_reader.consume();
                 if (m_reader.done())
                     break;
                 ch = m_reader.peek();
@@ -1053,7 +1053,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
             auto operator_type = Operator::operator_type_from_symbol(operator_string);
             operators.append(Operator(operator_type, move(operator_args)));
             operator_args = Vector<Value>();
-            consume_whitespace();
+            m_reader.consume_whitespace();
 
             continue;
         }
@@ -1062,73 +1062,6 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
     }
 
     return operators;
-}
-
-bool Parser::matches_eol() const
-{
-    return m_reader.matches_any(0xa, 0xd);
-}
-
-bool Parser::matches_whitespace() const
-{
-    return matches_eol() || m_reader.matches_any(0, 0x9, 0xc, ' ');
-}
-
-bool Parser::matches_number() const
-{
-    if (m_reader.done())
-        return false;
-    auto ch = m_reader.peek();
-    return isdigit(ch) || ch == '-' || ch == '+';
-}
-
-bool Parser::matches_delimiter() const
-{
-    return m_reader.matches_any('(', ')', '<', '>', '[', ']', '{', '}', '/', '%');
-}
-
-bool Parser::matches_regular_character() const
-{
-    return !matches_delimiter() && !matches_whitespace();
-}
-
-bool Parser::consume_eol()
-{
-    if (m_reader.done()) {
-        return false;
-    }
-    if (m_reader.matches("\r\n")) {
-        consume(2);
-        return true;
-    }
-    auto consumed = consume();
-    return consumed == 0xd || consumed == 0xa;
-}
-
-bool Parser::consume_whitespace()
-{
-    bool consumed = false;
-    while (matches_whitespace()) {
-        consumed = true;
-        consume();
-    }
-    return consumed;
-}
-
-char Parser::consume()
-{
-    return m_reader.read();
-}
-
-void Parser::consume(int amount)
-{
-    for (size_t i = 0; i < static_cast<size_t>(amount); i++)
-        consume();
-}
-
-bool Parser::consume(char ch)
-{
-    return consume() == ch;
 }
 
 Error Parser::error(

@@ -120,18 +120,6 @@ private:
     void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
     void pop_reference() { m_current_reference_stack.take_last(); }
 
-    bool matches_eol() const;
-    bool matches_whitespace() const;
-    bool matches_number() const;
-    bool matches_delimiter() const;
-    bool matches_regular_character() const;
-
-    bool consume_eol();
-    bool consume_whitespace();
-    char consume();
-    void consume(int amount);
-    bool consume(char);
-
     Error error(
         String const& message
 #ifdef PDF_DEBUG
