@@ -12,6 +12,7 @@
 #include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SettingsWindow.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 
 class KeyboardSettingsWidget final : public GUI::SettingsWindow::Tab {
@@ -35,6 +36,8 @@ private:
     RefPtr<GUI::ListView> m_selected_keymaps_listview;
     RefPtr<GUI::Label> m_active_keymap_label;
     RefPtr<GUI::CheckBox> m_num_lock_checkbox;
+    RefPtr<GUI::CheckBox> m_persistent_clipboard;
+    RefPtr<GUI::TextBox> m_clipboard_file_path;
     RefPtr<GUI::Button> m_activate_keymap_button;
     RefPtr<GUI::Button> m_add_keymap_button;
     RefPtr<GUI::Button> m_remove_keymap_button;

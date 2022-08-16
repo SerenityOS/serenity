@@ -36,10 +36,20 @@ public:
         RefPtr<Gfx::Bitmap> as_bitmap() const;
     };
 
+    struct DataAndTypeAndFavorite {
+        bool favorite;
+        ByteBuffer data;
+        String mime_type;
+        HashMap<String, String> metadata;
+
+        RefPtr<Gfx::Bitmap> as_bitmap() const;
+    };
+
     static void initialize(Badge<Application>);
     static Clipboard& the();
 
     DataAndType fetch_data_and_type() const;
+    DataAndTypeAndFavorite fetch_data_and_type_and_favorite() const;
     String fetch_mime_type() const { return fetch_data_and_type().mime_type; }
 
     void set_data(ReadonlyBytes data, String const& mime_type = "text/plain", HashMap<String, String> const& metadata = {});

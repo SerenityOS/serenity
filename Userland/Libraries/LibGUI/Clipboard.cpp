@@ -68,6 +68,21 @@ Clipboard::DataAndType Clipboard::fetch_data_and_type() const
     return { data.release_value(), type, metadata };
 }
 
+Clipboard::DataAndTypeAndFavorite Clipboard::fetch_data_and_type_and_favorite() const
+{
+    auto response = connection().get_clipboard_data();
+    if (!response.data().is_valid())
+        return {};
+    auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
+    if (data.is_error())
+        return {};
+
+    auto favorite = false;
+    auto type = response.mime_type();
+    auto metadata = response.metadata().entries();
+    return { favorite, data.release_value(), type, metadata };
+}
+
 RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
 {
     if (mime_type != "image/x-serenityos")

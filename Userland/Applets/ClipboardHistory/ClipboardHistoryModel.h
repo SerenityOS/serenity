@@ -21,6 +21,7 @@ public:
     static NonnullRefPtr<ClipboardHistoryModel> create();
 
     enum Column {
+        IsPersistent,
         Data,
         Type,
         Size,
@@ -28,15 +29,24 @@ public:
         __Count
     };
 
+    enum ClipboardEntryState {
+        Persistent,
+        Volatile
+    };
+
     struct ClipboardItem {
         GUI::Clipboard::DataAndType data_and_type;
         Core::DateTime time;
+        ClipboardEntryState state;
     };
 
     virtual ~ClipboardHistoryModel() override = default;
 
     ClipboardItem const& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
+    void set_state(int index, ClipboardEntryState state);
+    bool is_persistent(int index);
+    void add_item(const GUI::Clipboard::DataAndType& item, ClipboardEntryState state = ClipboardEntryState::Volatile);
 
     // ^GUI::Model
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
@@ -46,7 +56,6 @@ public:
 
 private:
     ClipboardHistoryModel();
-    void add_item(const GUI::Clipboard::DataAndType& item);
 
     // ^GUI::Model
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
