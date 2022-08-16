@@ -611,12 +611,17 @@ void Menu::do_popup(Gfx::IntPoint const& position, bool make_input, bool as_subm
     auto& window = ensure_menu_window(position);
     redraw_if_theme_changed();
 
-    int const margin = 30;
+    constexpr auto margin = 10;
     Gfx::IntPoint adjusted_pos = position;
 
     if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
         // Vertically translate the window by its full width, i.e. flip it at its vertical axis.
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
+        // If the window is a submenu, translate to the opposite side of its immediate ancestor
+        if (auto* ancestor = MenuManager::the().closest_open_ancestor_of(*this); ancestor && as_submenu) {
+            constexpr auto offset = 1 + frame_thickness() * 2;
+            adjusted_pos = adjusted_pos.translated(-ancestor->menu_window()->width() + offset, 0);
+        }
     } else {
         // Even if no adjustment needs to be done, move the menu to the right by 1px so it's not
         // underneath the cursor and can be closed by another click at the same position.
