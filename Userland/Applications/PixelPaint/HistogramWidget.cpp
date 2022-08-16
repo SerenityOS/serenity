@@ -16,25 +16,6 @@ REGISTER_WIDGET(PixelPaint, HistogramWidget);
 
 namespace PixelPaint {
 
-HistogramWidget::~HistogramWidget()
-{
-    if (m_image)
-        m_image->remove_client(*this);
-}
-
-void HistogramWidget::set_image(Image* image)
-{
-    if (m_image == image)
-        return;
-    if (m_image)
-        m_image->remove_client(*this);
-    m_image = image;
-    if (m_image)
-        m_image->add_client(*this);
-
-    (void)rebuild_histogram_data();
-}
-
 ErrorOr<void> HistogramWidget::rebuild_histogram_data()
 {
     if (!m_image)
@@ -81,16 +62,15 @@ ErrorOr<void> HistogramWidget::rebuild_histogram_data()
     }
 
     // Scale the frequency values to fit the widgets height.
-    m_widget_height = height();
+    auto widget_height = height();
 
     for (int i = 0; i < 256; i++) {
-        m_data.red[i] = m_data.red[i] != 0 ? (static_cast<float>(m_data.red[i]) / max_color_frequency) * m_widget_height : 0;
-        m_data.green[i] = m_data.green[i] != 0 ? (static_cast<float>(m_data.green[i]) / max_color_frequency) * m_widget_height : 0;
-        m_data.blue[i] = m_data.blue[i] != 0 ? (static_cast<float>(m_data.blue[i]) / max_color_frequency) * m_widget_height : 0;
-        m_data.brightness[i] = m_data.brightness[i] != 0 ? (static_cast<float>(m_data.brightness[i]) / max_brightness_frequency) * m_widget_height : 0;
+        m_data.red[i] = m_data.red[i] != 0 ? (static_cast<float>(m_data.red[i]) / max_color_frequency) * widget_height : 0;
+        m_data.green[i] = m_data.green[i] != 0 ? (static_cast<float>(m_data.green[i]) / max_color_frequency) * widget_height : 0;
+        m_data.blue[i] = m_data.blue[i] != 0 ? (static_cast<float>(m_data.blue[i]) / max_color_frequency) * widget_height : 0;
+        m_data.brightness[i] = m_data.brightness[i] != 0 ? (static_cast<float>(m_data.brightness[i]) / max_brightness_frequency) * widget_height : 0;
     }
 
-    update();
     return {};
 }
 
@@ -102,7 +82,7 @@ void HistogramWidget::paint_event(GUI::PaintEvent& event)
     if (!m_image)
         return;
 
-    int bottom_line = m_widget_height - 1;
+    int bottom_line = height() - 1;
     float step_width = static_cast<float>(width()) / 256;
 
     Gfx::Path brightness_path;
@@ -153,14 +133,6 @@ void HistogramWidget::paint_event(GUI::PaintEvent& event)
 void HistogramWidget::image_changed()
 {
     (void)rebuild_histogram_data();
-}
-
-void HistogramWidget::set_color_at_mouseposition(Color color)
-{
-    if (m_color_at_mouseposition == color)
-        return;
-
-    m_color_at_mouseposition = color;
     update();
 }
 
