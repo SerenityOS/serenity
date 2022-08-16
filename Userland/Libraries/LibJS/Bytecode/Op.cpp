@@ -773,7 +773,7 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     auto name = m_class_expression.name();
     auto scope = interpreter.ast_interpreter_scope();
     auto& ast_interpreter = scope.interpreter();
-    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, interpreter.global_object(), name, name.is_null() ? ""sv : name));
+    auto class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, name, name.is_null() ? ""sv : name));
     interpreter.accumulator() = class_object;
     return {};
 }

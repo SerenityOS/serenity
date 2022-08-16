@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -173,9 +174,12 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
 
     // 17. If result.[[Type]] is normal, then
     if (!eval_result.is_throw_completion()) {
+        // FIXME: Remove once everything uses the VM's current realm.
+        auto eval_realm_interpreter = Interpreter::create_with_existing_realm(eval_realm);
+
         // TODO: Optionally use bytecode interpreter?
         // a. Set result to the result of evaluating body.
-        result = program->execute(vm.interpreter(), eval_realm.global_object());
+        result = program->execute(*eval_realm_interpreter);
     }
 
     // 18. If result.[[Type]] is normal and result.[[Value]] is empty, then
