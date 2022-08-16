@@ -177,7 +177,11 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
         // For any given point between the two color stops,
         // determine the point’s location as a percentage of the distance between the two color stops.
         // Let this percentage be P.
-        auto p = (position - previous_stop.position) / (next_stop.position - previous_stop.position);
+        auto stop_length = next_stop.position - previous_stop.position;
+        // FIXME: Avoids NaNs... Still not quite correct?
+        if (stop_length <= 0)
+            return 1;
+        auto p = (position - previous_stop.position) / stop_length;
         if (!next_stop.transition_hint.has_value())
             return p;
         if (*next_stop.transition_hint >= 1)
