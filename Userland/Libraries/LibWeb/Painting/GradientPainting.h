@@ -25,6 +25,7 @@ using ColorStopList = Vector<ColorStop, 4>;
 struct LinearGradientData {
     float gradient_angle;
     ColorStopList color_stops;
+    Optional<float> repeat_length;
 };
 
 LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatSize const&, CSS::LinearGradientStyleValue const&);

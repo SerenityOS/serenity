@@ -120,7 +120,11 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
         }
     }
 
-    return { gradient_angle, resolved_color_stops };
+    Optional<float> repeat_length = {};
+    if (linear_gradient.is_repeating())
+        repeat_length = resolved_color_stops.last().position - resolved_color_stops.first().position;
+
+    return { gradient_angle, resolved_color_stops, repeat_length };
 }
 
 static float mix(float x, float y, float a)
@@ -159,6 +163,7 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     float sin_angle, cos_angle;
     AK::sincos(angle, sin_angle, cos_angle);
 
+    // Full length of the gradient
     auto length = calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle);
 
     Gfx::FloatPoint offset { cos_angle * (length / 2), sin_angle * (length / 2) };
@@ -196,17 +201,19 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     };
 
     Vector<Gfx::Color, 1024> gradient_line_colors;
-    auto int_length = round_to<int>(length);
-    gradient_line_colors.resize(int_length);
+    auto gradient_color_count = round_to<int>(data.repeat_length.value_or(length));
+    gradient_line_colors.resize(gradient_color_count);
     auto& color_stops = data.color_stops;
-    for (int loc = 0; loc < int_length; loc++) {
+    auto start_offset = data.repeat_length.has_value() ? color_stops.first().position : 0.0f;
+    auto start_offset_int = round_to<int>(start_offset);
+    for (int loc = 0; loc < gradient_color_count; loc++) {
         Gfx::Color gradient_color = color_mix(
             color_stops[0].color,
             color_stops[1].color,
             color_stop_step(
                 color_stops[0],
                 color_stops[1],
-                loc));
+                loc + start_offset_int));
         for (size_t i = 1; i < color_stops.size() - 1; i++) {
             gradient_color = color_mix(
                 gradient_color,
@@ -214,18 +221,23 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
                 color_stop_step(
                     color_stops[i],
                     color_stops[i + 1],
-                    loc));
+                    loc + start_offset_int));
         }
         gradient_line_colors[loc] = gradient_color;
     }
 
     auto lookup_color = [&](int loc) {
-        return gradient_line_colors[clamp(loc, 0, int_length - 1)];
+        return gradient_line_colors[clamp(loc, 0, gradient_color_count - 1)];
     };
 
     for (int y = 0; y < gradient_rect.height(); y++) {
         for (int x = 0; x < gradient_rect.width(); x++) {
-            auto loc = (x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x;
+            auto loc = (x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x - start_offset;
+            if (data.repeat_length.has_value()) {
+                loc = AK::fmod(loc, *data.repeat_length);
+                if (loc < 0)
+                    loc = *data.repeat_length + loc;
+            }
             // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
             auto blend = loc - static_cast<int>(loc);
             auto gradient_color = color_mix(lookup_color(loc - 1), lookup_color(loc), blend);
