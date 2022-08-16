@@ -118,6 +118,23 @@
                 75%,
                 dodgerblue 0)
         }
+
+        .grad-repeat-0 {
+            background-image: repeating-linear-gradient(#e66465, #e66465 20px, #9198e5 20px, #9198e5 25px);
+        }
+
+        .grad-repeat-1 {
+            background-image: repeating-linear-gradient(45deg, #3f87a6, #ebf8e1 15%, #f69d3c 20%);
+        }
+
+        .grad-repeat-2 {
+            background-image: repeating-linear-gradient(transparent, #4d9f0c 40px),
+                              repeating-linear-gradient(0.25turn, transparent, #3f87a6 20px);
+        }
+
+        .grad-repeat-3 {
+            background-image: -webkit-repeating-linear-gradient(left, red 10%, blue 30%);
+        }
     </style>
   </head>
   <body>
@@ -151,6 +168,11 @@
     <div class="rect grad-15"></div>
     <b>A webkit gradient</b><br>
     <div class="box grad-webkit"></div>
+    <b>Repeating gradients</b><br>
+    <div class="box grad-repeat-0"></div>
+    <div class="box grad-repeat-1"></div>
+    <div class="box grad-repeat-2"></div>
+    <div class="box grad-repeat-3"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
