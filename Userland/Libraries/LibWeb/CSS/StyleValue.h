@@ -978,10 +978,15 @@ public:
         WebKit
     };
 
-    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)
+    enum class Repeating {
+        Yes,
+        No
+    };
+
+    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type));
+        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
     }
 
     virtual String to_string() const override;
@@ -993,6 +998,8 @@ public:
         return m_color_stop_list;
     }
 
+    bool is_repeating() const { return m_repeating == Repeating::Yes; }
+
     float angle_degrees(Gfx::FloatSize const& gradient_size) const;
 
     void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
@@ -1001,17 +1008,19 @@ public:
     void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
 private:
-    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type)
+    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
         : AbstractImageStyleValue(Type::LinearGradient)
         , m_direction(direction)
         , m_color_stop_list(move(color_stop_list))
         , m_gradient_type(type)
+        , m_repeating(repeating)
     {
     }
 
     GradientDirection m_direction;
     Vector<ColorStopListElement> m_color_stop_list;
     GradientType m_gradient_type;
+    Repeating m_repeating;
 
     mutable Optional<Painting::LinearGradientData> m_resolved_data;
 };

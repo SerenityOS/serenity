@@ -2362,16 +2362,33 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
 RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
     using GradientType = LinearGradientStyleValue::GradientType;
+    using Repeating = LinearGradientStyleValue::Repeating;
 
     if (!component_value.is_function())
         return {};
 
+    auto consume_if_starts_with = [](StringView str, StringView start, auto found_callback) {
+        if (str.starts_with(start, CaseSensitivity::CaseInsensitive)) {
+            found_callback();
+            return str.substring_view(start.length());
+        }
+        return str;
+    };
+
+    Repeating repeating_gradient = Repeating::No;
+    GradientType gradient_type { GradientType::Standard };
+
     auto function_name = component_value.function().name();
 
-    GradientType gradient_type { GradientType::Standard };
-    if (function_name.equals_ignoring_case("-webkit-linear-gradient"sv))
+    function_name = consume_if_starts_with(function_name, "-webkit-"sv, [&] {
         gradient_type = GradientType::WebKit;
-    else if (!function_name.equals_ignoring_case("linear-gradient"sv))
+    });
+
+    function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
+        repeating_gradient = Repeating::Yes;
+    });
+
+    if (!function_name.equals_ignoring_case("linear-gradient"sv))
         return {};
 
     // linear-gradient() = linear-gradient([ <angle> | to <side-or-corner> ]?, <color-stop-list>)
@@ -2558,7 +2575,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         color_stops.append(list_element);
     }
 
-    return LinearGradientStyleValue::create(gradient_direction, move(color_stops), gradient_type);
+    return LinearGradientStyleValue::create(gradient_direction, move(color_stops), gradient_type, repeating_gradient);
 }
 
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<Rule> rule)

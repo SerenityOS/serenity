@@ -1491,6 +1491,8 @@ String LinearGradientStyleValue::to_string() const
 
     if (m_gradient_type == GradientType::WebKit)
         builder.append("-webkit-"sv);
+    if (m_repeating == Repeating::Yes)
+        builder.append("repeating-"sv);
     builder.append("linear-gradient("sv);
     m_direction.visit(
         [&](SideOrCorner side_or_corner) {
