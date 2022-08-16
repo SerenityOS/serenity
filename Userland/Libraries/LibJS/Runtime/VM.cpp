@@ -235,23 +235,23 @@ Symbol* VM::get_global_symbol(String const& description)
     return new_global_symbol;
 }
 
-ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(GlobalObject& global_object, ASTNode const& expression, FlyString const& name)
+ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name)
 {
     // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
     // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
     if (is<FunctionExpression>(expression)) {
         auto& function = static_cast<FunctionExpression const&>(expression);
         if (!function.has_name()) {
-            return function.instantiate_ordinary_function_expression(interpreter(), global_object, name);
+            return function.instantiate_ordinary_function_expression(interpreter(), name);
         }
     } else if (is<ClassExpression>(expression)) {
         auto& class_expression = static_cast<ClassExpression const&>(expression);
         if (!class_expression.has_name()) {
-            return TRY(class_expression.class_definition_evaluation(interpreter(), global_object, {}, name));
+            return TRY(class_expression.class_definition_evaluation(interpreter(), {}, name));
         }
     }
 
-    return TRY(expression.execute(interpreter(), global_object)).release_value();
+    return TRY(expression.execute(interpreter())).release_value();
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
@@ -327,7 +327,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>()) {
                 assignment_target = TRY(resolve_binding((*identifier_ptr)->string(), environment));
             } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression>>()) {
-                assignment_target = TRY((*member_ptr)->to_reference(interpreter(), global_object));
+                assignment_target = TRY((*member_ptr)->to_reference(interpreter()));
             } else {
                 VERIFY_NOT_REACHED();
             }
@@ -348,7 +348,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return identifier->string();
             },
             [&](NonnullRefPtr<Expression> const& expression) -> ThrowCompletionOr<PropertyKey> {
-                auto result = TRY(expression->execute(interpreter(), global_object)).release_value();
+                auto result = TRY(expression->execute(interpreter())).release_value();
                 return result.to_property_key(global_object);
             }));
 
@@ -361,7 +361,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
             auto value_to_assign = TRY(object->get(name));
             if (property.initializer && value_to_assign.is_undefined()) {
-                value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, identifier.string()));
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, identifier.string()));
             }
 
             if (!environment)
@@ -378,15 +378,15 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                return TRY(member_expression->to_reference(interpreter(), global_object));
+                return TRY(member_expression->to_reference(interpreter()));
             }));
 
         auto value_to_assign = TRY(object->get(name));
         if (property.initializer && value_to_assign.is_undefined()) {
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier>>())
-                value_to_assign = TRY(named_evaluation_if_anonymous_function(global_object, *property.initializer, (*identifier_ptr)->string()));
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string()));
             else
-                value_to_assign = TRY(property.initializer->execute(interpreter(), global_object)).release_value();
+                value_to_assign = TRY(property.initializer->execute(interpreter())).release_value();
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
@@ -421,7 +421,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                return TRY(member_expression->to_reference(interpreter(), global_object));
+                return TRY(member_expression->to_reference(interpreter()));
             }));
 
         // BindingRestElement : ... BindingIdentifier
@@ -520,9 +520,9 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         if (value.is_undefined() && entry.initializer) {
             VERIFY(!entry.is_rest);
             if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier>>())
-                value = TRY(named_evaluation_if_anonymous_function(global_object, *entry.initializer, (*identifier_ptr)->string()));
+                value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string()));
             else
-                value = TRY(entry.initializer->execute(interpreter(), global_object)).release_value();
+                value = TRY(entry.initializer->execute(interpreter())).release_value();
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {

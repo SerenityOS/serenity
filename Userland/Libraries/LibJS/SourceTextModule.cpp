@@ -660,7 +660,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<Promis
         TRY(vm.push_execution_context(module_context, realm().global_object()));
 
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
-        auto result = m_ecmascript_code->execute(vm.interpreter(), realm().global_object());
+        auto result = m_ecmascript_code->execute(vm.interpreter());
 
         // d. Suspend moduleContext and remove it from the execution context stack.
         vm.pop_execution_context();

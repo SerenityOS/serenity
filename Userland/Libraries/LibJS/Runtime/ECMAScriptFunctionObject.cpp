@@ -451,7 +451,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                         // Resulting value is in the accumulator.
                         argument_value = value_and_frame.frame->registers.at(0);
                     } else if (interpreter) {
-                        argument_value = TRY(parameter.default_value->execute(*interpreter, global_object)).release_value();
+                        argument_value = TRY(parameter.default_value->execute(*interpreter)).release_value();
                     }
                 } else {
                     argument_value = js_undefined();
@@ -730,7 +730,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
     auto* execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
-        auto result = async_body->execute(vm.interpreter(), global_object);
+        auto result = async_body->execute(vm.interpreter());
 
         // b. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
 
@@ -862,7 +862,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             TRY(function_declaration_instantiation(ast_interpreter));
 
             // 2. Return the result of evaluating FunctionStatementList.
-            return m_ecmascript_code->execute(*ast_interpreter, global_object);
+            return m_ecmascript_code->execute(*ast_interpreter);
         }
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {

@@ -712,7 +712,7 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
             eval_result = result;
     } else {
         auto& ast_interpreter = vm.interpreter();
-        eval_result = TRY(program->execute(ast_interpreter, global_object));
+        eval_result = TRY(program->execute(ast_interpreter));
     }
 
     // 30. If result.[[Type]] is normal and result.[[Value]] is empty, then

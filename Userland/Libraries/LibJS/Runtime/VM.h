@@ -203,7 +203,7 @@ public:
     ThrowCompletionOr<void> binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object);
     ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object);
 
-    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(GlobalObject& global_object, ASTNode const& expression, FlyString const& name);
+    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name);
 
     void save_execution_context_stack();
     void restore_execution_context_stack();
