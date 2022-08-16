@@ -17,6 +17,7 @@
 #include <AK/Singleton.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
+#include <LibCore/Account.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -359,7 +360,8 @@ EventLoop::~EventLoop()
 bool connect_to_inspector_server()
 {
 #ifdef __serenity__
-    auto maybe_socket = Core::Stream::LocalSocket::connect("/tmp/user/%uid/portal/inspectables");
+    auto inspector_server_path = Account::parse_path_with_uid("/tmp/user/%uid/portal/inspectables"sv);
+    auto maybe_socket = Stream::LocalSocket::connect(inspector_server_path);
     if (maybe_socket.is_error()) {
         dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
         return false;
