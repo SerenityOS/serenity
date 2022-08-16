@@ -229,6 +229,14 @@ void MenuManager::close_everyone()
     clear_current_menu();
 }
 
+Menu* MenuManager::closest_open_ancestor_of(Menu const& other) const
+{
+    for (auto& menu : m_open_menu_stack.in_reverse())
+        if (menu->is_menu_ancestor_of(other))
+            return menu.ptr();
+    return nullptr;
+}
+
 void MenuManager::close_everyone_not_in_lineage(Menu& menu)
 {
     Vector<Menu&> menus_to_close;
