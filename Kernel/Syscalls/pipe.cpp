@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
+ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
@@ -43,11 +43,18 @@ ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fds[reader_fd_allocation.fd].set(move(reader_description), fd_flags);
         fds[writer_fd_allocation.fd].set(move(writer_description), fd_flags);
+
+        int fds_for_userspace[2] = {
+            reader_fd_allocation.fd,
+            writer_fd_allocation.fd,
+        };
+        if (copy_to_user(pipefd, fds_for_userspace, sizeof(fds_for_userspace)).is_error()) {
+            fds[reader_fd_allocation.fd] = {};
+            fds[writer_fd_allocation.fd] = {};
+            return EFAULT;
+        }
         return {};
     }));
-
-    TRY(copy_to_user(&pipefd[0], &reader_fd_allocation.fd));
-    TRY(copy_to_user(&pipefd[1], &writer_fd_allocation.fd));
     return 0;
 }
 

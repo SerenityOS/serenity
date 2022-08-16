@@ -355,7 +355,7 @@ public:
     ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<timespec const*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
     ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<gid_t const*>);
-    ErrorOr<FlatPtr> sys$pipe(int pipefd[2], int flags);
+    ErrorOr<FlatPtr> sys$pipe(Userspace<int*>, int flags);
     ErrorOr<FlatPtr> sys$killpg(pid_t pgrp, int sig);
     ErrorOr<FlatPtr> sys$seteuid(UserID);
     ErrorOr<FlatPtr> sys$setegid(GroupID);
