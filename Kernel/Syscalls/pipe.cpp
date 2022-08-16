@@ -13,9 +13,7 @@ ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
-    auto open_count = fds().with_shared([](auto& fds) { return fds.open_count(); });
-    if (open_count + 2 > OpenFileDescriptions::max_open())
-        return EMFILE;
+
     // Reject flags other than O_CLOEXEC, O_NONBLOCK
     if ((flags & (O_CLOEXEC | O_NONBLOCK)) != flags)
         return EINVAL;
