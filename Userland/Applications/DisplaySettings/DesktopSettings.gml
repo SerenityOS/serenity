@@ -5,69 +5,65 @@
     }
 
     @GUI::GroupBox {
-        layout: @GUI::VerticalBoxLayout {
-            margins: [14, 14, 4]
-        }
-        title: "Workspaces"
-        shrink_to_fit: true
-
-        @GUI::Widget {
-            fixed_height: 32
-            layout: @GUI::HorizontalBoxLayout {
-                margins: [6]
-            }
-
-            @GUI::Label {
-                text: "Rows:"
-                text_alignment: "CenterRight"
-            }
-
-            @GUI::SpinBox {
-                name: "workspace_rows_spinbox"
-                min: 1
-                max: 16
-                orientation: "Horizontal"
-            }
-
-            @GUI::Label {
-                text: "Columns:"
-                text_alignment: "CenterRight"
-            }
-
-            @GUI::SpinBox {
-                name: "workspace_columns_spinbox"
-                min: 1
-                max: 16
-                orientation: "Horizontal"
-            }
+        title: "Layout"
+        preferred_height: "shrink"
+        layout: @GUI::HorizontalBoxLayout {
+            margins: [8]
+            spacing: 2
         }
 
         @GUI::Widget {
-            fixed_height: 76
-            layout: @GUI::HorizontalBoxLayout {}
+            fixed_width: 32
+            layout: @GUI::VerticalBoxLayout {}
 
-            @GUI::Label {
-                fixed_height: 32
-                fixed_width: 32
-                icon: "/res/icons/32x32/app-welcome.png"
+            @GUI::ImageWidget {
+                bitmap: "/res/icons/32x32/workspaces.png"
+            }
+
+            @GUI::Layout::Spacer {}
+        }
+
+        @GUI::Widget {
+            layout: @GUI::VerticalBoxLayout {
+                margins: [4, 0, 0, 16]
+                spacing: 10
             }
 
             @GUI::Widget {
-                layout: @GUI::VerticalBoxLayout {
-                    margins: [6]
+                layout: @GUI::HorizontalBoxLayout {
+                    spacing: 8
                 }
 
                 @GUI::Label {
-                    text: "Use the Ctrl+Alt+Arrow hotkeys to move between workspaces."
-                    text_alignment: "TopLeft"
-                    word_wrap: true
+                    text: "Rows:"
+                    autosize: true
+                }
+
+                @GUI::SpinBox {
+                    name: "workspace_rows_spinbox"
+                    min: 1
+                    max: 16
+                }
+
+                @GUI::Widget {
+                    fixed_width: 8
                 }
 
                 @GUI::Label {
-                    text: "Use the Ctrl+Shift+Alt+Arrow hotkeys to move between\nworkspaces and move the active window."
-                    text_alignment: "TopLeft"
-                    word_wrap: true
+                    text: "Columns:"
+                    autosize: true
                 }
+
+                @GUI::SpinBox {
+                    name: "workspace_columns_spinbox"
+                    min: 1
+                    max: 16
+                }
+            }
+
+            @GUI::Label {
+                name: "keyboard_shortcuts_label"
+                text_alignment: "CenterLeft"
             }
         }
     }

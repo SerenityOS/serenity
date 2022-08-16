@@ -33,6 +33,9 @@ void DesktopSettingsWidget::create_frame()
     m_workspace_columns_spinbox->on_change = [&](auto) {
         set_modified(true);
     };
+
+    auto& keyboard_shortcuts_label = *find_descendant_of_type_named<GUI::Label>("keyboard_shortcuts_label");
+    keyboard_shortcuts_label.set_text("\xE2\x84\xB9\tCtrl+Alt+{Shift}+Arrows moves between workspaces");
 }
 
 void DesktopSettingsWidget::load_current_settings()
