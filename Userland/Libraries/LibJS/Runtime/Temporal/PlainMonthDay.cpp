@@ -153,11 +153,11 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global
 
     // 3. If IsValidISODate(referenceISOYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 4. If ISODateTimeWithinLimits(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     if (!iso_date_time_within_limits(global_object, reference_iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 5. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.
     if (!new_target)

@@ -45,7 +45,7 @@ ThrowCompletionOr<Value> InstantConstructor::call()
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Instant");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.Instant");
 }
 
 // 8.1.1 Temporal.Instant ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant
@@ -59,7 +59,7 @@ ThrowCompletionOr<Object*> InstantConstructor::construct(FunctionObject& new_tar
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
     return TRY(create_temporal_instant(global_object, *epoch_nanoseconds, &new_target));
@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 
     // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
     return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
@@ -114,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
 
     // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 5. Return ! CreateTemporalInstant(epochNanoseconds).
     return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
@@ -131,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return ! CreateTemporalInstant(epochNanoseconds).
     return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));
@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 
     // 2. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 3. Return ! CreateTemporalInstant(epochNanoseconds).
     return MUST(create_temporal_instant(global_object, *epoch_nanoseconds));

@@ -32,7 +32,7 @@ void WeakRefConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakRefConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakRef);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakRef);
 }
 
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_tar
 
     auto target = vm.argument(0);
     if (!can_be_held_weakly(target))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     if (target.is_object())
         return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, target.as_object()));

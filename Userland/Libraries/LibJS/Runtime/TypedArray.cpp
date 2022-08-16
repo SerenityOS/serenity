@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject& global_object,
 
     auto* this_object = TRY(typed_array_value.to_object(global_object));
     if (!this_object->is_typed_array())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
 
     return static_cast<TypedArrayBase*>(this_object);
 }
@@ -35,7 +35,7 @@ ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedA
 
     // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     if (!typed_array.is_typed_array())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
 
     // 2. Assert: O has a [[ViewedArrayBuffer]] internal slot.
 
@@ -44,7 +44,7 @@ ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedA
 
     // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     return {};
 }
@@ -62,7 +62,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
 
     // 3. If offset modulo elementSize ≠ 0, throw a RangeError exception.
     if (offset % element_size != 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
 
     size_t new_length { 0 };
 
@@ -74,7 +74,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (array_buffer.is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 6. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
     auto buffer_byte_length = array_buffer.byte_length();
@@ -85,12 +85,12 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     if (length.is_undefined()) {
         // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
         if (buffer_byte_length % element_size != 0)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
+            return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
 
         // b. Let newByteLength be bufferByteLength - offset.
         // c. If newByteLength < 0, throw a RangeError exception.
         if (offset > buffer_byte_length)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
+            return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
         new_byte_length = buffer_byte_length;
         new_byte_length -= offset;
     }
@@ -105,14 +105,14 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
         new_byte_end += offset;
 
         if (new_byte_end.has_overflow())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
         if (new_byte_end.value() > buffer_byte_length)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
+            return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
     }
 
     if (new_byte_length.has_overflow())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
     // 9. Set O.[[ViewedArrayBuffer]] to buffer.
     typed_array.set_viewed_array_buffer(&array_buffer);
@@ -142,7 +142,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
 
     // 2. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
     if (src_data->is_detached())
-        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 3. Let elementType be TypedArrayElementType(O).
     // 4. Let elementSize be TypedArrayElementSize(O).
@@ -162,7 +162,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
     Checked<size_t> byte_length = element_size;
     byte_length *= element_length;
     if (byte_length.has_overflow())
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return vm.template throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
     ArrayBuffer* data = nullptr;
 
@@ -178,11 +178,11 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
 
         // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
         if (src_data->is_detached())
-            return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
         // c. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
         if (src_array.content_type() != dest_array.content_type())
-            return vm.template throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
+            return vm.template throw_completion<TypeError>(ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
 
         // d. Let srcByteIndex be srcByteOffset.
         u64 src_byte_index = src_byte_offset;
@@ -233,14 +233,14 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(GlobalObject& global_
 
     // Enforce 2GB "Excessive Length" limit
     if (length > NumericLimits<i32>::max() / sizeof(T))
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return vm.template throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
     // 1. Assert: O.[[ViewedArrayBuffer]] is undefined.
 
     // 2. Let elementSize be TypedArrayElementSize(O).
     auto element_size = typed_array.element_size();
     if (Checked<size_t>::multiplication_would_overflow(element_size, length))
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return vm.template throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
     // 3. Let byteLength be elementSize × length.
     auto byte_length = element_size * length;
@@ -332,7 +332,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
 
     // 2. Perform ? ValidateTypedArray(newTypedArray).
     if (!new_typed_array->is_typed_array())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
     auto& typed_array = *static_cast<TypedArrayBase*>(new_typed_array);
     TRY(validate_typed_array(global_object, typed_array));
 
@@ -340,7 +340,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
     if (first_argument.has_value() && first_argument->is_number()) {
         // a. If newTypedArray.[[ArrayLength]] < ℝ(argumentList[0]), throw a TypeError exception.
         if (typed_array.array_length() < first_argument->as_double())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidLength, "typed array");
+            return vm.throw_completion<TypeError>(ErrorType::InvalidLength, "typed array");
     }
 
     // 4. Return newTypedArray.
@@ -378,7 +378,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
 
         // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
         if (buffer.is_detached())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
         //  c. If v is NaN, return +0𝔽.
         if (value_number.is_nan())
@@ -512,7 +512,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ThrowCompletionOr<Value> ConstructorName::call()                                                                                   \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
-        return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ClassName);                  \
+        return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.ClassName);                                   \
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
@@ -552,16 +552,16 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             auto error = array_length_or_error.release_error();                                                                        \
             if (error.value()->is_object() && is<RangeError>(error.value()->as_object())) {                                            \
                 /* Re-throw more specific RangeError */                                                                                \
-                return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                        \
+                return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");                                       \
             }                                                                                                                          \
             return error;                                                                                                              \
         }                                                                                                                              \
         auto array_length = array_length_or_error.release_value();                                                                     \
         if (array_length > NumericLimits<i32>::max() / sizeof(Type))                                                                   \
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                            \
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");                                           \
         /* FIXME: What is the best/correct behavior here? */                                                                           \
         if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                                   \
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "typed array");                            \
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");                                           \
         return TRY(ClassName::create(realm, array_length, new_target));                                                                \
     }
 

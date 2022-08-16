@@ -20,12 +20,12 @@ WindowConstructor::~WindowConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WindowConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Window");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Window");
 }
 
 JS::ThrowCompletionOr<JS::Object*> WindowConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "Window");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Window");
 }
 
 void WindowConstructor::initialize(JS::Realm& realm)

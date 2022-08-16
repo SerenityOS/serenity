@@ -88,7 +88,7 @@ ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(GlobalObject& glob
 }
 
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s
-ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject&, FlyString const& name, Value value, bool strict)
 {
     auto& vm = this->vm();
 
@@ -98,7 +98,7 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
 
     // 3. If stillExists is false and S is true, throw a ReferenceError exception.
     if (!still_exists && strict)
-        return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
+        return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
 
     // 4. Perform ? Set(bindingObject, N, V, S).
     auto result_or_error = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
@@ -111,7 +111,7 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
             return result_or_error.release_error();
         auto property = property_or_error.release_value();
         if (property.has_value() && !property->writable.value_or(true)) {
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DescWriteNonWritable, name);
+            return vm.throw_completion<TypeError>(ErrorType::DescWriteNonWritable, name);
         }
     }
 
@@ -123,7 +123,7 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject& glo
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
-ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject&, FlyString const& name, bool strict)
 {
     auto& vm = this->vm();
 
@@ -136,7 +136,7 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject& glob
         // a. If S is false, return undefined; otherwise throw a ReferenceError exception.
         if (!strict)
             return js_undefined();
-        return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
+        return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
     }
 
     // 4. Return ? Get(bindingObject, N).

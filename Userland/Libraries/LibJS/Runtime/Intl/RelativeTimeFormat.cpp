@@ -89,7 +89,7 @@ ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(GlobalObject& g
     // 11. Return unit.
     if (auto time_unit = Unicode::time_unit_from_string(unit); time_unit.has_value())
         return *time_unit;
-    return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidUnit, unit);
+    return vm.throw_completion<RangeError>(ErrorType::IntlInvalidUnit, unit);
 }
 
 // 17.5.2 PartitionRelativeTimePattern ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-PartitionRelativeTimePattern
@@ -103,7 +103,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
 
     // 4. If value is NaN, +∞𝔽, or -∞𝔽, throw a RangeError exception.
     if (!Value(value).is_finite_number())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrInfinity);
+        return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaNOrInfinity);
 
     // 5. Let unit be ? SingularRelativeTimeUnit(unit).
     auto time_unit = TRY(singular_relative_time_unit(global_object, unit));

@@ -137,7 +137,7 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& glo
 
     // 1. If Type(input) is not Object, throw a TypeError exception.
     if (!input.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, input);
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, input);
     auto& input_object = input.as_object();
 
     // 2. Let result be a new Record.
@@ -177,7 +177,7 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& glo
 
     // 5. If any is false, throw a TypeError exception.
     if (!any)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
     // 6. Return result.
     return result;
@@ -281,7 +281,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& g
         // a. If style is not "numeric" or "2-digit", then
         if (style != "numeric"sv && style != "2-digit"sv) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNonNumericOr2DigitAfterNumericOr2Digit);
+            return vm.throw_completion<RangeError>(ErrorType::IntlNonNumericOr2DigitAfterNumericOr2Digit);
         }
         // b. Else if unit is "minutes" or "seconds", then
         else if (unit == "minutes"sv || unit == "seconds"sv) {

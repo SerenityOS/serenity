@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
 {
     auto& vm = global_object.vm();
     if (value.is_nullish())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
     return value;
 }
 
@@ -53,7 +53,7 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, 
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     if (!function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function.to_string_without_side_effects());
 
     // 3. Return ? F.[[Call]](V, argumentsList).
     return function.as_function().internal_call(this_value, move(*arguments_list));
@@ -105,7 +105,7 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&
 
     // 2. If Type(obj) is not Object, throw a TypeError exception.
     if (!value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
 
     auto& array_like = value.as_object();
 
@@ -151,7 +151,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
 
     // 3. If Type(C) is not Object, throw a TypeError exception.
     if (!constructor.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     // 4. Let S be ? Get(C, @@species).
     auto species = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
@@ -165,7 +165,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
         return &species.as_function();
 
     // 7. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
+    return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, species.to_string_without_side_effects());
 }
 
 // 7.3.25 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
@@ -196,7 +196,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
 
         // a. If obj.[[ProxyHandler]] is null, throw a TypeError exception.
         if (proxy.is_revoked())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
         // b. Let proxyTarget be obj.[[ProxyTarget]].
         auto& proxy_target = proxy.target();
@@ -595,7 +595,7 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
     //     b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(global_object, error.to_string());
+        return vm.throw_completion<SyntaxError>(error.to_string());
     }
 
     bool strict_eval = false;
@@ -697,7 +697,7 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
-            return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_string());
 
         auto executable = executable_result.release_value();
         executable->name = "eval"sv;
@@ -739,7 +739,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
                 // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
                 if (global_var_environment->has_lexical_declaration(name))
-                    return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+                    return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
                 // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
                 return {};
@@ -760,7 +760,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                     // a. If ! thisEnv.HasBinding(name) is true, then
                     if (MUST(this_environment->has_binding(name))) {
                         // i. Throw a SyntaxError exception.
-                        return vm.throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+                        return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
                         // FIXME: ii. NOTE: Annex B.3.4 defines alternate semantics for the above step.
                         // In particular it only throw the syntax error if it is not an environment from a catchclause.
@@ -811,7 +811,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
             // b. If fnDefinable is false, throw a TypeError exception.
             if (!function_definable)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
+                return vm.throw_completion<TypeError>(ErrorType::CannotDeclareGlobalFunction, function.name());
         }
 
         // 2. Append fn to declaredFunctionNames.
@@ -937,7 +937,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
                     // ii. If vnDefinable is false, throw a TypeError exception.
                     if (!variable_definable)
-                        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
+                        return vm.throw_completion<TypeError>(ErrorType::CannotDeclareGlobalVariable, name);
                 }
 
                 // b. If vn is not an element of declaredVarNames, then

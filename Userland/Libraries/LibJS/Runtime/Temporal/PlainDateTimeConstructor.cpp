@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> PlainDateTimeConstructor::call()
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainDateTime");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.PlainDateTime");
 }
 
 // 5.1.1 Temporal.PlainDateTime ( isoYear, isoMonth, isoDay [ , hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond [ , calendarLike ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime
@@ -86,7 +86,7 @@ ThrowCompletionOr<Object*> PlainDateTimeConstructor::construct(FunctionObject& n
     // ISO values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31, for hours: 0 - 23, for minutes and seconds: 0 - 59,
     // milliseconds, microseconds, and nanoseconds: 0 - 999) all of which are subsets of this check.
     if (!AK::is_within_range<i32>(iso_year) || !AK::is_within_range<u8>(iso_month) || !AK::is_within_range<u8>(iso_day) || !AK::is_within_range<u8>(hour) || !AK::is_within_range<u8>(minute) || !AK::is_within_range<u8>(second) || !AK::is_within_range<u16>(millisecond) || !AK::is_within_range<u16>(microsecond) || !AK::is_within_range<u16>(nanosecond))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 12. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
     return TRY(create_temporal_date_time(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target));

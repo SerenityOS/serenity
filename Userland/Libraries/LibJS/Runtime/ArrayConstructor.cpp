@@ -68,7 +68,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
         } else {
             int_length = MUST(length.to_u32(global_object));
             if (int_length != length.as_double())
-                return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
+                return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
         }
         TRY(array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes));
         return array;
@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     if (!vm.argument(1).is_undefined()) {
         auto callback = vm.argument(1);
         if (!callback.is_function())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects());
         map_fn = &callback.as_function();
     }
 
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         size_t k = 0;
         while (true) {
             if (k >= MAX_ARRAY_LIKE_INDEX) {
-                auto error = vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                auto error = vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
                 return TRY(iterator_close(global_object, iterator, move(error)));
             }
 

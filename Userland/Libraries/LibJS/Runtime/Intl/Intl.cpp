@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 8. Else,
     else {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidKey, key);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidKey, key);
     }
 
     // 9. Return CreateArrayFromList( list ).

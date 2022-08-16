@@ -372,7 +372,7 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
 
         // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
 
         // c. Return result.
         return result;
@@ -380,7 +380,7 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
 
     // 3. Perform ? RequireInternalSlot(R, [[RegExpMatcher]]).
     if (!is<RegExpObject>(regexp_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp");
 
     // 4. Return ? RegExpBuiltinExec(R, S).
     return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
@@ -415,24 +415,24 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 // 22.2.5.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
 // 22.2.5.18 get RegExp.prototype.unicodeSets, https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodeSets
-#define __JS_ENUMERATE(flagName, flag_name, flag_char)                                                    \
-    JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                                 \
-    {                                                                                                     \
-        /* 1. If Type(R) is not Object, throw a TypeError exception. */                                   \
-        auto* regexp_object = TRY(this_object(global_object));                                            \
-        /* 2. If R does not have an [[OriginalFlags]] internal slot, then */                              \
-        if (!is<RegExpObject>(regexp_object)) {                                                           \
-            /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */                       \
-            if (same_value(regexp_object, global_object.regexp_prototype()))                              \
-                return js_undefined();                                                                    \
-            /* b. Otherwise, throw a TypeError exception. */                                              \
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp"); \
-        }                                                                                                 \
-        /* 3. Let flags be R.[[OriginalFlags]]. */                                                        \
-        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();                           \
-        /* 4. If flags contains codeUnit, return true. */                                                 \
-        /* 5. Return false. */                                                                            \
-        return Value(flags.contains(#flag_char##sv));                                                     \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char)                                     \
+    JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                  \
+    {                                                                                      \
+        /* 1. If Type(R) is not Object, throw a TypeError exception. */                    \
+        auto* regexp_object = TRY(this_object(global_object));                             \
+        /* 2. If R does not have an [[OriginalFlags]] internal slot, then */               \
+        if (!is<RegExpObject>(regexp_object)) {                                            \
+            /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */        \
+            if (same_value(regexp_object, global_object.regexp_prototype()))               \
+                return js_undefined();                                                     \
+            /* b. Otherwise, throw a TypeError exception. */                               \
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp"); \
+        }                                                                                  \
+        /* 3. Let flags be R.[[OriginalFlags]]. */                                         \
+        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();            \
+        /* 4. If flags contains codeUnit, return true. */                                  \
+        /* 5. Return false. */                                                             \
+        return Value(flags.contains(#flag_char##sv));                                      \
     }
 JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
@@ -856,7 +856,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
             return js_string(vm, "(?:)");
 
         // b. Otherwise, throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp");
     }
 
     // 4. Assert: R has an [[OriginalFlags]] internal slot.
@@ -1073,7 +1073,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {
         // a. If flags is not undefined, throw a TypeError exception.
         if (!flags.is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotUndefined, flags.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotUndefined, flags.to_string_without_side_effects());
 
         auto& regexp_pattern = static_cast<RegExpObject&>(pattern.as_object());
 

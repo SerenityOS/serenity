@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 
     // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
     if (!proto.is_object() && !proto.is_null())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
 
     // 3. If Type(O) is not Object, return O.
     if (!object.is_object())
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
     // 5. If status is false, throw a TypeError exception.
     if (!status) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
     }
 
     // 6. Return O.
@@ -203,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
     auto status = TRY(argument.as_object().internal_prevent_extensions());
     if (!status) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPreventExtensionsReturnedFalse);
     }
     return argument;
 }
@@ -216,7 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
         return argument;
     auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen));
     if (!status)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectFreezeFailed);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectFreezeFailed);
     return argument;
 }
 
@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 
     (void)TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
         return argument;
     auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed));
     if (!status)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectSealFailed);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSealFailed);
     return argument;
 }
 
@@ -302,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
 {
     if (!vm.argument(0).is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
     auto key = TRY(vm.argument(1).to_property_key(global_object));
     auto descriptor = TRY(to_property_descriptor(global_object, vm.argument(2)));
     TRY(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
@@ -317,7 +317,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
 
     // 1. If Type(O) is not Object, throw a TypeError exception.
     if (!object.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Object argument");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "Object argument");
 
     // 2. Return ? ObjectDefineProperties(O, Properties).
     return TRY(object.as_object().define_properties(properties));
@@ -369,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 
     // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
     if (!proto.is_object() && !proto.is_null())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
 
     // 2. Let obj be OrdinaryObjectCreate(O).
     auto* object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());

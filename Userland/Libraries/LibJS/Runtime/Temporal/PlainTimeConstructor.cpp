@@ -40,7 +40,7 @@ ThrowCompletionOr<Value> PlainTimeConstructor::call()
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainTime");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.PlainTime");
 }
 
 // 4.1.1 Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime
@@ -72,7 +72,7 @@ ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_t
     // ISO values (for hours: 0 - 23, for minutes and seconds: 0 - 59, milliseconds, microseconds, and nanoseconds: 0 - 999) all of which
     // are subsets of this check.
     if (!AK::is_within_range<u8>(hour) || !AK::is_within_range<u8>(minute) || !AK::is_within_range<u8>(second) || !AK::is_within_range<u16>(millisecond) || !AK::is_within_range<u16>(microsecond) || !AK::is_within_range<u16>(nanosecond))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainTime);
 
     // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
     return TRY(create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));

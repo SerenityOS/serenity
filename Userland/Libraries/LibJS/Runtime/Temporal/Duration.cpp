@@ -84,7 +84,7 @@ ThrowCompletionOr<DurationRecord> create_duration_record(GlobalObject& global_ob
 
     // 1. If ! IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
 
     // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return DurationRecord { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
@@ -107,7 +107,7 @@ ThrowCompletionOr<DateDurationRecord> create_date_duration_record(GlobalObject& 
 
     // 1. If ! IsValidDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     if (!is_valid_duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
 
     // 2. Return the Record { [[Years]]: ℝ(𝔽(years)), [[Months]]: ℝ(𝔽(months)), [[Weeks]]: ℝ(𝔽(weeks)), [[Days]]: ℝ(𝔽(days)) }.
     return DateDurationRecord { .years = years, .months = months, .weeks = weeks, .days = days };
@@ -120,7 +120,7 @@ ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject& 
 
     // 1. If ! IsValidDuration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     if (!is_valid_duration(0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
 
     // 2. Return the Record { [[Days]]: ℝ(𝔽(days)), [[Hours]]: ℝ(𝔽(hours)), [[Minutes]]: ℝ(𝔽(minutes)), [[Seconds]]: ℝ(𝔽(seconds)), [[Milliseconds]]: ℝ(𝔽(milliseconds)), [[Microseconds]]: ℝ(𝔽(microseconds)), [[Nanoseconds]]: ℝ(𝔽(nanoseconds)) }.
     return TimeDurationRecord { .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
@@ -192,7 +192,7 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
     // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
     if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
     }
 
     // 7. Return result.
@@ -293,7 +293,7 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(Glo
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_duration_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_duration_like.to_string_without_side_effects());
     }
 
     // 2. Let result be a new partial Duration Record with each field set to undefined.
@@ -326,7 +326,7 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(Glo
     // 5. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
     }
 
     // 6. Return result.
@@ -340,7 +340,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject& global_objec
 
     // 1. If ! IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
 
     // 2. If newTarget is not present, set newTarget to %Temporal.Duration%.
     if (!new_target)
@@ -617,7 +617,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
         // a. If calendar is undefined, then
         if (!calendar) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "months");
+            return vm.throw_completion<RangeError>(ErrorType::TemporalMissingStartingPoint, "months");
         }
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
@@ -658,7 +658,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
         // a. If calendar is undefined, then
         if (!calendar) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "weeks");
+            return vm.throw_completion<RangeError>(ErrorType::TemporalMissingStartingPoint, "weeks");
         }
 
         // b. Repeat, while years ≠ 0,
@@ -698,7 +698,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
             // i. If calendar is undefined, then
             if (!calendar) {
                 // i. Throw a RangeError exception.
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "calendar units");
+                return vm.throw_completion<RangeError>(ErrorType::TemporalMissingStartingPoint, "calendar units");
             }
 
             // ii. Repeat, while years ≠ 0,
@@ -767,7 +767,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
     // 2. If relativeTo is undefined, then
     if (relative_to_value.is_undefined()) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "calendar units");
+        return vm.throw_completion<RangeError>(ErrorType::TemporalMissingStartingPoint, "calendar units");
     }
 
     // 3. Let sign be ! DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
@@ -995,7 +995,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // a. If largestUnit is one of "year", "month", or "week", then
         if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv)) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "year, month or week");
+            return vm.throw_completion<RangeError>(ErrorType::TemporalMissingStartingPoint, "year, month or week");
         }
 
         // b. Let result be ? BalanceDuration(d1 + d2, h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
@@ -1124,7 +1124,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     // 2. If unit is "year", "month", or "week", and relativeTo is undefined, then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv) && !relative_to_object) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, unit, "smallestUnit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, unit, "smallestUnit"sv);
     }
 
     // 3. Let zonedRelativeTo be undefined.

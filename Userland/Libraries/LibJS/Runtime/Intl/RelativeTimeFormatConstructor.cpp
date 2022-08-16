@@ -42,7 +42,7 @@ void RelativeTimeFormatConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> RelativeTimeFormatConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.RelativeTimeFormat");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.RelativeTimeFormat");
 }
 
 // 17.1.1 Intl.RelativeTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat
@@ -103,7 +103,7 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObj
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 8. Set opt.[[nu]] to numberingSystem.
         opt.nu = numbering_system.as_string().string();

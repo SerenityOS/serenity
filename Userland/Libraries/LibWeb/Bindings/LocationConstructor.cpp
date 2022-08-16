@@ -20,12 +20,12 @@ LocationConstructor::~LocationConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> LocationConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Location");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Location");
 }
 
 JS::ThrowCompletionOr<JS::Object*> LocationConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "Location");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Location");
 }
 
 void LocationConstructor::initialize(JS::Realm& realm)

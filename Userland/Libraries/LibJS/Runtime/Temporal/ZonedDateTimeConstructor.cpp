@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> ZonedDateTimeConstructor::call()
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.ZonedDateTime");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.ZonedDateTime");
 }
 
 // 6.1.1 Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime
@@ -58,7 +58,7 @@ ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& n
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
     auto* time_zone = TRY(to_temporal_time_zone(global_object, vm.argument(1)));

@@ -22,7 +22,7 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
 
     // 3. If V is not a Reference Record, throw a ReferenceError exception.
     if (!is_valid_reference())
-        return vm.throw_completion<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
+        return vm.throw_completion<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
 
     // 4. If IsUnresolvableReference(V) is true, then
     if (is_unresolvable()) {
@@ -54,7 +54,7 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
 
         // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
         if (!succeeded && m_strict)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
 
         // e. Return unused.
         return {};
@@ -78,9 +78,9 @@ Completion Reference::throw_reference_error(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
     if (!m_name.is_valid())
-        return vm.throw_completion<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
+        return vm.throw_completion<ReferenceError>(ErrorType::ReferenceUnresolvable);
     else
-        return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
+        return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
 }
 
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
@@ -170,7 +170,7 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
 
         // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
         if (is_super_reference())
-            return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnsupportedDeleteSuperProperty);
+            return vm.throw_completion<ReferenceError>(ErrorType::UnsupportedDeleteSuperProperty);
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
         auto* base_obj = MUST(m_base_value.to_object(global_object));
@@ -180,7 +180,7 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
         if (!delete_status && m_strict)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
 
         // f. Return deleteStatus.
         return delete_status;

@@ -184,7 +184,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
     }
 
     Object* round_to;
@@ -210,7 +210,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 
     // 6. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
 
     // At this point smallest_unit_value can only be a string
     auto& smallest_unit = *smallest_unit_value;
@@ -342,7 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.Instant", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.Instant", "a primitive value");
 }
 
 // 8.3.17 Temporal.Instant.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetime
@@ -357,7 +357,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, item);
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, item);
     }
 
     // 4. Let calendarLike be ? Get(item, "calendar").
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     // 5. If calendarLike is undefined, then
     if (calendar_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.calendar.as_string());
+        return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, vm.names.calendar.as_string());
     }
 
     // 6. Let calendar be ? ToTemporalCalendar(calendarLike).
@@ -378,7 +378,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
     // 8. If temporalTimeZoneLike is undefined, then
     if (temporal_time_zone_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.timeZone.as_string());
+        return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, vm.names.timeZone.as_string());
     }
 
     // 9. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).

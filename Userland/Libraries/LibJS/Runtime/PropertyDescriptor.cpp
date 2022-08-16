@@ -94,7 +94,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
     // 1. If Type(Obj) is not Object, throw a TypeError exception.
     if (!argument.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, argument.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, argument.to_string_without_side_effects());
 
     auto& object = argument.as_object();
 
@@ -159,7 +159,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
         // b. If IsCallable(getter) is false and getter is not undefined, throw a TypeError exception.
         if (!getter.is_function() && !getter.is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorBadField, "get");
+            return vm.throw_completion<TypeError>(ErrorType::AccessorBadField, "get");
 
         // c. Set desc.[[Get]] to getter.
         descriptor.get = getter.is_function() ? &getter.as_function() : nullptr;
@@ -175,7 +175,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
 
         // b. If IsCallable(setter) is false and setter is not undefined, throw a TypeError exception.
         if (!setter.is_function() && !setter.is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorBadField, "set");
+            return vm.throw_completion<TypeError>(ErrorType::AccessorBadField, "set");
 
         // c. Set desc.[[Set]] to setter.
         descriptor.set = setter.is_function() ? &setter.as_function() : nullptr;
@@ -185,7 +185,7 @@ ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject& globa
     if (descriptor.get.has_value() || descriptor.set.has_value()) {
         // a. If desc has a [[Value]] field or desc has a [[Writable]] field, throw a TypeError exception.
         if (descriptor.value.has_value() || descriptor.writable.has_value())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::AccessorValueOrWritable);
+            return vm.throw_completion<TypeError>(ErrorType::AccessorValueOrWritable);
     }
 
     // 16. Return desc.

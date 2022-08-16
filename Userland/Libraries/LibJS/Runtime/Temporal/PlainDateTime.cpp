@@ -238,16 +238,16 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(GlobalObject& global
 
     // 3. If IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, iso_day))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 4. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 5. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
     }
 
     // 6. If newTarget is not present, set newTarget to %Temporal.PlainDateTime%.
@@ -422,7 +422,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(GlobalObject& g
 
     // 3. If ? CalendarEquals(dateTime.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
     if (!TRY(calendar_equals(global_object, date_time.calendar(), other->calendar())))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
 
     // 4. Let settings be ? GetDifferenceSettings(operation, options, datetime, « », "nanosecond", "day").
     auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::DateTime, {}, { "nanosecond"sv }, "day"sv));

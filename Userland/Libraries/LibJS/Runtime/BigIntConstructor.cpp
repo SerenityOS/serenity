@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,7 +59,7 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
 ThrowCompletionOr<Object*> BigIntConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::NotAConstructor, "BigInt");
+    return vm().throw_completion<TypeError>(ErrorType::NotAConstructor, "BigInt");
 }
 
 // 21.2.2.1 BigInt.asIntN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asintn

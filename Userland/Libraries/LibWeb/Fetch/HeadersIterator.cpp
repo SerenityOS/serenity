@@ -23,7 +23,7 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
         auto headers_or_error = m_headers.m_header_list.sort_and_combine();
         if (headers_or_error.is_error())
-            return vm.throw_completion<JS::InternalError>(global_object, JS::ErrorType::NotEnoughMemoryToAllocate);
+            return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
         return headers_or_error.release_value();
     };
 

@@ -148,9 +148,9 @@ ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& gl
 
     // 5. If x is NaN or y is NaN, throw a RangeError exception.
     if (start.is_nan())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "start"sv);
+        return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaN, "start"sv);
     if (end.is_nan())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaN, "end"sv);
+        return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaN, "end"sv);
 
     // 6. Let xp be ! ResolvePlural(pluralRules, x).
     auto start_plurality = resolve_plural(plural_rules, start);

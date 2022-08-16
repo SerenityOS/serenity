@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
     auto* weak_set = TRY(typed_this_object(global_object));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, value.to_string_without_side_effects());
     weak_set->values().set(&value.as_cell(), AK::HashSetExistingEntryBehavior::Keep);
     return weak_set;
 }

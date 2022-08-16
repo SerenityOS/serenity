@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -39,7 +39,7 @@ void ArrayBufferConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new
         auto error = byte_length_or_error.release_error();
         if (error.value()->is_object() && is<RangeError>(error.value()->as_object())) {
             // Re-throw more specific RangeError
-            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array buffer");
         }
         return error;
     }

@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 
     // 2. If Type(promise) is not Object, throw a TypeError exception.
     if (!promise.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, promise.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, promise.to_string_without_side_effects());
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
     auto* constructor = TRY(species_constructor(global_object, promise.as_object(), *global_object.promise_constructor()));

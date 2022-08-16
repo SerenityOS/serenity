@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -139,7 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
     // 4. If Type(temporalDateLike) is Object and temporalDateLike has an [[InitializedTemporalMonthDay]] internal slot, then
     if (temporal_date_like.is_object() && is<PlainMonthDay>(temporal_date_like.as_object())) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalAmbiguousMonthOfPlainMonthDay);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalAmbiguousMonthOfPlainMonthDay);
     }
 
     // 5. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
@@ -534,7 +534,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {
             // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-            auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
+            auto completion = vm.throw_completion<TypeError>(ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(global_object, iterator_record, move(completion)));
@@ -543,7 +543,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(global_object, iterator_record, move(completion)));
@@ -552,7 +552,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
         if (!next_value.as_string().string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(global_object, iterator_record, move(completion)));

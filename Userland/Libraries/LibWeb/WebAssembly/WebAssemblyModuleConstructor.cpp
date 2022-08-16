@@ -23,7 +23,7 @@ WebAssemblyModuleConstructor::~WebAssemblyModuleConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyModuleConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
 }
 
 JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(FunctionObject&)

@@ -35,7 +35,7 @@ static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& globa
         return Optional<String> {};
 
     if (validator && !validator(option.as_string().string()))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, option, property);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
     return option.as_string().string();
 }
@@ -51,7 +51,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     // 3. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
     auto locale_id = is_structurally_valid_language_tag(tag);
     if (!locale_id.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, tag);
 
     // 4. Let language be ? GetOption(options, "language", "string", undefined, undefined).
     // 5. If language is not undefined, then
@@ -240,7 +240,7 @@ void LocaleConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> LocaleConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.Locale");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.Locale");
 }
 
 // 14.1.1 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale
@@ -268,7 +268,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
 
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
     if (!tag_value.is_string() && !tag_value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrString, "tag"sv);
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrString, "tag"sv);
 
     // 8. If Type(tag) is Object and tag has an [[InitializedLocale]] internal slot, then
     if (tag_value.is_object() && is<Locale>(tag_value.as_object())) {

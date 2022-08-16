@@ -100,9 +100,9 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
 
     // 3. If startDate is undefined or endDate is undefined, throw a TypeError exception.
     if (start_date.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "startDate"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "startDate"sv);
     if (end_date.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "endDate"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
     auto start_date_number = TRY(start_date.to_number(global_object)).as_double();
@@ -127,9 +127,9 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
 
     // 3. If startDate is undefined or endDate is undefined, throw a TypeError exception.
     if (start_date.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "startDate"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "startDate"sv);
     if (end_date.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "endDate"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
     auto start_date_number = TRY(start_date.to_number(global_object)).as_double();

@@ -78,7 +78,7 @@ static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::GlobalObject&
     auto& vm = global_object.vm();
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !is<LocationObject>(this_value.as_object()))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Location");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Location");
     return static_cast<LocationObject*>(&this_value.as_object());
 }
 
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
     auto new_href = TRY(vm.argument(0).to_string(global_object));
     auto href_url = window.impl().associated_document().parse_url(new_href);
     if (!href_url.is_valid())
-        return vm.throw_completion<JS::URIError>(global_object, String::formatted("Invalid URL '{}'", new_href));
+        return vm.throw_completion<JS::URIError>(String::formatted("Invalid URL '{}'", new_href));
 
     // 3. Location-object navigate given the resulting URL record.
     window.impl().did_set_location_href({}, href_url);
@@ -313,7 +313,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
     }
 
     // 2. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't define property '{}' on cross-origin object", property_key)));
+    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't define property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
@@ -353,7 +353,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey cons
         return JS::Object::internal_delete(property_key);
 
     // 2. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
+    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-ownpropertykeys

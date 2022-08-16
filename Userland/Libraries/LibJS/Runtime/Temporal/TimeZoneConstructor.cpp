@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> TimeZoneConstructor::call()
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.TimeZone");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.TimeZone");
 }
 
 // 11.2.1 Temporal.TimeZone ( identifier ), https://tc39.es/proposal-temporal/#sec-temporal.timezone
@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
         // a. If IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, identifier);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, identifier);
         }
 
         // b. Set identifier to ! CanonicalizeTimeZoneName(identifier).

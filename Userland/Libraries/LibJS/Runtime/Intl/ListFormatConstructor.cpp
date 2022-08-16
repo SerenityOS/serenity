@@ -39,7 +39,7 @@ void ListFormatConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> ListFormatConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.ListFormat");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.ListFormat");
 }
 
 // 13.1.1 Intl.ListFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat

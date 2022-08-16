@@ -20,12 +20,12 @@ NavigatorConstructor::~NavigatorConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> NavigatorConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Navigator");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Navigator");
 }
 
 JS::ThrowCompletionOr<JS::Object*> NavigatorConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "Navigator");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Navigator");
 }
 
 void NavigatorConstructor::initialize(JS::Realm& realm)

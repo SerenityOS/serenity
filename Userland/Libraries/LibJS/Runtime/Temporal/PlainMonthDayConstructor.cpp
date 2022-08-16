@@ -40,7 +40,7 @@ ThrowCompletionOr<Value> PlainMonthDayConstructor::call()
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainMonthDay");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.PlainMonthDay");
 }
 
 // 10.1.1 Temporal.PlainMonthDay ( isoMonth, isoDay [ , calendarLike [ , referenceISOYear ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday
@@ -76,7 +76,7 @@ ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& n
     // This does not change the exposed behavior as the call to CreateTemporalMonthDay will immediately check that these values are valid
     // ISO values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
     if (!AK::is_within_range<i32>(ref) || !AK::is_within_range<u8>(m) || !AK::is_within_range<u8>(d))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
     return TRY(create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target));

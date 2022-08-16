@@ -59,11 +59,11 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
 
     // 5. If IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, iso_day))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
     // 6. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
     // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.
     if (!new_target)
@@ -322,7 +322,7 @@ ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, 
         // does not change the exposed behavior as the parent's call to CreateTemporalDate will immediately check that this value is a valid
         // ISO value for years: -273975 - 273975, which is a subset of this check.
         if (!AK::is_within_range<i32>(year))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
         // a. Set month to the result of clamping month between 1 and 12.
         month = clamp(month, 1, 12);
@@ -345,14 +345,14 @@ ThrowCompletionOr<ISODateRecord> regulate_iso_date(GlobalObject& global_object, 
         // This does not change the exposed behavior as the call to IsValidISODate will immediately check that these values are valid ISO
         // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
         if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month) || !AK::is_within_range<u8>(day))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
         auto y = static_cast<i32>(year);
         auto m = static_cast<u8>(month);
         auto d = static_cast<u8>(day);
         // b. If IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (!is_valid_iso_date(y, m, d))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
         // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
         return ISODateRecord { .year = y, .month = m, .day = d };
@@ -512,7 +512,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(GlobalObject& global
 
     // 3. If ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]) is false, throw a RangeError exception.
     if (!TRY(calendar_equals(global_object, temporal_date.calendar(), other->calendar())))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
 
     // 4. Let settings be ? GetDifferenceSettings(operation, options, date, « », "day", "day").
     auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::Date, {}, { "day"sv }, "day"sv));

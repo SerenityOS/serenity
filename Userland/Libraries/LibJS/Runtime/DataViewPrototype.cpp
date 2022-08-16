@@ -61,7 +61,7 @@ static ThrowCompletionOr<Value> get_view_value(GlobalObject& global_object, Valu
 
     auto buffer = view->viewed_array_buffer();
     if (buffer->is_detached())
-        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     auto view_offset = view->byte_offset();
     auto view_size = view->byte_length();
@@ -75,7 +75,7 @@ static ThrowCompletionOr<Value> get_view_value(GlobalObject& global_object, Valu
     end_index += element_size;
 
     if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
+        return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
     return buffer->get_value<T>(buffer_index.value(), false, ArrayBuffer::Order::Unordered, little_endian);
 }
@@ -98,7 +98,7 @@ static ThrowCompletionOr<Value> set_view_value(GlobalObject& global_object, Valu
 
     auto buffer = view->viewed_array_buffer();
     if (buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     auto view_offset = view->byte_offset();
     auto view_size = view->byte_length();
@@ -112,7 +112,7 @@ static ThrowCompletionOr<Value> set_view_value(GlobalObject& global_object, Valu
     end_index += element_size;
 
     if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
+        return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
     buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian);
 
@@ -242,7 +242,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
 {
     auto* data_view = TRY(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
     return Value(data_view->byte_length());
 }
 
@@ -251,7 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
 {
     auto* data_view = TRY(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
     return Value(data_view->byte_offset());
 }
 

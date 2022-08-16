@@ -109,7 +109,7 @@ ThrowCompletionOr<double> this_time_value(GlobalObject& global_object, Value val
 
     // 2. Throw a TypeError exception.
     auto& vm = global_object.vm();
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Date");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Date");
 }
 
 // 21.4.4.2 Date.prototype.getDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getdate
@@ -969,7 +969,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
     auto* this_object = TRY(typed_this_object(global_object));
 
     if (!Value(this_object->date_value()).is_finite_number())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidTimeValue);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidTimeValue);
 
     auto string = this_object->iso_date_string();
     return js_string(vm, move(string));
@@ -1241,10 +1241,10 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value.to_string_without_side_effects());
     auto hint_value = vm.argument(0);
     if (!hint_value.is_string())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
     auto& hint = hint_value.as_string().string();
     Value::PreferredType try_first;
     if (hint == "string" || hint == "default")
@@ -1252,7 +1252,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
     else if (hint == "number")
         try_first = Value::PreferredType::Number;
     else
-        return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidHint, hint);
+        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, hint);
     return TRY(this_value.as_object().ordinary_to_primitive(try_first));
 }
 

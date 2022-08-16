@@ -172,7 +172,7 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
 
     // 11. If targetEnv is empty, throw a ReferenceError exception.
     if (!target_environment)
-        return vm().throw_completion<ReferenceError>(global_object(), ErrorType::ModuleNoEnvironment);
+        return vm().throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
 
     // 12. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return target_environment->get_binding_value(global_object(), binding.export_name, true);

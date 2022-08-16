@@ -31,7 +31,7 @@ void ImageConstructor::initialize(JS::Realm& realm)
 
 JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Image");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Image");
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-image

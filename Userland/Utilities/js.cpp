@@ -1154,7 +1154,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(interpreter.global_object(), executable_result.error().to_string());
+                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_string());
                 return ReturnEarly::No;
             }
 
@@ -1194,7 +1194,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln("{}", error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
         } else {
             auto return_early = run_script_or_module(script_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -1208,7 +1208,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
             if (!hint.is_empty())
                 outln("{}", hint);
             outln(error.to_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(interpreter.global_object(), error.to_string());
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_string());
         } else {
             auto return_early = run_script_or_module(module_or_error.value());
             if (return_early == ReturnEarly::Yes)
@@ -1269,7 +1269,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObje
     auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly))
-        return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
+        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file->fd()));
     auto* object = JS::Object::create(realm, global_object.object_prototype());
@@ -1289,11 +1289,11 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObj
     auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly))
-        return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
+        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
     if (json.is_error())
-        return vm.throw_completion<JS::SyntaxError>(global_object, JS::ErrorType::JsonMalformed);
+        return vm.throw_completion<JS::SyntaxError>(JS::ErrorType::JsonMalformed);
     return JS::JSONObject::parse_json_value(global_object, json.value());
 }
 

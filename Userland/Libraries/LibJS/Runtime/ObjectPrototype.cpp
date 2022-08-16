@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -185,7 +185,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     auto getter = vm.argument(1);
     if (!getter.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, getter.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, getter.to_string_without_side_effects());
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
@@ -203,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     auto setter = vm.argument(1);
     if (!setter.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, setter.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, setter.to_string_without_side_effects());
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 
@@ -276,7 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
     auto status = TRY(object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr));
     if (!status) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
     }
     return js_undefined();
 }

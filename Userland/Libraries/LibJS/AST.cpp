@@ -407,7 +407,6 @@ Completion NewExpression::execute(Interpreter& interpreter) const
 
 Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter, Value callee_value, StringView call_type) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
@@ -417,9 +416,9 @@ Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter,
         } else {
             expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
         }
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee_value.to_string_without_side_effects(), call_type, expression_string);
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee_value.to_string_without_side_effects(), call_type, expression_string);
     } else {
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, callee_value.to_string_without_side_effects(), call_type);
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee_value.to_string_without_side_effects(), call_type);
     }
 }
 
@@ -494,7 +493,7 @@ Completion SuperCall::execute(Interpreter& interpreter) const
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
     if (!func || !Value(func).is_constructor())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, "Super constructor");
 
     // 6. Let result be ? Construct(func, argList, newTarget).
     auto* result = TRY(construct(global_object, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
@@ -1201,7 +1200,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
 
         // c. If Type(nextResult) is not Object, throw a TypeError exception.
         if (!next_result.is_object())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
+            return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
 
         // d. Let done be ? IteratorComplete(nextResult).
         auto done = TRY(iterator_complete(global_object, next_result.as_object()));
@@ -1260,7 +1259,7 @@ Completion BinaryExpression::execute(Interpreter& interpreter) const
 
         auto rhs_result = TRY(m_rhs->execute(interpreter)).release_value();
         if (!rhs_result.is_object())
-            return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::InOperatorWithObject);
+            return interpreter.vm().throw_completion<TypeError>(ErrorType::InOperatorWithObject);
         auto* private_environment = interpreter.vm().running_execution_context().private_environment;
         VERIFY(private_environment);
         auto private_name = private_environment->resolve_private_identifier(private_identifier);
@@ -1856,11 +1855,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         if (super_class.is_null()) {
             proto_parent = nullptr;
         } else if (!super_class.is_constructor()) {
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueNotAConstructorOrNull, super_class.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueNotAConstructorOrNull, super_class.to_string_without_side_effects());
         } else {
             auto super_class_prototype = TRY(super_class.get(global_object, vm.names.prototype));
             if (!super_class_prototype.is_null() && !super_class_prototype.is_object())
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_class_prototype.to_string_without_side_effects());
+                return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueInvalidPrototype, super_class_prototype.to_string_without_side_effects());
 
             if (super_class_prototype.is_null())
                 proto_parent = nullptr;
@@ -4555,18 +4554,18 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     TRY(for_each_lexically_declared_name([&](FlyString const& name) -> ThrowCompletionOr<void> {
         // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_var_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_lexical_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         // c. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
         auto has_restricted_global = TRY(global_environment.has_restricted_global_property(name));
 
         // d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
         if (has_restricted_global)
-            return interpreter.vm().throw_completion<SyntaxError>(global_object, ErrorType::RestrictedGlobalProperty, name);
+            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::RestrictedGlobalProperty, name);
 
         return {};
     }));
@@ -4575,7 +4574,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     TRY(for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
         // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_lexical_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(global_object, ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         return {};
     }));
@@ -4607,7 +4606,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (!function_definable)
-            return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
+            return interpreter.vm().throw_completion<TypeError>(ErrorType::CannotDeclareGlobalFunction, function.name());
 
         // 3. Append fn to declaredFunctionNames.
         // Note: Already done in step iv. above.
@@ -4636,7 +4635,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
             // b. If vnDefinable is false, throw a TypeError exception.
             if (!var_definable)
-                return interpreter.vm().throw_completion<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
+                return interpreter.vm().throw_completion<TypeError>(ErrorType::CannotDeclareGlobalVariable, name);
 
             // c. If vn is not an element of declaredVarNames, then
             // i. Append vn to declaredVarNames.

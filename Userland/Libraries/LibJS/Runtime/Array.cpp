@@ -23,7 +23,7 @@ ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* protot
 
     // 1. If length > 2^32 - 1, throw a RangeError exception.
     if (length > NumericLimits<u32>::max())
-        return vm.throw_completion<RangeError>(realm.global_object(), ErrorType::InvalidLength, "array");
+        return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
 
     // 2. If proto is not present, set proto to %Array.prototype%.
     if (!prototype)
@@ -84,7 +84,7 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
         auto number_length = TRY(property_descriptor.value->to_number(global_object));
         // 5. If newLen is not the same value as numberLen, throw a RangeError exception.
         if (new_length != number_length.as_double())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
     }
 
     // 6. Set newLenDesc.[[Value]] to newLen.

@@ -35,7 +35,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 
     auto callback = vm.argument(0);
     if (vm.argument_count() > 0 && !callback.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
     // IMPLEMENTATION DEFINED: The specification for this function hasn't been updated to accommodate for JobCallback records.
     //                         This just follows how the constructor immediately converts the callback to a JobCallback using HostMakeJobCallback.
@@ -51,15 +51,15 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 
     auto target = vm.argument(0);
     if (!can_be_held_weakly(target))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     auto held_value = vm.argument(1);
     if (same_value(target, held_value))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::FinalizationRegistrySameTargetAndValue);
+        return vm.throw_completion<TypeError>(ErrorType::FinalizationRegistrySameTargetAndValue);
 
     auto unregister_token = vm.argument(2);
     if (!can_be_held_weakly(unregister_token) && !unregister_token.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
 
     finalization_registry->add_finalization_record(target.as_cell(), held_value, unregister_token.is_undefined() ? nullptr : &unregister_token.as_cell());
 
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
 
     auto unregister_token = vm.argument(0);
     if (!can_be_held_weakly(unregister_token))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, unregister_token.to_string_without_side_effects());
 
     return Value(finalization_registry->remove_by_token(unregister_token.as_cell()));
 }

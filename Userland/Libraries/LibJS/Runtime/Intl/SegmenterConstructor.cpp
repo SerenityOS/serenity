@@ -38,7 +38,7 @@ void SegmenterConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> SegmenterConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.Segmenter");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.Segmenter");
 }
 
 // 18.1.1 Intl.Segmenter ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.segmenter

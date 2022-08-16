@@ -67,7 +67,7 @@ ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& global_obj
             switch (exception.type) {
 #define E(x)                          \
     case DOM::SimpleExceptionType::x: \
-        return vm.template throw_completion<JS::x>(global_object, exception.message);
+        return vm.template throw_completion<JS::x>(exception.message);
 
                 ENUMERATE_SIMPLE_WEBIDL_EXCEPTION_TYPES(E)
 
@@ -77,7 +77,7 @@ ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& global_obj
             }
         },
         [&](NonnullRefPtr<DOM::DOMException> exception) {
-            return vm.template throw_completion<DOMExceptionWrapper>(global_object, move(exception));
+            return vm.template throw_completion<DOMExceptionWrapper>(move(exception));
         });
 }
 

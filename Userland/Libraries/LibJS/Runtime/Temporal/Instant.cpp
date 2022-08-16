@@ -127,7 +127,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 8. If ! IsValidEpochNanoseconds(result) is false, then
     if (!is_valid_epoch_nanoseconds(*result_ns)) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
     }
 
     // 9. Return result.
@@ -169,7 +169,7 @@ ThrowCompletionOr<BigInt*> add_instant(GlobalObject& global_object, BigInt const
 
     // 2. If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*result))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 3. Return result.
     return result;
@@ -314,19 +314,19 @@ ThrowCompletionOr<Instant*> add_duration_to_or_subtract_duration_from_instant(Gl
 
     // 3. If duration.[[Days]] is not 0, throw a RangeError exception.
     if (duration.days != 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "days", duration.days);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationPropertyValueNonZero, "days", duration.days);
 
     // 4. If duration.[[Months]] is not 0, throw a RangeError exception.
     if (duration.months != 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "months", duration.months);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationPropertyValueNonZero, "months", duration.months);
 
     // 5. If duration.[[Weeks]] is not 0, throw a RangeError exception.
     if (duration.weeks != 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "weeks", duration.weeks);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationPropertyValueNonZero, "weeks", duration.weeks);
 
     // 6. If duration.[[Years]] is not 0, throw a RangeError exception.
     if (duration.years != 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, "years", duration.years);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationPropertyValueNonZero, "years", duration.years);
 
     // 7. Let ns be ? AddInstant(instant.[[Nanoseconds]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]]).
     auto* ns = TRY(add_instant(global_object, instant.nanoseconds(), sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds));

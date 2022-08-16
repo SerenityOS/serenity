@@ -37,7 +37,7 @@ void DurationFormatConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> DurationFormatConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.DurationFormat");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.DurationFormat");
 }
 
 // 1.2.1 Intl.DurationFormat ( [ locales [ , options ] ] ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat
@@ -68,7 +68,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     if (!numbering_system.is_undefined()) {
         // 7. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (numbering_system.is_undefined() || !Unicode::is_type_identifier(numbering_system.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
     }
 
     // 8. Let opt be the Record { [[localeMatcher]]: matcher, [[nu]]: numberingSystem }.

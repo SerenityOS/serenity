@@ -21,7 +21,7 @@ struct ParseRegexPatternError {
     String error;
 };
 ErrorOr<String, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets);
-ThrowCompletionOr<String> parse_regex_pattern(StringView pattern, VM& vm, GlobalObject& global_object, bool unicode, bool unicode_sets);
+ThrowCompletionOr<String> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets);
 
 class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);

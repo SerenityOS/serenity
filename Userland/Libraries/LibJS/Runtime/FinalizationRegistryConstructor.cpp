@@ -33,7 +33,7 @@ void FinalizationRegistryConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback
@@ -47,7 +47,7 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
     // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
     auto cleanup_callback = vm.argument(0);
     if (!cleanup_callback.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
 
     // 3. Let finalizationRegistry be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistry.prototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
     // 4. Let fn be the active function object.

@@ -40,7 +40,7 @@ void DisplayNamesConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> DisplayNamesConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.DisplayNames");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.DisplayNames");
 }
 
 // 12.1.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
@@ -60,7 +60,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
 
     // 4. If options is undefined, throw a TypeError exception.
     if (options_value.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "options"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "options"sv);
 
     // 5. Set options to ? GetOptionsObject(options).
     auto* options = TRY(Temporal::get_options_object(global_object, options_value));
@@ -90,7 +90,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
 
     // 14. If type is undefined, throw a TypeError exception.
     if (type.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "options.type"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "options.type"sv);
 
     // 15. Set displayNames.[[Type]] to type.
     display_names->set_type(type.as_string().string());

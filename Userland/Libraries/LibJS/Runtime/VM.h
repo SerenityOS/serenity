@@ -90,11 +90,11 @@ public:
         m_execution_context_stack.append(&context);
     }
 
-    ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)
+    ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject&)
     {
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
-            return throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
+            return throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
         m_execution_context_stack.append(&context);
         return {};
     }
@@ -163,16 +163,16 @@ public:
 
     // 5.2.3.2 Throw an Exception, https://tc39.es/ecma262/#sec-throw-an-exception
     template<typename T, typename... Args>
-    Completion throw_completion(GlobalObject& global_object, Args&&... args)
+    Completion throw_completion(Args&&... args)
     {
-        auto& realm = realm_from_global_object(global_object);
+        auto& realm = *current_realm();
         return JS::throw_completion(T::create(realm, forward<Args>(args)...));
     }
 
     template<typename T, typename... Args>
-    Completion throw_completion(GlobalObject& global_object, ErrorType type, Args&&... args)
+    Completion throw_completion(ErrorType type, Args&&... args)
     {
-        return throw_completion<T>(global_object, String::formatted(type.message(), forward<Args>(args)...));
+        return throw_completion<T>(String::formatted(type.message(), forward<Args>(args)...));
     }
 
     Value construct(FunctionObject&, FunctionObject& new_target, Optional<MarkedVector<Value>> arguments);
