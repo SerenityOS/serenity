@@ -126,7 +126,7 @@ enum class NeedsBigProcessLock {
     S(open, NeedsBigProcessLock::Yes)                       \
     S(perf_event, NeedsBigProcessLock::Yes)                 \
     S(perf_register_string, NeedsBigProcessLock::Yes)       \
-    S(pipe, NeedsBigProcessLock::Yes)                       \
+    S(pipe, NeedsBigProcessLock::No)                        \
     S(pledge, NeedsBigProcessLock::Yes)                     \
     S(poll, NeedsBigProcessLock::Yes)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)             \

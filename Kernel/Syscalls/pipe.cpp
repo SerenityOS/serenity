@@ -11,7 +11,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
 
     // Reject flags other than O_CLOEXEC, O_NONBLOCK
