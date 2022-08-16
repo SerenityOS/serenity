@@ -21,15 +21,6 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
     u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
     auto fifo = TRY(FIFO::try_create(uid()));
 
-    ScopedDescriptionAllocation reader_fd_allocation;
-    ScopedDescriptionAllocation writer_fd_allocation;
-
-    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
-        reader_fd_allocation = TRY(fds.allocate());
-        writer_fd_allocation = TRY(fds.allocate());
-        return {};
-    }));
-
     auto reader_description = TRY(fifo->open_direction(FIFO::Direction::Reader));
     auto writer_description = TRY(fifo->open_direction(FIFO::Direction::Writer));
 
@@ -41,6 +32,9 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
     }
 
     TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+        auto reader_fd_allocation = TRY(fds.allocate());
+        auto writer_fd_allocation = TRY(fds.allocate());
+
         fds[reader_fd_allocation.fd].set(move(reader_description), fd_flags);
         fds[writer_fd_allocation.fd].set(move(writer_description), fd_flags);
 
