@@ -123,7 +123,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         auto calendar_identifier = TRY(Value(calendar).to_string(global_object));
         if (calendar_identifier != "iso8601"sv) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
         }
 
         // f. Let result be ? ToTemporalTimeRecord(item).
@@ -146,7 +146,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
         // d. If result.[[Calendar]] is not one of undefined or "iso8601", then
         if (result->calendar.has_value() && *result->calendar != "iso8601"sv) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *result->calendar);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, *result->calendar);
         }
     }
 
@@ -177,7 +177,7 @@ ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject& global_object, doubl
 
         // b. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
         if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainTime);
 
         // c. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
         return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
@@ -317,7 +317,7 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, 
 
     // 2. If IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainTime);
 
     // 3. If newTarget is not present, set newTarget to %Temporal.PlainTime%.
     if (!new_target)

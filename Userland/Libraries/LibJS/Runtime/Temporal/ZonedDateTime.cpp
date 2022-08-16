@@ -69,7 +69,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
 
         // c. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
         if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
         // d. Return epochNanoseconds.
         return epoch_nanoseconds;
@@ -110,7 +110,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
 
     // 9. If offsetOption is "reject", throw a RangeError exception.
     if (offset_option == "reject"sv)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeOffset);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidZonedDateTimeOffset);
 
     // 10. Let instant be ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
     auto* instant = TRY(disambiguate_possible_instants(global_object, possible_instants, time_zone, *date_time, disambiguation));
@@ -210,7 +210,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
             // i. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(*time_zone_name))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
+                return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
             // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
             time_zone_name = canonicalize_time_zone_name(*time_zone_name);
@@ -489,7 +489,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
 
     // 9. If ! IsValidEpochNanoseconds(ℤ(endNs)) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*end_ns_bigint))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 10. Let endInstant be ! CreateTemporalInstant(ℤ(endNs)).
     auto* end_instant = MUST(create_temporal_instant(global_object, *end_ns_bigint));
@@ -566,7 +566,7 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
     // 3. If ? CalendarEquals(zonedDateTime.[[Calendar]], other.[[Calendar]]) is false, then
     if (!TRY(calendar_equals(global_object, zoned_date_time.calendar(), other->calendar()))) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
     }
 
     // 4. Let settings be ? GetDifferenceSettings(operation, options, datetime, « », "nanosecond", "hour").
@@ -589,7 +589,7 @@ ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& g
     // 6. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, then
     if (!TRY(time_zone_equals(global_object, zoned_date_time.time_zone(), other->time_zone()))) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentTimeZones);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentTimeZones);
     }
 
     // 7. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).

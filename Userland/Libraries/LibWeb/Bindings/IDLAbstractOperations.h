@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,7 +88,7 @@ JS::Completion call_user_object_operation(Bindings::CallbackType& callback, Stri
 
         // 4. If ! IsCallable(X) is false, then set completion to a new Completion{[[Type]]: throw, [[Value]]: a newly created TypeError object, [[Target]]: empty}, and jump to the step labeled return.
         if (!get_result.value().is_function()) {
-            completion = realm.vm().template throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, get_result.value().to_string_without_side_effects());
+            completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, get_result.value().to_string_without_side_effects());
             return clean_up_on_return(stored_settings, relevant_settings, completion);
         }
 

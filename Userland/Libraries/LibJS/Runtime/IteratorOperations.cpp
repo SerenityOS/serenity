@@ -50,14 +50,14 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
 
     // NOTE: Additional type check to produce a better error message than Call().
     if (!method->is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects());
 
     // 3. Let iterator be ? Call(method, obj).
     auto iterator = TRY(call(global_object, *method, value));
 
     // 4. If Type(iterator) is not Object, throw a TypeError exception.
     if (!iterator.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects());
 
     // 5. Let nextMethod be ? GetV(iterator, "next").
     auto next_method = TRY(iterator.get(global_object, vm.names.next));
@@ -87,7 +87,7 @@ ThrowCompletionOr<Object*> iterator_next(GlobalObject& global_object, Iterator c
 
     // 3. If Type(result) is not Object, throw a TypeError exception.
     if (!result.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
+        return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
 
     // 4. Return result.
     return &result.as_object();
@@ -175,7 +175,7 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
 
     // 7. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
     if (!inner_result.value().is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
+        return vm.throw_completion<TypeError>(ErrorType::IterableReturnBadReturn);
 
     // 8. Return ? completion.
     return completion;

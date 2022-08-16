@@ -199,7 +199,7 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_obje
     // 2. If integer is -∞ or +∞ , then
     if (Value(integer).is_infinity()) {
         // a. Throw a RangeError exception.
-        return vm.template throw_completion<RangeError>(global_object, error_type, args...);
+        return vm.template throw_completion<RangeError>(error_type, args...);
     }
 
     // 3. Return integer.
@@ -221,7 +221,7 @@ ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_objec
 
     // 3. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number())
-        return vm.template throw_completion<RangeError>(global_object, error_type, args...);
+        return vm.template throw_completion<RangeError>(error_type, args...);
 
     // 4. Return ℝ(number).
     return number.as_double();

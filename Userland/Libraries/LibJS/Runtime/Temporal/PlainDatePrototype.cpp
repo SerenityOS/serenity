@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     // 3. If Type(temporalDateLike) is not Object, then
     if (!temporal_date_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_date_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_date_like.to_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateLike).
@@ -619,7 +619,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainDate", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.PlainDate", "a primitive value");
 }
 
 }

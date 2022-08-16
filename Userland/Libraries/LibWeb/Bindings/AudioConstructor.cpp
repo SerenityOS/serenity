@@ -31,7 +31,7 @@ void AudioConstructor::initialize(JS::Realm& realm)
 
 JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Audio");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Audio");
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-audio

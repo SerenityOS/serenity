@@ -65,7 +65,7 @@ ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(GlobalObject& gl
             // ii. If Type(nextValue) is not an element of elementTypes, then
             if (auto type = to_option_type(next_value); !type.has_value() || !element_types.contains_slow(*type)) {
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-                auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::IterableToListOfTypeInvalidValue, next_value.to_string_without_side_effects());
+                auto completion = vm.throw_completion<TypeError>(ErrorType::IterableToListOfTypeInvalidValue, next_value.to_string_without_side_effects());
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
                 return iterator_close(global_object, iterator_record, move(completion));
             }
@@ -97,7 +97,7 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
     }
 
     // 3. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, "Options");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "Options");
 }
 
 // 13.3 GetOption ( options, property, type, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
@@ -114,7 +114,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
     if (value.is_undefined()) {
         // a. If default is required, throw a RangeError exception.
         if (default_.has<GetOptionRequired>())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, "undefined"sv, property.as_string());
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, "undefined"sv, property.as_string());
 
         // b. Return default.
         return default_.visit(
@@ -137,7 +137,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
         // b. If value is NaN, throw a RangeError exception.
         if (value.is_nan())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property.as_string());
     }
     // 7. Else,
     else {
@@ -153,7 +153,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
         if (!values.contains_slow(value.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
     }
 
     // 9. Return value.
@@ -305,7 +305,7 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
 
     // 6. If increment < 1𝔽 or increment > maximum, throw a RangeError exception.
     if (increment < 1 || increment > maximum)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
     // 7. Set increment to floor(ℝ(increment)).
     auto floored_increment = static_cast<u64>(increment);
@@ -313,7 +313,7 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     // 8. If dividend is not undefined and dividend modulo increment is not zero, then
     if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0)
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
     // 9. Return increment.
     return floored_increment;
@@ -350,7 +350,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 
     // 2. If smallestUnit is "hour", throw a RangeError exception.
     if (smallest_unit == "hour"sv)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
 
     // 3. If smallestUnit is "minute", then
     if (smallest_unit == "minute"sv) {
@@ -394,7 +394,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
         if (!fractional_digits_value.is_undefined()) {
             // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
             if (TRY(fractional_digits_value.to_string(global_object)) != "auto"sv)
-                return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+                return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
         }
 
         // b. Return the Record { [[Precision]]: "auto", [[Unit]]: "nanosecond", [[Increment]]: 1 }.
@@ -403,14 +403,14 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObje
 
     // 11. If fractionalDigitsVal is NaN, +∞𝔽, or -∞𝔽, throw a RangeError exception.
     if (fractional_digits_value.is_nan() || fractional_digits_value.is_infinity())
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+        return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
     // 12. Let fractionalDigitCount be RoundTowardsZero(ℝ(fractionalDigitsVal)).
     auto fractional_digit_count_unchecked = trunc(fractional_digits_value.as_double());
 
     // 13. If fractionalDigitCount < 0 or fractionalDigitCount > 9, throw a RangeError exception.
     if (fractional_digit_count_unchecked < 0 || fractional_digit_count_unchecked > 9)
-        return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
+        return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
     auto fractional_digit_count = static_cast<u8>(fractional_digit_count_unchecked);
 
@@ -531,7 +531,7 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(GlobalObject& global_objec
 
     // 10. If value is undefined and default is required, throw a RangeError exception.
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IsUndefined, String::formatted("{} option value", key.as_string()));
+        return vm.throw_completion<RangeError>(ErrorType::IsUndefined, String::formatted("{} option value", key.as_string()));
 
     Optional<String> value = option_value.is_undefined()
         ? Optional<String> {}
@@ -657,7 +657,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
             if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
                 // 1. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
                 if (!is_valid_time_zone_name(*time_zone_name))
-                    return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
+                    return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
                 // 2. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
                 time_zone_name = canonicalize_time_zone_name(*time_zone_name);
@@ -809,7 +809,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
     // 2. If object has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
     if (is<PlainDate>(object) || is<PlainDateTime>(object) || is<PlainMonthDay>(object) || is<PlainTime>(object) || is<PlainYearMonth>(object) || is<ZonedDateTime>(object)) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "calendar or timeZone");
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustNotHave, "calendar or timeZone");
     }
 
     // 3. Let calendarProperty be ? Get(object, "calendar").
@@ -818,7 +818,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
     // 4. If calendarProperty is not undefined, then
     if (!calendar_property.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "calendar");
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustNotHave, "calendar");
     }
 
     // 5. Let timeZoneProperty be ? Get(object, "timeZone").
@@ -827,7 +827,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& g
     // 6. If timeZoneProperty is not undefined, then
     if (!time_zone_property.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "timeZone");
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustNotHave, "timeZone");
     }
 
     return {};
@@ -1315,11 +1315,11 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 
     // 20. If IsValidISODate(yearMV, monthMV, dayMV) is false, throw a RangeError exception.
     if (!is_valid_iso_date(year_mv, month_mv, day_mv))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidISODate);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidISODate);
 
     // 21. If IsValidTime(hourMV, minuteMV, secondMV, millisecondMV, microsecondMV, nanosecondMV) is false, throw a RangeError exception.
     if (!is_valid_time(hour_mv, minute_mv, second_mv, millisecond_mv, microsecond_mv, nanosecond_mv))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTime);
 
     Optional<String> calendar_val;
 
@@ -1347,7 +1347,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
     // 1. If ParseText(StringToCodePoints(isoString), TemporalInstantString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalInstantString, iso_string);
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidInstantString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidInstantString, iso_string);
 
     // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1379,7 +1379,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
     // 1. If ParseText(StringToCodePoints(isoString), TemporalZonedDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidZonedDateTimeString, iso_string);
 
     // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1403,7 +1403,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarString, iso_string);
 
     // 3. Let id be the source text matched by the CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto id = parse_result->calendar_name;
@@ -1438,11 +1438,11 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDateTimeString, iso_string);
 
     // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
     if (parse_result->utc_designator.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeStringUTCDesignator, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDateTimeStringUTCDesignator, iso_string);
 
     // 4. Return ? ParseISODateTime(isoString).
     return parse_iso_date_time(global_object, *parse_result);
@@ -1458,7 +1458,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     // 2. If duration is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationString, iso_string);
 
     // 3. Let each of sign, years, months, weeks, days, hours, fHours, minutes, fMinutes, seconds, and fSeconds be the source text matched by the respective Sign, DurationYears, DurationMonths, DurationWeeks, DurationDays, DurationWholeHours, DurationHoursFraction, DurationWholeMinutes, DurationMinutesFraction, DurationWholeSeconds, and DurationSecondsFraction Parse Node contained within duration, or an empty sequence of code points if not present.
     auto sign_part = parse_result->sign;
@@ -1496,7 +1496,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     if (f_hours_part.has_value()) {
         // a. If any of minutes, fMinutes, seconds, fSeconds is not empty, throw a RangeError exception.
         if (minutes_part.has_value() || f_minutes_part.has_value() || seconds_part.has_value() || f_seconds_part.has_value())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "hours"sv, "minutes or seconds"sv);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "hours"sv, "minutes or seconds"sv);
 
         // b. Let fHoursDigits be the substring of CodePointsToString(fHours) from 1.
         auto f_hours_digits = f_hours_part->substring_view(1);
@@ -1519,7 +1519,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
     if (f_minutes_part.has_value()) {
         // a. If any of seconds, fSeconds is not empty, throw a RangeError exception.
         if (seconds_part.has_value() || f_seconds_part.has_value())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "minutes"sv, "seconds"sv);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "minutes"sv, "seconds"sv);
 
         // b. Let fMinutesDigits be the substring of CodePointsToString(fMinutes) from 1.
         auto f_minutes_digits = f_minutes_part->substring_view(1);
@@ -1598,11 +1598,11 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthDayString, iso_string);
 
     // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
     if (parse_result->utc_designator.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayStringUTCDesignator, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthDayStringUTCDesignator, iso_string);
 
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1628,7 +1628,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     // 1. If ParseText(StringToCodePoints(isoString), TemporalDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDateTimeString, iso_string);
 
     // 2. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1675,11 +1675,11 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeString, iso_string);
 
     // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
     if (parse_result->utc_designator.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeStringUTCDesignator, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeStringUTCDesignator, iso_string);
 
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1698,7 +1698,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneString, iso_string);
 
     // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIdentifier Parse Nodes contained within parseResult, or an empty sequence of code points if not present.
     auto z = parse_result->utc_designator;
@@ -1737,11 +1737,11 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidYearMonthString, iso_string);
 
     // 3. If parseResult contains a UTCDesignator Parse Node, throw a RangeError exception.
     if (parse_result->utc_designator.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthStringUTCDesignator, iso_string);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidYearMonthStringUTCDesignator, iso_string);
 
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
@@ -1761,7 +1761,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
     // 2. If integer ≤ 0, then
     if (integer <= 0) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalPropertyMustBePositiveInteger);
     }
 
     // 3. Return integer.
@@ -1820,7 +1820,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             // i. If requiredFields contains property, then
             if (required_fields.get<Vector<StringView>>().contains_slow(property)) {
                 // 1. Throw a TypeError exception.
-                return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
+                return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, property);
             }
             // ii. If property is in the Property column of Table 13, then
             // NOTE: The other properties in the table are automatically handled as their default value is undefined
@@ -1837,7 +1837,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     // 4. If requiredFields is partial and any is false, then
     if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
     }
 
     // 5. Return result.
@@ -1857,7 +1857,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(GlobalObject& glob
 
     // 3. If disallowedUnits contains smallestUnit, throw a RangeError exception.
     if (disallowed_units.contains_slow(*smallest_unit))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, *smallest_unit, "smallestUnit"sv);
 
     // 4. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits(smallestLargestDefaultUnit, smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units(smallest_largest_default_unit, *smallest_unit);
@@ -1867,7 +1867,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(GlobalObject& glob
 
     // 6. If disallowedUnits contains largestUnit, throw a RangeError exception.
     if (disallowed_units.contains_slow(*largest_unit))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, *largest_unit, "largestUnit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, *largest_unit, "largestUnit"sv);
 
     // 7. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
     if (largest_unit == "auto"sv)
@@ -1875,7 +1875,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(GlobalObject& glob
 
     // 8. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
     if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));

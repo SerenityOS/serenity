@@ -35,7 +35,7 @@ void MapConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> MapConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Map);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.Map);
 }
 
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
@@ -51,11 +51,11 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 
     auto adder = TRY(map->get(vm.names.set));
     if (!adder.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'set' property of Map");
 
     (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));

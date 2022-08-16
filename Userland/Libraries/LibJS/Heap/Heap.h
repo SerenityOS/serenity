@@ -25,8 +25,6 @@
 
 namespace JS {
 
-Realm& realm_from_global_object(GlobalObject&);
-
 class Heap {
     AK_MAKE_NONCOPYABLE(Heap);
     AK_MAKE_NONMOVABLE(Heap);

@@ -32,7 +32,7 @@ void OptionConstructor::initialize(JS::Realm& realm)
 
 JS::ThrowCompletionOr<JS::Value> OptionConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Option");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "Option");
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option

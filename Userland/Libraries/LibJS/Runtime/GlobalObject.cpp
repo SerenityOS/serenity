@@ -226,8 +226,8 @@ void GlobalObject::initialize_global_object()
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(
-        realm, [](VM& vm, GlobalObject& global_object) {
-            return vm.throw_completion<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
+        realm, [](VM& vm, GlobalObject&) {
+            return vm.throw_completion<TypeError>(ErrorType::RestrictedFunctionPropertiesAccess);
         },
         0, "", &realm);
     m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
@@ -533,7 +533,7 @@ static ThrowCompletionOr<String> encode(GlobalObject& global_object, String cons
             auto code_point = code_point_at(utf16_string.view(), k);
             // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
             if (code_point.is_unpaired_surrogate)
-                return vm.throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+                return vm.throw_completion<URIError>(ErrorType::URIMalformed);
 
             // iii. Set k to k + cp.[[CodeUnitCount]].
             k += code_point.code_unit_count;
@@ -563,22 +563,22 @@ static ThrowCompletionOr<String> decode(GlobalObject& global_object, String cons
         auto code_unit = string[k];
         if (code_unit != '%') {
             if (expected_continuation_bytes > 0)
-                return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+                return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
 
             decoded_builder.append(code_unit);
             continue;
         }
 
         if (k + 2 >= string.length())
-            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+            return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
 
         auto first_digit = decode_hex_digit(string[k + 1]);
         if (first_digit >= 16)
-            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+            return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
 
         auto second_digit = decode_hex_digit(string[k + 2]);
         if (second_digit >= 16)
-            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+            return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
 
         u8 decoded_code_unit = (first_digit << 4) | second_digit;
         k += 2;
@@ -586,7 +586,7 @@ static ThrowCompletionOr<String> decode(GlobalObject& global_object, String cons
             decoded_builder.append(decoded_code_unit);
             expected_continuation_bytes--;
             if (expected_continuation_bytes == 0 && !Utf8View(decoded_builder.string_view().substring_view(code_point_start_offset)).validate())
-                return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+                return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
             continue;
         }
 
@@ -600,14 +600,14 @@ static ThrowCompletionOr<String> decode(GlobalObject& global_object, String cons
 
         auto leading_ones = count_leading_zeroes_safe(static_cast<u8>(~decoded_code_unit));
         if (leading_ones == 1 || leading_ones > 4)
-            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+            return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
 
         code_point_start_offset = decoded_builder.length();
         decoded_builder.append(decoded_code_unit);
         expected_continuation_bytes = leading_ones - 1;
     }
     if (expected_continuation_bytes > 0)
-        return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+        return global_object.vm().throw_completion<URIError>(ErrorType::URIMalformed);
     return decoded_builder.build();
 }
 

@@ -160,7 +160,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     if (m_is_class_constructor) {
         // a. Let error be a newly created TypeError object.
         // b. NOTE: error is created in calleeContext with F's associated Realm Record.
-        auto throw_completion = vm.throw_completion<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
+        auto throw_completion = vm.throw_completion<TypeError>(ErrorType::ClassConstructorWithoutNew, m_name);
 
         // c. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
         vm.pop_execution_context();
@@ -274,7 +274,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
 
         // c. If result.[[Value]] is not undefined, throw a TypeError exception.
         if (!result.value()->is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
+            return vm.throw_completion<TypeError>(ErrorType::DerivedConstructorReturningInvalidValue);
     }
     // 11. Else, ReturnIfAbrupt(result).
     else if (result.is_abrupt()) {
@@ -787,14 +787,14 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (m_kind == FunctionKind::AsyncGenerator)
-        return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "Async Generator function execution");
+        return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async Generator function execution");
 
     if (bytecode_interpreter) {
         if (!m_bytecode_executable) {
             auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
                 auto executable_result = Bytecode::Generator::generate(node, kind);
                 if (executable_result.is_error())
-                    return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+                    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_string());
 
                 auto bytecode_executable = executable_result.release_value();
                 bytecode_executable->name = name;
@@ -845,7 +845,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         return { Completion::Type::Return, generator_object, {} };
     } else {
         if (m_kind == FunctionKind::Generator)
-            return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "Generator function execution in AST interpreter");
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Generator function execution in AST interpreter");
         OwnPtr<Interpreter> local_interpreter;
         Interpreter* ast_interpreter = vm.interpreter_if_exists();
 

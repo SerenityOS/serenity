@@ -331,7 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
     }
 
     Object* round_to;
@@ -396,12 +396,12 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 15. If smallestUnitPresent is false and largestUnitPresent is false, then
     if (!smallest_unit_present && !largest_unit_present) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingUnits);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalMissingUnits);
     }
 
     // 16. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
     if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidUnitRange, *smallest_unit, *largest_unit);
 
     // 17. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"sv));
@@ -454,7 +454,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 
     // 3. If totalOf is undefined, throw a TypeError exception.
     if (vm.argument(0).is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
 
     Object* total_of;
 
@@ -578,7 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
 
     // 5. If precision.[[Unit]] is "minute", throw a RangeError exception.
     if (precision.unit == "minute"sv)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, "minute"sv, "smallestUnit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, "minute"sv, "smallestUnit"sv);
 
     // 6. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -617,7 +617,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_locale_string)
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.Duration", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.Duration", "a primitive value");
 }
 
 }

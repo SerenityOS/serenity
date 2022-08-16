@@ -15,7 +15,7 @@ ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(Realm& realm, size_t byte_le
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);
     if (buffer.is_error())
-        return realm.vm().throw_completion<RangeError>(realm.global_object(), ErrorType::NotEnoughMemoryToAllocate, byte_length);
+        return realm.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
     return realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.global_object().array_buffer_prototype());
 }
@@ -59,7 +59,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
     // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
     if (block.is_error())
-        return global_object.vm().throw_completion<RangeError>(global_object, ErrorType::NotEnoughMemoryToAllocate, byte_length);
+        return global_object.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
     // 3. Set obj.[[ArrayBufferData]] to block.
     obj->set_buffer(block.release_value());
@@ -84,7 +84,7 @@ ThrowCompletionOr<void> detach_array_buffer(GlobalObject& global_object, ArrayBu
 
     // 3. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
     if (!same_value(array_buffer.detach_key(), *key))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachKeyMismatch, *key, array_buffer.detach_key());
+        return vm.throw_completion<TypeError>(ErrorType::DetachKeyMismatch, *key, array_buffer.detach_key());
 
     // 4. Set arrayBuffer.[[ArrayBufferData]] to null.
     // 5. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.

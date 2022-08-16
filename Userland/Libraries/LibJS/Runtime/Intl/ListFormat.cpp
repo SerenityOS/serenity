@@ -270,7 +270,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
             // ii. If Type(nextValue) is not String, then
             if (!next_value.is_string()) {
                 // 1. Let error be ThrowCompletion(a newly created TypeError object).
-                auto error = vm.throw_completion<TypeError>(global_object, ErrorType::NotAString, next_value);
+                auto error = vm.throw_completion<TypeError>(ErrorType::NotAString, next_value);
 
                 // 2. Return ? IteratorClose(iteratorRecord, error).
                 return iterator_close(global_object, iterator_record, move(error));

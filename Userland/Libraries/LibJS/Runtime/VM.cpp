@@ -911,12 +911,10 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto& global_object = current_realm()->global_object();
-
     auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
-        return throw_completion<SyntaxError>(global_object, ErrorType::ModuleNotFound, module_request.module_specifier);
+        return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);
     }
 
     // FIXME: Don't read the file in one go.
@@ -937,7 +935,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
 
         if (module_or_errors.is_error()) {
             VERIFY(module_or_errors.error().size() > 0);
-            return throw_completion<SyntaxError>(global_object, module_or_errors.error().first().to_string());
+            return throw_completion<SyntaxError>(module_or_errors.error().first().to_string());
         }
         return module_or_errors.release_value();
     }());

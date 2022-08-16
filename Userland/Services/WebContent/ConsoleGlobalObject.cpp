@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
     if (!is<ConsoleGlobalObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
 
     auto console_global_object = static_cast<ConsoleGlobalObject*>(this_object);
     auto& window = console_global_object->m_window_object->impl();

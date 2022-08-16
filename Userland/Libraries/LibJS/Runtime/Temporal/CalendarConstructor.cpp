@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> CalendarConstructor::call()
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Calendar");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.Calendar");
 }
 
 // 12.2.1 Temporal.Calendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal.calendar
@@ -53,7 +53,7 @@ ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_ta
     // 3. If IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
     }
 
     // 4. Return ? CreateTemporalCalendar(id, NewTarget).

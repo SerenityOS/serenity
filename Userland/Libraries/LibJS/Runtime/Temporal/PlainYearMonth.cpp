@@ -101,7 +101,7 @@ ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_obj
         // values (for years: -273975 - 273975) which is a subset of this check.
         // If RegulateISOYearMonth is ever used outside ISOYearMonthFromFields, this may need to be changed.
         if (!AK::is_within_range<i32>(year))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
         // a. Set month to the result of clamping month between 1 and 12.
         month = clamp(month, 1, 12);
@@ -118,11 +118,11 @@ ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_obj
         // This does not change the exposed behavior as the call to IsValidISOMonth and subsequent call to CreateTemporalDateTime will check
         // that these values are valid ISO values (for years: -273975 - 273975, for months: 1 - 12) all of which are subsets of this check.
         if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
         // b. If ! IsValidISOMonth(month) is false, throw a RangeError exception.
         if (!is_valid_iso_month(month))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
         // c. Return the Record { [[Year]]: year, [[Month]]: month }.
         return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
@@ -196,11 +196,11 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
 
     // 3. If IsValidISODate(isoYear, isoMonth, referenceISODay) is false, throw a RangeError exception.
     if (!is_valid_iso_date(iso_year, iso_month, reference_iso_day))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
     // 4. If ! ISOYearMonthWithinLimits(isoYear, isoMonth) is false, throw a RangeError exception.
     if (!iso_year_month_within_limits(iso_year, iso_month))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
     // 5. If newTarget is not present, set newTarget to %Temporal.PlainYearMonth%.
     if (!new_target)
@@ -262,7 +262,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& 
 
     // 4. If ? CalendarEquals(calendar, other.[[Calendar]]) is false, throw a RangeError exception.
     if (!TRY(calendar_equals(global_object, calendar, other->calendar())))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
 
     // 5. Let settings be ? GetDifferenceSettings(operation, options, date, « "week", "day" », "month", "year").
     auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::Date, { "week"sv, "day"sv }, { "month"sv }, "year"sv));

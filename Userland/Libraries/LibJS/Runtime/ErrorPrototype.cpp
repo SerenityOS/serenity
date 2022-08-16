@@ -110,14 +110,14 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
 
     // 2. If ! Type(E) is not Object, throw a TypeError exception.
     if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value.to_string_without_side_effects());
 
     auto& this_object = this_value.as_object();
 
     // 3. Let numberOfArgs be the number of arguments passed to this function call.
     // 4. If numberOfArgs is 0, throw a TypeError exception.
     if (vm.argument_count() == 0)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::BadArgCountOne, "set stack");
+        return vm.throw_completion<TypeError>(ErrorType::BadArgCountOne, "set stack");
 
     // 5. Return ? CreateDataPropertyOrThrow(E, "stack", value);
     return TRY(this_object.create_data_property_or_throw(vm.names.stack, vm.argument(0)));

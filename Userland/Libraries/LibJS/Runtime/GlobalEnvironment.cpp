@@ -57,7 +57,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& 
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
-        return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
+        return vm().throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
     // 3. Return ! DclRec.CreateMutableBinding(N, D).
     return MUST(m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted));
@@ -69,7 +69,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
-        return vm().throw_completion<TypeError>(global_object, ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
+        return vm().throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
     // 3. Return ! DclRec.CreateImmutableBinding(N, S).
     return MUST(m_declarative_record->create_immutable_binding(global_object, name, strict));

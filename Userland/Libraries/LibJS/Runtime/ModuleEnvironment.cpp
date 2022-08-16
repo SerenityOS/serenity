@@ -36,7 +36,7 @@ ThrowCompletionOr<Value> ModuleEnvironment::get_binding_value(GlobalObject& glob
 
         // c. If targetEnv is empty, throw a ReferenceError exception.
         if (!target_env)
-            return vm().throw_completion<ReferenceError>(global_object, ErrorType::ModuleNoEnvironment);
+            return vm().throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
 
         // d. Return ? targetEnv.GetBindingValue(N2, true).
         return target_env->get_binding_value(global_object, indirect_binding->binding_name, true);

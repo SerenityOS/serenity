@@ -31,7 +31,7 @@ static ThrowCompletionOr<Value> get_promise_resolve(GlobalObject& global_object,
 
     // 2. If IsCallable(promiseResolve) is false, throw a TypeError exception.
     if (!promise_resolve.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
 
     // 3. Return promiseResolve.
     return promise_resolve;
@@ -279,7 +279,7 @@ ThrowCompletionOr<Value> PromiseConstructor::call()
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Promise);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.Promise);
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
@@ -292,7 +292,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
 
     // 2. If IsCallable(executor) is false, throw a TypeError exception.
     if (!executor.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::PromiseExecutorNotAFunction);
+        return vm.throw_completion<TypeError>(ErrorType::PromiseExecutorNotAFunction);
 
     // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
     // 4. Set promise.[[PromiseState]] to pending.
@@ -481,7 +481,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 
     // 2. If Type(C) is not Object, throw a TypeError exception.
     if (!constructor.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, constructor.to_string_without_side_effects());
 
     // 3. Return ? PromiseResolve(C, x).
     return TRY(promise_resolve(global_object, constructor.as_object(), value));

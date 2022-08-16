@@ -729,7 +729,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     // 3. If Type(temporalZonedDateTimeLike) is not Object, then
     if (!temporal_zoned_date_time_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_zoned_date_time_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_zoned_date_time_like.to_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalZonedDateTimeLike).
@@ -960,7 +960,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
     }
 
     Object* round_to;
@@ -1023,7 +1023,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     // 19. If dayLengthNs ≤ 0, then
     if (day_length_ns <= 0) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalZonedDateTimeRoundZeroOrNegativeLengthDay);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalZonedDateTimeRoundZeroOrNegativeLengthDay);
     }
 
     // 20. Let roundResult be ! RoundISODateTime(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode, dayLengthNs).
@@ -1117,7 +1117,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
 }
 
 // 6.3.45 Temporal.ZonedDateTime.prototype.startOfDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.startofday

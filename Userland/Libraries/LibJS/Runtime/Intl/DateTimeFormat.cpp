@@ -119,13 +119,13 @@ ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Val
     // 9. If required is "date" and timeStyle is not undefined, then
     if ((required == OptionRequired::Date) && !time_style.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidDateTimeFormatOption, "timeStyle"sv, "date"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IntlInvalidDateTimeFormatOption, "timeStyle"sv, "date"sv);
     }
 
     // 10. If required is "time" and dateStyle is not undefined, then
     if ((required == OptionRequired::Time) && !date_style.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidDateTimeFormatOption, "dateStyle"sv, "time"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IntlInvalidDateTimeFormatOption, "dateStyle"sv, "time"sv);
     }
 
     // 11. If needDefaults is true and defaults is either "date" or "all", then
@@ -540,7 +540,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
 
     // 2. If x is NaN, throw a RangeError exception.
     if (isnan(time))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidTime);
 
     // 3. Let locale be dateTimeFormat.[[Locale]].
     auto const& locale = date_time_format.locale();
@@ -928,14 +928,14 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 
     // 2. If x is NaN, throw a RangeError exception.
     if (isnan(start))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidTime);
 
     // 3. Let y be TimeClip(y).
     end = time_clip(end);
 
     // 4. If y is NaN, throw a RangeError exception.
     if (isnan(end))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidTime);
 
     // 5. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
     auto start_local_time = TRY(to_local_time(global_object, start, date_time_format.calendar(), date_time_format.time_zone()));
@@ -1248,7 +1248,7 @@ ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double t
     // 3. Else,
     //     a. Return a record with the fields of Column 1 of Table 7 calculated from t for the given calendar and timeZone. The calculations should use best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
     // FIXME: Implement this when non-Gregorian calendars are supported by LibUnicode.
-    return global_object.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
+    return global_object.vm().throw_completion<InternalError>(ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
 }
 
 }

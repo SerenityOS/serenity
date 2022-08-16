@@ -43,7 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
 
     // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
     if (!is_valid_duration_record(record))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
     // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
     auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
 
     // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
     if (!is_valid_duration_record(record))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
     // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
     auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));

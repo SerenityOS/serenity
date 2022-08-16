@@ -284,7 +284,7 @@ JS::VM& main_thread_vm()
         // FIXME: Implement 8.1.5.4.4 HostGetSupportedImportAssertions(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
 
         vm->host_resolve_imported_module = [&](JS::ScriptOrModule, JS::ModuleRequest const&) -> JS::ThrowCompletionOr<NonnullRefPtr<JS::Module>> {
-            return vm->throw_completion<JS::InternalError>(vm->current_realm()->global_object(), JS::ErrorType::NotImplemented, "Modules in the browser");
+            return vm->throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Modules in the browser");
         };
 
         // NOTE: We push a dummy execution context onto the JS execution context stack,

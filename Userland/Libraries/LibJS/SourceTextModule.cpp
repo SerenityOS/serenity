@@ -311,7 +311,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
         auto resolution = TRY(resolve_export(vm, entry.export_name));
         // b. If resolution is null or ambiguous, throw a SyntaxError exception.
         if (!resolution.is_valid())
-            return vm.throw_completion<SyntaxError>(realm().global_object(), ErrorType::InvalidOrAmbiguousExportEntry, entry.export_name);
+            return vm.throw_completion<SyntaxError>(ErrorType::InvalidOrAmbiguousExportEntry, entry.export_name);
 
         // c. Assert: resolution is a ResolvedBinding Record.
         VERIFY(resolution.is_valid());
@@ -357,7 +357,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
 
             // ii. If resolution is null or ambiguous, throw a SyntaxError exception.
             if (!resolution.is_valid())
-                return vm.throw_completion<SyntaxError>(global_object, ErrorType::InvalidOrAmbiguousExportEntry, import_entry.import_name);
+                return vm.throw_completion<SyntaxError>(ErrorType::InvalidOrAmbiguousExportEntry, import_entry.import_name);
 
             // iii. If resolution.[[BindingName]] is namespace, then
             if (resolution.is_namespace()) {

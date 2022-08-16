@@ -69,7 +69,7 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
         if (!succeeded && interpreter.vm().in_strict_mode())
-            return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
+            return interpreter.vm().throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
         break;
     }
     case PropertyKind::Spread:
@@ -346,7 +346,7 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
-            return vm.throw_completion<InternalError>(interpreter.global_object(), String::formatted("Lexical environment already has binding '{}'", name));
+            return vm.throw_completion<InternalError>(String::formatted("Lexical environment already has binding '{}'", name));
 
         if (m_is_immutable)
             vm.lexical_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
@@ -481,10 +481,10 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     auto callee = interpreter.reg(m_callee);
 
     if (m_type == CallType::Call && !callee.is_function())
-        return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
 
     if (m_type == CallType::Construct && !callee.is_constructor())
-        return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
+        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
 
     auto& function = callee.as_function();
 
@@ -699,7 +699,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                 auto& realm = *global_object.associated_realm();
                 auto iterated_object_value = vm.this_value(global_object);
                 if (!iterated_object_value.is_object())
-                    return vm.throw_completion<InternalError>(global_object, "Invalid state for GetObjectPropertyIterator.next");
+                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next");
 
                 auto& iterated_object = iterated_object_value.as_object();
                 auto* result_object = Object::create(realm, nullptr);

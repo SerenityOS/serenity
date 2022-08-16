@@ -25,7 +25,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
     auto address = table_object->address();
     auto* table = WebAssemblyObject::s_abstract_machine.store().get(address);
@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
     auto& reference = reference_value.value().get<Wasm::Reference>();
 
     if (!table->grow(delta, reference))
-        return vm.throw_completion<JS::RangeError>(global_object, "Failed to grow table");
+        return vm.throw_completion<JS::RangeError>("Failed to grow table");
 
     return JS::Value(static_cast<u32>(initial_size));
 }
@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
     auto address = table_object->address();
     auto* table = WebAssemblyObject::s_abstract_machine.store().get(address);
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
         return JS::js_undefined();
 
     if (table->elements().size() <= index)
-        return vm.throw_completion<JS::RangeError>(global_object, "Table element index out of range");
+        return vm.throw_completion<JS::RangeError>("Table element index out of range");
 
     auto& ref = table->elements()[index];
     if (!ref.has_value())
@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
     auto address = table_object->address();
     auto* table = WebAssemblyObject::s_abstract_machine.store().get(address);
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
         return JS::js_undefined();
 
     if (table->elements().size() <= index)
-        return vm.throw_completion<JS::RangeError>(global_object, "Table element index out of range");
+        return vm.throw_completion<JS::RangeError>("Table element index out of range");
 
     auto value_value = vm.argument(1);
     auto reference_value = TRY([&]() -> JS::ThrowCompletionOr<Wasm::Value> {
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
 {
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
     auto address = table_object->address();
     auto* table = WebAssemblyObject::s_abstract_machine.store().get(address);

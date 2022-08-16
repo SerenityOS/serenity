@@ -109,7 +109,7 @@ ThrowCompletionOr<void> Object::set(PropertyKey const& property_key, Value value
     // 2. If success is false and Throw is true, throw a TypeError exception.
     if (!success && throw_exceptions == ShouldThrowExceptions::Yes) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectSetReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSetReturnedFalse);
     }
 
     // 3. Return unused.
@@ -170,7 +170,7 @@ ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyKey const&
     // 2. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectDefineOwnPropertyReturnedFalse);
     }
 
     // 3. Return success.
@@ -207,7 +207,7 @@ ThrowCompletionOr<void> Object::define_property_or_throw(PropertyKey const& prop
     // 2. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDefineOwnPropertyReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectDefineOwnPropertyReturnedFalse);
     }
 
     // 3. Return unused.
@@ -227,7 +227,7 @@ ThrowCompletionOr<void> Object::delete_property_or_throw(PropertyKey const& prop
     // 2. If success is false, throw a TypeError exception.
     if (!success) {
         // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(global_object(), ErrorType::ObjectDeleteReturnedFalse);
+        return vm.throw_completion<TypeError>(ErrorType::ObjectDeleteReturnedFalse);
     }
 
     // 3. Return unused.
@@ -462,15 +462,17 @@ PrivateElement* Object::private_element_find(PrivateName const& name)
 // 7.3.28 PrivateFieldAdd ( O, P, value ), https://tc39.es/ecma262/#sec-privatefieldadd
 ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value value)
 {
+    auto& vm = this->vm();
+
     // 1. If the host is a web browser, then
     //    a. Perform ? HostEnsureCanAddPrivateElement(O).
     // NOTE: Since LibJS has no way of knowing whether it is in a browser we just always call the hook.
-    TRY(vm().host_ensure_can_add_private_element(*this));
+    TRY(vm.host_ensure_can_add_private_element(*this));
 
     // 2. Let entry be PrivateElementFind(O, P).
     // 3. If entry is not empty, throw a TypeError exception.
     if (auto* entry = private_element_find(name); entry)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldAlreadyDeclared, name.description);
 
     if (!m_private_elements)
         m_private_elements = make<Vector<PrivateElement>>();
@@ -485,18 +487,20 @@ ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value
 // 7.3.29 PrivateMethodOrAccessorAdd ( O, method ), https://tc39.es/ecma262/#sec-privatemethodoraccessoradd
 ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement element)
 {
+    auto& vm = this->vm();
+
     // 1. Assert: method.[[Kind]] is either method or accessor.
     VERIFY(element.kind == PrivateElement::Kind::Method || element.kind == PrivateElement::Kind::Accessor);
 
     // 2. If the host is a web browser, then
     //    a. Perform ? HostEnsureCanAddPrivateElement(O).
     // NOTE: Since LibJS has no way of knowing whether it is in a browser we just always call the hook.
-    TRY(vm().host_ensure_can_add_private_element(*this));
+    TRY(vm.host_ensure_can_add_private_element(*this));
 
     // 3. Let entry be PrivateElementFind(O, method.[[Key]]).
     // 4. If entry is not empty, throw a TypeError exception.
     if (auto* entry = private_element_find(element.key); entry)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, element.key.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldAlreadyDeclared, element.key.description);
 
     if (!m_private_elements)
         m_private_elements = make<Vector<PrivateElement>>();
@@ -513,7 +517,7 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
 {
     auto* entry = private_element_find(name);
     if (!entry)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
 
     auto& value = entry->value;
 
@@ -523,7 +527,7 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
     VERIFY(value.is_accessor());
     auto* getter = value.as_accessor().getter();
     if (!getter)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
+        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
 
     // 8. Return ? Call(getter, Receiver).
     return TRY(call(global_object(), *getter, this));
@@ -534,13 +538,13 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
 {
     auto* entry = private_element_find(name);
     if (!entry)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
 
     if (entry->kind == PrivateElement::Kind::Field) {
         entry->value = value;
         return {};
     } else if (entry->kind == PrivateElement::Kind::Method) {
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldSetMethod, name.description);
+        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldSetMethod, name.description);
     }
 
     VERIFY(entry->kind == PrivateElement::Kind::Accessor);
@@ -549,7 +553,7 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     VERIFY(accessor.is_accessor());
     auto* setter = accessor.as_accessor().setter();
     if (!setter)
-        return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
+        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
 
     TRY(call(global_object(), *setter, this, value));
     return {};
@@ -1259,7 +1263,7 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
     }
 
     // 4. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
 }
 
 }

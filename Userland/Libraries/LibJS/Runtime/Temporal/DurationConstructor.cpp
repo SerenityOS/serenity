@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> DurationConstructor::call()
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Duration");
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Temporal.Duration");
 }
 
 // 7.1.1 Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ , minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration

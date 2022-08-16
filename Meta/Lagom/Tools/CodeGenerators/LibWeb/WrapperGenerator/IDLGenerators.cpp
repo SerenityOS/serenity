@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -356,7 +356,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     RefPtr<@cpp_type@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
-            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
         CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
         @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
@@ -365,7 +365,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
     auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
@@ -376,7 +376,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             if (!optional) {
                 scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     auto& @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
 )~~~");
@@ -385,7 +385,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     Optional<NonnullRefPtr<@parameter.type.name@>> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
         if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
-            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
         @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
@@ -396,7 +396,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
-            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
         @cpp_name@ = &static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
@@ -566,7 +566,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name == "BufferSource") {
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !(is<JS::TypedArrayBase>(@js_name@@js_suffix@.as_object()) || is<JS::ArrayBuffer>(@js_name@@js_suffix@.as_object()) || is<JS::DataView>(@js_name@@js_suffix@.as_object())))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     // TODO: Should we make this a Variant?
     auto @cpp_name@ = JS::make_handle(&@js_name@@js_suffix@.as_object());
@@ -642,7 +642,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if constexpr (!IsSame<Attribute, RemoveConst<ParameterType>>) {
             enum_generator.append(R"~~~(
     @else@
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
 )~~~");
         } else {
             enum_generator.append(R"~~~(
@@ -662,7 +662,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto dictionary_generator = scoped_generator.fork();
         dictionary_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_nullish() && !@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     @parameter.type.name@ @cpp_name@ {};
 )~~~");
@@ -683,7 +683,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 if (member.required) {
                     dictionary_generator.append(R"~~~(
     if (@member_name@.is_undefined())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::MissingRequiredProperty, "@member_key@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::MissingRequiredProperty, "@member_key@");
 )~~~");
                 }
 
@@ -710,7 +710,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!callback_function.is_legacy_treat_non_object_as_null) {
             callback_function_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_function())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, @js_name@@js_suffix@.to_string_without_side_effects());
 )~~~");
         }
         // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
@@ -775,11 +775,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         sequence_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (!iterator_method@recursion_depth@)
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
 )~~~");
 
         parameterized_type.generate_sequence_from_iterable(sequence_generator, String::formatted("{}{}", acceptable_cpp_name, optional ? "_non_optional" : ""), String::formatted("{}{}", js_name, js_suffix), String::formatted("iterator_method{}", recursion_depth), interface, recursion_depth + 1);
@@ -824,7 +824,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (recursion_depth == 0) {
             record_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     auto& @js_name@@js_suffix@_object = @js_name@@js_suffix@.as_object();
 )~~~");
@@ -1234,7 +1234,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 19. Throw a TypeError.
             // FIXME: Replace the error message with something more descriptive.
             union_generator.append(R"~~~(
-        return vm.throw_completion<JS::TypeError>(global_object, "No union types matched");
+        return vm.throw_completion<JS::TypeError>("No union types matched");
 )~~~");
         }
 
@@ -1310,7 +1310,7 @@ static void generate_argument_count_check(SourceGenerator& generator, String con
 
     argument_count_check_generator.append(R"~~~(
     if (vm.argument_count() < @function.nargs@)
-        return vm.throw_completion<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
+        return vm.throw_completion<JS::TypeError>(@.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
 )~~~");
 }
 
@@ -1803,7 +1803,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     }
 
     function_generator.append(R"~~~(
-    return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::OverloadResolutionFailed);
+    return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
 }
 )~~~");
 }
@@ -2944,7 +2944,7 @@ namespace Web::Bindings {
 
 JS::ThrowCompletionOr<JS::Value> @constructor_class@::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "@name@");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "@name@");
 }
 
 JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject&)
@@ -2955,7 +2955,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
         // No constructor
         generator.set("constructor.length", "0");
         generator.append(R"~~~(
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "@name@");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@name@");
 )~~~");
     } else if (interface.constructors.size() == 1) {
         // Single constructor
@@ -3386,7 +3386,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
 
         generator.append(R"~~~(
     if (!is<@wrapper_class@>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
 
     return &static_cast<@wrapper_class@*>(this_object)->impl();
 }
@@ -3538,7 +3538,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 
     auto callback = vm.argument(0);
     if (!callback.is_function())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
     auto this_value = vm.this_value(global_object);
     TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
@@ -3809,7 +3809,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
 {
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     if (!is<@wrapper_class@>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
     return &static_cast<@wrapper_class@*>(this_object)->impl();
 }
 

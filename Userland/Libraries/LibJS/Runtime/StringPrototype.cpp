@@ -172,7 +172,7 @@ static ThrowCompletionOr<PrimitiveString*> this_string_value(GlobalObject& globa
     if (value.is_object() && is<StringObject>(value.as_object()))
         return &static_cast<StringObject&>(value.as_object()).primitive_string();
     auto& vm = global_object.vm();
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "String");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "String");
 }
 
 // 22.1.3.2 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -217,10 +217,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     auto n = TRY(vm.argument(0).to_integer_or_infinity(global_object));
 
     if (n < 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
+        return vm.throw_completion<RangeError>(ErrorType::StringRepeatCountMustBe, "positive");
 
     if (Value(n).is_positive_infinity())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
+        return vm.throw_completion<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
 
     if (n == 0)
         return js_string(vm, String::empty());
@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 
     bool search_is_regexp = TRY(search_string_value.is_regexp(global_object));
     if (search_is_regexp)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, "searchString", "string, but a regular expression");
 
     auto search_string = TRY(search_string_value.to_utf16_string(global_object));
     auto string_length = string.length_in_code_units();
@@ -276,7 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 
     bool search_is_regexp = TRY(search_string_value.is_regexp(global_object));
     if (search_is_regexp)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, "searchString", "string, but a regular expression");
 
     auto search_string = TRY(search_string_value.to_utf16_string(global_object));
     auto string_length = string.length_in_code_units();
@@ -602,7 +602,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 
     bool search_is_regexp = TRY(search_string_value.is_regexp(global_object));
     if (search_is_regexp)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, "searchString", "string, but a regular expression");
 
     auto search_string = TRY(search_string_value.to_utf16_string(global_object));
 
@@ -808,7 +808,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             auto flags_object = TRY(require_object_coercible(global_object, flags));
             auto flags_string = TRY(flags_object.to_string(global_object));
             if (!flags_string.contains('g'))
-                return vm.throw_completion<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
+                return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
         if (auto* matcher = TRY(regexp.get_method(global_object, *vm.well_known_symbol_match_all())))
             return TRY(call(global_object, *matcher, regexp, this_object));
@@ -836,7 +836,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 5. If f is not one of "NFC", "NFD", "NFKC", or "NFKD", throw a RangeError exception.
     if (!form.is_one_of("NFC"sv, "NFD"sv, "NFKC"sv, "NFKD"sv))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidNormalizationForm, form);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidNormalizationForm, form);
 
     // FIXME: 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
     auto ns = string;
@@ -902,7 +902,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             auto flags_object = TRY(require_object_coercible(global_object, flags));
             auto flags_string = TRY(flags_object.to_string(global_object));
             if (!flags_string.contains('g'))
-                return vm.throw_completion<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
+                return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
 
         auto* replacer = TRY(search_value.get_method(global_object, *vm.well_known_symbol_replace()));

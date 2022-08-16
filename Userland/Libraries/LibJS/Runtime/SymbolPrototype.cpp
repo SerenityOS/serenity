@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,7 +45,7 @@ static ThrowCompletionOr<Symbol*> this_symbol_value(GlobalObject& global_object,
     if (value.is_object() && is<SymbolObject>(value.as_object()))
         return &static_cast<SymbolObject&>(value.as_object()).primitive_symbol();
     auto& vm = global_object.vm();
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Symbol");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Symbol");
 }
 
 // 20.4.3.2 get Symbol.prototype.description, https://tc39.es/ecma262/#sec-symbol.prototype.description

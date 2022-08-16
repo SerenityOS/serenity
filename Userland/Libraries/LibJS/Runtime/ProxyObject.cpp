@@ -50,7 +50,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -69,7 +69,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 
     // 8. If Type(handlerProto) is neither Object nor Null, throw a TypeError exception.
     if (!handler_proto.is_object() && !handler_proto.is_null())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfReturn);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyGetPrototypeOfReturn);
 
     // 9. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = TRY(m_target.is_extensible());
@@ -83,7 +83,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 
     // 12. If SameValue(handlerProto, targetProto) is false, throw a TypeError exception.
     if (!same_value(handler_proto, target_proto))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetPrototypeOfNonExtensible);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyGetPrototypeOfNonExtensible);
 
     // 13. Return handlerProto.
     return handler_proto.is_null() ? nullptr : &handler_proto.as_object();
@@ -99,7 +99,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -132,7 +132,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
 
     // 12. If SameValue(V, targetProto) is false, throw a TypeError exception.
     if (!same_value(prototype, target_proto))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxySetPrototypeOfNonExtensible);
+        return vm.throw_completion<TypeError>(ErrorType::ProxySetPrototypeOfNonExtensible);
 
     // 13. Return true.
     return true;
@@ -148,7 +148,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -170,7 +170,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 
     // 9. If SameValue(booleanTrapResult, targetResult) is false, throw a TypeError exception.
     if (trap_result != target_result)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyIsExtensibleReturn);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyIsExtensibleReturn);
 
     // 10. Return booleanTrapResult.
     return trap_result;
@@ -186,7 +186,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -210,7 +210,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 
         // b. If extensibleTarget is true, throw a TypeError exception.
         if (extensible_target)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyPreventExtensionsReturn);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyPreventExtensionsReturn);
     }
 
     // 9. Return booleanTrapResult.
@@ -229,7 +229,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -248,7 +248,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 
     // 8. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (!trap_result.is_object() && !trap_result.is_undefined())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorReturn);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorReturn);
 
     // 9. Let targetDesc be ? target.[[GetOwnProperty]](P).
     auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
@@ -261,14 +261,14 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 
         // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
         if (!*target_descriptor->configurable)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurable);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorNonConfigurable);
 
         // c. Let extensibleTarget be ? IsExtensible(target).
         auto extensible_target = TRY(m_target.is_extensible());
 
         // d. If extensibleTarget is false, throw a TypeError exception.
         if (!extensible_target)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorUndefinedReturn);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorUndefinedReturn);
 
         // e. Return undefined.
         return Optional<PropertyDescriptor> {};
@@ -288,20 +288,20 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 
     // 15. If valid is false, throw a TypeError exception.
     if (!valid)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidDescriptor);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorInvalidDescriptor);
 
     // 16. If resultDesc.[[Configurable]] is false, then
     if (!*result_desc.configurable) {
         // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
         if (!target_descriptor.has_value() || *target_descriptor->configurable)
             // i. Throw a TypeError exception.
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorInvalidNonConfig);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorInvalidNonConfig);
 
         // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
         if (result_desc.writable.has_value() && !*result_desc.writable) {
             // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
             if (*target_descriptor->writable)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetOwnDescriptorNonConfigurableNonWritable);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyGetOwnDescriptorNonConfigurableNonWritable);
         }
     }
 
@@ -321,7 +321,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -364,27 +364,27 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
     if (!target_descriptor.has_value()) {
         // a. If extensibleTarget is false, throw a TypeError exception.
         if (!extensible_target)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonExtensible);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyDefinePropNonExtensible);
 
         // b. If settingConfigFalse is true, throw a TypeError exception.
         if (setting_config_false)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonConfigurableNonExisting);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyDefinePropNonConfigurableNonExisting);
     }
     // 15. Else,
     else {
         // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
         if (!is_compatible_property_descriptor(extensible_target, property_descriptor, target_descriptor))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropIncompatibleDescriptor);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyDefinePropIncompatibleDescriptor);
 
         // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
         if (setting_config_false && *target_descriptor->configurable)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropExistingConfigurable);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyDefinePropExistingConfigurable);
 
         // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->configurable && *target_descriptor->writable) {
             // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
             if (property_descriptor.writable.has_value() && !*property_descriptor.writable)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDefinePropNonWritable);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyDefinePropNonWritable);
         }
     }
 
@@ -404,7 +404,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -430,14 +430,14 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
         if (target_descriptor.has_value()) {
             // i. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
             if (!*target_descriptor->configurable)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyHasExistingNonConfigurable);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyHasExistingNonConfigurable);
 
             // ii. Let extensibleTarget be ? IsExtensible(target).
             auto extensible_target = TRY(m_target.is_extensible());
 
             // iii. If extensibleTarget is false, throw a TypeError exception.
             if (!extensible_target)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyHasExistingNonExtensible);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyHasExistingNonExtensible);
         }
     }
 
@@ -460,7 +460,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -479,7 +479,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
     //
     // In JS code: `h = {}; p = new Proxy({}, h); h.__proto__ = p; p.foo // or h.foo`
     if (vm.did_reach_stack_space_limit())
-        return vm.throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
+        return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
 
     // 5. Let trap be ? GetMethod(handler, "get").
     auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.get));
@@ -502,13 +502,13 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->writable) {
             // i. If SameValue(trapResult, targetDesc.[[Value]]) is false, throw a TypeError exception.
             if (!same_value(trap_result, *target_descriptor->value))
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetImmutableDataProperty);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyGetImmutableDataProperty);
         }
         // b. If IsAccessorDescriptor(targetDesc) is true and targetDesc.[[Get]] is undefined, then
         if (target_descriptor->is_accessor_descriptor() && !*target_descriptor->get) {
             // i. If trapResult is not undefined, throw a TypeError exception.
             if (!trap_result.is_undefined())
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyGetNonConfigurableAccessor);
+                return vm.throw_completion<TypeError>(ErrorType::ProxyGetNonConfigurableAccessor);
         }
     }
 
@@ -530,7 +530,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -560,13 +560,13 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
         if (target_descriptor->is_data_descriptor() && !*target_descriptor->writable) {
             // i. If SameValue(V, targetDesc.[[Value]]) is false, throw a TypeError exception.
             if (!same_value(value, *target_descriptor->value))
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxySetImmutableDataProperty);
+                return vm.throw_completion<TypeError>(ErrorType::ProxySetImmutableDataProperty);
         }
         // b. If IsAccessorDescriptor(targetDesc) is true, then
         if (target_descriptor->is_accessor_descriptor()) {
             // i. If targetDesc.[[Set]] is undefined, throw a TypeError exception.
             if (!*target_descriptor->set)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ProxySetNonConfigurableAccessor);
+                return vm.throw_completion<TypeError>(ErrorType::ProxySetNonConfigurableAccessor);
         }
     }
 
@@ -586,7 +586,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -616,14 +616,14 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
 
     // 11. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
     if (!*target_descriptor->configurable)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDeleteNonConfigurable);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyDeleteNonConfigurable);
 
     // 12. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = TRY(m_target.is_extensible());
 
     // 13. If extensibleTarget is false, throw a TypeError exception.
     if (!extensible_target)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyDeleteNonExtensible);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyDeleteNonExtensible);
 
     // 14. Return true.
     return true;
@@ -639,7 +639,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -661,7 +661,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
     auto trap_result = TRY(create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
         auto& vm = global_object.vm();
         if (!value.is_string() && !value.is_symbol())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
         auto property_key = MUST(value.to_property_key(global_object));
         unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
         return {};
@@ -669,7 +669,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 
     // 9. If trapResult contains any duplicate entries, throw a TypeError exception.
     if (unique_keys.size() != trap_result.size())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysDuplicates);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysDuplicates);
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = TRY(m_target.is_extensible());
@@ -719,7 +719,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
     for (auto& key : target_nonconfigurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
         if (!unchecked_result_keys.contains_slow(key))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysSkippedNonconfigurableProperty, key.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysSkippedNonconfigurableProperty, key.to_string_without_side_effects());
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -735,7 +735,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
     for (auto& key : target_configurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
         if (!unchecked_result_keys.contains_slow(key))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNonExtensibleSkippedProperty, key.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysNonExtensibleSkippedProperty, key.to_string_without_side_effects());
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -745,7 +745,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 
     // 22. If uncheckedResultKeys is not empty, throw a TypeError exception.
     if (!unchecked_result_keys.is_empty())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNonExtensibleNewProperty, unchecked_result_keys[0].to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysNonExtensibleNewProperty, unchecked_result_keys[0].to_string_without_side_effects());
 
     // 23. Return trapResult.
     return { move(trap_result) };
@@ -763,13 +763,13 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     //       According to the spec, the Call() AO may be called with a non-function argument, but
     //       throws before calling [[Call]]() if that's the case.
     if (!is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -811,13 +811,13 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
     //       According to the spec, the Construct() AO is only ever called with a constructor argument.
     if (!is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
     // 2. If handler is null, throw a TypeError exception.
     if (m_is_revoked)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
@@ -840,7 +840,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
 
     // 10. If Type(newObj) is not Object, throw a TypeError exception.
     if (!new_object.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructBadReturnType);
+        return vm.throw_completion<TypeError>(ErrorType::ProxyConstructBadReturnType);
 
     // 11. Return newObj.
     return &new_object.as_object();

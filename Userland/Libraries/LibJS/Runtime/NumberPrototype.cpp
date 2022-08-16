@@ -119,7 +119,7 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
     auto& vm = global_object.vm();
 
     // 3. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Number");
 }
 
 // 21.1.3.2 Number.prototype.toExponential ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.toexponential
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
 
     // 5. If f < 0 or f > 100, throw a RangeError exception.
     if (fraction_digits < 0 || fraction_digits > 100)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidFractionDigits);
 
     // 6. Set x to ℝ(x).
     auto number = number_value.as_double();
@@ -255,11 +255,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 4. If f is not finite, throw a RangeError exception.
     if (!Value(fraction_digits).is_finite_number())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidFractionDigits);
 
     // 5. If f < 0 or f > 100, throw a RangeError exception.
     if (fraction_digits < 0 || fraction_digits > 100)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidFractionDigits);
 
     // 6. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
 
     // 5. If p < 1 or p > 100, throw a RangeError exception.
     if ((precision < 1) || (precision > 100))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidPrecision);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidPrecision);
 
     // 6. Set x to ℝ(x).
     auto number = number_value.as_double();
@@ -484,7 +484,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
     // 4. If radixMV < 2 or radixMV > 36, throw a RangeError exception.
     if (radix_mv < 2 || radix_mv > 36)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidRadix);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidRadix);
 
     // 5. If radixMV = 10, return ! ToString(x).
     if (radix_mv == 10)

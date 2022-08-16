@@ -47,7 +47,7 @@ ThrowCompletionOr<Value> TypedArrayConstructor::call()
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
 ThrowCompletionOr<Object*> TypedArrayConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ClassIsAbstract, "TypedArray");
+    return vm().throw_completion<TypeError>(ErrorType::ClassIsAbstract, "TypedArray");
 }
 
 // 23.2.2.1 %TypedArray%.from ( source [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.from
@@ -55,13 +55,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 {
     auto constructor = vm.this_value(global_object);
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
         auto callback = vm.argument(1);
         if (!callback.is_function())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects());
         map_fn = &callback.as_function();
     }
 
@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     auto length = vm.argument_count();
     auto constructor = vm.this_value(global_object);
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
     MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(length));
     auto new_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));

@@ -85,7 +85,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
 
     // 1. If IsBuiltinCalendar(id) is false, throw a RangeError exception.
     if (!is_builtin_calendar(identifier))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 2. Return ! CreateTemporalCalendar(id).
     return MUST(create_temporal_calendar(global_object, identifier));
@@ -147,7 +147,7 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 
     // 4. If Type(result) is not Object, throw a TypeError exception.
     if (!result.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, result.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, result.to_string_without_side_effects());
 
     // 5. Return result.
     return &result.as_object();
@@ -173,7 +173,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Obj
     // 6. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
     auto* added_date_object = TRY(added_date.to_object(global_object));
     if (!is<PlainDate>(added_date_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
     // 7. Return addedDate.
     return static_cast<PlainDate*>(added_date_object);
@@ -196,7 +196,7 @@ ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Ob
     // 4. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration_object = TRY(duration.to_object(global_object));
     if (!is<Duration>(duration_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Duration");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Duration");
 
     // 5. Return duration.
     return static_cast<Duration*>(duration_object);
@@ -213,7 +213,7 @@ ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& cal
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
 
     // 4. Return ? ToIntegerThrowOnInfinity(result).
     return TRY(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
@@ -230,7 +230,7 @@ ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& ca
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(global_object, result));
@@ -247,7 +247,7 @@ ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Objec
 
     // 3. If result is undefined, throw a RangeError exception.
     if (result.is_undefined())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string(), vm.names.undefined.as_string());
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string(), vm.names.undefined.as_string());
 
     // 4. Return ? ToString(result).
     return result.to_string(global_object);
@@ -264,7 +264,7 @@ ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& cale
 
     // NOTE: Explicitly handled for a better error message similar to the other calendar property AOs
     if (result.is_undefined())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToPositiveInteger(result).
     return TRY(to_positive_integer(global_object, result));
@@ -431,7 +431,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
 
         // b. If IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
         if (!is_builtin_calendar(identifier))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
     }
 
     // 4. Return ! CreateTemporalCalendar(identifier).
@@ -490,7 +490,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_obj
     // 3. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
     auto* date_object = TRY(date.to_object(global_object));
     if (!is<PlainDate>(date_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
     // 4. Return date.
     return static_cast<PlainDate*>(date_object);
@@ -509,7 +509,7 @@ ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject&
     // 3. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month_object = TRY(year_month.to_object(global_object));
     if (!is<PlainYearMonth>(year_month_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
 
     // 4. Return yearMonth.
     return static_cast<PlainYearMonth*>(year_month_object);
@@ -528,7 +528,7 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(GlobalObject& g
     // 3. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
     auto* month_day_object = TRY(month_day.to_object(global_object));
     if (!is<PlainMonthDay>(month_day_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
 
     // 4. Return monthDay.
     return static_cast<PlainMonthDay*>(month_day_object);
@@ -600,7 +600,7 @@ ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Ob
         return &one;
 
     // 7. Throw a RangeError exception.
-    return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendar);
+    return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendar);
 }
 
 // 12.2.29 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
@@ -683,7 +683,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
     if (month_code.is_undefined()) {
         // a. If month is undefined, throw a TypeError exception.
         if (month.is_undefined())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.month.as_string());
+            return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, vm.names.month.as_string());
 
         // b. Assert: Type(month) is Number.
         VERIFY(month.is_number());
@@ -701,7 +701,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 
     // 7. If monthLength is not 3, throw a RangeError exception.
     if (month_length != 3)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
     // 8. Let numberPart be the substring of monthCode from 1.
     auto number_part = month_code_string.substring(1);
@@ -711,18 +711,18 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 
     // 10. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
     if (number_part_integer < 1 || number_part_integer > 12)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
     // 11. If month is not undefined and month ≠ numberPart, then
     if (!month.is_undefined() && month.as_double() != number_part_integer) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
     }
 
     // 12. If SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
     if (month_code_string != build_iso_month_code(number_part_integer)) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
     }
 
     // 13. Return numberPart.
@@ -815,7 +815,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 7. If month is not undefined, and monthCode and year are both undefined, then
     if (!month_value.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, "monthCode or year");
+        return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, "monthCode or year");
     }
 
     // 8. Set month to ? ResolveISOMonth(fields).

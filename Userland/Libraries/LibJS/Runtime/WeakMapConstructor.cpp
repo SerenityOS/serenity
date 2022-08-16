@@ -33,7 +33,7 @@ void WeakMapConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakMapConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakMap);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakMap);
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
@@ -49,11 +49,11 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
 
     auto adder = TRY(weak_map->get(vm.names.set));
     if (!adder.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of WeakMap");
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'set' property of WeakMap");
 
     (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));

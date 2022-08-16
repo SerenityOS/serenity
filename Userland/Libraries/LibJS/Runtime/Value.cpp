@@ -207,7 +207,7 @@ ThrowCompletionOr<bool> Value::is_array(GlobalObject& global_object) const
     if (is<ProxyObject>(object)) {
         auto& proxy = static_cast<ProxyObject const&>(object);
         if (proxy.is_revoked())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyRevoked);
+            return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
         return Value(&proxy.target()).is_array(global_object);
     }
     return false;
@@ -353,7 +353,7 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
     case STRING_TAG:
         return as_string().string();
     case SYMBOL_TAG:
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
     case BIGINT_TAG:
         return as_bigint().big_integer().to_base(10);
     case OBJECT_TAG: {
@@ -430,7 +430,7 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
             auto result = TRY(call(global_object, *to_primitive_method, *this, js_string(vm, hint)));
             if (!result.is_object())
                 return result;
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
+            return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
         }
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
@@ -450,7 +450,7 @@ ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
     switch (m_value.tag) {
     case UNDEFINED_TAG:
     case NULL_TAG:
-        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+        return global_object.vm().throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefined);
     case BOOLEAN_TAG:
         return BooleanObject::create(realm, as_bool());
     case STRING_TAG:
@@ -509,9 +509,9 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
         return Value(parsed_double);
     }
     case SYMBOL_TAG:
-        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "number");
+        return global_object.vm().throw_completion<TypeError>(ErrorType::Convert, "symbol", "number");
     case BIGINT_TAG:
-        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
+        return global_object.vm().throw_completion<TypeError>(ErrorType::Convert, "BigInt", "number");
     case OBJECT_TAG: {
         auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
         return primitive.to_number(global_object);
@@ -529,13 +529,13 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
 
     VERIFY(!primitive.is_empty());
     if (primitive.is_number())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "number", "BigInt");
 
     switch (primitive.m_value.tag) {
     case UNDEFINED_TAG:
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "undefined", "BigInt");
     case NULL_TAG:
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "null", "BigInt");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "null", "BigInt");
     case BOOLEAN_TAG: {
         auto value = primitive.as_bool() ? 1 : 0;
         return js_bigint(vm, Crypto::SignedBigInteger { value });
@@ -548,13 +548,13 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
 
         // 2. If n is undefined, throw a SyntaxError exception.
         if (!bigint.has_value())
-            return vm.throw_completion<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, primitive);
+            return vm.throw_completion<SyntaxError>(ErrorType::BigIntInvalidValue, primitive);
 
         // 3. Return n.
         return bigint.release_value();
     }
     case SYMBOL_TAG:
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "BigInt");
     default:
         VERIFY_NOT_REACHED();
     }
@@ -804,10 +804,10 @@ ThrowCompletionOr<size_t> Value::to_index(GlobalObject& global_object) const
         return 0;
     auto integer_index = TRY(to_integer_or_infinity(global_object));
     if (integer_index < 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
     auto index = MUST(Value(integer_index).to_length(global_object));
     if (integer_index != index)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
     return index;
 }
 
@@ -883,7 +883,7 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object
 
     // 4. If IsCallable(func) is false, throw a TypeError exception.
     if (!function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function.to_string_without_side_effects());
 
     // 5. Return func.
     return &function.as_function();
@@ -950,7 +950,7 @@ ThrowCompletionOr<Value> bitwise_and(GlobalObject& global_object, Value lhs, Val
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
@@ -970,7 +970,7 @@ ThrowCompletionOr<Value> bitwise_or(GlobalObject& global_object, Value lhs, Valu
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
@@ -990,7 +990,7 @@ ThrowCompletionOr<Value> bitwise_xor(GlobalObject& global_object, Value lhs, Val
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
 }
 
 // 13.5.6 Bitwise NOT Operator ( ~ ), https://tc39.es/ecma262/#sec-bitwise-not-operator
@@ -1049,7 +1049,7 @@ ThrowCompletionOr<Value> left_shift(GlobalObject& global_object, Value lhs, Valu
         else
             return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "left-shift");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
 }
 
 // 13.9.2 The Signed Right Shift Operator ( >> ), https://tc39.es/ecma262/#sec-signed-right-shift-operator
@@ -1072,7 +1072,7 @@ ThrowCompletionOr<Value> right_shift(GlobalObject& global_object, Value lhs, Val
         rhs_negated.negate();
         return left_shift(global_object, lhs, js_bigint(vm, rhs_negated));
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "right-shift");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "right-shift");
 }
 
 // 13.9.3 The Unsigned Right Shift Operator ( >>> ), https://tc39.es/ecma262/#sec-unsigned-right-shift-operator
@@ -1091,7 +1091,7 @@ ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject& global_object, Value
         auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
         return Value(lhs_u32 >> rhs_u32);
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperator, "unsigned right-shift");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperator, "unsigned right-shift");
 }
 
 // 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
@@ -1123,7 +1123,7 @@ ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "addition");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "addition");
 }
 
 // 13.8.2 The Subtraction Operator ( - ), https://tc39.es/ecma262/#sec-subtraction-operator-minus
@@ -1140,7 +1140,7 @@ ThrowCompletionOr<Value> sub(GlobalObject& global_object, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "subtraction");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "subtraction");
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
@@ -1153,7 +1153,7 @@ ThrowCompletionOr<Value> mul(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer())));
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "multiplication");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "multiplication");
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
@@ -1166,10 +1166,10 @@ ThrowCompletionOr<Value> div(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::DivisionByZero);
+            return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient));
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "division");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "division");
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
@@ -1188,10 +1188,10 @@ ThrowCompletionOr<Value> mod(GlobalObject& global_object, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::DivisionByZero);
+            return vm.throw_completion<RangeError>(ErrorType::DivisionByZero);
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder));
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "modulo");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
 }
 
 static Value exp_double(Value base, Value exponent)
@@ -1256,16 +1256,16 @@ ThrowCompletionOr<Value> exp(GlobalObject& global_object, Value lhs, Value rhs)
         return exp_double(lhs_numeric, rhs_numeric);
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer().is_negative())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::NegativeExponent);
+            return vm.throw_completion<RangeError>(ErrorType::NegativeExponent);
         return Value(js_bigint(vm, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer())));
     }
-    return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "exponentiation");
+    return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
 }
 
 ThrowCompletionOr<Value> in(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (!rhs.is_object())
-        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::InOperatorWithObject);
+        return global_object.vm().throw_completion<TypeError>(ErrorType::InOperatorWithObject);
     auto lhs_property_key = TRY(lhs.to_property_key(global_object));
     return Value(TRY(rhs.as_object().has_property(lhs_property_key)));
 }
@@ -1275,14 +1275,14 @@ ThrowCompletionOr<Value> instance_of(GlobalObject& global_object, Value lhs, Val
 {
     auto& vm = global_object.vm();
     if (!rhs.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects());
     auto has_instance_method = TRY(rhs.get_method(global_object, *vm.well_known_symbol_has_instance()));
     if (has_instance_method) {
         auto has_instance_result = TRY(call(global_object, *has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());
     }
     if (!rhs.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects());
     return TRY(ordinary_has_instance(global_object, lhs, rhs));
 }
 
@@ -1305,7 +1305,7 @@ ThrowCompletionOr<Value> ordinary_has_instance(GlobalObject& global_object, Valu
     Object* lhs_object = &lhs.as_object();
     auto rhs_prototype = TRY(rhs_function.get(vm.names.prototype));
     if (!rhs_prototype.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
     while (true) {
         lhs_object = TRY(lhs_object->internal_get_prototype_of());
         if (!lhs_object)
@@ -1593,7 +1593,7 @@ ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, Pro
     auto& vm = global_object.vm();
     auto property = TRY(get(global_object, property_key));
     if (!property.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, property.to_string_without_side_effects());
 
     return call(global_object, property.as_function(), *this, move(arguments));
 }

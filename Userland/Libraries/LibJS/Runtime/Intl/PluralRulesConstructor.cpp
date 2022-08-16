@@ -39,7 +39,7 @@ void PluralRulesConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> PluralRulesConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.PluralRules");
+    return vm().throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, "Intl.PluralRules");
 }
 
 // 16.1.1 Intl.PluralRules ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.pluralrules

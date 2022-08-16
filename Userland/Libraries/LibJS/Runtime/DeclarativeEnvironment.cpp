@@ -129,7 +129,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(GlobalObject
     if (!index.has_value()) {
         // a. If S is true, throw a ReferenceError exception.
         if (strict)
-            return vm().throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
+            return vm().throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
 
         // b. Perform ! envRec.CreateMutableBinding(N, true).
         MUST(create_mutable_binding(global_object, name, true));
@@ -148,20 +148,20 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(GlobalObject
     return {};
 }
 
-ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(GlobalObject& global_object, size_t index, Value value, bool strict)
+ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(GlobalObject&, size_t index, Value value, bool strict)
 {
     auto& binding = m_bindings[index];
     if (binding.strict)
         strict = true;
 
     if (!binding.initialized)
-        return vm().throw_completion<ReferenceError>(global_object, ErrorType::BindingNotInitialized, binding.name);
+        return vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, binding.name);
 
     if (binding.mutable_) {
         binding.value = value;
     } else {
         if (strict)
-            return vm().throw_completion<TypeError>(global_object, ErrorType::InvalidAssignToConst);
+            return vm().throw_completion<TypeError>(ErrorType::InvalidAssignToConst);
     }
 
     return {};
@@ -178,13 +178,13 @@ ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value(GlobalObject&
     return get_binding_value_direct(global_object, *index, strict);
 }
 
-ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(GlobalObject& global_object, size_t index, bool)
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(GlobalObject&, size_t index, bool)
 {
     auto& binding = m_bindings[index];
 
     // 2. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (!binding.initialized)
-        return vm().throw_completion<ReferenceError>(global_object, ErrorType::BindingNotInitialized, binding.name);
+        return vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, binding.name);
 
     // 3. Return the value currently bound to N in envRec.
     return binding.value;

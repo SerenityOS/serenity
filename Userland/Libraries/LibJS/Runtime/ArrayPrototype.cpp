@@ -144,7 +144,7 @@ static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_obje
         return TRY(Array::create(realm, length));
 
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     return TRY(construct(global_object, constructor.as_function(), Value(length)));
 }
@@ -199,7 +199,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
             auto length = TRY(length_of_array_like(global_object, obj));
 
             if (n + length > MAX_ARRAY_LIKE_INDEX)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
             while (k < length) {
                 auto k_exists = TRY(obj.has_property(k));
                 if (k_exists) {
@@ -211,7 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
             }
         } else {
             if (n >= MAX_ARRAY_LIKE_INDEX)
-                return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
             TRY(new_array->create_data_property_or_throw(n, arg));
             ++n;
         }
@@ -317,7 +317,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -403,7 +403,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
     auto* array = TRY(array_species_create(global_object, *object, 0));
@@ -461,7 +461,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, predicate.to_string_without_side_effects());
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -500,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, predicate.to_string_without_side_effects());
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -539,7 +539,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, predicate.to_string_without_side_effects());
 
     // 4. Let k be len - 1.
     // 5. Repeat, while k ≥ 0,
@@ -578,7 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
     if (!predicate.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, predicate.to_string_without_side_effects());
 
     // 4. Let k be len - 1.
     // 5. Repeat, while k ≥ 0,
@@ -621,7 +621,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
 
         if (depth > 0 && TRY(value.is_array(global_object))) {
             if (vm.did_reach_stack_space_limit())
-                return vm.throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
+                return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
 
             auto length = TRY(length_of_array_like(global_object, value.as_object()));
             target_index = TRY(flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1));
@@ -629,7 +629,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
         }
 
         if (target_index >= MAX_ARRAY_LIKE_INDEX)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidIndex);
+            return vm.throw_completion<TypeError>(ErrorType::InvalidIndex);
 
         TRY(new_array.create_data_property_or_throw(target_index, value));
 
@@ -671,7 +671,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
 
     // 3. If IsCallable(mapperFunction) is false, throw a TypeError exception.
     if (!mapper_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, mapper_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, mapper_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
     auto* array = TRY(array_species_create(global_object, *object, 0));
@@ -697,7 +697,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -768,7 +768,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 5. Let groups be a new empty List.
     OrderedHashMap<PropertyKey, MarkedVector<Value>> groups;
@@ -824,7 +824,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     struct KeyedGroupTraits : public Traits<Handle<Value>> {
         static unsigned hash(Handle<Value> const& value_handle)
@@ -1109,7 +1109,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, len).
     auto* array = TRY(array_species_create(global_object, *object, length));
@@ -1166,7 +1166,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
     auto argument_count = vm.argument_count();
     auto new_length = length + argument_count;
     if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+        return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
     for (size_t i = 0; i < argument_count; ++i)
         TRY(this_object->set(length + i, vm.argument(i), Object::ShouldThrowExceptions::Yes));
     auto new_length_value = Value(new_length);
@@ -1188,11 +1188,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. If len = 0 and initialValue is not present, throw a TypeError exception.
     if (length == 0 && vm.argument_count() <= 1)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+        return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
 
     // 5. Let k be 0.
     size_t k = 0;
@@ -1229,7 +1229,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 
         // c. If kPresent is false, throw a TypeError exception.
         if (!k_present)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+            return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
     }
 
     // 9. Repeat, while k < len,
@@ -1270,11 +1270,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. If len = 0 and initialValue is not present, throw a TypeError exception.
     if (length == 0 && vm.argument_count() <= 1)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+        return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
 
     // 5. Let k be len - 1.
     ssize_t k = length - 1;
@@ -1311,7 +1311,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 
         // c. If kPresent is false, throw a TypeError exception.
         if (!k_present)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+            return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
     }
 
     // 9. Repeat, while k ≥ 0,
@@ -1470,7 +1470,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_function.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let k be 0.
     // 5. Repeat, while k < len,
@@ -1566,7 +1566,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     auto comparefn = vm.argument(0);
     if (!comparefn.is_undefined() && !comparefn.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn.to_string_without_side_effects());
 
     // 2. Let obj be ? ToObject(this value).
     auto* object = TRY(vm.this_value(global_object).to_object(global_object));
@@ -1642,7 +1642,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     double new_length = initial_length + insert_count - actual_delete_count;
 
     if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+        return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
     auto* removed_elements = TRY(array_species_create(global_object, *this_object, actual_delete_count));
 
@@ -1795,7 +1795,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     if (!comparefn.is_undefined() && !comparefn.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn);
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be ? ToObject(this value).
     auto* object = TRY(vm.this_value(global_object).to_object(global_object));
@@ -1892,7 +1892,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 
     // 12. If newLen > 2^53 - 1, throw a TypeError exception.
     if (new_length_double > MAX_ARRAY_LIKE_INDEX)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+        return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
     auto new_length = static_cast<u64>(new_length_double);
 
@@ -1985,7 +1985,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
     size_t new_length = length + arg_count;
     if (arg_count > 0) {
         if (new_length > MAX_ARRAY_LIKE_INDEX)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+            return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
         for (size_t k = length; k > 0; --k) {
             auto from = k - 1;
@@ -2046,7 +2046,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
 
     // 6. If actualIndex ≥ len or actualIndex < 0, throw a RangeError exception.
     if (actual_index >= static_cast<double>(length) || actual_index < 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, actual_index, length);
+        return vm.throw_completion<RangeError>(ErrorType::IndexOutOfRange, actual_index, length);
 
     // 7. Let A be ? ArrayCreate(𝔽(len)).
     auto* array = TRY(Array::create(realm, length));

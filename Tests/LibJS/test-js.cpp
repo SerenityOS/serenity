@@ -35,7 +35,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 {
     auto* object = TRY(vm.argument(0).to_object(global_object));
     if (!is<JS::WeakSet>(object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakSet");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WeakSet");
     auto* weak_set = static_cast<JS::WeakSet*>(object);
     return JS::Value(weak_set->values().size());
 }
@@ -44,7 +44,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
 {
     auto* object = TRY(vm.argument(0).to_object(global_object));
     if (!is<JS::WeakMap>(object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakMap");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WeakMap");
     auto* weak_map = static_cast<JS::WeakMap*>(object);
     return JS::Value(weak_map->values().size());
 }
@@ -53,7 +53,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
 {
     auto argument = vm.argument(0);
     if (!argument.is_string())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAString, argument.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAString, argument.to_string_without_side_effects());
 
     auto& variable_name = argument.as_string();
 
@@ -62,14 +62,14 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
         return execution_context->lexical_environment != nullptr;
     });
     if (!outer_environment.has_value())
-        return vm.throw_completion<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
+        return vm.throw_completion<JS::ReferenceError>(JS::ErrorType::UnknownIdentifier, variable_name.string());
 
     auto reference = TRY(vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment));
 
     auto value = TRY(reference.get_value(global_object));
 
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::CannotBeHeldWeakly, String::formatted("Variable with name {}", variable_name.string()));
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, String::formatted("Variable with name {}", variable_name.string()));
 
     vm.heap().uproot_cell(&value.as_cell());
     TRY(reference.delete_(global_object));
@@ -81,7 +81,7 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
 {
     auto array_buffer = vm.argument(0);
     if (!array_buffer.is_object() || !is<JS::ArrayBuffer>(array_buffer.as_object()))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ArrayBuffer");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ArrayBuffer");
 
     auto& array_buffer_object = static_cast<JS::ArrayBuffer&>(array_buffer.as_object());
     TRY(JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1)));

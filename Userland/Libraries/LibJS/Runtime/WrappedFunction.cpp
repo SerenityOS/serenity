@@ -29,7 +29,7 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm&
 
     // 8. If result is an Abrupt Completion, throw a TypeError exception.
     if (result.is_throw_completion())
-        return vm.throw_completion<TypeError>(realm.global_object(), ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
+        return vm.throw_completion<TypeError>(ErrorType::WrappedFunctionCopyNameAndLengthThrowCompletion);
 
     // 9. Return wrapped.
     return wrapped;
@@ -126,7 +126,7 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     // 11. Else,
     else {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(caller_realm->global_object(), ErrorType::WrappedFunctionCallThrowCompletion);
+        return vm.throw_completion<TypeError>(ErrorType::WrappedFunctionCallThrowCompletion);
     }
 
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.

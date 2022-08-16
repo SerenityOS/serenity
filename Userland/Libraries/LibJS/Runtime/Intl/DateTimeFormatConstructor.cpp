@@ -109,7 +109,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
     if (!calendar.is_undefined()) {
         // a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (!Unicode::is_type_identifier(calendar.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
 
         // 8. Set opt.[[ca]] to calendar.
         opt.ca = calendar.as_string().string();
@@ -122,7 +122,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 11. Set opt.[[nu]] to numberingSystem.
         opt.nu = numbering_system.as_string().string();
@@ -229,7 +229,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // b. If the result of IsValidTimeZoneName(timeZone) is false, then
         if (!Temporal::is_valid_time_zone_name(time_zone)) {
             // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
         }
 
         // c. Set timeZone to ! CanonicalizeTimeZoneName(timeZone).
@@ -312,7 +312,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // a. If hasExplicitFormatComponents is true, then
         if (explicit_format_component != nullptr) {
             // i. Throw a TypeError exception.
-            return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidDateTimeFormatOption, *explicit_format_component, "dateStyle or timeStyle"sv);
+            return vm.throw_completion<TypeError>(ErrorType::IntlInvalidDateTimeFormatOption, *explicit_format_component, "dateStyle or timeStyle"sv);
         }
 
         // b. Let styles be dataLocaleData.[[styles]].[[<resolvedCalendar>]].

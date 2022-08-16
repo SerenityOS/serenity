@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +43,7 @@ static ThrowCompletionOr<BigInt*> this_bigint_value(GlobalObject& global_object,
     if (value.is_object() && is<BigIntObject>(value.as_object()))
         return &static_cast<BigIntObject&>(value.as_object()).bigint();
     auto& vm = global_object.vm();
-    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "BigInt");
+    return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "BigInt");
 }
 
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
@@ -54,7 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
     if (!vm.argument(0).is_undefined()) {
         radix = TRY(vm.argument(0).to_integer_or_infinity(global_object));
         if (radix < 2 || radix > 36)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidRadix);
+            return vm.throw_completion<RangeError>(ErrorType::InvalidRadix);
     }
     return js_string(vm, bigint->big_integer().to_base(radix));
 }

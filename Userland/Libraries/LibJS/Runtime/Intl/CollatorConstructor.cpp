@@ -52,7 +52,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_obj
     if (!collation.is_undefined()) {
         // a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (!Unicode::is_type_identifier(collation.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, collation, "collation"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, collation, "collation"sv);
 
         // 12. Set opt.[[co]] to collation.
         opt.co = collation.as_string().string();

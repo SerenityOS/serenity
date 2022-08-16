@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
 {
     auto array_buffer = vm.argument(0);
     if (!array_buffer.is_object() || !is<ArrayBuffer>(array_buffer.as_object()))
-        return vm.throw_completion<TypeError>(global_object);
+        return vm.throw_completion<TypeError>();
 
     auto& array_buffer_object = static_cast<ArrayBuffer&>(array_buffer.as_object());
     TRY(JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1)));
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
     auto source = TRY(vm.argument(0).to_string(global_object));
     auto script_or_error = Script::parse(source, *vm.current_realm());
     if (script_or_error.is_error())
-        return vm.throw_completion<SyntaxError>(global_object, script_or_error.error()[0].to_string());
+        return vm.throw_completion<SyntaxError>(script_or_error.error()[0].to_string());
     TRY(vm.interpreter().run(script_or_error.value()));
     return js_undefined();
 }

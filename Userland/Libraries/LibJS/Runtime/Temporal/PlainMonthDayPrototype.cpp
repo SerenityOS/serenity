@@ -95,7 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::with)
     // 3. If Type(temporalMonthDayLike) is not Object, then
     if (!temporal_month_day_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_month_day_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_month_day_like.to_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalMonthDayLike).
@@ -196,7 +196,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainMonthDay", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.PlainMonthDay", "a primitive value");
 }
 
 // 10.3.12 Temporal.PlainMonthDay.prototype.toPlainDate ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.toplaindate
@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, item);
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, item);
     }
 
     // 4. Let calendar be monthDay.[[Calendar]].

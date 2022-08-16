@@ -19,9 +19,9 @@ static ThrowCompletionOr<ProxyObject*> proxy_create(GlobalObject& global_object,
     auto& vm = global_object.vm();
     auto& realm = *global_object.associated_realm();
     if (!target.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
     if (!handler.is_object())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
     return ProxyObject::create(realm, target.as_object(), handler.as_object());
 }
 
@@ -44,7 +44,7 @@ void ProxyConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> ProxyConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Proxy);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.Proxy);
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler

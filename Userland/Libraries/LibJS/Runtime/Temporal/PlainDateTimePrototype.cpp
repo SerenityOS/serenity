@@ -365,7 +365,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 3. If Type(temporalDateTimeLike) is not Object, then
     if (!temporal_date_time_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_date_time_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_date_time_like.to_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateTimeLike).
@@ -526,7 +526,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
     // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+        return vm.throw_completion<TypeError>(ErrorType::TemporalMissingOptionsObject);
     }
 
     Object* round_to;
@@ -637,7 +637,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainDateTime", "a primitive value");
+    return vm.throw_completion<TypeError>(ErrorType::Convert, "Temporal.PlainDateTime", "a primitive value");
 }
 
 // 5.3.36 Temporal.PlainDateTime.prototype.toZonedDateTime ( temporalTimeZoneLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime

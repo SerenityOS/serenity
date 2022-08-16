@@ -90,10 +90,10 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(GlobalObject& globa
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayPrototypeOneArg, name);
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayPrototypeOneArg, name);
     auto callback = vm.argument(0);
     if (!callback.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects());
     return &callback.as_function();
 }
 
@@ -158,7 +158,7 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObjec
     // 4. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
     // 5. If result.[[ContentType]] ≠ exemplar.[[ContentType]], throw a TypeError exception.
     if (result->content_type() != exemplar.content_type())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
 
     // 6. Return result.
     return result;
@@ -287,7 +287,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 
         // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
         if (buffer->is_detached())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
         // d. Let elementSize be TypedArrayElementSize(O).
         auto element_size = typed_array->element_size();
@@ -444,7 +444,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         final = min(relative_end, length);
 
     if (typed_array->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     for (; k < final; ++k)
         TRY(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
@@ -798,7 +798,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     auto* callback_function = TRY(callback_from_args(global_object, vm.names.reduce.as_string()));
 
     if (length == 0 && vm.argument_count() <= 1)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+        return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
 
     u32 k = 0;
     Value accumulator;
@@ -828,7 +828,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     auto* callback_function = TRY(callback_from_args(global_object, vm.names.reduce.as_string()));
 
     if (length == 0 && vm.argument_count() <= 1)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
+        return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
 
     i32 k = (i32)length - 1;
     Value accumulator;
@@ -898,7 +898,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
 
     // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
     if (target_buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 3. Let targetLength be target.[[ArrayLength]].
     auto target_length = target.array_length();
@@ -908,7 +908,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
 
     // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
     if (source_buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 6. Let targetType be TypedArrayElementType(target).
     // 7. Let targetElementSize be TypedArrayElementSize(target).
@@ -929,17 +929,17 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
 
     // 13. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "finite");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
     // 14. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     Checked<size_t> checked = source_length;
     checked += static_cast<u32>(target_offset);
     if (checked.has_overflow() || checked.value() > target_length)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
     // 15. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
     if (target.content_type() != source.content_type())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayInvalidCopy, target.class_name(), source.class_name());
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayInvalidCopy, target.class_name(), source.class_name());
 
     // FIXME: 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
     // FIXME: a. If srcBuffer.[[ArrayBufferData]] and targetBuffer.[[ArrayBufferData]] are the same Shared Data Block values, let same be true; else let same be false.
@@ -970,7 +970,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
     checked_target_byte_index *= target_element_size;
     checked_target_byte_index += target_byte_offset;
     if (checked_target_byte_index.has_overflow())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflow, "target byte index");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target byte index");
     auto target_byte_index = checked_target_byte_index.value();
 
     // 21. Let limit be targetByteIndex + targetElementSize × srcLength.
@@ -978,7 +978,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(GlobalObject& gl
     checked_limit *= target_element_size;
     checked_limit += target_byte_index;
     if (checked_limit.has_overflow())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflow, "target limit");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target limit");
     auto limit = checked_limit.value();
 
     // 22. If srcType is the same as targetType, then
@@ -1020,7 +1020,7 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(GlobalObject& glo
 
     // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
     if (target_buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 3. Let targetLength be target.[[ArrayLength]].
     auto target_length = target.array_length();
@@ -1033,13 +1033,13 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(GlobalObject& glo
 
     // 6. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "finite");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
     // 7. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     Checked<size_t> checked = source_length;
     checked += static_cast<u32>(target_offset);
     if (checked.has_overflow() || checked.value() > target_length)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
     // 8. Let k be 0.
     size_t k = 0;
@@ -1085,7 +1085,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 
     // 5. If targetOffset < 0, throw a RangeError exception.
     if (target_offset < 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TypedArrayInvalidTargetOffset, "positive");
+        return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidTargetOffset, "positive");
 
     // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
     if (source.is_object() && is<TypedArrayBase>(source.as_object())) {
@@ -1164,7 +1164,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     if (count > 0) {
         // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
         if (typed_array->viewed_array_buffer()->is_detached())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
         // b. Let srcType be TypedArrayElementType(O).
         // c. Let targetType be TypedArrayElementType(A).
@@ -1261,7 +1261,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     auto compare_fn = vm.argument(0);
     if (!compare_fn.is_undefined() && !compare_fn.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
 
     // 2. Let obj be the this value.
     // 3. Perform ? ValidateTypedArray(obj).
@@ -1519,7 +1519,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     auto comparefn = vm.argument(0);
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     if (!comparefn.is_undefined() && !comparefn.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, comparefn);
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be the this value.
     auto* object = TRY(vm.this_value(global_object).to_object(global_object));
@@ -1592,7 +1592,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 
     // 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
     if (!is_valid_integer_index(*typed_array, CanonicalIndex(CanonicalIndex::Type::Index, actual_index)))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
+        return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
 
     // 10. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());

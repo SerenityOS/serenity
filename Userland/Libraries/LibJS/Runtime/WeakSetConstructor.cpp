@@ -33,7 +33,7 @@ void WeakSetConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakSetConstructor::call()
 {
     auto& vm = this->vm();
-    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
+    return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
@@ -49,7 +49,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
 
     auto adder = TRY(weak_set->get(vm.names.add));
     if (!adder.is_function())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'add' property of WeakSet");
 
     (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         TRY(JS::call(global_object, adder.as_function(), weak_set, iterator_value));

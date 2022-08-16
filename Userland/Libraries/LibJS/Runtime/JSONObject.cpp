@@ -200,7 +200,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
 
     // 10. If Type(value) is BigInt, throw a TypeError exception.
     if (value.is_bigint())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::JsonBigInt);
+        return vm.throw_completion<TypeError>(ErrorType::JsonBigInt);
 
     // 11. If Type(value) is Object and IsCallable(value) is false, then
     if (value.is_object() && !value.is_function()) {
@@ -224,7 +224,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global
 {
     auto& vm = global_object.vm();
     if (state.seen_objects.contains(&object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::JsonCircular);
+        return vm.throw_completion<TypeError>(ErrorType::JsonCircular);
 
     state.seen_objects.set(&object);
     String previous_indent = state.indent;
@@ -293,7 +293,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
 {
     auto& vm = global_object.vm();
     if (state.seen_objects.contains(&object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::JsonCircular);
+        return vm.throw_completion<TypeError>(ErrorType::JsonCircular);
 
     state.seen_objects.set(&object);
     String previous_indent = state.indent;
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 
     auto json = JsonValue::from_string(string);
     if (json.is_error())
-        return vm.throw_completion<SyntaxError>(global_object, ErrorType::JsonMalformed);
+        return vm.throw_completion<SyntaxError>(ErrorType::JsonMalformed);
     Value unfiltered = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
         auto* root = Object::create(realm, global_object.object_prototype());

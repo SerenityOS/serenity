@@ -30,7 +30,7 @@ void CSSNamespace::initialize(JS::Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
 {
     if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "CSS.escape");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "CSS.escape");
 
     auto identifier = TRY(vm.argument(0).to_string(global_object));
     return JS::js_string(vm, Web::CSS::serialize_an_identifier(identifier));
@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
 JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
 {
     if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "CSS.supports");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "CSS.supports");
 
     if (vm.argument_count() >= 2) {
         // When the supports(property, value) method is invoked with two arguments property and value:

@@ -23,7 +23,7 @@ WebAssemblyInstanceConstructor::~WebAssemblyInstanceConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyInstanceConstructor::call()
 {
-    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Instance");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Instance");
 }
 
 JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(FunctionObject&)
@@ -34,7 +34,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(Fun
 
     auto* module_argument = TRY(vm.argument(0).to_object(global_object));
     if (!is<WebAssemblyModuleObject>(module_argument))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(module_object.module(), vm, global_object));
     return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);

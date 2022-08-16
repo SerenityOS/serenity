@@ -107,7 +107,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
         if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 8. Set opt.[[nu]] to numberingSystem.
         opt.nu = numbering_system.as_string().string();
@@ -178,15 +178,15 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     static constexpr auto sanctioned_rounding_increments = AK::Array { 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 };
 
     if (!sanctioned_rounding_increments.span().contains_slow(*rounding_increment))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidRoundingIncrement, *rounding_increment);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrement, *rounding_increment);
 
     // 23. If roundingIncrement is not 1 and numberFormat.[[RoundingType]] is not fractionDigits, throw a TypeError exception.
     if ((rounding_increment != 1) && (number_format.rounding_type() != NumberFormatBase::RoundingType::FractionDigits))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidRoundingIncrementForRoundingType, *rounding_increment, number_format.rounding_type_string());
+        return vm.throw_completion<TypeError>(ErrorType::IntlInvalidRoundingIncrementForRoundingType, *rounding_increment, number_format.rounding_type_string());
 
     // 24. If roundingIncrement is not 1 and numberFormat.[[MaximumFractionDigits]] is not equal to numberFormat.[[MinimumFractionDigits]], throw a RangeError exception.
     if ((rounding_increment != 1) && (number_format.max_fraction_digits() != number_format.min_fraction_digits()))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidRoundingIncrementForFractionDigits, *rounding_increment);
+        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrementForFractionDigits, *rounding_increment);
 
     // 25. Set numberFormat.[[RoundingIncrement]] to roundingIncrement.
     number_format.set_rounding_increment(*rounding_increment);
@@ -335,7 +335,7 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
                 max_digits = max(default_max_fraction_digits, *min_digits);
             // v. Else if mnfd is greater than mxfd, throw a RangeError exception.
             else if (*min_digits > *max_digits)
-                return vm.throw_completion<RangeError>(global_object, ErrorType::IntlMinimumExceedsMaximum, *min_digits, *max_digits);
+                return vm.throw_completion<RangeError>(ErrorType::IntlMinimumExceedsMaximum, *min_digits, *max_digits);
 
             // vi. Set intlObj.[[MinimumFractionDigits]] to mnfd.
             intl_object.set_min_fraction_digits(*min_digits);
@@ -419,12 +419,12 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
     if (currency.is_undefined()) {
         // a. If style is "currency", throw a TypeError exception.
         if (intl_object.style() == NumberFormat::Style::Currency)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::IntlOptionUndefined, "currency"sv, "style"sv, style);
+            return vm.throw_completion<TypeError>(ErrorType::IntlOptionUndefined, "currency"sv, "style"sv, style);
     }
     // 7. Else,
     //     a. If ! IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
     else if (!is_well_formed_currency_code(currency.as_string().string()))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, currency, "currency"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, currency, "currency"sv);
 
     // 8. Let currencyDisplay be ? GetOption(options, "currencyDisplay", "string", « "code", "symbol", "narrowSymbol", "name" », "symbol").
     auto currency_display = TRY(get_option(global_object, options, vm.names.currencyDisplay, OptionType::String, { "code"sv, "symbol"sv, "narrowSymbol"sv, "name"sv }, "symbol"sv));
@@ -439,12 +439,12 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
     if (unit.is_undefined()) {
         // a. If style is "unit", throw a TypeError exception.
         if (intl_object.style() == NumberFormat::Style::Unit)
-            return vm.throw_completion<TypeError>(global_object, ErrorType::IntlOptionUndefined, "unit"sv, "style"sv, style);
+            return vm.throw_completion<TypeError>(ErrorType::IntlOptionUndefined, "unit"sv, "style"sv, style);
     }
     // 12. Else,
     //     a. If ! IsWellFormedUnitIdentifier(unit) is false, throw a RangeError exception.
     else if (!is_well_formed_unit_identifier(unit.as_string().string()))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, unit, "unit"sv);
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, unit, "unit"sv);
 
     // 13. Let unitDisplay be ? GetOption(options, "unitDisplay", "string", « "short", "narrow", "long" », "short").
     auto unit_display = TRY(get_option(global_object, options, vm.names.unitDisplay, OptionType::String, { "short"sv, "narrow"sv, "long"sv }, "short"sv));

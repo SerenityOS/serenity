@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -43,7 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 5. Let len be O.[[ArrayBufferByteLength]].
     auto length = array_buffer_object->byte_length();
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     // 17. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
     if (!is<ArrayBuffer>(new_array_buffer))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
+        return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
     auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer);
 
     // 18. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
@@ -95,20 +95,20 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     // 19. If IsDetachedBuffer(new) is true, throw a TypeError exception.
     if (new_array_buffer_object->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "a detached ArrayBuffer");
+        return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorReturned, "a detached ArrayBuffer");
 
     // 20. If SameValue(new, O) is true, throw a TypeError exception.
     if (same_value(new_array_buffer_object, array_buffer_object))
-        return vm.throw_completion<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "same ArrayBuffer instance");
+        return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorReturned, "same ArrayBuffer instance");
 
     // 21. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
     if (new_array_buffer_object->byte_length() < new_length)
-        return vm.throw_completion<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "an ArrayBuffer smaller than requested");
+        return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorReturned, "an ArrayBuffer smaller than requested");
 
     // 22. NOTE: Side-effects of the above steps may have detached O.
     // 23. If IsDetachedBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 24. Let fromBuf be O.[[ArrayBufferData]].
     // 25. Let toBuf be new.[[ArrayBufferData]].

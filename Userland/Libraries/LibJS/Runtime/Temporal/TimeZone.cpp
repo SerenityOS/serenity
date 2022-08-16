@@ -271,7 +271,7 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
 
     // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFormat, "TimeZone offset");
+        return vm.throw_completion<RangeError>(ErrorType::InvalidFormat, "TimeZone offset");
 
     // 3. Let each of sign, hours, minutes, seconds, and fSeconds be the source text matched by the respective TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, and TimeZoneUTCOffsetFraction Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto sign = parse_result->time_zone_utc_offset_sign;
@@ -459,7 +459,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
         if (!is_valid_time_zone_numeric_utc_offset_syntax(name)) {
             // i. If IsValidTimeZoneName(name) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(name))
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName, name);
+                return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
 
             // ii. Set name to ! CanonicalizeTimeZoneName(name).
             name = canonicalize_time_zone_name(name);
@@ -490,18 +490,18 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
 
     // 3. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
     if (!offset_nanoseconds_value.is_number())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "Offset nanoseconds value", "number");
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, "Offset nanoseconds value", "number");
 
     // 4. If IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
     if (!offset_nanoseconds_value.is_integral_number())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IsNotAn, "Offset nanoseconds value", "integral number");
+        return vm.throw_completion<RangeError>(ErrorType::IsNotAn, "Offset nanoseconds value", "integral number");
 
     // 5. Set offsetNanoseconds to ℝ(offsetNanoseconds).
     auto offset_nanoseconds = offset_nanoseconds_value.as_double();
 
     // 6. If abs(offsetNanoseconds) > nsPerDay, throw a RangeError exception.
     if (fabs(offset_nanoseconds) > ns_per_day)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidOffsetNanosecondsValue);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidOffsetNanosecondsValue);
 
     // 7. Return offsetNanoseconds.
     return offset_nanoseconds;
@@ -581,7 +581,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
         VERIFY(disambiguation == "reject"sv);
 
         // d. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsRejectMoreThanOne);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDisambiguatePossibleInstantsRejectMoreThanOne);
     }
 
     // 5. Assert: n = 0.
@@ -590,7 +590,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     // 6. If disambiguation is "reject", then
     if (disambiguation == "reject"sv) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsRejectZero);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDisambiguatePossibleInstantsRejectZero);
     }
 
     // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
@@ -601,7 +601,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
 
     // 9. If ! IsValidEpochNanoseconds(dayBeforeNs) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*day_before_ns))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 10. Let dayBefore be ! CreateTemporalInstant(dayBeforeNs).
     auto* day_before = MUST(create_temporal_instant(global_object, *day_before_ns));
@@ -611,7 +611,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
 
     // 12. If ! IsValidEpochNanoseconds(dayAfterNs) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*day_after_ns))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 13. Let dayAfter be ! CreateTemporalInstant(dayAfterNs).
     auto* day_after = MUST(create_temporal_instant(global_object, *day_after_ns));
@@ -638,7 +638,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
 
         // d. If possibleInstants is empty, throw a RangeError exception.
         if (possible_instants_.is_empty())
-            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsEarlierZero);
+            return vm.throw_completion<RangeError>(ErrorType::TemporalDisambiguatePossibleInstantsEarlierZero);
 
         // e. Return possibleInstants[0].
         return possible_instants_[0];
@@ -661,7 +661,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
 
     // 23. If n = 0, throw a RangeError exception.
     if (n == 0)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsZero);
+        return vm.throw_completion<RangeError>(ErrorType::TemporalDisambiguatePossibleInstantsZero);
 
     // 24. Return possibleInstants[n - 1].
     return possible_instants_[n - 1];
@@ -699,7 +699,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(GlobalObject
             // ii. If Type(nextValue) is not Object or nextValue does not have an [[InitializedTemporalInstant]] internal slot, then
             if (!next_value.is_object() || !is<Instant>(next_value.as_object())) {
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-                auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Instant");
+                auto completion = vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Instant");
 
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
                 return iterator_close(global_object, iterator, move(completion));

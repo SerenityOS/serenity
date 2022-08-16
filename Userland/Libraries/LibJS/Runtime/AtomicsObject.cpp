@@ -33,14 +33,14 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
     if (waitable) {
         // a. If typedArray.[[TypedArrayName]] is not "Int32Array" or "BigInt64Array", throw a TypeError exception.
         if ((type_name != vm.names.Int32Array.as_string()) && (type_name != vm.names.BigInt64Array.as_string()))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
+            return vm.throw_completion<TypeError>(ErrorType::TypedArrayTypeIsNot, type_name, "Int32 or BigInt64"sv);
     }
     // 5. Else,
     else {
         // a. Let type be TypedArrayElementType(typedArray).
         // b. If IsUnclampedIntegerElementType(type) is false and IsBigIntElementType(type) is false, throw a TypeError exception.
         if (!typed_array.is_unclamped_integer_element_type() && !typed_array.is_bigint_element_type())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
+            return vm.throw_completion<TypeError>(ErrorType::TypedArrayTypeIsNot, type_name, "an unclamped integer or BigInt"sv);
     }
 
     // 6. Return buffer.
@@ -62,7 +62,7 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
 
     // 4. If accessIndex ≥ length, throw a RangeError exception.
     if (access_index >= length)
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IndexOutOfRange, access_index, typed_array.array_length());
+        return vm.throw_completion<RangeError>(ErrorType::IndexOutOfRange, access_index, typed_array.array_length());
 
     // 5. Let elementSize be TypedArrayElementSize(typedArray).
     auto element_size = typed_array.element_size();
@@ -96,7 +96,7 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 6. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
 
@@ -224,7 +224,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
 
     // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
-        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 7. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
 
@@ -323,7 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 
     // 3. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 4. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ValidateAtomicAccess on the preceding line can have arbitrary side effects, which could cause the buffer to become detached.
 
@@ -370,7 +370,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 6. NOTE: The above check is not redundant with the check in ValidateIntegerTypedArray because the call to ToBigInt or ToIntegerOrInfinity on the preceding lines can have arbitrary side effects, which could cause the buffer to become detached.
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,7 +35,7 @@ ThrowCompletionOr<BigInt*> number_to_bigint(GlobalObject& global_object, Value n
 
     // 1. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number())
-        return vm.throw_completion<RangeError>(global_object, ErrorType::BigIntFromNonIntegral);
+        return vm.throw_completion<RangeError>(ErrorType::BigIntFromNonIntegral);
 
     // 2. Return the BigInt value that represents ℝ(number).
     return js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)number.as_double()));

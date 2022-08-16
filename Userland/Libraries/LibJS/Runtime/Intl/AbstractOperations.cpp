@@ -229,7 +229,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
 
             // ii. If Type(kValue) is not String or Object, throw a TypeError exception.
             if (!key_value.is_string() && !key_value.is_object())
-                return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
+                return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
 
             String tag;
 
@@ -247,7 +247,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
             // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
             auto locale_id = is_structurally_valid_language_tag(tag);
             if (!locale_id.has_value())
-                return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
+                return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, tag);
 
             // vi. Let canonicalizedTag be ! CanonicalizeUnicodeLocaleId(tag).
             auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
@@ -658,7 +658,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
 
     // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
     if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
+        return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
 
     // 4. Return floor(value).
     return floor(value.as_double());

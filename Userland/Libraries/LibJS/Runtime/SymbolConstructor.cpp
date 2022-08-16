@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 {
-    return vm().throw_completion<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
+    return vm().throw_completion<TypeError>(ErrorType::NotAConstructor, "Symbol");
 }
 
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
     if (!argument.is_symbol())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects());
 
     auto& symbol = argument.as_symbol();
     if (symbol.is_global())

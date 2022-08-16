@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
         auto& typed_array = static_cast<TypedArrayBase&>(array);
 
         if (typed_array.viewed_array_buffer()->is_detached())
-            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
         length = typed_array.array_length();
     } else {
