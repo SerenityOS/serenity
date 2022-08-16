@@ -197,7 +197,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     }
 
     if (mouse_event.type() == Event::MouseMove) {
-        for (auto& menu : m_open_menu_stack) {
+        for (auto& menu : m_open_menu_stack.in_reverse()) {
             if (!menu)
                 continue;
             if (!menu->menu_window()->rect().contains(mouse_event.position()))
