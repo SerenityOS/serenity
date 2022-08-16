@@ -17,11 +17,18 @@ test("constructor without new", () => {
     expect(Number("Infinity")).toBe(Infinity);
     expect(Number("+Infinity")).toBe(Infinity);
     expect(Number("-Infinity")).toBe(-Infinity);
+    expect(Number("infinity")).toBeNaN();
+    expect(Number("-infinity")).toBeNaN();
+    expect(Number("INFINITY")).toBeNaN();
+    expect(Number("-INFINITY")).toBeNaN();
+    expect(Number("inf")).toBeNaN();
     expect(Number(undefined)).toBeNaN();
     expect(Number({})).toBeNaN();
     expect(Number({ a: 1 })).toBeNaN();
     expect(Number([1, 2, 3])).toBeNaN();
     expect(Number("foo")).toBeNaN();
+    expect(Number("10e10000")).toBe(Infinity);
+    expect(Number("-10e10000")).toBe(-Infinity);
 });
 
 test("constructor with new", () => {
@@ -38,9 +45,16 @@ test("constructor with new", () => {
     expect(new Number("Infinity").valueOf()).toBe(Infinity);
     expect(new Number("+Infinity").valueOf()).toBe(Infinity);
     expect(new Number("-Infinity").valueOf()).toBe(-Infinity);
+    expect(new Number("infinity").valueOf()).toBeNaN();
+    expect(new Number("-infinity").valueOf()).toBeNaN();
+    expect(new Number("INFINITY").valueOf()).toBeNaN();
+    expect(new Number("-INFINITY").valueOf()).toBeNaN();
+    expect(new Number("inf").valueOf()).toBeNaN();
     expect(new Number(undefined).valueOf()).toBeNaN();
     expect(new Number({}).valueOf()).toBeNaN();
     expect(new Number({ a: 1 }).valueOf()).toBeNaN();
     expect(new Number([1, 2, 3]).valueOf()).toBeNaN();
     expect(new Number("foo").valueOf()).toBeNaN();
+    expect(new Number("10e10000").valueOf()).toBe(Infinity);
+    expect(new Number("-10e10000").valueOf()).toBe(-Infinity);
 });

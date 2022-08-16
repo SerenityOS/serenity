@@ -500,6 +500,11 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
         auto parsed_double = strtod(string.characters(), &endptr);
         if (*endptr)
             return js_nan();
+        // NOTE: Per the spec only exactly [+-]Infinity should result in infinity
+        //       but strtod gives infinity for any case-insensitive 'infinity' or 'inf' string.
+        if (isinf(parsed_double) && string.contains('i', AK::CaseSensitivity::CaseInsensitive))
+            return js_nan();
+
         return Value(parsed_double);
     }
     case SYMBOL_TAG:
