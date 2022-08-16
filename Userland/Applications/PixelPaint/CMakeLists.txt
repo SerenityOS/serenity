@@ -52,6 +52,7 @@ set(SOURCES
     ProjectLoader.cpp
     ResizeImageDialog.cpp
     ResizeImageDialogGML.h
+    ScopeWidget.cpp
     Selection.cpp
     ToolPropertiesWidget.cpp
     ToolboxWidget.cpp
