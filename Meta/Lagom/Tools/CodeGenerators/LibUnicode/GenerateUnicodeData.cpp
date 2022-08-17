@@ -20,6 +20,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 
+using StringIndexType = u16;
+constexpr auto s_string_index_type = "u16"sv;
+
 // Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
 // points, as indicated by the "name" field. For example:
 //     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
@@ -63,7 +66,7 @@ using NormalizationProps = HashMap<String, Vector<Normalization>>;
 
 struct CodePointName {
     CodePointRange code_point_range;
-    StringView name;
+    StringIndexType name { 0 };
 };
 
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
@@ -72,7 +75,7 @@ struct CodePointName {
 struct CodePointData {
     u32 code_point { 0 };
     String name;
-    Optional<StringView> abbreviation;
+    Optional<StringIndexType> abbreviation;
     u8 canonical_combining_class { 0 };
     String bidi_class;
     String decomposition_type;
@@ -90,10 +93,12 @@ struct CodePointData {
 
 struct BlockName {
     CodePointRange code_point_range;
-    String name;
+    StringIndexType name { 0 };
 };
 
 struct UnicodeData {
+    UniqueStringStorage<StringIndexType> unique_strings;
+
     u32 code_points_with_non_zero_combining_class { 0 };
 
     u32 simple_uppercase_mapping_size { 0 };
@@ -107,8 +112,8 @@ struct UnicodeData {
 
     Vector<CodePointData> code_point_data;
 
-    HashMap<u32, String> code_point_abbreviations;
-    HashMap<u32, String> code_point_display_name_aliases;
+    HashMap<u32, StringIndexType> code_point_abbreviations;
+    HashMap<u32, StringIndexType> code_point_display_name_aliases;
     Vector<CodePointName> code_point_display_names;
 
     PropList general_categories;
@@ -355,10 +360,13 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
         auto reason = segments[2].trim_whitespace();
 
         if (reason == "abbreviation"sv) {
-            unicode_data.code_point_abbreviations.set(*code_point, alias);
+            auto index = unicode_data.unique_strings.ensure(alias);
+            unicode_data.code_point_abbreviations.set(*code_point, index);
         } else if (reason.is_one_of("correction"sv, "control"sv)) {
-            if (!unicode_data.code_point_display_name_aliases.contains(*code_point))
-                unicode_data.code_point_display_name_aliases.set(*code_point, alias);
+            if (!unicode_data.code_point_display_name_aliases.contains(*code_point)) {
+                auto index = unicode_data.unique_strings.ensure(alias);
+                unicode_data.code_point_display_name_aliases.set(*code_point, index);
+            }
         }
     }
 
@@ -459,8 +467,13 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
     // https://www.unicode.org/versions/Unicode14.0.0/ch04.pdf#G142981
     // FIXME: Implement the NR1 rules for Hangul syllables.
 
+    struct CodePointNameFormat {
+        CodePointRange code_point_range;
+        StringView name;
+    };
+
     // These code point ranges are the NR2 set of name replacements defined by Table 4-8.
-    constexpr Array<CodePointName, 15> s_ideographic_replacements { {
+    constexpr Array<CodePointNameFormat, 15> s_ideographic_replacements { {
         { { 0x3400, 0x4DBF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0x4E00, 0x9FFC }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0xF900, 0xFA6D }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
@@ -484,7 +497,8 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
         });
 
     if (it != s_ideographic_replacements.end()) {
-        unicode_data.code_point_display_names.append(*it);
+        auto index = unicode_data.unique_strings.ensure(it->name);
+        unicode_data.code_point_display_names.append({ it->code_point_range, index });
         return;
     }
 
@@ -505,7 +519,8 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
         return;
     }
 
-    unicode_data.code_point_display_names.append({ range, name });
+    auto index = unicode_data.unique_strings.ensure(name);
+    unicode_data.code_point_display_names.append({ range, index });
 }
 
 static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
@@ -521,7 +536,9 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
         auto display_name = segments[1].trim_whitespace();
-        unicode_data.block_display_names.append({ code_point_range, display_name });
+
+        auto index = unicode_data.unique_strings.ensure(display_name);
+        unicode_data.block_display_names.append({ code_point_range, index });
     }
 
     TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
@@ -713,6 +730,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("string_index_type"sv, s_string_index_type);
     generator.set("largest_special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
 
@@ -729,6 +747,8 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
 
 namespace Unicode {
 )~~~");
+
+    unicode_data.unique_strings.generate(generator);
 
     auto append_list_and_size = [&](auto const& list, StringView format) {
         if (list.is_empty()) {
@@ -784,7 +804,7 @@ struct SpecialCaseMapping {
 
 struct CodePointAbbreviation {
     u32 code_point { 0 };
-    StringView abbreviation {};
+    @string_index_type@ abbreviation { 0 };
 };
 
 template<typename MappingType>
@@ -792,6 +812,37 @@ struct CodePointComparator {
     constexpr int operator()(u32 code_point, MappingType const& mapping)
     {
         return code_point - mapping.code_point;
+    }
+};
+
+struct CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointRange const& range)
+    {
+        return (code_point > range.last) - (code_point < range.first);
+    }
+};
+
+struct BlockNameData {
+    CodePointRange code_point_range {};
+    @string_index_type@ display_name { 0 };
+};
+
+struct BlockNameComparator : public CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, BlockNameData const& name)
+    {
+        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
+    }
+};
+
+struct CodePointName {
+    CodePointRange code_point_range {};
+    @string_index_type@ display_name { 0 };
+};
+
+struct CodePointNameComparator : public CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointName const& name)
+    {
+        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
     }
 };
 )~~~");
@@ -825,12 +876,9 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             generator.set("code_point", String::formatted("{:#x}", data.code_point));
             generator.append("{ @code_point@");
 
-            if constexpr (IsSame<decltype(mapping), Optional<u32>>) {
+            if constexpr (IsSame<decltype(mapping), Optional<u32>> || IsSame<decltype(mapping), Optional<StringIndexType>>) {
                 generator.set("mapping", String::formatted("{:#x}", *mapping));
                 generator.append(", @mapping@ },");
-            } else if constexpr (IsSame<decltype(mapping), Optional<StringView>>) {
-                generator.set("mapping", String::formatted("{}", *mapping));
-                generator.append(", \"@mapping@\"sv },");
             } else {
                 append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
                 generator.append(" },");
@@ -856,16 +904,6 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
     append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
     append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
-
-    generator.append(R"~~~(
-struct CodePointRangeComparator {
-    constexpr int operator()(u32 code_point, CodePointRange const& range)
-    {
-        return (code_point > range.last) - (code_point < range.first);
-    }
-};
-
-)~~~");
 
     auto append_code_point_range_list = [&](String name, Vector<CodePointRange> const& ranges) {
         generator.set("name", name);
@@ -930,80 +968,73 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
     append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
 
-    generator.append(R"~~~(
-struct BlockNameComparator : public CodePointRangeComparator {
-    constexpr int operator()(u32 code_point, BlockName const& name)
-    {
-        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
-    }
-};
-)~~~");
+    auto append_code_point_display_names = [&](StringView type, StringView name, auto const& display_names) {
+        constexpr size_t max_values_per_row = 30;
+        size_t values_in_current_row = 0;
 
-    generator.set("block_display_names_size", String::number(unicode_data.block_display_names.size()));
-    generator.append(R"~~~(
-static constexpr Array<BlockName, @block_display_names_size@> s_block_display_names { {
+        generator.set("type", type);
+        generator.set("name", name);
+        generator.set("size", String::number(display_names.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<@type@, @size@> @name@ { {
+    )~~~");
+        for (auto const& display_name : display_names) {
+            if (values_in_current_row++ > 0)
+                generator.append(", ");
+
+            generator.set("first", String::formatted("{:#x}", display_name.code_point_range.first));
+            generator.set("last", String::formatted("{:#x}", display_name.code_point_range.last));
+            generator.set("name", String::number(display_name.name));
+            generator.append("{ { @first@, @last@ }, @name@ }");
+
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
+                generator.append(",\n    ");
+            }
+        }
+        generator.append(R"~~~(
+} };
 )~~~");
-    for (auto const& block_name : unicode_data.block_display_names) {
-        generator.set("first", String::formatted("{:#x}", block_name.code_point_range.first));
-        generator.set("last", String::formatted("{:#x}", block_name.code_point_range.last));
-        generator.set("name", block_name.name);
-        generator.append(R"~~~(    { { @first@, @last@ }, "@name@"sv },
-)~~~");
-    }
-    generator.append(R"~~~(} };
-)~~~");
+    };
+
+    append_code_point_display_names("BlockNameData"sv, "s_block_display_names"sv, unicode_data.block_display_names);
+    append_code_point_display_names("CodePointName"sv, "s_code_point_display_names"sv, unicode_data.code_point_display_names);
 
     generator.append(R"~~~(
 Optional<StringView> code_point_block_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_block_display_names, code_point, nullptr, BlockNameComparator {}))
-        return entry->display_name;
+        return decode_string(entry->display_name);
 
     return {};
 }
 
 Span<BlockName const> block_display_names()
 {
-    return s_block_display_names;
+    static auto display_names = []() {
+        Array<BlockName, s_block_display_names.size()> display_names;
+
+        for (size_t i = 0; i < s_block_display_names.size(); ++i) {
+            auto const& display_name = s_block_display_names[i];
+            display_names[i] = { display_name.code_point_range, decode_string(display_name.display_name) };
+        }
+
+        return display_names;
+    }();
+
+    return display_names.span();
 }
-)~~~");
 
-    generator.append(R"~~~(
-struct CodePointName {
-    CodePointRange code_point_range {};
-    StringView display_name;
-};
-
-struct CodePointNameComparator : public CodePointRangeComparator {
-    constexpr int operator()(u32 code_point, CodePointName const& name)
-    {
-        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
-    }
-};
-)~~~");
-
-    generator.set("code_point_display_names_size", String::number(unicode_data.code_point_display_names.size()));
-    generator.append(R"~~~(
-static constexpr Array<CodePointName, @code_point_display_names_size@> s_code_point_display_names { {
-)~~~");
-    for (auto const& code_point_name : unicode_data.code_point_display_names) {
-        generator.set("first", String::formatted("{:#x}", code_point_name.code_point_range.first));
-        generator.set("last", String::formatted("{:#x}", code_point_name.code_point_range.last));
-        generator.set("name", code_point_name.name);
-        generator.append(R"~~~(    { { @first@, @last@ }, "@name@"sv },
-)~~~");
-    }
-    generator.append(R"~~~(} };
-)~~~");
-
-    generator.append(R"~~~(
 Optional<String> code_point_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
-        if (entry->display_name.ends_with("{:X}"sv))
-            return String::formatted(entry->display_name, code_point);
+        auto display_name = decode_string(entry->display_name);
 
-        return entry->display_name;
+        if (display_name.ends_with("{:X}"sv))
+            return String::formatted(display_name, code_point);
+
+        return display_name;
     }
 
     return {};
@@ -1042,8 +1073,10 @@ Optional<StringView> code_point_abbreviation(u32 code_point)
     auto const* mapping = binary_search(s_abbreviation_mappings, code_point, nullptr, CodePointComparator<CodePointAbbreviation> {});
     if (mapping == nullptr)
         return {};
+    if (mapping->abbreviation == 0)
+        return {};
 
-    return mapping->abbreviation;
+    return decode_string(mapping->abbreviation);
 }
 )~~~");
 
