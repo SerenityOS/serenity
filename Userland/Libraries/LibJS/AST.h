@@ -1769,9 +1769,12 @@ public:
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
+    ThrowCompletionOr<Value> get_template_object(Interpreter& interpreter, GlobalObject& global_object) const;
+
 private:
     NonnullRefPtr<Expression> const m_tag;
     NonnullRefPtr<TemplateLiteral> const m_template_literal;
+    mutable HashMap<Realm*, Handle<Array>> m_cached_values;
 };
 
 class MemberExpression final : public Expression {

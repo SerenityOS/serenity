@@ -130,4 +130,37 @@ describe("tagged template literal functionality", () => {
         expect(calls).toBe(3);
         expect(lastValue).toBe("\\u{10FFFFF}");
     });
+
+    test("for multiple values gives undefined only for invalid strings", () => {
+        let restValue = null;
+        let stringsValue = null;
+        let calls = 0;
+
+        function extractArguments(value, ...arguments) {
+            ++calls;
+            restValue = arguments;
+            stringsValue = value;
+        }
+        extractArguments`valid${1}invalid\u`;
+
+        expect(calls).toBe(1);
+        expect(restValue).toHaveLength(1);
+        expect(restValue[0]).toBe(1);
+        expect(stringsValue).toHaveLength(2);
+        expect(stringsValue[0]).toBe("valid");
+        expect(stringsValue[1]).toBeUndefined();
+        expect(stringsValue.raw).toHaveLength(2);
+        expect(stringsValue.raw[0]).toBe("valid");
+        expect(stringsValue.raw[1]).toBe("invalid\\u");
+    });
+
+    test("string value gets cached per AST node", () => {
+        function call(func, val) {
+            return func`template${val}second`;
+        }
+
+        let firstResult = call(value => value, 1);
+        let secondResult = call(value => value, 2);
+        expect(firstResult).toBe(secondResult);
+    });
 });
