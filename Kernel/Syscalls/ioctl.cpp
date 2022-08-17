@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto description = TRY(open_file_description(fd));
     if (request == FIONBIO) {
         description->set_blocking(TRY(copy_typed_from_user(Userspace<int const*>(arg))) == 0);

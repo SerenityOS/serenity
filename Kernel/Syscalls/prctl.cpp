@@ -11,7 +11,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] FlatPtr arg2)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     switch (option) {
     case PR_GET_DUMPABLE:
         return is_dumpable();

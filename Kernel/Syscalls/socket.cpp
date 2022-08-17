@@ -33,7 +33,7 @@ static void setup_socket_fd(Process::OpenFileDescriptions& fds, int fd, NonnullR
 
 ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
 
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 
 ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> address, socklen_t address_length)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
@@ -62,7 +62,7 @@ ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> addres
 
 ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (backlog < 0)
         return EINVAL;
     auto description = TRY(open_file_description(sockfd));
@@ -78,7 +78,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 
 ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const*> user_params)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::accept));
     auto params = TRY(copy_typed_from_user(user_params));
 
@@ -145,7 +145,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
 
 ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> user_address, socklen_t user_address_size)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
@@ -158,7 +158,7 @@ ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> use
 
 ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     if (how != SHUT_RD && how != SHUT_WR && how != SHUT_RDWR)
         return EINVAL;
@@ -173,7 +173,7 @@ ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 
 ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*> user_msg, int flags)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     auto msg = TRY(copy_typed_from_user(user_msg));
 
@@ -218,7 +218,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
 
 ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
 
     struct msghdr msg;
@@ -308,7 +308,7 @@ ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 
 ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<Syscall::SC_getsockname_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
     TRY(get_sock_or_peer_name<true>(params));
     return 0;
@@ -316,7 +316,7 @@ ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<Syscall::SC_getsockname_para
 
 ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
     TRY(get_sock_or_peer_name<false>(params));
     return 0;
@@ -324,7 +324,7 @@ ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_para
 
 ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params const*> user_params)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
     int sockfd = params.sockfd;
@@ -347,7 +347,7 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params
 
 ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params const*> user_params)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
     Userspace<void const*> user_value((FlatPtr)params.value);
@@ -362,7 +362,7 @@ ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params
 
 ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<Syscall::SC_socketpair_params const*> user_params)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.domain != AF_LOCAL)

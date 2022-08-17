@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$unlink(int dirfd, Userspace<char const*> user_path, size_t path_length, int flags)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::cpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
 

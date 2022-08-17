@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::sendfd));
     auto socket_description = TRY(open_file_description(sockfd));
     if (!socket_description->is_socket())
@@ -31,7 +31,7 @@ ErrorOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 
 ErrorOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::recvfd));
     auto socket_description = TRY(open_file_description(sockfd));
     if (!socket_description->is_socket())
