@@ -349,37 +349,11 @@ public:
     }
 
 private:
-    ALWAYS_INLINE void do_leave_critical()
-    {
-        VERIFY(m_in_critical > 0);
-        if (m_in_critical == 1) {
-            if (m_in_irq == 0) {
-                deferred_call_execute_pending();
-                VERIFY(m_in_critical == 1);
-            }
-            m_in_critical = 0;
-            if (m_in_irq == 0)
-                check_invoke_scheduler();
-        } else {
-            m_in_critical = m_in_critical - 1;
-        }
-    }
+    void do_leave_critical();
 
 public:
-    ALWAYS_INLINE static void leave_critical()
-    {
-        current().do_leave_critical();
-    }
-
-    ALWAYS_INLINE static u32 clear_critical()
-    {
-        auto prev_critical = in_critical();
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
-        auto& proc = current();
-        if (proc.m_in_irq == 0)
-            proc.check_invoke_scheduler();
-        return prev_critical;
-    }
+    static void leave_critical();
+    static u32 clear_critical();
 
     ALWAYS_INLINE static void restore_critical(u32 prev_critical)
     {
