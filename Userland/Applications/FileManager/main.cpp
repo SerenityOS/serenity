@@ -986,20 +986,21 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(select_all_action));
 
+    auto show_dotfiles_in_view = [&](bool show_dotfiles) {
+        directory_view->set_should_show_dotfiles(show_dotfiles);
+        directories_model->set_should_show_dotfiles(show_dotfiles);
+    };
+
     auto show_dotfiles_action = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
-        directory_view->set_should_show_dotfiles(action.is_checked());
-        directories_model->set_should_show_dotfiles(action.is_checked());
+        show_dotfiles_in_view(action.is_checked());
         refresh_tree_view();
         Config::write_bool("FileManager"sv, "DirectoryView"sv, "ShowDotFiles"sv, action.is_checked());
     });
 
     auto show_dotfiles = Config::read_bool("FileManager"sv, "DirectoryView"sv, "ShowDotFiles"sv, false);
-    directory_view->set_should_show_dotfiles(show_dotfiles);
+    show_dotfiles |= initial_location.contains("/."sv);
     show_dotfiles_action->set_checked(show_dotfiles);
-
-    auto const initial_location_contains_dotfile = initial_location.contains("/."sv);
-    show_dotfiles_action->set_checked(initial_location_contains_dotfile);
-    show_dotfiles_action->on_activation(show_dotfiles_action);
+    show_dotfiles_in_view(show_dotfiles);
 
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
