@@ -3545,6 +3545,11 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject
         // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
         // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
         if (i % 2 == 0) {
+            // If the string contains invalid escapes we get a null expression here, which we then convert
+            // to the expected `undefined` TV.
+            if (value.is_nullish())
+                value = js_undefined();
+
             strings->indexed_properties().append(value);
         } else {
             arguments.append(value);

@@ -63,3 +63,9 @@ test("line continuation in literals (not characters)", () => {
 test("reference error from expressions", () => {
     expect(() => `${b}`).toThrowWithMessage(ReferenceError, "'b' is not defined");
 });
+
+test("invalid escapes should give syntax error", () => {
+    expect("`\\u`").not.toEval();
+    expect("`\\01`").not.toEval();
+    expect("`\\u{10FFFFF}`").not.toEval();
+});
