@@ -24,12 +24,13 @@ void Spinlock::unlock(u32 prev_flags)
     VERIFY(is_locked());
     track_lock_release(m_rank);
     m_lock.store(0, AK::memory_order_release);
+
+    Processor::leave_critical();
+
     if ((prev_flags & 0x200) != 0)
         sti();
     else
         cli();
-
-    Processor::leave_critical();
 }
 
 u32 RecursiveSpinlock::lock()
@@ -60,12 +61,13 @@ void RecursiveSpinlock::unlock(u32 prev_flags)
         track_lock_release(m_rank);
         m_lock.store(0, AK::memory_order_release);
     }
+
+    Processor::leave_critical();
+
     if ((prev_flags & 0x200) != 0)
         sti();
     else
         cli();
-
-    Processor::leave_critical();
 }
 
 }
