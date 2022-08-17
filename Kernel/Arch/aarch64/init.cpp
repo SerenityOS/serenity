@@ -26,6 +26,7 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 
 extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame);
@@ -91,6 +92,17 @@ extern "C" [[noreturn]] void init()
 {
     g_in_early_boot = true;
 
+    // FIXME: Don't hardcode this
+    multiboot_memory_map_t mmap[] = {
+        { sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+            (u64)0x0,
+            (u64)0xA2F000,
+            MULTIBOOT_MEMORY_AVAILABLE }
+    };
+
+    multiboot_memory_map = mmap;
+    multiboot_memory_map_count = 1;
+
     dbgln("Welcome to Serenity OS!");
     dbgln("Imagine this being your ideal operating system.");
     dbgln("Observed deviations from that ideal are shortcomings of your imagination.");
@@ -119,6 +131,9 @@ extern "C" [[noreturn]] void init()
     }
     dmesgln("Starting SerenityOS...");
 
+    dmesgln("Initialize MMU");
+    init_page_tables();
+    Memory::MemoryManager::initialize(0);
     DeviceManagement::initialize();
 
     // Invoke all static global constructors in the kernel.
@@ -133,9 +148,6 @@ extern "C" [[noreturn]] void init()
     auto firmware_version = query_firmware_version();
     dmesgln("Firmware version: {}", firmware_version);
 
-    dmesgln("Initialize MMU");
-    init_page_tables();
-
     auto& timer = RPi::Timer::the();
     timer.set_interrupt_interval_usec(1'000'000);
     timer.enable_interrupt_mode();
@@ -146,6 +158,8 @@ extern "C" [[noreturn]] void init()
     // interrupts are working!
     for (;;)
         asm volatile("wfi");
+
+    VERIFY_NOT_REACHED();
 }
 
 class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
