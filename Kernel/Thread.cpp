@@ -155,6 +155,8 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     ScopedCritical critical;
     VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
+
     SpinlockLocker block_lock(m_block_lock);
     // We need to hold m_block_lock so that nobody can unblock a blocker as soon
     // as it is constructed and registered elsewhere
@@ -168,7 +170,6 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
         return BlockResult::NotBlocked;
     }
 
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
     // Relaxed semantics are fine for timeout_unblocked because we
     // synchronize on the spin locks already.
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
@@ -212,8 +213,8 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
 
     set_state(Thread::State::Blocked);
 
-    scheduler_lock.unlock();
     block_lock.unlock();
+    scheduler_lock.unlock();
 
     dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
     bool did_timeout = false;
@@ -296,8 +297,8 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
 
     set_state(Thread::State::Blocked);
 
-    scheduler_lock.unlock();
     block_lock.unlock();
+    scheduler_lock.unlock();
 
     lock_lock.unlock();
 
