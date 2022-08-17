@@ -95,6 +95,11 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     auto path_parts = KLexicalPath::parts(new_unveiled_path->view());
     auto it = path_parts.begin();
     return m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<FlatPtr> {
+        // NOTE: We have to check again, since the veil may have been locked by another thread
+        //       while we were parsing the arguments.
+        if (unveil_data.state == VeilState::Locked)
+            return EPERM;
+
         auto& matching_node = unveil_data.paths.traverse_until_last_accessible_node(it, path_parts.end());
         if (it.is_end()) {
             // If the path has already been explicitly unveiled, do not allow elevating its permissions.
