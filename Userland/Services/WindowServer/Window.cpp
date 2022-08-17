@@ -19,8 +19,6 @@
 
 namespace WindowServer {
 
-static constexpr Gfx::IntSize s_default_normal_minimum_size = { 50, 50 };
-
 static String default_window_icon_path()
 {
     return "/res/icons/16x16/window.png";
@@ -88,10 +86,6 @@ Window::Window(Core::Object& parent, WindowType type)
     , m_icon(default_window_icon())
     , m_frame(*this)
 {
-    // Set default minimum size for Normal windows
-    if (m_type == WindowType::Normal)
-        m_minimum_size = s_default_normal_minimum_size;
-
     WindowManager::the().add_window(*this);
     frame().window_was_constructed({});
 }
@@ -112,10 +106,6 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, int window_
     , m_icon(default_window_icon())
     , m_frame(*this)
 {
-    // Set default minimum size for Normal windows
-    if (m_type == WindowType::Normal)
-        m_minimum_size = s_default_normal_minimum_size;
-
     if (parent_window)
         set_parent_window(*parent_window);
     WindowManager::the().add_window(*this);
@@ -169,7 +159,7 @@ void Window::set_rect(Gfx::IntRect const& rect)
 
 void Window::set_rect_without_repaint(Gfx::IntRect const& rect)
 {
-    VERIFY(!rect.is_empty());
+    VERIFY(rect.width() >= 0 && rect.height() >= 0);
     if (m_rect == rect)
         return;
     auto old_rect = m_rect;
@@ -248,16 +238,9 @@ void Window::nudge_into_desktop(Screen* target_screen, bool force_titlebar_visib
 
 void Window::set_minimum_size(Gfx::IntSize const& size)
 {
-    if (size.is_null())
-        return;
-
+    VERIFY(size.width() >= 0 && size.height() >= 0);
     if (m_minimum_size == size)
         return;
-
-    // Disallow setting minimum zero widths or heights.
-    if (size.width() == 0 || size.height() == 0)
-        return;
-
     m_minimum_size = size;
 }
 

@@ -450,7 +450,7 @@ private:
     float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
-    Gfx::IntSize m_minimum_size { 1, 1 };
+    Gfx::IntSize m_minimum_size { 0, 0 };
     NonnullRefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Cursor> m_cursor;
     RefPtr<Cursor> m_cursor_override;

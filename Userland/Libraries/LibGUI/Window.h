@@ -278,8 +278,7 @@ private:
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
-    Gfx::IntSize m_minimum_size_when_windowless { 50, 50 };
-    bool m_minimum_size_modified { false };
+    Gfx::IntSize m_minimum_size_when_windowless { 0, 0 };
     String m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;
