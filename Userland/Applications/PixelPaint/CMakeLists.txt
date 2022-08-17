@@ -72,6 +72,7 @@ set(SOURCES
     Tools/Tool.cpp
     Tools/WandSelectTool.cpp
     Tools/ZoomTool.cpp
+    VectorscopeWidget.cpp
     main.cpp
     )
 
