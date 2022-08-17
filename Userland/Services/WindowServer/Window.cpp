@@ -190,52 +190,6 @@ bool Window::apply_minimum_size(Gfx::IntRect& rect)
     return did_size_clamp;
 }
 
-void Window::nudge_into_desktop(Screen* target_screen, bool force_titlebar_visible)
-{
-    if (!target_screen) {
-        // If no explicit target screen was supplied,
-        // guess based on the current frame rectangle
-        target_screen = &Screen::closest_to_rect(rect());
-    }
-    Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(*target_screen, type());
-    auto min_visible = 1;
-    switch (type()) {
-    case WindowType::Normal:
-        min_visible = 30;
-        break;
-    case WindowType::Desktop:
-        set_rect(arena);
-        return;
-    default:
-        break;
-    }
-
-    // Push the frame around such that at least `min_visible` pixels of the *frame* are in the desktop rect.
-    auto old_frame_rect = frame().rect();
-    Gfx::IntRect new_frame_rect = {
-        clamp(old_frame_rect.x(), arena.left() + min_visible - width(), arena.right() - min_visible),
-        clamp(old_frame_rect.y(), arena.top() + min_visible - height(), arena.bottom() - min_visible),
-        old_frame_rect.width(),
-        old_frame_rect.height(),
-    };
-
-    // Make sure that at least half of the titlebar is visible.
-    auto min_frame_y = arena.top() - (y() - old_frame_rect.y()) / 2;
-    if (force_titlebar_visible && new_frame_rect.y() < min_frame_y) {
-        new_frame_rect.set_y(min_frame_y);
-    }
-
-    // Deduce new window rect:
-    Gfx::IntRect new_window_rect = {
-        x() + new_frame_rect.x() - old_frame_rect.x(),
-        y() + new_frame_rect.y() - old_frame_rect.y(),
-        width(),
-        height(),
-    };
-
-    set_rect(new_window_rect);
-}
-
 void Window::set_minimum_size(Gfx::IntSize const& size)
 {
     VERIFY(size.width() >= 0 && size.height() >= 0);
