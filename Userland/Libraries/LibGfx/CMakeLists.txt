@@ -50,6 +50,7 @@ set(SOURCES
     SystemTheme.cpp
     TextDirection.cpp
     TextLayout.cpp
+    TGALoader.cpp
     Triangle.cpp
     WindowTheme.cpp
 )
