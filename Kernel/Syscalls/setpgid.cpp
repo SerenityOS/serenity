@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
     if (pid == 0)
         return sid().value();
@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$setsid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
@@ -47,7 +47,7 @@ ErrorOr<FlatPtr> Process::sys$setsid()
 
 ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
     if (pid == 0)
         return pgid().value();
@@ -59,7 +59,7 @@ ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$getpgrp()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     return pgid().value();
 }
@@ -79,7 +79,7 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
 
 ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
     ProcessID pid = specified_pid ? ProcessID(specified_pid) : this->pid();
     if (specified_pgid < 0) {

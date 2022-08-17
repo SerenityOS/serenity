@@ -14,7 +14,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$purge(int mode)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_no_promises());
     if (!is_superuser())
         return EPERM;

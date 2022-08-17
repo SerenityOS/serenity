@@ -26,7 +26,7 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
 
 ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (!params.path.characters && !params.permissions.characters) {

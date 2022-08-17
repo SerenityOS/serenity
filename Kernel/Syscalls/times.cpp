@@ -10,7 +10,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$times(Userspace<tms*> user_times)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     tms times = {};
     times.tms_utime = m_ticks_in_user;

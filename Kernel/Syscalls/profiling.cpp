@@ -20,7 +20,7 @@ u64 g_profiling_event_mask;
 //       does not fit into a register on 32bit architectures.
 ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> userspace_event_mask)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_no_promises());
 
     auto const event_mask = TRY(copy_typed_from_user(userspace_event_mask));
@@ -77,7 +77,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> 
 
 ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_no_promises());
 
     if (pid == -1) {
@@ -107,7 +107,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_no_promises());
 
     if (pid == -1) {

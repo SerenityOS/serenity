@@ -10,7 +10,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$getrusage(int who, Userspace<rusage*> user_usage)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
 
     rusage usage {};
 

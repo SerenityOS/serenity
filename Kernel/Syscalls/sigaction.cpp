@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::sigaction));
     auto* current_thread = Thread::current();
     u32 previous_signal_mask;
@@ -43,7 +43,7 @@ ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<sigset_t const*> se
 
 ErrorOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     auto pending_signals = Thread::current()->pending_signals();
     TRY(copy_to_user(set, &pending_signals));
@@ -52,7 +52,7 @@ ErrorOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 
 ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<sigaction const*> user_act, Userspace<sigaction*> user_old_act)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::sigaction));
     if (signum < 1 || signum >= NSIG || signum == SIGKILL || signum == SIGSTOP)
         return EINVAL;
@@ -77,7 +77,7 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<sigaction const*> 
 
 ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
     SmapDisabler disabler;
 
@@ -249,7 +249,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
 
 ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<stack_t const*> user_ss, Userspace<stack_t*> user_old_ss)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::sigaction));
 
     if (user_old_ss) {
@@ -298,7 +298,7 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<stack_t const*> user_ss, Use
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigtimedwait.html
 ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<sigset_t const*> set, Userspace<siginfo_t*> info, Userspace<timespec const*> timeout)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::sigaction));
 
     sigset_t set_value;
@@ -329,7 +329,7 @@ ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<sigset_t const*> set, Users
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html
 ErrorOr<FlatPtr> Process::sys$sigsuspend(Userspace<sigset_t const*> mask)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
 
     auto sigmask = TRY(copy_typed_from_user(mask));
 

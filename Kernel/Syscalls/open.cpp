@@ -15,7 +15,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
 
     int dirfd = params.dirfd;
@@ -80,7 +80,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
 
 ErrorOr<FlatPtr> Process::sys$close(int fd)
 {
-    VERIFY_NO_PROCESS_BIG_LOCK(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     auto description = TRY(open_file_description(fd));
     auto result = description->close();

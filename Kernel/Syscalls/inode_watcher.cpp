@@ -15,7 +15,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::rpath));
 
     auto fd_allocation = TRY(allocate_fd());
@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
 
 ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<Syscall::SC_inode_watcher_add_watch_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
@@ -56,7 +56,7 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<Syscall::SC_inod
 
 ErrorOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto description = TRY(open_file_description(fd));
     if (!description->is_inode_watcher())
         return EBADF;
