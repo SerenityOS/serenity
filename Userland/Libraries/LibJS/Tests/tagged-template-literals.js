@@ -105,4 +105,29 @@ describe("tagged template literal functionality", () => {
         expect(raw[1]).toHaveLength(5);
         expect(raw[1]).toBe("\\nbar");
     });
+
+    test("invalid escapes give undefined cooked values but can be accesed in raw form", () => {
+        let calls = 0;
+        let lastValue = null;
+        function noCookedButRaw(values) {
+            ++calls;
+            expect(values).not.toBeNull();
+            expect(values.raw).toHaveLength(1);
+            expect(values.raw[0].length).toBeGreaterThan(0);
+            expect(values.raw[0].charAt(0)).toBe("\\");
+            expect(values[0]).toBeUndefined();
+            lastValue = values.raw[0];
+        }
+        noCookedButRaw`\u`;
+        expect(calls).toBe(1);
+        expect(lastValue).toBe("\\u");
+
+        noCookedButRaw`\01`;
+        expect(calls).toBe(2);
+        expect(lastValue).toBe("\\01");
+
+        noCookedButRaw`\u{10FFFFF}`;
+        expect(calls).toBe(3);
+        expect(lastValue).toBe("\\u{10FFFFF}");
+    });
 });

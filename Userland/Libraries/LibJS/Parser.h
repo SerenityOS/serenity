@@ -142,7 +142,14 @@ public:
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
-    NonnullRefPtr<StringLiteral> parse_string_literal(Token const& token, bool in_template_literal = false);
+
+    enum class StringLiteralType {
+        Normal,
+        NonTaggedTemplate,
+        TaggedTemplate
+    };
+
+    NonnullRefPtr<StringLiteral> parse_string_literal(Token const& token, StringLiteralType string_literal_type = StringLiteralType::Normal, bool* contains_invalid_escape = nullptr);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     ExpressionResult parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right, ForbiddenTokens forbidden = {});
     NonnullRefPtr<Expression> parse_call_expression(NonnullRefPtr<Expression>);
