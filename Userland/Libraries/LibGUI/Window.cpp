@@ -70,7 +70,7 @@ Window::Window(Core::Object* parent)
     , m_menubar(Menubar::construct())
 {
     all_windows->set(this);
-    m_rect_when_windowless = { -5000, -5000, 140, 140 };
+    m_rect_when_windowless = { -5000, -5000, 0, 0 };
     m_title_when_windowless = "GUI::Window";
 
     register_property(
@@ -289,7 +289,8 @@ Gfx::IntSize Window::minimum_size() const
 
 void Window::set_minimum_size(Gfx::IntSize const& size)
 {
-    m_minimum_size_modified = true;
+    VERIFY(size.width() >= 0 && size.height() >= 0);
+    VERIFY(!is_obeying_widget_min_size());
     m_minimum_size_when_windowless = size;
 
     if (is_visible())
@@ -311,14 +312,6 @@ void Window::center_within(Window const& other)
 void Window::set_window_type(WindowType window_type)
 {
     m_window_type = window_type;
-
-    if (!m_minimum_size_modified) {
-        // Apply minimum size defaults.
-        if (m_window_type == WindowType::Normal || m_window_type == WindowType::ToolWindow)
-            m_minimum_size_when_windowless = { 50, 50 };
-        else
-            m_minimum_size_when_windowless = { 1, 1 };
-    }
 }
 
 void Window::make_window_manager(unsigned event_mask)
@@ -1044,7 +1037,10 @@ void Window::update_min_size()
         main_widget()->do_layout();
         if (m_obey_widget_min_size) {
             auto min_size = main_widget()->effective_min_size();
-            set_minimum_size(MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()));
+            Gfx::IntSize size = { MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()) };
+            m_minimum_size_when_windowless = size;
+            if (is_visible())
+                ConnectionToWindowServer::the().async_set_window_minimum_size(m_window_id, size);
         }
     }
 }

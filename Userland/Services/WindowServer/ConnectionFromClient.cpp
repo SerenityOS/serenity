@@ -470,6 +470,9 @@ Messages::WindowServer::GetWindowRectResponse ConnectionFromClient::get_window_r
 
 static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
 {
+    if (window.is_frameless())
+        return { 0, 0 };
+
     // NOTE: Windows with a title bar have a minimum size enforced by the system,
     //       because we want to always keep their title buttons accessible.
     if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow) {
