@@ -16,8 +16,6 @@
 
 namespace Kernel {
 
-// FIXME: Custody needs some locking.
-
 class Custody : public ListedRefCounted<Custody, LockType::Mutex> {
 public:
     static ErrorOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
