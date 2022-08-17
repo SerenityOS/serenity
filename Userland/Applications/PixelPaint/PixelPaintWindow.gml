@@ -77,6 +77,19 @@
                 }
             }
 
+            @GUI::GroupBox {
+                title: "Vectorscope"
+                min_height: 80
+                layout: @GUI::VerticalBoxLayout {
+                    margins: [6]
+                }
+
+                @PixelPaint::VectorscopeWidget {
+                    name: "vectorscope_widget"
+                    preferred_height: "fit"
+                }
+            }
+
             @PixelPaint::ToolPropertiesWidget {
                 name: "tool_properties_widget"
                 max_height: 144
