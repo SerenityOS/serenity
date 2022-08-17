@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,11 +12,11 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
-#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
-class Custody : public ListedRefCounted<Custody, LockType::Mutex> {
+class Custody : public ListedRefCounted<Custody, LockType::Spinlock> {
 public:
     static ErrorOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
@@ -44,7 +44,7 @@ private:
 
 public:
     using AllCustodiesList = IntrusiveList<&Custody::m_all_custodies_list_node>;
-    static MutexProtected<Custody::AllCustodiesList>& all_instances();
+    static SpinlockProtected<Custody::AllCustodiesList>& all_instances();
 };
 
 }
