@@ -121,6 +121,13 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_MAJOR_VERSION" ] ||
     die
 fi
 
+# FIXME: Remove this once #14856 is resolved.
+if [ "$SERENITY_ARCH" = "aarch64" ] && [ "$installed_major_version" -ge "7" ]; then
+    echo "The aarch64 Kernel currently does not support QEMU >= 7.0."
+    echo "Please install QEMU 6.2 or use the QEMU build script: 'QEMU_VERSION=\"qemu-6.2.0\" QEMU_MD5SUM=\"a077669ce58b6ee07ec355e54aad25be\" ./Toolchain/BuildQemu.sh'."
+    die
+fi
+
 NATIVE_WINDOWS_QEMU="0"
 
 if command -v wslpath >/dev/null; then
