@@ -190,7 +190,7 @@ public:
     // section of the shared library. If StringViews are generated directly, the table will be located
     // in the initialized data section. So instead, we generate run-length encoded (RLE) arrays to
     // represent the strings.
-    void generate(SourceGenerator& generator)
+    void generate(SourceGenerator& generator) const
     {
         constexpr size_t max_values_per_row = 300;
         size_t values_in_current_row = 0;
