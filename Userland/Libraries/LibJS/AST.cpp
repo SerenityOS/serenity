@@ -3534,35 +3534,116 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto& vm = interpreter.vm();
+    // NOTE: This is both
+    //  MemberExpression : MemberExpression TemplateLiteral
+    //  CallExpression : CallExpression TemplateLiteral
+    // As the only difference is the first step.
+
+    // 1. Let tagRef be ? Evaluation of MemberExpression.
+    // 1. Let tagRef be ? Evaluation of CallExpression.
+
+    // 2. Let tagFunc be ? GetValue(tagRef).
     auto tag = TRY(m_tag->execute(interpreter, global_object)).release_value();
+
+    // 3. Let thisCall be this CallExpression.
+    // 3. Let thisCall be this MemberExpression.
+    // FIXME: 4. Let tailCall be IsInTailPosition(thisCall).
+
+    // NOTE: A tagged template is a function call where the arguments of the call are derived from a
+    //       TemplateLiteral (13.2.8). The actual arguments include a template object (13.2.8.3)
+    //       and the values produced by evaluating the expressions embedded within the TemplateLiteral.
+    auto template_ = TRY(get_template_object(interpreter, global_object));
+    MarkedVector<Value> arguments(interpreter.vm().heap());
+    arguments.append(template_);
+
     auto& expressions = m_template_literal->expressions();
-    auto* strings = MUST(Array::create(global_object, 0));
-    MarkedVector<Value> arguments(vm.heap());
-    arguments.append(strings);
-    for (size_t i = 0; i < expressions.size(); ++i) {
-        auto value = TRY(expressions[i].execute(interpreter, global_object)).release_value();
-        // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
-        // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
-        if (i % 2 == 0) {
-            // If the string contains invalid escapes we get a null expression here, which we then convert
-            // to the expected `undefined` TV.
-            if (value.is_nullish())
-                value = js_undefined();
 
-            strings->indexed_properties().append(value);
-        } else {
-            arguments.append(value);
-        }
-    }
+    // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
+    // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
+    // So we want all the odd expressions
+    for (size_t i = 1; i < expressions.size(); i += 2)
+        arguments.append(TRY(expressions[i].execute(interpreter, global_object)).release_value());
 
-    auto* raw_strings = MUST(Array::create(global_object, 0));
-    for (auto& raw_string : m_template_literal->raw_strings()) {
-        auto value = TRY(raw_string.execute(interpreter, global_object)).release_value();
-        raw_strings->indexed_properties().append(value);
-    }
-    strings->define_direct_property(vm.names.raw, raw_strings, 0);
+    // 5. Return ? EvaluateCall(tagFunc, tagRef, TemplateLiteral, tailCall).
     return call(global_object, tag, js_undefined(), move(arguments));
+}
+
+// 13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
+ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    // 1. Let realm be the current Realm Record.
+    auto* realm = global_object.associated_realm();
+
+    // 2. Let templateRegistry be realm.[[TemplateMap]].
+    // 3. For each element e of templateRegistry, do
+    //    a. If e.[[Site]] is the same Parse Node as templateLiteral, then
+    //        i. Return e.[[Array]].
+    // NOTE: Instead of caching on the realm we cache on the Parse Node side as
+    //       this makes it easier to track whether it is the same parse node.
+    if (auto cached_value_or_end = m_cached_values.find(realm); cached_value_or_end != m_cached_values.end())
+        return Value { cached_value_or_end->value.cell() };
+
+    // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
+    auto& raw_strings = m_template_literal->raw_strings();
+
+    // 5. Let cookedStrings be TemplateStrings of templateLiteral with argument false.
+    auto& expressions = m_template_literal->expressions();
+
+    // 6. Let count be the number of elements in the List cookedStrings.
+    // NOTE: Only the even expression in expression are the cooked strings
+    //       so we use rawStrings for the size here
+    VERIFY(raw_strings.size() == (expressions.size() + 1) / 2);
+    auto count = raw_strings.size();
+
+    // 7. Assert: count ≤ 2^32 - 1.
+    VERIFY(count <= 0xffffffff);
+
+    // 8. Let template be ! ArrayCreate(count).
+    // NOTE: We don't set count since we push the values using append which
+    //       would then append after count. Same for 9.
+    auto* template_ = MUST(Array::create(global_object, 0));
+
+    // 9. Let rawObj be ! ArrayCreate(count).
+    auto* raw_obj = MUST(Array::create(global_object, 0));
+
+    // 10. Let index be 0.
+    // 11. Repeat, while index < count,
+    for (size_t i = 0; i < count; ++i) {
+        auto cooked_string_index = i * 2;
+        // a. Let prop be ! ToString(𝔽(index)).
+        // b. Let cookedValue be cookedStrings[index].
+        auto cooked_value = TRY(expressions[cooked_string_index].execute(interpreter, global_object)).release_value();
+
+        // NOTE: If the string contains invalid escapes we get a null expression here,
+        //       which we then convert to the expected `undefined` TV. See
+        //       12.9.6.1 Static Semantics: TV, https://tc39.es/ecma262/#sec-static-semantics-tv
+        if (cooked_value.is_null())
+            cooked_value = js_undefined();
+
+        // c. Perform ! DefinePropertyOrThrow(template, prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
+        template_->indexed_properties().append(cooked_value);
+
+        // d. Let rawValue be the String value rawStrings[index].
+        // e. Perform ! DefinePropertyOrThrow(rawObj, prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
+        raw_obj->indexed_properties().append(TRY(raw_strings[i].execute(interpreter, global_object)).release_value());
+
+        // f. Set index to index + 1.
+    }
+
+    // 12. Perform ! SetIntegrityLevel(rawObj, frozen).
+    MUST(raw_obj->set_integrity_level(Object::IntegrityLevel::Frozen));
+
+    // 13. Perform ! DefinePropertyOrThrow(template, "raw", PropertyDescriptor { [[Value]]: rawObj, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
+    template_->define_direct_property(interpreter.vm().names.raw, raw_obj, 0);
+
+    // 14. Perform ! SetIntegrityLevel(template, frozen).
+    MUST(template_->set_integrity_level(Object::IntegrityLevel::Frozen));
+
+    // 15. Append the Record { [[Site]]: templateLiteral, [[Array]]: template } to templateRegistry.
+    m_cached_values.set(realm, make_handle(template_));
+
+    // 16. Return template.
+    return template_;
 }
 
 void TryStatement::dump(int indent) const
