@@ -211,20 +211,21 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAdd
     else
         TRY(m_region_tree.place_specifically(*region, VirtualRange { VirtualAddress { requested_address }, size }));
 
+    ArmedScopeGuard remove_region_from_tree_on_failure = [this, &region]() {
+        // At this point the region is already part of the Process region tree, so we have to make sure
+        // we remove it from the tree before returning an error, or else the Region tree will contain
+        // a dangling pointer to the free'd Region instance
+        m_region_tree.remove(*region);
+    };
+
     if (prot == PROT_NONE) {
         // For PROT_NONE mappings, we don't have to set up any page table mappings.
         // We do still need to attach the region to the page_directory though.
         region->set_page_directory(page_directory());
     } else {
-        auto result = region->map(page_directory(), ShouldFlushTLB::No);
-        if (result.is_error()) [[unlikely]] {
-            // At this point the region is already part of the Process region tree, so we have to make sure
-            // we remove it from the tree before returning this error, or else the Region tree will contain
-            // a dangling pointer to the free'd Region instance
-            m_region_tree.remove(*region);
-            return result.release_error();
-        }
+        TRY(region->map(page_directory(), ShouldFlushTLB::No));
     }
+    remove_region_from_tree_on_failure.disarm();
     return region.leak_ptr();
 }
 
