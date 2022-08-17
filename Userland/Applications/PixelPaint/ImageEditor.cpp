@@ -488,6 +488,8 @@ void ImageEditor::set_pixel_grid_visibility(bool show_pixel_grid)
 
 void ImageEditor::layers_did_change()
 {
+    if (on_modified_change)
+        on_modified_change(true);
     update();
 }
 
