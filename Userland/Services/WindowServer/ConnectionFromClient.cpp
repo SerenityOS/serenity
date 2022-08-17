@@ -453,7 +453,6 @@ Messages::WindowServer::SetWindowRectResponse ConnectionFromClient::set_window_r
     auto new_rect = rect;
     window.apply_minimum_size(new_rect);
     window.set_rect(new_rect);
-    window.nudge_into_desktop(nullptr);
     window.request_update(window.rect());
     return window.rect();
 }
@@ -523,7 +522,6 @@ void ConnectionFromClient::set_window_minimum_size(i32 window_id, Gfx::IntSize c
         auto new_rect = window.rect();
         bool did_size_clamp = window.apply_minimum_size(new_rect);
         window.set_rect(new_rect);
-        window.nudge_into_desktop(nullptr);
         window.request_update(window.rect());
 
         if (did_size_clamp)
@@ -610,7 +608,6 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
             max(minimum_size.height(), system_window_minimum_size.height()) });
         bool did_size_clamp = window->apply_minimum_size(new_rect);
         window->set_rect(new_rect);
-        window->nudge_into_desktop(nullptr);
 
         if (did_size_clamp)
             window->refresh_client_size();

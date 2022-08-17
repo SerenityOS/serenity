@@ -190,7 +190,6 @@ public:
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(Gfx::IntRect const&);
     bool apply_minimum_size(Gfx::IntRect&);
-    void nudge_into_desktop(Screen*, bool force_titlebar_visible = true);
 
     Gfx::IntSize minimum_size() const { return m_minimum_size; }
     void set_minimum_size(Gfx::IntSize const&);
