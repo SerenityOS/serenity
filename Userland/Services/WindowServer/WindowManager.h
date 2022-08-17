@@ -472,6 +472,7 @@ private:
 
     u8 m_keyboard_modifiers { 0 };
     u8 m_last_processed_buttons { MouseButton::None };
+    Vector<KeyEvent> m_buffered_keys;
 
     NonnullRefPtr<WindowSwitcher> m_switcher;
     NonnullRefPtr<KeymapSwitcher> m_keymap_switcher;

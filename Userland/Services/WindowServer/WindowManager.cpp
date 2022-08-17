@@ -1218,8 +1218,12 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent const& e
     // a move in that other unrelated window, and other silly shenanigans.
     deliver_mouse_event(*input_tracking_window, event, true);
 
-    if (event.type() == Event::MouseUp && event.buttons() == 0)
+    if (event.type() == Event::MouseUp && event.buttons() == 0) {
         set_automatic_cursor_tracking_window(nullptr);
+        for (KeyEvent key : m_buffered_keys)
+            process_key_event(key);
+        m_buffered_keys.clear();
+    }
 
     return true;
 }
@@ -1589,6 +1593,11 @@ void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& prev
 
 void WindowManager::process_key_event(KeyEvent& event)
 {
+    if (automatic_cursor_tracking_window()) {
+        m_buffered_keys.append(event);
+        return;
+    }
+
     m_keyboard_modifiers = event.modifiers();
 
     // Escape key cancels an ongoing drag.
