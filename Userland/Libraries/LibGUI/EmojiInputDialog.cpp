@@ -62,7 +62,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     int dialog_width = button_size * columns + magic_offset;
     int dialog_height = button_size * rows;
 
-    set_minimum_size(dialog_width, dialog_height);
+    resize(dialog_width, dialog_height);
     set_frameless(true);
 
     for (size_t row = 0; row < rows && index < code_points.size(); ++row) {

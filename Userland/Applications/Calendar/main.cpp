@@ -35,7 +35,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Calendar");
     window->resize(600, 480);
-    window->set_minimum_size(171, 141);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());

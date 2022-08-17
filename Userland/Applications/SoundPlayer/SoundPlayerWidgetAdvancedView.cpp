@@ -29,7 +29,6 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     , m_window(window)
 {
     window.resize(455, 350);
-    window.set_minimum_size(600, 130);
     window.set_resizable(true);
     set_fill_with_background_color(true);
 
