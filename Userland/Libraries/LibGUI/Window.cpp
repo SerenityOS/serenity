@@ -208,6 +208,8 @@ void Window::hide()
     if (GUI::Application::in_teardown())
         return;
 
+    m_rect_when_windowless = rect();
+
     auto destroyed_window_ids = ConnectionToWindowServer::the().destroy_window(m_window_id);
     server_did_destroy();
 
@@ -468,7 +470,7 @@ void Window::handle_resize_event(ResizeEvent& event)
         m_pending_paint_event_rects.clear_with_capacity();
         m_pending_paint_event_rects.append({ {}, new_size });
     }
-    m_rect_when_windowless = { {}, new_size };
+    m_rect_when_windowless.set_size(new_size);
     if (m_main_widget)
         m_main_widget->set_relative_rect({ {}, new_size });
 }
