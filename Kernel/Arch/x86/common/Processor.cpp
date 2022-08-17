@@ -990,7 +990,7 @@ void Processor::exit_trap(TrapFrame& trap)
 
 void Processor::check_invoke_scheduler()
 {
-    InterruptDisabler disabler;
+    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
     VERIFY(&Processor::current() == this);
@@ -1667,6 +1667,7 @@ u64 Processor::time_spent_idle() const
 
 void Processor::leave_critical()
 {
+    InterruptDisabler disabler;
     current().do_leave_critical();
 }
 
@@ -1688,6 +1689,7 @@ void Processor::do_leave_critical()
 
 u32 Processor::clear_critical()
 {
+    InterruptDisabler disabler;
     auto prev_critical = in_critical();
     write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
     auto& proc = current();
