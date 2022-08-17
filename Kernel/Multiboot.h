@@ -43,7 +43,12 @@ struct multiboot_mmap_entry {
     u64 addr;
     u64 len;
     u32 type;
+#if ARCH(AARCH64)
+    // __attribute__((packed)) causes alignment issues on aarch64
+};
+#else
 } __attribute__((packed));
+#endif
 typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
 #define MULTIBOOT_INFO_FRAMEBUFFER_INFO (1 << 12)

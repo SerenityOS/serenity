@@ -487,8 +487,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd_kernel));
             PageDirectoryEntry& pde = pd[page_directory_index];
 
+            // FIXME: port quickmap_page to aarch64
+#if !ARCH(AARCH64)
             VERIFY(!pde.is_present()); // Nothing should be using this PD yet
-
+#endif
             // We can't use ensure_pte quite yet!
             pde.set_page_table_base(pt_paddr.get());
             pde.set_user_allowed(false);

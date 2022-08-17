@@ -39,4 +39,9 @@ void Processor::initialize(u32 cpu)
         asm volatile("wfi");
 }
 
+void Processor::flush_tlb_local(VirtualAddress, size_t)
+{
+    // FIXME: Implement this
+}
+
 }
