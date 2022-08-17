@@ -134,7 +134,7 @@ public:
     constexpr u8 blue() const { return m_value & 0xff; }
     constexpr u8 alpha() const { return (m_value >> 24) & 0xff; }
 
-    void set_alpha(u8 value)
+    constexpr void set_alpha(u8 value)
     {
         m_value &= 0x00ffffff;
         m_value |= value << 24;
