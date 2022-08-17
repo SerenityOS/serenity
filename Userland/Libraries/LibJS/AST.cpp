@@ -339,9 +339,15 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
         return ThisAndCallee { this_value, callee };
     }
 
+    Value this_value = js_undefined();
+    if (callee_reference.is_environment_reference()) {
+        if (Object* base_object = callee_reference.base_environment().with_base_object(); base_object != nullptr)
+            this_value = base_object;
+    }
+
     // [[Call]] will handle that in non-strict mode the this value becomes the global object
     return ThisAndCallee {
-        js_undefined(),
+        this_value,
         callee_reference.is_unresolvable()
             ? TRY(m_callee->execute(interpreter, global_object)).release_value()
             : TRY(callee_reference.get_value(global_object))
