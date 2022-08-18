@@ -237,30 +237,20 @@ bool Region::map_individual_page_impl(size_t page_index)
     return true;
 }
 
-bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
+bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
 {
-    if (!m_page_directory)
-        return true; // not an error, region may have not yet mapped it
-    if (!translate_vmobject_page(page_index))
-        return true; // not an error, region doesn't map this page
     SpinlockLocker page_lock(m_page_directory->get_lock());
-    SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker mm_lock(s_mm_lock);
+    SpinlockLocker lock(m_vmobject->m_lock);
+
+    // NOTE: `page_index` is a VMObject page index, so first we convert it to a Region page index.
+    if (!translate_vmobject_page(page_index))
+        return false;
+
     VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
         MemoryManager::flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
-    return success;
-}
-
-bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
-{
-    auto& vmobject = this->vmobject();
-    bool success = true;
-    SpinlockLocker lock(vmobject.m_lock);
-    vmobject.for_each_region([&](auto& region) {
-        if (!region.do_remap_vmobject_page(page_index, with_flush))
-            success = false;
-    });
     return success;
 }
 
