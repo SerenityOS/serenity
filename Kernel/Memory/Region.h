@@ -152,7 +152,7 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    PhysicalPage const* physical_page(size_t index) const;
+    RefPtr<PhysicalPage> physical_page(size_t index) const;
     RefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
     [[nodiscard]] size_t offset_in_vmobject() const

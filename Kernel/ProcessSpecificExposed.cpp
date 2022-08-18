@@ -293,7 +293,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
 
             StringBuilder pagemap_builder;
             for (size_t i = 0; i < region.page_count(); ++i) {
-                auto const* page = region.physical_page(i);
+                auto page = region.physical_page(i);
                 if (!page)
                     pagemap_builder.append('N');
                 else if (page->is_shared_zero_page() || page->is_lazy_committed_page())

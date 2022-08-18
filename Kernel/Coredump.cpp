@@ -200,7 +200,7 @@ ErrorOr<void> Coredump::write_regions()
         region.remap();
 
         for (size_t i = 0; i < region.page_count(); i++) {
-            auto const* page = region.physical_page(i);
+            auto page = region.physical_page(i);
             auto src_buffer = [&]() -> ErrorOr<UserOrKernelBuffer> {
                 if (page)
                     return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);

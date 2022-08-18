@@ -164,7 +164,7 @@ size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        auto const* page = physical_page(i);
+        auto page = physical_page(i);
         if (page && !page->is_shared_zero_page() && !page->is_lazy_committed_page())
             bytes += PAGE_SIZE;
     }
@@ -175,7 +175,7 @@ size_t Region::amount_shared() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        auto const* page = physical_page(i);
+        auto page = physical_page(i);
         if (page && page->ref_count() > 1 && !page->is_shared_zero_page() && !page->is_lazy_committed_page())
             bytes += PAGE_SIZE;
     }
@@ -367,6 +367,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             return handle_inode_fault(page_index_in_region);
         }
 
+        SpinlockLocker vmobject_locker(vmobject().m_lock);
         auto& page_slot = physical_page_slot(page_index_in_region);
         if (page_slot->is_lazy_committed_page()) {
             auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
@@ -388,7 +389,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
         dbgln_if(PAGE_FAULT_DEBUG, "PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-        auto* phys_page = physical_page(page_index_in_region);
+        auto phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_zero_fault(page_index_in_region);
@@ -404,10 +405,10 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
+    SpinlockLocker locker(vmobject().m_lock);
+
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-
-    SpinlockLocker locker(vmobject().m_lock);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
         dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
@@ -541,14 +542,16 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     return PageFaultResponse::Continue;
 }
 
-PhysicalPage const* Region::physical_page(size_t index) const
+RefPtr<PhysicalPage> Region::physical_page(size_t index) const
 {
+    SpinlockLocker vmobject_locker(vmobject().m_lock);
     VERIFY(index < page_count());
     return vmobject().physical_pages()[first_page_index() + index];
 }
 
 RefPtr<PhysicalPage>& Region::physical_page_slot(size_t index)
 {
+    VERIFY(vmobject().m_lock.is_locked_by_current_processor());
     VERIFY(index < page_count());
     return vmobject().physical_pages()[first_page_index() + index];
 }
