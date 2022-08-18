@@ -58,6 +58,11 @@ ErrorOr<FlatPtr> page_round_up(FlatPtr x)
 // run. If we do, then Singleton would get re-initialized, causing
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
+
+// The MM lock protects:
+// - all data members of MemoryManager
+// - the quickmap mechanism
+// - the PTE/PDE mapping mechanism
 RecursiveSpinlock s_mm_lock { LockRank::MemoryManager };
 
 MemoryManager& MemoryManager::the()
