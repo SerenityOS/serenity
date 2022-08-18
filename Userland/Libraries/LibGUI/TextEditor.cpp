@@ -28,6 +28,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/StandardCursor.h>
 #include <LibSyntax/Highlighter.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -309,6 +310,12 @@ void TextEditor::mousemove_event(MouseEvent& event)
         did_update_selection();
         update();
         return;
+    }
+
+    if (m_ruler_visible && (ruler_rect_in_inner_coordinates().contains(event.position()))) {
+        set_override_cursor(Gfx::StandardCursor::None);
+    } else {
+        set_editing_cursor();
     }
 }
 
@@ -1672,6 +1679,11 @@ void TextEditor::set_mode(const Mode mode)
         VERIFY_NOT_REACHED();
     }
 
+    set_editing_cursor();
+}
+
+void TextEditor::set_editing_cursor()
+{
     if (!is_displayonly())
         set_override_cursor(Gfx::StandardCursor::IBeam);
     else

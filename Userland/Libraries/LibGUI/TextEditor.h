@@ -95,6 +95,8 @@ public:
     bool is_displayonly() const { return m_mode == DisplayOnly; }
     void set_mode(const Mode);
 
+    void set_editing_cursor();
+
     bool is_ruler_visible() const { return m_ruler_visible; }
     void set_ruler_visible(bool);
 
