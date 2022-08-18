@@ -58,7 +58,7 @@ protected:
     Spinlock m_cq_lock { LockRank::Interrupts };
     RefPtr<AsyncBlockDeviceRequest> m_current_request;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
-    Spinlock m_request_lock;
+    Spinlock m_request_lock { LockRank::None };
 
 private:
     u16 m_qid {};

@@ -70,6 +70,7 @@ private:
     UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, StringView name)
         : m_pool_name(name)
         , m_pool_region(move(pool_memory_block))
+        , m_pool_lock(LockRank::None)
     {
         // Go through the number of descriptors to create in the pool, and create a virtual/physical address mapping
         for (size_t i = 0; i < PAGE_SIZE / sizeof(T); i++) {

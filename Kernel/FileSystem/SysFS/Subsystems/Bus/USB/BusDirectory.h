@@ -27,7 +27,7 @@ public:
 
 private:
     explicit SysFSUSBBusDirectory(SysFSBusDirectory&);
-    mutable Spinlock m_lock;
+    mutable Spinlock m_lock { LockRank::None };
 };
 
 }

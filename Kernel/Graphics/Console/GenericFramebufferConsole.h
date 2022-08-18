@@ -81,7 +81,7 @@ protected:
 
     virtual void clear_glyph(size_t x, size_t y) override;
 
-    mutable Spinlock m_lock;
+    mutable Spinlock m_lock { LockRank::None };
 };
 
 }

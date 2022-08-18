@@ -29,7 +29,7 @@ private:
 
     // Note: All read and writes must be done with a spinlock because
     // Linux says that CPU might deadlock otherwise if access is not serialized.
-    Spinlock m_config_lock;
+    Spinlock m_config_lock { LockRank::None };
 };
 
 }

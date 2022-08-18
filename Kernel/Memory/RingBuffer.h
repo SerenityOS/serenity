@@ -32,7 +32,7 @@ private:
     RingBuffer(NonnullOwnPtr<Memory::Region> region, size_t capacity);
 
     NonnullOwnPtr<Memory::Region> m_region;
-    Spinlock m_lock;
+    Spinlock m_lock { LockRank::None };
     size_t m_start_of_used {};
     size_t m_num_used_bytes {};
     size_t m_capacity_in_bytes {};

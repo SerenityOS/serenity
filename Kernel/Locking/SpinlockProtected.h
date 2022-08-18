@@ -47,8 +47,9 @@ private:
 
 public:
     template<typename... Args>
-    SpinlockProtected(Args&&... args)
+    SpinlockProtected(LockRank rank, Args&&... args)
         : m_value(forward<Args>(args)...)
+        , m_spinlock(rank)
     {
     }
 

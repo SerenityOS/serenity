@@ -35,7 +35,7 @@ private:
     virtual StringView class_name() const override { return "PTYMultiplexer"sv; }
 
     static constexpr size_t max_pty_pairs = 64;
-    SpinlockProtected<Vector<unsigned, max_pty_pairs>> m_freelist;
+    SpinlockProtected<Vector<unsigned, max_pty_pairs>> m_freelist { LockRank::None };
 };
 
 }

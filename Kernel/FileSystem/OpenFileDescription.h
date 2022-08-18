@@ -155,6 +155,6 @@ private:
         FIFO::Direction fifo_direction : 2 { FIFO::Direction::Neither };
     };
 
-    SpinlockProtected<State> m_state;
+    SpinlockProtected<State> m_state { LockRank::None };
 };
 }

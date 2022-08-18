@@ -63,7 +63,7 @@ private:
 
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;
-    SpinlockProtected<IntrusiveList<&WorkItem::m_node>> m_items;
+    SpinlockProtected<IntrusiveList<&WorkItem::m_node>> m_items { LockRank::None };
 };
 
 }

@@ -153,7 +153,7 @@ private:
     void do_write(u8 port, u8 data);
     u8 do_read(u8 port);
 
-    Spinlock m_lock;
+    Spinlock m_lock { LockRank::None };
     bool m_first_port_available { false };
     bool m_second_port_available { false };
     bool m_is_dual_channel { false };

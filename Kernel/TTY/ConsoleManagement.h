@@ -39,8 +39,8 @@ public:
 private:
     NonnullRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
     VirtualConsole* m_active_console { nullptr };
-    Spinlock m_lock;
-    RecursiveSpinlock m_tty_write_lock;
+    Spinlock m_lock { LockRank::None };
+    RecursiveSpinlock m_tty_write_lock { LockRank::None };
 };
 
 };

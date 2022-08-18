@@ -87,7 +87,7 @@ private:
     RefPtr<FakeWritesFramebufferVMObject> m_fake_writes_framebuffer_vmobject;
     RefPtr<RealWritesFramebufferVMObject> m_real_writes_framebuffer_vmobject;
     bool m_writes_are_faked { false };
-    mutable RecursiveSpinlock m_writes_state_lock;
+    mutable RecursiveSpinlock m_writes_state_lock { LockRank::None };
     CommittedPhysicalPageSet m_committed_pages;
 };
 

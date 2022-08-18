@@ -98,7 +98,7 @@ private:
     RefPtr<Inode> m_root_inode;
     RefPtr<Custody> m_root_custody;
 
-    SpinlockProtected<Vector<Mount, 16>> m_mounts;
+    SpinlockProtected<Vector<Mount, 16>> m_mounts { LockRank::None };
 };
 
 }

@@ -53,8 +53,8 @@ private:
     Vector<Capability> get_capabilities(Address);
     Optional<u8> get_capabilities_pointer(Address address);
 
-    mutable RecursiveSpinlock m_access_lock;
-    mutable Spinlock m_scan_lock;
+    mutable RecursiveSpinlock m_access_lock { LockRank::None };
+    mutable Spinlock m_scan_lock { LockRank::None };
 
     HashMap<u32, NonnullOwnPtr<HostController>> m_host_controllers;
     Vector<DeviceIdentifier> m_device_identifiers;

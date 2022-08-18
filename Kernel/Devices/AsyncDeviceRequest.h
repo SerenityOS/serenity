@@ -151,7 +151,7 @@ private:
     WaitQueue m_queue;
     NonnullRefPtr<Process> m_process;
     void* m_private { nullptr };
-    mutable Spinlock m_lock;
+    mutable Spinlock m_lock { LockRank::None };
 };
 
 }

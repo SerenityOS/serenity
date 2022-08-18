@@ -14,7 +14,7 @@
 // Output bytes to kernel debug port 0xE9 (Bochs console). It's very handy.
 #define CONSOLE_OUT_TO_BOCHS_DEBUG_PORT
 
-static Kernel::Spinlock g_console_lock;
+static Kernel::Spinlock g_console_lock { LockRank::None };
 
 UNMAP_AFTER_INIT NonnullRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {

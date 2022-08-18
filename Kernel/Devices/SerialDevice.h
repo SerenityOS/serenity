@@ -130,7 +130,7 @@ private:
     bool m_break_enable { false };
     u8 m_modem_control { 0 };
     bool m_last_put_char_was_carriage_return { false };
-    Spinlock m_serial_lock;
+    Spinlock m_serial_lock { LockRank::None };
 };
 
 }

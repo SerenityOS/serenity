@@ -58,7 +58,7 @@ private:
     // Here to ensure it's not garbage collected at the end of open()
     OwnPtr<Memory::Region> m_kernel_region;
 
-    Spinlock m_lock;
+    Spinlock m_lock { LockRank::None };
 };
 
 }

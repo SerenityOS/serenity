@@ -22,7 +22,7 @@
 
 namespace Kernel {
 
-RecursiveSpinlock g_scheduler_lock;
+RecursiveSpinlock g_scheduler_lock { LockRank::None };
 
 static u32 time_slice_for(Thread const& thread)
 {
@@ -49,7 +49,7 @@ struct ThreadReadyQueues {
 
 static Singleton<SpinlockProtected<ThreadReadyQueues>> g_ready_queues;
 
-static SpinlockProtected<TotalTimeScheduled> g_total_time_scheduled;
+static SpinlockProtected<TotalTimeScheduled> g_total_time_scheduled { LockRank::None };
 
 // The Scheduler::current_time function provides a current time for scheduling purposes,
 // which may not necessarily relate to wall time

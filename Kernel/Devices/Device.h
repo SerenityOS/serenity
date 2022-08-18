@@ -88,7 +88,7 @@ private:
 
     State m_state { State::Normal };
 
-    Spinlock m_requests_lock;
+    Spinlock m_requests_lock { LockRank::None };
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
 
 protected:

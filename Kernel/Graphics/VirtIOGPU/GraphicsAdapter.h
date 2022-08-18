@@ -124,7 +124,7 @@ private:
 
     // Synchronous commands
     WaitQueue m_outstanding_request;
-    Spinlock m_operation_lock;
+    Spinlock m_operation_lock { LockRank::None };
     NonnullOwnPtr<Memory::Region> m_scratch_space;
 };
 }
