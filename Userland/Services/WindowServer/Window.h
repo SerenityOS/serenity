@@ -455,7 +455,6 @@ private:
     RefPtr<Cursor> m_cursor_override;
     WindowFrame m_frame;
     Gfx::DisjointRectSet m_pending_paint_rects;
-    Gfx::IntRect m_unmaximized_rect;
     Gfx::IntRect m_rect_in_applet_area;
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
