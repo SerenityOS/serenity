@@ -471,11 +471,12 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
+    auto& vmobject_physical_page_slot = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
     {
+        // NOTE: The VMObject lock is required when manipulating the VMObject's physical page slot.
         SpinlockLocker locker(inode_vmobject.m_lock);
-        if (!vmobject_physical_page_entry.is_null()) {
+        if (!vmobject_physical_page_slot.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
             if (!remap_vmobject_page(page_index_in_vmobject))
                 return PageFaultResponse::OutOfMemory;
@@ -506,9 +507,25 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
 
+    // Allocate a new physical page, and copy the read inode contents into it.
+    auto new_physical_page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::No);
+    if (new_physical_page_or_error.is_error()) {
+        dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
+        return PageFaultResponse::OutOfMemory;
+    }
+    auto new_physical_page = new_physical_page_or_error.release_value();
+    {
+        // NOTE: The MM lock is required for quick-mapping.
+        SpinlockLocker mm_locker(s_mm_lock);
+        u8* dest_ptr = MM.quickmap_page(*new_physical_page);
+        memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+        MM.unquickmap_page();
+    }
+
+    // NOTE: The VMObject lock is required when manipulating the VMObject's physical page slot.
     SpinlockLocker locker(inode_vmobject.m_lock);
 
-    if (!vmobject_physical_page_entry.is_null()) {
+    if (!vmobject_physical_page_slot.is_null()) {
         // Someone else faulted in this page while we were reading from the inode.
         // No harm done (other than some duplicate work), remap the page here and return.
         dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
@@ -517,19 +534,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    auto vmobject_physical_page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::No);
-    if (vmobject_physical_page_or_error.is_error()) {
-        dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
-        return PageFaultResponse::OutOfMemory;
-    }
-    vmobject_physical_page_entry = vmobject_physical_page_or_error.release_value();
-
-    {
-        SpinlockLocker mm_locker(s_mm_lock);
-        u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
-        memcpy(dest_ptr, page_buffer, PAGE_SIZE);
-        MM.unquickmap_page();
-    }
+    vmobject_physical_page_slot = move(new_physical_page);
 
     if (!remap_vmobject_page(page_index_in_vmobject))
         return PageFaultResponse::OutOfMemory;
