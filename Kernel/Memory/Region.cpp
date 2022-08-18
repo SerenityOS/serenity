@@ -531,4 +531,16 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     return PageFaultResponse::Continue;
 }
 
+PhysicalPage const* Region::physical_page(size_t index) const
+{
+    VERIFY(index < page_count());
+    return vmobject().physical_pages()[first_page_index() + index];
+}
+
+RefPtr<PhysicalPage>& Region::physical_page_slot(size_t index)
+{
+    VERIFY(index < page_count());
+    return vmobject().physical_pages()[first_page_index() + index];
+}
+
 }
