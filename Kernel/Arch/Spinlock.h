@@ -16,7 +16,7 @@ class Spinlock {
     AK_MAKE_NONMOVABLE(Spinlock);
 
 public:
-    Spinlock(LockRank rank = LockRank::None)
+    Spinlock(LockRank rank)
         : m_rank(rank)
     {
     }
@@ -48,7 +48,7 @@ class RecursiveSpinlock {
     AK_MAKE_NONMOVABLE(RecursiveSpinlock);
 
 public:
-    RecursiveSpinlock(LockRank rank = LockRank::None)
+    RecursiveSpinlock(LockRank rank)
         : m_rank(rank)
     {
     }

@@ -135,7 +135,7 @@ protected:
     }
 
     mutable Mutex m_lock;
-    Spinlock m_hard_lock;
+    Spinlock m_hard_lock { LockRank::None };
 
     EntropySource m_entropy_source;
 

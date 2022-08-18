@@ -66,11 +66,11 @@ private:
 
     private:
         Plan9FS& m_fs;
-        mutable Spinlock m_lock;
+        mutable Spinlock m_lock { LockRank::None };
     };
 
     struct ReceiveCompletion : public RefCounted<ReceiveCompletion> {
-        mutable Spinlock lock;
+        mutable Spinlock lock { LockRank::None };
         bool completed { false };
         const u16 tag;
         OwnPtr<Message> message;
@@ -139,7 +139,7 @@ private:
     Plan9FSBlockerSet m_completion_blocker;
     HashMap<u16, NonnullRefPtr<ReceiveCompletion>> m_completions;
 
-    Spinlock m_thread_lock;
+    Spinlock m_thread_lock { LockRank::None };
     RefPtr<Thread> m_thread;
     Atomic<bool> m_thread_running { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_thread_shutdown { false };

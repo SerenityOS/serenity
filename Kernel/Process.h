@@ -815,7 +815,7 @@ private:
     SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
     SpinlockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
 
-    SpinlockProtected<Thread::ListInProcess> m_thread_list;
+    SpinlockProtected<Thread::ListInProcess> m_thread_list { LockRank::None };
 
     MutexProtected<OpenFileDescriptions> m_fds;
 
@@ -859,7 +859,7 @@ private:
         OwnPtr<KString> value;
     };
 
-    SpinlockProtected<Array<CoredumpProperty, 4>> m_coredump_properties;
+    SpinlockProtected<Array<CoredumpProperty, 4>> m_coredump_properties { LockRank::None };
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;

@@ -57,13 +57,13 @@ private:
     size_t generate_minor_device_number_for_mouse();
     size_t generate_minor_device_number_for_keyboard();
 
-    SpinlockProtected<KeymapData> m_keymap_data;
+    SpinlockProtected<KeymapData> m_keymap_data { LockRank::None };
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
     RefPtr<I8042Controller> m_i8042_controller;
     NonnullRefPtrVector<HIDDevice> m_hid_devices;
-    Spinlock m_client_lock;
+    Spinlock m_client_lock { LockRank::None };
 };
 
 class KeyboardClient {

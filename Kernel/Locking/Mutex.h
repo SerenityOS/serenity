@@ -116,9 +116,11 @@ private:
             return mode == Mode::Exclusive ? exclusive : shared;
         }
     };
-    SpinlockProtected<BlockedThreadLists> m_blocked_thread_lists;
+    // FIXME: Use a specific lock rank passed by constructor.
+    SpinlockProtected<BlockedThreadLists> m_blocked_thread_lists { LockRank::None };
 
-    mutable Spinlock m_lock;
+    // FIXME: See above.
+    mutable Spinlock m_lock { LockRank::None };
 
 #if LOCK_SHARED_UPGRADE_DEBUG
     HashMap<Thread*, u32> m_shared_holders_map;

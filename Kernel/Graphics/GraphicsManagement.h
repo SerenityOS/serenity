@@ -58,9 +58,9 @@ private:
 
     unsigned m_current_minor_number { 0 };
 
-    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes;
+    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes { LockRank::None };
 
-    RecursiveSpinlock m_main_vga_lock;
+    RecursiveSpinlock m_main_vga_lock { LockRank::None };
     bool m_vga_access_is_disabled { false };
 };
 

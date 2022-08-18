@@ -382,7 +382,8 @@ public:
         bool add_to_blocker_set(BlockerSet&, void* = nullptr);
         void set_blocker_set_raw_locked(BlockerSet* blocker_set) { m_blocker_set = blocker_set; }
 
-        mutable RecursiveSpinlock m_lock;
+        // FIXME: Figure out whether this can be Thread.
+        mutable RecursiveSpinlock m_lock { LockRank::None };
 
     private:
         BlockerSet* m_blocker_set { nullptr };
@@ -500,7 +501,8 @@ public:
             blockers_to_append.clear();
         }
 
-        mutable Spinlock m_lock;
+        // FIXME: Check whether this can be Thread.
+        mutable Spinlock m_lock { LockRank::None };
 
     private:
         Vector<BlockerInfo, 4> m_blockers;
@@ -1227,7 +1229,7 @@ private:
     void reset_fpu_state();
 
     mutable RecursiveSpinlock m_lock { LockRank::Thread };
-    mutable RecursiveSpinlock m_block_lock;
+    mutable RecursiveSpinlock m_block_lock { LockRank::None };
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     ThreadRegisters m_regs {};
@@ -1274,7 +1276,7 @@ private:
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
-    Spinlock m_holding_locks_lock;
+    Spinlock m_holding_locks_lock { LockRank::None };
     Vector<HoldingLockInfo> m_holding_locks_list;
 #endif
 

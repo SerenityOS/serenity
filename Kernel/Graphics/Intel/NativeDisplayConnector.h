@@ -154,7 +154,7 @@ private:
 
     Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
 
-    mutable Spinlock m_registers_lock;
+    mutable Spinlock m_registers_lock { LockRank::None };
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
 
     const PhysicalAddress m_registers;

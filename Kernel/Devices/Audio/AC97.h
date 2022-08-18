@@ -144,7 +144,7 @@ private:
     private:
         IOAddress m_channel_base;
         AC97& m_device;
-        SpinlockProtected<bool> m_dma_running { false };
+        SpinlockProtected<bool> m_dma_running { LockRank::None, false };
         StringView m_name;
     };
 

@@ -14,6 +14,7 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Net/NetworkAdapter.h>
 
 namespace Kernel {
 
@@ -41,7 +42,7 @@ public:
 private:
     RefPtr<NetworkAdapter> determine_network_device(PCI::DeviceIdentifier const&) const;
 
-    SpinlockProtected<NonnullRefPtrVector<NetworkAdapter>> m_adapters;
+    SpinlockProtected<NonnullRefPtrVector<NetworkAdapter>> m_adapters { LockRank::None };
     RefPtr<NetworkAdapter> m_loopback_adapter;
 };
 

@@ -117,7 +117,7 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
-    Spinlock m_lock;
+    Spinlock m_lock { LockRank::None };
 };
 
 class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {

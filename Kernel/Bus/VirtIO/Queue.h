@@ -96,7 +96,7 @@ private:
     QueueDriver* m_driver { nullptr };
     QueueDevice* m_device { nullptr };
     NonnullOwnPtr<Memory::Region> m_queue_region;
-    Spinlock m_lock;
+    Spinlock m_lock { LockRank::None };
 
     friend class QueueChain;
 };

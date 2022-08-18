@@ -60,6 +60,6 @@ private:
     // Note: This lock is intended to be locked when doing changes to HBA registers
     // that affect its core functionality in a manner that controls all attached storage devices
     // to the HBA SATA ports.
-    mutable Spinlock m_hba_control_lock;
+    mutable Spinlock m_hba_control_lock { LockRank::None };
 };
 }

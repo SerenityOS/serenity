@@ -14,7 +14,7 @@
 namespace Kernel {
 
 static Singleton<TimerQueue> s_the;
-static Spinlock g_timerqueue_lock;
+static Spinlock g_timerqueue_lock { LockRank::None };
 
 Time Timer::remaining() const
 {

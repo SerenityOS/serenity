@@ -88,7 +88,7 @@ protected:
 
     SysFSDirectory() {};
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
-    ChildList m_child_components;
+    ChildList m_child_components { LockRank::None };
 };
 
 }

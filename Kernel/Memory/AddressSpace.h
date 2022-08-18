@@ -67,7 +67,7 @@ public:
 private:
     AddressSpace(NonnullRefPtr<PageDirectory>, VirtualRange total_range);
 
-    mutable RecursiveSpinlock m_lock;
+    mutable RecursiveSpinlock m_lock { LockRank::None };
 
     RefPtr<PageDirectory> m_page_directory;
 

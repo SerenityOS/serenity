@@ -32,7 +32,7 @@ public:
 
 private:
     NonnullRefPtr<SysFSRootDirectory> m_root_directory;
-    Spinlock m_root_directory_lock;
+    Spinlock m_root_directory_lock { LockRank::None };
 };
 
 }

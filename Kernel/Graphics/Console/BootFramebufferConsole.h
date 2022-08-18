@@ -42,7 +42,7 @@ protected:
     OwnPtr<Memory::Region> m_framebuffer;
 #endif
     u8* m_framebuffer_data {};
-    mutable Spinlock m_lock;
+    mutable Spinlock m_lock { LockRank::None };
 };
 
 }

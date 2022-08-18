@@ -72,7 +72,7 @@ private:
 #else
     RefPtr<PhysicalPage> m_directory_pages[4];
 #endif
-    RecursiveSpinlock m_lock;
+    RecursiveSpinlock m_lock { LockRank::None };
 };
 
 void activate_kernel_page_directory(PageDirectory const& pgd);

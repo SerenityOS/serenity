@@ -58,7 +58,8 @@ private:
     ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);
     ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PAGE_SIZE);
 
-    RecursiveSpinlock mutable m_lock;
+    // FIXME: We need a Region rank, but we don't know where to put it.
+    RecursiveSpinlock mutable m_lock { LockRank::None };
 
     IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
     VirtualRange const m_total_range;

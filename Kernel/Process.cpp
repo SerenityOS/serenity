@@ -45,7 +45,7 @@ static void create_signal_trampoline();
 
 extern ProcessID g_init_pid;
 
-RecursiveSpinlock g_profiling_lock;
+RecursiveSpinlock g_profiling_lock { LockRank::None };
 static Atomic<pid_t> next_pid;
 static Singleton<SpinlockProtected<Process::List>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
@@ -233,9 +233,9 @@ Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
-    , m_current_directory(move(current_directory))
+    , m_current_directory(LockRank::None, move(current_directory))
     , m_tty(tty)
-    , m_unveil_data(move(unveil_tree))
+    , m_unveil_data(LockRank::None, move(unveil_tree))
     , m_wait_blocker_set(*this)
 {
     // Ensure that we protect the process data when exiting the constructor.

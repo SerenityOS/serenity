@@ -65,7 +65,7 @@ protected:
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
 
-    mutable RecursiveSpinlock m_lock;
+    mutable RecursiveSpinlock m_lock { LockRank::None };
 
 private:
     VMObject& operator=(VMObject const&) = delete;
