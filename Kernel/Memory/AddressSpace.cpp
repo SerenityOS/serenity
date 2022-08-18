@@ -214,7 +214,6 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAdd
     if (prot == PROT_NONE) {
         // For PROT_NONE mappings, we don't have to set up any page table mappings.
         // We do still need to attach the region to the page_directory though.
-        SpinlockLocker mm_locker(s_mm_lock);
         region->set_page_directory(page_directory());
     } else {
         auto result = region->map(page_directory(), ShouldFlushTLB::No);

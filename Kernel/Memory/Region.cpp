@@ -280,7 +280,6 @@ void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLock
 void Region::set_page_directory(PageDirectory& page_directory)
 {
     VERIFY(!m_page_directory || m_page_directory == &page_directory);
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     m_page_directory = page_directory;
 }
 
