@@ -14,6 +14,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/WindowMode.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
@@ -33,8 +34,8 @@ public:
     bool is_modified() const;
     void set_modified(bool);
 
-    bool is_modal() const { return m_modal; }
-    void set_modal(bool);
+    bool is_modal() const { return m_window_mode != WindowMode::Modeless; }
+    bool is_blocking() const { return m_window_mode == WindowMode::Blocking; }
 
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
@@ -70,6 +71,9 @@ public:
 
     WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
+
+    WindowMode window_mode() const { return m_window_mode; }
+    void set_window_mode(WindowMode);
 
     int window_id() const { return m_window_id; }
 
@@ -284,12 +288,12 @@ private:
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
     WindowType m_window_type { WindowType::Normal };
+    WindowMode m_window_mode { WindowMode::Modeless };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::None };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_effective_cursor { Gfx::StandardCursor::None };
     bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
-    bool m_modal { false };
     bool m_resizable { true };
     bool m_obey_widget_min_size { true };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};

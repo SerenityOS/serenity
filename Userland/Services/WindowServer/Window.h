@@ -17,6 +17,7 @@
 #include <WindowServer/Menubar.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowFrame.h>
+#include <WindowServer/WindowMode.h>
 #include <WindowServer/WindowType.h>
 
 namespace WindowServer {
@@ -141,8 +142,6 @@ public:
     WindowFrame& frame() { return m_frame; }
     WindowFrame const& frame() const { return m_frame; }
 
-    Window* blocking_modal_window();
-
     ConnectionFromClient* client() { return m_client; }
     ConnectionFromClient const* client() const { return m_client; }
 
@@ -182,8 +181,13 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 
-    bool is_modal() const;
-    bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
+    bool is_modal() const { return m_mode != WindowMode::Modeless; }
+    bool is_passive() { return m_mode == WindowMode::Passive; }
+
+    bool is_blocking() const { return m_mode == WindowMode::Blocking; }
+    Window* blocking_modal_window();
+
+    WindowMode mode() const { return m_mode; }
     Window* modeless_ancestor();
 
     Gfx::IntRect rect() const { return m_rect; }
@@ -381,7 +385,7 @@ public:
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
 private:
-    Window(ConnectionFromClient&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
@@ -412,10 +416,10 @@ private:
     Gfx::DisjointRectSet m_transparency_wallpaper_rects;
     HashMap<Window*, Gfx::DisjointRectSet> m_affected_transparency_rects;
     WindowType m_type { WindowType::Normal };
+    WindowMode m_mode { WindowMode::Modeless };
     bool m_automatic_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };
-    bool m_modal { false };
     bool m_minimizable { false };
     bool m_closeable { false };
     bool m_frameless { false };

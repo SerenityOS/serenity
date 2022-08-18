@@ -446,7 +446,7 @@ void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& w
         return;
     auto* parent = window.parent_window();
     auto& window_stack = is_stationary_window_type(window.type()) ? current_window_stack() : window.window_stack();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMConnectionFromClient& conn, Window& window)
@@ -594,19 +594,6 @@ void WindowManager::notify_title_changed(Window& window)
         return;
 
     dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) title set to '{}'", &window, window.title());
-
-    if (m_switcher->is_visible())
-        m_switcher->refresh();
-
-    tell_wms_window_state_changed(window);
-}
-
-void WindowManager::notify_modal_unparented(Window& window)
-{
-    if (window.type() != WindowType::Normal)
-        return;
-
-    dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) was unparented", &window);
 
     if (m_switcher->is_visible())
         m_switcher->refresh();

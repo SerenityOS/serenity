@@ -163,8 +163,8 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
         return action;
     }
 
-    // NOTE: Application-global shortcuts are ignored while a modal window is up.
-    if (!window.is_modal()) {
+    // NOTE: Application-global shortcuts are ignored while a blocking modal window is up.
+    if (!window.is_blocking()) {
         if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
             dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
             return action;

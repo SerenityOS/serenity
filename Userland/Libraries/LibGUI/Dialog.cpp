@@ -17,8 +17,7 @@ Dialog::Dialog(Window* parent_window, ScreenPosition screen_position)
     : Window(parent_window)
     , m_screen_position(screen_position)
 {
-    set_modal(true);
-    set_minimizable(false);
+    set_window_mode(WindowMode::Blocking);
 }
 
 Dialog::ExecResult Dialog::exec()

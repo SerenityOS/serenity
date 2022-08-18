@@ -81,7 +81,6 @@ public:
     void remove_window(Window&);
 
     void notify_title_changed(Window&);
-    void notify_modal_unparented(Window&);
     void notify_rect_changed(Window&, Gfx::IntRect const& oldRect, Gfx::IntRect const& newRect);
     void notify_minimization_state_changed(Window&);
     void notify_opacity_changed(Window&);

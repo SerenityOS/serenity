@@ -14,7 +14,6 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
 {
     resize(400, 260);
     center_within(*parent);
-    set_modal(true);
     set_title("Commit");
     set_icon(parent->icon());
 

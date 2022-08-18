@@ -90,11 +90,11 @@ Window::Window(Core::Object& parent, WindowType type)
     frame().window_was_constructed({});
 }
 
-Window::Window(ConnectionFromClient& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
+Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
     : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
-    , m_modal(modal)
+    , m_mode(window_mode)
     , m_minimizable(minimizable)
     , m_closeable(closeable)
     , m_frameless(frameless)
@@ -739,7 +739,7 @@ void Window::ensure_window_menu()
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
-        if (!m_modal) {
+        if (!is_modal()) {
             auto pin_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleAlwaysOnTop, "Always on &Top");
             m_window_menu_always_on_top_item = pin_item.ptr();
             m_window_menu_always_on_top_item->set_icon(&pin_icon());
@@ -1017,23 +1017,6 @@ bool Window::is_accessory_of(Window& window) const
     if (!is_accessory())
         return false;
     return parent_window() == &window;
-}
-
-void Window::modal_unparented()
-{
-    m_modal = false;
-    WindowManager::the().notify_modal_unparented(*this);
-}
-
-bool Window::is_modal() const
-{
-    if (!m_modal)
-        return false;
-    if (!m_parent_window) {
-        const_cast<Window*>(this)->modal_unparented();
-        return false;
-    }
-    return true;
 }
 
 void Window::set_progress(Optional<int> progress)
