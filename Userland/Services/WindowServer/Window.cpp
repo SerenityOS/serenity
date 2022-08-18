@@ -423,12 +423,10 @@ void Window::set_maximized(bool maximized)
         return;
     m_tile_type = maximized ? WindowTileType::Maximized : WindowTileType::None;
     update_window_menu_items();
-    if (maximized) {
-        m_unmaximized_rect = m_floating_rect;
+    if (maximized)
         set_rect(WindowManager::the().tiled_window_rect(*this));
-    } else {
-        set_rect(m_unmaximized_rect);
-    }
+    else
+        set_rect(m_floating_rect);
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
