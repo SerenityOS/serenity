@@ -309,16 +309,6 @@ void Rect<T>::align_within(Rect<T> const& other, TextAlignment alignment)
     }
 }
 
-template<typename T>
-void Rect<T>::set_size_around(Size<T> const& new_size, Point<T> const& fixed_point)
-{
-    const T new_x = fixed_point.x() - (T)(new_size.width() * ((float)(fixed_point.x() - x()) / width()));
-    const T new_y = fixed_point.y() - (T)(new_size.height() * ((float)(fixed_point.y() - y()) / height()));
-
-    set_location({ new_x, new_y });
-    set_size(new_size);
-}
-
 template<>
 String IntRect::to_string() const
 {
