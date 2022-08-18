@@ -183,8 +183,13 @@ static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, Reado
 
     switch (filter) {
     case PNG::FilterType::Sub:
-        for (size_t i = 0; i < scanline_data.size(); ++i) {
-            u8 left = (i < bytes_per_complete_pixel) ? 0 : scanline_data[i - bytes_per_complete_pixel];
+        // This loop starts at bytes_per_complete_pixel because all bytes before that are
+        // guaranteed to have no valid byte at index (i - bytes_per_complete pixel).
+        // All such invalid byte indexes should be treated as 0, and adding 0 to the current
+        // byte would do nothing, so the first bytes_per_complete_pixel bytes can instead
+        // just be skipped.
+        for (size_t i = bytes_per_complete_pixel; i < scanline_data.size(); ++i) {
+            u8 left = scanline_data[i - bytes_per_complete_pixel];
             scanline_data[i] += left;
         }
         break;
