@@ -133,6 +133,8 @@ Optional<size_t> Breadcrumbbar::find_segment_with_data(String const& data)
 
 void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 {
+    m_selected_segment = index;
+
     if (!index.has_value()) {
         for_each_child_of_type<GUI::AbstractButton>([&](auto& button) {
             button.set_checked(false);
