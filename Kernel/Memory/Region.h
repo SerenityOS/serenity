@@ -199,7 +199,7 @@ private:
     Region(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
     Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    [[nodiscard]] bool remap_vmobject_page(size_t page_index, bool with_flush = true);
+    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalPage>);
 
     void set_access_bit(Access access, bool b)
     {
@@ -214,6 +214,7 @@ private:
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage>);
 
     RefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;

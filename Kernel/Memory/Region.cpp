@@ -202,10 +202,9 @@ ErrorOr<void> Region::set_should_cow(size_t page_index, bool cow)
     return {};
 }
 
-bool Region::map_individual_page_impl(size_t page_index)
+bool Region::map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage> page)
 {
     VERIFY(m_page_directory->get_lock().is_locked_by_current_processor());
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
 
     auto page_vaddr = vaddr_from_page_index(page_index);
 
@@ -214,43 +213,53 @@ bool Region::map_individual_page_impl(size_t page_index)
         PANIC("About to map mmap'ed page at a kernel address");
     }
 
+    SpinlockLocker lock(s_mm_lock);
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
         return false;
-    auto* page = physical_page(page_index);
+
     if (!page || (!is_readable() && !is_writable())) {
         pte->clear();
-    } else {
-        pte->set_cache_disabled(!m_cacheable);
-        pte->set_physical_page_base(page->paddr().get());
-        pte->set_present(true);
-        if (page->is_shared_zero_page() || page->is_lazy_committed_page() || should_cow(page_index))
-            pte->set_writable(false);
-        else
-            pte->set_writable(is_writable());
-        if (Processor::current().has_nx())
-            pte->set_execute_disabled(!is_executable());
-        if (Processor::current().has_pat())
-            pte->set_pat(is_write_combine());
-        pte->set_user_allowed(user_allowed);
+        return true;
     }
+
+    pte->set_cache_disabled(!m_cacheable);
+    pte->set_physical_page_base(page->paddr().get());
+    pte->set_present(true);
+    if (page->is_shared_zero_page() || page->is_lazy_committed_page() || should_cow(page_index))
+        pte->set_writable(false);
+    else
+        pte->set_writable(is_writable());
+    if (Processor::current().has_nx())
+        pte->set_execute_disabled(!is_executable());
+    if (Processor::current().has_pat())
+        pte->set_pat(is_write_combine());
+    pte->set_user_allowed(user_allowed);
+
     return true;
 }
 
-bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
+bool Region::map_individual_page_impl(size_t page_index)
+{
+    RefPtr<PhysicalPage> page;
+    {
+        SpinlockLocker vmobject_locker(vmobject().m_lock);
+        page = physical_page(page_index);
+    }
+
+    return map_individual_page_impl(page_index, page);
+}
+
+bool Region::remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalPage> physical_page)
 {
     SpinlockLocker page_lock(m_page_directory->get_lock());
-    SpinlockLocker mm_lock(s_mm_lock);
-    SpinlockLocker lock(m_vmobject->m_lock);
 
     // NOTE: `page_index` is a VMObject page index, so first we convert it to a Region page index.
     if (!translate_vmobject_page(page_index))
         return false;
 
-    VERIFY(physical_page(page_index));
-    bool success = map_individual_page_impl(page_index);
-    if (with_flush)
-        MemoryManager::flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
+    bool success = map_individual_page_impl(page_index, physical_page);
+    MemoryManager::flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
     return success;
 }
 
@@ -286,7 +295,6 @@ void Region::set_page_directory(PageDirectory& page_directory)
 ErrorOr<void> Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
     SpinlockLocker page_lock(page_directory.get_lock());
-    SpinlockLocker lock(s_mm_lock);
 
     // FIXME: Find a better place for this sanity check(?)
     if (is_user() && !is_shared()) {
@@ -364,7 +372,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
             VERIFY(m_vmobject->is_anonymous());
             page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-            if (!remap_vmobject_page(page_index_in_vmobject))
+            if (!remap_vmobject_page(page_index_in_vmobject, *page_slot))
                 return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
@@ -403,7 +411,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
         dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
-        if (!remap_vmobject_page(page_index_in_vmobject))
+        if (!remap_vmobject_page(page_index_in_vmobject, *page_slot))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
@@ -426,7 +434,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
     }
 
-    if (!remap_vmobject_page(page_index_in_vmobject)) {
+    if (!remap_vmobject_page(page_index_in_vmobject, *page_slot)) {
         dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", page_slot);
         return PageFaultResponse::OutOfMemory;
     }
@@ -445,7 +453,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(page_index_in_vmobject, vaddr().offset(page_index_in_region * PAGE_SIZE));
-    if (!remap_vmobject_page(page_index_in_vmobject))
+    if (!remap_vmobject_page(page_index_in_vmobject, *vmobject().physical_pages()[page_index_in_vmobject]))
         return PageFaultResponse::OutOfMemory;
     return response;
 }
@@ -467,7 +475,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         SpinlockLocker locker(inode_vmobject.m_lock);
         if (!vmobject_physical_page_slot.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
-            if (!remap_vmobject_page(page_index_in_vmobject))
+            if (!remap_vmobject_page(page_index_in_vmobject, *vmobject_physical_page_slot))
                 return PageFaultResponse::OutOfMemory;
             return PageFaultResponse::Continue;
         }
@@ -511,21 +519,23 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         MM.unquickmap_page();
     }
 
-    // NOTE: The VMObject lock is required when manipulating the VMObject's physical page slot.
-    SpinlockLocker locker(inode_vmobject.m_lock);
+    {
+        // NOTE: The VMObject lock is required when manipulating the VMObject's physical page slot.
+        SpinlockLocker locker(inode_vmobject.m_lock);
 
-    if (!vmobject_physical_page_slot.is_null()) {
-        // Someone else faulted in this page while we were reading from the inode.
-        // No harm done (other than some duplicate work), remap the page here and return.
-        dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
-        if (!remap_vmobject_page(page_index_in_vmobject))
-            return PageFaultResponse::OutOfMemory;
-        return PageFaultResponse::Continue;
+        if (!vmobject_physical_page_slot.is_null()) {
+            // Someone else faulted in this page while we were reading from the inode.
+            // No harm done (other than some duplicate work), remap the page here and return.
+            dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
+            if (!remap_vmobject_page(page_index_in_vmobject, *vmobject_physical_page_slot))
+                return PageFaultResponse::OutOfMemory;
+            return PageFaultResponse::Continue;
+        }
+
+        vmobject_physical_page_slot = new_physical_page;
     }
 
-    vmobject_physical_page_slot = move(new_physical_page);
-
-    if (!remap_vmobject_page(page_index_in_vmobject))
+    if (!remap_vmobject_page(page_index_in_vmobject, *vmobject_physical_page_slot))
         return PageFaultResponse::OutOfMemory;
 
     return PageFaultResponse::Continue;
