@@ -47,7 +47,6 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     resize(500, 385);
     center_on_screen();
     set_resizable(false);
-    set_modal(true);
     set_title("New project");
 
     auto& main_widget = set_main_widget<GUI::Widget>();

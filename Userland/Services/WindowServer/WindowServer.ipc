@@ -44,7 +44,6 @@ endpoint WindowServer
         Gfx::IntRect rect,
         bool auto_position,
         bool has_alpha_channel,
-        bool modal,
         bool minimizable,
         bool closeable,
         bool resizable,
@@ -59,6 +58,7 @@ endpoint WindowServer
         Gfx::IntSize minimum_size,
         Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
+        i32 mode,
         [UTF8] String title,
         i32 parent_window_id,
         Gfx::IntRect launch_origin_rect) =|

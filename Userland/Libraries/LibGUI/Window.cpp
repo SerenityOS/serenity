@@ -69,6 +69,9 @@ Window::Window(Core::Object* parent)
     : Core::Object(parent)
     , m_menubar(Menubar::construct())
 {
+    if (parent)
+        set_window_mode(WindowMode::Passive);
+
     all_windows->set(this);
     m_rect_when_windowless = { -5000, -5000, 0, 0 };
     m_title_when_windowless = "GUI::Window";
@@ -144,7 +147,6 @@ void Window::show()
         m_rect_when_windowless,
         !m_moved_by_client,
         m_has_alpha_channel,
-        m_modal,
         m_minimizable,
         m_closeable,
         m_resizable,
@@ -159,6 +161,7 @@ void Window::show()
         m_minimum_size_when_windowless,
         m_resize_aspect_ratio,
         (i32)m_window_type,
+        (i32)m_window_mode,
         m_title_when_windowless,
         parent_window ? parent_window->window_id() : 0,
         launch_origin_rect);
@@ -314,6 +317,12 @@ void Window::center_within(Window const& other)
 void Window::set_window_type(WindowType window_type)
 {
     m_window_type = window_type;
+}
+
+void Window::set_window_mode(WindowMode mode)
+{
+    VERIFY(!is_visible());
+    m_window_mode = mode;
 }
 
 void Window::make_window_manager(unsigned event_mask)
@@ -888,12 +897,6 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize const& size
         return {};
     }
     return make<WindowBackingStore>(bitmap_or_error.release_value());
-}
-
-void Window::set_modal(bool modal)
-{
-    VERIFY(!is_visible());
-    m_modal = modal;
 }
 
 void Window::wm_event(WMEvent&)
