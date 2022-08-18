@@ -95,6 +95,7 @@ struct PNGLoadingContext {
     bool has_seen_zlib_header { false };
     bool has_alpha() const { return to_underlying(color_type) & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
+    ByteBuffer unfiltered_data;
     RefPtr<Gfx::Bitmap> bitmap;
     ByteBuffer* decompression_buffer { nullptr };
     Vector<u8> compressed_data;
@@ -176,85 +177,53 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-template<bool has_alpha, PNG::FilterType filter_type>
-ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, void const* dummy_scanline_data)
+static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel)
 {
-    auto* dummy_scanline = (Pixel const*)dummy_scanline_data;
-    if constexpr (filter_type == PNG::FilterType::None) {
-        auto* pixels = (Pixel*)bitmap.scanline(y);
-        for (int i = 0; i < bitmap.width(); ++i) {
-            auto& x = pixels[i];
-            swap(x.r, x.b);
-        }
-    }
+    VERIFY(filter != PNG::FilterType::None);
 
-    if constexpr (filter_type == PNG::FilterType::Sub) {
-        auto* pixels = (Pixel*)bitmap.scanline(y);
-        swap(pixels[0].r, pixels[0].b);
-        for (int i = 1; i < bitmap.width(); ++i) {
-            auto& x = pixels[i];
-            swap(x.r, x.b);
-            auto& a = (Pixel const&)pixels[i - 1];
-            x.v[0] += a.v[0];
-            x.v[1] += a.v[1];
-            x.v[2] += a.v[2];
-            if constexpr (has_alpha)
-                x.v[3] += a.v[3];
+    switch (filter) {
+    case PNG::FilterType::Sub:
+        for (size_t i = 0; i < scanline_data.size(); ++i) {
+            u8 left = (i < bytes_per_complete_pixel) ? 0 : scanline_data[i - bytes_per_complete_pixel];
+            scanline_data[i] += left;
         }
-        return;
-    }
-    if constexpr (filter_type == PNG::FilterType::Up) {
-        auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
-        for (int i = 0; i < bitmap.width(); ++i) {
-            auto& x = pixels[i];
-            swap(x.r, x.b);
-            Pixel const& b = pixels_y_minus_1[i];
-            x.v[0] += b.v[0];
-            x.v[1] += b.v[1];
-            x.v[2] += b.v[2];
-            if constexpr (has_alpha)
-                x.v[3] += b.v[3];
+        break;
+    case PNG::FilterType::Up:
+        for (size_t i = 0; i < scanline_data.size(); ++i) {
+            u8 above = previous_scanlines_data[i];
+            scanline_data[i] += above;
         }
-        return;
-    }
-    if constexpr (filter_type == PNG::FilterType::Average) {
-        auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel const*)bitmap.scanline(y - 1);
-        for (int i = 0; i < bitmap.width(); ++i) {
-            auto& x = pixels[i];
-            swap(x.r, x.b);
-            Pixel a;
-            if (i != 0)
-                a = pixels[i - 1];
-            Pixel const& b = pixels_y_minus_1[i];
-            x.v[0] = x.v[0] + ((a.v[0] + b.v[0]) / 2);
-            x.v[1] = x.v[1] + ((a.v[1] + b.v[1]) / 2);
-            x.v[2] = x.v[2] + ((a.v[2] + b.v[2]) / 2);
-            if constexpr (has_alpha)
-                x.v[3] = x.v[3] + ((a.v[3] + b.v[3]) / 2);
+        break;
+    case PNG::FilterType::Average:
+        for (size_t i = 0; i < scanline_data.size(); ++i) {
+            u32 left = (i < bytes_per_complete_pixel) ? 0 : scanline_data[i - bytes_per_complete_pixel];
+            u32 above = previous_scanlines_data[i];
+            u8 average = (left + above) / 2;
+            scanline_data[i] += average;
         }
-        return;
-    }
-    if constexpr (filter_type == PNG::FilterType::Paeth) {
-        auto* pixels = (Pixel*)bitmap.scanline(y);
-        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
-        for (int i = 0; i < bitmap.width(); ++i) {
-            auto& x = pixels[i];
-            swap(x.r, x.b);
-            Pixel a;
-            Pixel const& b = pixels_y_minus_1[i];
-            Pixel c;
-            if (i != 0) {
-                a = pixels[i - 1];
-                c = pixels_y_minus_1[i - 1];
+        break;
+    case PNG::FilterType::Paeth:
+        for (size_t i = 0; i < scanline_data.size(); ++i) {
+            u8 left = (i < bytes_per_complete_pixel) ? 0 : scanline_data[i - bytes_per_complete_pixel];
+            u8 above = previous_scanlines_data[i];
+            u8 upper_left = (i < bytes_per_complete_pixel) ? 0 : previous_scanlines_data[i - bytes_per_complete_pixel];
+            i32 predictor = left + above - upper_left;
+            u32 predictor_left = abs(predictor - left);
+            u32 predictor_above = abs(predictor - above);
+            u32 predictor_upper_left = abs(predictor - upper_left);
+            u8 nearest;
+            if (predictor_left <= predictor_above && predictor_left <= predictor_upper_left) {
+                nearest = left;
+            } else if (predictor_above <= predictor_upper_left) {
+                nearest = above;
+            } else {
+                nearest = upper_left;
             }
-            x.v[0] += PNG::paeth_predictor(a.v[0], b.v[0], c.v[0]);
-            x.v[1] += PNG::paeth_predictor(a.v[1], b.v[1], c.v[1]);
-            x.v[2] += PNG::paeth_predictor(a.v[2], b.v[2], c.v[2]);
-            if constexpr (has_alpha)
-                x.v[3] += PNG::paeth_predictor(a.v[3], b.v[3], c.v[3]);
+            scanline_data[i] += nearest;
         }
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -323,7 +292,47 @@ ALWAYS_INLINE static void unpack_triplets_with_transparency_value(PNGLoadingCont
 
 NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 {
-    // First unpack the scanlines to RGBA:
+    // First unfilter the scanlines:
+
+    // FIXME: Instead of creating a separate buffer for the scanlines that need to be
+    //        mutated, the mutation could be done in place (if the data was non-const).
+    size_t bytes_per_scanline = context.scanlines[0].data.size();
+    size_t bytes_needed_for_all_unfiltered_scanlines = 0;
+    for (int y = 0; y < context.height; ++y) {
+        if (context.scanlines[y].filter != PNG::FilterType::None) {
+            bytes_needed_for_all_unfiltered_scanlines += bytes_per_scanline;
+        }
+    }
+    context.unfiltered_data = TRY(ByteBuffer::create_uninitialized(bytes_needed_for_all_unfiltered_scanlines));
+
+    // From section 6.3 of http://www.libpng.org/pub/png/spec/1.2/PNG-Filters.html
+    // "bpp is defined as the number of bytes per complete pixel, rounding up to one.
+    // For example, for color type 2 with a bit depth of 16, bpp is equal to 6
+    // (three samples, two bytes per sample); for color type 0 with a bit depth of 2,
+    // bpp is equal to 1 (rounding up); for color type 4 with a bit depth of 16, bpp
+    // is equal to 4 (two-byte grayscale sample, plus two-byte alpha sample)."
+    u8 bytes_per_complete_pixel = (context.bit_depth + 7) / 8 * context.channels;
+
+    u8 dummy_scanline_bytes[bytes_per_scanline];
+    memset(dummy_scanline_bytes, 0, sizeof(dummy_scanline_bytes));
+    auto previous_scanlines_data = ReadonlyBytes { dummy_scanline_bytes, sizeof(dummy_scanline_bytes) };
+
+    for (int y = 0, data_start = 0; y < context.height; ++y) {
+        if (context.scanlines[y].filter != PNG::FilterType::None) {
+            auto scanline_data_slice = context.unfiltered_data.bytes().slice(data_start, bytes_per_scanline);
+
+            // Copy the current values over and set the scanline's data to the to-be-mutated slice
+            context.scanlines[y].data.copy_to(scanline_data_slice);
+            context.scanlines[y].data = scanline_data_slice;
+
+            unfilter_scanline(context.scanlines[y].filter, scanline_data_slice, previous_scanlines_data, bytes_per_complete_pixel);
+
+            data_start += bytes_per_scanline;
+        }
+        previous_scanlines_data = context.scanlines[y].data;
+    }
+
+    // Now unpack the scanlines to RGBA:
     switch (context.color_type) {
     case PNG::ColorType::Greyscale:
         if (context.bit_depth == 8) {
@@ -448,45 +457,12 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
         break;
     }
 
-    u8 dummy_scanline[context.width * sizeof(ARGB32)];
-    memset(dummy_scanline, 0, sizeof(dummy_scanline));
-
+    // Swap r and b values:
     for (int y = 0; y < context.height; ++y) {
-        auto filter = context.scanlines[y].filter;
-        if (filter == PNG::FilterType::None) {
-            if (context.has_alpha())
-                unfilter_impl<true, PNG::FilterType::None>(*context.bitmap, y, dummy_scanline);
-            else
-                unfilter_impl<false, PNG::FilterType::None>(*context.bitmap, y, dummy_scanline);
-            continue;
-        }
-        if (filter == PNG::FilterType::Sub) {
-            if (context.has_alpha())
-                unfilter_impl<true, PNG::FilterType::Sub>(*context.bitmap, y, dummy_scanline);
-            else
-                unfilter_impl<false, PNG::FilterType::Sub>(*context.bitmap, y, dummy_scanline);
-            continue;
-        }
-        if (filter == PNG::FilterType::Up) {
-            if (context.has_alpha())
-                unfilter_impl<true, PNG::FilterType::Up>(*context.bitmap, y, dummy_scanline);
-            else
-                unfilter_impl<false, PNG::FilterType::Up>(*context.bitmap, y, dummy_scanline);
-            continue;
-        }
-        if (filter == PNG::FilterType::Average) {
-            if (context.has_alpha())
-                unfilter_impl<true, PNG::FilterType::Average>(*context.bitmap, y, dummy_scanline);
-            else
-                unfilter_impl<false, PNG::FilterType::Average>(*context.bitmap, y, dummy_scanline);
-            continue;
-        }
-        if (filter == PNG::FilterType::Paeth) {
-            if (context.has_alpha())
-                unfilter_impl<true, PNG::FilterType::Paeth>(*context.bitmap, y, dummy_scanline);
-            else
-                unfilter_impl<false, PNG::FilterType::Paeth>(*context.bitmap, y, dummy_scanline);
-            continue;
+        auto* pixels = (Pixel*)context.bitmap->scanline(y);
+        for (int i = 0; i < context.bitmap->width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
         }
     }
 
