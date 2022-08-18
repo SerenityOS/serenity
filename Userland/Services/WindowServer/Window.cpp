@@ -415,7 +415,7 @@ void Window::set_occluded(bool occluded)
     WindowManager::the().notify_occlusion_state_changed(*this);
 }
 
-void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
+void Window::set_maximized(bool maximized)
 {
     if (is_maximized() == maximized)
         return;
@@ -427,13 +427,7 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
         m_unmaximized_rect = m_floating_rect;
         set_rect(WindowManager::the().tiled_window_rect(*this));
     } else {
-        if (fixed_point.has_value()) {
-            auto new_rect = Gfx::IntRect(m_rect);
-            new_rect.set_size_around(m_unmaximized_rect.size(), fixed_point.value());
-            set_rect(new_rect);
-        } else {
-            set_rect(m_unmaximized_rect);
-        }
+        set_rect(m_unmaximized_rect);
     }
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
@@ -920,21 +914,14 @@ void Window::check_untile_due_to_resize(Gfx::IntRect const& new_rect)
     m_tile_type = new_tile_type;
 }
 
-bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
+bool Window::set_untiled()
 {
     if (m_tile_type == WindowTileType::None)
         return false;
     VERIFY(!resize_aspect_ratio().has_value());
 
     m_tile_type = WindowTileType::None;
-
-    if (fixed_point.has_value()) {
-        auto new_rect = Gfx::IntRect(m_rect);
-        new_rect.set_size_around(m_floating_rect.size(), fixed_point.value());
-        set_rect(new_rect);
-    } else {
-        set_rect(m_floating_rect);
-    }
+    set_rect(m_floating_rect);
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 

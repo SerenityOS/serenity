@@ -107,8 +107,6 @@ public:
         m_size = size;
     }
 
-    void set_size_around(Size<T> const&, Point<T> const& fixed_point);
-
     void set_size(T width, T height)
     {
         m_size.set_width(width);

@@ -109,7 +109,7 @@ public:
     void set_resizable(bool);
 
     bool is_maximized() const { return m_tile_type == WindowTileType::Maximized; }
-    void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
+    void set_maximized(bool);
 
     bool is_always_on_top() const { return m_always_on_top; }
     void set_always_on_top(bool);
@@ -122,7 +122,7 @@ public:
     void set_tiled(WindowTileType);
     WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
     void check_untile_due_to_resize(Gfx::IntRect const&);
-    bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
+    bool set_untiled();
 
     Gfx::IntRect floating_rect() const { return m_floating_rect; }
     void set_floating_rect(Gfx::IntRect rect) { m_floating_rect = rect; }
@@ -265,7 +265,7 @@ public:
         // The screen can change, so "tiled" and "fixed aspect ratio" are mutually exclusive.
         // Similarly for "maximized" and "fixed aspect ratio".
         // In order to resolve this, undo those properties first:
-        set_untiled(position());
+        set_untiled();
         set_maximized(false);
         m_resize_aspect_ratio = ratio;
     }
