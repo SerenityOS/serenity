@@ -667,6 +667,15 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         directory_view->open_parent_directory();
     });
 
+    auto open_child_directory_action = GUI::Action::create("Open &Child Directory", { Mod_Alt, Key_Down }, [&](GUI::Action const&) {
+        auto segment_index = breadcrumbbar.selected_segment();
+        if (!segment_index.has_value() || *segment_index >= breadcrumbbar.segment_count() - 1)
+            return;
+        breadcrumbbar.set_selected_segment(*segment_index + 1);
+        if (breadcrumbbar.on_segment_click)
+            breadcrumbbar.on_segment_click(*segment_index + 1);
+    });
+
     RefPtr<GUI::Action> layout_toolbar_action;
     RefPtr<GUI::Action> layout_location_action;
     RefPtr<GUI::Action> layout_statusbar_action;
@@ -1029,6 +1038,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(go_menu->try_add_action(go_back_action));
     TRY(go_menu->try_add_action(go_forward_action));
     TRY(go_menu->try_add_action(open_parent_directory_action));
+    TRY(go_menu->try_add_action(open_child_directory_action));
     TRY(go_menu->try_add_action(go_home_action));
     TRY(go_menu->try_add_action(go_to_location_action));
     TRY(go_menu->try_add_separator());
