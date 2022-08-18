@@ -2043,9 +2043,9 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
     if (tile_type == WindowTileType::Bottom
         || tile_type == WindowTileType::BottomLeft
         || tile_type == WindowTileType::BottomRight) {
-        auto half_screen_reminder = rect.height() % 2;
-        rect.set_height(rect.height() / 2 + half_screen_reminder);
-        rect.set_y(rect.height() - half_screen_reminder);
+        auto half_screen_remainder = rect.height() % 2;
+        rect.set_height(rect.height() / 2 + half_screen_remainder);
+        rect.set_y(rect.height() - half_screen_remainder);
     }
 
     Gfx::IntRect window_rect = window.rect();
