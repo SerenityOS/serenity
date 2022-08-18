@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
         return EINVAL;
 
     auto new_fd = TRY(allocate_fd());
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve));
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::AllocateNow));
     auto anon_file = TRY(AnonymousFile::try_create(move(vmobject)));
     auto description = TRY(OpenFileDescription::try_create(move(anon_file)));
 
