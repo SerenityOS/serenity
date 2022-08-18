@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,9 +19,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/kstdio.h>
-
-// Remove this once SMP is stable and can be enabled by default
-#define SCHEDULE_ON_ALL_PROCESSORS 0
 
 namespace Kernel {
 
@@ -451,11 +448,6 @@ void Scheduler::timer_tick(RegisterState const& regs)
     VERIFY(current_thread->current_trap());
     VERIFY(current_thread->current_trap()->regs == &regs);
 
-#if !SCHEDULE_ON_ALL_PROCESSORS
-    if (!Processor::is_bootstrap_processor())
-        return; // TODO: This prevents scheduling on other CPUs!
-#endif
-
     if (current_thread->process().is_kernel_process()) {
         // Because the previous mode when entering/exiting kernel threads never changes
         // we never update the time scheduled. So we need to update it manually on the
@@ -519,12 +511,7 @@ void Scheduler::idle_loop(void*)
 
         proc.idle_end();
         VERIFY_INTERRUPTS_ENABLED();
-#if SCHEDULE_ON_ALL_PROCESSORS
         yield();
-#else
-        if (Processor::current_id() == 0)
-            yield();
-#endif
     }
 }
 
