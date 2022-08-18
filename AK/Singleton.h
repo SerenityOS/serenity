@@ -12,6 +12,7 @@
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
+#    include <Kernel/Locking/SpinlockProtected.h>
 #else
 #    include <sched.h>
 #endif
@@ -29,6 +30,18 @@ struct SingletonInstanceCreator {
         return new T();
     }
 };
+
+#ifdef KERNEL
+
+// FIXME: Find a nice way of injecting the lock rank into the singleton.
+template<typename T>
+struct SingletonInstanceCreator<Kernel::SpinlockProtected<T>> {
+    static Kernel::SpinlockProtected<T>* create()
+    {
+        return new Kernel::SpinlockProtected<T> { Kernel::LockRank::None };
+    }
+};
+#endif
 
 template<typename T, T* (*InitFunction)() = SingletonInstanceCreator<T>::create>
 class Singleton {
