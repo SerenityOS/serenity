@@ -18,6 +18,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/ConnectionFromClient.h>
@@ -1427,7 +1428,7 @@ Gfx::IntRect WindowManager::desktop_rect(Screen& screen) const
         return Screen::main().rect(); // TODO: we should support fullscreen windows on any screen
     auto screen_rect = screen.rect();
     if (screen.is_main_screen())
-        screen_rect.set_height(screen.height() - 28);
+        screen_rect.set_height(screen.height() - TaskbarWindow::taskbar_height());
     return screen_rect;
 }
 
@@ -2012,13 +2013,8 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
     auto& screen = Screen::closest_to_rect(window.frame().rect());
     Gfx::IntRect rect = screen.rect();
 
-    if (screen.is_main_screen()) {
-        // Subtract taskbar window height if present
-        const_cast<WindowManager*>(this)->current_window_stack().for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, [&rect](Window& taskbar_window) {
-            rect.set_height(rect.height() - taskbar_window.height());
-            return IterationDecision::Break;
-        });
-    }
+    if (screen.is_main_screen())
+        rect.set_height(rect.height() - TaskbarWindow::taskbar_height());
 
     if (tile_type == WindowTileType::Maximized) {
         auto border_thickness = palette().window_border_thickness();
@@ -2217,9 +2213,6 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
     // FIXME: Find a  better source for the width and height to shift by.
     Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
 
-    // FIXME: Find a better source for this.
-    int taskbar_height = 28;
-
     Window const* overlap_window = nullptr;
     current_window_stack().for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
         if (window.is_default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
@@ -2233,7 +2226,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
         auto& screen = Screen::closest_to_location(desired);
         point = overlap_window->position() + shift;
         point = { point.x() % screen.width(),
-            (point.y() >= (screen.height() - (screen.is_main_screen() ? taskbar_height : 0)))
+            (point.y() >= (screen.height() - (screen.is_main_screen() ? TaskbarWindow::taskbar_height() : 0)))
                 ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette())
                 : point.y() };
     } else {
