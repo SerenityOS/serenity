@@ -69,13 +69,9 @@ static MappedObject* get_or_create_mapped_object(String const& path)
 
 void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
 {
-    StringView path;
-    if (name.contains("Loader.so"sv))
-        path = "Loader.so"sv;
-    else if (!name.contains(':'))
+    if (!name.contains(':'))
         return;
-    else
-        path = name.substring_view(0, name.view().find(':').value());
+    auto path = name.substring_view(0, name.view().find(':').value());
 
     // Each loaded object has at least 4 segments associated with it: .rodata, .text, .relro, .data.
     // We only want to create a single LibraryMetadata object for each library, so we need to update the
