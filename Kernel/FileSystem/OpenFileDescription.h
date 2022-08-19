@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
-#include <AK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -22,7 +22,7 @@ public:
     virtual ~OpenFileDescriptionData() = default;
 };
 
-class OpenFileDescription : public RefCounted<OpenFileDescription> {
+class OpenFileDescription final : public AtomicRefCounted<OpenFileDescription> {
 public:
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);

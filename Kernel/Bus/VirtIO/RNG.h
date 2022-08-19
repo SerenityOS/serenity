@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>
@@ -16,7 +16,7 @@ namespace Kernel::VirtIO {
 #define REQUESTQ 0
 
 class RNG final
-    : public RefCounted<RNG>
+    : public AtomicRefCounted<RNG>
     , public VirtIO::Device {
 public:
     static NonnullRefPtr<RNG> must_create(PCI::DeviceIdentifier const&);

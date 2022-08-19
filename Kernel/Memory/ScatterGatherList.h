@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Vector.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -16,7 +17,7 @@ namespace Kernel::Memory {
 
 // A Scatter-Gather List type that owns its buffers
 
-class ScatterGatherList : public RefCounted<ScatterGatherList> {
+class ScatterGatherList final : public AtomicRefCounted<ScatterGatherList> {
 public:
     static RefPtr<ScatterGatherList> try_create(AsyncBlockDeviceRequest&, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size);
     VMObject const& vmobject() const { return m_vm_object; }

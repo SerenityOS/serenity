@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/IntrusiveList.h>
-#include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
@@ -15,7 +15,7 @@
 namespace Kernel {
 
 class ProcessGroup
-    : public RefCounted<ProcessGroup>
+    : public AtomicRefCounted<ProcessGroup>
     , public Weakable<ProcessGroup> {
 
     AK_MAKE_NONMOVABLE(ProcessGroup);

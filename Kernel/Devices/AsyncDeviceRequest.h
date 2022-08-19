@@ -20,7 +20,7 @@ class Device;
 
 extern WorkQueue* g_io_work;
 
-class AsyncDeviceRequest : public RefCounted<AsyncDeviceRequest> {
+class AsyncDeviceRequest : public AtomicRefCounted<AsyncDeviceRequest> {
     AK_MAKE_NONCOPYABLE(AsyncDeviceRequest);
     AK_MAKE_NONMOVABLE(AsyncDeviceRequest);
 

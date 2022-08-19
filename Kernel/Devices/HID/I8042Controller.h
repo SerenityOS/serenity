@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -83,7 +83,7 @@ protected:
 class PS2KeyboardDevice;
 class PS2MouseDevice;
 class HIDManagement;
-class I8042Controller : public RefCounted<I8042Controller> {
+class I8042Controller final : public AtomicRefCounted<I8042Controller> {
     friend class PS2KeyboardDevice;
     friend class PS2MouseDevice;
 

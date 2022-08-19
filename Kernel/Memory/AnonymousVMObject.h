@@ -63,7 +63,7 @@ private:
     Bitmap m_cow_map;
 
     // AnonymousVMObject shares committed COW pages with cloned children (happens on fork)
-    class SharedCommittedCowPages : public RefCounted<SharedCommittedCowPages> {
+    class SharedCommittedCowPages final : public AtomicRefCounted<SharedCommittedCowPages> {
         AK_MAKE_NONCOPYABLE(SharedCommittedCowPages);
 
     public:

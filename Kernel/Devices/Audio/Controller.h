@@ -23,7 +23,7 @@ namespace Kernel {
 
 class AudioManagement;
 class AudioController
-    : public RefCounted<AudioController>
+    : public AtomicRefCounted<AudioController>
     , public Weakable<AudioController> {
     friend class AudioManagement;
 

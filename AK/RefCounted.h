@@ -6,15 +6,11 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeRefCounted.h>
-#else
-
-#    include <AK/Assertions.h>
-#    include <AK/Checked.h>
-#    include <AK/Noncopyable.h>
-#    include <AK/Platform.h>
-#    include <AK/StdLibExtras.h>
+#include <AK/Assertions.h>
+#include <AK/Checked.h>
+#include <AK/Noncopyable.h>
+#include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 
 namespace AK {
 
@@ -67,7 +63,7 @@ public:
         if (new_ref_count == 0) {
             if constexpr (requires { that->will_be_destroyed(); })
                 that->will_be_destroyed();
-            delete static_cast<const T*>(this);
+            delete static_cast<T const*>(this);
             return true;
         }
         return false;
@@ -78,5 +74,3 @@ public:
 
 using AK::RefCounted;
 using AK::RefCountedBase;
-
-#endif

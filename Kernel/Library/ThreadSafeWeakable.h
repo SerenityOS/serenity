@@ -8,7 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Processor.h>
@@ -21,7 +21,7 @@ class Weakable;
 template<typename T>
 class WeakPtr;
 
-class WeakLink : public RefCounted<WeakLink> {
+class WeakLink final : public AtomicRefCounted<WeakLink> {
     template<typename T>
     friend class Weakable;
     template<typename T>
@@ -30,7 +30,7 @@ class WeakLink : public RefCounted<WeakLink> {
 public:
     template<typename T, typename PtrTraits = RefPtrTraits<T>>
     RefPtr<T, PtrTraits> strong_ref() const
-        requires(IsBaseOf<RefCountedBase, T>)
+        requires(IsBaseOf<AtomicRefCountedBase, T>)
     {
         RefPtr<T, PtrTraits> ref;
 

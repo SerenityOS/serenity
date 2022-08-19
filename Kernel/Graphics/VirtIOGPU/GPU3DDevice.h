@@ -100,7 +100,7 @@ public:
 private:
     VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region);
 
-    class PerContextState : public RefCounted<PerContextState> {
+    class PerContextState final : public AtomicRefCounted<PerContextState> {
     public:
         static ErrorOr<RefPtr<PerContextState>> try_create(Graphics::VirtIOGPU::ContextID context_id)
         {

@@ -168,7 +168,7 @@ template<typename T>
 template<typename U>
 inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 {
-    if constexpr (IsBaseOf<RefCountedBase, T>) {
+    if constexpr (IsBaseOf<AtomicRefCountedBase, T>) {
         // Checking m_being_destroyed isn't sufficient when dealing with
         // a RefCounted type.The reference count will drop to 0 before the
         // destructor is invoked and revoke_weak_ptrs is called. So, try
@@ -192,7 +192,7 @@ inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 
     WeakPtr<U> weak_ptr(m_link);
 
-    if constexpr (IsBaseOf<RefCountedBase, T>) {
+    if constexpr (IsBaseOf<AtomicRefCountedBase, T>) {
         // Now drop the reference we temporarily added
         if (static_cast<const T*>(this)->unref()) {
             // We just dropped the last reference, which should have called

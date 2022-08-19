@@ -27,7 +27,7 @@ class USBConfiguration;
 //
 // https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_113_Simplified%20Description%20of%20USB%20Device%20Enumeration.pdf
 class Hub;
-class Device : public RefCounted<Device> {
+class Device : public AtomicRefCounted<Device> {
 public:
     enum class DeviceSpeed : u8 {
         FullSpeed = 0,

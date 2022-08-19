@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Function.h>
-#include <AK/RefCounted.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -23,8 +23,7 @@ enum class HardwareTimerType {
 template<typename InterruptHandlerType>
 class HardwareTimer;
 
-class HardwareTimerBase
-    : public RefCounted<HardwareTimerBase> {
+class HardwareTimerBase : public AtomicRefCounted<HardwareTimerBase> {
 public:
     virtual ~HardwareTimerBase() = default;
 

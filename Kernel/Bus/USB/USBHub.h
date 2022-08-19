@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Bus/USB/PacketTypes.h>
@@ -17,7 +18,7 @@
 // TODO: Callback stuff in this class please!
 namespace Kernel::USB {
 
-class Transfer : public RefCounted<Transfer> {
+class Transfer final : public AtomicRefCounted<Transfer> {
 public:
     static ErrorOr<NonnullRefPtr<Transfer>> try_create(Pipe&, u16 length, Memory::Region& dma_buffer);
 

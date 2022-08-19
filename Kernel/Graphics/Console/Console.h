@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 
 namespace Kernel::Graphics {
 
-class Console : public RefCounted<Console> {
+class Console : public AtomicRefCounted<Console> {
 public:
     // Stanadard VGA text mode colors
     enum Color : u8 {

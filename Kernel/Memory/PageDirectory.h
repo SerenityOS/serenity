@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveRedBlackTree.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -17,7 +17,7 @@
 
 namespace Kernel::Memory {
 
-class PageDirectory : public RefCounted<PageDirectory> {
+class PageDirectory final : public AtomicRefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:

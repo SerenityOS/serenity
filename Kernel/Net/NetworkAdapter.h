@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
@@ -27,7 +28,7 @@ class NetworkAdapter;
 
 using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
 
-struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
+struct PacketWithTimestamp final : public AtomicRefCounted<PacketWithTimestamp> {
     PacketWithTimestamp(NonnullOwnPtr<KBuffer> buffer, Time timestamp)
         : buffer(move(buffer))
         , timestamp(timestamp)
@@ -41,7 +42,8 @@ struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
     IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
 };
 
-class NetworkAdapter : public RefCounted<NetworkAdapter>
+class NetworkAdapter
+    : public AtomicRefCounted<NetworkAdapter>
     , public Weakable<NetworkAdapter> {
 public:
     static constexpr i32 LINKSPEED_INVALID = -1;

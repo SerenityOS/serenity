@@ -14,7 +14,7 @@
 
 namespace Kernel {
 class GenericGraphicsAdapter
-    : public RefCounted<GenericGraphicsAdapter>
+    : public AtomicRefCounted<GenericGraphicsAdapter>
     , public Weakable<GenericGraphicsAdapter> {
 public:
     virtual ~GenericGraphicsAdapter() = default;

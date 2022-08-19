@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
 
 namespace Kernel {
 
 class GenericInterruptHandler;
 
-class IRQController : public RefCounted<IRQController> {
+class IRQController : public AtomicRefCounted<IRQController> {
 public:
     virtual ~IRQController() = default;
 

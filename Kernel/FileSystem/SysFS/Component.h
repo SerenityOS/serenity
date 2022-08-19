@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -24,7 +24,7 @@ struct SysFSInodeData : public OpenFileDescriptionData {
 };
 
 class SysFSDirectory;
-class SysFSComponent : public RefCounted<SysFSComponent> {
+class SysFSComponent : public AtomicRefCounted<SysFSComponent> {
     friend class SysFSDirectory;
 
 public:

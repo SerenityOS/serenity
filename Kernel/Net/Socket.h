@@ -8,7 +8,6 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>

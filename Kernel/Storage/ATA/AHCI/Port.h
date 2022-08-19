@@ -32,7 +32,7 @@ class AsyncBlockDeviceRequest;
 
 class AHCIInterruptHandler;
 class AHCIPort
-    : public RefCounted<AHCIPort>
+    : public AtomicRefCounted<AHCIPort>
     , public Weakable<AHCIPort> {
     friend class AHCIController;
 

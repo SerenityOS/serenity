@@ -69,7 +69,7 @@ private:
         mutable Spinlock m_lock { LockRank::None };
     };
 
-    struct ReceiveCompletion : public RefCounted<ReceiveCompletion> {
+    struct ReceiveCompletion final : public AtomicRefCounted<ReceiveCompletion> {
         mutable Spinlock lock { LockRank::None };
         bool completed { false };
         const u16 tag;

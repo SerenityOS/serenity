@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
@@ -66,7 +66,7 @@ private:
     NonnullRefPtr<ProcFSRootDirectory> m_root_directory;
 };
 
-class ProcFSExposedComponent : public RefCounted<ProcFSExposedComponent> {
+class ProcFSExposedComponent : public AtomicRefCounted<ProcFSExposedComponent> {
 public:
     StringView name() const { return m_name->view(); }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }

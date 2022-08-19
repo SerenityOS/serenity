@@ -10,7 +10,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Locking/Spinlock.h>

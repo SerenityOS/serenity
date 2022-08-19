@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-struct Route : public RefCounted<Route> {
+struct Route final : public AtomicRefCounted<Route> {
     Route(IPv4Address const& destination, IPv4Address const& gateway, IPv4Address const& netmask, u16 flags, NonnullRefPtr<NetworkAdapter> adapter)
         : destination(destination)
         , gateway(gateway)

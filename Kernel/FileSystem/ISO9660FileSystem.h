@@ -283,7 +283,7 @@ class ISO9660FS final : public BlockBasedFileSystem {
     friend ISO9660DirectoryIterator;
 
 public:
-    struct DirectoryEntry : public RefCounted<DirectoryEntry> {
+    struct DirectoryEntry final : public AtomicRefCounted<DirectoryEntry> {
         u32 extent { 0 };
         u32 length { 0 };
 

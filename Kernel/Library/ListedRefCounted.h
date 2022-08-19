@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 
 namespace Kernel {
 
@@ -21,7 +21,7 @@ enum class LockType {
 };
 
 template<typename T, LockType Lock>
-class ListedRefCounted : public RefCountedBase {
+class ListedRefCounted : public AtomicRefCountedBase {
 public:
     bool unref() const
     {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 
@@ -19,7 +19,7 @@ enum class IRQControllerType {
     i82093AA = 2 /* Intel 82093AA I/O ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (IOAPIC) */
 };
 
-class IRQController : public RefCounted<IRQController> {
+class IRQController : public AtomicRefCounted<IRQController> {
 public:
     virtual ~IRQController() = default;
 

@@ -9,7 +9,6 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IRQController.h>

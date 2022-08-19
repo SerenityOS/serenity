@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,9 +15,9 @@
 
 namespace AK {
 
-class RefCountedBase {
-    AK_MAKE_NONCOPYABLE(RefCountedBase);
-    AK_MAKE_NONMOVABLE(RefCountedBase);
+class AtomicRefCountedBase {
+    AK_MAKE_NONCOPYABLE(AtomicRefCountedBase);
+    AK_MAKE_NONMOVABLE(AtomicRefCountedBase);
 
 public:
     using RefCountType = unsigned int;
@@ -48,8 +48,8 @@ public:
     }
 
 protected:
-    RefCountedBase() = default;
-    ~RefCountedBase()
+    AtomicRefCountedBase() = default;
+    ~AtomicRefCountedBase()
     {
         VERIFY(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
     }
@@ -65,7 +65,7 @@ protected:
 };
 
 template<typename T>
-class RefCounted : public RefCountedBase {
+class AtomicRefCounted : public AtomicRefCountedBase {
 public:
     bool unref() const
     {
@@ -83,5 +83,5 @@ public:
 
 }
 
-using AK::RefCounted;
-using AK::RefCountedBase;
+using AK::AtomicRefCounted;
+using AK::AtomicRefCountedBase;

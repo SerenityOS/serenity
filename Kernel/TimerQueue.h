@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/Time.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -18,7 +18,7 @@ namespace Kernel {
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, TimerId);
 
-class Timer : public RefCounted<Timer> {
+class Timer final : public AtomicRefCounted<Timer> {
     friend class TimerQueue;
 
 public:

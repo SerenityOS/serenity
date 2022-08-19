@@ -6,16 +6,14 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <AK/RefCounted.h>
+#include <AK/AtomicRefCounted.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Memory/VMObject.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
 
 class FutexQueue final
-    : public RefCounted<FutexQueue>
+    : public AtomicRefCounted<FutexQueue>
     , public Thread::BlockerSet {
 public:
     FutexQueue();

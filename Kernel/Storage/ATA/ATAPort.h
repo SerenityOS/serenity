@@ -13,7 +13,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class ATAPort
-    : public RefCounted<ATAPort>
+    : public AtomicRefCounted<ATAPort>
     , public Weakable<ATAPort> {
 
     friend class ATAPortInterruptDisabler;

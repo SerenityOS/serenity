@@ -21,7 +21,7 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 class StorageDevice;
-class StorageController : public RefCounted<StorageController> {
+class StorageController : public AtomicRefCounted<StorageController> {
 
 public:
     virtual ~StorageController() = default;

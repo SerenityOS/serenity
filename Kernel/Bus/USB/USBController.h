@@ -6,14 +6,14 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
-#include <AK/RefCounted.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 
 namespace Kernel::USB {
 
-class USBController : public RefCounted<USBController> {
+class USBController : public AtomicRefCounted<USBController> {
 public:
     virtual ~USBController() = default;
 
