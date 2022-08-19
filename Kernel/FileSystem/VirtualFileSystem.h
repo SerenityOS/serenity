@@ -12,6 +12,8 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
+#include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -48,7 +50,7 @@ public:
     ErrorOr<void> mount(FileSystem&, Custody& mount_point, int flags);
     ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
-    ErrorOr<void> unmount(Inode& guest_inode);
+    ErrorOr<void> unmount(Custody& mount_point);
 
     ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     ErrorOr<NonnullLockRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
@@ -70,6 +72,8 @@ public:
     ErrorOr<NonnullRefPtr<Custody>> open_directory(Credentials const&, StringView path, Custody& base);
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
+
+    ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback);
 
     InodeIdentifier root_inode_id() const;
 
@@ -101,6 +105,7 @@ private:
     SpinlockProtected<RefPtr<Custody>> m_root_custody;
 
     SpinlockProtected<Vector<NonnullOwnPtr<Mount>, 16>> m_mounts { LockRank::None };
+    SpinlockProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>> m_file_backed_file_systems_list { LockRank::None };
 };
 
 }

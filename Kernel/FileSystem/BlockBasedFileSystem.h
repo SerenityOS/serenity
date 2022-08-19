@@ -16,7 +16,6 @@ public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 
     virtual ~BlockBasedFileSystem() override;
-    virtual ErrorOr<void> initialize() override;
 
     u64 logical_block_size() const { return m_logical_block_size; };
 
@@ -25,6 +24,8 @@ public:
 
 protected:
     explicit BlockBasedFileSystem(OpenFileDescription&);
+
+    virtual ErrorOr<void> initialize_while_locked() override;
 
     ErrorOr<void> read_block(BlockIndex, UserOrKernelBuffer*, size_t count, u64 offset = 0, bool allow_cache = true) const;
     ErrorOr<void> read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;

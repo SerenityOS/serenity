@@ -42,6 +42,15 @@ FileSystem* FileSystem::from_fsid(FileSystemID id)
     return nullptr;
 }
 
+ErrorOr<void> FileSystem::prepare_to_unmount()
+{
+    return m_attach_count.with([&](auto& attach_count) -> ErrorOr<void> {
+        if (attach_count == 1)
+            return prepare_to_clear_last_mount();
+        return {};
+    });
+}
+
 FileSystem::DirectoryEntryView::DirectoryEntryView(StringView n, InodeIdentifier i, u8 ft)
     : name(n)
     , inode(i)

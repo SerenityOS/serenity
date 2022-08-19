@@ -22,8 +22,6 @@ public:
     virtual ~Plan9FS() override;
     static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
-    virtual ErrorOr<void> initialize() override;
-
     virtual bool supports_watchers() const override { return false; }
 
     virtual Inode& root_inode() override;
@@ -47,6 +45,11 @@ public:
 
 private:
     Plan9FS(OpenFileDescription&);
+
+    virtual ErrorOr<void> prepare_to_clear_last_mount() override;
+
+    virtual bool is_initialized_while_locked() override;
+    virtual ErrorOr<void> initialize_while_locked() override;
 
     class Blocker;
 

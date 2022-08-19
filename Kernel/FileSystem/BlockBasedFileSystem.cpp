@@ -116,8 +116,10 @@ BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description
 
 BlockBasedFileSystem::~BlockBasedFileSystem() = default;
 
-ErrorOr<void> BlockBasedFileSystem::initialize()
+ErrorOr<void> BlockBasedFileSystem::initialize_while_locked()
 {
+    VERIFY(m_lock.is_locked());
+    VERIFY(!is_initialized_while_locked());
     VERIFY(block_size() != 0);
     auto cached_block_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache blocks"sv, DiskCache::EntryCount * block_size()));
     auto entries_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache entries"sv, DiskCache::EntryCount * sizeof(CacheEntry)));

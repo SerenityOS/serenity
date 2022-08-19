@@ -91,14 +91,11 @@ public:
     static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~Ext2FS() override;
-    virtual ErrorOr<void> initialize() override;
 
     virtual unsigned total_block_count() const override;
     virtual unsigned free_block_count() const override;
     virtual unsigned total_inode_count() const override;
     virtual unsigned free_inode_count() const override;
-
-    virtual ErrorOr<void> prepare_to_unmount() override;
 
     virtual bool supports_watchers() const override { return true; }
 
@@ -126,6 +123,10 @@ private:
 
     ErrorOr<void> flush_super_block();
 
+    virtual ErrorOr<void> initialize_while_locked() override;
+    virtual bool is_initialized_while_locked() override;
+
+    virtual ErrorOr<void> prepare_to_clear_last_mount() override;
     virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual Ext2FSInode& root_inode() override;
     ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;

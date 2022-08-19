@@ -65,7 +65,8 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
-        dbgln("VirtualFileSystem: Mounting {} at inode {} with flags {}",
+        dbgln("VirtualFileSystem: FileSystemID {}, Mounting {} at inode {} with flags {}",
+            fs.fsid(),
             fs.class_name(),
             inode.identifier(),
             flags);
@@ -73,6 +74,10 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
             dbgln("VirtualFileSystem: Mounting unsuccessful - inode {} is already a mount-point.", inode.identifier());
             return EBUSY;
         }
+        // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
+        new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
+            mounted_count++;
+        });
         mounts.append(move(new_mount));
         return {};
     });
@@ -106,16 +111,24 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
     return {};
 }
 
-ErrorOr<void> VirtualFileSystem::unmount(Inode& guest_inode)
+ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
 {
-    dbgln("VirtualFileSystem: unmount called with inode {}", guest_inode.identifier());
+    auto& guest_inode = mountpoint_custody.inode();
+    auto custody_path = TRY(mountpoint_custody.try_serialize_absolute_path());
+    dbgln("VirtualFileSystem: unmount called with inode {} on mountpoint {}", guest_inode.identifier(), custody_path->view());
 
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         for (size_t i = 0; i < mounts.size(); ++i) {
             auto& mount = mounts[i];
             if (&mount->guest() != &guest_inode)
                 continue;
+            auto mountpoint_path = TRY(mount->absolute_path());
+            if (custody_path->view() != mountpoint_path->view())
+                continue;
             TRY(mount->guest_fs().prepare_to_unmount());
+            mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
+                mounted_count--;
+            });
             dbgln("VirtualFileSystem: Unmounting file system {}...", mount->guest_fs().fsid());
             (void)mounts.unstable_take(i);
             return {};
@@ -142,9 +155,13 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
 
     m_root_inode = root_inode;
     auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
-    dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), pseudo_path);
+    dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
 
+    // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
     m_mounts.with([&](auto& mounts) {
+        new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
+            mounted_count++;
+        });
         mounts.append(move(new_mount));
     });
 
@@ -239,6 +256,24 @@ ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& cre
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
     return custody->inode().metadata();
+}
+
+ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback)
+{
+    return TRY(m_file_backed_file_systems_list.with([&](auto& list) -> ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> {
+        for (auto& node : list) {
+            if (&node.file_description() == &description) {
+                return node;
+            }
+            if (&node.file() == &description.file()) {
+                return node;
+            }
+        }
+        auto fs = TRY(callback(description));
+        VERIFY(fs->is_file_backed());
+        list.append(static_cast<FileBackedFileSystem&>(*fs));
+        return static_ptr_cast<FileBackedFileSystem>(fs);
+    }));
 }
 
 ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
