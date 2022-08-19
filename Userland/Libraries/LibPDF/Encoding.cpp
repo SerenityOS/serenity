@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Julian Offenhäuser <offenhaeuser@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,17 +37,10 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     }
 
     auto encoding = adopt_ref(*new Encoding());
-
-    // Build a String -> Character mapping for handling the differences map
-    HashMap<String, CharDescriptor> base_encoding_name_mapping;
-
-    for (auto& [code_point, descriptor] : base_encoding->descriptors()) {
+    for (auto& [code_point, descriptor] : base_encoding->descriptors())
         encoding->m_descriptors.set(code_point, descriptor);
-        base_encoding_name_mapping.set(descriptor.name, descriptor);
-    }
 
     auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
-    HashMap<u16, String> differences_map;
 
     u16 current_code_point = 0;
     bool first = true;
@@ -61,12 +55,7 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
             auto& object = item.get<NonnullRefPtr<Object>>();
             auto name = object->cast<NameObject>()->name();
 
-            auto character = base_encoding_name_mapping.get(name);
-            // FIXME: This should always have a value. This does cause crashes in certain
-            //        documents, so we must be missing something here.
-            if (character.has_value())
-                encoding->m_descriptors.set(current_code_point, character.value());
-
+            encoding->m_descriptors.set(current_code_point, { name, base_encoding->m_name_mapping.ensure(name) });
             current_code_point++;
         }
     }
@@ -78,9 +67,10 @@ NonnullRefPtr<Encoding> Encoding::standard_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
-    auto name##_code_point = *Utf8View(string##sv).begin();                  \
-    encoding->m_descriptors.set(standard_code, { string, name##_code_point });
+#define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code)   \
+    auto name##_code_point = *Utf8View(string##sv).begin();                    \
+    encoding->m_descriptors.set(standard_code, { string, name##_code_point }); \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -94,7 +84,8 @@ NonnullRefPtr<Encoding> Encoding::mac_encoding()
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
     auto name##_code_point = *Utf8View(string##sv).begin();                  \
-    encoding->m_descriptors.set(mac_code, { string, name##_code_point });
+    encoding->m_descriptors.set(mac_code, { string, name##_code_point });    \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -108,7 +99,8 @@ NonnullRefPtr<Encoding> Encoding::windows_encoding()
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
     auto name##_code_point = *Utf8View(string##sv).begin();                  \
-    encoding->m_descriptors.set(win_code, { string, name##_code_point });
+    encoding->m_descriptors.set(win_code, { string, name##_code_point });    \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -122,7 +114,8 @@ NonnullRefPtr<Encoding> Encoding::pdf_doc_encoding()
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(string, name, standard_code, mac_code, win_code, pdf_code) \
     auto name##_code_point = *Utf8View(string##sv).begin();                  \
-    encoding->m_descriptors.set(pdf_code, { string, name##_code_point });
+    encoding->m_descriptors.set(pdf_code, { string, name##_code_point });    \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -134,9 +127,10 @@ NonnullRefPtr<Encoding> Encoding::symbol_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(string, name, code)                       \
-    auto name##_code_point = *Utf8View(string##sv).begin(); \
-    encoding->m_descriptors.set(code, { string, name##_code_point });
+#define ENUMERATE(string, name, code)                                 \
+    auto name##_code_point = *Utf8View(string##sv).begin();           \
+    encoding->m_descriptors.set(code, { string, name##_code_point }); \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_SYMBOL_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -148,9 +142,10 @@ NonnullRefPtr<Encoding> Encoding::zapf_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(string, name, code)                       \
-    auto name##_code_point = *Utf8View(string##sv).begin(); \
-    encoding->m_descriptors.set(code, { string, name##_code_point });
+#define ENUMERATE(string, name, code)                                 \
+    auto name##_code_point = *Utf8View(string##sv).begin();           \
+    encoding->m_descriptors.set(code, { string, name##_code_point }); \
+    encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_ZAPF_DINGBATS_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
