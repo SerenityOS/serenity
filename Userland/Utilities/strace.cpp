@@ -808,7 +808,7 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath cpath proc exec ptrace sigaction"));
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec ptrace sigaction"));
 
     Vector<StringView> child_argv;
 
@@ -843,7 +843,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parse_syscalls(exclude_syscalls_option, exclude_syscalls);
     parse_syscalls(include_syscalls_option, include_syscalls);
 
-    TRY(Core::System::pledge("stdio proc exec ptrace sigaction"));
+    TRY(Core::System::pledge("stdio rpath proc exec ptrace sigaction"));
 
     int status;
     if (g_pid == -1) {
