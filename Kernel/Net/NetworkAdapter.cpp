@@ -122,7 +122,7 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
         if (unused_packet->buffer->capacity() >= size)
             return unused_packet;
 
-        // FIXME: Shouldn't we put existing buffers that are too small back into the list?
+        unused_packets.append(*unused_packet);
         return nullptr;
     });
 
