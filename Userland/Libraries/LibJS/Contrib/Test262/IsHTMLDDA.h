@@ -18,10 +18,8 @@ public:
     virtual ~IsHTMLDDA() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
-    virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
-    virtual bool has_constructor() const override { return true; }
     virtual bool is_htmldda() const override { return true; }
 };
 
