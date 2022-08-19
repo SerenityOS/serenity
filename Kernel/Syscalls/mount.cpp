@@ -39,7 +39,7 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {} },
 };
 
-static ErrorOr<NonnullLockRefPtr<FileSystem>> create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
+static ErrorOr<NonnullLockRefPtr<FileSystem>> find_or_create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
 {
     for (auto& initializer_entry : s_initializers) {
         if (fs_type != initializer_entry.short_name && fs_type != initializer_entry.name)
@@ -49,6 +49,9 @@ static ErrorOr<NonnullLockRefPtr<FileSystem>> create_filesystem_instance(StringV
             NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create());
             return fs;
         }
+        // Note: If there's an associated file description with the filesystem, we could
+        // try to first find it from the VirtualFileSystem filesystem list and if it was not found,
+        // then create it and add it.
         VERIFY(initializer_entry.create_with_fd);
         if (!possible_description)
             return EBADF;
@@ -60,8 +63,7 @@ static ErrorOr<NonnullLockRefPtr<FileSystem>> create_filesystem_instance(StringV
             dbgln("mount: this is not a seekable file");
             return ENODEV;
         }
-        NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create_with_fd(description));
-        return fs;
+        return TRY(VirtualFileSystem::the().find_already_existing_or_create_file_backed_file_system(description, initializer_entry.create_with_fd));
     }
     return ENODEV;
 }
@@ -112,11 +114,11 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 
     if (!description_or_error.is_error()) {
         auto description = description_or_error.release_value();
-        fs = TRY(create_filesystem_instance(fs_type, description.ptr()));
+        fs = TRY(find_or_create_filesystem_instance(fs_type, description.ptr()));
         auto source_pseudo_path = TRY(description->pseudo_path());
         dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
     } else {
-        fs = TRY(create_filesystem_instance(fs_type, {}));
+        fs = TRY(find_or_create_filesystem_instance(fs_type, {}));
     }
 
     TRY(fs->initialize());
@@ -135,8 +137,7 @@ ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, siz
 
     auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
     auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials, mountpoint->view(), current_directory()));
-    auto& guest_inode = custody->inode();
-    TRY(VirtualFileSystem::the().unmount(guest_inode));
+    TRY(VirtualFileSystem::the().unmount(*custody));
     return 0;
 }
 

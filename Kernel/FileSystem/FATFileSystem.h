@@ -116,11 +116,16 @@ public:
     static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~FATFS() override = default;
-    virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "FATFS"sv; }
     virtual Inode& root_inode() override;
 
 private:
+    virtual ErrorOr<void> initialize_while_locked() override;
+    virtual bool is_initialized_while_locked() override;
+    // FIXME: This is not a proper way to clear last mount of a FAT filesystem,
+    // but for now we simply have no other way to properly do it.
+    virtual ErrorOr<void> prepare_to_clear_last_mount() override { return {}; }
+
     FATFS(OpenFileDescription&);
 
     static constexpr u8 signature_1 = 0x28;

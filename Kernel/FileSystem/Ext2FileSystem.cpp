@@ -77,9 +77,16 @@ ext2_group_desc const& Ext2FS::group_descriptor(GroupIndex group_index) const
     return block_group_descriptors()[group_index.value() - 1];
 }
 
-ErrorOr<void> Ext2FS::initialize()
+bool Ext2FS::is_initialized_while_locked()
 {
-    MutexLocker locker(m_lock);
+    VERIFY(m_lock.is_locked());
+    return !m_root_inode.is_null();
+}
+
+ErrorOr<void> Ext2FS::initialize_while_locked()
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(!is_initialized_while_locked());
 
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
@@ -109,7 +116,7 @@ ErrorOr<void> Ext2FS::initialize()
     set_fragment_size(EXT2_FRAG_SIZE(&super_block));
 
     // Note: This depends on the block size being available.
-    TRY(BlockBasedFileSystem::initialize());
+    TRY(BlockBasedFileSystem::initialize_while_locked());
 
     VERIFY(block_size() <= (int)max_block_size);
 
@@ -1680,7 +1687,7 @@ unsigned Ext2FS::free_inode_count() const
     return super_block().s_free_inodes_count;
 }
 
-ErrorOr<void> Ext2FS::prepare_to_unmount()
+ErrorOr<void> Ext2FS::prepare_to_clear_last_mount()
 {
     MutexLocker locker(m_lock);
 

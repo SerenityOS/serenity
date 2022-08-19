@@ -22,9 +22,16 @@ FATFS::FATFS(OpenFileDescription& file_description)
 {
 }
 
-ErrorOr<void> FATFS::initialize()
+bool FATFS::is_initialized_while_locked()
 {
-    MutexLocker locker(m_lock);
+    VERIFY(m_lock.is_locked());
+    return !m_root_inode.is_null();
+}
+
+ErrorOr<void> FATFS::initialize_while_locked()
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(!is_initialized_while_locked());
 
     m_boot_record = TRY(KBuffer::try_create_with_size("FATFS: Boot Record"sv, m_logical_block_size));
     auto boot_record_buffer = UserOrKernelBuffer::for_kernel_buffer(m_boot_record->data());
@@ -63,7 +70,7 @@ ErrorOr<void> FATFS::initialize()
     u32 root_directory_sectors = ((boot_record()->root_directory_entry_count * sizeof(FATEntry)) + (m_logical_block_size - 1)) / m_logical_block_size;
     m_first_data_sector = boot_record()->reserved_sector_count + (boot_record()->fat_count * boot_record()->sectors_per_fat) + root_directory_sectors;
 
-    TRY(BlockBasedFileSystem::initialize());
+    TRY(BlockBasedFileSystem::initialize_while_locked());
 
     FATEntry root_entry {};
 

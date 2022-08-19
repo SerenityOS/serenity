@@ -308,7 +308,6 @@ public:
     static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~ISO9660FS() override;
-    virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "ISO9660FS"sv; }
     virtual Inode& root_inode() override;
 
@@ -321,6 +320,11 @@ public:
 
 private:
     ISO9660FS(OpenFileDescription&);
+
+    virtual ErrorOr<void> prepare_to_clear_last_mount() override;
+
+    virtual bool is_initialized_while_locked() override;
+    virtual ErrorOr<void> initialize_while_locked() override;
 
     ErrorOr<void> parse_volume_set();
     ErrorOr<void> create_root_inode();

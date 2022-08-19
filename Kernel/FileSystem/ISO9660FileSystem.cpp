@@ -182,9 +182,18 @@ ISO9660FS::ISO9660FS(OpenFileDescription& description)
 
 ISO9660FS::~ISO9660FS() = default;
 
-ErrorOr<void> ISO9660FS::initialize()
+bool ISO9660FS::is_initialized_while_locked()
 {
-    TRY(BlockBasedFileSystem::initialize());
+    VERIFY(m_lock.is_locked());
+    return !m_root_inode.is_null();
+}
+
+ErrorOr<void> ISO9660FS::initialize_while_locked()
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(!is_initialized_while_locked());
+
+    TRY(BlockBasedFileSystem::initialize_while_locked());
     TRY(parse_volume_set());
     TRY(create_root_inode());
     return {};
@@ -221,6 +230,12 @@ u8 ISO9660FS::internal_file_type_to_directory_entry_type(DirectoryEntryView cons
     }
 
     return DT_REG;
+}
+
+ErrorOr<void> ISO9660FS::prepare_to_clear_last_mount()
+{
+    // FIXME: Do proper cleaning here.
+    return {};
 }
 
 ErrorOr<void> ISO9660FS::parse_volume_set()

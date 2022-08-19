@@ -20,6 +20,12 @@ Plan9FS::Plan9FS(OpenFileDescription& file_description)
 {
 }
 
+ErrorOr<void> Plan9FS::prepare_to_clear_last_mount()
+{
+    // FIXME: Do proper cleaning here.
+    return {};
+}
+
 Plan9FS::~Plan9FS()
 {
     // Make sure to destroy the root inode before the FS gets destroyed.
@@ -196,8 +202,17 @@ private:
     bool m_have_been_built { false };
 };
 
-ErrorOr<void> Plan9FS::initialize()
+bool Plan9FS::is_initialized_while_locked()
 {
+    VERIFY(m_lock.is_locked());
+    return !m_root_inode.is_null();
+}
+
+ErrorOr<void> Plan9FS::initialize_while_locked()
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(!is_initialized_while_locked());
+
     ensure_thread();
 
     Message version_message { *this, Message::Type::Tversion };
