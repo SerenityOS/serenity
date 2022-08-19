@@ -58,18 +58,60 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
     struct EmojiAndCodePoints {
         Bitmap const* emoji;
         Span<u32> code_points;
+        u8 real_codepoint_length;
     };
     Vector<EmojiAndCodePoints, max_emoji_code_point_sequence_length> possible_emojis;
 
     // Determine all existing emojis for the longest possible ZWJ emoji sequence,
     // or until we run out of code points in the iterator.
-    for (size_t i = 0; i < max_emoji_code_point_sequence_length; ++i) {
+    bool last_codepoint_sequence_found = false;
+    for (u8 i = 0; i < max_emoji_code_point_sequence_length; ++i) {
         auto code_point = it.peek(i);
         if (!code_point.has_value())
             break;
-        code_points.append(*code_point);
-        if (auto const* emoji = emoji_for_code_points(code_points))
-            possible_emojis.empend(emoji, code_points);
+        // NOTE: The following only applies to emoji presentation, not to other
+        // emoji modifiers.
+        //
+        // For a single emoji core sequence, we assume that emoji presentation
+        // is implied, since this function will only be called for characters
+        // with default text presentation when either (1) the character is not
+        // found in the font, or (2) the character is followed by an explicit
+        // emoji presentation selector.
+        //
+        // For emoji zwj sequences, Serenity chooses to treat minimally-qualified
+        // and unqualified emojis the same as fully-qualified emojis (with regards
+        // to emoji presentation).
+        //
+        // From https://unicode.org/reports/tr51/#Emoji_Implementation_Notes:
+        // > minimally-qualified or unqualified emoji zwj sequences may be handled
+        // > in the same way as their fully-qualified forms; the choice is up to
+        // > the implementation.
+        //
+        // In both cases, whenever an emoji presentation selector (U+FE0F) is found, we
+        // just skip it in order to drop fully-qualified emojis down to their
+        // minimally-qualified or unqualified forms (with respect to emoji presentation)
+        // for doing emoji lookups. This ensures that all forms are treated the same
+        // assuming the emoji filenames are named accordingly (with all emoji presentation
+        // selector codepoints removed).
+        if (code_point.value() == 0xFE0F) {
+            // If the last sequence was found, then we can just update
+            // its real length.
+            if (last_codepoint_sequence_found) {
+                possible_emojis.last().real_codepoint_length++;
+            }
+            // And we can always skip the lookup since the code point sequence
+            // will be unchanged since last time.
+            continue;
+        } else {
+            code_points.append(*code_point);
+        }
+        if (auto const* emoji = emoji_for_code_points(code_points)) {
+            u8 real_codepoint_length = i + 1;
+            possible_emojis.empend(emoji, code_points, real_codepoint_length);
+            last_codepoint_sequence_found = true;
+        } else {
+            last_codepoint_sequence_found = false;
+        }
     }
 
     if (possible_emojis.is_empty())
@@ -77,12 +119,12 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
 
     // If we found one or more matches, return the longest, i.e. last. For example:
     // U+1F3F3 - white flag
-    // U+1F3F3 U+FE0F U+200D U+1F308 - rainbow flag
-    auto& [emoji, emoji_code_points] = possible_emojis.last();
+    // U+1F3F3 U+200D U+1F308 - rainbow flag (unqualified form)
+    auto& [emoji, emoji_code_points, codepoint_length] = possible_emojis.last();
 
     // Advance the iterator, so it's on the last code point of our found emoji and
     // whoever is iterating will advance to the next new code point.
-    for (size_t i = 0; i < emoji_code_points.size() - 1; ++i)
+    for (u8 i = 0; i < codepoint_length - 1; ++i)
         ++it;
 
     return emoji;
