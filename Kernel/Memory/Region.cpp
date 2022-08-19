@@ -402,7 +402,6 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
 PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
     SpinlockLocker locker(vmobject().m_lock);
@@ -444,7 +443,6 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
 PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     auto current_thread = Thread::current();
     if (current_thread)
         current_thread->did_cow_fault();
@@ -461,7 +459,6 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 
 PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_inode());
     VERIFY(!s_mm_lock.is_locked_by_current_processor());
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());

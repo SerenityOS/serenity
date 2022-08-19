@@ -715,8 +715,6 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
-    VERIFY_INTERRUPTS_DISABLED();
-
     auto faulted_in_range = [&fault](auto const* start, auto const* end) {
         return fault.vaddr() >= VirtualAddress { start } && fault.vaddr() < VirtualAddress { end };
     };

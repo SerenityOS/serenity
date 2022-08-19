@@ -254,8 +254,12 @@ void page_fault_handler(TrapFrame* trap)
 {
     clac();
 
-    auto& regs = *trap->regs;
+    // NOTE: Once we've extracted the faulting address from CR2,
+    //       we can re-enable interrupts.
     auto fault_address = read_cr2();
+    sti();
+
+    auto& regs = *trap->regs;
 
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();

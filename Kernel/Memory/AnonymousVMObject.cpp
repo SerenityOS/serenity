@@ -317,7 +317,6 @@ size_t AnonymousVMObject::cow_pages() const
 
 PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, VirtualAddress vaddr)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     SpinlockLocker lock(m_lock);
 
     if (is_volatile()) {
