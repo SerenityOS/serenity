@@ -1448,10 +1448,13 @@ ThrowCompletionOr<bool> is_loosely_equal(VM& vm, Value lhs, Value rhs)
         // b. If ℝ(x) = ℝ(y), return true; otherwise return false.
         if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
-        if (lhs.is_number())
-            return Crypto::SignedBigInteger { MUST(lhs.to_i32(vm)) } == rhs.as_bigint().big_integer();
-        else
-            return Crypto::SignedBigInteger { MUST(rhs.to_i32(vm)) } == lhs.as_bigint().big_integer();
+
+        VERIFY(!lhs.is_nan() && !rhs.is_nan());
+
+        auto& number_side = lhs.is_number() ? lhs : rhs;
+        auto& bigint_side = lhs.is_number() ? rhs : lhs;
+
+        return bigint_side.as_bigint().big_integer().compare_to_double(number_side.as_double()) == Crypto::SignedBigInteger::CompareResult::DoubleEqualsBigInt;
     }
 
     // 14. Return false.
@@ -1547,14 +1550,13 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     VERIFY((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
 
     bool x_lower_than_y;
+    VERIFY(!x_numeric.is_nan() && !y_numeric.is_nan());
     if (x_numeric.is_number()) {
-        x_lower_than_y = x_numeric.is_integral_number()
-            ? Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) + 1 } < y_numeric.as_bigint().big_integer());
+        x_lower_than_y = y_numeric.as_bigint().big_integer().compare_to_double(x_numeric.as_double())
+            == Crypto::SignedBigInteger::CompareResult::DoubleLessThanBigInt;
     } else {
-        x_lower_than_y = y_numeric.is_integral_number()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) + 1 });
+        x_lower_than_y = x_numeric.as_bigint().big_integer().compare_to_double(y_numeric.as_double())
+            == Crypto::SignedBigInteger::CompareResult::DoubleGreaterThanBigInt;
     }
     if (x_lower_than_y)
         return TriState::True;
