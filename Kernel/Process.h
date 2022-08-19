@@ -1014,21 +1014,6 @@ inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
     });
 }
 
-inline bool InodeMetadata::may_read(Process const& process) const
-{
-    return may_read(process.euid(), process.egid(), process.extra_gids());
-}
-
-inline bool InodeMetadata::may_write(Process const& process) const
-{
-    return may_write(process.euid(), process.egid(), process.extra_gids());
-}
-
-inline bool InodeMetadata::may_execute(Process const& process) const
-{
-    return may_execute(process.euid(), process.egid(), process.extra_gids());
-}
-
 inline ProcessID Thread::pid() const
 {
     return m_process->pid();
