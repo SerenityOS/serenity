@@ -79,6 +79,13 @@ Finally, to quickly switch between the two different contexts, simply click the 
 
 ## Notes for WSL Users
 
+### Toolchain
+
+If the serenity directory is on the WSL filesystem you need to configure the CLion toolchain to be WSL.
+To set that up go to `File->Settings->Build, Execution, Deployment->Toolchains` and click on the `+` icon, then select WSL. In `Toolset` select the distribution you have the serenity directory on.
+
+### Terminal
+
 It is possible to set the embedded terminal in CLion to the one that your WSL distribution provides.
 This way you can build and run serenity without leaving the IDE.
 Note that following will only help if you don't use an X-window server to access qemu.
