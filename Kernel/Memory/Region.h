@@ -211,7 +211,7 @@ private:
 
     [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
     [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index);
-    [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalPage& page_in_slot_at_time_of_fault);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage>);

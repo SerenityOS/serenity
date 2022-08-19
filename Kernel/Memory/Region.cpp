@@ -392,7 +392,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
         auto phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_zero_fault(page_index_in_region);
+            return handle_zero_fault(page_index_in_region, *phys_page);
         }
         return handle_cow_fault(page_index_in_region);
     }
@@ -400,42 +400,49 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
-PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
+PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, PhysicalPage& page_in_slot_at_time_of_fault)
 {
     VERIFY(vmobject().is_anonymous());
 
-    SpinlockLocker locker(vmobject().m_lock);
-
-    auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-
-    if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
-        dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
-        if (!remap_vmobject_page(page_index_in_vmobject, *page_slot))
-            return PageFaultResponse::OutOfMemory;
-        return PageFaultResponse::Continue;
-    }
 
     auto current_thread = Thread::current();
     if (current_thread != nullptr)
         current_thread->did_zero_fault();
 
-    if (page_slot->is_lazy_committed_page()) {
+    RefPtr<PhysicalPage> new_physical_page;
+
+    if (page_in_slot_at_time_of_fault.is_lazy_committed_page()) {
         VERIFY(m_vmobject->is_anonymous());
-        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", page_slot->paddr());
+        new_physical_page = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
+        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", new_physical_page->paddr());
     } else {
         auto page_or_error = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_or_error.is_error()) {
             dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
-        page_slot = page_or_error.release_value();
-        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
+        new_physical_page = page_or_error.release_value();
+        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", new_physical_page->paddr());
     }
 
-    if (!remap_vmobject_page(page_index_in_vmobject, *page_slot)) {
-        dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", page_slot);
+    bool already_handled = false;
+
+    {
+        SpinlockLocker locker(vmobject().m_lock);
+        auto& page_slot = physical_page_slot(page_index_in_region);
+        already_handled = !page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page();
+        if (already_handled) {
+            // Someone else already faulted in a new page in this slot. That's fine, we'll just remap with their page.
+            new_physical_page = page_slot;
+        } else {
+            // Install the newly allocated page into the VMObject.
+            page_slot = new_physical_page;
+        }
+    }
+
+    if (!remap_vmobject_page(page_index_in_vmobject, *new_physical_page)) {
+        dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", new_physical_page);
         return PageFaultResponse::OutOfMemory;
     }
     return PageFaultResponse::Continue;
