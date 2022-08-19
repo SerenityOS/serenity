@@ -98,8 +98,7 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
-    // shift is the manual advance given in the TJ operator array
-    void show_text(String const&, float shift = 0.0f);
+    void show_text(String const&);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 
     ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
