@@ -18,6 +18,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
