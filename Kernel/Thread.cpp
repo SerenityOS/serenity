@@ -667,8 +667,7 @@ void Thread::update_time_scheduled(u64 current_scheduler_time, bool is_kernel, b
             Scheduler::add_time_scheduled(delta, is_kernel);
 
             auto& total_time = is_kernel ? m_total_time_scheduled_kernel : m_total_time_scheduled_user;
-            SpinlockLocker scheduler_lock(g_scheduler_lock);
-            total_time += delta;
+            total_time.fetch_add(delta, AK::memory_order_relaxed);
         }
     }
     if (no_longer_running)

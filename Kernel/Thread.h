@@ -1062,8 +1062,8 @@ public:
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 1 * MiB;
 
-    u64 time_in_user() const { return m_total_time_scheduled_user; }
-    u64 time_in_kernel() const { return m_total_time_scheduled_kernel; }
+    u64 time_in_user() const { return m_total_time_scheduled_user.load(AK::MemoryOrder::memory_order_relaxed); }
+    u64 time_in_kernel() const { return m_total_time_scheduled_kernel.load(AK::MemoryOrder::memory_order_relaxed); }
 
     enum class PreviousMode : u8 {
         KernelMode = 0,
@@ -1238,8 +1238,8 @@ private:
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     Optional<u64> m_last_time_scheduled;
-    u64 m_total_time_scheduled_user { 0 };
-    u64 m_total_time_scheduled_kernel { 0 };
+    Atomic<u64> m_total_time_scheduled_user { 0 };
+    Atomic<u64> m_total_time_scheduled_kernel { 0 };
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
     u32 m_ticks_in_user { 0 };
