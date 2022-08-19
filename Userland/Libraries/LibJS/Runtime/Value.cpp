@@ -1028,11 +1028,24 @@ ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
         return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
+        // 6.1.6.2.9 BigInt::leftShift ( x, y ), https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift
         auto multiplier_divisor = Crypto::SignedBigInteger { Crypto::NumberTheory::Power(Crypto::UnsignedBigInteger(2), rhs_numeric.as_bigint().big_integer().unsigned_value()) };
-        if (rhs_numeric.as_bigint().big_integer().is_negative())
-            return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().divided_by(multiplier_divisor).quotient));
-        else
-            return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
+
+        // 1. If y < 0ℤ, then
+        if (rhs_numeric.as_bigint().big_integer().is_negative()) {
+            // a. Return the BigInt value that represents ℝ(x) / 2^-y, rounding down to the nearest integer, including for negative numbers.
+            // NOTE: Since y is negative we can just do ℝ(x) / 2^|y|
+            auto const& big_integer = lhs_numeric.as_bigint().big_integer();
+            auto division_result = big_integer.divided_by(multiplier_divisor);
+
+            // For positive initial values and no remainder just return quotient
+            if (division_result.remainder.is_zero() || !big_integer.is_negative())
+                return js_bigint(vm, division_result.quotient);
+            // For negative round "down" to the next negative number
+            return js_bigint(vm, division_result.quotient.minus(Crypto::SignedBigInteger { 1 }));
+        }
+        // 2. Return the BigInt value that represents ℝ(x) × 2^y.
+        return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor)));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
 }

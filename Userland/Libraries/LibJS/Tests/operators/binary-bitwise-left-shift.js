@@ -63,3 +63,13 @@ test("shifting with non-numeric values", () => {
     expect(Infinity << Infinity).toBe(0);
     expect(-Infinity << Infinity).toBe(0);
 });
+
+describe("logical left shift on big ints", () => {
+    expect(3n << -1n).toBe(1n);
+    expect(3n << -2n).toBe(0n);
+    expect(-3n << -1n).toBe(-2n);
+    expect(-3n << -2n).toBe(-1n);
+    expect(-3n << -128n).toBe(-1n);
+    expect(3n << 6n).toBe(192n);
+    expect(3n << 0n).toBe(3n);
+});
