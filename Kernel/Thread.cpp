@@ -133,19 +133,10 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
 
 Thread::~Thread()
 {
-    {
-        // We need to explicitly remove ourselves from the thread list
-        // here. We may get preempted in the middle of destructing this
-        // thread, which causes problems if the thread list is iterated.
-        // Specifically, if this is the last thread of a process, checking
-        // block conditions would access m_process, which would be in
-        // the middle of being destroyed.
-        SpinlockLocker lock(g_scheduler_lock);
-        VERIFY(!m_process_thread_list_node.is_in_list());
+    VERIFY(!m_process_thread_list_node.is_in_list());
 
-        // We shouldn't be queued
-        VERIFY(m_runnable_priority < 0);
-    }
+    // We shouldn't be queued
+    VERIFY(m_runnable_priority < 0);
 }
 
 Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blocker)
