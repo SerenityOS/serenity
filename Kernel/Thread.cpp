@@ -686,7 +686,6 @@ void Thread::check_dispatch_pending_signal()
     {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
         if (pending_signals_for_state() != 0) {
-            SpinlockLocker lock(m_lock);
             result = dispatch_one_pending_signal();
         }
     }
@@ -739,7 +738,6 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
         return;
 
     if (m_state == Thread::State::Stopped) {
-        SpinlockLocker lock(m_lock);
         if (pending_signals_for_state() != 0) {
             dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
             resume_from_stopped();
@@ -814,7 +812,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
 
 DispatchSignalResult Thread::dispatch_one_pending_signal()
 {
-    VERIFY(m_lock.is_locked_by_current_processor());
+    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if (signal_candidates == 0)
         return DispatchSignalResult::Continue;
@@ -832,7 +830,6 @@ DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
 {
     VERIFY(signal != 0);
     SpinlockLocker scheduler_lock(g_scheduler_lock);
-    SpinlockLocker lock(m_lock);
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if ((signal_candidates & (1 << (signal - 1))) == 0)
         return DispatchSignalResult::Continue;
@@ -1272,7 +1269,6 @@ void Thread::set_state(State new_state, u8 stop_signal)
         return;
 
     {
-        SpinlockLocker thread_lock(m_lock);
         previous_state = m_state;
         if (previous_state == Thread::State::Invalid) {
             // If we were *just* created, we may have already pending signals
