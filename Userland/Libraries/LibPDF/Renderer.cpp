@@ -453,8 +453,10 @@ RENDERER_HANDLER(text_show_string_array)
         } else if (element.has<float>()) {
             next_shift = element.get<float>();
         } else {
+            auto shift = next_shift / 1000.0f;
+            m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
             auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
-            show_text(str, next_shift);
+            show_text(str);
         }
     }
 
@@ -637,7 +639,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     return {};
 }
 
-void Renderer::show_text(String const& string, float shift)
+void Renderer::show_text(String const& string)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
@@ -660,7 +662,7 @@ void Renderer::show_text(String const& string, float shift)
             m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 
         auto glyph_width = char_width * font_size;
-        auto tx = (glyph_width - shift / 1000.0f);
+        auto tx = glyph_width;
         tx += text_state().character_spacing;
 
         if (code_point == ' ')
