@@ -253,8 +253,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto result = Core::System::unveil("/usr/local/lib", "r"); result.is_error() && result.error().code() != ENOENT)
         return result.release_error();
 
-    // This file is only accessible when running as root
-    if (auto result = Core::System::unveil("/boot/Kernel.debug", "r"); result.is_error() && result.error().code() != EACCES)
+    // This file is only accessible when running as root if it is available on the disk image.
+    // It might be possible to not have this file on the disk image, if the user decided to not
+    // include kernel symbols for debug purposes so don't fail if the error is ENOENT.
+    if (auto result = Core::System::unveil("/boot/Kernel.debug", "r"); result.is_error() && (result.error().code() != EACCES && result.error().code() != ENOENT))
         return result.release_error();
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
