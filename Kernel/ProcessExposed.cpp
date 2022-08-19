@@ -205,17 +205,17 @@ ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOr
     return nread;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedComponent::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSGlobalInode::try_create(procfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSDirectoryInode::try_create(procfs_instance, *this));
 }
@@ -225,7 +225,7 @@ void ProcFSExposedDirectory::add_component(ProcFSExposedComponent const&)
     TODO();
 }
 
-ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(StringView name)
 {
     for (auto& component : m_components) {
         if (component.name() == name) {

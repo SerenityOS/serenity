@@ -42,12 +42,12 @@ u8 InterruptManagement::acquire_mapped_interrupt_number(u8 interrupt_number)
     return interrupt_number;
 }
 
-Vector<RefPtr<IRQController>> const& InterruptManagement::controllers()
+Vector<LockRefPtr<IRQController>> const& InterruptManagement::controllers()
 {
     return m_interrupt_controllers;
 }
 
-RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8)
+LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8)
 {
     // TODO: Support more interrupt controllers
     VERIFY(m_interrupt_controllers.size() == 1);

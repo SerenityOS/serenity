@@ -67,7 +67,7 @@ auto AsyncDeviceRequest::get_request_result() const -> RequestResult
     return m_result;
 }
 
-void AsyncDeviceRequest::add_sub_request(NonnullRefPtr<AsyncDeviceRequest> sub_request)
+void AsyncDeviceRequest::add_sub_request(NonnullLockRefPtr<AsyncDeviceRequest> sub_request)
 {
     // Sub-requests cannot be for the same device
     VERIFY(&m_device != &sub_request->m_device);

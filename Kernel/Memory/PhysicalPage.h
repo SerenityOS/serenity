@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
@@ -36,7 +36,7 @@ public:
             free_this();
     }
 
-    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
+    static NonnullLockRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
 
     u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
 

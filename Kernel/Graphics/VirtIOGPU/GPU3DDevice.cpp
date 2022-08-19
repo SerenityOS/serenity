@@ -21,7 +21,7 @@ VirtIOGPU3DDevice::PerContextState::PerContextState(Graphics::VirtIOGPU::Context
 {
 }
 
-NonnullRefPtr<VirtIOGPU3DDevice> VirtIOGPU3DDevice::must_create(VirtIOGraphicsAdapter const& adapter)
+NonnullLockRefPtr<VirtIOGPU3DDevice> VirtIOGPU3DDevice::must_create(VirtIOGraphicsAdapter const& adapter)
 {
     // Setup memory transfer region
     auto region_result = MM.allocate_kernel_region(
@@ -48,7 +48,7 @@ void VirtIOGPU3DDevice::detach(OpenFileDescription& description)
     CharacterDevice::detach(description);
 }
 
-ErrorOr<RefPtr<VirtIOGPU3DDevice::PerContextState>> VirtIOGPU3DDevice::get_context_for_description(OpenFileDescription& description)
+ErrorOr<LockRefPtr<VirtIOGPU3DDevice::PerContextState>> VirtIOGPU3DDevice::get_context_for_description(OpenFileDescription& description)
 {
     auto res = m_context_state_lookup.get(&description);
     if (!res.has_value())
@@ -66,7 +66,7 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
         SpinlockLocker locker(m_graphics_adapter->operation_lock());
         // TODO: Delete the context if it fails to be set in m_context_state_lookup
         auto context_id = m_graphics_adapter->create_context();
-        RefPtr<PerContextState> per_context_state = TRY(PerContextState::try_create(context_id));
+        LockRefPtr<PerContextState> per_context_state = TRY(PerContextState::try_create(context_id));
         TRY(m_context_state_lookup.try_set(&description, per_context_state));
         return {};
     }

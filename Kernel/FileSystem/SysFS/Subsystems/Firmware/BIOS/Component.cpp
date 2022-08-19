@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<BIOSSysFSComponent> BIOSSysFSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+NonnullLockRefPtr<BIOSSysFSComponent> BIOSSysFSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
 {
-    return adopt_ref_if_nonnull(new (nothrow) BIOSSysFSComponent(type, blob_paddr, blob_size)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) BIOSSysFSComponent(type, blob_paddr, blob_size)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)

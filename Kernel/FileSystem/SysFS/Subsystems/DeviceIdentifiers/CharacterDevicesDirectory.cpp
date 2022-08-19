@@ -12,9 +12,9 @@ namespace Kernel {
 
 static SysFSCharacterDevicesDirectory* s_the { nullptr };
 
-NonnullRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::must_create(SysFSDeviceIdentifiersDirectory const& devices_directory)
+NonnullLockRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::must_create(SysFSDeviceIdentifiersDirectory const& devices_directory)
 {
-    return adopt_ref_if_nonnull(new SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
 }
 SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDeviceIdentifiersDirectory const& devices_directory)
     : SysFSDirectory(devices_directory)

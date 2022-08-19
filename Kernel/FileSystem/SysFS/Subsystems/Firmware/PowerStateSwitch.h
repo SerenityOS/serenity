@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/MappedROM.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
@@ -23,7 +23,7 @@ namespace Kernel {
 class PowerStateSwitchNode final : public SysFSComponent {
 public:
     virtual StringView name() const override { return "power_state"sv; }
-    static NonnullRefPtr<PowerStateSwitchNode> must_create(FirmwareSysFSDirectory&);
+    static NonnullLockRefPtr<PowerStateSwitchNode> must_create(FirmwareSysFSDirectory&);
     virtual mode_t permissions() const override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
     virtual ErrorOr<void> truncate(u64) override;

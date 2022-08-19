@@ -38,10 +38,10 @@ private:
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> set_atime(time_t) override;
@@ -86,7 +86,7 @@ public:
         FileSize64bits = 1 << 1,
     };
 
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~Ext2FS() override;
     virtual ErrorOr<void> initialize() override;
@@ -126,9 +126,9 @@ private:
 
     virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual Ext2FSInode& root_inode() override;
-    ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
-    ErrorOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
-    ErrorOr<NonnullRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
+    ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;
+    ErrorOr<NonnullLockRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
+    ErrorOr<NonnullLockRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;
@@ -159,7 +159,7 @@ private:
     mutable ext2_super_block m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
 
-    mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;
+    mutable HashMap<InodeIndex, LockRefPtr<Ext2FSInode>> m_inode_cache;
 
     bool m_super_block_dirty { false };
     bool m_block_group_descriptors_dirty { false };
@@ -180,7 +180,7 @@ private:
     ErrorOr<void> update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
-    RefPtr<Ext2FSInode> m_root_inode;
+    LockRefPtr<Ext2FSInode> m_root_inode;
 };
 
 inline Ext2FS& Ext2FSInode::fs()

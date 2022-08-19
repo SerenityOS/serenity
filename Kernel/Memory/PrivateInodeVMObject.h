@@ -17,14 +17,14 @@ class PrivateInodeVMObject final : public InodeVMObject {
 public:
     virtual ~PrivateInodeVMObject() override;
 
-    static ErrorOr<NonnullRefPtr<PrivateInodeVMObject>> try_create_with_inode(Inode&);
-    virtual ErrorOr<NonnullRefPtr<VMObject>> try_clone() override;
+    static ErrorOr<NonnullLockRefPtr<PrivateInodeVMObject>> try_create_with_inode(Inode&);
+    virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override;
 
 private:
     virtual bool is_private_inode() const override { return true; }
 
-    explicit PrivateInodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
-    explicit PrivateInodeVMObject(PrivateInodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
+    explicit PrivateInodeVMObject(Inode&, FixedArray<LockRefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
+    explicit PrivateInodeVMObject(PrivateInodeVMObject const&, FixedArray<LockRefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
 
     virtual StringView class_name() const override { return "PrivateInodeVMObject"sv; }
 

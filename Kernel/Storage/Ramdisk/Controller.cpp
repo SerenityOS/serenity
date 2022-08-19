@@ -5,15 +5,15 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskController> RamdiskController::initialize()
+NonnullLockRefPtr<RamdiskController> RamdiskController::initialize()
 {
-    return adopt_ref(*new RamdiskController());
+    return adopt_lock_ref(*new RamdiskController());
 }
 
 bool RamdiskController::reset()
@@ -57,7 +57,7 @@ RamdiskController::RamdiskController()
 
 RamdiskController::~RamdiskController() = default;
 
-RefPtr<StorageDevice> RamdiskController::device(u32 index) const
+LockRefPtr<StorageDevice> RamdiskController::device(u32 index) const
 {
     if (index >= m_devices.size())
         return nullptr;

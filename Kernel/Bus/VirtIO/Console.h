@@ -18,7 +18,7 @@ class Console
     friend VirtIO::ConsolePort;
 
 public:
-    static NonnullRefPtr<Console> must_create(PCI::DeviceIdentifier const&);
+    static NonnullLockRefPtr<Console> must_create(PCI::DeviceIdentifier const&);
     virtual ~Console() override = default;
 
     virtual StringView purpose() const override { return class_name(); }
@@ -64,7 +64,7 @@ private:
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
 
-    Vector<RefPtr<ConsolePort>> m_ports;
+    Vector<LockRefPtr<ConsolePort>> m_ports;
     void setup_multiport();
     void process_control_message(ControlMessage message);
     void write_control_message(ControlMessage message);

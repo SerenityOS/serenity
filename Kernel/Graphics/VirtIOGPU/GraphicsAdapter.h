@@ -37,7 +37,7 @@ class VirtIOGraphicsAdapter final
     friend class VirtIOGPU3DDevice;
 
 public:
-    static NonnullRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static NonnullLockRefPtr<VirtIOGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
 
     virtual void initialize() override;
     void initialize_3d_device();
@@ -63,7 +63,7 @@ private:
             Graphics::VirtIOGPU::ResourceID resource_id { 0 };
         };
 
-        RefPtr<VirtIODisplayConnector> display_connector;
+        LockRefPtr<VirtIODisplayConnector> display_connector;
         PhysicalBuffer main_buffer;
         PhysicalBuffer back_buffer;
     };
@@ -119,7 +119,7 @@ private:
     // Note: Resource ID 0 is invalid, and we must not allocate 0 as the first resource ID.
     Atomic<u32> m_resource_id_counter { 1 };
     Atomic<u32> m_context_id_counter { 1 };
-    RefPtr<VirtIOGPU3DDevice> m_3d_device;
+    LockRefPtr<VirtIOGPU3DDevice> m_3d_device;
     bool m_has_virgl_support { false };
 
     // Synchronous commands

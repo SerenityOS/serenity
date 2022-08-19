@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -18,12 +18,12 @@ class AsyncBlockDeviceRequest;
 
 class ISAIDEController final : public IDEController {
 public:
-    static NonnullRefPtr<ISAIDEController> initialize();
+    static NonnullLockRefPtr<ISAIDEController> initialize();
 
 private:
     ISAIDEController();
 
-    RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
+    LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     void initialize_channels();
 };
 }

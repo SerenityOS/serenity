@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
@@ -26,7 +26,7 @@ class StorageController : public AtomicRefCounted<StorageController> {
 public:
     virtual ~StorageController() = default;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const = 0;
+    virtual LockRefPtr<StorageDevice> device(u32 index) const = 0;
     virtual size_t devices_count() const = 0;
 
     u32 controller_id() const { return m_controller_id; }

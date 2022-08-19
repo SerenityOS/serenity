@@ -87,7 +87,7 @@ bool PS2KeyboardDevice::handle_irq(RegisterState const&)
     return m_i8042_controller->irq_process_input_buffer(HIDDevice::Type::Keyboard);
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(I8042Controller const& ps2_controller)
 {
     auto keyboard_device = TRY(DeviceManagement::try_create_device<PS2KeyboardDevice>(ps2_controller));
 

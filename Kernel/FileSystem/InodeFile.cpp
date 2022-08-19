@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-InodeFile::InodeFile(NonnullRefPtr<Inode>&& inode)
+InodeFile::InodeFile(NonnullLockRefPtr<Inode>&& inode)
     : m_inode(move(inode))
 {
 }
@@ -87,7 +87,7 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
 ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    RefPtr<Memory::InodeVMObject> vmobject;
+    LockRefPtr<Memory::InodeVMObject> vmobject;
     if (shared)
         vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
     else

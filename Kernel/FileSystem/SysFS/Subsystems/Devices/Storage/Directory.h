@@ -19,7 +19,7 @@ class SysFSStorageDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "storage"sv; }
     static SysFSStorageDirectory& the();
-    static NonnullRefPtr<SysFSStorageDirectory> must_create(SysFSDevicesDirectory const&);
+    static NonnullLockRefPtr<SysFSStorageDirectory> must_create(SysFSDevicesDirectory const&);
 
     void plug(Badge<StorageDevice>, StorageDeviceSysFSDirectory&);
     void unplug(Badge<StorageDevice>, SysFSDirectory&);

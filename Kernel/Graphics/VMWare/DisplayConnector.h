@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -23,7 +23,7 @@ class VMWareDisplayConnector : public DisplayConnector {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static NonnullLockRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
 private:
     VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
@@ -48,7 +48,7 @@ private:
     virtual void disable_console() override;
 
 private:
-    NonnullRefPtr<VMWareGraphicsAdapter> m_parent_adapter;
-    RefPtr<VMWareFramebufferConsole> m_framebuffer_console;
+    NonnullLockRefPtr<VMWareGraphicsAdapter> m_parent_adapter;
+    LockRefPtr<VMWareFramebufferConsole> m_framebuffer_console;
 };
 }

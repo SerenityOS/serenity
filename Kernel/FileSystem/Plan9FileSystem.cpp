@@ -9,9 +9,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> Plan9FS::try_create(OpenFileDescription& file_description)
+ErrorOr<NonnullLockRefPtr<FileSystem>> Plan9FS::try_create(OpenFileDescription& file_description)
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FS(file_description)));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Plan9FS(file_description)));
 }
 
 Plan9FS::Plan9FS(OpenFileDescription& file_description)
@@ -487,7 +487,7 @@ bool Plan9FS::is_complete(ReceiveCompletion const& completion)
     return true;
 }
 
-ErrorOr<void> Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> completion)
+ErrorOr<void> Plan9FS::post_message(Message& message, LockRefPtr<ReceiveCompletion> completion)
 {
     auto const& buffer = message.build();
     u8 const* data = buffer.data();
@@ -584,7 +584,7 @@ ErrorOr<void> Plan9FS::post_message_and_wait_for_a_reply(Message& message)
 {
     auto request_type = message.type();
     auto tag = message.tag();
-    auto completion = adopt_ref(*new ReceiveCompletion(tag));
+    auto completion = adopt_lock_ref(*new ReceiveCompletion(tag));
     TRY(post_message(message, completion));
     if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
         return EINTR;
@@ -668,9 +668,9 @@ Plan9FSInode::Plan9FSInode(Plan9FS& fs, u32 fid)
 {
 }
 
-ErrorOr<NonnullRefPtr<Plan9FSInode>> Plan9FSInode::try_create(Plan9FS& fs, u32 fid)
+ErrorOr<NonnullLockRefPtr<Plan9FSInode>> Plan9FSInode::try_create(Plan9FS& fs, u32 fid)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FSInode(fs, fid));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Plan9FSInode(fs, fid));
 }
 
 Plan9FSInode::~Plan9FSInode()
@@ -893,7 +893,7 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSys
     return ENOTIMPL;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
 {
     u32 newfid = fs().allocate_fid();
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twalk };
@@ -902,7 +902,7 @@ ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
     return TRY(Plan9FSInode::try_create(fs(), newfid));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullLockRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     // TODO
     return ENOTIMPL;

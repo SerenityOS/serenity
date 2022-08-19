@@ -6,11 +6,7 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeWeakPtr.h>
-#else
-
-#    include <AK/Weakable.h>
+#include <AK/Weakable.h>
 
 namespace AK {
 
@@ -185,4 +181,3 @@ WeakPtr<T> make_weak_ptr_if_nonnull(T const* ptr)
 }
 
 using AK::WeakPtr;
-#endif

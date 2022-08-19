@@ -20,14 +20,14 @@ extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
 
-UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
+UNMAP_AFTER_INIT NonnullLockRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
 {
-    return adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
+ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
 {
-    auto directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PageDirectory));
+    auto directory = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PageDirectory));
 
     // NOTE: Take the MM lock since we need it for quickmap.
     SpinlockLocker lock(s_mm_lock);

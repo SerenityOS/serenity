@@ -14,10 +14,10 @@ namespace Kernel {
 
 class UDPSocket final : public IPv4Socket {
 public:
-    static ErrorOr<NonnullRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullLockRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~UDPSocket() override;
 
-    static RefPtr<UDPSocket> from_port(u16);
+    static LockRefPtr<UDPSocket> from_port(u16);
     static void for_each(Function<void(UDPSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(UDPSocket const&)>);
 

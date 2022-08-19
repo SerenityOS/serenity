@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Storage/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -26,7 +26,7 @@ public:
     void initialize(StringView boot_argument, bool force_pio, bool nvme_poll);
     static StorageManagement& the();
 
-    NonnullRefPtr<FileSystem> root_filesystem() const;
+    NonnullLockRefPtr<FileSystem> root_filesystem() const;
 
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
@@ -51,11 +51,11 @@ private:
 
     ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
-    RefPtr<BlockDevice> boot_block_device() const;
+    LockRefPtr<BlockDevice> boot_block_device() const;
 
     StringView m_boot_argument;
-    WeakPtr<BlockDevice> m_boot_block_device;
-    NonnullRefPtrVector<StorageController> m_controllers;
+    LockWeakPtr<BlockDevice> m_boot_block_device;
+    NonnullLockRefPtrVector<StorageController> m_controllers;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 

@@ -24,31 +24,31 @@ ProcessGroup::~ProcessGroup()
     });
 }
 
-ErrorOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID pgid)
+ErrorOr<NonnullLockRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID pgid)
 {
-    auto process_group = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
+    auto process_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
     process_groups().with([&](auto& groups) {
         groups.prepend(*process_group);
     });
     return process_group;
 }
 
-ErrorOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
+ErrorOr<NonnullLockRefPtr<ProcessGroup>> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
 {
-    return process_groups().with([&](auto& groups) -> ErrorOr<NonnullRefPtr<ProcessGroup>> {
+    return process_groups().with([&](auto& groups) -> ErrorOr<NonnullLockRefPtr<ProcessGroup>> {
         for (auto& group : groups) {
             if (group.pgid() == pgid)
                 return group;
         }
-        auto process_group = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
+        auto process_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
         groups.prepend(*process_group);
         return process_group;
     });
 }
 
-RefPtr<ProcessGroup> ProcessGroup::from_pgid(ProcessGroupID pgid)
+LockRefPtr<ProcessGroup> ProcessGroup::from_pgid(ProcessGroupID pgid)
 {
-    return process_groups().with([&](auto& groups) -> RefPtr<ProcessGroup> {
+    return process_groups().with([&](auto& groups) -> LockRefPtr<ProcessGroup> {
         for (auto& group : groups) {
             if (group.pgid() == pgid)
                 return &group;

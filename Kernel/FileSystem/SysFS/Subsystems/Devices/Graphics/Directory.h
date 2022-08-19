@@ -17,7 +17,7 @@ class SysFSGraphicsDirectory : public SysFSDirectory {
 
 public:
     virtual StringView name() const override { return "graphics"sv; }
-    static NonnullRefPtr<SysFSGraphicsDirectory> must_create(SysFSDevicesDirectory const&);
+    static NonnullLockRefPtr<SysFSGraphicsDirectory> must_create(SysFSDevicesDirectory const&);
 
 private:
     explicit SysFSGraphicsDirectory(SysFSDevicesDirectory const&);

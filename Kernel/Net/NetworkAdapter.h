@@ -12,10 +12,10 @@
 #include <AK/IntrusiveList.h>
 #include <AK/MACAddress.h>
 #include <AK/Types.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Library/LockWeakPtr.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
@@ -39,12 +39,12 @@ struct PacketWithTimestamp final : public AtomicRefCounted<PacketWithTimestamp> 
 
     NonnullOwnPtr<KBuffer> buffer;
     Time timestamp;
-    IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
+    IntrusiveListNode<PacketWithTimestamp, LockRefPtr<PacketWithTimestamp>> packet_node;
 };
 
 class NetworkAdapter
     : public AtomicRefCounted<NetworkAdapter>
-    , public Weakable<NetworkAdapter> {
+    , public LockWeakable<NetworkAdapter> {
 public:
     static constexpr i32 LINKSPEED_INVALID = -1;
 
@@ -83,7 +83,7 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
-    RefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
+    LockRefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
     void release_packet_buffer(PacketWithTimestamp&);
 
     constexpr size_t layer3_payload_offset() const { return sizeof(EthernetFrameHeader); }

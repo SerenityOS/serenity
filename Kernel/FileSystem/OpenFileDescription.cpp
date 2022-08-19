@@ -22,19 +22,19 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
 {
     auto inode_file = TRY(InodeFile::create(custody.inode()));
-    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(move(inode_file))));
+    auto description = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) OpenFileDescription(move(inode_file))));
 
     description->m_custody = custody;
     TRY(description->attach());
     return description;
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(File& file)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> OpenFileDescription::try_create(File& file)
 {
-    auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(file)));
+    auto description = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) OpenFileDescription(file)));
     TRY(description->attach());
     return description;
 }

@@ -15,7 +15,7 @@ namespace Kernel {
 class StorageDeviceAttributeSysFSComponent;
 class StorageDeviceSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<StorageDeviceSysFSDirectory> create(SysFSDirectory const&, StorageDevice const&);
+    static NonnullLockRefPtr<StorageDeviceSysFSDirectory> create(SysFSDirectory const&, StorageDevice const&);
 
     virtual StringView name() const override { return m_device_directory_name->view(); }
 
@@ -23,7 +23,7 @@ public:
 
 private:
     StorageDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const&, StorageDevice const&);
-    RefPtr<StorageDevice> m_device;
+    LockRefPtr<StorageDevice> m_device;
     NonnullOwnPtr<KString> m_device_directory_name;
 };
 

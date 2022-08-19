@@ -111,9 +111,9 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     return packet_size;
 }
 
-RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
+LockRefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
 {
-    auto packet = m_unused_packets.with([size](auto& unused_packets) -> RefPtr<PacketWithTimestamp> {
+    auto packet = m_unused_packets.with([size](auto& unused_packets) -> LockRefPtr<PacketWithTimestamp> {
         if (unused_packets.is_empty())
             return nullptr;
 
@@ -135,7 +135,7 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
     auto buffer_or_error = KBuffer::try_create_with_size("NetworkAdapter: Packet buffer"sv, size, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
     if (buffer_or_error.is_error())
         return {};
-    packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { buffer_or_error.release_value(), kgettimeofday() });
+    packet = adopt_lock_ref_if_nonnull(new (nothrow) PacketWithTimestamp { buffer_or_error.release_value(), kgettimeofday() });
     if (!packet)
         return {};
     packet->buffer->set_size(size);

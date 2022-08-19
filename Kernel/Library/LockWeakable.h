@@ -9,30 +9,30 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/AtomicRefCounted.h>
-#include <AK/RefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/ScopedCritical.h>
+#include <Kernel/Library/LockRefPtr.h>
 
 namespace AK {
 
 template<typename T>
-class Weakable;
+class LockWeakable;
 template<typename T>
-class WeakPtr;
+class LockWeakPtr;
 
 class WeakLink final : public AtomicRefCounted<WeakLink> {
     template<typename T>
-    friend class Weakable;
+    friend class LockWeakable;
     template<typename T>
-    friend class WeakPtr;
+    friend class LockWeakPtr;
 
 public:
-    template<typename T, typename PtrTraits = RefPtrTraits<T>>
-    RefPtr<T, PtrTraits> strong_ref() const
+    template<typename T, typename PtrTraits = LockRefPtrTraits<T>>
+    LockRefPtr<T, PtrTraits> strong_ref() const
         requires(IsBaseOf<AtomicRefCountedBase, T>)
     {
-        RefPtr<T, PtrTraits> ref;
+        LockRefPtr<T, PtrTraits> ref;
 
         {
             // We don't want to be preempted while we are trying to obtain
@@ -41,7 +41,7 @@ public:
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
                 T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
                 if (ptr && ptr->try_ref())
-                    ref = adopt_ref(*ptr);
+                    ref = adopt_lock_ref(*ptr);
             }
             m_consumers.fetch_sub(1u << 1, AK::MemoryOrder::memory_order_release);
         }
@@ -91,18 +91,18 @@ private:
 };
 
 template<typename T>
-class Weakable {
+class LockWeakable {
 private:
     class Link;
 
 public:
     template<typename U = T>
-    ErrorOr<WeakPtr<U>> try_make_weak_ptr() const;
+    ErrorOr<LockWeakPtr<U>> try_make_weak_ptr() const;
 
 protected:
-    Weakable() = default;
+    LockWeakable() = default;
 
-    ~Weakable()
+    ~LockWeakable()
     {
         m_being_destroyed.store(true, AK::MemoryOrder::memory_order_release);
         revoke_weak_ptrs();
@@ -115,10 +115,10 @@ protected:
     }
 
 private:
-    mutable RefPtr<WeakLink> m_link;
+    mutable LockRefPtr<WeakLink> m_link;
     Atomic<bool> m_being_destroyed { false };
 };
 
 }
 
-using AK::Weakable;
+using AK::LockWeakable;

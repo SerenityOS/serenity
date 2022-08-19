@@ -31,7 +31,7 @@ public:
     SysFSBusDirectory& buses_directory();
 
 private:
-    NonnullRefPtr<SysFSRootDirectory> m_root_directory;
+    NonnullLockRefPtr<SysFSRootDirectory> m_root_directory;
     Spinlock m_root_directory_lock { LockRank::None };
 };
 

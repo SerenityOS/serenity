@@ -16,7 +16,7 @@ class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
 public:
-    static ErrorOr<NonnullRefPtr<MasterPTY>> try_create(unsigned index);
+    static ErrorOr<NonnullLockRefPtr<MasterPTY>> try_create(unsigned index);
     virtual ~MasterPTY() override;
 
     unsigned index() const { return m_index; }
@@ -39,7 +39,7 @@ private:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual StringView class_name() const override { return "MasterPTY"sv; }
 
-    RefPtr<SlavePTY> m_slave;
+    LockRefPtr<SlavePTY> m_slave;
     unsigned m_index;
     bool m_closed { false };
     NonnullOwnPtr<DoubleBuffer> m_buffer;

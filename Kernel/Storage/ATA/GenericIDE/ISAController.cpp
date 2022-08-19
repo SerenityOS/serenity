@@ -5,10 +5,10 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<ISAIDEController> ISAIDEController::initialize()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ISAIDEController> ISAIDEController::initialize()
 {
-    return adopt_ref(*new ISAIDEController());
+    return adopt_lock_ref(*new ISAIDEController());
 }
 
 UNMAP_AFTER_INIT ISAIDEController::ISAIDEController()

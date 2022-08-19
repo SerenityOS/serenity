@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/CircularDeque.h>
-#include <AK/WeakPtr.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
+#include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
 
@@ -89,8 +89,8 @@ private:
     // FIXME: use something like AK::Bitmap but which takes a size template parameter
     u8 m_special_character_bitmask[TTY_BUFFER_SIZE / 8];
 
-    WeakPtr<Process> m_original_process_parent;
-    WeakPtr<ProcessGroup> m_pg;
+    LockWeakPtr<Process> m_original_process_parent;
+    LockWeakPtr<ProcessGroup> m_pg;
     termios m_termios;
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };

@@ -9,13 +9,13 @@
 #include <AK/EnumBits.h>
 #include <AK/Error.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/RecursionDecision.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 
 namespace Kernel {
 
@@ -291,9 +291,9 @@ public:
         //       We need it as an OwnPtr to default-construct this struct.
         OwnPtr<KBuffer> blocks;
 
-        static ErrorOr<NonnullRefPtr<DirectoryEntry>> try_create(u32 extent, u32 length, OwnPtr<KBuffer> blocks)
+        static ErrorOr<NonnullLockRefPtr<DirectoryEntry>> try_create(u32 extent, u32 length, OwnPtr<KBuffer> blocks)
         {
-            return adopt_nonnull_ref_or_enomem(new (nothrow) DirectoryEntry(extent, length, move(blocks)));
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) DirectoryEntry(extent, length, move(blocks)));
         }
 
     private:
@@ -305,7 +305,7 @@ public:
         }
     };
 
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create(OpenFileDescription&);
 
     virtual ~ISO9660FS() override;
     virtual ErrorOr<void> initialize() override;
@@ -317,7 +317,7 @@ public:
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
-    ErrorOr<NonnullRefPtr<DirectoryEntry>> directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record);
+    ErrorOr<NonnullLockRefPtr<DirectoryEntry>> directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record);
 
 private:
     ISO9660FS(OpenFileDescription&);
@@ -331,10 +331,10 @@ private:
     ErrorOr<void> visit_directory_record(ISO::DirectoryRecordHeader const& record, Function<ErrorOr<RecursionDecision>(ISO::DirectoryRecordHeader const*)> const& visitor) const;
 
     OwnPtr<ISO::PrimaryVolumeDescriptor> m_primary_volume;
-    RefPtr<ISO9660Inode> m_root_inode;
+    LockRefPtr<ISO9660Inode> m_root_inode;
 
     mutable u32 m_cached_inode_count { 0 };
-    HashMap<u32, NonnullRefPtr<DirectoryEntry>> m_directory_entry_cache;
+    HashMap<u32, NonnullLockRefPtr<DirectoryEntry>> m_directory_entry_cache;
 };
 
 class ISO9660Inode final : public Inode {
@@ -350,10 +350,10 @@ public:
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> chmod(mode_t) override;
@@ -370,7 +370,7 @@ private:
     static constexpr size_t max_file_identifier_length = 256 - sizeof(ISO::DirectoryRecordHeader);
 
     ISO9660Inode(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
-    static ErrorOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
+    static ErrorOr<NonnullLockRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
 
     static InodeIndex get_inode_index(ISO::DirectoryRecordHeader const& record, StringView name);
     static StringView get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer);

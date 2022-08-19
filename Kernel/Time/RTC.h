@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
 class RealTimeClock final : public HardwareTimer<IRQHandler> {
 public:
-    static NonnullRefPtr<RealTimeClock> create(Function<void(RegisterState const&)> callback);
+    static NonnullLockRefPtr<RealTimeClock> create(Function<void(RegisterState const&)> callback);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
     virtual StringView model() const override { return "Real Time Clock"sv; }
     virtual size_t ticks_per_second() const override;

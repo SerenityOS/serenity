@@ -20,7 +20,7 @@ class DevTmpFS final : public FileSystem {
 
 public:
     virtual ~DevTmpFS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "DevTmpFS"sv; }
@@ -30,7 +30,7 @@ private:
     DevTmpFS();
     size_t allocate_inode_index();
 
-    RefPtr<DevTmpFSRootDirectoryInode> m_root_inode;
+    LockRefPtr<DevTmpFSRootDirectoryInode> m_root_inode;
     InodeIndex m_next_inode_index { 0 };
 };
 
@@ -50,11 +50,11 @@ protected:
     DevTmpFSInode(DevTmpFS&, MajorNumber, MinorNumber);
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual InodeMetadata metadata() const override final;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> chmod(mode_t) override;
@@ -77,7 +77,7 @@ protected:
     virtual Type node_type() const = 0;
 
 private:
-    IntrusiveListNode<DevTmpFSInode, RefPtr<DevTmpFSInode>> m_list_node;
+    IntrusiveListNode<DevTmpFSInode, LockRefPtr<DevTmpFSInode>> m_list_node;
 };
 
 class DevTmpFSDeviceInode final : public DevTmpFSInode {
@@ -135,10 +135,10 @@ protected:
     // ^DevTmpFSInode
     virtual Type node_type() const override { return Type::Directory; }
 
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     DevTmpFSDirectoryInode(DevTmpFS&, NonnullOwnPtr<KString> name);
     // ^Inode
     OwnPtr<KString> m_name;

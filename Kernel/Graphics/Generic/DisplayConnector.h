@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -20,7 +20,7 @@ class GenericDisplayConnector
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<GenericDisplayConnector> must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
+    static NonnullLockRefPtr<GenericDisplayConnector> must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
 
 protected:
     ErrorOr<void> create_attached_framebuffer_console();
@@ -47,6 +47,6 @@ protected:
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
 };
 }

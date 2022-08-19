@@ -67,7 +67,7 @@ public:
 private:
     friend class Device;
 
-    NonnullRefPtr<USBController> m_controller;
+    NonnullLockRefPtr<USBController> m_controller;
 
     Type m_type;
     Direction m_direction;

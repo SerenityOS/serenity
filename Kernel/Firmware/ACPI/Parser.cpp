@@ -35,11 +35,11 @@ void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_
     VERIFY(s_acpi_parser);
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(StringView name, PhysicalAddress paddr, size_t table_size)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(StringView name, PhysicalAddress paddr, size_t table_size)
 {
     // FIXME: Handle allocation failure gracefully
     auto table_name = KString::must_create(name);
-    return adopt_ref(*new (nothrow) ACPISysFSComponent(move(table_name), paddr, table_size));
+    return adopt_lock_ref(*new (nothrow) ACPISysFSComponent(move(table_name), paddr, table_size));
 }
 
 ErrorOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
@@ -97,9 +97,9 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     }));
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    auto acpi_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
+    auto acpi_directory = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
     acpi_directory->find_tables_and_register_them_as_components();
     return acpi_directory;
 }

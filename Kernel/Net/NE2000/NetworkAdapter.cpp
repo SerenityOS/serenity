@@ -138,7 +138,7 @@ struct [[gnu::packed]] received_packet_header {
     u16 length;
 };
 
-UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT LockRefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     constexpr auto ne2k_ids = Array {
         PCI::HardwareID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
@@ -162,7 +162,7 @@ UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initi
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    return adopt_ref_if_nonnull(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    return adopt_lock_ref_if_nonnull(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
 }
 
 UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)

@@ -13,7 +13,7 @@
 namespace Kernel::Graphics {
 class VGATextModeConsole final : public Console {
 public:
-    static NonnullRefPtr<VGATextModeConsole> initialize();
+    static NonnullLockRefPtr<VGATextModeConsole> initialize();
     virtual size_t chars_per_line() const override { return width(); };
 
     virtual bool has_hardware_cursor() const override { return true; }

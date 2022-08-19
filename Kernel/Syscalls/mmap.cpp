@@ -203,7 +203,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        RefPtr<Memory::AnonymousVMObject> vmobject;
+        LockRefPtr<Memory::AnonymousVMObject> vmobject;
         if (flags & MAP_PURGEABLE) {
             vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(rounded_size, strategy));
         } else {
@@ -459,7 +459,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
         auto range = old_region->range();
         auto old_prot = region_access_flags_to_prot(old_region->access());
         auto old_offset = old_region->offset_in_vmobject();
-        NonnullRefPtr inode = static_cast<Memory::SharedInodeVMObject&>(old_region->vmobject()).inode();
+        NonnullLockRefPtr inode = static_cast<Memory::SharedInodeVMObject&>(old_region->vmobject()).inode();
 
         auto new_vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode));
         auto old_name = old_region->take_name();

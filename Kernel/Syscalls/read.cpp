@@ -13,7 +13,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-static ErrorOr<NonnullRefPtr<OpenFileDescription>> open_readable_file_description(auto& fds, int fd)
+static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_readable_file_description(auto& fds, int fd)
 {
     auto description = TRY(fds.with_shared([&](auto& fds) { return fds.open_file_description(fd); }));
     if (!description->is_readable())

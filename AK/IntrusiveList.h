@@ -13,6 +13,10 @@
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 
+#ifdef KERNEL
+#    include <Kernel/Library/LockRefPtr.h>
+#endif
+
 namespace AK::Detail {
 
 template<typename T, typename Container = RawPtr<T>>
@@ -56,7 +60,7 @@ public:
     void prepend(T& n);
     void insert_before(T&, T&);
     void remove(T& n);
-    [[nodiscard]] bool contains(const T&) const;
+    [[nodiscard]] bool contains(T const&) const;
     [[nodiscard]] Container first() const;
     [[nodiscard]] Container last() const;
 
@@ -71,7 +75,7 @@ public:
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
@@ -99,7 +103,7 @@ public:
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
@@ -122,12 +126,12 @@ public:
     class ConstIterator {
     public:
         ConstIterator() = default;
-        ConstIterator(const T* value)
+        ConstIterator(T const* value)
             : m_value(value)
         {
         }
 
-        const T& operator*() const { return *m_value; }
+        T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         bool operator==(ConstIterator const& other) const { return other.m_value == m_value; }
         bool operator!=(ConstIterator const& other) const { return !(*this == other); }
@@ -138,7 +142,7 @@ public:
         }
 
     private:
-        const T* m_value { nullptr };
+        T const* m_value { nullptr };
     };
 
     ConstIterator begin() const;
@@ -147,8 +151,8 @@ public:
 private:
     static T* next(T* current);
     static T* prev(T* current);
-    static const T* next(const T* current);
-    static const T* prev(const T* current);
+    static T const* next(T const* current);
+    static T const* prev(T const* current);
     static T* node_to_value(SubstitutedIntrusiveListNode<T, Container>& node);
     IntrusiveListStorage<T, Container> m_storage;
 };
@@ -284,7 +288,7 @@ inline void IntrusiveList<T, Container, member>::remove(T& n)
 }
 
 template<class T, typename Container, SubstitutedIntrusiveListNode<T, Container> T::*member>
-inline bool IntrusiveList<T, Container, member>::contains(const T& n) const
+inline bool IntrusiveList<T, Container, member>::contains(T const& n) const
 {
     auto& nnode = n.*member;
     return nnode.m_storage == &m_storage;
@@ -323,18 +327,18 @@ inline Container IntrusiveList<T, Container, member>::last() const
 }
 
 template<class T, typename Container, SubstitutedIntrusiveListNode<T, Container> T::*member>
-inline const T* IntrusiveList<T, Container, member>::next(const T* current)
+inline T const* IntrusiveList<T, Container, member>::next(T const* current)
 {
     auto& nextnode = (current->*member).m_next;
-    const T* nextstruct = nextnode ? node_to_value(*nextnode) : nullptr;
+    T const* nextstruct = nextnode ? node_to_value(*nextnode) : nullptr;
     return nextstruct;
 }
 
 template<class T, typename Container, SubstitutedIntrusiveListNode<T, Container> T::*member>
-inline const T* IntrusiveList<T, Container, member>::prev(const T* current)
+inline T const* IntrusiveList<T, Container, member>::prev(T const* current)
 {
     auto& prevnode = (current->*member).m_prev;
-    const T* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
+    T const* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
     return prevstruct;
 }
 
@@ -428,6 +432,22 @@ public:
     [[nodiscard]] NonnullRefPtr<T> take_first() { return *IntrusiveList<T, RefPtr<T>, member>::take_first(); }
     [[nodiscard]] NonnullRefPtr<T> take_last() { return *IntrusiveList<T, RefPtr<T>, member>::take_last(); }
 };
+
+#ifdef KERNEL
+// Specialise IntrusiveList for NonnullLockRefPtr
+// By default, intrusive lists cannot contain null entries anyway, so switch to LockRefPtr
+// and just make the user-facing functions deref the pointers.
+
+template<class T, SubstitutedIntrusiveListNode<T, NonnullLockRefPtr<T>> T::*member>
+class IntrusiveList<T, NonnullLockRefPtr<T>, member> : public IntrusiveList<T, LockRefPtr<T>, member> {
+public:
+    [[nodiscard]] NonnullLockRefPtr<T> first() const { return *IntrusiveList<T, LockRefPtr<T>, member>::first(); }
+    [[nodiscard]] NonnullLockRefPtr<T> last() const { return *IntrusiveList<T, LockRefPtr<T>, member>::last(); }
+
+    [[nodiscard]] NonnullLockRefPtr<T> take_first() { return *IntrusiveList<T, LockRefPtr<T>, member>::take_first(); }
+    [[nodiscard]] NonnullLockRefPtr<T> take_last() { return *IntrusiveList<T, LockRefPtr<T>, member>::take_last(); }
+};
+#endif
 
 }
 

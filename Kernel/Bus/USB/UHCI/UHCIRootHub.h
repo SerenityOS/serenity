@@ -8,9 +8,9 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 
 namespace Kernel::USB {
 
@@ -18,9 +18,9 @@ class UHCIController;
 
 class UHCIRootHub {
 public:
-    static ErrorOr<NonnullOwnPtr<UHCIRootHub>> try_create(NonnullRefPtr<UHCIController>);
+    static ErrorOr<NonnullOwnPtr<UHCIRootHub>> try_create(NonnullLockRefPtr<UHCIController>);
 
-    UHCIRootHub(NonnullRefPtr<UHCIController>);
+    UHCIRootHub(NonnullLockRefPtr<UHCIController>);
     ~UHCIRootHub() = default;
 
     ErrorOr<void> setup(Badge<UHCIController>);
@@ -32,8 +32,8 @@ public:
     void check_for_port_updates() { m_hub->check_for_port_updates(); }
 
 private:
-    NonnullRefPtr<UHCIController> m_uhci_controller;
-    RefPtr<Hub> m_hub;
+    NonnullLockRefPtr<UHCIController> m_uhci_controller;
+    LockRefPtr<Hub> m_hub;
 };
 
 }

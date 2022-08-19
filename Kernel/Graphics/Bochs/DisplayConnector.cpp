@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
+NonnullLockRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
     auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size);
     VERIFY(!device_or_error.is_error());

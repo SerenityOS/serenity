@@ -17,7 +17,7 @@ class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
 
 public:
     virtual StringView name() const override { return "char"sv; }
-    static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
+    static NonnullLockRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
 
     static SysFSCharacterDevicesDirectory& the();
 

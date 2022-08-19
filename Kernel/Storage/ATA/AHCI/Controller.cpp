@@ -7,19 +7,19 @@
 #include <AK/Atomic.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullLockRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto controller = adopt_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
+    auto controller = adopt_lock_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
     controller->initialize_hba(pci_device_identifier);
     return controller;
 }
@@ -192,7 +192,7 @@ void AHCIController::enable_global_interrupts() const
     hba().control_regs.ghc = hba().control_regs.ghc | (1 << 1);
 }
 
-RefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
+LockRefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
 {
     SpinlockLocker locker(m_hba_control_lock);
     auto port = m_ports[port_index];
@@ -202,9 +202,9 @@ RefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
     return port->connected_device();
 }
 
-RefPtr<StorageDevice> AHCIController::device(u32 index) const
+LockRefPtr<StorageDevice> AHCIController::device(u32 index) const
 {
-    NonnullRefPtrVector<StorageDevice> connected_devices;
+    NonnullLockRefPtrVector<StorageDevice> connected_devices;
     u32 pi = hba().control_regs.pi;
     u32 bit = bit_scan_forward(pi);
     while (bit) {

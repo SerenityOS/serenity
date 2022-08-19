@@ -11,10 +11,10 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 constexpr static AK::Time refresh_interval = AK::Time::from_milliseconds(16);
 
-NonnullRefPtr<Console> Console::initialize(VirtIODisplayConnector& parent_display_connector)
+NonnullLockRefPtr<Console> Console::initialize(VirtIODisplayConnector& parent_display_connector)
 {
     auto current_resolution = parent_display_connector.current_mode_setting();
-    return adopt_ref(*new Console(parent_display_connector, current_resolution));
+    return adopt_lock_ref(*new Console(parent_display_connector, current_resolution));
 }
 
 Console::Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution)
@@ -36,7 +36,7 @@ void Console::flush(size_t, size_t, size_t, size_t)
 
 void Console::enqueue_refresh_timer()
 {
-    NonnullRefPtr<Timer> refresh_timer = adopt_ref(*new Timer());
+    NonnullLockRefPtr<Timer> refresh_timer = adopt_lock_ref(*new Timer());
     refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {

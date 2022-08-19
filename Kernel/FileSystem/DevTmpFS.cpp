@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> DevTmpFS::try_create()
+ErrorOr<NonnullLockRefPtr<FileSystem>> DevTmpFS::try_create()
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevTmpFS));
 }
 
 DevTmpFS::DevTmpFS() = default;
@@ -30,7 +30,7 @@ DevTmpFS::~DevTmpFS() = default;
 
 ErrorOr<void> DevTmpFS::initialize()
 {
-    m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSRootDirectoryInode(*this)));
+    m_root_inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevTmpFSRootDirectoryInode(*this)));
     return {};
 }
 
@@ -61,7 +61,7 @@ ErrorOr<void> DevTmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::lookup(StringView)
+ErrorOr<NonnullLockRefPtr<Inode>> DevTmpFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -76,7 +76,7 @@ ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer con
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullLockRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     VERIFY_NOT_REACHED();
 }
@@ -214,7 +214,7 @@ ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<ErrorOr<voi
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
@@ -237,7 +237,7 @@ ErrorOr<void> DevTmpFSDirectoryInode::remove_child(StringView name)
     return Error::from_errno(ENOENT);
 }
 
-ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
+ErrorOr<NonnullLockRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
@@ -249,7 +249,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView na
     metadata.mode = mode;
     if (metadata.is_directory()) {
         auto name_kstring = TRY(KString::try_create(name));
-        auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDirectoryInode(fs(), move(name_kstring))));
+        auto new_directory_inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevTmpFSDirectoryInode(fs(), move(name_kstring))));
         TRY(new_directory_inode->chmod(mode));
         m_nodes.append(*new_directory_inode);
         return new_directory_inode;
@@ -258,14 +258,14 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView na
         auto name_kstring = TRY(KString::try_create(name));
         auto major = major_from_encoded_device(device_mode);
         auto minor = minor_from_encoded_device(device_mode);
-        auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
+        auto new_device_inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
         TRY(new_device_inode->chmod(mode));
         m_nodes.append(*new_device_inode);
         return new_device_inode;
     }
     if (metadata.is_symlink()) {
         auto name_kstring = TRY(KString::try_create(name));
-        auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSLinkInode(fs(), move(name_kstring))));
+        auto new_link_inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevTmpFSLinkInode(fs(), move(name_kstring))));
         TRY(new_link_inode->chmod(mode));
         m_nodes.append(*new_link_inode);
         return new_link_inode;
@@ -307,7 +307,7 @@ ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, User
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
+    LockRefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_read(*description, offset))
@@ -322,7 +322,7 @@ ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, Use
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
+    LockRefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_write(*description, offset))

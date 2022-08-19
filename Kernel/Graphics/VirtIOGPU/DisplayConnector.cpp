@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
 {
     auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id);
     VERIFY(!device_or_error.is_error());

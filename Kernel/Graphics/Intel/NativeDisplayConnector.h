@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
@@ -81,7 +81,7 @@ class IntelNativeDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static NonnullLockRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector
@@ -155,7 +155,7 @@ private:
     Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
 
     mutable Spinlock m_registers_lock { LockRank::None };
-    RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
 
     const PhysicalAddress m_registers;
     NonnullOwnPtr<Memory::Region> m_registers_region;

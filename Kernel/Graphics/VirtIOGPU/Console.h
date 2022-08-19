@@ -14,7 +14,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 class Console final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<Console> initialize(VirtIODisplayConnector& parent_display_connector);
+    static NonnullLockRefPtr<Console> initialize(VirtIODisplayConnector& parent_display_connector);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -25,7 +25,7 @@ private:
     virtual u8* framebuffer_data() override;
 
     Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution);
-    NonnullRefPtr<VirtIODisplayConnector> m_parent_display_connector;
+    NonnullLockRefPtr<VirtIODisplayConnector> m_parent_display_connector;
     bool m_dirty { false };
 };
 

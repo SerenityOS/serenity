@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSDevicesDirectory> SysFSDevicesDirectory::must_create(SysFSRootDirectory const& root_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDevicesDirectory> SysFSDevicesDirectory::must_create(SysFSRootDirectory const& root_directory)
 {
-    auto devices_directory = adopt_ref_if_nonnull(new (nothrow) SysFSDevicesDirectory(root_directory)).release_nonnull();
+    auto devices_directory = adopt_lock_ref_if_nonnull(new (nothrow) SysFSDevicesDirectory(root_directory)).release_nonnull();
     MUST(devices_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSStorageDirectory::must_create(*devices_directory));
         list.append(SysFSGraphicsDirectory::must_create(*devices_directory));

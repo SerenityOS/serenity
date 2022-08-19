@@ -53,7 +53,7 @@ void FileSystem::sync()
 {
     Inode::sync_all();
 
-    NonnullRefPtrVector<FileSystem, 32> file_systems;
+    NonnullLockRefPtrVector<FileSystem, 32> file_systems;
     {
         InterruptDisabler disabler;
         for (auto& it : all_file_systems())

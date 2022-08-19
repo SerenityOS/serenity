@@ -8,10 +8,10 @@
 
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -34,16 +34,16 @@ public:
     void for_each(Function<void(NetworkAdapter&)>);
     ErrorOr<void> try_for_each(Function<ErrorOr<void>(NetworkAdapter&)>);
 
-    RefPtr<NetworkAdapter> from_ipv4_address(IPv4Address const&) const;
-    RefPtr<NetworkAdapter> lookup_by_name(StringView) const;
+    LockRefPtr<NetworkAdapter> from_ipv4_address(IPv4Address const&) const;
+    LockRefPtr<NetworkAdapter> lookup_by_name(StringView) const;
 
-    NonnullRefPtr<NetworkAdapter> loopback_adapter() const;
+    NonnullLockRefPtr<NetworkAdapter> loopback_adapter() const;
 
 private:
-    RefPtr<NetworkAdapter> determine_network_device(PCI::DeviceIdentifier const&) const;
+    LockRefPtr<NetworkAdapter> determine_network_device(PCI::DeviceIdentifier const&) const;
 
-    SpinlockProtected<NonnullRefPtrVector<NetworkAdapter>> m_adapters { LockRank::None };
-    RefPtr<NetworkAdapter> m_loopback_adapter;
+    SpinlockProtected<NonnullLockRefPtrVector<NetworkAdapter>> m_adapters { LockRank::None };
+    LockRefPtr<NetworkAdapter> m_loopback_adapter;
 };
 
 }

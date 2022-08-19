@@ -28,7 +28,7 @@ class ProcFS final : public FileSystem {
 
 public:
     virtual ~ProcFS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }
@@ -38,7 +38,7 @@ public:
 private:
     ProcFS();
 
-    RefPtr<ProcFSDirectoryInode> m_root_inode;
+    LockRefPtr<ProcFSDirectoryInode> m_root_inode;
 };
 
 class ProcFSInode : public Inode {
@@ -57,7 +57,7 @@ protected:
     virtual ErrorOr<void> attach(OpenFileDescription& description) override = 0;
     virtual void did_seek(OpenFileDescription&, off_t) override = 0;
     virtual ErrorOr<void> flush_metadata() override final;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override final;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override final;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override final;
     virtual ErrorOr<void> remove_child(StringView name) override final;
     virtual ErrorOr<void> chmod(mode_t) override final;
@@ -68,7 +68,7 @@ class ProcFSGlobalInode : public ProcFSInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSGlobalInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
+    static ErrorOr<NonnullLockRefPtr<ProcFSGlobalInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
     virtual ~ProcFSGlobalInode() override {};
     StringView name() const;
 
@@ -82,18 +82,18 @@ protected:
     virtual void did_seek(OpenFileDescription&, off_t) override final;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView) override;
     virtual ErrorOr<void> truncate(u64) override final;
     virtual ErrorOr<void> set_mtime(time_t) override final;
 
-    NonnullRefPtr<ProcFSExposedComponent> m_associated_component;
+    NonnullLockRefPtr<ProcFSExposedComponent> m_associated_component;
 };
 
 class ProcFSLinkInode : public ProcFSGlobalInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSLinkInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
+    static ErrorOr<NonnullLockRefPtr<ProcFSLinkInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
 
 protected:
     ProcFSLinkInode(ProcFS const&, ProcFSExposedComponent const&);
@@ -104,7 +104,7 @@ class ProcFSDirectoryInode final : public ProcFSGlobalInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSDirectoryInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
+    static ErrorOr<NonnullLockRefPtr<ProcFSDirectoryInode>> try_create(ProcFS const&, ProcFSExposedComponent const&);
     virtual ~ProcFSDirectoryInode() override;
 
 protected:
@@ -112,7 +112,7 @@ protected:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 };
 
 class ProcFSProcessAssociatedInode : public ProcFSInode {
@@ -133,7 +133,7 @@ class ProcFSProcessDirectoryInode final : public ProcFSProcessAssociatedInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSProcessDirectoryInode>> try_create(ProcFS const&, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessDirectoryInode>> try_create(ProcFS const&, ProcessID);
 
 private:
     ProcFSProcessDirectoryInode(ProcFS const&, ProcessID);
@@ -143,14 +143,14 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 };
 
 class ProcFSProcessSubDirectoryInode final : public ProcFSProcessAssociatedInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSProcessSubDirectoryInode>> try_create(ProcFS const&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessSubDirectoryInode>> try_create(ProcFS const&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
 
 private:
     ProcFSProcessSubDirectoryInode(ProcFS const&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
@@ -160,7 +160,7 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 
     const SegmentedProcFSIndex::ProcessSubDirectory m_sub_directory_type;
 };
@@ -169,10 +169,10 @@ class ProcFSProcessPropertyInode final : public ProcFSProcessAssociatedInode {
     friend class ProcFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_file_description_link(ProcFS const&, unsigned, ProcessID);
-    static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_thread_stack(ProcFS const&, ThreadID, ProcessID);
-    static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_pid_property(ProcFS const&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
-    static ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_child_process_link(ProcFS const&, ProcessID, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> try_create_for_file_description_link(ProcFS const&, unsigned, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> try_create_for_thread_stack(ProcFS const&, ThreadID, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> try_create_for_pid_property(ProcFS const&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
+    static ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> try_create_for_child_process_link(ProcFS const&, ProcessID, ProcessID);
 
 private:
     ProcFSProcessPropertyInode(ProcFS const&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
@@ -186,7 +186,7 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override final;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override final;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override final;
 
     ErrorOr<void> refresh_data(OpenFileDescription& description);
     ErrorOr<void> try_to_acquire_data(Process& process, KBufferBuilder& builder) const;

@@ -41,7 +41,7 @@ private:
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index);
 
-    RefPtr<MasterPTY> m_master;
+    LockRefPtr<MasterPTY> m_master;
     time_t m_time_of_last_write { 0 };
     unsigned m_index { 0 };
 

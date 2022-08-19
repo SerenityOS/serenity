@@ -10,31 +10,31 @@
 
 namespace Kernel::Memory {
 
-ErrorOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with_inode(Inode& inode)
+ErrorOr<NonnullLockRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
     if (auto shared_vmobject = inode.shared_vmobject())
         return shared_vmobject.release_nonnull();
     auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
     auto dirty_pages = TRY(Bitmap::try_create(new_physical_pages.size(), false));
-    auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedInodeVMObject(inode, move(new_physical_pages), move(dirty_pages))));
+    auto vmobject = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SharedInodeVMObject(inode, move(new_physical_pages), move(dirty_pages))));
     TRY(vmobject->inode().set_shared_vmobject(*vmobject));
     return vmobject;
 }
 
-ErrorOr<NonnullRefPtr<VMObject>> SharedInodeVMObject::try_clone()
+ErrorOr<NonnullLockRefPtr<VMObject>> SharedInodeVMObject::try_clone()
 {
     auto new_physical_pages = TRY(this->try_clone_physical_pages());
     auto dirty_pages = TRY(Bitmap::try_create(new_physical_pages.size(), false));
-    return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) SharedInodeVMObject(*this, move(new_physical_pages), move(dirty_pages)));
+    return adopt_nonnull_lock_ref_or_enomem<VMObject>(new (nothrow) SharedInodeVMObject(*this, move(new_physical_pages), move(dirty_pages)));
 }
 
-SharedInodeVMObject::SharedInodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+SharedInodeVMObject::SharedInodeVMObject(Inode& inode, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(inode, move(new_physical_pages), move(dirty_pages))
 {
 }
 
-SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(other, move(new_physical_pages), move(dirty_pages))
 {
 }

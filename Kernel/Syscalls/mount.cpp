@@ -24,8 +24,8 @@ struct FileSystemInitializer {
     bool requires_open_file_description { false };
     bool requires_block_device { false };
     bool requires_seekable_file { false };
-    ErrorOr<NonnullRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&) = nullptr;
-    ErrorOr<NonnullRefPtr<FileSystem>> (*create)(void) = nullptr;
+    ErrorOr<NonnullLockRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&) = nullptr;
+    ErrorOr<NonnullLockRefPtr<FileSystem>> (*create)(void) = nullptr;
 };
 
 static constexpr FileSystemInitializer s_initializers[] = {
@@ -39,14 +39,14 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {} },
 };
 
-static ErrorOr<NonnullRefPtr<FileSystem>> create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
+static ErrorOr<NonnullLockRefPtr<FileSystem>> create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
 {
     for (auto& initializer_entry : s_initializers) {
         if (fs_type != initializer_entry.short_name && fs_type != initializer_entry.name)
             continue;
         if (!initializer_entry.requires_open_file_description) {
             VERIFY(initializer_entry.create);
-            NonnullRefPtr<FileSystem> fs = TRY(initializer_entry.create());
+            NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create());
             return fs;
         }
         VERIFY(initializer_entry.create_with_fd);
@@ -60,7 +60,7 @@ static ErrorOr<NonnullRefPtr<FileSystem>> create_filesystem_instance(StringView 
             dbgln("mount: this is not a seekable file");
             return ENODEV;
         }
-        NonnullRefPtr<FileSystem> fs = TRY(initializer_entry.create_with_fd(description));
+        NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create_with_fd(description));
         return fs;
     }
     return ENODEV;
@@ -107,7 +107,7 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
         return 0;
     }
 
-    RefPtr<FileSystem> fs;
+    LockRefPtr<FileSystem> fs;
 
     if (!description_or_error.is_error()) {
         auto description = description_or_error.release_value();

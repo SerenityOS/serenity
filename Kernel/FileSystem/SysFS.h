@@ -19,7 +19,7 @@ class SysFS final : public FileSystem {
 
 public:
     virtual ~SysFS() override;
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
+    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
 
     virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }
@@ -29,7 +29,7 @@ public:
 private:
     SysFS();
 
-    RefPtr<SysFSInode> m_root_inode;
+    LockRefPtr<SysFSInode> m_root_inode;
 };
 
 class SysFSInode : public Inode {
@@ -37,18 +37,18 @@ class SysFSInode : public Inode {
     friend class SysFSDirectoryInode;
 
 public:
-    static ErrorOr<NonnullRefPtr<SysFSInode>> try_create(SysFS const&, SysFSComponent const&);
+    static ErrorOr<NonnullLockRefPtr<SysFSInode>> try_create(SysFS const&, SysFSComponent const&);
     StringView name() const { return m_associated_component->name(); }
 
 protected:
     SysFSInode(SysFS const&, SysFSComponent const&);
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> chmod(mode_t) override;
@@ -59,14 +59,14 @@ protected:
     virtual ErrorOr<void> attach(OpenFileDescription& description) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;
 
-    NonnullRefPtr<SysFSComponent> m_associated_component;
+    NonnullLockRefPtr<SysFSComponent> m_associated_component;
 };
 
 class SysFSLinkInode : public SysFSInode {
     friend class SysFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
+    static ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSLinkInode() override;
 
 protected:
@@ -79,7 +79,7 @@ class SysFSDirectoryInode : public SysFSInode {
     friend class SysFS;
 
 public:
-    static ErrorOr<NonnullRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
+    static ErrorOr<NonnullLockRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
     SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }
@@ -90,7 +90,7 @@ protected:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 };
 
 }

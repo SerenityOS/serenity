@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/IntegralMath.h>
-#include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/Library/LockWeakable.h>
 
 namespace Kernel {
 

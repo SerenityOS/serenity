@@ -7,22 +7,22 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 
 namespace Kernel {
 
 class Coredump {
 public:
-    static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
+    static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullLockRefPtr<Process>, StringView output_path);
 
     ~Coredump() = default;
     ErrorOr<void> write();
 
 private:
-    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<OpenFileDescription>);
-    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
+    Coredump(NonnullLockRefPtr<Process>, NonnullLockRefPtr<OpenFileDescription>);
+    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
 
     ErrorOr<void> write_elf_header();
     ErrorOr<void> write_program_headers(size_t notes_size);
@@ -35,8 +35,8 @@ private:
     ErrorOr<void> create_notes_regions_data(auto&) const;
     ErrorOr<void> create_notes_metadata_data(auto&) const;
 
-    NonnullRefPtr<Process> m_process;
-    NonnullRefPtr<OpenFileDescription> m_description;
+    NonnullLockRefPtr<Process> m_process;
+    NonnullLockRefPtr<OpenFileDescription> m_description;
     size_t m_num_program_headers { 0 };
 };
 

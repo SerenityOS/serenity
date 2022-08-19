@@ -40,7 +40,7 @@ ErrorOr<NonnullOwnPtr<DoubleBuffer>> IPv4Socket::try_create_receive_buffer()
     return DoubleBuffer::try_create("IPv4Socket: Receive buffer"sv, 256 * KiB);
 }
 
-ErrorOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
+ErrorOr<NonnullLockRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 {
     auto receive_buffer = TRY(IPv4Socket::try_create_receive_buffer());
 
@@ -49,7 +49,7 @@ ErrorOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
     if (type == SOCK_DGRAM)
         return TRY(UDPSocket::try_create(protocol, move(receive_buffer)));
     if (type == SOCK_RAW) {
-        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, move(receive_buffer), {}));
+        auto raw_socket = adopt_lock_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, move(receive_buffer), {}));
         if (raw_socket)
             return raw_socket.release_nonnull();
         return ENOMEM;

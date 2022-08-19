@@ -15,9 +15,9 @@ namespace Kernel {
 
 static SysFSStorageDirectory* s_the { nullptr };
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSStorageDirectory> SysFSStorageDirectory::must_create(SysFSDevicesDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSStorageDirectory> SysFSStorageDirectory::must_create(SysFSDevicesDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) SysFSStorageDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) SysFSStorageDirectory(parent_directory));
     s_the = directory;
     return directory;
 }

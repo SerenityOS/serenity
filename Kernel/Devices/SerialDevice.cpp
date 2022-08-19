@@ -17,11 +17,11 @@ namespace Kernel {
 #define SERIAL_COM3_ADDR 0x3E8
 #define SERIAL_COM4_ADDR 0x2E8
 
-UNMAP_AFTER_INIT NonnullRefPtr<SerialDevice> SerialDevice::must_create(size_t com_number)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SerialDevice> SerialDevice::must_create(size_t com_number)
 {
     // FIXME: This way of blindly doing release_value is really not a good thing, find
     // a way to propagate errors back.
-    RefPtr<SerialDevice> serial_device;
+    LockRefPtr<SerialDevice> serial_device;
     switch (com_number) {
     case 0: {
         serial_device = DeviceManagement::try_create_device<SerialDevice>(IOAddress(SERIAL_COM1_ADDR), 64).release_value();

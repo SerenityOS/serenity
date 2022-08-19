@@ -14,9 +14,9 @@ class Inode;
 
 class InodeFile final : public File {
 public:
-    static ErrorOr<NonnullRefPtr<InodeFile>> create(NonnullRefPtr<Inode>&& inode)
+    static ErrorOr<NonnullLockRefPtr<InodeFile>> create(NonnullLockRefPtr<Inode>&& inode)
     {
-        auto file = adopt_ref_if_nonnull(new (nothrow) InodeFile(move(inode)));
+        auto file = adopt_lock_ref_if_nonnull(new (nothrow) InodeFile(move(inode)));
         if (!file)
             return ENOMEM;
         return file.release_nonnull();
@@ -49,8 +49,8 @@ public:
     virtual bool is_inode() const override { return true; }
 
 private:
-    explicit InodeFile(NonnullRefPtr<Inode>&&);
-    NonnullRefPtr<Inode> m_inode;
+    explicit InodeFile(NonnullLockRefPtr<Inode>&&);
+    NonnullLockRefPtr<Inode> m_inode;
 };
 
 }

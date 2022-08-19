@@ -30,7 +30,7 @@ void PageDirectory::deregister_page_directory(PageDirectory* directory)
     cr3_map().remove(directory->cr3());
 }
 
-RefPtr<PageDirectory> PageDirectory::find_current()
+LockRefPtr<PageDirectory> PageDirectory::find_current()
 {
     SpinlockLocker lock(s_mm_lock);
     return cr3_map().find(read_cr3());

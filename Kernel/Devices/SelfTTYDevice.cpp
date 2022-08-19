@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
 {
     auto self_tty_device_or_error = DeviceManagement::try_create_device<SelfTTYDevice>();
     // FIXME: Find a way to propagate errors
@@ -19,14 +19,14 @@ UNMAP_AFTER_INIT NonnullRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
     return self_tty_device_or_error.release_value();
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> SelfTTYDevice::open(int options)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> SelfTTYDevice::open(int options)
 {
     // Note: If for some odd reason we try to open this device (early on boot?)
     // while there's no current Process assigned, don't fail and return an error.
     if (!Process::has_current())
         return Error::from_errno(ESRCH);
     auto& current_process = Process::current();
-    RefPtr<TTY> tty = current_process.tty();
+    LockRefPtr<TTY> tty = current_process.tty();
     if (!tty)
         return Error::from_errno(ENXIO);
     auto description = TRY(OpenFileDescription::try_create(*tty));

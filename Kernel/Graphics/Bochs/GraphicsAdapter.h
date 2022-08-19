@@ -25,7 +25,7 @@ class BochsGraphicsAdapter final : public GenericGraphicsAdapter
     friend class GraphicsManagement;
 
 public:
-    static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static NonnullLockRefPtr<BochsGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
     virtual ~BochsGraphicsAdapter() = default;
 
 private:
@@ -33,6 +33,6 @@ private:
 
     explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
-    RefPtr<BochsDisplayConnector> m_display_connector;
+    LockRefPtr<BochsDisplayConnector> m_display_connector;
 };
 }

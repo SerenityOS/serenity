@@ -98,7 +98,7 @@ u8 InterruptManagement::get_irq_vector(u8 mapped_interrupt_vector)
     return mapped_interrupt_vector;
 }
 
-RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
+LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
 {
     for (auto& irq_controller : m_interrupt_controllers) {
         if (irq_controller->gsi_base() <= interrupt_vector && irq_controller->type() == controller_type)
@@ -107,7 +107,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQCon
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
+LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
         return m_interrupt_controllers[0];
@@ -143,7 +143,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
     m_smp_enabled = false;
-    m_interrupt_controllers[0] = adopt_ref(*new PIC());
+    m_interrupt_controllers[0] = adopt_lock_ref(*new PIC());
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -204,7 +204,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 
     int irq_controller_count = 0;
     if (madt->flags & PCAT_COMPAT_FLAG) {
-        m_interrupt_controllers[0] = adopt_ref(*new PIC());
+        m_interrupt_controllers[0] = adopt_lock_ref(*new PIC());
         irq_controller_count++;
     }
     size_t entry_index = 0;
@@ -216,7 +216,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
+            m_interrupt_controllers[irq_controller_count] = adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
             irq_controller_count++;
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {

@@ -20,9 +20,9 @@ static constexpr u16 pcm_fixed_sample_rate = 48000;
 static constexpr u16 pcm_sample_rate_minimum = 8000;
 static constexpr u16 pcm_sample_rate_maximum = 48000;
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AC97>> AC97::try_create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<AC97>> AC97::try_create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto ac97 = adopt_nonnull_ref_or_enomem(new (nothrow) AC97(pci_device_identifier));
+    auto ac97 = adopt_nonnull_lock_ref_or_enomem(new (nothrow) AC97(pci_device_identifier));
     if (!ac97.is_error())
         TRY(ac97.value()->initialize());
     return ac97;
@@ -166,7 +166,7 @@ void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)
     m_io_mixer_base.offset(NativeAudioMixerRegister::SetPCMOutputVolume).out(volume_value);
 }
 
-RefPtr<AudioChannel> AC97::audio_channel(u32 index) const
+LockRefPtr<AudioChannel> AC97::audio_channel(u32 index) const
 {
     if (index == 0)
         return m_audio_channel;

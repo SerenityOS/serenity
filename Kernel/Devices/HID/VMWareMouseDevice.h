@@ -18,7 +18,7 @@ namespace Kernel {
 class VMWareMouseDevice final : public PS2MouseDevice {
 public:
     friend class DeviceManagement;
-    static ErrorOr<NonnullRefPtr<VMWareMouseDevice>> try_to_initialize(I8042Controller const&);
+    static ErrorOr<NonnullLockRefPtr<VMWareMouseDevice>> try_to_initialize(I8042Controller const&);
     virtual ~VMWareMouseDevice() override;
 
     // ^I8042Device

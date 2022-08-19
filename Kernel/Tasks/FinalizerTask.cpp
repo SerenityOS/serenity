@@ -28,7 +28,7 @@ static void finalizer_task(void*)
 
 UNMAP_AFTER_INIT void FinalizerTask::spawn()
 {
-    RefPtr<Thread> finalizer_thread;
+    LockRefPtr<Thread> finalizer_thread;
     auto finalizer_process = Process::create_kernel_process(finalizer_thread, KString::must_create(finalizer_task_name), finalizer_task, nullptr);
     VERIFY(finalizer_process);
     g_finalizer = finalizer_thread;

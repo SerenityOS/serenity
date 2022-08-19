@@ -38,7 +38,7 @@ ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const
     return space;
 }
 
-AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory, VirtualRange total_range)
+AddressSpace::AddressSpace(NonnullLockRefPtr<PageDirectory> page_directory, VirtualRange total_range)
     : m_page_directory(move(page_directory))
     , m_region_tree(total_range)
 {
@@ -173,12 +173,12 @@ ErrorOr<Region*> AddressSpace::allocate_region(RandomizeVirtualAddress randomize
     return region.leak_ptr();
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange requested_range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange requested_range, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     return allocate_region_with_vmobject(RandomizeVirtualAddress::Yes, requested_range.base(), requested_range.size(), PAGE_SIZE, move(vmobject), offset_in_vmobject, name, prot, shared);
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAddress randomize_virtual_address, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAddress randomize_virtual_address, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     if (!requested_address.is_page_aligned())
         return EINVAL;

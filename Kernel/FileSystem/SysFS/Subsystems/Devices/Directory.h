@@ -14,7 +14,7 @@ namespace Kernel {
 class SysFSDevicesDirectory final : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "devices"sv; }
-    static NonnullRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
+    static NonnullLockRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
 
 private:
     explicit SysFSDevicesDirectory(SysFSRootDirectory const&);

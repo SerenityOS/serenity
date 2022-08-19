@@ -22,11 +22,11 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullLockRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
     VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
-    auto adapter = adopt_ref(*new BochsGraphicsAdapter(pci_device_identifier));
+    auto adapter = adopt_lock_ref(*new BochsGraphicsAdapter(pci_device_identifier));
     MUST(adapter->initialize_adapter(pci_device_identifier));
     return adapter;
 }

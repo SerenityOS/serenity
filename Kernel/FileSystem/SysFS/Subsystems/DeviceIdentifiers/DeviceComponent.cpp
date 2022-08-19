@@ -10,11 +10,11 @@
 
 namespace Kernel {
 
-NonnullRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device const& device)
+NonnullLockRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device const& device)
 {
     // FIXME: Handle allocation failure gracefully
     auto device_name = MUST(KString::formatted("{}:{}", device.major(), device.minor()));
-    return adopt_ref_if_nonnull(new SysFSDeviceComponent(move(device_name), device)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new SysFSDeviceComponent(move(device_name), device)).release_nonnull();
 }
 SysFSDeviceComponent::SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const& device)
     : SysFSComponent()

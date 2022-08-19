@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<NullDevice> NullDevice::must_initialize()
+UNMAP_AFTER_INIT NonnullLockRefPtr<NullDevice> NullDevice::must_initialize()
 {
     auto null_device_or_error = DeviceManagement::try_create_device<NullDevice>();
     // FIXME: Find a way to propagate errors

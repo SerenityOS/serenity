@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create(SysFSRootDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create(SysFSRootDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) SysFSBusDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) SysFSBusDirectory(parent_directory));
     return directory;
 }
 

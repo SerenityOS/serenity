@@ -19,12 +19,12 @@ StorageDevice const& StorageDeviceSysFSDirectory::device(Badge<StorageDeviceAttr
     return *m_device;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, StorageDevice const& device)
+UNMAP_AFTER_INIT NonnullLockRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, StorageDevice const& device)
 {
     // FIXME: Handle allocation failure gracefully
     auto lun_address = device.logical_unit_number_address();
     auto device_name = MUST(KString::formatted("{:02x}:{:02x}.{}", lun_address.controller_id, lun_address.target_id, lun_address.disk_id));
-    auto directory = adopt_ref(*new (nothrow) StorageDeviceSysFSDirectory(move(device_name), parent_directory, device));
+    auto directory = adopt_lock_ref(*new (nothrow) StorageDeviceSysFSDirectory(move(device_name), parent_directory, device));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::EndLBA));
         list.append(StorageDeviceAttributeSysFSComponent::must_create(*directory, StorageDeviceAttributeSysFSComponent::Type::SectorSize));

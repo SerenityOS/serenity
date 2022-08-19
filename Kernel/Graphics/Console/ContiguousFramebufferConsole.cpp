@@ -9,9 +9,9 @@
 
 namespace Kernel::Graphics {
 
-NonnullRefPtr<ContiguousFramebufferConsole> ContiguousFramebufferConsole::initialize(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
+NonnullLockRefPtr<ContiguousFramebufferConsole> ContiguousFramebufferConsole::initialize(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {
-    return adopt_ref(*new ContiguousFramebufferConsole(framebuffer_address, width, height, pitch));
+    return adopt_lock_ref(*new ContiguousFramebufferConsole(framebuffer_address, width, height, pitch));
 }
 
 ContiguousFramebufferConsole::ContiguousFramebufferConsole(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)

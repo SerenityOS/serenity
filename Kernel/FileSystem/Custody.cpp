@@ -20,20 +20,20 @@ SpinlockProtected<Custody::AllCustodiesList>& Custody::all_instances()
     return s_all_instances;
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
+ErrorOr<NonnullLockRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
-    return all_instances().with([&](auto& all_custodies) -> ErrorOr<NonnullRefPtr<Custody>> {
+    return all_instances().with([&](auto& all_custodies) -> ErrorOr<NonnullLockRefPtr<Custody>> {
         for (Custody& custody : all_custodies) {
             if (custody.parent() == parent
                 && custody.name() == name
                 && &custody.inode() == &inode
                 && custody.mount_flags() == mount_flags) {
-                return NonnullRefPtr { custody };
+                return NonnullLockRefPtr { custody };
             }
         }
 
         auto name_kstring = TRY(KString::try_create(name));
-        auto custody = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Custody(parent, move(name_kstring), inode, mount_flags)));
+        auto custody = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Custody(parent, move(name_kstring), inode, mount_flags)));
         all_custodies.prepend(*custody);
         return custody;
     });

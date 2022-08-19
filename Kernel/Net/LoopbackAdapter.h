@@ -15,7 +15,7 @@ private:
     LoopbackAdapter(NonnullOwnPtr<KString>);
 
 public:
-    static RefPtr<LoopbackAdapter> try_create();
+    static LockRefPtr<LoopbackAdapter> try_create();
     virtual ~LoopbackAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;

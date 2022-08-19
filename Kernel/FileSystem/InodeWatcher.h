@@ -40,7 +40,7 @@ private:
 
 class InodeWatcher final : public File {
 public:
-    static ErrorOr<NonnullRefPtr<InodeWatcher>> try_create();
+    static ErrorOr<NonnullLockRefPtr<InodeWatcher>> try_create();
     virtual ~InodeWatcher() override;
 
     virtual bool can_read(OpenFileDescription const&, u64) const override;

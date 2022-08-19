@@ -26,7 +26,7 @@ public:
     };
 
 private:
-    RefPtr<ATAPort> m_port;
+    LockRefPtr<ATAPort> m_port;
 };
 
 class ATAPortInterruptCleaner {
@@ -42,7 +42,7 @@ public:
     };
 
 private:
-    RefPtr<ATAPort> m_port;
+    LockRefPtr<ATAPort> m_port;
 };
 
 void ATAPort::fix_name_string_in_identify_device_block()
@@ -99,7 +99,7 @@ ErrorOr<void> ATAPort::detect_connected_devices()
     return {};
 }
 
-RefPtr<StorageDevice> ATAPort::connected_device(size_t device_index) const
+LockRefPtr<StorageDevice> ATAPort::connected_device(size_t device_index) const
 {
     MutexLocker locker(m_lock);
     if (m_ata_devices.size() > device_index)

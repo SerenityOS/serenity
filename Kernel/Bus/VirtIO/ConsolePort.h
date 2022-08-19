@@ -24,7 +24,7 @@ class Console;
 class ConsolePort
     : public CharacterDevice {
 public:
-    static ErrorOr<NonnullRefPtr<ConsolePort>> try_create(unsigned port, VirtIO::Console&);
+    static ErrorOr<NonnullLockRefPtr<ConsolePort>> try_create(unsigned port, VirtIO::Console&);
 
     void handle_queue_update(Badge<VirtIO::Console>, u16 queue_index);
 
@@ -44,7 +44,7 @@ private:
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
-    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
 
     static unsigned next_device_id;
     u16 m_receive_queue {};

@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options)
+ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, int options)
 {
     ErrorOr<siginfo_t> result = siginfo_t {};
     if (Thread::current()->block<Thread::WaitBlocker>({}, options, move(waitee), result).was_interrupted())
@@ -25,7 +25,7 @@ ErrorOr<FlatPtr> Process::sys$waitid(Userspace<Syscall::SC_waitid_params const*>
     TRY(require_promise(Pledge::proc));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee;
+    Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee;
     switch (params.idtype) {
     case P_ALL:
         break;

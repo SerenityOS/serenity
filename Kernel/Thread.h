@@ -15,13 +15,13 @@
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
+#include <Kernel/Library/LockWeakPtr.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
 #include <Kernel/Locking/LockRank.h>
@@ -137,7 +137,7 @@ struct ThreadRegisters {
 
 class Thread
     : public ListedRefCounted<Thread, LockType::Spinlock>
-    , public Weakable<Thread> {
+    , public LockWeakable<Thread> {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
 
@@ -152,10 +152,10 @@ public:
         return Processor::current_thread();
     }
 
-    static ErrorOr<NonnullRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
+    static ErrorOr<NonnullLockRefPtr<Thread>> try_create(NonnullLockRefPtr<Process>);
     ~Thread();
 
-    static RefPtr<Thread> from_tid(ThreadID);
+    static LockRefPtr<Thread> from_tid(ThreadID);
     static void finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
@@ -387,7 +387,7 @@ public:
 
     private:
         BlockerSet* m_blocker_set { nullptr };
-        NonnullRefPtr<Thread> m_thread;
+        NonnullLockRefPtr<Thread> m_thread;
         u8 m_was_interrupted_by_signal { 0 };
         bool m_is_blocking { false };
         bool m_was_interrupted_by_death { false };
@@ -522,7 +522,7 @@ public:
         bool unblock(void*, bool);
 
     private:
-        NonnullRefPtr<Thread> m_joinee;
+        NonnullLockRefPtr<Thread> m_joinee;
         void*& m_joinee_exit_value;
         ErrorOr<void>& m_try_join_result;
         bool m_did_unblock { false };
@@ -612,7 +612,7 @@ public:
         explicit OpenFileDescriptionBlocker(OpenFileDescription&, BlockFlags, BlockFlags&);
 
     private:
-        NonnullRefPtr<OpenFileDescription> m_blocked_description;
+        NonnullLockRefPtr<OpenFileDescription> m_blocked_description;
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
@@ -670,7 +670,7 @@ public:
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
-            RefPtr<OpenFileDescription> description;
+            LockRefPtr<OpenFileDescription> description;
             BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };
@@ -737,7 +737,7 @@ public:
             Disowned
         };
 
-        WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
+        WaitBlocker(int wait_options, Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -753,7 +753,7 @@ public:
 
         int const m_wait_options;
         ErrorOr<siginfo_t>& m_result;
-        Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> m_waitee;
+        Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> m_waitee;
         bool m_did_unblock { false };
         bool m_got_sigchild { false };
     };
@@ -777,12 +777,12 @@ public:
 
     private:
         struct ProcessBlockInfo {
-            NonnullRefPtr<Process> process;
+            NonnullLockRefPtr<Process> process;
             WaitBlocker::UnblockFlags flags;
             u8 signal;
             bool was_waited { false };
 
-            explicit ProcessBlockInfo(NonnullRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
+            explicit ProcessBlockInfo(NonnullLockRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
             ~ProcessBlockInfo();
         };
 
@@ -793,7 +793,7 @@ public:
 
     class FlockBlocker final : public Blocker {
     public:
-        FlockBlocker(NonnullRefPtr<Inode>, flock const&);
+        FlockBlocker(NonnullLockRefPtr<Inode>, flock const&);
         virtual StringView state_string() const override { return "Locking File"sv; }
         virtual Type blocker_type() const override { return Type::Flock; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -801,7 +801,7 @@ public:
         bool try_unblock(bool from_add_blocker);
 
     private:
-        NonnullRefPtr<Inode> m_inode;
+        NonnullLockRefPtr<Inode> m_inode;
         flock const& m_flock;
         bool m_did_unblock { false };
     };
@@ -1049,7 +1049,7 @@ public:
         return !m_is_joinable;
     }
 
-    ErrorOr<NonnullRefPtr<Thread>> try_clone(Process&);
+    ErrorOr<NonnullLockRefPtr<Thread>> try_clone(Process&);
 
     template<IteratorFunction<Thread&> Callback>
     static IterationDecision for_each_in_state(State, Callback);
@@ -1159,7 +1159,7 @@ public:
     ErrorOr<NonnullOwnPtr<KString>> backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<KString>);
+    Thread(NonnullLockRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullLockRefPtr<Timer>, NonnullOwnPtr<KString>);
 
     BlockResult block_impl(BlockTimeout const&, Blocker&);
 
@@ -1230,7 +1230,7 @@ private:
 
     mutable RecursiveSpinlock m_lock { LockRank::Thread };
     mutable RecursiveSpinlock m_block_lock { LockRank::None };
-    NonnullRefPtr<Process> m_process;
+    NonnullLockRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     ThreadRegisters m_regs {};
     DebugRegisterState m_debug_register_state {};
@@ -1316,7 +1316,7 @@ private:
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 
-    NonnullRefPtr<Timer> m_block_timer;
+    NonnullLockRefPtr<Timer> m_block_timer;
 
     bool m_is_profiling_suppressed { false };
 

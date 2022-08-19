@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/LockWeakPtr.h>
 #include <LibPartition/DiskPartitionMetadata.h>
 
 namespace Kernel {
@@ -17,7 +17,7 @@ class DiskPartition final : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<DiskPartition> create(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
+    static NonnullLockRefPtr<DiskPartition> create(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
     virtual ~DiskPartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
@@ -34,7 +34,7 @@ private:
     DiskPartition(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
-    WeakPtr<BlockDevice> m_device;
+    LockWeakPtr<BlockDevice> m_device;
     Partition::DiskPartitionMetadata m_metadata;
 };
 

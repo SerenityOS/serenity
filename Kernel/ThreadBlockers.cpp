@@ -510,7 +510,7 @@ bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
     return true;
 }
 
-Thread::WaitBlockerSet::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
+Thread::WaitBlockerSet::ProcessBlockInfo::ProcessBlockInfo(NonnullLockRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
     : process(move(process))
     , flags(flags)
     , signal(signal)
@@ -663,7 +663,7 @@ void Thread::WaitBlockerSet::finalize()
     }
 }
 
-Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
+Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
     : m_wait_options(wait_options)
     , m_result(result)
     , m_waitee(move(waitee))
@@ -731,10 +731,10 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     VERIFY(flags != UnblockFlags::Terminated || signal == 0); // signal argument should be ignored for Terminated
 
     bool do_not_unblock = m_waitee.visit(
-        [&](NonnullRefPtr<Process> const& waitee_process) {
+        [&](NonnullLockRefPtr<Process> const& waitee_process) {
             return &process != waitee_process;
         },
-        [&](NonnullRefPtr<ProcessGroup> const& waitee_process_group) {
+        [&](NonnullLockRefPtr<ProcessGroup> const& waitee_process_group) {
             return waitee_process_group->pgid() != process.pgid();
         },
         [&](Empty const&) {
@@ -821,7 +821,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     return true;
 }
 
-Thread::FlockBlocker::FlockBlocker(NonnullRefPtr<Inode> inode, flock const& flock)
+Thread::FlockBlocker::FlockBlocker(NonnullLockRefPtr<Inode> inode, flock const& flock)
     : m_inode(move(inode))
     , m_flock(flock)
 {

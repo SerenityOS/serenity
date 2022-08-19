@@ -20,7 +20,7 @@ class PS2MouseDevice : public IRQHandler
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullRefPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&);
+    static ErrorOr<NonnullLockRefPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&);
     ErrorOr<void> initialize();
 
     virtual ~PS2MouseDevice() override;

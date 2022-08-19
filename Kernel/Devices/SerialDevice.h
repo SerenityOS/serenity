@@ -15,7 +15,7 @@ class SerialDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
+    static NonnullLockRefPtr<SerialDevice> must_create(size_t com_number);
 
     virtual ~SerialDevice() override;
 

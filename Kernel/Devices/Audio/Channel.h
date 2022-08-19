@@ -20,7 +20,7 @@ class AudioChannel final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<AudioChannel> must_create(AudioController const&, size_t channel_index);
+    static NonnullLockRefPtr<AudioChannel> must_create(AudioController const&, size_t channel_index);
     virtual ~AudioChannel() override = default;
 
     // ^CharacterDevice
@@ -37,7 +37,7 @@ private:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "AudioChannel"sv; }
 
-    WeakPtr<AudioController> m_controller;
+    LockWeakPtr<AudioController> m_controller;
     const size_t m_channel_index;
 };
 }

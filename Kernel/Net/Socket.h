@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
@@ -21,7 +21,7 @@ class OpenFileDescription;
 
 class Socket : public File {
 public:
-    static ErrorOr<NonnullRefPtr<Socket>> create(int domain, int type, int protocol);
+    static ErrorOr<NonnullLockRefPtr<Socket>> create(int domain, int type, int protocol);
     virtual ~Socket() override;
 
     int domain() const { return m_domain; }
@@ -68,7 +68,7 @@ public:
     void set_connected(bool);
 
     bool can_accept() const { return !m_pending.is_empty(); }
-    RefPtr<Socket> accept();
+    LockRefPtr<Socket> accept();
 
     ErrorOr<void> shutdown(int how);
 
@@ -91,7 +91,7 @@ public:
     ProcessID acceptor_pid() const { return m_acceptor.pid; }
     UserID acceptor_uid() const { return m_acceptor.uid; }
     GroupID acceptor_gid() const { return m_acceptor.gid; }
-    RefPtr<NetworkAdapter> const bound_interface() const { return m_bound_interface; }
+    LockRefPtr<NetworkAdapter> const bound_interface() const { return m_bound_interface; }
 
     Mutex& mutex() { return m_mutex; }
 
@@ -112,7 +112,7 @@ public:
 protected:
     Socket(int domain, int type, int protocol);
 
-    ErrorOr<void> queue_connection_from(NonnullRefPtr<Socket>);
+    ErrorOr<void> queue_connection_from(NonnullLockRefPtr<Socket>);
 
     size_t backlog() const { return m_backlog; }
     void set_backlog(size_t backlog) { m_backlog = backlog; }
@@ -172,7 +172,7 @@ private:
     bool m_shut_down_for_reading { false };
     bool m_shut_down_for_writing { false };
 
-    RefPtr<NetworkAdapter> m_bound_interface { nullptr };
+    LockRefPtr<NetworkAdapter> m_bound_interface { nullptr };
 
     Time m_receive_timeout {};
     Time m_send_timeout {};
@@ -180,7 +180,7 @@ private:
 
     ErrorOr<void> m_so_error;
 
-    NonnullRefPtrVector<Socket> m_pending;
+    NonnullLockRefPtrVector<Socket> m_pending;
 };
 
 // This is a special variant of TRY() that also updates the socket's SO_ERROR field on error.

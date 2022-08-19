@@ -8,14 +8,11 @@
 
 #define NONNULLREFPTR_SCRUB_BYTE 0xe1
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeNonnullRefPtr.h>
-#else
-#    include <AK/Assertions.h>
-#    include <AK/Atomic.h>
-#    include <AK/Format.h>
-#    include <AK/Traits.h>
-#    include <AK/Types.h>
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/Format.h>
+#include <AK/Traits.h>
+#include <AK/Types.h>
 
 namespace AK {
 
@@ -98,9 +95,9 @@ public:
     {
         unref_if_not_null(m_ptr);
         m_ptr = nullptr;
-#    ifdef SANITIZE_PTRS
+#ifdef SANITIZE_PTRS
         m_ptr = reinterpret_cast<T*>(explode_byte(NONNULLREFPTR_SCRUB_BYTE));
-#    endif
+#endif
     }
 
     template<typename U>
@@ -163,7 +160,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* ptr() const
     {
         return as_nonnull_ptr();
     }
@@ -172,7 +169,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -181,7 +178,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T& operator*() const
+    ALWAYS_INLINE T const& operator*() const
     {
         return *as_nonnull_ptr();
     }
@@ -190,7 +187,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
+    ALWAYS_INLINE RETURNS_NONNULL operator T const*() const
     {
         return as_nonnull_ptr();
     }
@@ -199,7 +196,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T&() const
+    ALWAYS_INLINE operator T const&() const
     {
         return *as_nonnull_ptr();
     }
@@ -245,10 +242,10 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
 }
 
 template<typename T>
-struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
+struct Formatter<NonnullRefPtr<T>> : Formatter<T const*> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
     {
-        return Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<T const*>::format(builder, value.ptr());
     }
 };
 
@@ -275,7 +272,7 @@ inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
 template<typename T>
 struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(NonnullRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(NonnullRefPtr<T> const& a, NonnullRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
@@ -283,5 +280,3 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
 using AK::adopt_ref;
 using AK::make_ref_counted;
 using AK::NonnullRefPtr;
-
-#endif

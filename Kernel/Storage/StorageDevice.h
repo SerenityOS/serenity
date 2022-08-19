@@ -66,9 +66,9 @@ public:
     // FIXME: Remove this method after figuring out another scheme for naming.
     StringView early_storage_name() const;
 
-    NonnullRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
+    NonnullLockRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
 
-    void add_partition(NonnullRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
+    void add_partition(NonnullLockRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
 
     LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
 
@@ -88,8 +88,8 @@ private:
     virtual void after_inserting() override;
     virtual void will_be_destroyed() override;
 
-    mutable IntrusiveListNode<StorageDevice, RefPtr<StorageDevice>> m_list_node;
-    NonnullRefPtrVector<DiskPartition> m_partitions;
+    mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;
+    NonnullLockRefPtrVector<DiskPartition> m_partitions;
 
     // FIXME: Remove this method after figuring out another scheme for naming.
     NonnullOwnPtr<KString> m_early_storage_device_name;

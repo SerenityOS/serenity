@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -24,7 +24,7 @@ class BochsDisplayConnector
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static NonnullRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
+    static NonnullLockRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
 
     virtual IndexID index_id() const;
 
@@ -50,6 +50,6 @@ protected:
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
 };
 }

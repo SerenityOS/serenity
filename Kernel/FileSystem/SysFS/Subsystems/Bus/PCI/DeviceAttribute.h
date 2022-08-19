@@ -15,7 +15,7 @@ namespace Kernel {
 
 class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
-    static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width);
+    static NonnullLockRefPtr<PCIDeviceAttributeSysFSComponent> create(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~PCIDeviceAttributeSysFSComponent() {};
@@ -25,7 +25,7 @@ public:
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     PCIDeviceAttributeSysFSComponent(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width);
-    NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
+    NonnullLockRefPtr<PCIDeviceSysFSDirectory> m_device;
     PCI::RegisterOffset m_offset;
     size_t m_field_bytes_width;
 };

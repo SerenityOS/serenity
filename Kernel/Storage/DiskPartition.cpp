@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
+NonnullLockRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
 {
     auto partition_or_error = DeviceManagement::try_create_device<DiskPartition>(device, minor_number, metadata);
     // FIXME: Find a way to propagate errors

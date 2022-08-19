@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
@@ -23,7 +23,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<BIOSSysFSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
+    static NonnullLockRefPtr<BIOSSysFSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
     virtual StringView name() const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 

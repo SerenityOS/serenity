@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/IRQController.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel {
 
@@ -40,7 +40,7 @@ protected:
 private:
     bool m_shared_with_others { false };
     bool m_enabled { false };
-    RefPtr<IRQController> m_responsible_irq_controller;
+    LockRefPtr<IRQController> m_responsible_irq_controller;
 };
 
 }

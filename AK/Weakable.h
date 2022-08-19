@@ -6,15 +6,12 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/Library/ThreadSafeWeakable.h>
-#else
-#    include <AK/Assertions.h>
-#    include <AK/Atomic.h>
-#    include <AK/RefCounted.h>
-#    include <AK/RefPtr.h>
-#    include <AK/StdLibExtras.h>
-#    include <sched.h>
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
+#include <sched.h>
 
 namespace AK {
 
@@ -125,5 +122,3 @@ private:
 }
 
 using AK::Weakable;
-
-#endif

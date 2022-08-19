@@ -31,7 +31,7 @@ public:
 private:
     u8 m_next_device_index { 1 };
 
-    IntrusiveListNode<USBController, NonnullRefPtr<USBController>> m_controller_list_node;
+    IntrusiveListNode<USBController, NonnullLockRefPtr<USBController>> m_controller_list_node;
 
 public:
     using List = IntrusiveList<&USBController::m_controller_list_node>;

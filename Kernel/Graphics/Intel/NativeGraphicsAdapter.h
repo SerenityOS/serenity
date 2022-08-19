@@ -20,7 +20,7 @@ class IntelNativeGraphicsAdapter final
     , public PCI::Device {
 
 public:
-    static RefPtr<IntelNativeGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
+    static LockRefPtr<IntelNativeGraphicsAdapter> initialize(PCI::DeviceIdentifier const&);
 
     virtual ~IntelNativeGraphicsAdapter() = default;
 
@@ -29,6 +29,6 @@ private:
 
     explicit IntelNativeGraphicsAdapter(PCI::Address);
 
-    RefPtr<IntelNativeDisplayConnector> m_display_connector;
+    LockRefPtr<IntelNativeDisplayConnector> m_display_connector;
 };
 }

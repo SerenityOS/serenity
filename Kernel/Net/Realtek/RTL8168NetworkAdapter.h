@@ -22,7 +22,7 @@ class RTL8168NetworkAdapter final : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static RefPtr<RTL8168NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static LockRefPtr<RTL8168NetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
 
     virtual ~RTL8168NetworkAdapter() override;
 

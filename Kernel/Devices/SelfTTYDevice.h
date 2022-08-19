@@ -14,14 +14,14 @@ class SelfTTYDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<SelfTTYDevice> must_create();
+    static NonnullLockRefPtr<SelfTTYDevice> must_create();
     virtual ~SelfTTYDevice() override;
 
 private:
     SelfTTYDevice();
 
     // ^CharacterDevice
-    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual bool can_read(OpenFileDescription const&, u64) const override;

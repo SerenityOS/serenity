@@ -43,11 +43,11 @@ ErrorOr<void> LocalSocket::try_for_each(Function<ErrorOr<void>(LocalSocket const
     });
 }
 
-ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
+ErrorOr<NonnullLockRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
     auto client_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Client buffer"sv));
     auto server_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Server buffer"sv));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
 }
 
 ErrorOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
@@ -469,7 +469,7 @@ ErrorOr<void> LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
     return {};
 }
 
-NonnullRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
+NonnullLockRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -479,7 +479,7 @@ NonnullRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(OpenFile
     VERIFY_NOT_REACHED();
 }
 
-NonnullRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
+NonnullLockRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -489,7 +489,7 @@ NonnullRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(OpenFile
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description)
+ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullLockRefPtr<OpenFileDescription> passing_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -503,7 +503,7 @@ ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description,
     return {};
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDescription const& socket_description)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDescription const& socket_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);

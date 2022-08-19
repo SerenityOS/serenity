@@ -79,7 +79,7 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     // However, if the user specified unveil() with "c" permissions, we don't set errno if ENOENT is encountered,
     // because they most likely intend the program to create the file for them later on.
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
-    RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
+    LockRefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     OwnPtr<KString> new_unveiled_path;
     auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path->view(), VirtualFileSystem::the().root_custody(), &parent_custody);
     if (!custody_or_error.is_error()) {

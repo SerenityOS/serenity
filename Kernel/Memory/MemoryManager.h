@@ -11,8 +11,8 @@
 #include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PhysicalPage.h>
@@ -122,7 +122,7 @@ public:
     bool is_empty() const { return m_page_count == 0; }
     size_t page_count() const { return m_page_count; }
 
-    [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+    [[nodiscard]] NonnullLockRefPtr<PhysicalPage> take_one();
     void uncommit_one();
 
     void operator=(CommittedPhysicalPageSet&&) = delete;
@@ -173,15 +173,15 @@ public:
     ErrorOr<CommittedPhysicalPageSet> commit_physical_pages(size_t page_count);
     void uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
 
-    NonnullRefPtr<PhysicalPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
-    ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
-    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_physical_pages(size_t size);
+    NonnullLockRefPtr<PhysicalPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
+    ErrorOr<NonnullLockRefPtr<PhysicalPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
+    ErrorOr<NonnullLockRefPtrVector<PhysicalPage>> allocate_contiguous_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page);
+    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access, LockRefPtr<Memory::PhysicalPage>& dma_buffer_page);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access);
-    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages);
+    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullLockRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
@@ -263,7 +263,7 @@ private:
 
     static Region* find_region_from_vaddr(VirtualAddress);
 
-    RefPtr<PhysicalPage> find_free_physical_page(bool);
+    LockRefPtr<PhysicalPage> find_free_physical_page(bool);
 
     ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
     {
@@ -289,10 +289,10 @@ private:
         VERIFY(m_system_memory_info.physical_pages == (m_system_memory_info.physical_pages_used + physical_pages_unused));
     }
 
-    RefPtr<PageDirectory> m_kernel_page_directory;
+    LockRefPtr<PageDirectory> m_kernel_page_directory;
 
-    RefPtr<PhysicalPage> m_shared_zero_page;
-    RefPtr<PhysicalPage> m_lazy_committed_page;
+    LockRefPtr<PhysicalPage> m_shared_zero_page;
+    LockRefPtr<PhysicalPage> m_lazy_committed_page;
 
     SystemMemoryInfo m_system_memory_info;
 

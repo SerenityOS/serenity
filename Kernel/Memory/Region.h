@@ -10,9 +10,9 @@
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveRedBlackTree.h>
-#include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Memory/PageFaultResponse.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
@@ -30,7 +30,7 @@ enum class ShouldFlushTLB {
 };
 
 class Region final
-    : public Weakable<Region> {
+    : public LockWeakable<Region> {
     friend class AddressSpace;
     friend class MemoryManager;
     friend class RegionTree;
@@ -54,9 +54,9 @@ public:
         Yes,
     };
 
-    static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
     static ErrorOr<NonnullOwnPtr<Region>> create_unbacked();
-    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes, bool shared = false);
+    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes, bool shared = false);
 
     ~Region();
 
@@ -80,7 +80,7 @@ public:
 
     [[nodiscard]] VMObject const& vmobject() const { return *m_vmobject; }
     [[nodiscard]] VMObject& vmobject() { return *m_vmobject; }
-    void set_vmobject(NonnullRefPtr<VMObject>&&);
+    void set_vmobject(NonnullLockRefPtr<VMObject>&&);
 
     [[nodiscard]] bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
@@ -152,8 +152,8 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    RefPtr<PhysicalPage> physical_page(size_t index) const;
-    RefPtr<PhysicalPage>& physical_page_slot(size_t index);
+    LockRefPtr<PhysicalPage> physical_page(size_t index) const;
+    LockRefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
     [[nodiscard]] size_t offset_in_vmobject() const
     {
@@ -196,10 +196,10 @@ public:
 
 private:
     Region();
-    Region(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
-    Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
+    Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
+    Region(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalPage>);
+    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullLockRefPtr<PhysicalPage>);
 
     void set_access_bit(Access access, bool b)
     {
@@ -214,12 +214,12 @@ private:
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalPage& page_in_slot_at_time_of_fault);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage>);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, LockRefPtr<PhysicalPage>);
 
-    RefPtr<PageDirectory> m_page_directory;
+    LockRefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;
     size_t m_offset_in_vmobject { 0 };
-    RefPtr<VMObject> m_vmobject;
+    LockRefPtr<VMObject> m_vmobject;
     OwnPtr<KString> m_name;
     u8 m_access { Region::None };
     bool m_shared : 1 { false };

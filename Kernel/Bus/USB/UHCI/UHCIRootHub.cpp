@@ -83,12 +83,12 @@ static USBHubDescriptor uhci_root_hub_hub_descriptor = {
     0x0,                                  // Self-powered
 };
 
-ErrorOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullRefPtr<UHCIController> uhci_controller)
+ErrorOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullLockRefPtr<UHCIController> uhci_controller)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) UHCIRootHub(move(uhci_controller)));
 }
 
-UHCIRootHub::UHCIRootHub(NonnullRefPtr<UHCIController> uhci_controller)
+UHCIRootHub::UHCIRootHub(NonnullLockRefPtr<UHCIController> uhci_controller)
     : m_uhci_controller(move(uhci_controller))
 {
 }

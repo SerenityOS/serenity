@@ -30,7 +30,7 @@ class VirtIODisplayConnector final : public DisplayConnector {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VirtIODisplayConnector> must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    static NonnullLockRefPtr<VirtIODisplayConnector> must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
 
     void set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes);
     void set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>);
@@ -81,8 +81,8 @@ private:
     // Context used for kernel operations (e.g. flushing resources to scanout)
     Graphics::VirtIOGPU::ContextID m_kernel_context_id;
 
-    NonnullRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
-    RefPtr<Graphics::Console> m_console;
+    NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
+    LockRefPtr<Graphics::Console> m_console;
     Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display m_display_info {};
     Graphics::VirtIOGPU::ScanoutID m_scanout_id;
 

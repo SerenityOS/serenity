@@ -230,7 +230,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     }
 }
 
-RefPtr<BlockDevice> StorageManagement::boot_block_device() const
+LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
 {
     return m_boot_block_device.strong_ref();
 }
@@ -254,7 +254,7 @@ u32 StorageManagement::generate_controller_id()
     return s_controller_id.fetch_add(1);
 }
 
-NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
+NonnullLockRefPtr<FileSystem> StorageManagement::root_filesystem() const
 {
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {

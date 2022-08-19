@@ -15,19 +15,19 @@ namespace Kernel {
 class OpenFileDescription;
 
 struct SocketPair {
-    NonnullRefPtr<OpenFileDescription> description0;
-    NonnullRefPtr<OpenFileDescription> description1;
+    NonnullLockRefPtr<OpenFileDescription> description0;
+    NonnullLockRefPtr<OpenFileDescription> description1;
 };
 
 class LocalSocket final : public Socket {
 
 public:
-    static ErrorOr<NonnullRefPtr<LocalSocket>> try_create(int type);
+    static ErrorOr<NonnullLockRefPtr<LocalSocket>> try_create(int type);
     static ErrorOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
+    ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullLockRefPtr<OpenFileDescription> passing_description);
+    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
 
     static void for_each(Function<void(LocalSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(LocalSocket const&)>);
@@ -59,8 +59,8 @@ private:
     bool has_attached_peer(OpenFileDescription const&) const;
     DoubleBuffer* receive_buffer_for(OpenFileDescription&);
     DoubleBuffer* send_buffer_for(OpenFileDescription&);
-    NonnullRefPtrVector<OpenFileDescription>& sendfd_queue_for(OpenFileDescription const&);
-    NonnullRefPtrVector<OpenFileDescription>& recvfd_queue_for(OpenFileDescription const&);
+    NonnullLockRefPtrVector<OpenFileDescription>& sendfd_queue_for(OpenFileDescription const&);
+    NonnullLockRefPtrVector<OpenFileDescription>& recvfd_queue_for(OpenFileDescription const&);
 
     void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
@@ -73,7 +73,7 @@ private:
     ErrorOr<void> try_set_path(StringView);
 
     // The inode this socket is bound to.
-    WeakPtr<Inode> m_inode;
+    LockWeakPtr<Inode> m_inode;
 
     UserID m_prebind_uid { 0 };
     GroupID m_prebind_gid { 0 };
@@ -100,8 +100,8 @@ private:
     NonnullOwnPtr<DoubleBuffer> m_for_client;
     NonnullOwnPtr<DoubleBuffer> m_for_server;
 
-    NonnullRefPtrVector<OpenFileDescription> m_fds_for_client;
-    NonnullRefPtrVector<OpenFileDescription> m_fds_for_server;
+    NonnullLockRefPtrVector<OpenFileDescription> m_fds_for_client;
+    NonnullLockRefPtrVector<OpenFileDescription> m_fds_for_server;
 
     IntrusiveListNode<LocalSocket> m_list_node;
 

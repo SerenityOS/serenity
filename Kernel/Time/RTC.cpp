@@ -15,9 +15,9 @@ namespace Kernel {
 #define IRQ_TIMER 8
 #define MAX_FREQUENCY 8000
 
-NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(RegisterState const&)> callback)
+NonnullLockRefPtr<RealTimeClock> RealTimeClock::create(Function<void(RegisterState const&)> callback)
 {
-    return adopt_ref(*new RealTimeClock(move(callback)));
+    return adopt_lock_ref(*new RealTimeClock(move(callback)));
 }
 RealTimeClock::RealTimeClock(Function<void(RegisterState const&)> callback)
     : HardwareTimer(IRQ_TIMER, move(callback))

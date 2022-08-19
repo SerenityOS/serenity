@@ -107,7 +107,7 @@ extern "C" [[noreturn]] void init()
 
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
-        g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(framebuffer.gpu_buffer(), framebuffer.width(), framebuffer.width(), framebuffer.pitch()).value().leak_ref();
+        g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(framebuffer.gpu_buffer(), framebuffer.width(), framebuffer.width(), framebuffer.pitch()).value().leak_ref();
         draw_logo();
     }
     dmesgln("Starting SerenityOS...");

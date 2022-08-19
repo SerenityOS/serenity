@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> SysFS::try_create()
+ErrorOr<NonnullLockRefPtr<FileSystem>> SysFS::try_create()
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SysFS));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFS));
 }
 
 SysFS::SysFS() = default;
@@ -31,9 +31,9 @@ Inode& SysFS::root_inode()
     return *m_root_inode;
 }
 
-ErrorOr<NonnullRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
+ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
 }
 
 SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
@@ -68,7 +68,7 @@ ErrorOr<void> SysFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullRefPtr<Inode>> SysFSInode::lookup(StringView)
+ErrorOr<NonnullLockRefPtr<Inode>> SysFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -96,7 +96,7 @@ ErrorOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernel
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullLockRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -131,9 +131,9 @@ ErrorOr<void> SysFSInode::truncate(u64 size)
     return m_associated_component->truncate(size);
 }
 
-ErrorOr<NonnullRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
+ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
 }
 
 SysFSLinkInode::SysFSLinkInode(SysFS const& fs, SysFSComponent const& component)
@@ -156,9 +156,9 @@ InodeMetadata SysFSLinkInode::metadata() const
     return metadata;
 }
 
-ErrorOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
+ErrorOr<NonnullLockRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSDirectoryInode(sysfs, component));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSDirectoryInode(sysfs, component));
 }
 
 SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
@@ -186,7 +186,7 @@ ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(
     return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);

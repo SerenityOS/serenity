@@ -8,10 +8,10 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
-#include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>

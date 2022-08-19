@@ -50,7 +50,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
     TRY(m_fds.with_shared([&](auto& fds) -> ErrorOr<void> {
         for (size_t i = 0; i < params.nfds; i++) {
             auto& pfd = fds_copy[i];
-            RefPtr<OpenFileDescription> description;
+            LockRefPtr<OpenFileDescription> description;
             auto description_or_error = fds.open_file_description(pfd.fd);
             if (!description_or_error.is_error())
                 description = description_or_error.release_value();

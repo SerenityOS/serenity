@@ -124,9 +124,9 @@ ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<
     });
 }
 
-RefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
+LockRefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
 {
-    return m_child_components.with([&](auto& list) -> RefPtr<SysFSComponent> {
+    return m_child_components.with([&](auto& list) -> LockRefPtr<SysFSComponent> {
         for (auto& child_component : list) {
             if (child_component.name() == name) {
                 return child_component;
@@ -141,17 +141,17 @@ SysFSDirectory::SysFSDirectory(SysFSDirectory const& parent_directory)
 {
 }
 
-ErrorOr<NonnullRefPtr<SysFSInode>> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
 {
     return TRY(SysFSDirectoryInode::try_create(sysfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<SysFSInode>> SysFSSymbolicLink::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSSymbolicLink::to_inode(SysFS const& sysfs_instance) const
 {
     return TRY(SysFSLinkInode::try_create(sysfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<SysFSInode>> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSInode::try_create(sysfs_instance, *this);
 }

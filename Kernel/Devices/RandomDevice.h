@@ -14,7 +14,7 @@ class RandomDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<RandomDevice> must_create();
+    static NonnullLockRefPtr<RandomDevice> must_create();
     virtual ~RandomDevice() override;
 
 private:

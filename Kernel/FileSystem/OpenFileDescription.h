@@ -24,8 +24,8 @@ public:
 
 class OpenFileDescription final : public AtomicRefCounted<OpenFileDescription> {
 public:
-    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
-    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
+    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create(Custody&);
+    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create(File&);
     ~OpenFileDescription();
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
@@ -112,7 +112,7 @@ public:
 
     OwnPtr<OpenFileDescriptionData>& data();
 
-    void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_inode(Badge<VirtualFileSystem>, NonnullLockRefPtr<Inode>&& inode) { m_inode = move(inode); }
     void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
 
     ErrorOr<void> truncate(u64);
@@ -138,9 +138,9 @@ private:
         blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
-    RefPtr<Custody> m_custody;
-    RefPtr<Inode> m_inode;
-    NonnullRefPtr<File> m_file;
+    LockRefPtr<Custody> m_custody;
+    LockRefPtr<Inode> m_inode;
+    NonnullLockRefPtr<File> m_file;
 
     struct State {
         OwnPtr<OpenFileDescriptionData> data;

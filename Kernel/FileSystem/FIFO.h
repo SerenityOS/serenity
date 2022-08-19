@@ -24,13 +24,13 @@ public:
         Writer
     };
 
-    static ErrorOr<NonnullRefPtr<FIFO>> try_create(UserID);
+    static ErrorOr<NonnullLockRefPtr<FIFO>> try_create(UserID);
     virtual ~FIFO() override;
 
     UserID uid() const { return m_uid; }
 
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
+    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_direction(Direction);
+    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"

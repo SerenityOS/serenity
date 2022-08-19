@@ -12,7 +12,7 @@ namespace Kernel::Graphics {
 
 class ContiguousFramebufferConsole final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<ContiguousFramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t pitch);
+    static NonnullLockRefPtr<ContiguousFramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t pitch);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t, size_t, size_t, size_t) override { }

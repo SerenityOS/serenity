@@ -5,10 +5,10 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize()
+UNMAP_AFTER_INIT NonnullLockRefPtr<IDEController> IDEController::initialize()
 {
-    return adopt_ref(*new IDEController());
+    return adopt_lock_ref(*new IDEController());
 }
 
 bool IDEController::reset()
@@ -70,7 +70,7 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
 UNMAP_AFTER_INIT IDEController::IDEController() = default;
 UNMAP_AFTER_INIT IDEController::~IDEController() = default;
 
-RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
+LockRefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
 {
     switch (index) {
     case 0:
@@ -85,9 +85,9 @@ RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) c
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<StorageDevice> IDEController::device(u32 index) const
+LockRefPtr<StorageDevice> IDEController::device(u32 index) const
 {
-    NonnullRefPtrVector<StorageDevice> connected_devices;
+    NonnullLockRefPtrVector<StorageDevice> connected_devices;
     for (size_t index = 0; index < 4; index++) {
         auto checked_device = device_by_channel_and_position(index);
         if (checked_device.is_null())

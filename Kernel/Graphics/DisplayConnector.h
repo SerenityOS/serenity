@@ -162,11 +162,11 @@ protected:
     size_t const m_framebuffer_resource_size;
 
 private:
-    RefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;
+    LockRefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;
 
-    WeakPtr<Process> m_responsible_process;
+    LockWeakPtr<Process> m_responsible_process;
     Spinlock m_responsible_process_lock { LockRank::None };
 
-    IntrusiveListNode<DisplayConnector, RefPtr<DisplayConnector>> m_list_node;
+    IntrusiveListNode<DisplayConnector, LockRefPtr<DisplayConnector>> m_list_node;
 };
 }

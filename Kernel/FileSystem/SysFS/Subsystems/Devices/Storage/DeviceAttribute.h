@@ -21,7 +21,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<StorageDeviceAttributeSysFSComponent> must_create(StorageDeviceSysFSDirectory const& device_directory, Type);
+    static NonnullLockRefPtr<StorageDeviceAttributeSysFSComponent> must_create(StorageDeviceSysFSDirectory const& device_directory, Type);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~StorageDeviceAttributeSysFSComponent() {};
@@ -31,7 +31,7 @@ public:
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     StorageDeviceAttributeSysFSComponent(StorageDeviceSysFSDirectory const& device, Type);
-    NonnullRefPtr<StorageDevice> m_device;
+    NonnullLockRefPtr<StorageDevice> m_device;
     Type const m_type { Type::EndLBA };
 };
 

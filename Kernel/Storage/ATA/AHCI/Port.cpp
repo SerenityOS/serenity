@@ -20,10 +20,10 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
     auto identify_buffer_page = MUST(MM.allocate_physical_page());
-    auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(controller, move(identify_buffer_page), hba_capabilities, registers, port_index)));
+    auto port = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AHCIPort(controller, move(identify_buffer_page), hba_capabilities, registers, port_index)));
     TRY(port->allocate_resources_and_initialize_ports());
     return port;
 }
@@ -54,7 +54,7 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
     return {};
 }
 
-UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, NonnullLockRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
     , m_hba_capabilities(hba_capabilities)
     , m_identify_buffer_page(move(identify_buffer_page))
@@ -180,7 +180,7 @@ void AHCIPort::recover_from_fatal_error()
 {
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);
-    RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+    LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
     if (!controller) {
         dmesgln("AHCI Port {}: fatal error, controller not available", representative_port_index());
         return;
@@ -355,7 +355,7 @@ bool AHCIPort::initialize()
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
-            RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+            LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
             if (!controller) {
                 dmesgln("AHCI Port {}: Device found, but parent controller is not available, abort.", representative_port_index());
                 return false;
@@ -496,7 +496,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
     VERIFY(m_lock.is_locked());
     VERIFY(request.block_count() > 0);
 
-    NonnullRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
+    NonnullLockRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
     for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
         allocated_dma_regions.append(m_dma_buffers.at(index));
     }
@@ -662,7 +662,7 @@ bool AHCIPort::identify_device()
     if (!spin_until_ready())
         return false;
 
-    RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+    LockRefPtr<AHCIController> controller = m_parent_controller.strong_ref();
     if (!controller)
         return false;
 

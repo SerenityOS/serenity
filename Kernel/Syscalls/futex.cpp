@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullRefPtr<FutexQueue>>>> s_global_futex_queues;
+static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullLockRefPtr<FutexQueue>>>> s_global_futex_queues;
 
 void Process::clear_futex_queues_on_exec()
 {
@@ -122,16 +122,16 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
     }
     }
 
-    auto find_futex_queue = [&](GlobalFutexKey futex_key, bool create_if_not_found, bool* did_create = nullptr) -> ErrorOr<RefPtr<FutexQueue>> {
+    auto find_futex_queue = [&](GlobalFutexKey futex_key, bool create_if_not_found, bool* did_create = nullptr) -> ErrorOr<LockRefPtr<FutexQueue>> {
         VERIFY(!create_if_not_found || did_create != nullptr);
-        return s_global_futex_queues->with([&](auto& queues) -> ErrorOr<RefPtr<FutexQueue>> {
+        return s_global_futex_queues->with([&](auto& queues) -> ErrorOr<LockRefPtr<FutexQueue>> {
             auto it = queues.find(futex_key);
             if (it != queues.end())
                 return it->value;
             if (!create_if_not_found)
                 return nullptr;
             *did_create = true;
-            auto futex_queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FutexQueue));
+            auto futex_queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) FutexQueue));
             auto result = TRY(queues.try_set(futex_key, futex_queue));
             VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             return futex_queue;
@@ -169,7 +169,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
 
     auto do_wait = [&](u32 bitset) -> ErrorOr<FlatPtr> {
         bool did_create;
-        RefPtr<FutexQueue> futex_queue;
+        LockRefPtr<FutexQueue> futex_queue;
         auto futex_key = TRY(get_futex_key(user_address, shared));
         do {
             auto user_value = user_atomic_load_relaxed(params.userspace_address);
@@ -216,7 +216,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
         if (!futex_queue)
             return 0;
 
-        RefPtr<FutexQueue> target_futex_queue;
+        LockRefPtr<FutexQueue> target_futex_queue;
         bool is_empty = false;
         bool is_target_empty = false;
         auto futex_key2 = TRY(get_futex_key(user_address2, shared));

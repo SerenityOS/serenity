@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 
 namespace Kernel {
 
@@ -32,9 +32,9 @@ public:
     void set_flags(int flags) { m_flags = flags; }
 
 private:
-    NonnullRefPtr<Inode> m_guest;
-    NonnullRefPtr<FileSystem> m_guest_fs;
-    RefPtr<Custody> m_host_custody;
+    NonnullLockRefPtr<Inode> m_guest;
+    NonnullLockRefPtr<FileSystem> m_guest_fs;
+    LockRefPtr<Custody> m_host_custody;
     int m_flags;
 };
 

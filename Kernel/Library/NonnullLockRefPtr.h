@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/Format.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #ifdef KERNEL
@@ -16,104 +17,90 @@
 #    include <Kernel/Arch/ScopedCritical.h>
 #endif
 
-#define THREADSAFENONNULLREFPTR_SCRUB_BYTE 0xa1
+#define NONNULLLOCKREFPTR_SCRUB_BYTE 0xa1
 
 namespace AK {
 
 template<typename T>
 class OwnPtr;
 template<typename T, typename PtrTraits>
-class RefPtr;
+class LockRefPtr;
 
 template<typename T>
-ALWAYS_INLINE void ref_if_not_null(T* ptr)
-{
-    if (ptr)
-        ptr->ref();
-}
-
-template<typename T>
-ALWAYS_INLINE void unref_if_not_null(T* ptr)
-{
-    if (ptr)
-        ptr->unref();
-}
-
-template<typename T>
-class [[nodiscard]] NonnullRefPtr {
+class [[nodiscard]] NonnullLockRefPtr {
     template<typename U, typename P>
-    friend class RefPtr;
+    friend class LockRefPtr;
     template<typename U>
-    friend class NonnullRefPtr;
+    friend class NonnullLockRefPtr;
     template<typename U>
-    friend class WeakPtr;
+    friend class LockWeakPtr;
 
 public:
     using ElementType = T;
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(const T& object)
+    ALWAYS_INLINE NonnullLockRefPtr(T const& object)
         : m_bits((FlatPtr)&object)
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
-        : m_bits((FlatPtr) static_cast<const T*>(&object))
+    ALWAYS_INLINE NonnullLockRefPtr(U const& object) requires(IsConvertible<U*, T*>)
+        : m_bits((FlatPtr) static_cast<T const*>(&object))
     {
         VERIFY(!(m_bits & 1));
-        const_cast<T&>(static_cast<const T&>(object)).ref();
+        const_cast<T&>(static_cast<T const&>(object)).ref();
     }
-    ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
+    ALWAYS_INLINE NonnullLockRefPtr(AdoptTag, T& object)
         : m_bits((FlatPtr)&object)
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr const& other)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE ~NonnullRefPtr()
+    ALWAYS_INLINE ~NonnullLockRefPtr()
     {
         assign(nullptr);
 #ifdef SANITIZE_PTRS
-        m_bits.store(explode_byte(THREADSAFENONNULLREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(NONNULLLOCKREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 
     template<typename U>
-    NonnullRefPtr(OwnPtr<U> const&) = delete;
+    NonnullLockRefPtr(OwnPtr<U> const&) = delete;
     template<typename U>
-    NonnullRefPtr& operator=(OwnPtr<U> const&) = delete;
+    NonnullLockRefPtr& operator=(OwnPtr<U> const&) = delete;
 
     template<typename U>
-    NonnullRefPtr(RefPtr<U> const&) = delete;
+    NonnullLockRefPtr(LockRefPtr<U> const&) = delete;
     template<typename U>
-    NonnullRefPtr& operator=(RefPtr<U> const&) = delete;
-    NonnullRefPtr(RefPtr<T> const&) = delete;
-    NonnullRefPtr& operator=(RefPtr<T> const&) = delete;
+    NonnullLockRefPtr& operator=(LockRefPtr<U> const&) = delete;
+    NonnullLockRefPtr(LockRefPtr<T> const&) = delete;
+    NonnullLockRefPtr& operator=(LockRefPtr<T> const&) = delete;
 
-    NonnullRefPtr& operator=(NonnullRefPtr const& other)
+    NonnullLockRefPtr& operator=(NonnullLockRefPtr const& other)
     {
         if (this != &other)
             assign(other.add_ref());
@@ -121,13 +108,13 @@ public:
     }
 
     template<typename U>
-    NonnullRefPtr& operator=(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
     {
         assign(other.add_ref());
         return *this;
     }
 
-    ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
+    ALWAYS_INLINE NonnullLockRefPtr& operator=(NonnullLockRefPtr&& other)
     {
         if (this != &other)
             assign(&other.leak_ref());
@@ -135,13 +122,13 @@ public:
     }
 
     template<typename U>
-    NonnullRefPtr& operator=(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
     {
         assign(&other.leak_ref());
         return *this;
     }
 
-    NonnullRefPtr& operator=(const T& object)
+    NonnullLockRefPtr& operator=(T const& object)
     {
         const_cast<T&>(object).ref();
         assign(const_cast<T*>(&object));
@@ -159,7 +146,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* ptr() const
     {
         return as_nonnull_ptr();
     }
@@ -168,7 +155,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    ALWAYS_INLINE RETURNS_NONNULL T const* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -177,7 +164,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T& operator*() const
+    ALWAYS_INLINE T const& operator*() const
     {
         return *as_nonnull_ptr();
     }
@@ -186,7 +173,7 @@ public:
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
+    ALWAYS_INLINE RETURNS_NONNULL operator T const*() const
     {
         return as_nonnull_ptr();
     }
@@ -195,7 +182,7 @@ public:
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T&() const
+    ALWAYS_INLINE operator T const&() const
     {
         return *as_nonnull_ptr();
     }
@@ -203,7 +190,7 @@ public:
     operator bool() const = delete;
     bool operator!() const = delete;
 
-    void swap(NonnullRefPtr& other)
+    void swap(NonnullLockRefPtr& other)
     {
         if (this == &other)
             return;
@@ -215,7 +202,7 @@ public:
     }
 
     template<typename U>
-    void swap(NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
+    void swap(NonnullLockRefPtr<U>& other) requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         U* other_ptr = other.exchange(nullptr);
@@ -225,7 +212,7 @@ public:
 
     // clang-format off
 private:
-    NonnullRefPtr() = delete;
+    NonnullLockRefPtr() = delete;
     // clang-format on
 
     ALWAYS_INLINE T* as_ptr() const
@@ -317,21 +304,21 @@ private:
 };
 
 template<typename T>
-inline NonnullRefPtr<T> adopt_ref(T& object)
+inline NonnullLockRefPtr<T> adopt_lock_ref(T& object)
 {
-    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
+    return NonnullLockRefPtr<T>(NonnullLockRefPtr<T>::Adopt, object);
 }
 
 template<typename T>
-struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
-    ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
+struct Formatter<NonnullLockRefPtr<T>> : Formatter<T const*> {
+    ErrorOr<void> format(FormatBuilder& builder, NonnullLockRefPtr<T> const& value)
     {
-        return Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<T const*>::format(builder, value.ptr());
     }
 };
 
 template<typename T, typename U>
-inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b) requires(IsConvertible<U*, T*>)
+inline void swap(NonnullLockRefPtr<T>& a, NonnullLockRefPtr<U>& b) requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }
@@ -339,12 +326,12 @@ inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b) requires(IsConvertibl
 }
 
 template<typename T>
-struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
+struct Traits<NonnullLockRefPtr<T>> : public GenericTraits<NonnullLockRefPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
-    static unsigned hash(NonnullRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
-    static bool equals(NonnullRefPtr<T> const& a, NonnullRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
+    using ConstPeekType = T const*;
+    static unsigned hash(NonnullLockRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static bool equals(NonnullLockRefPtr<T> const& a, NonnullLockRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
-using AK::adopt_ref;
-using AK::NonnullRefPtr;
+using AK::adopt_lock_ref;
+using AK::NonnullLockRefPtr;

@@ -5,10 +5,10 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<PCIIDEController> PCIIDEController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT NonnullLockRefPtr<PCIIDEController> PCIIDEController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
 {
-    return adopt_ref(*new PCIIDEController(device_identifier, force_pio));
+    return adopt_lock_ref(*new PCIIDEController(device_identifier, force_pio));
 }
 
 UNMAP_AFTER_INIT PCIIDEController::PCIIDEController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)

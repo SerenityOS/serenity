@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
 {
     auto device_control_device_or_error = DeviceManagement::try_create_device<DeviceControlDevice>();
     // FIXME: Find a way to propagate errors

@@ -16,13 +16,13 @@ namespace Kernel {
 
 static Atomic<int> s_next_fifo_id = 1;
 
-ErrorOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
+ErrorOr<NonnullLockRefPtr<FIFO>> FIFO::try_create(UserID uid)
 {
     auto buffer = TRY(DoubleBuffer::try_create("FIFO: Buffer"sv));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
     auto description = TRY(OpenFileDescription::try_create(*this));
     attach(direction);
@@ -30,7 +30,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction
     return description;
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
 {
     MutexLocker locker(m_open_lock);
 

@@ -13,16 +13,16 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<I8042Controller> I8042Controller::initialize()
+UNMAP_AFTER_INIT NonnullLockRefPtr<I8042Controller> I8042Controller::initialize()
 {
-    return adopt_ref(*new I8042Controller());
+    return adopt_lock_ref(*new I8042Controller());
 }
 
-RefPtr<MouseDevice> I8042Controller::mouse() const
+LockRefPtr<MouseDevice> I8042Controller::mouse() const
 {
     return m_mouse_device;
 }
-RefPtr<KeyboardDevice> I8042Controller::keyboard() const
+LockRefPtr<KeyboardDevice> I8042Controller::keyboard() const
 {
     return m_keyboard_device;
 }

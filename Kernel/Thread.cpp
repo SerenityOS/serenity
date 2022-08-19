@@ -40,18 +40,18 @@ SpinlockProtected<Thread::GlobalList>& Thread::all_instances()
     return *s_list;
 }
 
-ErrorOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
+ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullLockRefPtr<Process> process)
 {
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
 
-    auto block_timer = TRY(try_make_ref_counted<Timer>());
+    auto block_timer = TRY(try_make_lock_ref_counted<Timer>());
 
     auto name = TRY(KString::try_create(process->name()));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
+Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullLockRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
@@ -632,7 +632,7 @@ void Thread::finalize_dying_threads()
         });
     }
     for (auto* thread : dying_threads) {
-        RefPtr<Process> process = thread->process();
+        LockRefPtr<Process> process = thread->process();
         dbgln_if(PROCESS_DEBUG, "Before finalization, {} has {} refs and its process has {}",
             *thread, thread->ref_count(), thread->process().ref_count());
         thread->finalize();
@@ -1251,7 +1251,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *trap->regs;
 }
 
-ErrorOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
+ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_clone(Process& process)
 {
     auto clone = TRY(Thread::try_create(process));
     m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
@@ -1427,9 +1427,9 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     return {};
 }
 
-RefPtr<Thread> Thread::from_tid(ThreadID tid)
+LockRefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
-    return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
+    return Thread::all_instances().with([&](auto& list) -> LockRefPtr<Thread> {
         for (Thread& thread : list) {
             if (thread.tid() == tid)
                 return thread;

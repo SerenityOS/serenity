@@ -45,10 +45,10 @@ SpinlockProtected<Inode::AllInstancesList>& Inode::all_instances()
     return s_all_instances;
 }
 
-RefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
+LockRefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
 {
     VERIFY_NOT_REACHED();
-    return RefPtr<Memory::SharedInodeVMObject>(nullptr);
+    return LockRefPtr<Memory::SharedInodeVMObject>(nullptr);
 }
 
 void Inode::will_be_destroyed()

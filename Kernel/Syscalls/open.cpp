@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
     auto fd_allocation = TRY(allocate_fd());
-    RefPtr<Custody> base;
+    LockRefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();
     } else {

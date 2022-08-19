@@ -14,9 +14,9 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullLockRefPtr<Console> Console::must_create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref_if_nonnull(new Console(pci_device_identifier)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new Console(pci_device_identifier)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT void Console::initialize()

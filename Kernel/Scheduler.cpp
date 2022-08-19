@@ -394,7 +394,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
         current_time = current_time_monotonic;
     }
 
-    RefPtr<Thread> idle_thread;
+    LockRefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);

@@ -20,7 +20,7 @@ class SysFSDisplayConnectorsDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "connectors"sv; }
     static SysFSDisplayConnectorsDirectory& the();
-    static NonnullRefPtr<SysFSDisplayConnectorsDirectory> must_create(SysFSGraphicsDirectory const&);
+    static NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> must_create(SysFSGraphicsDirectory const&);
 
     void plug(Badge<DisplayConnector>, DisplayConnectorSysFSDirectory&);
     void unplug(Badge<DisplayConnector>, SysFSDirectory&);

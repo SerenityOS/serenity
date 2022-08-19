@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/ATA/ATAController.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -18,10 +18,10 @@ class AsyncBlockDeviceRequest;
 class IDEChannel;
 class IDEController : public ATAController {
 public:
-    static NonnullRefPtr<IDEController> initialize();
+    static NonnullLockRefPtr<IDEController> initialize();
     virtual ~IDEController() override;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const override final;
+    virtual LockRefPtr<StorageDevice> device(u32 index) const override final;
     virtual bool reset() override final;
     virtual bool shutdown() override final;
     virtual size_t devices_count() const override final;
@@ -31,7 +31,7 @@ public:
 protected:
     IDEController();
 
-    RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
-    NonnullRefPtrVector<IDEChannel> m_channels;
+    LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
+    NonnullLockRefPtrVector<IDEChannel> m_channels;
 };
 }

@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSGraphicsDirectory> SysFSGraphicsDirectory::must_create(SysFSDevicesDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGraphicsDirectory> SysFSGraphicsDirectory::must_create(SysFSDevicesDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) SysFSGraphicsDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) SysFSGraphicsDirectory(parent_directory));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSDisplayConnectorsDirectory::must_create(*directory));
         return {};

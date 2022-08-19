@@ -14,23 +14,23 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed)
+ErrorOr<NonnullLockRefPtr<Hub>> Hub::try_create_root_hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed)
 {
     // NOTE: Enumeration does not happen here, as the controller must know what the device address is at all times during enumeration to intercept requests.
     auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
-    auto hub = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Hub(controller, device_speed, move(pipe))));
+    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(controller, device_speed, move(pipe))));
     return hub;
 }
 
-ErrorOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
+ErrorOr<NonnullLockRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
 {
     auto pipe = TRY(Pipe::try_create_pipe(device.controller(), Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, device.device_descriptor().max_packet_size, device.address()));
-    auto hub = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Hub(device, move(pipe))));
+    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(device, move(pipe))));
     TRY(hub->enumerate_and_power_on_hub());
     return hub;
 }
 
-Hub::Hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed, NonnullOwnPtr<Pipe> default_pipe)
+Hub::Hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed, NonnullOwnPtr<Pipe> default_pipe)
     : Device(move(controller), 1 /* Port 1 */, device_speed, move(default_pipe))
 {
 }
@@ -266,7 +266,7 @@ void Hub::check_for_port_updates()
             } else {
                 dbgln("USB Hub: Device detached on port {}!", port_number);
 
-                RefPtr<Device> device_to_remove = nullptr;
+                LockRefPtr<Device> device_to_remove = nullptr;
                 for (auto& child : m_children) {
                     if (port_number == child.port()) {
                         device_to_remove = &child;

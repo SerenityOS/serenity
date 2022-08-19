@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
     auto params = TRY(copy_typed_from_user(user_params));
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    RefPtr<Custody> base;
+    LockRefPtr<Custody> base;
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
     } else {

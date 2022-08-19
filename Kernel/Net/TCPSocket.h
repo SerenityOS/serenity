@@ -10,7 +10,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
-#include <AK/WeakPtr.h>
+#include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
 
@@ -20,7 +20,7 @@ class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(TCPSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(TCPSocket const&)>);
-    static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullLockRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     virtual bool unref() const override;
@@ -146,15 +146,15 @@ public:
     bool should_delay_next_ack() const;
 
     static MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static RefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
+    static LockRefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
 
-    static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
+    static MutexProtected<HashMap<IPv4SocketTuple, LockRefPtr<TCPSocket>>>& closing_sockets();
 
-    ErrorOr<NonnullRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
+    ErrorOr<NonnullLockRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
-    void release_for_accept(NonnullRefPtr<TCPSocket>);
+    void release_for_accept(NonnullLockRefPtr<TCPSocket>);
 
     void retransmit_packets();
 
@@ -185,11 +185,11 @@ private:
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();
 
-    WeakPtr<TCPSocket> m_originator;
-    HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
+    LockWeakPtr<TCPSocket> m_originator;
+    HashMap<IPv4SocketTuple, NonnullLockRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
-    RefPtr<NetworkAdapter> m_adapter;
+    LockRefPtr<NetworkAdapter> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
     State m_state { State::Closed };
@@ -200,9 +200,9 @@ private:
 
     struct OutgoingPacket {
         u32 ack_number { 0 };
-        RefPtr<PacketWithTimestamp> buffer;
+        LockRefPtr<PacketWithTimestamp> buffer;
         size_t ipv4_payload_offset;
-        WeakPtr<NetworkAdapter> adapter;
+        LockWeakPtr<NetworkAdapter> adapter;
         int tx_counter { 0 };
     };
 

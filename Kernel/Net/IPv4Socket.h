@@ -28,7 +28,7 @@ struct PortAllocationResult {
 
 class IPv4Socket : public Socket {
 public:
-    static ErrorOr<NonnullRefPtr<Socket>> create(int type, int protocol);
+    static ErrorOr<NonnullLockRefPtr<Socket>> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
     virtual ErrorOr<void> close() override;

@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/API/InodeWatcherEvent.h>
@@ -16,6 +15,7 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
@@ -31,7 +31,7 @@ SpinlockProtected<Inode::AllInstancesList>& Inode::all_instances()
 
 void Inode::sync_all()
 {
-    NonnullRefPtrVector<Inode, 32> inodes;
+    NonnullLockRefPtrVector<Inode, 32> inodes;
     Inode::all_instances().with([&](auto& all_inodes) {
         for (auto& inode : all_inodes) {
             if (inode.is_metadata_dirty())
@@ -76,7 +76,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* descript
     return entire_file.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<NonnullLockRefPtr<Custody>> Inode::resolve_as_link(Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
@@ -138,7 +138,7 @@ ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
     return {};
 }
 
-RefPtr<LocalSocket> Inode::bound_socket() const
+LockRefPtr<LocalSocket> Inode::bound_socket() const
 {
     return m_bound_socket;
 }
@@ -178,7 +178,7 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     });
 }
 
-ErrorOr<NonnullRefPtr<FIFO>> Inode::fifo()
+ErrorOr<NonnullLockRefPtr<FIFO>> Inode::fifo()
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(metadata().is_fifo());
@@ -187,7 +187,7 @@ ErrorOr<NonnullRefPtr<FIFO>> Inode::fifo()
     if (!m_fifo)
         m_fifo = TRY(FIFO::try_create(metadata().uid));
 
-    return NonnullRefPtr { *m_fifo };
+    return NonnullLockRefPtr { *m_fifo };
 }
 
 void Inode::set_metadata_dirty(bool metadata_dirty)
@@ -264,7 +264,7 @@ ErrorOr<void> Inode::prepare_to_write_data()
     return {};
 }
 
-RefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
+LockRefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
 {
     MutexLocker locker(m_inode_lock);
     return m_shared_vmobject.strong_ref();

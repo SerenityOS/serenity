@@ -8,9 +8,9 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <Kernel/Bus/USB/PacketTypes.h>
 #include <Kernel/Bus/USB/USBPipe.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/Region.h>
@@ -20,7 +20,7 @@ namespace Kernel::USB {
 
 class Transfer final : public AtomicRefCounted<Transfer> {
 public:
-    static ErrorOr<NonnullRefPtr<Transfer>> try_create(Pipe&, u16 length, Memory::Region& dma_buffer);
+    static ErrorOr<NonnullLockRefPtr<Transfer>> try_create(Pipe&, u16 length, Memory::Region& dma_buffer);
 
     Transfer() = delete;
     ~Transfer();

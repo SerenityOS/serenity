@@ -23,7 +23,7 @@ UNMAP_AFTER_INIT void WorkQueue::initialize()
 
 UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
 {
-    RefPtr<Thread> thread;
+    LockRefPtr<Thread> thread;
     auto name_kstring = KString::try_create(name);
     if (name_kstring.is_error())
         TODO();

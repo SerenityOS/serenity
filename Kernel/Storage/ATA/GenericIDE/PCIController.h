@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -19,7 +19,7 @@ class AsyncBlockDeviceRequest;
 class PCIIDEController final : public IDEController
     , public PCI::Device {
 public:
-    static NonnullRefPtr<PCIIDEController> initialize(PCI::DeviceIdentifier const&, bool force_pio);
+    static NonnullLockRefPtr<PCIIDEController> initialize(PCI::DeviceIdentifier const&, bool force_pio);
 
     bool is_bus_master_capable() const;
     bool is_pci_native_mode_enabled() const;
@@ -29,7 +29,7 @@ private:
     bool is_pci_native_mode_enabled_on_secondary_channel() const;
     PCIIDEController(PCI::DeviceIdentifier const&, bool force_pio);
 
-    RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
+    LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     void initialize(bool force_pio);
     void detect_disks();
 

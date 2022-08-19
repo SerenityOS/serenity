@@ -13,11 +13,11 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, PCI::Address address)
+UNMAP_AFTER_INIT NonnullLockRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, PCI::Address address)
 {
     // FIXME: Handle allocation failure gracefully
     auto device_name = MUST(KString::formatted("{:04x}:{:02x}:{:02x}.{}", address.domain(), address.bus(), address.device(), address.function()));
-    auto directory = adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
+    auto directory = adopt_lock_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
     MUST(directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::VENDOR_ID, 2));
         list.append(PCIDeviceAttributeSysFSComponent::create(*directory, PCI::RegisterOffset::DEVICE_ID, 2));

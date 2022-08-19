@@ -27,12 +27,12 @@ static bool is_supported_model(u16 device_id)
     return false;
 }
 
-RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+LockRefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     VERIFY(pci_device_identifier.hardware_id().vendor_id == 0x8086);
     if (!is_supported_model(pci_device_identifier.hardware_id().device_id))
         return {};
-    auto adapter = adopt_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier.address()));
+    auto adapter = adopt_lock_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier.address()));
     MUST(adapter->initialize_adapter());
     return adapter;
 }

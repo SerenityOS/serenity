@@ -57,14 +57,14 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
     });
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_needle = name.to_uint();
     if (!maybe_needle.has_value())
         return ENOENT;
     auto needle = maybe_needle.release_value();
 
-    ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
+    ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
     for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
@@ -96,7 +96,7 @@ ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<E
     });
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_children_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_pid = name.to_uint();
     if (!maybe_pid.has_value())
@@ -145,7 +145,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())
@@ -233,7 +233,7 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
                 return {};
             }
             bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
-            RefPtr<OpenFileDescription> description = file_description_metadata.description();
+            LockRefPtr<OpenFileDescription> description = file_description_metadata.description();
             auto description_object = TRY(array.add_object());
             TRY(description_object.add("fd"sv, count));
             // TODO: Better OOM handling.

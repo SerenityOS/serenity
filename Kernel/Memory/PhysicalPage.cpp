@@ -10,10 +10,10 @@
 
 namespace Kernel::Memory {
 
-NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, MayReturnToFreeList may_return_to_freelist)
+NonnullLockRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, MayReturnToFreeList may_return_to_freelist)
 {
     auto& physical_page_entry = MM.get_physical_page_entry(paddr);
-    return adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(may_return_to_freelist));
+    return adopt_lock_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(may_return_to_freelist));
 }
 
 PhysicalPage::PhysicalPage(MayReturnToFreeList may_return_to_freelist)

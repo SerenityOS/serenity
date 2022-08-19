@@ -33,7 +33,7 @@ class UHCIController final
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
-    static ErrorOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static ErrorOr<NonnullLockRefPtr<UHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~UHCIController() override;
 
     virtual StringView purpose() const override { return "UHCI"sv; }

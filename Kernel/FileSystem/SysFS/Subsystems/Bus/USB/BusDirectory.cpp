@@ -40,7 +40,7 @@ UNMAP_AFTER_INIT SysFSUSBBusDirectory::SysFSUSBBusDirectory(SysFSBusDirectory& b
 
 UNMAP_AFTER_INIT void SysFSUSBBusDirectory::initialize()
 {
-    auto directory = adopt_ref(*new SysFSUSBBusDirectory(SysFSComponentRegistry::the().buses_directory()));
+    auto directory = adopt_lock_ref(*new SysFSUSBBusDirectory(SysFSComponentRegistry::the().buses_directory()));
     SysFSComponentRegistry::the().register_new_bus_directory(directory);
     s_sysfs_usb_bus_directory = directory;
 }

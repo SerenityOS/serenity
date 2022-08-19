@@ -88,9 +88,9 @@ void TCPSocket::set_state(State new_state)
         evaluate_block_conditions();
 }
 
-static Singleton<MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
+static Singleton<MutexProtected<HashMap<IPv4SocketTuple, LockRefPtr<TCPSocket>>>> s_socket_closing;
 
-MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
+MutexProtected<HashMap<IPv4SocketTuple, LockRefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
     return *s_socket_closing;
 }
@@ -102,9 +102,9 @@ MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tupl
     return *s_socket_tuples;
 }
 
-RefPtr<TCPSocket> TCPSocket::from_tuple(IPv4SocketTuple const& tuple)
+LockRefPtr<TCPSocket> TCPSocket::from_tuple(IPv4SocketTuple const& tuple)
 {
-    return sockets_by_tuple().with_shared([&](auto const& table) -> RefPtr<TCPSocket> {
+    return sockets_by_tuple().with_shared([&](auto const& table) -> LockRefPtr<TCPSocket> {
         auto exact_match = table.get(tuple);
         if (exact_match.has_value())
             return { *exact_match.value() };
@@ -122,10 +122,10 @@ RefPtr<TCPSocket> TCPSocket::from_tuple(IPv4SocketTuple const& tuple)
         return {};
     });
 }
-ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const& new_local_address, u16 new_local_port, IPv4Address const& new_peer_address, u16 new_peer_port)
+ErrorOr<NonnullLockRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const& new_local_address, u16 new_local_port, IPv4Address const& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
-    return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<NonnullRefPtr<TCPSocket>> {
+    return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<NonnullLockRefPtr<TCPSocket>> {
         if (table.contains(tuple))
             return EEXIST;
 
@@ -154,7 +154,7 @@ void TCPSocket::release_to_originator()
     m_originator.clear();
 }
 
-void TCPSocket::release_for_accept(NonnullRefPtr<TCPSocket> socket)
+void TCPSocket::release_for_accept(NonnullLockRefPtr<TCPSocket> socket)
 {
     VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
@@ -175,11 +175,11 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+ErrorOr<NonnullLockRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
     auto scratch_buffer = TRY(KBuffer::try_create_with_size("TCPSocket: Scratch buffer"sv, 65536));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
 ErrorOr<size_t> TCPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)

@@ -175,7 +175,7 @@ Optional<IntelGraphics::PLLSettings> IntelNativeDisplayConnector::create_pll_set
     return {};
 }
 
-NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length)
+NonnullLockRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, PhysicalAddress registers_region_address, size_t registers_region_length)
 {
     auto registers_region = MUST(MM.allocate_kernel_region(PhysicalAddress(registers_region_address), registers_region_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
     auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_region));

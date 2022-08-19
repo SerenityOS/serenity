@@ -13,9 +13,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
+NonnullLockRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 {
-    return adopt_ref(*new (nothrow) SysFSRootDirectory);
+    return adopt_lock_ref(*new (nothrow) SysFSRootDirectory);
 }
 
 SysFSRootDirectory::SysFSRootDirectory()

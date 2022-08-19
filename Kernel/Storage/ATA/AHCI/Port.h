@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/LockWeakPtr.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -33,18 +33,18 @@ class AsyncBlockDeviceRequest;
 class AHCIInterruptHandler;
 class AHCIPort
     : public AtomicRefCounted<AHCIPort>
-    , public Weakable<AHCIPort> {
+    , public LockWeakable<AHCIPort> {
     friend class AHCIController;
 
 public:
-    static ErrorOr<NonnullRefPtr<AHCIPort>> create(AHCIController const&, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
+    static ErrorOr<NonnullLockRefPtr<AHCIPort>> create(AHCIController const&, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
     bool is_operable() const;
     bool is_atapi_attached() const { return m_port_registers.sig == (u32)ATA::DeviceSignature::ATAPI; };
 
-    RefPtr<StorageDevice> connected_device() const { return m_connected_device; }
+    LockRefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
     bool reset();
     bool initialize_without_reset();
@@ -56,7 +56,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    AHCIPort(AHCIController const&, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
+    AHCIPort(AHCIController const&, NonnullLockRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
@@ -105,18 +105,18 @@ private:
     // Data members
 
     EntropySource m_entropy_source;
-    RefPtr<AsyncBlockDeviceRequest> m_current_request;
+    LockRefPtr<AsyncBlockDeviceRequest> m_current_request;
     Spinlock m_hard_lock { LockRank::None };
     Mutex m_lock { "AHCIPort"sv };
 
     mutable bool m_wait_for_completion { false };
 
-    NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
-    NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
-    RefPtr<Memory::PhysicalPage> m_command_list_page;
+    NonnullLockRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
+    NonnullLockRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
+    LockRefPtr<Memory::PhysicalPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
-    RefPtr<Memory::PhysicalPage> m_fis_receive_page;
-    RefPtr<ATADevice> m_connected_device;
+    LockRefPtr<Memory::PhysicalPage> m_fis_receive_page;
+    LockRefPtr<ATADevice> m_connected_device;
 
     u32 m_port_index;
 
@@ -125,14 +125,14 @@ private:
     // it's probably better to just "cache" this here instead.
     AHCI::HBADefinedCapabilities const m_hba_capabilities;
 
-    NonnullRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
+    NonnullLockRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
 
     volatile AHCI::PortRegisters& m_port_registers;
-    WeakPtr<AHCIController> m_parent_controller;
+    LockWeakPtr<AHCIController> m_parent_controller;
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 
-    RefPtr<Memory::ScatterGatherList> m_current_scatter_list;
+    LockRefPtr<Memory::ScatterGatherList> m_current_scatter_list;
     bool m_disabled_by_firmware { false };
 };
 }

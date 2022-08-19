@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/AHCI/Definitions.h>
 #include <Kernel/Storage/ATA/ATAController.h>
@@ -24,10 +24,10 @@ class AHCIController final : public ATAController
     friend class AHCIInterruptHandler;
 
 public:
-    static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static NonnullLockRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const override;
+    virtual LockRefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
@@ -44,13 +44,13 @@ private:
     void initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
-    RefPtr<StorageDevice> device_by_port(u32 index) const;
+    LockRefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
     NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
-    Array<RefPtr<AHCIPort>, 32> m_ports;
+    Array<LockRefPtr<AHCIPort>, 32> m_ports;
     NonnullOwnPtr<Memory::Region> m_hba_region;
     AHCI::HBADefinedCapabilities m_hba_capabilities;
 

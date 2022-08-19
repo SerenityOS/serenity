@@ -126,7 +126,7 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    RefPtr<GenericGraphicsAdapter> adapter;
+    LockRefPtr<GenericGraphicsAdapter> adapter;
 
     if (!adapter) {
         switch (device_identifier.hardware_id().vendor_id) {

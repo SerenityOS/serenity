@@ -7,13 +7,13 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -83,7 +83,7 @@ private:
     bool probe_and_set_non_legacy_hardware_timers();
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
-    NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
+    NonnullLockRefPtrVector<HardwareTimerBase> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick(RegisterState const&);
 
@@ -102,11 +102,11 @@ private:
     bool m_can_query_precise_time { false };
     bool m_updating_time { false }; // may only be accessed from the BSP!
 
-    RefPtr<HardwareTimerBase> m_system_timer;
-    RefPtr<HardwareTimerBase> m_time_keeper_timer;
+    LockRefPtr<HardwareTimerBase> m_system_timer;
+    LockRefPtr<HardwareTimerBase> m_time_keeper_timer;
 
     Atomic<u32> m_profile_enable_count { 0 };
-    RefPtr<HardwareTimerBase> m_profile_timer;
+    LockRefPtr<HardwareTimerBase> m_profile_timer;
 
     NonnullOwnPtr<Memory::Region> m_time_page_region;
 };

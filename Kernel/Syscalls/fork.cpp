@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
-    RefPtr<Thread> child_first_thread;
+    LockRefPtr<Thread> child_first_thread;
 
     ArmedScopeGuard thread_finalizer_guard = [&child_first_thread]() {
         SpinlockLocker lock(g_scheduler_lock);

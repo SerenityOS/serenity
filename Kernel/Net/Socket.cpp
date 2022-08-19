@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
+ErrorOr<NonnullLockRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     switch (domain) {
     case AF_LOCAL:
@@ -46,7 +46,7 @@ void Socket::set_setup_state(SetupState new_setup_state)
     evaluate_block_conditions();
 }
 
-RefPtr<Socket> Socket::accept()
+LockRefPtr<Socket> Socket::accept()
 {
     MutexLocker locker(mutex());
     if (m_pending.is_empty())
@@ -63,7 +63,7 @@ RefPtr<Socket> Socket::accept()
     return client;
 }
 
-ErrorOr<void> Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
+ErrorOr<void> Socket::queue_connection_from(NonnullLockRefPtr<Socket> peer)
 {
     dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
     MutexLocker locker(mutex());

@@ -34,7 +34,7 @@ public:
         LowSpeed
     };
 
-    static ErrorOr<NonnullRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
+    static ErrorOr<NonnullLockRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
 
     Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
     Device(Device const& device, NonnullOwnPtr<Pipe> default_pipe);
@@ -59,7 +59,7 @@ public:
     SysFSUSBDeviceInformation& sysfs_device_info_node(Badge<USB::Hub>) { return *m_sysfs_device_info_node; }
 
 protected:
-    Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
+    Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
 
     u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
@@ -71,14 +71,14 @@ protected:
     USBDeviceDescriptor m_device_descriptor {}; // Device Descriptor obtained from USB Device
     Vector<USBConfiguration> m_configurations;  // Configurations for this device
 
-    NonnullRefPtr<USBController> m_controller;
+    NonnullLockRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
 
 private:
-    IntrusiveListNode<Device, NonnullRefPtr<Device>> m_hub_child_node;
+    IntrusiveListNode<Device, NonnullLockRefPtr<Device>> m_hub_child_node;
 
 protected:
-    RefPtr<SysFSUSBDeviceInformation> m_sysfs_device_info_node;
+    LockRefPtr<SysFSUSBDeviceInformation> m_sysfs_device_info_node;
 
 public:
     using List = IntrusiveList<&Device::m_hub_child_node>;

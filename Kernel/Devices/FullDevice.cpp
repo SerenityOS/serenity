@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<FullDevice> FullDevice::must_create()
 {
     auto full_device_or_error = DeviceManagement::try_create_device<FullDevice>();
     // FIXME: Find a way to propagate errors

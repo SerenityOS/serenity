@@ -15,16 +15,16 @@ class SharedInodeVMObject final : public InodeVMObject {
     AK_MAKE_NONMOVABLE(SharedInodeVMObject);
 
 public:
-    static ErrorOr<NonnullRefPtr<SharedInodeVMObject>> try_create_with_inode(Inode&);
-    virtual ErrorOr<NonnullRefPtr<VMObject>> try_clone() override;
+    static ErrorOr<NonnullLockRefPtr<SharedInodeVMObject>> try_create_with_inode(Inode&);
+    virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override;
 
     ErrorOr<void> sync(off_t offset_in_pages = 0, size_t pages = -1);
 
 private:
     virtual bool is_shared_inode() const override { return true; }
 
-    explicit SharedInodeVMObject(Inode&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
-    explicit SharedInodeVMObject(SharedInodeVMObject const&, FixedArray<RefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
+    explicit SharedInodeVMObject(Inode&, FixedArray<LockRefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
+    explicit SharedInodeVMObject(SharedInodeVMObject const&, FixedArray<LockRefPtr<PhysicalPage>>&&, Bitmap dirty_pages);
 
     virtual StringView class_name() const override { return "SharedInodeVMObject"sv; }
 

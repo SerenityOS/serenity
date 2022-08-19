@@ -53,7 +53,7 @@ private:
     u64 m_buffer_size_in_entries { 0 };
     size_t m_buffer_size_in_bytes { 0 };
     kcov_pc_t* m_buffer { nullptr };
-    RefPtr<Memory::AnonymousVMObject> m_vmobject;
+    LockRefPtr<Memory::AnonymousVMObject> m_vmobject;
 
     // Here to ensure it's not garbage collected at the end of open()
     OwnPtr<Memory::Region> m_kernel_region;

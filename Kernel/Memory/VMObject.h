@@ -8,10 +8,10 @@
 
 #include <AK/FixedArray.h>
 #include <AK/IntrusiveList.h>
-#include <AK/RefPtr.h>
-#include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/ListedRefCounted.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/Region.h>
 
@@ -19,14 +19,14 @@ namespace Kernel::Memory {
 
 class VMObject
     : public ListedRefCounted<VMObject, LockType::Spinlock>
-    , public Weakable<VMObject> {
+    , public LockWeakable<VMObject> {
     friend class MemoryManager;
     friend class Region;
 
 public:
     virtual ~VMObject();
 
-    virtual ErrorOr<NonnullRefPtr<VMObject>> try_clone() = 0;
+    virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() = 0;
 
     virtual bool is_anonymous() const { return false; }
     virtual bool is_inode() const { return false; }
@@ -35,8 +35,8 @@ public:
 
     size_t page_count() const { return m_physical_pages.size(); }
 
-    virtual Span<RefPtr<PhysicalPage> const> physical_pages() const { return m_physical_pages.span(); }
-    virtual Span<RefPtr<PhysicalPage>> physical_pages() { return m_physical_pages.span(); }
+    virtual Span<LockRefPtr<PhysicalPage> const> physical_pages() const { return m_physical_pages.span(); }
+    virtual Span<LockRefPtr<PhysicalPage>> physical_pages() { return m_physical_pages.span(); }
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
@@ -55,15 +55,15 @@ public:
     }
 
 protected:
-    static ErrorOr<FixedArray<RefPtr<PhysicalPage>>> try_create_physical_pages(size_t);
-    ErrorOr<FixedArray<RefPtr<PhysicalPage>>> try_clone_physical_pages() const;
-    explicit VMObject(FixedArray<RefPtr<PhysicalPage>>&&);
+    static ErrorOr<FixedArray<LockRefPtr<PhysicalPage>>> try_create_physical_pages(size_t);
+    ErrorOr<FixedArray<LockRefPtr<PhysicalPage>>> try_clone_physical_pages() const;
+    explicit VMObject(FixedArray<LockRefPtr<PhysicalPage>>&&);
 
     template<typename Callback>
     void for_each_region(Callback);
 
     IntrusiveListNode<VMObject> m_list_node;
-    FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
+    FixedArray<LockRefPtr<PhysicalPage>> m_physical_pages;
 
     mutable RecursiveSpinlock m_lock { LockRank::None };
 

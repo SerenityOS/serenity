@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
@@ -53,7 +53,7 @@ private:
     AHCI::MaskedBitField create_pending_ports_interrupts_bitfield() const;
 
     // Data members
-    NonnullRefPtr<AHCIController> m_parent_controller;
+    NonnullLockRefPtr<AHCIController> m_parent_controller;
     AHCI::MaskedBitField m_taken_ports;
     AHCI::MaskedBitField m_pending_ports_interrupts;
 };

@@ -7,15 +7,15 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <AK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Library/LockWeakable.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 class GenericGraphicsAdapter
     : public AtomicRefCounted<GenericGraphicsAdapter>
-    , public Weakable<GenericGraphicsAdapter> {
+    , public LockWeakable<GenericGraphicsAdapter> {
 public:
     virtual ~GenericGraphicsAdapter() = default;
 

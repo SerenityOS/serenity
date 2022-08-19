@@ -7,10 +7,10 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
-#include <AK/WeakPtr.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
@@ -36,10 +36,10 @@ struct LoadResult {
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
-    WeakPtr<Memory::Region> tls_region;
+    LockWeakPtr<Memory::Region> tls_region;
     size_t tls_size { 0 };
     size_t tls_alignment { 0 };
-    WeakPtr<Memory::Region> stack_region;
+    LockWeakPtr<Memory::Region> stack_region;
 };
 
 static constexpr size_t auxiliary_vector_size = 15;
@@ -410,8 +410,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
 }
 
 ErrorOr<LoadResult>
-Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
-    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
+Process::load(NonnullLockRefPtr<OpenFileDescription> main_program_description,
+    LockRefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
     auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
 
@@ -458,8 +458,8 @@ void Process::clear_signal_handlers_for_exec()
     }
 }
 
-ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
-    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
+ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
+    LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -726,7 +726,7 @@ static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_execut
     return ENOEXEC;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+ErrorOr<LockRefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;

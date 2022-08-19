@@ -14,7 +14,7 @@ class FullDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<FullDevice> must_create();
+    static NonnullLockRefPtr<FullDevice> must_create();
     virtual ~FullDevice() override;
 
 private:

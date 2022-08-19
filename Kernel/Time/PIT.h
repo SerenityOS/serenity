@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
@@ -34,7 +34,7 @@ namespace Kernel {
 
 class PIT final : public HardwareTimer<IRQHandler> {
 public:
-    static NonnullRefPtr<PIT> initialize(Function<void(RegisterState const&)>);
+    static NonnullLockRefPtr<PIT> initialize(Function<void(RegisterState const&)>);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::i8253; }
     virtual StringView model() const override { return "i8254"sv; }
     virtual size_t ticks_per_second() const override;

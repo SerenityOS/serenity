@@ -16,7 +16,7 @@
 
 static Kernel::Spinlock g_console_lock { LockRank::None };
 
-UNMAP_AFTER_INIT NonnullRefPtr<ConsoleDevice> ConsoleDevice::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {
     auto device_or_error = DeviceManagement::try_create_device<ConsoleDevice>();
     VERIFY(!device_or_error.is_error());

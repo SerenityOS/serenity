@@ -15,7 +15,7 @@ namespace Kernel {
 class DisplayConnectorAttributeSysFSComponent;
 class DisplayConnectorSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<DisplayConnectorSysFSDirectory> create(SysFSDirectory const&, DisplayConnector const&);
+    static NonnullLockRefPtr<DisplayConnectorSysFSDirectory> create(SysFSDirectory const&, DisplayConnector const&);
 
     virtual StringView name() const override { return m_device_directory_name->view(); }
 
@@ -23,7 +23,7 @@ public:
 
 private:
     DisplayConnectorSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const&, DisplayConnector const&);
-    RefPtr<DisplayConnector> m_device;
+    LockRefPtr<DisplayConnector> m_device;
     NonnullOwnPtr<KString> m_device_directory_name;
 };
 

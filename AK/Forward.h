@@ -55,7 +55,7 @@ struct Array;
 template<typename Container, typename ValueType>
 class SimpleIterator;
 
-using ReadonlyBytes = Span<const u8>;
+using ReadonlyBytes = Span<u8 const>;
 using Bytes = Span<u8>;
 
 template<typename T, AK::MemoryOrder DefaultMemoryOrder>
@@ -107,24 +107,30 @@ template<typename T>
 class NonnullOwnPtr;
 
 template<typename T, size_t inline_capacity = 0>
-class NonnullRefPtrVector;
+class NonnullOwnPtrVector;
 
 template<typename T, size_t inline_capacity = 0>
-class NonnullOwnPtrVector;
+class NonnullRefPtrVector;
 
 template<typename T>
 class Optional;
 
 #ifdef KERNEL
 template<typename T>
-struct RefPtrTraits;
+class NonnullLockRefPtr;
 
-template<typename T, typename PtrTraits = RefPtrTraits<T>>
-class RefPtr;
-#else
+template<typename T, size_t inline_capacity = 0>
+class NonnullLockRefPtrVector;
+
+template<typename T>
+struct LockRefPtrTraits;
+
+template<typename T, typename PtrTraits = LockRefPtrTraits<T>>
+class LockRefPtr;
+#endif
+
 template<typename T>
 class RefPtr;
-#endif
 
 template<typename T>
 class OwnPtr;
@@ -192,3 +198,10 @@ using AK::Utf32View;
 using AK::Utf8CodePointIterator;
 using AK::Utf8View;
 using AK::Vector;
+
+#ifdef KERNEL
+using AK::LockRefPtr;
+using AK::LockRefPtrTraits;
+using AK::NonnullLockRefPtr;
+using AK::NonnullLockRefPtrVector;
+#endif

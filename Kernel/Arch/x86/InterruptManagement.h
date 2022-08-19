@@ -9,12 +9,12 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IRQController.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IOAPIC.h>
+#include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel {
 
@@ -52,8 +52,8 @@ public:
     virtual void switch_to_ioapic_mode();
 
     bool smp_enabled() const { return m_smp_enabled; }
-    RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
-    RefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
+    LockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
+    LockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
 
     Vector<ISAInterruptOverrideMetadata> const& isa_overrides() const { return m_isa_interrupt_overrides; }
 
@@ -71,7 +71,7 @@ private:
     PhysicalAddress search_for_madt();
     void locate_apic_data();
     bool m_smp_enabled { false };
-    Vector<RefPtr<IRQController>> m_interrupt_controllers;
+    Vector<LockRefPtr<IRQController>> m_interrupt_controllers;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
     Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;

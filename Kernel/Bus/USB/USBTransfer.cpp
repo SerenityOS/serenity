@@ -9,9 +9,9 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length, Memory::Region& dma_buffer)
+ErrorOr<NonnullLockRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length, Memory::Region& dma_buffer)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Transfer(pipe, length, dma_buffer));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Transfer(pipe, length, dma_buffer));
 }
 
 Transfer::Transfer(Pipe& pipe, u16 len, Memory::Region& dma_buffer)

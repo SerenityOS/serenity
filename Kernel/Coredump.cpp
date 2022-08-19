@@ -30,7 +30,7 @@ namespace Kernel {
     return region.name().starts_with("LibJS:"sv) || region.name().starts_with("malloc:"sv);
 }
 
-ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
+ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullLockRefPtr<Process> process, StringView output_path)
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
@@ -41,7 +41,7 @@ ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> pro
     return adopt_nonnull_own_or_enomem(new (nothrow) Coredump(move(process), move(description)));
 }
 
-Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description)
+Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullLockRefPtr<OpenFileDescription> description)
     : m_process(move(process))
     , m_description(move(description))
 {
@@ -59,7 +59,7 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescrip
     ++m_num_program_headers; // +1 for NOTE segment
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = TRY(VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody()));

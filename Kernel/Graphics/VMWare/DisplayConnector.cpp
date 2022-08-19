@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+NonnullLockRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
     auto connector = MUST(DeviceManagement::try_create_device<VMWareDisplayConnector>(parent_adapter, framebuffer_address, framebuffer_resource_size));
     MUST(connector->create_attached_framebuffer_console());

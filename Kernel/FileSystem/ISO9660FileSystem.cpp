@@ -8,15 +8,15 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Endian.h>
 #include <AK/HashFunctions.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/StringHash.h>
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -28,7 +28,7 @@ constexpr u32 logical_sector_size = 2048;
 constexpr u32 max_cached_directory_entries = 128;
 
 struct DirectoryState {
-    RefPtr<ISO9660FS::DirectoryEntry> entry;
+    LockRefPtr<ISO9660FS::DirectoryEntry> entry;
     u32 offset { 0 };
 };
 
@@ -168,9 +168,9 @@ private:
     Vector<DirectoryState> m_directory_stack;
 };
 
-ErrorOr<NonnullRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& description)
+ErrorOr<NonnullLockRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& description)
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660FS(description)));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ISO9660FS(description)));
 }
 
 ISO9660FS::ISO9660FS(OpenFileDescription& description)
@@ -360,7 +360,7 @@ ErrorOr<void> ISO9660FS::visit_directory_record(ISO::DirectoryRecordHeader const
     return {};
 }
 
-ErrorOr<NonnullRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record)
+ErrorOr<NonnullLockRefPtr<ISO9660FS::DirectoryEntry>> ISO9660FS::directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record)
 {
     u32 extent_location = LittleEndian { record->extent_location.little };
     u32 data_length = LittleEndian { record->data_length.little };
@@ -458,9 +458,9 @@ ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<ErrorOr<void>(FileSys
     });
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
 {
-    RefPtr<Inode> inode;
+    LockRefPtr<Inode> inode;
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
     TRY(fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
@@ -498,7 +498,7 @@ ErrorOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, UserOrKernelBuffer cons
     return EROFS;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullLockRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -553,9 +553,9 @@ ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& reco
 
 ISO9660Inode::~ISO9660Inode() = default;
 
-ErrorOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
+ErrorOr<NonnullLockRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
 }
 
 void ISO9660Inode::create_metadata()

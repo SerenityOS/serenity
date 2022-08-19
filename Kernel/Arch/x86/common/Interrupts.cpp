@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 
 #include <Kernel/Arch/Interrupts.h>
@@ -349,21 +350,21 @@ void page_fault_handler(TrapFrame* trap)
             constexpr FlatPtr nonnullrefptr_scrub_pattern = explode_byte(NONNULLREFPTR_SCRUB_BYTE);
             constexpr FlatPtr ownptr_scrub_pattern = explode_byte(OWNPTR_SCRUB_BYTE);
             constexpr FlatPtr nonnullownptr_scrub_pattern = explode_byte(NONNULLOWNPTR_SCRUB_BYTE);
-            constexpr FlatPtr threadsaferefptr_scrub_pattern = explode_byte(THREADSAFEREFPTR_SCRUB_BYTE);
-            constexpr FlatPtr threadsafenonnullrefptr_scrub_pattern = explode_byte(THREADSAFENONNULLREFPTR_SCRUB_BYTE);
+            constexpr FlatPtr lockrefptr_scrub_pattern = explode_byte(LOCKREFPTR_SCRUB_BYTE);
+            constexpr FlatPtr nonnulllockrefptr_scrub_pattern = explode_byte(NONNULLLOCKREFPTR_SCRUB_BYTE);
 
             if ((fault_address & 0xffff0000) == (refptr_scrub_pattern & 0xffff0000)) {
-                dbgln("Note: Address {} looks like it may be a recently destroyed RefPtr", VirtualAddress(fault_address));
+                dbgln("Note: Address {} looks like it may be a recently destroyed LockRefPtr", VirtualAddress(fault_address));
             } else if ((fault_address & 0xffff0000) == (nonnullrefptr_scrub_pattern & 0xffff0000)) {
-                dbgln("Note: Address {} looks like it may be a recently destroyed NonnullRefPtr", VirtualAddress(fault_address));
+                dbgln("Note: Address {} looks like it may be a recently destroyed NonnullLockRefPtr", VirtualAddress(fault_address));
             } else if ((fault_address & 0xffff0000) == (ownptr_scrub_pattern & 0xffff0000)) {
                 dbgln("Note: Address {} looks like it may be a recently destroyed OwnPtr", VirtualAddress(fault_address));
             } else if ((fault_address & 0xffff0000) == (nonnullownptr_scrub_pattern & 0xffff0000)) {
                 dbgln("Note: Address {} looks like it may be a recently destroyed NonnullOwnPtr", VirtualAddress(fault_address));
-            } else if ((fault_address & 0xffff0000) == (threadsaferefptr_scrub_pattern & 0xffff0000)) {
-                dbgln("Note: Address {} looks like it may be a recently destroyed ThreadSafeRefPtr", VirtualAddress(fault_address));
-            } else if ((fault_address & 0xffff0000) == (threadsafenonnullrefptr_scrub_pattern & 0xffff0000)) {
-                dbgln("Note: Address {} looks like it may be a recently destroyed ThreadSafeNonnullRefPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (lockrefptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed LockRefPtr", VirtualAddress(fault_address));
+            } else if ((fault_address & 0xffff0000) == (nonnulllockrefptr_scrub_pattern & 0xffff0000)) {
+                dbgln("Note: Address {} looks like it may be a recently destroyed NonnullLockRefPtr", VirtualAddress(fault_address));
             }
         }
 

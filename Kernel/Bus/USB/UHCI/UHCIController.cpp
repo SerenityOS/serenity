@@ -62,10 +62,10 @@ static constexpr u16 UHCI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is u
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
-ErrorOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
+    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
     TRY(controller->initialize());
     return controller;
 }
@@ -510,7 +510,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 
 ErrorOr<void> UHCIController::spawn_port_process()
 {
-    RefPtr<Thread> usb_hotplug_thread;
+    LockRefPtr<Thread> usb_hotplug_thread;
     (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
         for (;;) {
             if (m_root_hub)

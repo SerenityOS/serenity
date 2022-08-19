@@ -18,10 +18,10 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/RefPtr.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
@@ -103,8 +103,8 @@ public:
     };
 
 public:
-    static NonnullRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
-    static NonnullRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
+    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
+    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
 
     virtual ~IDEChannel() override;
 

@@ -16,9 +16,9 @@ namespace Kernel {
 
 static SysFSDisplayConnectorsDirectory* s_the { nullptr };
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSDisplayConnectorsDirectory> SysFSDisplayConnectorsDirectory::must_create(SysFSGraphicsDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> SysFSDisplayConnectorsDirectory::must_create(SysFSGraphicsDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) SysFSDisplayConnectorsDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) SysFSDisplayConnectorsDirectory(parent_directory));
     s_the = directory;
     return directory;
 }

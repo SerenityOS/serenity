@@ -95,21 +95,21 @@ class VirtIOGPU3DDevice : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<VirtIOGPU3DDevice> must_create(VirtIOGraphicsAdapter const&);
+    static NonnullLockRefPtr<VirtIOGPU3DDevice> must_create(VirtIOGraphicsAdapter const&);
 
 private:
     VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region);
 
     class PerContextState final : public AtomicRefCounted<PerContextState> {
     public:
-        static ErrorOr<RefPtr<PerContextState>> try_create(Graphics::VirtIOGPU::ContextID context_id)
+        static ErrorOr<LockRefPtr<PerContextState>> try_create(Graphics::VirtIOGPU::ContextID context_id)
         {
             auto region_result = TRY(MM.allocate_kernel_region(
                 NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
                 "VIRGL3D userspace upload buffer"sv,
                 Memory::Region::Access::ReadWrite,
                 AllocationStrategy::AllocateNow));
-            return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
+            return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
         }
         Graphics::VirtIOGPU::ContextID context_id() { return m_context_id; }
         Memory::Region& transfer_buffer_region() { return *m_transfer_buffer_region; }
@@ -131,12 +131,12 @@ private:
     virtual void detach(OpenFileDescription&) override;
 
 private:
-    ErrorOr<RefPtr<PerContextState>> get_context_for_description(OpenFileDescription&);
+    ErrorOr<LockRefPtr<PerContextState>> get_context_for_description(OpenFileDescription&);
 
-    NonnullRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
+    NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
     Graphics::VirtIOGPU::ContextID m_kernel_context_id;
-    HashMap<OpenFileDescription*, RefPtr<PerContextState>> m_context_state_lookup;
+    HashMap<OpenFileDescription*, LockRefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
     NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;

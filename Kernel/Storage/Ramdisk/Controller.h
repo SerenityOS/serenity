@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/Ramdisk/Device.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -19,10 +19,10 @@ class AsyncBlockDeviceRequest;
 
 class RamdiskController final : public StorageController {
 public:
-    static NonnullRefPtr<RamdiskController> initialize();
+    static NonnullLockRefPtr<RamdiskController> initialize();
     virtual ~RamdiskController() override;
 
-    virtual RefPtr<StorageDevice> device(u32 index) const override;
+    virtual LockRefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
     virtual size_t devices_count() const override;
@@ -31,6 +31,6 @@ public:
 private:
     RamdiskController();
 
-    NonnullRefPtrVector<RamdiskDevice> m_devices;
+    NonnullLockRefPtrVector<RamdiskDevice> m_devices;
 };
 }

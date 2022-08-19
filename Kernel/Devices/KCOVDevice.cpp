@@ -19,7 +19,7 @@ namespace Kernel {
 HashMap<ProcessID, KCOVInstance*>* KCOVDevice::proc_instance;
 HashMap<ThreadID, KCOVInstance*>* KCOVDevice::thread_instance;
 
-UNMAP_AFTER_INIT NonnullRefPtr<KCOVDevice> KCOVDevice::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 {
     auto kcov_device_or_error = DeviceManagement::try_create_device<KCOVDevice>();
     // FIXME: Find a way to propagate errors
@@ -65,7 +65,7 @@ void KCOVDevice::free_process()
     delete kcov_instance;
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
 {
     auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())

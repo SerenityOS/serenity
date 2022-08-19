@@ -11,13 +11,13 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
-#include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/ListedRefCounted.h>
+#include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 
@@ -29,7 +29,7 @@ enum class ShouldBlock {
 };
 
 class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
-    , public Weakable<Inode> {
+    , public LockWeakable<Inode> {
     friend class VirtualFileSystem;
     friend class FileSystem;
     friend class InodeFile;
@@ -61,19 +61,19 @@ public:
     virtual void did_seek(OpenFileDescription&, off_t) { }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const = 0;
-    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) = 0;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) = 0;
-    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) = 0;
     virtual ErrorOr<void> remove_child(StringView name) = 0;
     virtual ErrorOr<void> chmod(mode_t) = 0;
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
     virtual ErrorOr<void> truncate(u64) { return {}; }
-    virtual ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
+    virtual ErrorOr<NonnullLockRefPtr<Custody>> resolve_as_link(Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 
-    RefPtr<LocalSocket> bound_socket() const;
+    LockRefPtr<LocalSocket> bound_socket() const;
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 
@@ -90,7 +90,7 @@ public:
     void will_be_destroyed();
 
     ErrorOr<void> set_shared_vmobject(Memory::SharedInodeVMObject&);
-    RefPtr<Memory::SharedInodeVMObject> shared_vmobject() const;
+    LockRefPtr<Memory::SharedInodeVMObject> shared_vmobject() const;
 
     static void sync_all();
     void sync();
@@ -100,7 +100,7 @@ public:
     ErrorOr<void> register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
-    ErrorOr<NonnullRefPtr<FIFO>> fifo();
+    ErrorOr<NonnullLockRefPtr<FIFO>> fifo();
 
     bool can_apply_flock(flock const&) const;
     ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>, ShouldBlock);
@@ -125,11 +125,11 @@ private:
 
     FileSystem& m_file_system;
     InodeIndex m_index { 0 };
-    WeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
-    RefPtr<LocalSocket> m_bound_socket;
+    LockWeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
+    LockRefPtr<LocalSocket> m_bound_socket;
     SpinlockProtected<HashTable<InodeWatcher*>> m_watchers { LockRank::None };
     bool m_metadata_dirty { false };
-    RefPtr<FIFO> m_fifo;
+    LockRefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
 
     struct Flock {

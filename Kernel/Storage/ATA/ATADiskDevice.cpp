@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<ATADiskDevice> ATADiskDevice::create(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
+NonnullLockRefPtr<ATADiskDevice> ATADiskDevice::create(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
 {
     auto minor_device_number = StorageManagement::generate_storage_minor_number();
 

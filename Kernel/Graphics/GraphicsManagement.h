@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
@@ -16,6 +14,8 @@
 #include <Kernel/Graphics/Generic/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
@@ -37,7 +37,7 @@ public:
     void disable_vga_text_mode_console_cursor();
     void disable_vga_emulation_access_permanently();
 
-    RefPtr<Graphics::Console> console() const { return m_console; }
+    LockRefPtr<Graphics::Console> console() const { return m_console; }
     void set_console(Graphics::Console&);
 
     void deactivate_graphical_mode();
@@ -50,11 +50,11 @@ private:
 
     void initialize_preset_resolution_generic_display_connector();
 
-    NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
-    RefPtr<Graphics::Console> m_console;
+    NonnullLockRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
+    LockRefPtr<Graphics::Console> m_console;
 
     // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"
-    RefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
+    LockRefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
 
     unsigned m_current_minor_number { 0 };
 

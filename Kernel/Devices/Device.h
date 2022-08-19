@@ -18,13 +18,13 @@
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/RefPtr.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/DeviceFileTypes.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -53,9 +53,9 @@ public:
     void process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const&);
 
     template<typename AsyncRequestType, typename... Args>
-    ErrorOr<NonnullRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
+    ErrorOr<NonnullLockRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
     {
-        auto request = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AsyncRequestType(*this, forward<Args>(args)...)));
+        auto request = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AsyncRequestType(*this, forward<Args>(args)...)));
         SpinlockLocker lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
         m_requests.append(request);
@@ -89,15 +89,15 @@ private:
     State m_state { State::Normal };
 
     Spinlock m_requests_lock { LockRank::None };
-    DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
+    DoublyLinkedList<LockRefPtr<AsyncDeviceRequest>> m_requests;
 
 protected:
     // FIXME: This pointer will be eventually removed after all nodes in /sys/dev/block/ and
     // /sys/dev/char/ are symlinks.
-    RefPtr<SysFSDeviceComponent> m_sysfs_component;
+    LockRefPtr<SysFSDeviceComponent> m_sysfs_component;
 
-    RefPtr<SysFSSymbolicLinkDeviceComponent> m_symlink_sysfs_component;
-    RefPtr<SysFSDirectory> m_sysfs_device_directory;
+    LockRefPtr<SysFSSymbolicLinkDeviceComponent> m_symlink_sysfs_component;
+    LockRefPtr<SysFSDirectory> m_sysfs_device_directory;
 };
 
 }

@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-AnonymousFile::AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
+AnonymousFile::AnonymousFile(NonnullLockRefPtr<Memory::AnonymousVMObject> vmobject)
     : m_vmobject(move(vmobject))
 {
 }

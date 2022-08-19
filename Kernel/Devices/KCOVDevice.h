@@ -17,13 +17,13 @@ public:
     static HashMap<ProcessID, KCOVInstance*>* proc_instance;
     static HashMap<ThreadID, KCOVInstance*>* thread_instance;
 
-    static NonnullRefPtr<KCOVDevice> must_create();
+    static NonnullLockRefPtr<KCOVDevice> must_create();
     static void free_thread();
     static void free_process();
 
     // ^File
     ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
 
 protected:
     KCOVDevice();

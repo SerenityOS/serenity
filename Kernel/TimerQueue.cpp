@@ -55,14 +55,14 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t clock_id, Time const& deadline, Function<void()>&& callback)
+bool TimerQueue::add_timer_without_id(NonnullLockRefPtr<Timer> timer, clockid_t clock_id, Time const& deadline, Function<void()>&& callback)
 {
     if (deadline <= TimeManagement::the().current_time(clock_id))
         return false;
 
     // Because timer handlers can execute on any processor and there is
     // a race between executing a timer handler and cancel_timer() this
-    // *must* be a RefPtr<Timer>. Otherwise, calling cancel_timer() could
+    // *must* be a LockRefPtr<Timer>. Otherwise, calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
     timer->setup(clock_id, deadline, move(callback));
@@ -73,7 +73,7 @@ bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t cloc
     return true;
 }
 
-TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
+TimerId TimerQueue::add_timer(NonnullLockRefPtr<Timer>&& timer)
 {
     SpinlockLocker lock(g_timerqueue_lock);
 
@@ -84,7 +84,7 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
     return id;
 }
 
-void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
+void TimerQueue::add_timer_locked(NonnullLockRefPtr<Timer> timer)
 {
     Time timer_expiration = timer->m_expires;
 

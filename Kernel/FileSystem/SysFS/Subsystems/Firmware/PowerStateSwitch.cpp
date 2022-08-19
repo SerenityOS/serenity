@@ -20,9 +20,9 @@ mode_t PowerStateSwitchNode::permissions() const
     return S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<PowerStateSwitchNode> PowerStateSwitchNode::must_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<PowerStateSwitchNode> PowerStateSwitchNode::must_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    return adopt_ref_if_nonnull(new (nothrow) PowerStateSwitchNode(firmware_directory)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) PowerStateSwitchNode(firmware_directory)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT PowerStateSwitchNode::PowerStateSwitchNode(FirmwareSysFSDirectory&)

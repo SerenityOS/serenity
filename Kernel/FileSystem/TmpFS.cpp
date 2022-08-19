@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> TmpFS::try_create()
+ErrorOr<NonnullLockRefPtr<FileSystem>> TmpFS::try_create()
 {
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFS));
 }
 
 TmpFS::TmpFS() = default;
@@ -37,7 +37,7 @@ unsigned TmpFS::next_inode_index()
     return m_next_inode_index++;
 }
 
-TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(move(parent))
@@ -47,12 +47,12 @@ TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSIn
 
 TmpFSInode::~TmpFSInode() = default;
 
-ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent)
+ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
 }
 
-ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
+ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
     auto now = kgettimeofday().to_truncated_seconds();
@@ -147,7 +147,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelB
     return size;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
@@ -205,7 +205,7 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 

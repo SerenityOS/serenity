@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
+NonnullLockRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
     auto device_name = MUST(KString::formatted("ramdisk{}", minor));
 

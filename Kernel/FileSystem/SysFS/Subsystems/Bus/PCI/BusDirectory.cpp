@@ -16,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
 {
-    auto pci_directory = adopt_ref(*new (nothrow) PCIBusSysFSDirectory());
+    auto pci_directory = adopt_lock_ref(*new (nothrow) PCIBusSysFSDirectory());
     SysFSComponentRegistry::the().register_new_bus_directory(pci_directory);
 }
 

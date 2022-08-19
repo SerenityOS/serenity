@@ -239,12 +239,12 @@ ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(StringView path, Custo
     return custody->inode().metadata();
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
 {
     if ((options & O_CREAT) && (options & O_DIRECTORY))
         return EINVAL;
 
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (custody_or_error.is_error()) {
         // NOTE: ENOENT with a non-null parent custody signals us that the immediate parent
@@ -332,7 +332,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return EINVAL;
 
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto existing_file_or_error = resolve_path(path, base, &parent_custody);
     if (!existing_file_or_error.is_error())
         return EEXIST;
@@ -353,7 +353,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
     return {};
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
     auto parent_path = TRY(parent_custody.try_serialize_absolute_path());
@@ -397,7 +397,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
         path = "/"sv;
     }
 
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
     auto result = resolve_path_without_veil(path, base, &parent_custody);
@@ -446,7 +446,7 @@ ErrorOr<void> VirtualFileSystem::access(StringView path, int mode, Custody& base
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::open_directory(StringView path, Custody& base)
+ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::open_directory(StringView path, Custody& base)
 {
     auto custody = TRY(resolve_path(path, base));
     auto& inode = custody->inode();
@@ -480,11 +480,11 @@ ErrorOr<void> VirtualFileSystem::chmod(StringView path, mode_t mode, Custody& ba
 
 ErrorOr<void> VirtualFileSystem::rename(StringView old_path, StringView new_path, Custody& base)
 {
-    RefPtr<Custody> old_parent_custody;
+    LockRefPtr<Custody> old_parent_custody;
     auto old_custody = TRY(resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR));
     auto& old_inode = old_custody->inode();
 
-    RefPtr<Custody> new_parent_custody;
+    LockRefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error().code() != ENOENT || !new_parent_custody)
@@ -630,7 +630,7 @@ ErrorOr<void> VirtualFileSystem::link(StringView old_path, StringView new_path, 
     auto old_custody = TRY(resolve_path(old_path, base));
     auto& old_inode = old_custody->inode();
 
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
     if (!new_custody_or_error.is_error())
         return EEXIST;
@@ -660,7 +660,7 @@ ErrorOr<void> VirtualFileSystem::link(StringView old_path, StringView new_path, 
 
 ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base)
 {
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
     auto& inode = custody->inode();
 
@@ -690,7 +690,7 @@ ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base)
 
 ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath, Custody& base)
 {
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto existing_custody_or_error = resolve_path(linkpath, base, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return EEXIST;
@@ -719,7 +719,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
 
 ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
 {
-    RefPtr<Custody> parent_custody;
+    LockRefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(path, base, &parent_custody));
     auto& inode = custody->inode();
 
@@ -871,7 +871,7 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
@@ -899,7 +899,7 @@ static bool safe_to_follow_symlink(Inode const& inode, InodeMetadata const& pare
     return false;
 }
 
-ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(StringView path, Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     if (symlink_recursion_level >= symlink_recursion_limit)
         return ELOOP;
@@ -910,7 +910,7 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Str
     GenericLexer path_lexer(path);
     auto& current_process = Process::current();
 
-    NonnullRefPtr<Custody> custody = path[0] == '/' ? root_custody() : base;
+    NonnullLockRefPtr<Custody> custody = path[0] == '/' ? root_custody() : base;
     bool extra_iteration = path[path.length() - 1] == '/';
 
     while (!path_lexer.is_eof() || extra_iteration) {

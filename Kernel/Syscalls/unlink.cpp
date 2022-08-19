@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$unlink(int dirfd, Userspace<char const*> user_path
     if (flags & ~AT_REMOVEDIR)
         return Error::from_errno(EINVAL);
 
-    RefPtr<Custody> base;
+    LockRefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();
     } else {

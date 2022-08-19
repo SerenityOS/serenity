@@ -107,7 +107,7 @@ ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const
     return KString::formatted("tty:{}", m_index);
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
+UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
     auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
@@ -115,7 +115,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t ind
     return virtual_console_or_error.release_value();
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, CircularQueue<char, 16384> const& log)
+UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, CircularQueue<char, 16384> const& log)
 {
     auto virtual_console = VirtualConsole::create(index);
     // HACK: We have to go through the TTY layer for correct newline handling.

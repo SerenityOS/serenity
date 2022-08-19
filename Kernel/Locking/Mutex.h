@@ -100,7 +100,7 @@ private:
     // the lock is unlocked, it just means we don't know which threads hold it.
     // When locked exclusively, this is always the one thread that holds the
     // lock.
-    RefPtr<Thread> m_holder;
+    LockRefPtr<Thread> m_holder;
     size_t m_shared_holders { 0 };
 
     struct BlockedThreadLists {

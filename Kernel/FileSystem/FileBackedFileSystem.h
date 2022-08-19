@@ -26,7 +26,7 @@ protected:
 private:
     virtual bool is_file_backed() const override { return true; }
 
-    mutable NonnullRefPtr<OpenFileDescription> m_file_description;
+    mutable NonnullLockRefPtr<OpenFileDescription> m_file_description;
 };
 
 }

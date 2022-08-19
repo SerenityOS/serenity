@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
-#include <AK/NonnullRefPtr.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
@@ -58,7 +58,7 @@ public:
     virtual StringView name() const = 0;
     virtual void start() = 0;
 
-    void add_sub_request(NonnullRefPtr<AsyncDeviceRequest>);
+    void add_sub_request(NonnullLockRefPtr<AsyncDeviceRequest>);
 
     [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
@@ -142,14 +142,14 @@ private:
 
     AsyncDeviceRequest* m_parent_request { nullptr };
     RequestResult m_result { Pending };
-    IntrusiveListNode<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>> m_list_node;
+    IntrusiveListNode<AsyncDeviceRequest, LockRefPtr<AsyncDeviceRequest>> m_list_node;
 
     using AsyncDeviceSubRequestList = IntrusiveList<&AsyncDeviceRequest::m_list_node>;
 
     AsyncDeviceSubRequestList m_sub_requests_pending;
     AsyncDeviceSubRequestList m_sub_requests_complete;
     WaitQueue m_queue;
-    NonnullRefPtr<Process> m_process;
+    NonnullLockRefPtr<Process> m_process;
     void* m_private { nullptr };
     mutable Spinlock m_lock { LockRank::None };
 };

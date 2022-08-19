@@ -16,12 +16,12 @@ class SysFSRootDirectory final : public SysFSDirectory {
 
 public:
     virtual StringView name() const override { return "."sv; }
-    static NonnullRefPtr<SysFSRootDirectory> create();
+    static NonnullLockRefPtr<SysFSRootDirectory> create();
 
 private:
     virtual bool is_root_directory() const override final { return true; }
     SysFSRootDirectory();
-    RefPtr<SysFSBusDirectory> m_buses_directory;
+    LockRefPtr<SysFSBusDirectory> m_buses_directory;
 };
 
 }

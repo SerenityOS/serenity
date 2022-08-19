@@ -19,7 +19,7 @@ class RNG final
     : public AtomicRefCounted<RNG>
     , public VirtIO::Device {
 public:
-    static NonnullRefPtr<RNG> must_create(PCI::DeviceIdentifier const&);
+    static NonnullLockRefPtr<RNG> must_create(PCI::DeviceIdentifier const&);
     virtual StringView purpose() const override { return class_name(); }
     virtual ~RNG() override = default;
 

@@ -15,7 +15,7 @@ namespace Kernel {
 File::File() = default;
 File::~File() = default;
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> File::open(int options)
 {
     auto description = OpenFileDescription::try_create(*this);
     if (!description.is_error()) {

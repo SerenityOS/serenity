@@ -19,7 +19,7 @@ namespace Kernel {
             TRY(require_promise(Pledge::unix));   \
     } while (0)
 
-static void setup_socket_fd(Process::OpenFileDescriptions& fds, int fd, NonnullRefPtr<OpenFileDescription> description, int type)
+static void setup_socket_fd(Process::OpenFileDescriptions& fds, int fd, NonnullLockRefPtr<OpenFileDescription> description, int type)
 {
     description->set_readable(true);
     description->set_writable(true);
@@ -92,7 +92,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
         TRY(copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)));
 
     ScopedDescriptionAllocation fd_allocation;
-    RefPtr<OpenFileDescription> accepting_socket_description;
+    LockRefPtr<OpenFileDescription> accepting_socket_description;
 
     TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fd_allocation = TRY(fds.allocate());
@@ -103,7 +103,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
         return ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
 
-    RefPtr<Socket> accepted_socket;
+    LockRefPtr<Socket> accepted_socket;
     for (;;) {
         accepted_socket = socket.accept();
         if (accepted_socket)

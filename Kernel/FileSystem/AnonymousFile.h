@@ -13,9 +13,9 @@ namespace Kernel {
 
 class AnonymousFile final : public File {
 public:
-    static ErrorOr<NonnullRefPtr<AnonymousFile>> try_create(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
+    static ErrorOr<NonnullLockRefPtr<AnonymousFile>> try_create(NonnullLockRefPtr<Memory::AnonymousVMObject> vmobject)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousFile(move(vmobject)));
+        return adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousFile(move(vmobject)));
     }
 
     virtual ~AnonymousFile() override;
@@ -30,9 +30,9 @@ private:
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return ENOTSUP; }
 
-    explicit AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject>);
+    explicit AnonymousFile(NonnullLockRefPtr<Memory::AnonymousVMObject>);
 
-    NonnullRefPtr<Memory::AnonymousVMObject> m_vmobject;
+    NonnullLockRefPtr<Memory::AnonymousVMObject> m_vmobject;
 };
 
 }

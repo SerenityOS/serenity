@@ -69,8 +69,8 @@ public:
     };
 
 public:
-    static NonnullRefPtr<VirtualConsole> create(size_t index);
-    static NonnullRefPtr<VirtualConsole> create_with_preset_log(size_t index, CircularQueue<char, 16384> const&);
+    static NonnullLockRefPtr<VirtualConsole> create(size_t index);
+    static NonnullLockRefPtr<VirtualConsole> create_with_preset_log(size_t index, CircularQueue<char, 16384> const&);
 
     virtual ~VirtualConsole() override;
 

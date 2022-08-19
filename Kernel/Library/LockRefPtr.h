@@ -10,16 +10,16 @@
 #include <AK/Atomic.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
 #endif
 
-#define THREADSAFEREFPTR_SCRUB_BYTE 0xa0
+#define LOCKREFPTR_SCRUB_BYTE 0xa0
 
 namespace AK {
 
@@ -27,7 +27,7 @@ template<typename T>
 class OwnPtr;
 
 template<typename T>
-struct RefPtrTraits {
+struct LockRefPtrTraits {
     ALWAYS_INLINE static T* as_ptr(FlatPtr bits)
     {
         return (T*)(bits & ~(FlatPtr)1);
@@ -88,7 +88,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static FlatPtr lock(Atomic<FlatPtr>& atomic_var)
     {
         // This sets the lock bit atomically, preventing further modifications.
-        // This is important when e.g. copying a RefPtr where the source
+        // This is important when e.g. copying a LockRefPtr where the source
         // might be released and freed too quickly. This allows us
         // to temporarily lock the pointer so we can add a reference, then
         // unlock it
@@ -117,24 +117,24 @@ struct RefPtrTraits {
 };
 
 template<typename T, typename PtrTraits>
-class [[nodiscard]] RefPtr {
+class [[nodiscard]] LockRefPtr {
     template<typename U, typename P>
-    friend class RefPtr;
+    friend class LockRefPtr;
     template<typename U>
-    friend class WeakPtr;
+    friend class LockWeakPtr;
 
 public:
     enum AdoptTag {
         Adopt
     };
 
-    RefPtr() = default;
-    RefPtr(const T* ptr)
+    LockRefPtr() = default;
+    LockRefPtr(const T* ptr)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(ptr)))
     {
         ref_if_not_null(const_cast<T*>(ptr));
     }
-    RefPtr(const T& object)
+    LockRefPtr(const T& object)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(&object)))
     {
         T* ptr = const_cast<T*>(&object);
@@ -142,58 +142,58 @@ public:
         VERIFY(!is_null());
         ptr->ref();
     }
-    RefPtr(AdoptTag, T& object)
+    LockRefPtr(AdoptTag, T& object)
         : m_bits(PtrTraits::as_bits(&object))
     {
         VERIFY(!is_null());
     }
-    RefPtr(RefPtr&& other)
+    LockRefPtr(LockRefPtr&& other)
         : m_bits(other.leak_ref_raw())
     {
     }
-    ALWAYS_INLINE RefPtr(NonnullRefPtr<T> const& other)
+    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<T> const& other)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(other.add_ref())))
     {
     }
     template<typename U>
-    ALWAYS_INLINE RefPtr(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(const_cast<U*>(other.add_ref())))
     {
     }
     template<typename U>
-    ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
         VERIFY(!is_null());
     }
-    template<typename U, typename P = RefPtrTraits<U>>
-    RefPtr(RefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
+    template<typename U, typename P = LockRefPtrTraits<U>>
+    LockRefPtr(LockRefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()))
     {
     }
-    RefPtr(RefPtr const& other)
+    LockRefPtr(LockRefPtr const& other)
         : m_bits(other.add_ref_raw())
     {
     }
-    template<typename U, typename P = RefPtrTraits<U>>
-    RefPtr(RefPtr<U, P> const& other) requires(IsConvertible<U*, T*>)
+    template<typename U, typename P = LockRefPtrTraits<U>>
+    LockRefPtr(LockRefPtr<U, P> const& other) requires(IsConvertible<U*, T*>)
         : m_bits(other.add_ref_raw())
     {
     }
-    ALWAYS_INLINE ~RefPtr()
+    ALWAYS_INLINE ~LockRefPtr()
     {
         clear();
 #ifdef SANITIZE_PTRS
-        m_bits.store(explode_byte(THREADSAFEREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
+        m_bits.store(explode_byte(LOCKREFPTR_SCRUB_BYTE), AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
 
     template<typename U>
-    RefPtr(OwnPtr<U> const&) = delete;
+    LockRefPtr(OwnPtr<U> const&) = delete;
     template<typename U>
-    RefPtr& operator=(OwnPtr<U> const&) = delete;
+    LockRefPtr& operator=(OwnPtr<U> const&) = delete;
 
-    void swap(RefPtr& other)
+    void swap(LockRefPtr& other)
     {
         if (this == &other)
             return;
@@ -204,8 +204,8 @@ public:
         PtrTraits::exchange(other.m_bits, bits);
     }
 
-    template<typename U, typename P = RefPtrTraits<U>>
-    void swap(RefPtr<U, P>& other) requires(IsConvertible<U*, T*>)
+    template<typename U, typename P = LockRefPtrTraits<U>>
+    void swap(LockRefPtr<U, P>& other) requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         FlatPtr other_bits = P::exchange(other.m_bits, P::default_null_value);
@@ -213,41 +213,41 @@ public:
         P::exchange(other.m_bits, P::template convert_from<U, P>(bits));
     }
 
-    ALWAYS_INLINE RefPtr& operator=(RefPtr&& other)
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr&& other)
     {
         if (this != &other)
             assign_raw(other.leak_ref_raw());
         return *this;
     }
 
-    template<typename U, typename P = RefPtrTraits<U>>
-    ALWAYS_INLINE RefPtr& operator=(RefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
+    template<typename U, typename P = LockRefPtrTraits<U>>
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()));
         return *this;
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(&other.leak_ref()));
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<T> const& other)
+    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<T> const& other)
     {
         assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(RefPtr const& other)
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr const& other)
     {
         if (this != &other)
             assign_raw(other.add_ref_raw());
@@ -255,41 +255,41 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(RefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
     {
         assign_raw(other.add_ref_raw());
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(const T* ptr)
+    ALWAYS_INLINE LockRefPtr& operator=(const T* ptr)
     {
         ref_if_not_null(const_cast<T*>(ptr));
         assign_raw(PtrTraits::as_bits(const_cast<T*>(ptr)));
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(const T& object)
+    ALWAYS_INLINE LockRefPtr& operator=(const T& object)
     {
         const_cast<T&>(object).ref();
         assign_raw(PtrTraits::as_bits(const_cast<T*>(&object)));
         return *this;
     }
 
-    RefPtr& operator=(std::nullptr_t)
+    LockRefPtr& operator=(std::nullptr_t)
     {
         clear();
         return *this;
     }
 
-    ALWAYS_INLINE bool assign_if_null(RefPtr&& other)
+    ALWAYS_INLINE bool assign_if_null(LockRefPtr&& other)
     {
         if (this == &other)
             return is_null();
         return PtrTraits::exchange_if_null(m_bits, other.leak_ref_raw());
     }
 
-    template<typename U, typename P = RefPtrTraits<U>>
-    ALWAYS_INLINE bool assign_if_null(RefPtr<U, P>&& other)
+    template<typename U, typename P = LockRefPtrTraits<U>>
+    ALWAYS_INLINE bool assign_if_null(LockRefPtr<U, P>&& other)
     {
         if (this == &other)
             return is_null();
@@ -309,11 +309,11 @@ public:
         return PtrTraits::as_ptr(bits);
     }
 
-    NonnullRefPtr<T> release_nonnull()
+    NonnullLockRefPtr<T> release_nonnull()
     {
         FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
         VERIFY(!PtrTraits::is_null(bits));
-        return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *PtrTraits::as_ptr(bits));
+        return NonnullLockRefPtr<T>(NonnullLockRefPtr<T>::Adopt, *PtrTraits::as_ptr(bits));
     }
 
     ALWAYS_INLINE T* ptr() { return as_ptr(); }
@@ -347,11 +347,11 @@ public:
     bool operator==(std::nullptr_t) const { return is_null(); }
     bool operator!=(std::nullptr_t) const { return !is_null(); }
 
-    bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
-    bool operator!=(RefPtr const& other) const { return as_ptr() != other.as_ptr(); }
+    bool operator==(LockRefPtr const& other) const { return as_ptr() == other.as_ptr(); }
+    bool operator!=(LockRefPtr const& other) const { return as_ptr() != other.as_ptr(); }
 
-    bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
-    bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
+    bool operator==(LockRefPtr& other) { return as_ptr() == other.as_ptr(); }
+    bool operator!=(LockRefPtr& other) { return as_ptr() != other.as_ptr(); }
 
     bool operator==(const T* other) const { return as_ptr() == other; }
     bool operator!=(const T* other) const { return as_ptr() != other; }
@@ -405,7 +405,7 @@ private:
         Kernel::ScopedCritical critical;
 #endif
         // This prevents a race condition between thread A and B:
-        // 1. Thread A copies RefPtr, e.g. through assignment or copy constructor,
+        // 1. Thread A copies LockRefPtr, e.g. through assignment or copy constructor,
         //    gets the pointer from source, but is pre-empted before adding
         //    another reference
         // 2. Thread B calls clear, leak_ref, or release_nonnull on source, and
@@ -445,64 +445,64 @@ private:
 };
 
 template<typename T>
-struct Formatter<RefPtr<T>> : Formatter<const T*> {
-    ErrorOr<void> format(FormatBuilder& builder, RefPtr<T> const& value)
+struct Formatter<LockRefPtr<T>> : Formatter<const T*> {
+    ErrorOr<void> format(FormatBuilder& builder, LockRefPtr<T> const& value)
     {
         return Formatter<const T*>::format(builder, value.ptr());
     }
 };
 
 template<typename T>
-struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
+struct Traits<LockRefPtr<T>> : public GenericTraits<LockRefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
-    static unsigned hash(RefPtr<T> const& p) { return ptr_hash(p.ptr()); }
-    static bool equals(RefPtr<T> const& a, RefPtr<T> const& b) { return a.ptr() == b.ptr(); }
+    static unsigned hash(LockRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static bool equals(LockRefPtr<T> const& a, LockRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
 template<typename T, typename U>
-inline NonnullRefPtr<T> static_ptr_cast(NonnullRefPtr<U> const& ptr)
+inline NonnullLockRefPtr<T> static_ptr_cast(NonnullLockRefPtr<U> const& ptr)
 {
-    return NonnullRefPtr<T>(static_cast<const T&>(*ptr));
+    return NonnullLockRefPtr<T>(static_cast<const T&>(*ptr));
 }
 
-template<typename T, typename U, typename PtrTraits = RefPtrTraits<T>>
-inline RefPtr<T> static_ptr_cast(RefPtr<U> const& ptr)
+template<typename T, typename U, typename PtrTraits = LockRefPtrTraits<T>>
+inline LockRefPtr<T> static_ptr_cast(LockRefPtr<U> const& ptr)
 {
-    return RefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
+    return LockRefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
 }
 
 template<typename T, typename PtrTraitsT, typename U, typename PtrTraitsU>
-inline void swap(RefPtr<T, PtrTraitsT>& a, RefPtr<U, PtrTraitsU>& b) requires(IsConvertible<U*, T*>)
+inline void swap(LockRefPtr<T, PtrTraitsT>& a, LockRefPtr<U, PtrTraitsU>& b) requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }
 
 template<typename T>
-inline RefPtr<T> adopt_ref_if_nonnull(T* object)
+inline LockRefPtr<T> adopt_lock_ref_if_nonnull(T* object)
 {
     if (object)
-        return RefPtr<T>(RefPtr<T>::Adopt, *object);
+        return LockRefPtr<T>(LockRefPtr<T>::Adopt, *object);
     return {};
 }
 
 template<typename T, class... Args>
-requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullRefPtr<T>> try_make_ref_counted(Args&&... args)
+requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullLockRefPtr<T>> try_make_lock_ref_counted(Args&&... args)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) T(forward<Args>(args)...));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) T(forward<Args>(args)...));
 }
 
 // FIXME: Remove once P0960R3 is available in Clang.
 template<typename T, class... Args>
-inline ErrorOr<NonnullRefPtr<T>> try_make_ref_counted(Args&&... args)
+inline ErrorOr<NonnullLockRefPtr<T>> try_make_lock_ref_counted(Args&&... args)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) T { forward<Args>(args)... });
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) T { forward<Args>(args)... });
 }
 
 template<typename T>
-inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
+inline ErrorOr<NonnullLockRefPtr<T>> adopt_nonnull_lock_ref_or_enomem(T* object)
 {
-    auto result = adopt_ref_if_nonnull(object);
+    auto result = adopt_lock_ref_if_nonnull(object);
     if (!result)
         return Error::from_errno(ENOMEM);
     return result.release_nonnull();
@@ -510,11 +510,11 @@ inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
 
 }
 
-using AK::adopt_ref_if_nonnull;
-using AK::RefPtr;
+using AK::adopt_lock_ref_if_nonnull;
+using AK::LockRefPtr;
 using AK::static_ptr_cast;
-using AK::try_make_ref_counted;
+using AK::try_make_lock_ref_counted;
 
 #ifdef KERNEL
-using AK::adopt_nonnull_ref_or_enomem;
+using AK::adopt_nonnull_lock_ref_or_enomem;
 #endif

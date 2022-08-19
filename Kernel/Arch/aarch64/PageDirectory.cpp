@@ -19,7 +19,7 @@ void PageDirectory::deregister_page_directory(PageDirectory*)
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<PageDirectory> PageDirectory::find_current()
+LockRefPtr<PageDirectory> PageDirectory::find_current()
 {
     VERIFY_NOT_REACHED();
     return nullptr;

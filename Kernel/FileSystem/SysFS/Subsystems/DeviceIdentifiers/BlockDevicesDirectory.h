@@ -17,7 +17,7 @@ class SysFSBlockDevicesDirectory final : public SysFSDirectory {
 
 public:
     virtual StringView name() const override { return "block"sv; }
-    static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
+    static NonnullLockRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDeviceIdentifiersDirectory const&);
 
     static SysFSBlockDevicesDirectory& the();
 

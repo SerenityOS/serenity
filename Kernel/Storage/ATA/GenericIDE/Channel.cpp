@@ -23,16 +23,16 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT NonnullLockRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
 {
     auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
-    return adopt_ref(*new IDEChannel(controller, io_group, type, move(ata_identify_data_buffer)));
+    return adopt_lock_ref(*new IDEChannel(controller, io_group, type, move(ata_identify_data_buffer)));
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT NonnullLockRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
     auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
-    return adopt_ref(*new IDEChannel(controller, irq, io_group, type, move(ata_identify_data_buffer)));
+    return adopt_lock_ref(*new IDEChannel(controller, irq, io_group, type, move(ata_identify_data_buffer)));
 }
 
 StringView IDEChannel::channel_type_string() const

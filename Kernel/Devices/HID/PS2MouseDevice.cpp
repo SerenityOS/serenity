@@ -175,7 +175,7 @@ ErrorOr<void> PS2MouseDevice::set_sample_rate(u8 rate)
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
 {
     auto mouse_device = TRY(DeviceManagement::try_create_device<PS2MouseDevice>(ps2_controller));
     TRY(mouse_device->initialize());

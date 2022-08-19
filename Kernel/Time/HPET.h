@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -29,7 +29,7 @@ public:
     u64 raw_counter_ticks_to_ns(u64) const;
     u64 ns_to_raw_counter_ticks(u64) const;
 
-    NonnullRefPtrVector<HPETComparator> const& comparators() const { return m_comparators; }
+    NonnullLockRefPtrVector<HPETComparator> const& comparators() const { return m_comparators; }
     void disable(HPETComparator const&);
     void enable(HPETComparator const&);
 
@@ -78,6 +78,6 @@ private:
     bool m_main_counter_64bits : 1;
     bool legacy_replacement_route_capable : 1;
 
-    NonnullRefPtrVector<HPETComparator> m_comparators;
+    NonnullLockRefPtrVector<HPETComparator> m_comparators;
 };
 }

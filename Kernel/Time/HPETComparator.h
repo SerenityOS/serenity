@@ -16,7 +16,7 @@ class HPETComparator final : public HardwareTimer<IRQHandler> {
     friend class HPET;
 
 public:
-    static NonnullRefPtr<HPETComparator> create(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable);
+    static NonnullLockRefPtr<HPETComparator> create(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable);
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::HighPrecisionEventTimer; }
     virtual StringView model() const override { return "HPET"sv; }

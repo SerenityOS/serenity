@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <Kernel/Graphics/Bochs/DisplayConnector.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
+#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -22,7 +22,7 @@ class QEMUDisplayConnector final
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<QEMUDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
+    static NonnullLockRefPtr<QEMUDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
 
     virtual IndexID index_id() const override;
 

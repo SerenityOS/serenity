@@ -37,7 +37,7 @@ namespace Kernel {
 
 class ProcFSAdapters final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSAdapters> must_create();
+    static NonnullLockRefPtr<ProcFSAdapters> must_create();
 
 private:
     ProcFSAdapters();
@@ -74,7 +74,7 @@ private:
 
 class ProcFSARP final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSARP> must_create();
+    static NonnullLockRefPtr<ProcFSARP> must_create();
 
 private:
     ProcFSARP();
@@ -99,7 +99,7 @@ private:
 
 class ProcFSRoute final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSRoute> must_create();
+    static NonnullLockRefPtr<ProcFSRoute> must_create();
 
 private:
     ProcFSRoute();
@@ -128,7 +128,7 @@ private:
 
 class ProcFSTCP final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSTCP> must_create();
+    static NonnullLockRefPtr<ProcFSTCP> must_create();
 
 private:
     ProcFSTCP();
@@ -165,7 +165,7 @@ private:
 
 class ProcFSLocalNet final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSLocalNet> must_create();
+    static NonnullLockRefPtr<ProcFSLocalNet> must_create();
 
 private:
     ProcFSLocalNet();
@@ -191,7 +191,7 @@ private:
 
 class ProcFSUDP final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSUDP> must_create();
+    static NonnullLockRefPtr<ProcFSUDP> must_create();
 
 private:
     ProcFSUDP();
@@ -221,7 +221,7 @@ private:
 
 class ProcFSNetworkDirectory : public ProcFSExposedDirectory {
 public:
-    static NonnullRefPtr<ProcFSNetworkDirectory> must_create(ProcFSRootDirectory const& parent_directory);
+    static NonnullLockRefPtr<ProcFSNetworkDirectory> must_create(ProcFSRootDirectory const& parent_directory);
 
 private:
     ProcFSNetworkDirectory(ProcFSRootDirectory const& parent_directory);
@@ -229,40 +229,40 @@ private:
 
 class ProcFSSystemDirectory : public ProcFSExposedDirectory {
 public:
-    static NonnullRefPtr<ProcFSSystemDirectory> must_create(ProcFSRootDirectory const& parent_directory);
+    static NonnullLockRefPtr<ProcFSSystemDirectory> must_create(ProcFSRootDirectory const& parent_directory);
 
 private:
     ProcFSSystemDirectory(ProcFSRootDirectory const& parent_directory);
 };
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSAdapters> ProcFSAdapters::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSAdapters> ProcFSAdapters::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSAdapters).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSAdapters).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSARP> ProcFSARP::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSARP> ProcFSARP::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSARP).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSARP).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRoute> ProcFSRoute::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSRoute> ProcFSRoute::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSRoute).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSRoute).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSTCP> ProcFSTCP::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSTCP> ProcFSTCP::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSTCP).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSTCP).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSLocalNet> ProcFSLocalNet::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSLocalNet> ProcFSLocalNet::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSLocalNet).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSLocalNet).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUDP> ProcFSUDP::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSUDP> ProcFSUDP::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSUDP).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSUDP).release_nonnull();
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::must_create(ProcFSRootDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::must_create(ProcFSRootDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
     directory->m_components.append(ProcFSAdapters::must_create());
     directory->m_components.append(ProcFSARP::must_create());
     directory->m_components.append(ProcFSRoute::must_create());
@@ -303,7 +303,7 @@ UNMAP_AFTER_INIT ProcFSNetworkDirectory::ProcFSNetworkDirectory(ProcFSRootDirect
 
 class ProcFSDumpKmallocStacks : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSDumpKmallocStacks> must_create(ProcFSSystemDirectory const&);
+    static NonnullLockRefPtr<ProcFSDumpKmallocStacks> must_create(ProcFSSystemDirectory const&);
     virtual bool value() const override
     {
         MutexLocker locker(m_lock);
@@ -322,7 +322,7 @@ private:
 
 class ProcFSUBSanDeadly : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSUBSanDeadly> must_create(ProcFSSystemDirectory const&);
+    static NonnullLockRefPtr<ProcFSUBSanDeadly> must_create(ProcFSSystemDirectory const&);
 
     virtual bool value() const override { return AK::UBSanitizer::g_ubsan_is_deadly; }
     virtual void set_value(bool new_value) override { AK::UBSanitizer::g_ubsan_is_deadly = new_value; }
@@ -333,7 +333,7 @@ private:
 
 class ProcFSCapsLockRemap : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSCapsLockRemap> must_create(ProcFSSystemDirectory const&);
+    static NonnullLockRefPtr<ProcFSCapsLockRemap> must_create(ProcFSSystemDirectory const&);
     virtual bool value() const override
     {
         MutexLocker locker(m_lock);
@@ -350,17 +350,17 @@ private:
     mutable Mutex m_lock;
 };
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDumpKmallocStacks> ProcFSDumpKmallocStacks::must_create(ProcFSSystemDirectory const&)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSDumpKmallocStacks> ProcFSDumpKmallocStacks::must_create(ProcFSSystemDirectory const&)
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSDumpKmallocStacks).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSDumpKmallocStacks).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUBSanDeadly> ProcFSUBSanDeadly::must_create(ProcFSSystemDirectory const&)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSUBSanDeadly> ProcFSUBSanDeadly::must_create(ProcFSSystemDirectory const&)
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSUBSanDeadly).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSUBSanDeadly).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCapsLockRemap> ProcFSCapsLockRemap::must_create(ProcFSSystemDirectory const&)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSCapsLockRemap> ProcFSCapsLockRemap::must_create(ProcFSSystemDirectory const&)
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSCapsLockRemap).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSCapsLockRemap).release_nonnull();
 }
 
 UNMAP_AFTER_INIT ProcFSDumpKmallocStacks::ProcFSDumpKmallocStacks()
@@ -380,7 +380,7 @@ UNMAP_AFTER_INIT ProcFSCapsLockRemap::ProcFSCapsLockRemap()
 
 class ProcFSSelfProcessDirectory final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSSelfProcessDirectory> must_create();
+    static NonnullLockRefPtr<ProcFSSelfProcessDirectory> must_create();
 
 private:
     ProcFSSelfProcessDirectory();
@@ -392,7 +392,7 @@ private:
 
 class ProcFSDiskUsage final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSDiskUsage> must_create();
+    static NonnullLockRefPtr<ProcFSDiskUsage> must_create();
 
 private:
     ProcFSDiskUsage();
@@ -430,7 +430,7 @@ private:
 
 class ProcFSMemoryStatus final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSMemoryStatus> must_create();
+    static NonnullLockRefPtr<ProcFSMemoryStatus> must_create();
 
 private:
     ProcFSMemoryStatus();
@@ -459,7 +459,7 @@ private:
 
 class ProcFSSystemStatistics final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSSystemStatistics> must_create();
+    static NonnullLockRefPtr<ProcFSSystemStatistics> must_create();
 
 private:
     ProcFSSystemStatistics();
@@ -482,7 +482,7 @@ private:
 
 class ProcFSOverallProcesses final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSOverallProcesses> must_create();
+    static NonnullLockRefPtr<ProcFSOverallProcesses> must_create();
 
 private:
     ProcFSOverallProcesses();
@@ -600,7 +600,7 @@ private:
 };
 class ProcFSCPUInformation final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSCPUInformation> must_create();
+    static NonnullLockRefPtr<ProcFSCPUInformation> must_create();
 
 private:
     ProcFSCPUInformation();
@@ -665,7 +665,7 @@ private:
 };
 class ProcFSDmesg final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSDmesg> must_create();
+    static NonnullLockRefPtr<ProcFSDmesg> must_create();
 
     virtual mode_t required_mode() const override { return 0400; }
 
@@ -683,7 +683,7 @@ private:
 };
 class ProcFSInterrupts final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSInterrupts> must_create();
+    static NonnullLockRefPtr<ProcFSInterrupts> must_create();
 
 private:
     ProcFSInterrupts();
@@ -713,7 +713,7 @@ private:
 };
 class ProcFSKeymap final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSKeymap> must_create();
+    static NonnullLockRefPtr<ProcFSKeymap> must_create();
 
 private:
     ProcFSKeymap();
@@ -730,7 +730,7 @@ private:
 
 class ProcFSDevices final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSDevices> must_create();
+    static NonnullLockRefPtr<ProcFSDevices> must_create();
 
 private:
     ProcFSDevices();
@@ -758,7 +758,7 @@ private:
 };
 class ProcFSUptime final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSUptime> must_create();
+    static NonnullLockRefPtr<ProcFSUptime> must_create();
 
 private:
     ProcFSUptime();
@@ -769,7 +769,7 @@ private:
 };
 class ProcFSCommandLine final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSCommandLine> must_create();
+    static NonnullLockRefPtr<ProcFSCommandLine> must_create();
 
 private:
     ProcFSCommandLine();
@@ -782,7 +782,7 @@ private:
 };
 class ProcFSSystemMode final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSSystemMode> must_create();
+    static NonnullLockRefPtr<ProcFSSystemMode> must_create();
 
 private:
     ProcFSSystemMode();
@@ -796,7 +796,7 @@ private:
 
 class ProcFSProfile final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSProfile> must_create();
+    static NonnullLockRefPtr<ProcFSProfile> must_create();
 
     virtual mode_t required_mode() const override { return 0400; }
 
@@ -813,7 +813,7 @@ private:
 
 class ProcFSKernelBase final : public ProcFSGlobalInformation {
 public:
-    static NonnullRefPtr<ProcFSKernelBase> must_create();
+    static NonnullLockRefPtr<ProcFSKernelBase> must_create();
 
 private:
     ProcFSKernelBase();
@@ -828,66 +828,66 @@ private:
     }
 };
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSelfProcessDirectory> ProcFSSelfProcessDirectory::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSelfProcessDirectory> ProcFSSelfProcessDirectory::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSSelfProcessDirectory()).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSelfProcessDirectory()).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDiskUsage> ProcFSDiskUsage::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSDiskUsage> ProcFSDiskUsage::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSDiskUsage).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSDiskUsage).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSMemoryStatus> ProcFSMemoryStatus::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSMemoryStatus> ProcFSMemoryStatus::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSMemoryStatus).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSMemoryStatus).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemStatistics> ProcFSSystemStatistics::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSystemStatistics> ProcFSSystemStatistics::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSSystemStatistics).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSystemStatistics).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSOverallProcesses> ProcFSOverallProcesses::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSOverallProcesses> ProcFSOverallProcesses::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSOverallProcesses).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSOverallProcesses).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCPUInformation> ProcFSCPUInformation::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSCPUInformation> ProcFSCPUInformation::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSCPUInformation).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSCPUInformation).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDmesg> ProcFSDmesg::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSDmesg> ProcFSDmesg::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSDmesg).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSDmesg).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSInterrupts> ProcFSInterrupts::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSInterrupts> ProcFSInterrupts::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSInterrupts).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSInterrupts).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSKeymap> ProcFSKeymap::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSKeymap> ProcFSKeymap::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSKeymap).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSKeymap).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDevices> ProcFSDevices::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSDevices> ProcFSDevices::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSDevices).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSDevices).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUptime> ProcFSUptime::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSUptime> ProcFSUptime::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSUptime).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSUptime).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCommandLine> ProcFSCommandLine::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSCommandLine> ProcFSCommandLine::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSCommandLine).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSCommandLine).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemMode> ProcFSSystemMode::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSystemMode> ProcFSSystemMode::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSSystemMode).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSystemMode).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSProfile> ProcFSProfile::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSProfile> ProcFSProfile::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSKernelBase> ProcFSKernelBase::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSKernelBase> ProcFSKernelBase::must_create()
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSKernelBase).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSKernelBase).release_nonnull();
 }
 
 UNMAP_AFTER_INIT ProcFSSelfProcessDirectory::ProcFSSelfProcessDirectory()
@@ -952,9 +952,9 @@ UNMAP_AFTER_INIT ProcFSKernelBase::ProcFSKernelBase()
 {
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(ProcFSRootDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(ProcFSRootDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
+    auto directory = adopt_lock_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
     directory->m_components.append(ProcFSDumpKmallocStacks::must_create(directory));
     directory->m_components.append(ProcFSUBSanDeadly::must_create(directory));
     directory->m_components.append(ProcFSCapsLockRemap::must_create(directory));
@@ -966,9 +966,9 @@ UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(ProcFSRootDirector
 {
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSRootDirectory);
+    auto directory = adopt_lock_ref(*new (nothrow) ProcFSRootDirectory);
     directory->m_components.append(ProcFSSelfProcessDirectory::must_create());
     directory->m_components.append(ProcFSDiskUsage::must_create());
     directory->m_components.append(ProcFSMemoryStatus::must_create());
@@ -1013,7 +1013,7 @@ ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Func
     });
 }
 
-ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(StringView name)
 {
     auto maybe_candidate = ProcFSExposedDirectory::lookup(name);
     if (maybe_candidate.is_error()) {

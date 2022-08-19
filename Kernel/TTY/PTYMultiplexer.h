@@ -22,7 +22,7 @@ public:
     static PTYMultiplexer& the();
 
     // ^CharacterDevice
-    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return 0; }
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return 0; }
     virtual bool can_read(OpenFileDescription const&, u64) const override { return true; }

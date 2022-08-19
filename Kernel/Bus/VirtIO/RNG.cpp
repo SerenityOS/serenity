@@ -9,9 +9,9 @@
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT NonnullRefPtr<RNG> RNG::must_create(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create(PCI::DeviceIdentifier const& device_identifier)
 {
-    return adopt_ref_if_nonnull(new RNG(device_identifier)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new RNG(device_identifier)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT void RNG::initialize()

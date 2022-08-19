@@ -21,7 +21,7 @@ namespace Kernel {
 class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
 public:
-    static RefPtr<E1000ENetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
+    static LockRefPtr<E1000ENetworkAdapter> try_to_initialize(PCI::DeviceIdentifier const&);
 
     virtual bool initialize() override;
 
