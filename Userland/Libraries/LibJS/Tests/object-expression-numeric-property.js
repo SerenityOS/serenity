@@ -28,3 +28,26 @@ test("numeric properties", () => {
         "4294967296", // >= 2^32 - 1
     ]);
 });
+
+test("big int properties", () => {
+    const o = {
+        [-1n]: "foo",
+        0n: "foo",
+        1n: "foo",
+        [12345678901n]: "foo",
+        [4294967294n]: "foo",
+        [4294967295n]: "foo",
+    };
+    // Numeric properties come first in Object.getOwnPropertyNames()'s output,
+    // which means we can test what each is treated as internally.
+    expect(Object.getOwnPropertyNames(o)).toEqual([
+        // Numeric properties
+        "0",
+        "1",
+        "4294967294",
+        // Non-numeric properties
+        "-1",
+        "12345678901", // >= 2^32 - 1
+        "4294967295", // >= 2^32 - 1
+    ]);
+});
