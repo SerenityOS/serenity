@@ -164,10 +164,12 @@ static void activate_mmu()
     tcr_el1.SH1 = Aarch64::TCR_EL1::InnerShareable;
     tcr_el1.ORGN1 = Aarch64::TCR_EL1::NormalMemory_Outer_WriteBack_ReadAllocate_WriteAllocateCacheable;
     tcr_el1.IRGN1 = Aarch64::TCR_EL1::NormalMemory_Inner_WriteBack_ReadAllocate_WriteAllocateCacheable;
+    tcr_el1.T1SZ = 16;
 
     tcr_el1.SH0 = Aarch64::TCR_EL1::InnerShareable;
     tcr_el1.ORGN0 = Aarch64::TCR_EL1::NormalMemory_Outer_WriteBack_ReadAllocate_WriteAllocateCacheable;
     tcr_el1.IRGN0 = Aarch64::TCR_EL1::NormalMemory_Inner_WriteBack_ReadAllocate_WriteAllocateCacheable;
+    tcr_el1.T0SZ = 16;
 
     tcr_el1.TG1 = Aarch64::TCR_EL1::TG1GranuleSize::Size_4KB;
     tcr_el1.TG0 = Aarch64::TCR_EL1::TG0GranuleSize::Size_4KB;
