@@ -223,4 +223,11 @@ describe("evaluating", () => {
         expect(x).toBe("foo");
         expect(a).toBe(o.a);
     });
+
+    test("can use big int values as number-like properties", () => {
+        let o = { "99999999999999999": 1 };
+        let { 123n: a = "foo", 99999999999999999n: b = "bar" } = o;
+        expect(a).toBe("foo");
+        expect(b).toBe(1);
+    });
 });

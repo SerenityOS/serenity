@@ -2762,7 +2762,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                     name = static_ptr_cast<Identifier>(expression);
                 else
                     syntax_error("Invalid destructuring assignment target", expression_position);
-            } else if (match_identifier_name() || match(TokenType::StringLiteral) || match(TokenType::NumericLiteral)) {
+            } else if (match_identifier_name() || match(TokenType::StringLiteral) || match(TokenType::NumericLiteral) || match(TokenType::BigIntLiteral)) {
                 if (match(TokenType::StringLiteral) || match(TokenType::NumericLiteral))
                     needs_alias = true;
 
@@ -2773,6 +2773,12 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                     name = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
                         string_literal->value());
+                } else if (match(TokenType::BigIntLiteral)) {
+                    auto string_value = consume().flystring_value();
+                    VERIFY(string_value.ends_with("n"sv));
+                    name = create_ast_node<Identifier>(
+                        { m_state.current_token.filename(), rule_start.position(), position() },
+                        FlyString(string_value.view().substring_view(0, string_value.length() - 1)));
                 } else {
                     name = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
