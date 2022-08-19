@@ -139,6 +139,14 @@ public:
     [[nodiscard]] bool operator<(UnsignedBigInteger const& other) const;
     [[nodiscard]] bool operator>(UnsignedBigInteger const& other) const;
 
+    enum class CompareResult {
+        DoubleEqualsBigInt,
+        DoubleLessThanBigInt,
+        DoubleGreaterThanBigInt
+    };
+
+    [[nodiscard]] CompareResult compare_to_double(double) const;
+
 private:
     void ensure_sign_is_valid()
     {

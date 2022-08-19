@@ -9,7 +9,7 @@
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibTest/TestCase.h>
-#include <cstring>
+#include <math.h>
 
 static Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
 {
@@ -657,4 +657,115 @@ TEST_CASE(test_negative_zero_is_not_allowed)
 
     EXPECT(zero.unsigned_value().is_zero());
     EXPECT(!zero.is_negative());
+}
+
+TEST_CASE(double_comparisons)
+{
+#define EXPECT_LESS_THAN(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleGreaterThanBigInt)
+#define EXPECT_GREATER_THAN(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleLessThanBigInt)
+#define EXPECT_EQUAL_TO(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleEqualsBigInt)
+    {
+        Crypto::SignedBigInteger zero { 0 };
+        EXPECT_EQUAL_TO(zero, 0.0);
+        EXPECT_EQUAL_TO(zero, -0.0);
+    }
+
+    {
+        Crypto::SignedBigInteger one { 1 };
+        EXPECT_EQUAL_TO(one, 1.0);
+        EXPECT_GREATER_THAN(one, -1.0);
+        EXPECT_GREATER_THAN(one, 0.5);
+        EXPECT_GREATER_THAN(one, -0.5);
+        EXPECT_LESS_THAN(one, 1.000001);
+
+        one.negate();
+        auto const& negative_one = one;
+        EXPECT_EQUAL_TO(negative_one, -1.0);
+        EXPECT_LESS_THAN(negative_one, 1.0);
+        EXPECT_LESS_THAN(one, 0.5);
+        EXPECT_LESS_THAN(one, -0.5);
+        EXPECT_GREATER_THAN(one, -1.5);
+        EXPECT_LESS_THAN(one, 1.000001);
+        EXPECT_GREATER_THAN(one, -1.000001);
+    }
+
+    {
+        double double_max_value = NumericLimits<double>::max();
+        double double_below_max_value = nextafter(double_max_value, 0.0);
+        VERIFY(double_below_max_value < double_max_value);
+        VERIFY(double_below_max_value < (double_max_value - 1.0));
+        auto max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+        auto max_value_plus_one = max_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
+        auto max_value_minus_one = max_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
+
+        auto below_max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+
+        EXPECT_EQUAL_TO(max_value_in_bigint, double_max_value);
+        EXPECT_LESS_THAN(max_value_minus_one, double_max_value);
+        EXPECT_GREATER_THAN(max_value_plus_one, double_max_value);
+        EXPECT_LESS_THAN(below_max_value_in_bigint, double_max_value);
+
+        EXPECT_GREATER_THAN(max_value_in_bigint, double_below_max_value);
+        EXPECT_GREATER_THAN(max_value_minus_one, double_below_max_value);
+        EXPECT_GREATER_THAN(max_value_plus_one, double_below_max_value);
+        EXPECT_EQUAL_TO(below_max_value_in_bigint, double_below_max_value);
+    }
+
+    {
+        double double_min_value = NumericLimits<double>::lowest();
+        double double_above_min_value = nextafter(double_min_value, 0.0);
+        VERIFY(double_above_min_value > double_min_value);
+        VERIFY(double_above_min_value > (double_min_value + 1.0));
+        auto min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+        auto min_value_plus_one = min_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
+        auto min_value_minus_one = min_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
+
+        auto above_min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+
+        EXPECT_EQUAL_TO(min_value_in_bigint, double_min_value);
+        EXPECT_LESS_THAN(min_value_minus_one, double_min_value);
+        EXPECT_GREATER_THAN(min_value_plus_one, double_min_value);
+        EXPECT_GREATER_THAN(above_min_value_in_bigint, double_min_value);
+
+        EXPECT_LESS_THAN(min_value_in_bigint, double_above_min_value);
+        EXPECT_LESS_THAN(min_value_minus_one, double_above_min_value);
+        EXPECT_LESS_THAN(min_value_plus_one, double_above_min_value);
+        EXPECT_EQUAL_TO(above_min_value_in_bigint, double_above_min_value);
+    }
+
+    {
+        double just_above_255 = bit_cast<double>(0x406fe00000000001ULL);
+        double just_below_255 = bit_cast<double>(0x406fdfffffffffffULL);
+        double double_255 = 255.0;
+        Crypto::SignedBigInteger bigint_255 { 255 };
+
+        EXPECT_EQUAL_TO(bigint_255, double_255);
+        EXPECT_GREATER_THAN(bigint_255, just_below_255);
+        EXPECT_LESS_THAN(bigint_255, just_above_255);
+    }
+
+#undef EXPECT_LESS_THAN
+#undef EXPECT_GREATER_THAN
+#undef EXPECT_EQUAL_TO
+}
+
+namespace AK {
+
+template<>
+struct Formatter<Crypto::SignedBigInteger::CompareResult> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Crypto::SignedBigInteger::CompareResult const& compare_result)
+    {
+        switch (compare_result) {
+        case Crypto::SignedBigInteger::CompareResult::DoubleEqualsBigInt:
+            return builder.put_string("Equals"sv);
+        case Crypto::SignedBigInteger::CompareResult::DoubleLessThanBigInt:
+            return builder.put_string("LessThan"sv);
+        case Crypto::SignedBigInteger::CompareResult::DoubleGreaterThanBigInt:
+            return builder.put_string("GreaterThan"sv);
+        default:
+            return builder.put_string("???"sv);
+        }
+    }
+};
+
 }

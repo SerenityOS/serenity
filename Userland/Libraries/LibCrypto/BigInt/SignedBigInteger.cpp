@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SignedBigInteger.h"
 #include <AK/StringBuilder.h>
+#include <math.h>
 
 namespace Crypto {
 
@@ -332,6 +334,155 @@ bool SignedBigInteger::operator>(SignedBigInteger const& other) const
 bool SignedBigInteger::operator>=(SignedBigInteger const& other) const
 {
     return !(*this < other);
+}
+
+SignedBigInteger::CompareResult SignedBigInteger::compare_to_double(double value) const
+{
+    VERIFY(!isnan(value));
+
+    if (isinf(value)) {
+        bool is_positive_infinity = __builtin_isinf_sign(value) > 0;
+        return is_positive_infinity ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+    }
+
+    bool bigint_is_negative = m_sign;
+
+    bool value_is_negative = value < 0;
+
+    if (value_is_negative != bigint_is_negative)
+        return bigint_is_negative ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+
+    // Value is zero, and from above the signs must be the same.
+    if (value == 0.0) {
+        VERIFY(!value_is_negative && !bigint_is_negative);
+        // Either we are also zero or value is certainly less than us.
+        return is_zero() ? CompareResult::DoubleEqualsBigInt : CompareResult::DoubleLessThanBigInt;
+    }
+
+    // If value is not zero but we are, then since the signs are the same value must be greater.
+    if (is_zero())
+        return CompareResult::DoubleGreaterThanBigInt;
+
+    constexpr u64 mantissa_size = 52;
+    constexpr u64 exponent_size = 11;
+    constexpr auto exponent_bias = (1 << (exponent_size - 1)) - 1;
+    union FloatExtractor {
+        struct {
+            unsigned long long mantissa : mantissa_size;
+            unsigned exponent : exponent_size;
+            unsigned sign : 1;
+        };
+        double d;
+    } extractor;
+
+    extractor.d = value;
+    VERIFY(extractor.exponent != (1 << exponent_size) - 1);
+    // Exponent cannot be filled as than we must be NaN or infinity.
+
+    i32 real_exponent = extractor.exponent - exponent_bias;
+    if (real_exponent < 0) {
+        // |value| is less than 1, and we cannot be zero so if we are negative
+        // value must be greater and vice versa.
+        return bigint_is_negative ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+    }
+
+    u64 bigint_bits_needed = m_unsigned_data.one_based_index_of_highest_set_bit();
+    VERIFY(bigint_bits_needed > 0);
+
+    // Double value is `-1^sign (1.mantissa) * 2^(exponent - bias)` so we need
+    // `exponent - bias + 1` bit to represent doubles value,
+    // for example `exponent - bias` = 3, sign = 0 and mantissa = 0 we get
+    // `-1^0 * 2^3 * 1 = 8` which needs 4 bits to store 8 (0b1000).
+    u32 double_bits_needed = real_exponent + 1;
+
+    if (bigint_bits_needed > double_bits_needed) {
+        // If we need more bits to represent us, we must be of greater magnitude
+        // this means that if we are negative we are below value and if positive above value.
+        return bigint_is_negative ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+    }
+
+    if (bigint_bits_needed < double_bits_needed)
+        return bigint_is_negative ? CompareResult::DoubleLessThanBigInt : CompareResult::DoubleGreaterThanBigInt;
+
+    u64 mantissa_bits = extractor.mantissa;
+
+    // We add the bit which represents the 1. of the double value calculation
+    constexpr u64 mantissa_extended_bit = 1ull << mantissa_size;
+
+    mantissa_bits |= mantissa_extended_bit;
+
+    // Now we shift value to the left virtually, with `exponent - bias` steps
+    // we then pretend both it and the big int are extended with virtual zeros.
+    using Word = UnsignedBigInteger::Word;
+    auto next_bigint_word = (UnsignedBigInteger::BITS_IN_WORD - 1 + bigint_bits_needed) / UnsignedBigInteger::BITS_IN_WORD;
+
+    VERIFY(next_bigint_word + 1 == trimmed_length());
+
+    auto msb_in_top_word_index = (bigint_bits_needed - 1) % UnsignedBigInteger::BITS_IN_WORD;
+    VERIFY(msb_in_top_word_index == (UnsignedBigInteger::BITS_IN_WORD - count_leading_zeroes(words()[next_bigint_word - 1]) - 1));
+
+    // We will keep the bits which are still valid in the mantissa at the top of mantissa bits.
+    mantissa_bits <<= 64 - (mantissa_size + 1);
+
+    auto bits_left_in_mantissa = mantissa_size + 1;
+
+    auto get_next_value_bits = [&](size_t num_bits) -> Word {
+        VERIFY(num_bits < 63);
+        VERIFY(bits_left_in_mantissa > 0);
+        if (num_bits > bits_left_in_mantissa)
+            num_bits = bits_left_in_mantissa;
+
+        bits_left_in_mantissa -= num_bits;
+
+        u64 extracted_bits = mantissa_bits & (((1ull << num_bits) - 1) << (64 - num_bits));
+        // Now shift the bits down to put the most significant bit on the num_bits position
+        // this means the rest will be "virtual" zeros.
+        extracted_bits >>= 32;
+
+        // Now shift away the used bits and fit the result into a Word.
+        mantissa_bits <<= num_bits;
+
+        VERIFY(extracted_bits <= NumericLimits<Word>::max());
+        return static_cast<Word>(extracted_bits);
+    };
+
+    auto bits_in_next_bigint_word = msb_in_top_word_index + 1;
+
+    while (next_bigint_word > 0 && bits_left_in_mantissa > 0) {
+        Word bigint_word = words()[next_bigint_word - 1];
+        Word double_word = get_next_value_bits(bits_in_next_bigint_word);
+
+        // For the first bit we have to align it with the top bit of bigint
+        // and for all the other cases bits_in_next_bigint_word is 32 so this does nothing.
+        double_word >>= 32 - bits_in_next_bigint_word;
+
+        if (bigint_word < double_word)
+            return value_is_negative ? CompareResult::DoubleLessThanBigInt : CompareResult::DoubleGreaterThanBigInt;
+
+        if (bigint_word > double_word)
+            return value_is_negative ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+
+        --next_bigint_word;
+        bits_in_next_bigint_word = UnsignedBigInteger::BITS_IN_WORD;
+    }
+
+    // If there are still bits left in bigint than any non zero bit means it has greater magnitude.
+    if (next_bigint_word > 0) {
+        VERIFY(bits_left_in_mantissa == 0);
+        while (next_bigint_word > 0) {
+            if (words()[next_bigint_word - 1] != 0)
+                return value_is_negative ? CompareResult::DoubleGreaterThanBigInt : CompareResult::DoubleLessThanBigInt;
+            --next_bigint_word;
+        }
+    } else if (bits_left_in_mantissa > 0) {
+        VERIFY(next_bigint_word == 0);
+        // Similarly if there are still any bits set in the mantissa it has greater magnitude.
+        if (mantissa_bits != 0)
+            return value_is_negative ? CompareResult::DoubleLessThanBigInt : CompareResult::DoubleGreaterThanBigInt;
+    }
+
+    // Otherwise if both don't have bits left or the rest of the bits are zero they are equal.
+    return CompareResult::DoubleEqualsBigInt;
 }
 
 }
