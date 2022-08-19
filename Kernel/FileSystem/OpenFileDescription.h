@@ -9,10 +9,11 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/VirtualAddress.h>
 
