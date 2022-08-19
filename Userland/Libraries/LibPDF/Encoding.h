@@ -647,6 +647,7 @@ public:
 
 protected:
     HashMap<u16, CharDescriptor> m_descriptors;
+    HashMap<String, u16> m_name_mapping;
 };
 
 }
