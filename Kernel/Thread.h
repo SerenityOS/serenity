@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/Concepts.h>
 #include <AK/EnumBits.h>
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/Platform.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -1238,8 +1240,13 @@ private:
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     Optional<u64> m_last_time_scheduled;
+#if ARCH(I386)
+    Atomic<u32> m_total_time_scheduled_user { 0 };
+    Atomic<u32> m_total_time_scheduled_kernel { 0 };
+#else
     Atomic<u64> m_total_time_scheduled_user { 0 };
     Atomic<u64> m_total_time_scheduled_kernel { 0 };
+#endif
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
     u32 m_ticks_in_user { 0 };
