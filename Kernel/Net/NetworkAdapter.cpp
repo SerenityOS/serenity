@@ -113,21 +113,20 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
 
 RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
 {
-    InterruptDisabler disabler;
-    if (m_unused_packets.is_empty()) {
-        auto buffer_or_error = KBuffer::try_create_with_size("NetworkAdapter: Packet buffer"sv, size, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
-        if (buffer_or_error.is_error())
-            return {};
-        auto buffer = buffer_or_error.release_value();
-        auto packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { move(buffer), kgettimeofday() });
-        if (!packet)
-            return {};
-        packet->buffer->set_size(size);
-        return packet;
-    }
+    auto packet = m_unused_packets.with([size](auto& unused_packets) -> RefPtr<PacketWithTimestamp> {
+        if (unused_packets.is_empty())
+            return nullptr;
 
-    auto packet = m_unused_packets.take_first();
-    if (packet->buffer->capacity() >= size) {
+        auto unused_packet = unused_packets.take_first();
+
+        if (unused_packet->buffer->capacity() >= size)
+            return unused_packet;
+
+        // FIXME: Shouldn't we put existing buffers that are too small back into the list?
+        return nullptr;
+    });
+
+    if (packet) {
         packet->timestamp = kgettimeofday();
         packet->buffer->set_size(size);
         return packet;
@@ -145,8 +144,9 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
 
 void NetworkAdapter::release_packet_buffer(PacketWithTimestamp& packet)
 {
-    InterruptDisabler disabler;
-    m_unused_packets.append(packet);
+    m_unused_packets.with([&packet](auto& unused_packets) {
+        unused_packets.append(packet);
+    });
 }
 
 void NetworkAdapter::set_ipv4_address(IPv4Address const& address)
