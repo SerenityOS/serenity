@@ -157,6 +157,12 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
     dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
 
+    if (fs.is_file_backed()) {
+        m_file_backed_file_systems_list.with([&](auto& list) {
+            list.append(static_cast<FileBackedFileSystem&>(fs));
+        });
+    }
+
     // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
     m_mounts.with([&](auto& mounts) {
         new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
