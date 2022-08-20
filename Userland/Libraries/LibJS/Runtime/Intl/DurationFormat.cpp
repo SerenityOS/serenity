@@ -133,9 +133,6 @@ StringView DurationFormat::display_to_string(Display display)
 // 1.1.3 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
 ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value input)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If Type(input) is not Object, throw a TypeError exception.
     if (!input.is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, input);
@@ -164,7 +161,7 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
             // i. Set any to true.
             any = true;
             // ii. Set value to ? ToIntegerWithoutRounding(value).
-            value_number = TRY(Temporal::to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
+            value_number = TRY(Temporal::to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
         }
         // e. Else,
         else {
@@ -242,11 +239,8 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, Optional<String> const& previous_style)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let style be ? GetOption(options, unit, "string", stylesList, undefined).
-    auto style_value = TRY(get_option(global_object, options, unit, OptionType::String, styles_list, Empty {}));
+    auto style_value = TRY(get_option(vm, options, unit, OptionType::String, styles_list, Empty {}));
 
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
@@ -276,7 +270,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
     auto display_field = String::formatted("{}Display", unit);
 
     // 5. Let display be ? GetOption(options, displayField, "string", « "auto", "always" », displayDefault).
-    auto display = TRY(get_option(global_object, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
+    auto display = TRY(get_option(vm, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
 
     // 6. If prevStyle is "numeric" or "2-digit", then
     if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {

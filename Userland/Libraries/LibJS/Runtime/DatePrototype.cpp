@@ -1184,7 +1184,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
     ns = js_bigint(vm, ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
     // 3. Return ! CreateTemporalInstant(ns).
-    return MUST(Temporal::create_temporal_instant(global_object, *ns));
+    return MUST(Temporal::create_temporal_instant(vm, *ns));
 }
 
 // 21.4.4.42 Date.prototype.toTimeString ( ), https://tc39.es/ecma262/#sec-date.prototype.totimestring

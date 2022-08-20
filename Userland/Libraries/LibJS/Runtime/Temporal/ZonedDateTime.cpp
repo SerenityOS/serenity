@@ -38,20 +38,18 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.5.1 InterpretISODateTimeOffset ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour ), https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset
-ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, OffsetBehavior offset_behavior, double offset_nanoseconds, Value time_zone, StringView disambiguation, StringView offset_option, MatchBehavior match_behavior)
+ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, OffsetBehavior offset_behavior, double offset_nanoseconds, Value time_zone, StringView disambiguation, StringView offset_option, MatchBehavior match_behavior)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let calendar be ! GetISO8601Calendar().
-    auto* calendar = get_iso8601_calendar(global_object);
+    auto* calendar = get_iso8601_calendar(vm);
 
     // 2. Let dateTime be ? CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar).
-    auto* date_time = TRY(create_temporal_date_time(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar));
+    auto* date_time = TRY(create_temporal_date_time(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar));
 
     // 3. If offsetBehaviour is wall or offsetOption is "ignore", then
     if (offset_behavior == OffsetBehavior::Wall || offset_option == "ignore"sv) {
         // a. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
-        auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));
+        auto* instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *date_time, disambiguation));
 
         // b. Return instant.[[Nanoseconds]].
         return &instant->nanoseconds();
@@ -60,7 +58,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
     // 4. If offsetBehaviour is exact or offsetOption is "use", then
     if (offset_behavior == OffsetBehavior::Exact || offset_option == "use"sv) {
         // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
-        auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+        auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
         // b. Set epochNanoseconds to epochNanoseconds - ℤ(offsetNanoseconds).
         // FIXME: Narrowing conversion from 'double' to 'i64'
@@ -82,12 +80,12 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
     VERIFY(offset_option.is_one_of("prefer"sv, "reject"sv));
 
     // 7. Let possibleInstants be ? GetPossibleInstantsFor(timeZone, dateTime).
-    auto possible_instants = TRY(get_possible_instants_for(global_object, time_zone, *date_time));
+    auto possible_instants = TRY(get_possible_instants_for(vm, time_zone, *date_time));
 
     // 8. For each element candidate of possibleInstants, do
     for (auto* candidate : possible_instants) {
         // a. Let candidateNanoseconds be ? GetOffsetNanosecondsFor(timeZone, candidate).
-        auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, *candidate));
+        auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, *candidate));
 
         // b. If candidateNanoseconds = offsetNanoseconds, then
         if (candidate_nanoseconds == offset_nanoseconds) {
@@ -113,16 +111,17 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidZonedDateTimeOffset);
 
     // 10. Let instant be ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
-    auto* instant = TRY(disambiguate_possible_instants(global_object, possible_instants, time_zone, *date_time, disambiguation));
+    auto* instant = TRY(disambiguate_possible_instants(vm, possible_instants, time_zone, *date_time, disambiguation));
 
     // 11. Return instant.[[Nanoseconds]].
     return &instant->nanoseconds();
 }
 
 // 6.5.2 ToTemporalZonedDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime
-ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& global_object, Value item, Object const* options)
+ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item, Object const* options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
@@ -149,10 +148,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         }
 
         // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
+        calendar = TRY(get_temporal_calendar_with_iso_default(vm, item_object));
 
         // c. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
-        auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
+        auto field_names = TRY(calendar_fields(vm, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // d. Append "timeZone" to fieldNames.
         field_names.append("timeZone");
@@ -161,13 +160,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         field_names.append("offset");
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> { "timeZone"sv }));
+        auto* fields = TRY(prepare_temporal_fields(vm, item_object, field_names, Vector<StringView> { "timeZone"sv }));
 
         // g. Let timeZone be ! Get(fields, "timeZone").
         auto time_zone_value = MUST(fields->get(vm.names.timeZone));
 
         // h. Set timeZone to ? ToTemporalTimeZone(timeZone).
-        time_zone = TRY(to_temporal_time_zone(global_object, time_zone_value));
+        time_zone = TRY(to_temporal_time_zone(vm, time_zone_value));
 
         // i. Let offsetString be ! Get(fields, "offset").
         auto offset_string_value = MUST(fields->get(vm.names.offset));
@@ -184,18 +183,18 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
-        result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));
+        result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, *options));
     }
     // 6. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, options));
+        (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Let string be ? ToString(item).
         auto string = TRY(item.to_string(global_object));
 
         // c. Let result be ? ParseTemporalZonedDateTimeString(string).
-        auto parsed_result = TRY(parse_temporal_zoned_date_time_string(global_object, string));
+        auto parsed_result = TRY(parse_temporal_zoned_date_time_string(vm, string));
 
         // NOTE: The ISODateTime struct inside parsed_result will be moved into `result` at the end of this path to avoid mismatching names.
         //       Thus, all remaining references to `result` in this path actually refers to `parsed_result`.
@@ -231,13 +230,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         }
 
         // j. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
-        time_zone = MUST(create_temporal_time_zone(global_object, *time_zone_name));
+        time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
 
         // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         auto temporal_calendar_like = parsed_result.date_time.calendar.has_value()
             ? js_string(vm, parsed_result.date_time.calendar.value())
             : js_undefined();
-        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, temporal_calendar_like));
+        calendar = TRY(to_temporal_calendar_with_iso_default(vm, temporal_calendar_like));
 
         // l. Set matchBehaviour to match minutes.
         match_behavior = MatchBehavior::MatchMinutes;
@@ -252,25 +251,28 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
     // 8. If offsetBehaviour is option, then
     if (offset_behavior == OffsetBehavior::Option) {
         // a. Set offsetNanoseconds to ? ParseTimeZoneOffsetString(offsetString).
-        offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
+        offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, *offset_string));
     }
 
     // 9. Let disambiguation be ? ToTemporalDisambiguation(options).
-    auto disambiguation = TRY(to_temporal_disambiguation(global_object, options));
+    auto disambiguation = TRY(to_temporal_disambiguation(vm, options));
 
     // 10. Let offsetOption be ? ToTemporalOffset(options, "reject").
-    auto offset_option = TRY(to_temporal_offset(global_object, options, "reject"));
+    auto offset_option = TRY(to_temporal_offset(vm, options, "reject"));
 
     // 11. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour).
-    auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_nanoseconds, time_zone, disambiguation, offset_option, match_behavior));
+    auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_nanoseconds, time_zone, disambiguation, offset_option, match_behavior));
 
     // 12. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
-    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar));
+    return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, *time_zone, *calendar));
 }
 
 // 6.5.3 CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime
-ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
+ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
     VERIFY(is_valid_epoch_nanoseconds(epoch_nanoseconds));
 
@@ -289,8 +291,11 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject& 
 }
 
 // 6.5.4 TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar, showTimeZone, showOffset [ , increment, unit, roundingMode ] ), https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring
-ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& global_object, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
+ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. If increment is not present, set increment to 1.
     if (!increment.has_value())
         increment = 1;
@@ -304,22 +309,22 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
         rounding_mode = "trunc"sv;
 
     // 4. Let ns be ! RoundTemporalInstant(zonedDateTime.[[Nanoseconds]], increment, unit, roundingMode).
-    auto* ns = round_temporal_instant(global_object, zoned_date_time.nanoseconds(), *increment, *unit, *rounding_mode);
+    auto* ns = round_temporal_instant(vm, zoned_date_time.nanoseconds(), *increment, *unit, *rounding_mode);
 
     // 5. Let timeZone be zonedDateTime.[[TimeZone]].
     auto& time_zone = zoned_date_time.time_zone();
 
     // 6. Let instant be ! CreateTemporalInstant(ns).
-    auto* instant = MUST(create_temporal_instant(global_object, *ns));
+    auto* instant = MUST(create_temporal_instant(vm, *ns));
 
     // 7. Let isoCalendar be ! GetISO8601Calendar().
-    auto* iso_calendar = get_iso8601_calendar(global_object);
+    auto* iso_calendar = get_iso8601_calendar(vm);
 
     // 8. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, isoCalendar).
-    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, *iso_calendar));
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, *iso_calendar));
 
     // 9. Let dateTimeString be ? TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
-    auto date_time_string = TRY(temporal_date_time_to_string(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
+    auto date_time_string = TRY(temporal_date_time_to_string(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
 
     String offset_string;
 
@@ -331,7 +336,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
     // 11. Else,
     else {
         // a. Let offsetNs be ? GetOffsetNanosecondsFor(timeZone, instant).
-        auto offset_ns = TRY(get_offset_nanoseconds_for(global_object, &time_zone, *instant));
+        auto offset_ns = TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant));
 
         // b. Let offsetString be ! FormatISOTimeZoneOffsetString(offsetNs).
         offset_string = format_iso_time_zone_offset_string(offset_ns);
@@ -364,7 +369,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 }
 
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime
-ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
+ThrowCompletionOr<BigInt*> add_zoned_date_time(VM& vm, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
@@ -372,36 +377,36 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
     // 3. If all of years, months, weeks, and days are 0, then
     if (years == 0 && months == 0 && weeks == 0 && days == 0) {
         // a. Return ? AddInstant(epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-        return add_instant(global_object, epoch_nanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+        return add_instant(vm, epoch_nanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
     }
 
     // 4. Let instant be ! CreateTemporalInstant(epochNanoseconds).
-    auto* instant = MUST(create_temporal_instant(global_object, epoch_nanoseconds));
+    auto* instant = MUST(create_temporal_instant(vm, epoch_nanoseconds));
 
     // 5. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, calendar));
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, time_zone, *instant, calendar));
 
     // 6. Let datePart be ! CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
-    auto* date_part = MUST(create_temporal_date(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
+    auto* date_part = MUST(create_temporal_date(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 
     // 7. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
-    auto* date_duration = MUST(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
+    auto* date_duration = MUST(create_temporal_duration(vm, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 8. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
-    auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
+    auto* added_date = TRY(calendar_date_add(vm, calendar, date_part, *date_duration, options));
 
     // 9. Let intermediateDateTime be ? CreateTemporalDateTime(addedDate.[[ISOYear]], addedDate.[[ISOMonth]], addedDate.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], calendar).
-    auto* intermediate_date_time = TRY(create_temporal_date_time(global_object, added_date->iso_year(), added_date->iso_month(), added_date->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), calendar));
+    auto* intermediate_date_time = TRY(create_temporal_date_time(vm, added_date->iso_year(), added_date->iso_month(), added_date->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), calendar));
 
     // 10. Let intermediateInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, intermediateDateTime, "compatible").
-    auto* intermediate_instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *intermediate_date_time, "compatible"sv));
+    auto* intermediate_instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *intermediate_date_time, "compatible"sv));
 
     // 11. Return ? AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-    return add_instant(global_object, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+    return add_instant(vm, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 }
 
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
-ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object const& options)
+ThrowCompletionOr<DurationRecord> difference_zoned_date_time(VM& vm, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object const& options)
 {
     // 1. If ns1 is ns2, then
     if (nanoseconds1.big_integer() == nanoseconds2.big_integer()) {
@@ -410,44 +415,43 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
     }
 
     // 2. Let startInstant be ! CreateTemporalInstant(ns1).
-    auto* start_instant = MUST(create_temporal_instant(global_object, nanoseconds1));
+    auto* start_instant = MUST(create_temporal_instant(vm, nanoseconds1));
 
     // 3. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, startInstant, calendar).
-    auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *start_instant, calendar));
+    auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *start_instant, calendar));
 
     // 4. Let endInstant be ! CreateTemporalInstant(ns2).
-    auto* end_instant = MUST(create_temporal_instant(global_object, nanoseconds2));
+    auto* end_instant = MUST(create_temporal_instant(vm, nanoseconds2));
 
     // 5. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, endInstant, calendar).
-    auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *end_instant, calendar));
+    auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *end_instant, calendar));
 
     // 6. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], calendar, largestUnit, options).
-    auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), calendar, largest_unit, options));
+    auto date_difference = TRY(difference_iso_date_time(vm, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), calendar, largest_unit, options));
 
     // 7. Let intermediateNs be ? AddZonedDateTime(ns1, timeZone, calendar, dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], 0, 0, 0, 0, 0, 0, 0).
-    auto* intermediate_ns = TRY(add_zoned_date_time(global_object, nanoseconds1, &time_zone, calendar, date_difference.years, date_difference.months, date_difference.weeks, 0, 0, 0, 0, 0, 0, 0));
+    auto* intermediate_ns = TRY(add_zoned_date_time(vm, nanoseconds1, &time_zone, calendar, date_difference.years, date_difference.months, date_difference.weeks, 0, 0, 0, 0, 0, 0, 0));
 
     // 8. Let timeRemainderNs be ns2 - intermediateNs.
     auto time_remainder_ns = nanoseconds2.big_integer().minus(intermediate_ns->big_integer());
 
     // 9. Let intermediate be ! CreateTemporalZonedDateTime(intermediateNs, timeZone, calendar).
-    auto* intermediate = MUST(create_temporal_zoned_date_time(global_object, *intermediate_ns, time_zone, calendar));
+    auto* intermediate = MUST(create_temporal_zoned_date_time(vm, *intermediate_ns, time_zone, calendar));
 
     // 10. Let result be ? NanosecondsToDays(timeRemainderNs, intermediate).
-    auto result = TRY(nanoseconds_to_days(global_object, time_remainder_ns, intermediate));
+    auto result = TRY(nanoseconds_to_days(vm, time_remainder_ns, intermediate));
 
     // 11. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
-    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, result.nanoseconds, "hour"sv));
+    auto time_difference = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, result.nanoseconds, "hour"sv));
 
     // 12. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     return create_duration_record(date_difference.years, date_difference.months, date_difference.weeks, result.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 }
 
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays
-ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& global_object, Crypto::SignedBigInteger nanoseconds, Value relative_to_value)
+ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::SignedBigInteger nanoseconds, Value relative_to_value)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let dayLengthNs be nsPerDay.
     auto day_length_ns = ns_per_day_bigint;
@@ -477,10 +481,10 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     auto& start_ns = relative_to.nanoseconds().big_integer();
 
     // 6. Let startInstant be ! CreateTemporalInstant(ℤ(startNs)).
-    auto* start_instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, start_ns)));
+    auto* start_instant = MUST(create_temporal_instant(vm, *js_bigint(vm, start_ns)));
 
     // 7. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], startInstant, relativeTo.[[Calendar]]).
-    auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to.time_zone(), *start_instant, relative_to.calendar()));
+    auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &relative_to.time_zone(), *start_instant, relative_to.calendar()));
 
     // 8. Let endNs be startNs + nanoseconds.
     auto end_ns = start_ns.plus(nanoseconds);
@@ -492,19 +496,19 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 10. Let endInstant be ! CreateTemporalInstant(ℤ(endNs)).
-    auto* end_instant = MUST(create_temporal_instant(global_object, *end_ns_bigint));
+    auto* end_instant = MUST(create_temporal_instant(vm, *end_ns_bigint));
 
     // 11. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], endInstant, relativeTo.[[Calendar]]).
-    auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to.time_zone(), *end_instant, relative_to.calendar()));
+    auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &relative_to.time_zone(), *end_instant, relative_to.calendar()));
 
     // 12. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], relativeTo.[[Calendar]], "day", OrdinaryObjectCreate(null)).
-    auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), relative_to.calendar(), "day"sv, *Object::create(realm, nullptr)));
+    auto date_difference = TRY(difference_iso_date_time(vm, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), relative_to.calendar(), "day"sv, *Object::create(realm, nullptr)));
 
     // 13. Let days be dateDifference.[[Days]].
     auto days = date_difference.days;
 
     // 14. Let intermediateNs be ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
-    auto intermediate_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
+    auto intermediate_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
 
     // 15. If sign is 1, then
     if (sign == 1) {
@@ -514,7 +518,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
             days--;
 
             // ii. Set intermediateNs to ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
-            intermediate_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
+            intermediate_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
         }
     }
 
@@ -525,7 +529,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     // 18. Repeat, while done is false,
     while (true) {
         // a. Let oneDayFartherNs be ℝ(? AddZonedDateTime(ℤ(intermediateNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, sign, 0, 0, 0, 0, 0, 0)).
-        auto one_day_farther_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
+        auto one_day_farther_ns = TRY(add_zoned_date_time(vm, *js_bigint(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
 
         // b. Set dayLengthNs to oneDayFartherNs - intermediateNs.
         day_length_ns = one_day_farther_ns.minus(intermediate_ns);
@@ -553,72 +557,70 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
 }
 
 // 6.5.8 DifferenceTemporalZonedDateTime ( operation, zonedDateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalzoneddatetime
-ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(GlobalObject& global_object, DifferenceOperation operation, ZonedDateTime& zoned_date_time, Value other_value, Value options_value)
+ThrowCompletionOr<Duration*> difference_temporal_zoned_date_time(VM& vm, DifferenceOperation operation, ZonedDateTime& zoned_date_time, Value other_value, Value options_value)
 {
-    auto& vm = global_object.vm();
-
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
 
     // 2. Set other to ? ToTemporalZonedDateTime(other).
-    auto* other = TRY(to_temporal_zoned_date_time(global_object, other_value));
+    auto* other = TRY(to_temporal_zoned_date_time(vm, other_value));
 
     // 3. If ? CalendarEquals(zonedDateTime.[[Calendar]], other.[[Calendar]]) is false, then
-    if (!TRY(calendar_equals(global_object, zoned_date_time.calendar(), other->calendar()))) {
+    if (!TRY(calendar_equals(vm, zoned_date_time.calendar(), other->calendar()))) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
     }
 
     // 4. Let settings be ? GetDifferenceSettings(operation, options, datetime, « », "nanosecond", "hour").
-    auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::DateTime, {}, { "nanosecond"sv }, "hour"sv));
+    auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::DateTime, {}, { "nanosecond"sv }, "hour"sv));
 
     // 5. If settings.[[LargestUnit]] is not one of "year", "month", "week", or "day", then
     if (!settings.largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let differenceNs be ! DifferenceInstant(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]]).
-        auto* difference_ns = difference_instant(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), settings.rounding_increment, settings.smallest_unit, settings.rounding_mode);
+        auto* difference_ns = difference_instant(vm, zoned_date_time.nanoseconds(), other->nanoseconds(), settings.rounding_increment, settings.smallest_unit, settings.rounding_mode);
 
         // b. Assert: The following steps cannot fail due to overflow in the Number domain because abs(differenceNs) ≤ 2 × nsMaxInstant.
 
         // c. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, settings.[[LargestUnit]]).
-        auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), settings.largest_unit));
+        auto balance_result = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), settings.largest_unit));
 
         // d. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × balanceResult.[[Hours]], sign × balanceResult.[[Minutes]], sign × balanceResult.[[Seconds]], sign × balanceResult.[[Milliseconds]], sign × balanceResult.[[Microseconds]], sign × balanceResult.[[Nanoseconds]]).
-        return MUST(create_temporal_duration(global_object, 0, 0, 0, 0, sign * balance_result.hours, sign * balance_result.minutes, sign * balance_result.seconds, sign * balance_result.milliseconds, sign * balance_result.microseconds, sign * balance_result.nanoseconds));
+        return MUST(create_temporal_duration(vm, 0, 0, 0, 0, sign * balance_result.hours, sign * balance_result.minutes, sign * balance_result.seconds, sign * balance_result.milliseconds, sign * balance_result.microseconds, sign * balance_result.nanoseconds));
     }
 
     // 6. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, then
-    if (!TRY(time_zone_equals(global_object, zoned_date_time.time_zone(), other->time_zone()))) {
+    if (!TRY(time_zone_equals(vm, zoned_date_time.time_zone(), other->time_zone()))) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentTimeZones);
     }
 
     // 7. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, settings.options, settings.largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
 
     // 8. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], settings.[[LargestUnit]], untilOptions).
-    auto difference = TRY(difference_zoned_date_time(global_object, zoned_date_time.nanoseconds(), other->nanoseconds(), zoned_date_time.time_zone(), zoned_date_time.calendar(), settings.largest_unit, *until_options));
+    auto difference = TRY(difference_zoned_date_time(vm, zoned_date_time.nanoseconds(), other->nanoseconds(), zoned_date_time.time_zone(), zoned_date_time.calendar(), settings.largest_unit, *until_options));
 
     // 9. Let roundResult be (? RoundDuration(difference.[[Years]], difference.[[Months]], difference.[[Weeks]], difference.[[Days]], difference.[[Hours]], difference.[[Minutes]], difference.[[Seconds]], difference.[[Milliseconds]], difference.[[Microseconds]], difference.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], zonedDateTime)).[[DurationRecord]].
-    auto round_result = TRY(round_duration(global_object, difference.years, difference.months, difference.weeks, difference.days, difference.hours, difference.minutes, difference.seconds, difference.milliseconds, difference.microseconds, difference.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &zoned_date_time)).duration_record;
+    auto round_result = TRY(round_duration(vm, difference.years, difference.months, difference.weeks, difference.days, difference.hours, difference.minutes, difference.seconds, difference.milliseconds, difference.microseconds, difference.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &zoned_date_time)).duration_record;
 
     // 10. Let result be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], zonedDateTime).
-    auto result = TRY(adjust_rounded_duration_days(global_object, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &zoned_date_time));
+    auto result = TRY(adjust_rounded_duration_days(vm, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, &zoned_date_time));
 
     // 11. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], sign × result.[[Weeks]], sign × result.[[Days]], sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
-    return MUST(create_temporal_duration(global_object, sign * result.years, sign * result.months, sign * result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
+    return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, sign * result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 
 // 6.5.9 AddDurationToOrSubtractDurationFromZonedDateTime ( operation, zonedDateTime, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoOrsubtractdurationfromzoneddatetime
-ThrowCompletionOr<ZonedDateTime*> add_duration_to_or_subtract_duration_from_zoned_date_time(GlobalObject& global_object, ArithmeticOperation operation, ZonedDateTime& zoned_date_time, Value temporal_duration_like, Value options_value)
+ThrowCompletionOr<ZonedDateTime*> add_duration_to_or_subtract_duration_from_zoned_date_time(VM& vm, ArithmeticOperation operation, ZonedDateTime& zoned_date_time, Value temporal_duration_like, Value options_value)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == ArithmeticOperation::Subtract ? -1 : 1;
 
     // 2. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
+    auto duration = TRY(to_temporal_duration_record(vm, temporal_duration_like));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, options_value));
+    auto* options = TRY(get_options_object(vm, options_value));
 
     // 4. Let timeZone be zonedDateTime.[[TimeZone]].
     auto& time_zone = zoned_date_time.time_zone();
@@ -627,10 +629,10 @@ ThrowCompletionOr<ZonedDateTime*> add_duration_to_or_subtract_duration_from_zone
     auto& calendar = zoned_date_time.calendar();
 
     // 6. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, sign × duration.[[Years]], sign × duration.[[Months]], sign × duration.[[Weeks]], sign × duration.[[Days]], sign × duration.[[Hours]], sign × duration.[[Minutes]], sign × duration.[[Seconds]], sign × duration.[[Milliseconds]], sign × duration.[[Microseconds]], sign × duration.[[Nanoseconds]], options).
-    auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time.nanoseconds(), &time_zone, calendar, sign * duration.years, sign * duration.months, sign * duration.weeks, sign * duration.days, sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds, options));
+    auto* epoch_nanoseconds = TRY(add_zoned_date_time(vm, zoned_date_time.nanoseconds(), &time_zone, calendar, sign * duration.years, sign * duration.months, sign * duration.weeks, sign * duration.days, sign * duration.hours, sign * duration.minutes, sign * duration.seconds, sign * duration.milliseconds, sign * duration.microseconds, sign * duration.nanoseconds, options));
 
     // 7. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
-    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
+    return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone, calendar));
 }
 
 }

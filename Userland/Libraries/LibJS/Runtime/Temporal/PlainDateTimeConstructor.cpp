@@ -49,37 +49,36 @@ ThrowCompletionOr<Value> PlainDateTimeConstructor::call()
 ThrowCompletionOr<Object*> PlainDateTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Let isoYear be ? ToIntegerThrowOnInfinity(isoYear).
-    auto iso_year = TRY(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainDateTime));
+    auto iso_year = TRY(to_integer_throw_on_infinity(vm, vm.argument(0), ErrorType::TemporalInvalidPlainDateTime));
 
     // 3. Let isoMonth be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto iso_month = TRY(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainDateTime));
+    auto iso_month = TRY(to_integer_throw_on_infinity(vm, vm.argument(1), ErrorType::TemporalInvalidPlainDateTime));
 
     // 4. Let isoDay be ? ToIntegerThrowOnInfinity(isoDay).
-    auto iso_day = TRY(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainDateTime));
+    auto iso_day = TRY(to_integer_throw_on_infinity(vm, vm.argument(2), ErrorType::TemporalInvalidPlainDateTime));
 
     // 5. Let hour be ? ToIntegerThrowOnInfinity(hour).
-    auto hour = TRY(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainDateTime));
+    auto hour = TRY(to_integer_throw_on_infinity(vm, vm.argument(3), ErrorType::TemporalInvalidPlainDateTime));
 
     // 6. Let minute be ? ToIntegerThrowOnInfinity(minute).
-    auto minute = TRY(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainDateTime));
+    auto minute = TRY(to_integer_throw_on_infinity(vm, vm.argument(4), ErrorType::TemporalInvalidPlainDateTime));
 
     // 7. Let second be ? ToIntegerThrowOnInfinity(second).
-    auto second = TRY(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainDateTime));
+    auto second = TRY(to_integer_throw_on_infinity(vm, vm.argument(5), ErrorType::TemporalInvalidPlainDateTime));
 
     // 8. Let millisecond be ? ToIntegerThrowOnInfinity(millisecond).
-    auto millisecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(6), ErrorType::TemporalInvalidPlainDateTime));
+    auto millisecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(6), ErrorType::TemporalInvalidPlainDateTime));
 
     // 9. Let microsecond be ? ToIntegerThrowOnInfinity(microsecond).
-    auto microsecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(7), ErrorType::TemporalInvalidPlainDateTime));
+    auto microsecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(7), ErrorType::TemporalInvalidPlainDateTime));
 
     // 10. Let nanosecond be ? ToIntegerThrowOnInfinity(nanosecond).
-    auto nanosecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime));
+    auto nanosecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(8), ErrorType::TemporalInvalidPlainDateTime));
 
     // 11. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, vm.argument(9)));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(9)));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalDateTime will immediately check that these values are valid
@@ -89,7 +88,7 @@ ThrowCompletionOr<Object*> PlainDateTimeConstructor::construct(FunctionObject& n
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 12. Return ? CreateTemporalDateTime(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, NewTarget).
-    return TRY(create_temporal_date_time(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target));
+    return TRY(create_temporal_date_time(vm, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar, &new_target));
 }
 
 // 5.2.2 Temporal.PlainDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from
@@ -98,31 +97,31 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalDateTime]] internal slot, then
     if (item.is_object() && is<PlainDateTime>(item.as_object())) {
         auto& plain_date_time = static_cast<PlainDateTime&>(item.as_object());
 
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, options));
+        (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Return ! CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]], item.[[Calendar]]).
-        return MUST(create_temporal_date_time(global_object, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond(), plain_date_time.calendar()));
+        return MUST(create_temporal_date_time(vm, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond(), plain_date_time.calendar()));
     }
 
     // 3. Return ? ToTemporalDateTime(item, options).
-    return TRY(to_temporal_date_time(global_object, item, options));
+    return TRY(to_temporal_date_time(vm, item, options));
 }
 
 // 5.2.3 Temporal.PlainDateTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare
 JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDateTime(one).
-    auto* one = TRY(to_temporal_date_time(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_date_time(vm, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalDateTime(two).
-    auto* two = TRY(to_temporal_date_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_date_time(vm, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareISODateTime(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_iso_date_time(one->iso_year(), one->iso_month(), one->iso_day(), one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_year(), two->iso_month(), two->iso_day(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));

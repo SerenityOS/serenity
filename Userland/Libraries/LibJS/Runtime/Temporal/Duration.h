@@ -135,30 +135,30 @@ auto temporal_duration_record_fields = [](VM& vm) {
 };
 
 DurationRecord create_duration_record(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
-ThrowCompletionOr<DurationRecord> create_duration_record(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
+ThrowCompletionOr<DurationRecord> create_duration_record(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 DateDurationRecord create_date_duration_record(double years, double months, double weeks, double days);
-ThrowCompletionOr<DateDurationRecord> create_date_duration_record(GlobalObject&, double years, double months, double weeks, double days);
-ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
-ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject&, Value item);
-ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject&, Value temporal_duration_like);
+ThrowCompletionOr<DateDurationRecord> create_date_duration_record(VM&, double years, double months, double weeks, double days);
+ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(VM&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
+ThrowCompletionOr<Duration*> to_temporal_duration(VM&, Value item);
+ThrowCompletionOr<DurationRecord> to_temporal_duration_record(VM&, Value temporal_duration_like);
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds);
-ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(GlobalObject&, Value temporal_duration_like);
-ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target = nullptr);
-Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration);
-ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_to_value, double years, double months, double weeks, double days);
+ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&, Value temporal_duration_like);
+ThrowCompletionOr<Duration*> create_temporal_duration(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target = nullptr);
+Duration* create_negated_temporal_duration(VM&, Duration const& duration);
+ThrowCompletionOr<double> calculate_offset_shift(VM&, Value relative_to_value, double years, double months, double weeks, double days);
 Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift);
-ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
-ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
-ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
-ThrowCompletionOr<DurationRecord> add_duration(GlobalObject&, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value);
-ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDate& relative_to, Duration& duration);
-ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject&, ZonedDateTime&, double years, double months, double weeks, double days);
-ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
-ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object);
+ThrowCompletionOr<TimeDurationRecord> balance_duration(VM&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
+ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
+ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
+ThrowCompletionOr<DurationRecord> add_duration(VM&, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value);
+ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(VM&, Object& calendar, PlainDate& relative_to, Duration& duration);
+ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(VM&, ZonedDateTime&, double years, double months, double weeks, double days);
+ThrowCompletionOr<RoundedDuration> round_duration(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
+ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object);
 String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
-ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(GlobalObject&, ArithmeticOperation, Duration const&, Value other_value, Value options_value);
+ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(VM&, ArithmeticOperation, Duration const&, Value other_value, Value options_value);
 
 // 7.5.22 DaysUntil ( earlier, later ), https://tc39.es/proposal-temporal/#sec-temporal-daysuntil
 template<typename EarlierObjectType, typename LaterObjectType>

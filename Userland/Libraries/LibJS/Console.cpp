@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -454,8 +454,10 @@ ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> co
 
 ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
 {
+    auto& vm = this->vm();
+
     auto elapsed_ms = timer.elapsed_time().to_milliseconds();
-    auto duration = TRY(Temporal::balance_duration(global_object(), 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"));
+    auto duration = TRY(Temporal::balance_duration(vm, 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"));
 
     auto append = [&](StringBuilder& builder, auto format, auto... number) {
         if (!builder.is_empty())

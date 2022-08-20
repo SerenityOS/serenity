@@ -61,8 +61,11 @@ Span<StringView const> available_calendars()
 }
 
 // 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
-ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
+ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& identifier, FunctionObject const* new_target)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: IsBuiltinCalendar(identifier) is true.
     VERIFY(is_builtin_calendar(identifier));
 
@@ -79,30 +82,28 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(GlobalObject& global_objec
 }
 
 // 12.2.2 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
-ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, String const& identifier)
+ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, String const& identifier)
 {
-    auto& vm = global_object.vm();
-
     // 1. If IsBuiltinCalendar(id) is false, throw a RangeError exception.
     if (!is_builtin_calendar(identifier))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 2. Return ! CreateTemporalCalendar(id).
-    return MUST(create_temporal_calendar(global_object, identifier));
+    return MUST(create_temporal_calendar(vm, identifier));
 }
 
 // 12.2.3 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
-Calendar* get_iso8601_calendar(GlobalObject& global_object)
+Calendar* get_iso8601_calendar(VM& vm)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
-    return MUST(get_builtin_calendar(global_object, "iso8601"));
+    return MUST(get_builtin_calendar(vm, "iso8601"));
 }
 
 // 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
-ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, Object& calendar, Vector<StringView> const& field_names)
+ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let fields be ? GetMethod(calendar, "fields").
     auto fields = TRY(Value(&calendar).get_method(global_object, vm.names.fields));
@@ -120,7 +121,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
-    auto list = TRY(iterable_to_list_of_type(global_object, fields_array, { OptionType::String }));
+    auto list = TRY(iterable_to_list_of_type(vm, fields_array, { OptionType::String }));
 
     Vector<String> result;
     for (auto& value : list)
@@ -129,9 +130,10 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
 }
 
 // 12.2.5 CalendarMergeFields ( calendar, fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields
-ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& additional_fields)
+ThrowCompletionOr<Object*> calendar_merge_fields(VM& vm, Object& calendar, Object& fields, Object& additional_fields)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let mergeFields be ? GetMethod(calendar, "mergeFields").
     auto* merge_fields = TRY(Value(&calendar).get_method(global_object, vm.names.mergeFields));
@@ -139,7 +141,7 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
     // 2. If mergeFields is undefined, then
     if (!merge_fields) {
         // a. Return ? DefaultMergeCalendarFields(fields, additionalFields).
-        return TRY(default_merge_calendar_fields(global_object, fields, additional_fields));
+        return TRY(default_merge_calendar_fields(vm, fields, additional_fields));
     }
 
     // 3. Let result be ? Call(mergeFields, calendar, « fields, additionalFields »).
@@ -154,10 +156,11 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 }
 
 // 12.2.6 CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
-ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
+ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
 {
     // NOTE: `date` is a `Value` because we sometimes need to pass a PlainDate, sometimes a PlainDateTime, and sometimes undefined.
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(calendar) is Object.
     // 2. If options is not present, set options to undefined.
@@ -180,9 +183,10 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Obj
 }
 
 // 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
-ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until)
+ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(calendar) is Object.
 
@@ -203,9 +207,11 @@ ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Ob
 }
 
 // 12.2.8 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
-ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "year", « dateLike »).
@@ -216,13 +222,15 @@ ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& cal
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.undefined.as_string());
 
     // 4. Return ? ToIntegerThrowOnInfinity(result).
-    return TRY(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
+    return TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.year.as_string(), vm.names.Infinity.as_string()));
 }
 
 // 12.2.9 CalendarMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonth
-ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_month(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "month", « dateLike »).
@@ -233,13 +241,15 @@ ThrowCompletionOr<double> calendar_month(GlobalObject& global_object, Object& ca
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.month.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(global_object, result));
+    return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
-ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<String> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
@@ -254,9 +264,11 @@ ThrowCompletionOr<String> calendar_month_code(GlobalObject& global_object, Objec
 }
 
 // 12.2.11 CalendarDay ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarday
-ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<double> calendar_day(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "day", « dateLike »).
@@ -267,13 +279,15 @@ ThrowCompletionOr<double> calendar_day(GlobalObject& global_object, Object& cale
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.day.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToPositiveInteger(result).
-    return TRY(to_positive_integer(global_object, result));
+    return TRY(to_positive_integer(vm, result));
 }
 
 // 12.2.12 CalendarDayOfWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofweek
-ThrowCompletionOr<Value> calendar_day_of_week(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_day_of_week(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfWeek", « dateLike »).
@@ -281,9 +295,11 @@ ThrowCompletionOr<Value> calendar_day_of_week(GlobalObject& global_object, Objec
 }
 
 // 12.2.13 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
-ThrowCompletionOr<Value> calendar_day_of_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_day_of_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfYear", « dateLike »).
@@ -291,9 +307,11 @@ ThrowCompletionOr<Value> calendar_day_of_year(GlobalObject& global_object, Objec
 }
 
 // 12.2.14 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
-ThrowCompletionOr<Value> calendar_week_of_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_week_of_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "weekOfYear", « dateLike »).
@@ -301,9 +319,11 @@ ThrowCompletionOr<Value> calendar_week_of_year(GlobalObject& global_object, Obje
 }
 
 // 12.2.14 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
-ThrowCompletionOr<Value> calendar_days_in_week(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_days_in_week(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInWeek", « dateLike »).
@@ -311,9 +331,11 @@ ThrowCompletionOr<Value> calendar_days_in_week(GlobalObject& global_object, Obje
 }
 
 // 12.2.16 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
-ThrowCompletionOr<Value> calendar_days_in_month(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_days_in_month(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInMonth", « dateLike »).
@@ -321,9 +343,11 @@ ThrowCompletionOr<Value> calendar_days_in_month(GlobalObject& global_object, Obj
 }
 
 // 12.2.17 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
-ThrowCompletionOr<Value> calendar_days_in_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_days_in_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInYear", « dateLike »).
@@ -331,9 +355,11 @@ ThrowCompletionOr<Value> calendar_days_in_year(GlobalObject& global_object, Obje
 }
 
 // 12.2.18 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
-ThrowCompletionOr<Value> calendar_months_in_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_months_in_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "monthsInYear", « dateLike »).
@@ -341,9 +367,11 @@ ThrowCompletionOr<Value> calendar_months_in_year(GlobalObject& global_object, Ob
 }
 
 // 12.2.29 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
-ThrowCompletionOr<Value> calendar_in_leap_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_in_leap_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "inLeapYear", « dateLike »).
@@ -351,9 +379,10 @@ ThrowCompletionOr<Value> calendar_in_leap_year(GlobalObject& global_object, Obje
 }
 
 // 15.6.1.1 CalendarEra ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarera
-ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_era(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(calendar) is Object.
 
@@ -369,9 +398,10 @@ ThrowCompletionOr<Value> calendar_era(GlobalObject& global_object, Object& calen
 }
 
 // 15.6.1.2 CalendarEraYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarerayear
-ThrowCompletionOr<Value> calendar_era_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+ThrowCompletionOr<Value> calendar_era_year(VM& vm, Object& calendar, Object& date_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(calendar) is Object.
 
@@ -380,16 +410,17 @@ ThrowCompletionOr<Value> calendar_era_year(GlobalObject& global_object, Object& 
 
     // 3. If result is not undefined, set result to ? ToIntegerThrowOnInfinity(result).
     if (!result.is_undefined())
-        result = Value(TRY(to_integer_throw_on_infinity(global_object, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
+        result = Value(TRY(to_integer_throw_on_infinity(vm, result, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.eraYear.as_string(), "Infinity"sv)));
 
     // 4. Return result.
     return result;
 }
 
 // 12.2.20 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
-ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
+ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_like)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If Type(temporalCalendarLike) is Object, then
     if (temporal_calendar_like.is_object()) {
@@ -427,7 +458,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     // 3. If IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Set identifier to ? ParseTemporalCalendarString(identifier).
-        identifier = TRY(parse_temporal_calendar_string(global_object, identifier));
+        identifier = TRY(parse_temporal_calendar_string(vm, identifier));
 
         // b. If IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
         if (!is_builtin_calendar(identifier))
@@ -435,26 +466,24 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
     }
 
     // 4. Return ! CreateTemporalCalendar(identifier).
-    return MUST(create_temporal_calendar(global_object, identifier));
+    return MUST(create_temporal_calendar(vm, identifier));
 }
 
 // 12.2.21 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
-ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(GlobalObject& global_object, Value temporal_calendar_like)
+ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(VM& vm, Value temporal_calendar_like)
 {
     // 1. If temporalCalendarLike is undefined, then
     if (temporal_calendar_like.is_undefined()) {
         // a. Return ! GetISO8601Calendar().
-        return get_iso8601_calendar(global_object);
+        return get_iso8601_calendar(vm);
     }
     // 2. Return ? ToTemporalCalendar(temporalCalendarLike).
-    return to_temporal_calendar(global_object, temporal_calendar_like);
+    return to_temporal_calendar(vm, temporal_calendar_like);
 }
 
 // 12.2.22 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
-ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& global_object, Object& item)
+ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(VM& vm, Object& item)
 {
-    auto& vm = global_object.vm();
-
     // 1. If item has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
     // a. Return item.[[Calendar]].
     if (is<PlainDate>(item))
@@ -474,13 +503,14 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
     auto calendar_like = TRY(item.get(vm.names.calendar));
 
     // 3. Return ? ToTemporalCalendarWithISODefault(calendarLike).
-    return to_temporal_calendar_with_iso_default(global_object, calendar_like);
+    return to_temporal_calendar_with_iso_default(vm, calendar_like);
 }
 
 // 12.2.23 CalendarDateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardatefromfields
-ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+ThrowCompletionOr<PlainDate*> calendar_date_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is not present, set options to undefined.
 
@@ -497,9 +527,10 @@ ThrowCompletionOr<PlainDate*> calendar_date_from_fields(GlobalObject& global_obj
 }
 
 // 12.2.24 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
-ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is not present, set options to undefined.
 
@@ -516,9 +547,10 @@ ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(GlobalObject&
 }
 
 // 12.2.25 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
-ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
+ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object& calendar, Object const& fields, Object const* options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is not present, set options to undefined.
 
@@ -553,8 +585,11 @@ String format_calendar_annotation(StringView id, StringView show_calendar)
 }
 
 // 12.2.27 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
-ThrowCompletionOr<bool> calendar_equals(GlobalObject& global_object, Object& one, Object& two)
+ThrowCompletionOr<bool> calendar_equals(VM& vm, Object& one, Object& two)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. If one and two are the same Object value, return true.
     if (&one == &two)
         return true;
@@ -574,9 +609,11 @@ ThrowCompletionOr<bool> calendar_equals(GlobalObject& global_object, Object& one
 }
 
 // 12.2.28 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
-ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject& global_object, Object& one, Object& two)
+ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& two)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. If one and two are the same Object value, return two.
     if (&one == &two)
         return &two;
@@ -667,9 +704,10 @@ String build_iso_month_code(u8 month)
 }
 
 // 12.2.32 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
-ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object const& fields)
+ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: fields is an ordinary object with no more and no less than the own data properties listed in Table 13.
 
@@ -730,17 +768,15 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 }
 
 // 12.2.33 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fields, Object const& options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, &options));
+    auto overflow = TRY(to_temporal_overflow(vm, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> { "year"sv, "day"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> { "year"sv, "day"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
@@ -749,7 +785,7 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_objec
     VERIFY(year.is_number());
 
     // 6. Let month be ? ResolveISOMonth(fields).
-    auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
+    auto month = TRY(resolve_iso_month(vm, *prepared_fields));
 
     // 7. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
@@ -758,21 +794,19 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(GlobalObject& global_objec
     VERIFY(day.is_number());
 
     // 9. Return ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
-    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow);
+    return regulate_iso_date(vm, year.as_double(), month, day.as_double(), overflow);
 }
 
 // 12.2.34 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
-ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM& vm, Object const& fields, Object const& options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, &options));
+    auto overflow = TRY(to_temporal_overflow(vm, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "year"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "year"sv }));
 
     // 4. Let year be ! Get(fields, "year").
     auto year = MUST(prepared_fields->get(vm.names.year));
@@ -781,27 +815,25 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     VERIFY(year.is_number());
 
     // 6. Let month be ? ResolveISOMonth(fields).
-    auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
+    auto month = TRY(resolve_iso_month(vm, *prepared_fields));
 
     // 7. Let result be ? RegulateISOYearMonth(ℝ(year), month, overflow).
-    auto result = TRY(regulate_iso_year_month(global_object, year.as_double(), month, overflow));
+    auto result = TRY(regulate_iso_year_month(vm, year.as_double(), month, overflow));
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
     return ISOYearMonth { .year = result.year, .month = result.month, .reference_iso_day = 1 };
 }
 
 // 12.2.35 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
-ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object const& fields, Object const& options)
+ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& fields, Object const& options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, &options));
+    auto overflow = TRY(to_temporal_overflow(vm, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "day"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "day"sv }));
 
     // 4. Let month be ! Get(fields, "month").
     auto month_value = MUST(prepared_fields->get(vm.names.month));
@@ -819,7 +851,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     }
 
     // 8. Set month to ? ResolveISOMonth(fields).
-    auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
+    auto month = TRY(resolve_iso_month(vm, *prepared_fields));
 
     // 9. Let day be ! Get(fields, "day").
     auto day = MUST(prepared_fields->get(vm.names.day));
@@ -838,12 +870,12 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
         VERIFY(year.is_number());
 
         // b. Let result be ? RegulateISODate(ℝ(year), month, ℝ(day), overflow).
-        result = TRY(regulate_iso_date(global_object, year.as_double(), month, day.as_double(), overflow));
+        result = TRY(regulate_iso_date(vm, year.as_double(), month, day.as_double(), overflow));
     }
     // 13. Else,
     else {
         // a. Let result be ? RegulateISODate(referenceISOYear, month, ℝ(day), overflow).
-        result = TRY(regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), overflow));
+        result = TRY(regulate_iso_date(vm, reference_iso_year, month, day.as_double(), overflow));
     }
 
     // 14. Return the Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
@@ -923,10 +955,10 @@ u8 iso_day(Object& temporal_object)
 }
 
 // 12.2.40 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
-ThrowCompletionOr<Object*> default_merge_calendar_fields(GlobalObject& global_object, Object const& fields, Object const& additional_fields)
+ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& fields, Object const& additional_fields)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto* merged = Object::create(realm, global_object.object_prototype());

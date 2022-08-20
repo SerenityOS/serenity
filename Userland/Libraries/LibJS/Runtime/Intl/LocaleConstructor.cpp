@@ -28,10 +28,7 @@ struct LocaleAndKeys {
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
 static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
-    auto option = TRY(get_option(global_object, options, property, OptionType::String, values, Empty {}));
+    auto option = TRY(get_option(vm, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
         return Optional<String> {};
 
@@ -311,7 +308,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     opt.kf = TRY(get_string_option(vm, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto kn = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
+    auto kn = TRY(get_option(vm, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.

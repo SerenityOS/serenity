@@ -47,25 +47,24 @@ ThrowCompletionOr<Value> PlainTimeConstructor::call()
 ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Let hour be ? ToIntegerThrowOnInfinity(hour).
-    auto hour = TRY(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime));
+    auto hour = TRY(to_integer_throw_on_infinity(vm, vm.argument(0), ErrorType::TemporalInvalidPlainTime));
 
     // 3. Let minute be ? ToIntegerThrowOnInfinity(hour).
-    auto minute = TRY(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime));
+    auto minute = TRY(to_integer_throw_on_infinity(vm, vm.argument(1), ErrorType::TemporalInvalidPlainTime));
 
     // 4. Let second be ? ToIntegerThrowOnInfinity(hour).
-    auto second = TRY(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime));
+    auto second = TRY(to_integer_throw_on_infinity(vm, vm.argument(2), ErrorType::TemporalInvalidPlainTime));
 
     // 5. Let millisecond be ? ToIntegerThrowOnInfinity(hour).
-    auto millisecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime));
+    auto millisecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(3), ErrorType::TemporalInvalidPlainTime));
 
     // 6. Let microsecond be ? ToIntegerThrowOnInfinity(hour).
-    auto microsecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime));
+    auto microsecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(4), ErrorType::TemporalInvalidPlainTime));
 
     // 7. Let nanosecond be ? ToIntegerThrowOnInfinity(hour).
-    auto nanosecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime));
+    auto nanosecond = TRY(to_integer_throw_on_infinity(vm, vm.argument(5), ErrorType::TemporalInvalidPlainTime));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalTime will immediately check that these values are valid
@@ -75,17 +74,17 @@ ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_t
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainTime);
 
     // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
-    return TRY(create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
+    return TRY(create_temporal_time(vm, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from
 JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(vm, options));
 
     auto item = vm.argument(0);
 
@@ -93,21 +92,21 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     if (item.is_object() && is<PlainTime>(item.as_object())) {
         auto& plain_time = static_cast<PlainTime&>(item.as_object());
         // a. Return ! CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
-        return MUST(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
+        return MUST(create_temporal_time(vm, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
     }
 
     // 4. Return ? ToTemporalTime(item, overflow).
-    return TRY(to_temporal_time(global_object, item, overflow));
+    return TRY(to_temporal_time(vm, item, overflow));
 }
 
 // 4.2.3 Temporal.PlainTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare
 JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalTime(one).
-    auto* one = TRY(to_temporal_time(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_time(vm, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalTime(two).
-    auto* two = TRY(to_temporal_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_time(vm, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareTemporalTime(one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_temporal_time(one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));

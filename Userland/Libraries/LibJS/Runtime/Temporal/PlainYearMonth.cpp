@@ -33,9 +33,10 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
 }
 
 // 9.5.1 ToTemporalYearMonth ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth
-ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_object, Value item, Object const* options)
+ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM& vm, Value item, Object const* options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
@@ -51,43 +52,41 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
         }
 
         // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
-        auto* calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
+        auto* calendar = TRY(get_temporal_calendar_with_iso_default(vm, item_object));
 
         // c. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
-        auto field_names = TRY(calendar_fields(global_object, *calendar, { "month"sv, "monthCode"sv, "year"sv }));
+        auto field_names = TRY(calendar_fields(vm, *calendar, { "month"sv, "monthCode"sv, "year"sv }));
 
         // d. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
-        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, Vector<StringView> {}));
+        auto* fields = TRY(prepare_temporal_fields(vm, item_object, field_names, Vector<StringView> {}));
 
         // e. Return ? CalendarYearMonthFromFields(calendar, fields, options).
-        return calendar_year_month_from_fields(global_object, *calendar, *fields, options);
+        return calendar_year_month_from_fields(vm, *calendar, *fields, options);
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)TRY(to_temporal_overflow(global_object, options));
+    (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
-    auto result = TRY(parse_temporal_year_month_string(global_object, string));
+    auto result = TRY(parse_temporal_year_month_string(vm, string));
 
     // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
 
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
-    auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
+    auto* creation_result = TRY(create_temporal_year_month(vm, result.year, result.month, *calendar, result.day));
 
     // 9. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISODay]] internal slot of the result.
     // 10. Return ? CalendarYearMonthFromFields(calendar, result).
-    return calendar_year_month_from_fields(global_object, *calendar, *creation_result);
+    return calendar_year_month_from_fields(vm, *calendar, *creation_result);
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth
-ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, double year, double month, StringView overflow)
+ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(VM& vm, double year, double month, StringView overflow)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: year and month are integers.
     VERIFY(year == trunc(year) && month == trunc(month));
 
@@ -187,9 +186,10 @@ ISOYearMonth balance_iso_year_month(double year, double month)
 }
 
 // 9.5.6 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
-ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& global_object, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
+ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: isoYear, isoMonth, and referenceISODay are integers.
     // 2. Assert: Type(calendar) is Object.
@@ -218,8 +218,11 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
 }
 
 // 9.5.7 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
-ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_object, PlainYearMonth& year_month, StringView show_calendar)
+ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Type(yearMonth) is Object.
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
 
@@ -247,94 +250,92 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
 }
 
 // 9.5.8 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
-ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(GlobalObject& global_object, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
+ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
 {
-    auto& vm = global_object.vm();
-
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
     i8 sign = operation == DifferenceOperation::Since ? -1 : 1;
 
     // 2. Set other to ? ToTemporalYearMonth(other).
-    auto* other = TRY(to_temporal_year_month(global_object, other_value));
+    auto* other = TRY(to_temporal_year_month(vm, other_value));
 
     // 3. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month.calendar();
 
     // 4. If ? CalendarEquals(calendar, other.[[Calendar]]) is false, throw a RangeError exception.
-    if (!TRY(calendar_equals(global_object, calendar, other->calendar())))
+    if (!TRY(calendar_equals(vm, calendar, other->calendar())))
         return vm.throw_completion<RangeError>(ErrorType::TemporalDifferentCalendars);
 
     // 5. Let settings be ? GetDifferenceSettings(operation, options, date, « "week", "day" », "month", "year").
-    auto settings = TRY(get_difference_settings(global_object, operation, options_value, UnitGroup::Date, { "week"sv, "day"sv }, { "month"sv }, "year"sv));
+    auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::Date, { "week"sv, "day"sv }, { "month"sv }, "year"sv));
 
     // 6. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
+    auto field_names = TRY(calendar_fields(vm, calendar, { "monthCode"sv, "year"sv }));
 
     // 7. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
-    auto* other_fields = TRY(prepare_temporal_fields(global_object, *other, field_names, Vector<StringView> {}));
+    auto* other_fields = TRY(prepare_temporal_fields(vm, *other, field_names, Vector<StringView> {}));
 
     // 8. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
     MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 9. Let otherDate be ? CalendarDateFromFields(calendar, otherFields).
-    auto* other_date = TRY(calendar_date_from_fields(global_object, calendar, *other_fields));
+    auto* other_date = TRY(calendar_date_from_fields(vm, calendar, *other_fields));
 
     // 10. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* this_fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, Vector<StringView> {}));
+    auto* this_fields = TRY(prepare_temporal_fields(vm, year_month, field_names, Vector<StringView> {}));
 
     // 11. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
     MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
 
     // 12. Let thisDate be ? CalendarDateFromFields(calendar, thisFields).
-    auto* this_date = TRY(calendar_date_from_fields(global_object, calendar, *this_fields));
+    auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, settings.options, settings.largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
 
     // 14. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
-    auto* duration = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));
+    auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *until_options));
 
     auto result = DurationRecord { duration->years(), duration->months(), 0, 0, 0, 0, 0, 0, 0, 0 };
 
     // 15. If settings.[[SmallestUnit]] is not "month" or settings.[[RoundingIncrement]] ≠ 1, then
     if (settings.smallest_unit != "month"sv || settings.rounding_increment != 1) {
         // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]], thisDate)).[[DurationRecord]].
-        result = TRY(round_duration(global_object, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date)).duration_record;
+        result = TRY(round_duration(vm, result.years, result.months, 0, 0, 0, 0, 0, 0, 0, 0, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, this_date)).duration_record;
     }
 
     // 16. Return ! CreateTemporalDuration(sign × result.[[Years]], sign × result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
-    return MUST(create_temporal_duration(global_object, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+    return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 // 9.5.9 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
-ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(GlobalObject& global_object, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
+ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(VM& vm, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let duration be ? ToTemporalDuration(temporalDurationLike).
-    auto* duration = TRY(to_temporal_duration(global_object, temporal_duration_like));
+    auto* duration = TRY(to_temporal_duration(vm, temporal_duration_like));
 
     // 2. If operation is subtract, then
     if (operation == ArithmeticOperation::Subtract) {
         // a. Set duration to ! CreateNegatedTemporalDuration(duration).
-        duration = create_negated_temporal_duration(global_object, *duration);
+        duration = create_negated_temporal_duration(vm, *duration);
     }
 
     // 3. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = TRY(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from((i64)duration->nanoseconds()), "day"sv));
+    auto balance_result = TRY(balance_duration(vm, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from((i64)duration->nanoseconds()), "day"sv));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, options_value));
+    auto* options = TRY(get_options_object(vm, options_value));
 
     // 5. Let calendar be yearMonth.[[Calendar]].
     auto& calendar = year_month.calendar();
 
     // 6. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
+    auto field_names = TRY(calendar_fields(vm, calendar, { "monthCode"sv, "year"sv }));
 
     // 7. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, year_month, field_names, Vector<StringView> {}));
+    auto* fields = TRY(prepare_temporal_fields(vm, year_month, field_names, Vector<StringView> {}));
 
     // 8. Set sign to ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto sign = duration_sign(duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0);
@@ -344,10 +345,10 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     // 9. If sign < 0, then
     if (sign < 0) {
         // a. Let dayFromCalendar be ? CalendarDaysInMonth(calendar, yearMonth).
-        auto day_from_calendar = TRY(calendar_days_in_month(global_object, calendar, year_month));
+        auto day_from_calendar = TRY(calendar_days_in_month(vm, calendar, year_month));
 
         // b. Let day be ? ToPositiveInteger(dayFromCalendar).
-        day = TRY(to_positive_integer(global_object, day_from_calendar));
+        day = TRY(to_positive_integer(vm, day_from_calendar));
     }
     // 10. Else,
     else {
@@ -359,10 +360,10 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     MUST(fields->create_data_property_or_throw(vm.names.day, Value(day)));
 
     // 12. Let date be ? CalendarDateFromFields(calendar, fields).
-    auto* date = TRY(calendar_date_from_fields(global_object, calendar, *fields));
+    auto* date = TRY(calendar_date_from_fields(vm, calendar, *fields));
 
     // 13. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
-    auto* duration_to_add = MUST(create_temporal_duration(global_object, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
+    auto* duration_to_add = MUST(create_temporal_duration(vm, duration->years(), duration->months(), duration->weeks(), balance_result.days, 0, 0, 0, 0, 0, 0));
 
     // 14. Let optionsCopy be OrdinaryObjectCreate(null).
     auto* options_copy = Object::create(realm, nullptr);
@@ -380,13 +381,13 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     }
 
     // 17. Let addedDate be ? CalendarDateAdd(calendar, date, durationToAdd, options).
-    auto* added_date = TRY(calendar_date_add(global_object, calendar, date, *duration_to_add, options));
+    auto* added_date = TRY(calendar_date_add(vm, calendar, date, *duration_to_add, options));
 
     // 18. Let addedDateFields be ? PrepareTemporalFields(addedDate, fieldNames, «»).
-    auto* added_date_fields = TRY(prepare_temporal_fields(global_object, *added_date, field_names, Vector<StringView> {}));
+    auto* added_date_fields = TRY(prepare_temporal_fields(vm, *added_date, field_names, Vector<StringView> {}));
 
     // 19. Return ? CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy).
-    return calendar_year_month_from_fields(global_object, calendar, *added_date_fields, options_copy);
+    return calendar_year_month_from_fields(vm, calendar, *added_date_fields, options_copy);
 }
 
 }

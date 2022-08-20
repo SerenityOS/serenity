@@ -49,40 +49,39 @@ ThrowCompletionOr<Value> DurationConstructor::call()
 ThrowCompletionOr<Object*> DurationConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Let y be ? ToIntegerWithoutRounding(years).
-    auto y = TRY(to_integer_without_rounding(global_object, vm.argument(0), ErrorType::TemporalInvalidDuration));
+    auto y = TRY(to_integer_without_rounding(vm, vm.argument(0), ErrorType::TemporalInvalidDuration));
 
     // 3. Let mo be ? ToIntegerWithoutRounding(months).
-    auto mo = TRY(to_integer_without_rounding(global_object, vm.argument(1), ErrorType::TemporalInvalidDuration));
+    auto mo = TRY(to_integer_without_rounding(vm, vm.argument(1), ErrorType::TemporalInvalidDuration));
 
     // 4. Let w be ? ToIntegerWithoutRounding(weeks).
-    auto w = TRY(to_integer_without_rounding(global_object, vm.argument(2), ErrorType::TemporalInvalidDuration));
+    auto w = TRY(to_integer_without_rounding(vm, vm.argument(2), ErrorType::TemporalInvalidDuration));
 
     // 5. Let d be ? ToIntegerWithoutRounding(days).
-    auto d = TRY(to_integer_without_rounding(global_object, vm.argument(3), ErrorType::TemporalInvalidDuration));
+    auto d = TRY(to_integer_without_rounding(vm, vm.argument(3), ErrorType::TemporalInvalidDuration));
 
     // 6. Let h be ? ToIntegerWithoutRounding(hours).
-    auto h = TRY(to_integer_without_rounding(global_object, vm.argument(4), ErrorType::TemporalInvalidDuration));
+    auto h = TRY(to_integer_without_rounding(vm, vm.argument(4), ErrorType::TemporalInvalidDuration));
 
     // 7. Let m be ? ToIntegerWithoutRounding(minutes).
-    auto m = TRY(to_integer_without_rounding(global_object, vm.argument(5), ErrorType::TemporalInvalidDuration));
+    auto m = TRY(to_integer_without_rounding(vm, vm.argument(5), ErrorType::TemporalInvalidDuration));
 
     // 8. Let s be ? ToIntegerWithoutRounding(seconds).
-    auto s = TRY(to_integer_without_rounding(global_object, vm.argument(6), ErrorType::TemporalInvalidDuration));
+    auto s = TRY(to_integer_without_rounding(vm, vm.argument(6), ErrorType::TemporalInvalidDuration));
 
     // 9. Let ms be ? ToIntegerWithoutRounding(milliseconds).
-    auto ms = TRY(to_integer_without_rounding(global_object, vm.argument(7), ErrorType::TemporalInvalidDuration));
+    auto ms = TRY(to_integer_without_rounding(vm, vm.argument(7), ErrorType::TemporalInvalidDuration));
 
     // 10. Let mis be ? ToIntegerWithoutRounding(microseconds).
-    auto mis = TRY(to_integer_without_rounding(global_object, vm.argument(8), ErrorType::TemporalInvalidDuration));
+    auto mis = TRY(to_integer_without_rounding(vm, vm.argument(8), ErrorType::TemporalInvalidDuration));
 
     // 11. Let ns be ? ToIntegerWithoutRounding(nanoseconds).
-    auto ns = TRY(to_integer_without_rounding(global_object, vm.argument(9), ErrorType::TemporalInvalidDuration));
+    auto ns = TRY(to_integer_without_rounding(vm, vm.argument(9), ErrorType::TemporalInvalidDuration));
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
-    return TRY(create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
+    return TRY(create_temporal_duration(vm, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
@@ -95,33 +94,33 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
         auto& duration = static_cast<Duration&>(item.as_object());
 
         // a. Return ! CreateTemporalDuration(item.[[Years]], item.[[Months]], item.[[Weeks]], item.[[Days]], item.[[Hours]], item.[[Minutes]], item.[[Seconds]], item.[[Milliseconds]], item.[[Microseconds]], item.[[Nanoseconds]]).
-        return MUST(create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds()));
+        return MUST(create_temporal_duration(vm, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds()));
     }
 
     // 2. Return ? ToTemporalDuration(item).
-    return TRY(to_temporal_duration(global_object, item));
+    return TRY(to_temporal_duration(vm, item));
 }
 
 // 7.2.3 Temporal.Duration.compare ( one, two [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.compare
 JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDuration(one).
-    auto* one = TRY(to_temporal_duration(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_duration(vm, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalDuration(two).
-    auto* two = TRY(to_temporal_duration(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_duration(vm, vm.argument(1)));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(2)));
+    auto const* options = TRY(get_options_object(vm, vm.argument(2)));
 
     // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
-    auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
+    auto relative_to = TRY(to_relative_temporal_object(vm, *options));
 
     // 5. Let shift1 be ? CalculateOffsetShift(relativeTo, one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]]).
-    auto shift1 = TRY(calculate_offset_shift(global_object, relative_to, one->years(), one->months(), one->weeks(), one->days()));
+    auto shift1 = TRY(calculate_offset_shift(vm, relative_to, one->years(), one->months(), one->weeks(), one->days()));
 
     // 6. Let shift2 be ? CalculateOffsetShift(relativeTo, two.[[Years]], two.[[Months]], two.[[Weeks]], two.[[Days]]).
-    auto shift2 = TRY(calculate_offset_shift(global_object, relative_to, two->years(), two->months(), two->weeks(), two->days()));
+    auto shift2 = TRY(calculate_offset_shift(vm, relative_to, two->years(), two->months(), two->weeks(), two->days()));
 
     double days1;
     double days2;
@@ -129,10 +128,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     // 7. If any of one.[[Years]], two.[[Years]], one.[[Months]], two.[[Months]], one.[[Weeks]], or two.[[Weeks]] are not 0, then
     if (one->years() != 0 || two->years() != 0 || one->months() != 0 || two->months() != 0 || one->weeks() != 0 || two->weeks() != 0) {
         // a. Let unbalanceResult1 be ? UnbalanceDurationRelative(one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]], "day", relativeTo).
-        auto unbalance_result1 = TRY(unbalance_duration_relative(global_object, one->years(), one->months(), one->weeks(), one->days(), "day", relative_to));
+        auto unbalance_result1 = TRY(unbalance_duration_relative(vm, one->years(), one->months(), one->weeks(), one->days(), "day", relative_to));
 
         // b. Let unbalanceResult2 be ? UnbalanceDurationRelative(two.[[Years]], two.[[Months]], two.[[Weeks]], two.[[Days]], "day", relativeTo).
-        auto unbalance_result2 = TRY(unbalance_duration_relative(global_object, two->years(), two->months(), two->weeks(), two->days(), "day", relative_to));
+        auto unbalance_result2 = TRY(unbalance_duration_relative(vm, two->years(), two->months(), two->weeks(), two->days(), "day", relative_to));
 
         // c. Let days1 be unbalanceResult1.[[Days]].
         days1 = unbalance_result1.days;

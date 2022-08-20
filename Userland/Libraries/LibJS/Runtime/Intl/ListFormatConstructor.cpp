@@ -58,13 +58,13 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(Temporal::get_options_object(global_object, options_value));
+    auto* options = TRY(Temporal::get_options_object(vm, options_value));
 
     // 5. Let opt be a new Record.
     LocaleOptions opt {};
 
     // 6. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 7. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
@@ -78,13 +78,13 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     list_format->set_locale(move(result.locale));
 
     // 11. Let type be ? GetOption(options, "type", "string", « "conjunction", "disjunction", "unit" », "conjunction").
-    auto type = TRY(get_option(global_object, *options, vm.names.type, OptionType::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
+    auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
     list_format->set_type(type.as_string().string());
 
     // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
-    auto style = TRY(get_option(global_object, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
+    auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
     list_format->set_style(style.as_string().string());

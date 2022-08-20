@@ -91,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::year_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarYear(calendar, temporalDate).
-    return Value(TRY(calendar_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_year(vm, calendar, *temporal_date)));
 }
 
 // 3.3.5 get Temporal.PlainDate.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.month
@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarMonth(calendar, temporalDate).
-    return Value(TRY(calendar_month(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_month(vm, calendar, *temporal_date)));
 }
 
 // 3.3.6 get Temporal.PlainDate.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthCode
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_code_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarMonthCode(calendar, temporalDate).
-    return js_string(vm, TRY(calendar_month_code(global_object, calendar, *temporal_date)));
+    return js_string(vm, TRY(calendar_month_code(vm, calendar, *temporal_date)));
 }
 
 // 3.3.7 get Temporal.PlainDate.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.day
@@ -133,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarDay(calendar, temporalDate).
-    return Value(TRY(calendar_day(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_day(vm, calendar, *temporal_date)));
 }
 
 // 3.3.8 get Temporal.PlainDate.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofweek
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_week_getter)
     auto& calendar = temporal_date->calendar();
 
     // Return ? CalendarDayOfWeek(calendar, temporalDate).
-    return Value(TRY(calendar_day_of_week(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_day_of_week(vm, calendar, *temporal_date)));
 }
 
 // 3.3.9 get Temporal.PlainDate.prototype.dayOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofyear
@@ -161,7 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_year_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarDayOfYear(calendar, temporalDate).
-    return Value(TRY(calendar_day_of_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_day_of_year(vm, calendar, *temporal_date)));
 }
 
 // 3.3.10 get Temporal.PlainDate.prototype.weekOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.weekofyear
@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::week_of_year_getter)
     auto& calendar = temporal_date->calendar();
 
     // Return ? CalendarWeekOfYear(calendar, temporalDate).
-    return Value(TRY(calendar_week_of_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_week_of_year(vm, calendar, *temporal_date)));
 }
 
 // 3.3.11 get Temporal.PlainDate.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinweek
@@ -189,7 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_week_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarDaysInWeek(calendar, temporalDate).
-    return Value(TRY(calendar_days_in_week(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_days_in_week(vm, calendar, *temporal_date)));
 }
 
 // 3.3.12 get Temporal.PlainDate.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinmonth
@@ -203,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_month_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarDaysInMonth(calendar, temporalDate).
-    return Value(TRY(calendar_days_in_month(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_days_in_month(vm, calendar, *temporal_date)));
 }
 
 // 3.3.13 get Temporal.PlainDate.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.daysinyear
@@ -217,7 +217,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_year_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarDaysInYear(calendar, temporalDate).
-    return Value(TRY(calendar_days_in_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_days_in_year(vm, calendar, *temporal_date)));
 }
 
 // 3.3.14 get Temporal.PlainDate.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.monthsinyear
@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::months_in_year_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarMonthsInYear(calendar, temporalDate).
-    return Value(TRY(calendar_months_in_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_months_in_year(vm, calendar, *temporal_date)));
 }
 
 // 3.3.15 get Temporal.PlainDate.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.inleapyear
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::in_leap_year_getter)
     auto& calendar = temporal_date->calendar();
 
     // 4. Return ? CalendarInLeapYear(calendar, temporalDate).
-    return Value(TRY(calendar_in_leap_year(global_object, calendar, *temporal_date)));
+    return Value(TRY(calendar_in_leap_year(vm, calendar, *temporal_date)));
 }
 
 // 15.6.5.2 get Temporal.PlainDate.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.era
@@ -259,7 +259,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::era_getter)
     auto& calendar = plain_date->calendar();
 
     // 4. Return ? CalendarEra(calendar, plainDate).
-    return TRY(calendar_era(global_object, calendar, *plain_date));
+    return TRY(calendar_era(vm, calendar, *plain_date));
 }
 
 // 15.6.5.3 get Temporal.PlainDate.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.erayear
@@ -273,7 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::era_year_getter)
     auto& calendar = plain_date->calendar();
 
     // 4. Return ? CalendarEraYear(calendar, plainDate).
-    return TRY(calendar_era_year(global_object, calendar, *plain_date));
+    return TRY(calendar_era_year(vm, calendar, *plain_date));
 }
 
 // 3.3.16 Temporal.PlainDate.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainyearmonth
@@ -287,13 +287,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_year_month)
     auto& calendar = temporal_date->calendar();
 
     // 4. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
+    auto field_names = TRY(calendar_fields(vm, calendar, { "monthCode"sv, "year"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, Vector<StringView> {}));
+    auto* fields = TRY(prepare_temporal_fields(vm, *temporal_date, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarYearMonthFromFields(calendar, fields).
-    return TRY(calendar_year_month_from_fields(global_object, calendar, *fields));
+    return TRY(calendar_year_month_from_fields(vm, calendar, *fields));
 }
 
 // 3.3.17 Temporal.PlainDate.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainmonthday
@@ -307,13 +307,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
     auto& calendar = temporal_date->calendar();
 
     // 4. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv }));
+    auto field_names = TRY(calendar_fields(vm, calendar, { "day"sv, "monthCode"sv }));
 
     // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, Vector<StringView> {}));
+    auto* fields = TRY(prepare_temporal_fields(vm, *temporal_date, field_names, Vector<StringView> {}));
 
     // 6. Return ? CalendarMonthDayFromFields(calendar, fields).
-    return TRY(calendar_month_day_from_fields(global_object, calendar, *fields));
+    return TRY(calendar_month_day_from_fields(vm, calendar, *fields));
 }
 
 // 3.3.18 Temporal.PlainDate.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.getisofields
@@ -352,13 +352,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::add)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Let duration be ? ToTemporalDuration(temporalDurationLike).
-    auto* duration = TRY(to_temporal_duration(global_object, vm.argument(0)));
+    auto* duration = TRY(to_temporal_duration(vm, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 5. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, duration, options).
-    return TRY(calendar_date_add(global_object, temporal_date->calendar(), temporal_date, *duration, options));
+    return TRY(calendar_date_add(vm, temporal_date->calendar(), temporal_date, *duration, options));
 }
 
 // 3.3.20 Temporal.PlainDate.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.subtract
@@ -369,16 +369,16 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::subtract)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Let duration be ? ToTemporalDuration(temporalDurationLike).
-    auto* duration = TRY(to_temporal_duration(global_object, vm.argument(0)));
+    auto* duration = TRY(to_temporal_duration(vm, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 5. Let negatedDuration be ! CreateNegatedTemporalDuration(duration).
-    auto* negated_duration = create_negated_temporal_duration(global_object, *duration);
+    auto* negated_duration = create_negated_temporal_duration(vm, *duration);
 
     // 6. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, negatedDuration, options).
-    return TRY(calendar_date_add(global_object, temporal_date->calendar(), temporal_date, *negated_duration, options));
+    return TRY(calendar_date_add(vm, temporal_date->calendar(), temporal_date, *negated_duration, options));
 }
 
 // 3.3.21 Temporal.PlainDate.prototype.with ( temporalDateLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.with
@@ -397,31 +397,31 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateLike).
-    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_date_like.as_object()));
+    TRY(reject_object_with_calendar_or_time_zone(vm, temporal_date_like.as_object()));
 
     // 5. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
 
     // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
-    auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
+    auto field_names = TRY(calendar_fields(vm, calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
 
     // 7. Let partialDate be ? PrepareTemporalFields(temporalDateLike, fieldNames, partial).
-    auto* partial_date = TRY(prepare_temporal_fields(global_object, temporal_date_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
+    auto* partial_date = TRY(prepare_temporal_fields(vm, temporal_date_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
 
     // 8. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 9. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
-    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, Vector<StringView> {}));
+    auto* fields = TRY(prepare_temporal_fields(vm, *temporal_date, field_names, Vector<StringView> {}));
 
     // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialDate).
-    fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_date));
+    fields = TRY(calendar_merge_fields(vm, calendar, *fields, *partial_date));
 
     // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
-    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, Vector<StringView> {}));
+    fields = TRY(prepare_temporal_fields(vm, *fields, field_names, Vector<StringView> {}));
 
     // 12. Return ? CalendarDateFromFields(calendar, fields, options).
-    return TRY(calendar_date_from_fields(global_object, calendar, *fields, options));
+    return TRY(calendar_date_from_fields(vm, calendar, *fields, options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
@@ -434,10 +434,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with_calendar)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = TRY(to_temporal_calendar(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar(vm, calendar_like));
 
     // 4. Return ! CreateTemporalDate(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], calendar).
-    return MUST(create_temporal_date(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), *calendar));
+    return MUST(create_temporal_date(vm, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), *calendar));
 }
 
 // 3.3.23 Temporal.PlainDate.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until
@@ -451,7 +451,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Return ? DifferenceTemporalPlainDate(until, temporalDate, other, options).
-    return TRY(difference_temporal_plain_date(global_object, DifferenceOperation::Until, *temporal_date, other, options));
+    return TRY(difference_temporal_plain_date(vm, DifferenceOperation::Until, *temporal_date, other, options));
 }
 
 // 3.3.24 Temporal.PlainDate.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.since
@@ -465,7 +465,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Return ? DifferenceTemporalPlainDate(since, temporalDate, other, options).
-    return TRY(difference_temporal_plain_date(global_object, DifferenceOperation::Since, *temporal_date, other, options));
+    return TRY(difference_temporal_plain_date(vm, DifferenceOperation::Since, *temporal_date, other, options));
 }
 
 // 3.3.25 Temporal.PlainDate.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals
@@ -476,7 +476,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::equals)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalDate(other).
-    auto* other = TRY(to_temporal_date(global_object, vm.argument(0)));
+    auto* other = TRY(to_temporal_date(vm, vm.argument(0)));
 
     // 4. If temporalDate.[[ISOYear]] ≠ other.[[ISOYear]], return false.
     if (temporal_date->iso_year() != other->iso_year())
@@ -488,7 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::equals)
     if (temporal_date->iso_day() != other->iso_day())
         return Value(false);
     // 7. Return ? CalendarEquals(temporalDate.[[Calendar]], other.[[Calendar]]).
-    return Value(TRY(calendar_equals(global_object, temporal_date->calendar(), other->calendar())));
+    return Value(TRY(calendar_equals(vm, temporal_date->calendar(), other->calendar())));
 }
 
 // 3.3.26 Temporal.PlainDate.prototype.toPlainDateTime ( [ temporalTime ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplaindatetime
@@ -501,14 +501,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_date_time)
     // 3. If temporalTime is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Return ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], 0, 0, 0, 0, 0, 0, temporalDate.[[Calendar]]).
-        return TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), 0, 0, 0, 0, 0, 0, temporal_date->calendar()));
+        return TRY(create_temporal_date_time(vm, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), 0, 0, 0, 0, 0, 0, temporal_date->calendar()));
     }
 
     // 4. Set temporalTime to ? ToTemporalTime(temporalTime).
-    auto* temporal_time = TRY(to_temporal_time(global_object, vm.argument(0)));
+    auto* temporal_time = TRY(to_temporal_time(vm, vm.argument(0)));
 
     // 5. Return ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], temporalDate.[[Calendar]]).
-    return TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_date->calendar()));
+    return TRY(create_temporal_date_time(vm, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_date->calendar()));
 }
 
 // 3.3.27 Temporal.PlainDate.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime
@@ -531,14 +531,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_zoned_date_time)
         // b. If timeZoneLike is undefined, then
         if (time_zone_like.is_undefined()) {
             // i. Let timeZone be ? ToTemporalTimeZone(item).
-            time_zone = TRY(to_temporal_time_zone(global_object, item));
+            time_zone = TRY(to_temporal_time_zone(vm, item));
 
             // ii. Let temporalTime be undefined.
         }
         // c. Else,
         else {
             // i. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
-            time_zone = TRY(to_temporal_time_zone(global_object, time_zone_like));
+            time_zone = TRY(to_temporal_time_zone(vm, time_zone_like));
 
             // ii. Let temporalTime be ? Get(item, "plainTime").
             temporal_time_value = TRY(item.as_object().get(vm.names.plainTime));
@@ -547,7 +547,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_zoned_date_time)
     // 4. Else,
     else {
         // a. Let timeZone be ? ToTemporalTimeZone(item).
-        time_zone = TRY(to_temporal_time_zone(global_object, item));
+        time_zone = TRY(to_temporal_time_zone(vm, item));
 
         // b. Let temporalTime be undefined.
     }
@@ -557,22 +557,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_zoned_date_time)
     // 5. If temporalTime is undefined, then
     if (temporal_time_value.is_undefined()) {
         // a. Let temporalDateTime be ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], 0, 0, 0, 0, 0, 0, temporalDate.[[Calendar]]).
-        temporal_date_time = TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), 0, 0, 0, 0, 0, 0, temporal_date->calendar()));
+        temporal_date_time = TRY(create_temporal_date_time(vm, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), 0, 0, 0, 0, 0, 0, temporal_date->calendar()));
     }
     // 6. Else,
     else {
         // a. Set temporalTime to ? ToTemporalTime(temporalTime).
-        auto* temporal_time = TRY(to_temporal_time(global_object, temporal_time_value));
+        auto* temporal_time = TRY(to_temporal_time(vm, temporal_time_value));
 
         // b. Let temporalDateTime be ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], temporalDate.[[Calendar]]).
-        temporal_date_time = TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_time->calendar()));
+        temporal_date_time = TRY(create_temporal_date_time(vm, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_time->calendar()));
     }
 
     // 7. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, temporalDateTime, "compatible").
-    auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *temporal_date_time, "compatible"sv));
+    auto* instant = TRY(builtin_time_zone_get_instant_for(vm, time_zone, *temporal_date_time, "compatible"sv));
 
     // 8. Return ! CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, temporalDate.[[Calendar]]).
-    return MUST(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, temporal_date->calendar()));
+    return MUST(create_temporal_zoned_date_time(vm, instant->nanoseconds(), *time_zone, temporal_date->calendar()));
 }
 
 // 3.3.28 Temporal.PlainDate.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring
@@ -583,13 +583,13 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+    auto* options = TRY(get_options_object(vm, vm.argument(0)));
 
     // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = TRY(to_show_calendar_option(global_object, *options));
+    auto show_calendar = TRY(to_show_calendar_option(vm, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
-    return js_string(vm, TRY(temporal_date_to_string(global_object, *temporal_date, show_calendar)));
+    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, show_calendar)));
 }
 
 // 3.3.29 Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tolocalestring
@@ -601,7 +601,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_locale_string)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    return js_string(vm, TRY(temporal_date_to_string(global_object, *temporal_date, "auto"sv)));
+    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
 }
 
 // 3.3.30 Temporal.PlainDate.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tojson
@@ -612,7 +612,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_json)
     auto* temporal_date = TRY(typed_this_object(global_object));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
-    return js_string(vm, TRY(temporal_date_to_string(global_object, *temporal_date, "auto"sv)));
+    return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
 }
 
 // 3.3.31 Temporal.PlainDate.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.valueof
