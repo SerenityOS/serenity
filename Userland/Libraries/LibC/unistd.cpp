@@ -8,6 +8,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <alloca.h>
 #include <assert.h>
 #include <bits/pthread_cancel.h>
@@ -186,7 +187,7 @@ int execvpe(char const* filename, char* const argv[], char* const envp[])
     ScopedValueRollback errno_rollback(errno);
     String path = getenv("PATH");
     if (path.is_empty())
-        path = "/bin:/usr/bin";
+        path = DEFAULT_PATH;
     auto parts = path.split(':');
     for (auto& part : parts) {
         auto candidate = String::formatted("{}/{}", part, filename);

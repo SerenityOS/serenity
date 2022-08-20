@@ -128,7 +128,7 @@ static void update_path_environment_variable()
 
     if (path.length())
         path.append(':');
-    path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv);
+    path.append(DEFAULT_PATH_SV);
     setenv("PATH", path.to_string().characters(), true);
 }
 
