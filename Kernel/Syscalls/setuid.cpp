@@ -10,7 +10,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     if (new_euid == (uid_t)-1)
@@ -41,7 +41,7 @@ ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
 
 ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     if (new_egid == (uid_t)-1)
@@ -72,7 +72,7 @@ ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
 
 ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     if (new_uid == (uid_t)-1)
@@ -103,7 +103,7 @@ ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
 
 ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     if (new_gid == (uid_t)-1)
@@ -134,7 +134,7 @@ ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
 
 ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     auto credentials = this->credentials();
@@ -171,7 +171,7 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
 
 ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID new_suid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     auto credentials = this->credentials();
@@ -207,7 +207,7 @@ ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID
 
 ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, GroupID new_sgid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     auto credentials = this->credentials();
@@ -243,7 +243,7 @@ ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Grou
 
 ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> user_gids)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
 
     auto credentials = this->credentials();

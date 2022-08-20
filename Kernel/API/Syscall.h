@@ -82,10 +82,10 @@ enum class NeedsBigProcessLock {
     S(get_stack_bounds, NeedsBigProcessLock::No)            \
     S(get_thread_name, NeedsBigProcessLock::Yes)            \
     S(getcwd, NeedsBigProcessLock::No)                      \
-    S(getegid, NeedsBigProcessLock::Yes)                    \
-    S(geteuid, NeedsBigProcessLock::Yes)                    \
-    S(getgid, NeedsBigProcessLock::Yes)                     \
-    S(getgroups, NeedsBigProcessLock::Yes)                  \
+    S(getegid, NeedsBigProcessLock::No)                     \
+    S(geteuid, NeedsBigProcessLock::No)                     \
+    S(getgid, NeedsBigProcessLock::No)                      \
+    S(getgroups, NeedsBigProcessLock::No)                   \
     S(gethostname, NeedsBigProcessLock::No)                 \
     S(getkeymap, NeedsBigProcessLock::No)                   \
     S(getpeername, NeedsBigProcessLock::Yes)                \
@@ -94,14 +94,14 @@ enum class NeedsBigProcessLock {
     S(getpid, NeedsBigProcessLock::No)                      \
     S(getppid, NeedsBigProcessLock::Yes)                    \
     S(getrandom, NeedsBigProcessLock::No)                   \
-    S(getresgid, NeedsBigProcessLock::Yes)                  \
-    S(getresuid, NeedsBigProcessLock::Yes)                  \
+    S(getresgid, NeedsBigProcessLock::No)                   \
+    S(getresuid, NeedsBigProcessLock::No)                   \
     S(getrusage, NeedsBigProcessLock::Yes)                  \
     S(getsid, NeedsBigProcessLock::Yes)                     \
     S(getsockname, NeedsBigProcessLock::Yes)                \
     S(getsockopt, NeedsBigProcessLock::No)                  \
     S(gettid, NeedsBigProcessLock::No)                      \
-    S(getuid, NeedsBigProcessLock::Yes)                     \
+    S(getuid, NeedsBigProcessLock::No)                      \
     S(inode_watcher_add_watch, NeedsBigProcessLock::Yes)    \
     S(inode_watcher_remove_watch, NeedsBigProcessLock::Yes) \
     S(ioctl, NeedsBigProcessLock::Yes)                      \
@@ -153,19 +153,19 @@ enum class NeedsBigProcessLock {
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
     S(set_process_name, NeedsBigProcessLock::Yes)           \
     S(set_thread_name, NeedsBigProcessLock::Yes)            \
-    S(setegid, NeedsBigProcessLock::Yes)                    \
-    S(seteuid, NeedsBigProcessLock::Yes)                    \
-    S(setgid, NeedsBigProcessLock::Yes)                     \
-    S(setgroups, NeedsBigProcessLock::Yes)                  \
+    S(setegid, NeedsBigProcessLock::No)                     \
+    S(seteuid, NeedsBigProcessLock::No)                     \
+    S(setgid, NeedsBigProcessLock::No)                      \
+    S(setgroups, NeedsBigProcessLock::No)                   \
     S(sethostname, NeedsBigProcessLock::No)                 \
     S(setkeymap, NeedsBigProcessLock::No)                   \
     S(setpgid, NeedsBigProcessLock::Yes)                    \
-    S(setresgid, NeedsBigProcessLock::Yes)                  \
-    S(setresuid, NeedsBigProcessLock::Yes)                  \
-    S(setreuid, NeedsBigProcessLock::Yes)                   \
+    S(setresgid, NeedsBigProcessLock::No)                   \
+    S(setresuid, NeedsBigProcessLock::No)                   \
+    S(setreuid, NeedsBigProcessLock::No)                    \
     S(setsid, NeedsBigProcessLock::Yes)                     \
     S(setsockopt, NeedsBigProcessLock::No)                  \
-    S(setuid, NeedsBigProcessLock::Yes)                     \
+    S(setuid, NeedsBigProcessLock::No)                      \
     S(shutdown, NeedsBigProcessLock::No)                    \
     S(sigaction, NeedsBigProcessLock::Yes)                  \
     S(sigaltstack, NeedsBigProcessLock::Yes)                \

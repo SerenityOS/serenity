@@ -10,35 +10,35 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$getuid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     return uid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getgid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     return gid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$geteuid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     return euid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getegid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     return egid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> user_ruid, Userspace<UserID*> user_euid, Userspace<UserID*> user_suid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto credentials = this->credentials();
@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> user_ruid, Userspace<
 
 ErrorOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> user_rgid, Userspace<GroupID*> user_egid, Userspace<GroupID*> user_sgid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto credentials = this->credentials();
@@ -70,7 +70,7 @@ ErrorOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> user_rgid, Userspace
 
 ErrorOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<GroupID*> user_gids)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto credentials = this->credentials();
