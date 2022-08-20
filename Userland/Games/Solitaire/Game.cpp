@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -539,7 +539,7 @@ void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 
 void Game::paint_event(GUI::PaintEvent& event)
 {
-    static Gfx::Color s_background_color = palette().color(background_role());
+    Gfx::Color background_color = this->background_color();
 
     GUI::Frame::paint_event(event);
 
@@ -554,11 +554,11 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     if (!m_focused_cards.is_empty()) {
         for (auto& focused_card : m_focused_cards)
-            focused_card.clear(painter, s_background_color);
+            focused_card.clear(painter, background_color);
     }
 
     for (auto& stack : m_stacks) {
-        stack.draw(painter, s_background_color);
+        stack.draw(painter, background_color);
     }
 
     if (!m_focused_cards.is_empty()) {

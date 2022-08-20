@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,9 +9,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <LibCards/CardGame.h>
 #include <LibCards/CardStack.h>
-#include <LibGUI/Frame.h>
-#include <LibGUI/Painter.h>
 
 using Cards::Card;
 using Cards::CardStack;
@@ -29,7 +28,7 @@ enum class GameOverReason {
     NewGame,
 };
 
-class Game final : public GUI::Frame {
+class Game final : public Cards::CardGame {
     C_OBJECT(Game)
 public:
     static constexpr int width = 640;
