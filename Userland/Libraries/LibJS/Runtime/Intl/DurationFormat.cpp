@@ -131,9 +131,10 @@ StringView DurationFormat::display_to_string(Display display)
 }
 
 // 1.1.3 ToDurationRecord ( input ), https://tc39.es/proposal-intl-duration-format/#sec-todurationrecord
-ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(GlobalObject& global_object, Value input)
+ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value input)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If Type(input) is not Object, throw a TypeError exception.
     if (!input.is_object())
@@ -239,9 +240,10 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 }
 
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(GlobalObject& global_object, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, Optional<String> const& previous_style)
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, Optional<String> const& previous_style)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let style be ? GetOption(options, unit, "string", stylesList, undefined).
     auto style_value = TRY(get_option(global_object, options, unit, OptionType::String, styles_list, Empty {}));
@@ -308,10 +310,10 @@ static String convert_number_format_pattern_to_duration_format_template(Unicode:
 }
 
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
-ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(GlobalObject& global_object, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
+ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -411,7 +413,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
 
         // FIXME: durationFormat.[[NumberFormat]] is not a thing, the spec likely means 'nf' in this case
         // p. Let num be ! FormatNumeric(durationFormat.[[NumberFormat]], value).
-        auto number = format_numeric(global_object, *number_format, value);
+        auto number = format_numeric(vm, *number_format, value);
 
         // q. Let dataLocale be durationFormat.[[DataLocale]].
         auto const& data_locale = duration_format.data_locale();
@@ -450,7 +452,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(Gl
             auto template_ = convert_number_format_pattern_to_duration_format_template(*pattern);
 
             // FIXME: MakePartsList takes a list, not a string, so likely missing spec step: Let fv be ! PartitionNumberPattern(nf, value).
-            auto formatted_value = partition_number_pattern(global_object, *number_format, value);
+            auto formatted_value = partition_number_pattern(vm, *number_format, value);
 
             // FIXME: Spec issue - see above, fv instead of num
             // iv. Let parts be ! MakePartsList(template, unit, num).

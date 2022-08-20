@@ -301,10 +301,8 @@ String MathematicalValue::to_string() const
         [](auto) -> String { VERIFY_NOT_REACHED(); });
 }
 
-Value MathematicalValue::to_value(GlobalObject& global_object) const
+Value MathematicalValue::to_value(VM& vm) const
 {
-    auto& vm = global_object.vm();
-
     return m_value.visit(
         [](double value) {
             return Value(value);

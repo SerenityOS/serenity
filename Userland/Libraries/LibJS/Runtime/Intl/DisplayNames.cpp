@@ -101,10 +101,8 @@ StringView DisplayNames::language_display_string() const
 }
 
 // 12.5.1 CanonicalCodeForDisplayNames ( type, code ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
-ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code)
+ThrowCompletionOr<Value> canonical_code_for_display_names(VM& vm, DisplayNames::Type type, StringView code)
 {
-    auto& vm = global_object.vm();
-
     // 1. If type is "language", then
     if (type == DisplayNames::Type::Language) {
         // a. If code does not match the unicode_language_id production, throw a RangeError exception.

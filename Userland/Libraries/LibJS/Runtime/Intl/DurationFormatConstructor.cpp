@@ -53,7 +53,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     auto* duration_format = TRY(ordinary_create_from_constructor<DurationFormat>(global_object, new_target, &GlobalObject::intl_duration_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 4. Let options be ? GetOptionsObject(options).
     auto* options = TRY(Temporal::get_options_object(global_object, options_value));
@@ -119,7 +119,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
         auto digital_base = duration_instances_component.digital_default;
 
         // f. Let unitOptions be ? GetDurationUnitOptions(unit, options, style, valueList, digitalBase, prevStyle).
-        auto unit_options = TRY(get_duration_unit_options(global_object, unit, *options, style.as_string().string(), value_list, digital_base, previous_style));
+        auto unit_options = TRY(get_duration_unit_options(vm, unit, *options, style.as_string().string(), value_list, digital_base, previous_style));
 
         // g. Set the value of the styleSlot slot of durationFormat to unitOptions.[[Style]].
         (duration_format->*style_slot)(unit_options.style);
@@ -135,7 +135,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     }
 
     // 18. Set durationFormat.[[FractionalDigits]] to ? GetNumberOption(options, "fractionalDigits", 0, 9, undefined).
-    duration_format->set_fractional_digits(Optional<u8>(TRY(get_number_option(global_object, *options, vm.names.fractionalDigits, 0, 9, {}))));
+    duration_format->set_fractional_digits(Optional<u8>(TRY(get_number_option(vm, *options, vm.names.fractionalDigits, 0, 9, {}))));
 
     // 19. Return durationFormat.
     return duration_format;
@@ -150,10 +150,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %DurationFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 }

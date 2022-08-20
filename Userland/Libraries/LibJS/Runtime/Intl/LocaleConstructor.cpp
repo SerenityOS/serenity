@@ -26,9 +26,10 @@ struct LocaleAndKeys {
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
+static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     auto option = TRY(get_option(global_object, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
@@ -41,10 +42,8 @@ static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& globa
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag
-static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_object, StringView tag, Object const& options)
+static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Object const& options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(tag) is String.
     // 2. Assert: Type(options) is Object.
 
@@ -56,17 +55,17 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     // 4. Let language be ? GetOption(options, "language", "string", undefined, undefined).
     // 5. If language is not undefined, then
     //     a. If language does not match the unicode_language_subtag production, throw a RangeError exception.
-    auto language = TRY(get_string_option(global_object, options, vm.names.language, Unicode::is_unicode_language_subtag));
+    auto language = TRY(get_string_option(vm, options, vm.names.language, Unicode::is_unicode_language_subtag));
 
     // 6. Let script be ? GetOption(options, "script", "string", undefined, undefined).
     // 7. If script is not undefined, then
     //     a. If script does not match the unicode_script_subtag production, throw a RangeError exception.
-    auto script = TRY(get_string_option(global_object, options, vm.names.script, Unicode::is_unicode_script_subtag));
+    auto script = TRY(get_string_option(vm, options, vm.names.script, Unicode::is_unicode_script_subtag));
 
     // 8. Let region be ? GetOption(options, "region", "string", undefined, undefined).
     // 9. If region is not undefined, then
     //     a. If region does not match the unicode_region_subtag production, throw a RangeError exception.
-    auto region = TRY(get_string_option(global_object, options, vm.names.region, Unicode::is_unicode_region_subtag));
+    auto region = TRY(get_string_option(vm, options, vm.names.region, Unicode::is_unicode_region_subtag));
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
     auto canonicalized_tag = Intl::canonicalize_unicode_locale_id(*locale_id);
@@ -283,10 +282,10 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(vm, options_value));
 
     // 11. Set tag to ? ApplyOptionsToTag(tag, options).
-    tag = TRY(apply_options_to_tag(global_object, tag, *options));
+    tag = TRY(apply_options_to_tag(vm, tag, *options));
 
     // 12. Let opt be a new Record.
     LocaleAndKeys opt {};
@@ -295,21 +294,21 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 14. If calendar is not undefined, then
     //     a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 15. Set opt.[[ca]] to calendar.
-    opt.ca = TRY(get_string_option(global_object, *options, vm.names.calendar, Unicode::is_type_identifier));
+    opt.ca = TRY(get_string_option(vm, *options, vm.names.calendar, Unicode::is_type_identifier));
 
     // 16. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
     // 17. If collation is not undefined, then
     //     a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 18. Set opt.[[co]] to collation.
-    opt.co = TRY(get_string_option(global_object, *options, vm.names.collation, Unicode::is_type_identifier));
+    opt.co = TRY(get_string_option(vm, *options, vm.names.collation, Unicode::is_type_identifier));
 
     // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
-    opt.hc = TRY(get_string_option(global_object, *options, vm.names.hourCycle, nullptr, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
+    opt.hc = TRY(get_string_option(vm, *options, vm.names.hourCycle, nullptr, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
 
     // 21. Let kf be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 22. Set opt.[[kf]] to kf.
-    opt.kf = TRY(get_string_option(global_object, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
+    opt.kf = TRY(get_string_option(vm, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
     auto kn = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
@@ -323,7 +322,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 27. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 28. Set opt.[[nu]] to numberingSystem.
-    opt.nu = TRY(get_string_option(global_object, *options, vm.names.numberingSystem, Unicode::is_type_identifier));
+    opt.nu = TRY(get_string_option(vm, *options, vm.names.numberingSystem, Unicode::is_type_identifier));
 
     // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
     auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);

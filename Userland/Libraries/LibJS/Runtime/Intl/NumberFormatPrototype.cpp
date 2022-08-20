@@ -73,11 +73,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     auto* number_format = TRY(typed_this_object(global_object));
 
     // 3. Let x be ? ToIntlMathematicalValue(value).
-    auto mathematical_value = TRY(to_intl_mathematical_value(global_object, value));
+    auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
     // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(global_object, *number_format, move(mathematical_value));
+    return format_numeric_to_parts(vm, *number_format, move(mathematical_value));
 }
 
 // 1.4.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrange
@@ -97,13 +97,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "end"sv);
 
     // 4. Let x be ? ToIntlMathematicalValue(start).
-    auto x = TRY(to_intl_mathematical_value(global_object, start));
+    auto x = TRY(to_intl_mathematical_value(vm, start));
 
     // 5. Let y be ? ToIntlMathematicalValue(end).
-    auto y = TRY(to_intl_mathematical_value(global_object, end));
+    auto y = TRY(to_intl_mathematical_value(vm, end));
 
     // 6. Return ? FormatNumericRange(nf, x, y).
-    auto formatted = TRY(format_numeric_range(global_object, *number_format, move(x), move(y)));
+    auto formatted = TRY(format_numeric_range(vm, *number_format, move(x), move(y)));
     return js_string(vm, move(formatted));
 }
 
@@ -124,13 +124,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "end"sv);
 
     // 4. Let x be ? ToIntlMathematicalValue(start).
-    auto x = TRY(to_intl_mathematical_value(global_object, start));
+    auto x = TRY(to_intl_mathematical_value(vm, start));
 
     // 5. Let y be ? ToIntlMathematicalValue(end).
-    auto y = TRY(to_intl_mathematical_value(global_object, end));
+    auto y = TRY(to_intl_mathematical_value(vm, end));
 
     // 6. Return ? FormatNumericRangeToParts(nf, x, y).
-    return TRY(format_numeric_range_to_parts(global_object, *number_format, move(x), move(y)));
+    return TRY(format_numeric_range_to_parts(vm, *number_format, move(x), move(y)));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits())));
     if (number_format->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
-    MUST(options->create_data_property_or_throw(vm.names.useGrouping, number_format->use_grouping_to_value(global_object)));
+    MUST(options->create_data_property_or_throw(vm.names.useGrouping, number_format->use_grouping_to_value(vm)));
     MUST(options->create_data_property_or_throw(vm.names.notation, js_string(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
         MUST(options->create_data_property_or_throw(vm.names.compactDisplay, js_string(vm, number_format->compact_display_string())));

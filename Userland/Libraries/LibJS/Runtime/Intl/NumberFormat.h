@@ -209,7 +209,7 @@ public:
     void set_unit_display(StringView unit_display) { m_unit_display = Unicode::style_from_string(unit_display); }
 
     UseGrouping use_grouping() const { return m_use_grouping; }
-    Value use_grouping_to_value(GlobalObject&) const;
+    Value use_grouping_to_value(VM&) const;
     void set_use_grouping(StringOrBoolean const& use_grouping);
 
     Notation notation() const { return m_notation; }
@@ -274,23 +274,23 @@ enum class RoundingDecision {
 
 int currency_digits(StringView currency);
 FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, MathematicalValue number);
-Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number);
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, MathematicalValue const& number, String formatted_string, int exponent);
-String format_numeric(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number);
-Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number);
+Vector<PatternPartition> partition_number_pattern(VM&, NumberFormat&, MathematicalValue number);
+Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat&, MathematicalValue const& number, String formatted_string, int exponent);
+String format_numeric(VM&, NumberFormat&, MathematicalValue number);
+Array* format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
 RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue const& number, Unicode::NumberFormat& found_pattern);
-Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
-int compute_exponent(NumberFormat& number_format, MathematicalValue number);
-int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude);
-ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(GlobalObject& global_object, Value value);
-NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative);
+Optional<Variant<StringView, String>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, Unicode::NumberFormat& found_pattern);
+Optional<StringView> get_notation_sub_pattern(NumberFormat&, int exponent);
+int compute_exponent(NumberFormat&, MathematicalValue number);
+int compute_exponent_for_magnitude(NumberFormat&, int magnitude);
+ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM&, Value value);
+NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode, bool is_negative);
 RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
-Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_format, Vector<PatternPartitionWithSource> result);
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
+Vector<PatternPartitionWithSource> format_approximately(NumberFormat&, Vector<PatternPartitionWithSource> result);
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
-ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
-ThrowCompletionOr<Array*> format_numeric_range_to_parts(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end);
+ThrowCompletionOr<String> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
+ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 
 }

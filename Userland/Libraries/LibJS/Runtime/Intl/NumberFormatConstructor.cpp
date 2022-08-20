@@ -54,7 +54,7 @@ ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& ne
     auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
-    TRY(initialize_number_format(global_object, *number_format, locales, options));
+    TRY(initialize_number_format(vm, *number_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.
@@ -73,23 +73,24 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %NumberFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 // 15.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/ecma402/#sec-initializenumberformat
 // 1.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-initializenumberformat
-ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value)
+ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& number_format, Value locales_value, Value options_value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(vm, options_value));
 
     // 3. Let opt be a new Record.
     LocaleOptions opt {};
@@ -128,7 +129,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
         number_format.set_numbering_system(result.nu.release_value());
 
     // 14. Perform ? SetNumberFormatUnitOptions(numberFormat, options).
-    TRY(set_number_format_unit_options(global_object, number_format, *options));
+    TRY(set_number_format_unit_options(vm, number_format, *options));
 
     // 15. Let style be numberFormat.[[Style]].
     auto style = number_format.style();
@@ -169,10 +170,10 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     number_format.set_notation(notation.as_string().string());
 
     // 20. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
-    TRY(set_number_format_digit_options(global_object, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
+    TRY(set_number_format_digit_options(vm, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
 
     // 21. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
-    auto rounding_increment = TRY(get_number_option(global_object, *options, vm.names.roundingIncrement, 1, 5000, 1));
+    auto rounding_increment = TRY(get_number_option(vm, *options, vm.names.roundingIncrement, 1, 5000, 1));
 
     // 22. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
     static constexpr auto sanctioned_rounding_increments = AK::Array { 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 };
@@ -213,7 +214,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     }
 
     // 31. Let useGrouping be ? GetStringOrBooleanOption(options, "useGrouping", « "min2", "auto", "always" », "always", false, defaultUseGrouping).
-    auto use_grouping = TRY(get_string_or_boolean_option(global_object, *options, vm.names.useGrouping, { "min2"sv, "auto"sv, "always"sv }, "always"sv, false, default_use_grouping));
+    auto use_grouping = TRY(get_string_or_boolean_option(vm, *options, vm.names.useGrouping, { "min2"sv, "auto"sv, "always"sv }, "always"sv, false, default_use_grouping));
 
     // 32. Set numberFormat.[[UseGrouping]] to useGrouping.
     number_format.set_use_grouping(use_grouping);
@@ -236,12 +237,13 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
 
 // 15.1.3 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
 // 1.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-setnfdigitoptions
-ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
+ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let mnid be ? GetNumberOption(options, "minimumIntegerDigits,", 1, 21, 1).
-    auto min_integer_digits = TRY(get_number_option(global_object, options, vm.names.minimumIntegerDigits, 1, 21, 1));
+    auto min_integer_digits = TRY(get_number_option(vm, options, vm.names.minimumIntegerDigits, 1, 21, 1));
 
     // 2. Let mnfd be ? Get(options, "minimumFractionDigits").
     auto min_fraction_digits = TRY(options.get(vm.names.minimumFractionDigits));
@@ -296,10 +298,10 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
         // a. If hasSd is true, then
         if (has_significant_digits) {
             // i. Set mnsd to ? DefaultNumberOption(mnsd, 1, 21, 1).
-            auto min_digits = TRY(default_number_option(global_object, min_significant_digits, 1, 21, 1));
+            auto min_digits = TRY(default_number_option(vm, min_significant_digits, 1, 21, 1));
 
             // ii. Set mxsd to ? DefaultNumberOption(mxsd, mnsd, 21, 21).
-            auto max_digits = TRY(default_number_option(global_object, max_significant_digits, *min_digits, 21, 21));
+            auto max_digits = TRY(default_number_option(vm, max_significant_digits, *min_digits, 21, 21));
 
             // iii. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
             intl_object.set_min_significant_digits(*min_digits);
@@ -322,10 +324,10 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
         // a. If hasFd is true, then
         if (has_fraction_digits) {
             // i. Set mnfd to ? DefaultNumberOption(mnfd, 0, 20, undefined).
-            auto min_digits = TRY(default_number_option(global_object, min_fraction_digits, 0, 20, {}));
+            auto min_digits = TRY(default_number_option(vm, min_fraction_digits, 0, 20, {}));
 
             // ii. Set mxfd to ? DefaultNumberOption(mxfd, 0, 20, undefined).
-            auto max_digits = TRY(default_number_option(global_object, max_fraction_digits, 0, 20, {}));
+            auto max_digits = TRY(default_number_option(vm, max_fraction_digits, 0, 20, {}));
 
             // iii. If mnfd is undefined, set mnfd to min(mnfdDefault, mxfd).
             if (!min_digits.has_value())
@@ -399,9 +401,10 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
 }
 
 // 15.1.4 SetNumberFormatUnitOptions ( intlObj, options ), https://tc39.es/ecma402/#sec-setnumberformatunitoptions
-ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options)
+ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& intl_object, Object const& options)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(intlObj) is Object.
     // 2. Assert: Type(options) is Object.

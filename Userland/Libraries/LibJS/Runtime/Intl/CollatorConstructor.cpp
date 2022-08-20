@@ -15,15 +15,16 @@
 namespace JS::Intl {
 
 // 10.1.2 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
-static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_object, Collator& collator, Value locales_value, Value options_value)
+static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collator, Value locales_value, Value options_value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(vm, options_value));
 
     // 3. Let usage be ? GetOption(options, "usage", "string", « "sort", "search" », "sort").
     auto usage = TRY(get_option(global_object, *options, vm.names.usage, OptionType::String, { "sort"sv, "search"sv }, "sort"sv));
@@ -177,7 +178,7 @@ ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_ta
     auto* collator = TRY(ordinary_create_from_constructor<Collator>(global_object, new_target, &GlobalObject::intl_collator_prototype));
 
     // 6. Return ? InitializeCollator(collator, locales, options).
-    return TRY(initialize_collator(global_object, *collator, locales, options));
+    return TRY(initialize_collator(vm, *collator, locales, options));
 }
 
 // 10.2.2 Intl.Collator.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.collator.supportedlocalesof
@@ -189,10 +190,10 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorConstructor::supported_locales_of)
     // 1. Let availableLocales be %Collator%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 }

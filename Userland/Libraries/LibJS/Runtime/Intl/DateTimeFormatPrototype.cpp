@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     }
 
     // 5. Return ? FormatDateTimeToParts(dtf, x).
-    return TRY(format_date_time_to_parts(global_object, *date_time_format, date_value));
+    return TRY(format_date_time_to_parts(vm, *date_time_format, date_value));
 }
 
 // 11.3.5 Intl.DateTimeFormat.prototype.formatRange ( startDate, endDate ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.formatRange
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
     auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
 
     // 6. Return ? FormatDateTimeRange(dtf, x, y).
-    auto formatted = TRY(format_date_time_range(global_object, *date_time_format, start_date_number, end_date_number));
+    auto formatted = TRY(format_date_time_range(vm, *date_time_format, start_date_number, end_date_number));
     return js_string(vm, move(formatted));
 }
 
@@ -138,7 +138,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
     auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
 
     // 6. Return ? FormatDateTimeRangeToParts(dtf, x, y).
-    return TRY(format_date_time_range_to_parts(global_object, *date_time_format, start_date_number, end_date_number));
+    return TRY(format_date_time_range_to_parts(vm, *date_time_format, start_date_number, end_date_number));
 }
 
 // 11.3.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
@@ -190,7 +190,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     }
 
     if (!date_time_format->has_date_style() && !date_time_format->has_time_style()) {
-        MUST(for_each_calendar_field(global_object, *date_time_format, [&](auto& option, auto const& property, auto const&) -> ThrowCompletionOr<void> {
+        MUST(for_each_calendar_field(vm, *date_time_format, [&](auto& option, auto const& property, auto const&) -> ThrowCompletionOr<void> {
             using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
             if (!option.has_value())

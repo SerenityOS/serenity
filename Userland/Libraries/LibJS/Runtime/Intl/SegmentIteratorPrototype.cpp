@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
     iterator->set_iterated_string_next_segment_code_unit_index(end_index);
 
     // 9. Let segmentData be ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
-    auto* segment_data = create_segment_data_object(global_object, segmenter, string, start_index, end_index);
+    auto* segment_data = create_segment_data_object(vm, segmenter, string, start_index, end_index);
 
     // 10. Return CreateIterResultObject(segmentData, false).
     return create_iterator_result_object(global_object, segment_data, false);

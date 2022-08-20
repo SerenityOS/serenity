@@ -39,14 +39,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     auto* duration_format = TRY(typed_this_object(global_object));
 
     // 3. Let record be ? ToDurationRecord(duration).
-    auto record = TRY(to_duration_record(global_object, vm.argument(0)));
+    auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
     // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
-    auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
+    auto formatted = TRY(partition_duration_format_pattern(vm, *duration_format, record));
 
     // 6. Let result be a new empty String.
     StringBuilder result;
@@ -71,14 +71,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     auto* duration_format = TRY(typed_this_object(global_object));
 
     // 3. Let record be ? ToDurationRecord(duration).
-    auto record = TRY(to_duration_record(global_object, vm.argument(0)));
+    auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. If IsValidDurationRecord(record) is false, throw a RangeError exception.
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
     // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
-    auto formatted = TRY(partition_duration_format_pattern(global_object, *duration_format, record));
+    auto formatted = TRY(partition_duration_format_pattern(vm, *duration_format, record));
 
     // 6. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));

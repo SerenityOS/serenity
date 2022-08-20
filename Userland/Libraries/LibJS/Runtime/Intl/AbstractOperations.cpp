@@ -183,10 +183,10 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 }
 
 // 9.2.1 CanonicalizeLocaleList ( locales ), https://tc39.es/ecma402/#sec-canonicalizelocalelist
-ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_object, Value locales)
+ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
@@ -566,13 +566,13 @@ Vector<String> best_fit_supported_locales(Vector<String> const& requested_locale
 }
 
 // 9.2.10 SupportedLocales ( availableLocales, requestedLocales, options ), https://tc39.es/ecma402/#sec-supportedlocales
-ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<String> const& requested_locales, Value options)
+ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& requested_locales, Value options)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Set options to ? CoerceOptionsToObject(options).
-    auto* options_object = TRY(coerce_options_to_object(global_object, options));
+    auto* options_object = TRY(coerce_options_to_object(vm, options));
 
     // 2. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(global_object, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
@@ -595,9 +595,10 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject
-ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object, Value options)
+ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is undefined, then
     if (options.is_undefined()) {
@@ -612,8 +613,11 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
 // 1.2.12 GetStringOrBooleanOption ( options, property, values, trueValue, falsyValue, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getstringorbooleanoption
-ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
+ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
@@ -645,9 +649,10 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(GlobalObject& gl
 }
 
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
-ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_object, Value value, int minimum, int maximum, Optional<int> fallback)
+ThrowCompletionOr<Optional<int>> default_number_option(VM& vm, Value value, int minimum, int maximum, Optional<int> fallback)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If value is undefined, return fallback.
     if (value.is_undefined())
@@ -665,7 +670,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
-ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback)
+ThrowCompletionOr<Optional<int>> get_number_option(VM& vm, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback)
 {
     // 1. Assert: Type(options) is Object.
 
@@ -673,7 +678,7 @@ ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, 
     auto value = TRY(options.get(property));
 
     // 3. Return ? DefaultNumberOption(value, minimum, maximum, fallback).
-    return default_number_option(global_object, value, minimum, maximum, move(fallback));
+    return default_number_option(vm, value, minimum, maximum, move(fallback));
 }
 
 // 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
