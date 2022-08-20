@@ -894,8 +894,8 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    static Gfx::Color s_background_color = palette().color(background_role());
-    painter.clear_rect(frame_inner_rect(), s_background_color);
+    Gfx::Color background_color = this->background_color();
+    painter.clear_rect(frame_inner_rect(), background_color);
 
     for (auto& player : m_players) {
         auto& font = painter.font().bold_variant();

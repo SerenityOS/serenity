@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,14 +11,14 @@
 
 #include "Player.h"
 #include <LibCards/Card.h>
+#include <LibCards/CardGame.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/Frame.h>
 
 using Cards::Card;
 
 namespace Hearts {
 
-class Game final : public GUI::Frame {
+class Game final : public Cards::CardGame {
     C_OBJECT(Game)
 public:
     static constexpr int width = 640;
