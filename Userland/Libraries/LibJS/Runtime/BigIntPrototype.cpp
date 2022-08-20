@@ -49,7 +49,7 @@ static ThrowCompletionOr<BigInt*> this_bigint_value(GlobalObject& global_object,
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value(global_object)));
+    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value()));
     double radix = 10;
     if (!vm.argument(0).is_undefined()) {
         radix = TRY(vm.argument(0).to_integer_or_infinity(global_object));
@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisBigIntValue(this value).
-    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value(global_object)));
+    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
     auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(global_object, *global_object.intl_number_format_constructor(), locales, options)));
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    return TRY(this_bigint_value(global_object, vm.this_value(global_object)));
+    return TRY(this_bigint_value(global_object, vm.this_value()));
 }
 
 }

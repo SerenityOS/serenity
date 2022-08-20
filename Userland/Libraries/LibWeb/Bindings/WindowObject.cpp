@@ -180,7 +180,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObje
     // this_value to a specific object type in the bindings. But since window is
     // the global object we make an exception here.
     // This allows calls like `setTimeout(f, 10)` to work.
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     if (this_value.is_nullish())
         this_value = &global_object;
 

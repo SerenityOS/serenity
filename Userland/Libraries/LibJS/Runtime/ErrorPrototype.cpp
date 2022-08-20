@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
 {
     // 1. Let E be the this value.
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
 
     // 2. If ! Type(E) is not Object, throw a TypeError exception.
     if (!this_value.is_object())

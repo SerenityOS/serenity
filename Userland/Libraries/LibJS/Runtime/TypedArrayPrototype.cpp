@@ -73,7 +73,7 @@ void TypedArrayPrototype::initialize(Realm& realm)
 
 static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(GlobalObject& global_object)
 {
-    auto this_value = global_object.vm().this_value(global_object);
+    auto this_value = global_object.vm().this_value();
     return typed_array_from(global_object, this_value);
 }
 
@@ -1522,7 +1522,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be the this value.
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 3. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
@@ -1635,7 +1635,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 // 23.2.3.35 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 {
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     if (!this_value.is_object())
         return js_undefined();
     auto& this_object = this_value.as_object();

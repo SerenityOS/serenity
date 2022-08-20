@@ -28,7 +28,7 @@ void IteratorPrototype::initialize(Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::symbol_iterator)
 {
     // 1. Return the this value.
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }

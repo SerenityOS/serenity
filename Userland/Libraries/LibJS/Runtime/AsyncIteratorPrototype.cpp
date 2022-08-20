@@ -25,7 +25,7 @@ void AsyncIteratorPrototype::initialize(Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(AsyncIteratorPrototype::symbol_async_iterator)
 {
     // 1. Return the this value.
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }
