@@ -1016,7 +1016,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         m_dnd_overlay->cursor_moved();
 
         // We didn't let go of the drag yet, see if we should send some drag move events..
-        if (auto* window = current_window_stack().window_at(event.position(), WindowStack::IncludeWindowFrame::No)) {
+        if (auto* window = hovered_window()) {
             event.set_drag(true);
             event.set_mime_data(*m_dnd_mime_data);
             deliver_mouse_event(*window, event, false);
@@ -1028,7 +1028,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Primary))
         return true;
 
-    if (auto* window = current_window_stack().window_at(event.position())) {
+    if (auto* window = hovered_window()) {
         m_dnd_client->async_drag_accepted();
         if (window->client()) {
             auto translated_event = event.translated(-window->position());
@@ -1429,8 +1429,9 @@ void WindowManager::event(Core::Event& event)
 
         process_mouse_event(mouse_event);
         m_last_processed_buttons = mouse_event.buttons();
+        auto include_window_frame = m_dnd_client ? WindowStack::IncludeWindowFrame::Yes : WindowStack::IncludeWindowFrame::No;
         // TODO: handle transitioning between two stacks
-        set_hovered_window(current_window_stack().window_at(mouse_event.position(), WindowStack::IncludeWindowFrame::No));
+        set_hovered_window(current_window_stack().window_at(mouse_event.position(), include_window_frame));
         return;
     }
 
