@@ -1,48 +1,96 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Array.h>
 #include <AK/Format.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Rect.h>
-#include <ctype.h>
 
 namespace Cards {
+
+enum class Rank : u8 {
+    Ace,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Jack,
+    Queen,
+    King,
+    __Count
+};
+
+constexpr StringView card_rank_label(Rank rank)
+{
+    switch (rank) {
+    case Rank::Ace:
+        return "A"sv;
+    case Rank::Two:
+        return "2"sv;
+    case Rank::Three:
+        return "3"sv;
+    case Rank::Four:
+        return "4"sv;
+    case Rank::Five:
+        return "5"sv;
+    case Rank::Six:
+        return "6"sv;
+    case Rank::Seven:
+        return "7"sv;
+    case Rank::Eight:
+        return "8"sv;
+    case Rank::Nine:
+        return "9"sv;
+    case Rank::Ten:
+        return "10"sv;
+    case Rank::Jack:
+        return "J"sv;
+    case Rank::Queen:
+        return "Q"sv;
+    case Rank::King:
+        return "K"sv;
+    case Rank::__Count:
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+enum class Suit : u8 {
+    Clubs,
+    Diamonds,
+    Spades,
+    Hearts,
+    __Count
+};
 
 class Card final : public Core::Object {
     C_OBJECT(Card)
 public:
     static constexpr int width = 80;
     static constexpr int height = 100;
-    static constexpr int card_count = 13;
+    static constexpr int card_count = to_underlying(Rank::__Count);
     static constexpr int card_radius = 5;
-    static constexpr Array<StringView, card_count> labels = {
-        "A"sv, "2"sv, "3"sv, "4"sv, "5"sv, "6"sv, "7"sv, "8"sv, "9"sv, "10"sv, "J"sv, "Q"sv, "K"sv
-    };
-
-    enum class Suit {
-        Clubs,
-        Diamonds,
-        Spades,
-        Hearts,
-        __Count
-    };
 
     virtual ~Card() override = default;
 
     Gfx::IntRect& rect() { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }
     Gfx::IntPoint const& old_position() const { return m_old_position; }
-    uint8_t value() const { return m_value; };
+    Rank rank() const { return m_rank; };
     Suit suit() const { return m_suit; }
 
     bool is_old_position_valid() const { return m_old_position_valid; }
@@ -63,7 +111,7 @@ public:
     void clear_and_draw(GUI::Painter&, Color const& background_color);
 
 private:
-    Card(Suit suit, uint8_t value);
+    Card(Suit, Rank);
 
     static NonnullRefPtr<Gfx::Bitmap> invert_bitmap(Gfx::Bitmap&);
 
@@ -72,7 +120,7 @@ private:
     RefPtr<Gfx::Bitmap> m_front_inverted;
     Gfx::IntPoint m_old_position;
     Suit m_suit;
-    uint8_t m_value;
+    Rank m_rank;
     bool m_old_position_valid { false };
     bool m_moving { false };
     bool m_upside_down { false };
@@ -88,22 +136,22 @@ struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
         StringView suit;
 
         switch (card.suit()) {
-        case Cards::Card::Suit::Clubs:
+        case Cards::Suit::Clubs:
             suit = "C"sv;
             break;
-        case Cards::Card::Suit::Diamonds:
+        case Cards::Suit::Diamonds:
             suit = "D"sv;
             break;
-        case Cards::Card::Suit::Hearts:
+        case Cards::Suit::Hearts:
             suit = "H"sv;
             break;
-        case Cards::Card::Suit::Spades:
+        case Cards::Suit::Spades:
             suit = "S"sv;
             break;
         default:
             VERIFY_NOT_REACHED();
         }
 
-        return Formatter<FormatString>::format(builder, "{:>2}{}"sv, Cards::Card::labels[card.value()], suit);
+        return Formatter<FormatString>::format(builder, "{:>2}{}"sv, Cards::card_rank_label(card.rank()), suit);
     }
 };

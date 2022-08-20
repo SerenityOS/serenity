@@ -35,13 +35,13 @@ public:
 
     NonnullRefPtrVector<Card> pick_cards_to_pass(PassingDirection);
     size_t pick_lead_card(Function<bool(Card&)>, Function<bool(Card&)>);
-    Optional<size_t> pick_low_points_high_value_card(Optional<Card::Suit> suit = {});
+    Optional<size_t> pick_low_points_high_value_card(Optional<Cards::Suit> suit = {});
     Optional<size_t> pick_lower_value_card(Card& other_card);
     Optional<size_t> pick_slightly_higher_value_card(Card& other_card);
     size_t pick_max_points_card(Function<bool(Card&)>);
-    Optional<size_t> pick_specific_card(Card::Suit suit, CardValue value);
+    Optional<size_t> pick_specific_card(Cards::Suit suit, CardValue value);
     size_t pick_last_card();
-    bool has_card_of_suit(Card::Suit suit);
+    bool has_card_of_suit(Cards::Suit suit);
     Vector<CardWithIndex> hand_sorted_by_fn(bool (*)(CardWithIndex&, CardWithIndex&)) const;
 
     void sort_hand() { quick_sort(hand, hearts_card_less); }

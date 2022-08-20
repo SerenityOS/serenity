@@ -71,7 +71,7 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
     return last_index;
 }
 
-Optional<size_t> Player::pick_low_points_high_value_card(Optional<Card::Suit> suit)
+Optional<size_t> Player::pick_low_points_high_value_card(Optional<Cards::Suit> suit)
 {
     auto sorted_hand = hand_sorted_by_fn(compare_card_value);
     int min_points = -1;
@@ -115,10 +115,10 @@ Optional<size_t> Player::pick_slightly_higher_value_card(Card& other_card)
 
 size_t Player::pick_max_points_card(Function<bool(Card&)> ignore_card)
 {
-    auto queen_of_spades_maybe = pick_specific_card(Card::Suit::Spades, CardValue::Queen);
+    auto queen_of_spades_maybe = pick_specific_card(Cards::Suit::Spades, CardValue::Queen);
     if (queen_of_spades_maybe.has_value())
         return queen_of_spades_maybe.value();
-    if (has_card_of_suit(Card::Suit::Hearts)) {
+    if (has_card_of_suit(Cards::Suit::Hearts)) {
         auto highest_hearts_card_index = pick_last_card();
         auto& card = hand[highest_hearts_card_index];
         if (!ignore_card(*card))
@@ -127,7 +127,7 @@ size_t Player::pick_max_points_card(Function<bool(Card&)> ignore_card)
     return pick_low_points_high_value_card().value();
 }
 
-Optional<size_t> Player::pick_specific_card(Card::Suit suit, CardValue value)
+Optional<size_t> Player::pick_specific_card(Cards::Suit suit, CardValue value)
 {
     for (size_t i = 0; i < hand.size(); i++) {
         auto& card = hand[i];
@@ -150,7 +150,7 @@ size_t Player::pick_last_card()
     VERIFY_NOT_REACHED();
 }
 
-bool Player::has_card_of_suit(Card::Suit suit)
+bool Player::has_card_of_suit(Cards::Suit suit)
 {
     auto matching_card = hand.first_matching([&](auto const& other_card) {
         return !other_card.is_null() && other_card->suit() == suit;

@@ -90,7 +90,7 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::create_new_animation_card()
 {
-    auto card = Card::construct(static_cast<Card::Suit>(get_random_uniform(to_underlying(Card::Suit::__Count))), get_random_uniform(Card::card_count));
+    auto card = Card::construct(static_cast<Cards::Suit>(get_random_uniform(to_underlying(Cards::Suit::__Count))), static_cast<Cards::Rank>(get_random_uniform(to_underlying(Cards::Rank::__Count))));
     card->set_position({ get_random_uniform(Game::width - Card::width), get_random_uniform(Game::height / 8) });
 
     int x_sgn = card->position().x() > (Game::width / 2) ? -1 : 1;
@@ -163,10 +163,10 @@ void Game::setup(Mode mode)
         on_undo_availability_change(false);
 
     for (int i = 0; i < Card::card_count; ++i) {
-        m_new_deck.append(Card::construct(Card::Suit::Clubs, i));
-        m_new_deck.append(Card::construct(Card::Suit::Spades, i));
-        m_new_deck.append(Card::construct(Card::Suit::Hearts, i));
-        m_new_deck.append(Card::construct(Card::Suit::Diamonds, i));
+        m_new_deck.append(Card::construct(Cards::Suit::Clubs, static_cast<Cards::Rank>(i)));
+        m_new_deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
+        m_new_deck.append(Card::construct(Cards::Suit::Hearts, static_cast<Cards::Rank>(i)));
+        m_new_deck.append(Card::construct(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i)));
     }
 
     for (uint8_t i = 0; i < 200; ++i)
