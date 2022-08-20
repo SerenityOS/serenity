@@ -36,35 +36,50 @@ ErrorOr<FlatPtr> Process::sys$getegid()
     return egid().value();
 }
 
-ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> ruid, Userspace<UserID*> euid, Userspace<UserID*> suid)
+ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> user_ruid, Userspace<UserID*> user_euid, Userspace<UserID*> user_suid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    TRY(copy_to_user(ruid, &m_protected_values.uid));
-    TRY(copy_to_user(euid, &m_protected_values.euid));
-    TRY(copy_to_user(suid, &m_protected_values.suid));
+
+    auto credentials = this->credentials();
+    auto uid = credentials->uid();
+    auto euid = credentials->euid();
+    auto suid = credentials->suid();
+
+    TRY(copy_to_user(user_ruid, &uid));
+    TRY(copy_to_user(user_euid, &euid));
+    TRY(copy_to_user(user_suid, &suid));
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> rgid, Userspace<GroupID*> egid, Userspace<GroupID*> sgid)
+ErrorOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> user_rgid, Userspace<GroupID*> user_egid, Userspace<GroupID*> user_sgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    TRY(copy_to_user(rgid, &m_protected_values.gid));
-    TRY(copy_to_user(egid, &m_protected_values.egid));
-    TRY(copy_to_user(sgid, &m_protected_values.sgid));
+
+    auto credentials = this->credentials();
+    auto gid = credentials->gid();
+    auto egid = credentials->egid();
+    auto sgid = credentials->sgid();
+
+    TRY(copy_to_user(user_rgid, &gid));
+    TRY(copy_to_user(user_egid, &egid));
+    TRY(copy_to_user(user_sgid, &sgid));
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_gids)
+ErrorOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<GroupID*> user_gids)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
+
+    auto credentials = this->credentials();
+
     if (!count)
-        return extra_gids().size();
-    if (count != extra_gids().size())
+        return credentials->extra_gids().size();
+    if (count != credentials->extra_gids().size())
         return EINVAL;
-    TRY(copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count));
+    TRY(copy_to_user(user_gids, credentials->extra_gids().data(), sizeof(GroupID) * count));
     return 0;
 }
 

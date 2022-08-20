@@ -56,7 +56,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         child->m_protected_values.has_promises = m_protected_values.has_promises.load();
         child->m_protected_values.has_execpromises = m_protected_values.has_execpromises.load();
         child->m_protected_values.sid = m_protected_values.sid;
-        child->m_protected_values.extra_gids = m_protected_values.extra_gids;
+        child->m_protected_values.credentials = m_protected_values.credentials;
         child->m_protected_values.umask = m_protected_values.umask;
         child->m_protected_values.signal_trampoline = m_protected_values.signal_trampoline;
         child->m_protected_values.dumpable = m_protected_values.dumpable;

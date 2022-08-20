@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Coredump.h>
+#include <Kernel/Credentials.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
@@ -85,7 +86,8 @@ UNMAP_AFTER_INIT void Process::initialize()
 
 bool Process::in_group(GroupID gid) const
 {
-    return this->gid() == gid || extra_gids().contains_slow(gid);
+    auto credentials = this->credentials();
+    return credentials->gid() == gid || credentials->extra_gids().contains_slow(gid);
 }
 
 void Process::kill_threads_except_self()
@@ -224,12 +226,13 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& firs
 {
     auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
-    auto process = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree))));
+    auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}));
+    auto process = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree))));
     TRY(process->attach_resources(move(space), first_thread, fork_parent));
     return process;
 }
 
-Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
@@ -243,12 +246,7 @@ Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID
 
     m_protected_values.pid = allocate_pid();
     m_protected_values.ppid = ppid;
-    m_protected_values.uid = uid;
-    m_protected_values.gid = gid;
-    m_protected_values.euid = uid;
-    m_protected_values.egid = gid;
-    m_protected_values.suid = uid;
-    m_protected_values.sgid = gid;
+    m_protected_values.credentials = move(credentials);
 
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 }
@@ -936,6 +934,41 @@ ErrorOr<void> Process::require_promise(Pledge promise)
     Thread::current()->set_promise_violation_pending(true);
     (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
     return EPROMISEVIOLATION;
+}
+
+UserID Process::uid() const
+{
+    return credentials()->uid();
+}
+
+GroupID Process::gid() const
+{
+    return credentials()->gid();
+}
+
+UserID Process::euid() const
+{
+    return credentials()->euid();
+}
+
+GroupID Process::egid() const
+{
+    return credentials()->egid();
+}
+
+UserID Process::suid() const
+{
+    return credentials()->suid();
+}
+
+GroupID Process::sgid() const
+{
+    return credentials()->sgid();
+}
+
+NonnullRefPtr<Credentials> Process::credentials() const
+{
+    return *m_protected_values.credentials;
 }
 
 }

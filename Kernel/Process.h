@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,12 +11,14 @@
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveListRelaxedConst.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Userspace.h>
 #include <AK/Variant.h>
 #include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/AtomicEdgeAction.h>
+#include <Kernel/Credentials.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
@@ -110,13 +112,8 @@ class Process final
         ProcessID pid { 0 };
         ProcessID ppid { 0 };
         SessionID sid { 0 };
-        UserID euid { 0 };
-        GroupID egid { 0 };
-        UserID uid { 0 };
-        GroupID gid { 0 };
-        UserID suid { 0 };
-        GroupID sgid { 0 };
-        Vector<GroupID> extra_gids;
+        // FIXME: This should be a NonnullRefPtr
+        RefPtr<Credentials> credentials;
         bool dumpable { false };
         Atomic<bool> has_promises { false };
         Atomic<u32> promises { 0 };
@@ -226,14 +223,16 @@ public:
     bool is_session_leader() const { return sid().value() == pid().value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
     bool is_group_leader() const { return pgid().value() == pid().value(); }
-    Vector<GroupID> const& extra_gids() const { return m_protected_values.extra_gids; }
-    UserID euid() const { return m_protected_values.euid; }
-    GroupID egid() const { return m_protected_values.egid; }
-    UserID uid() const { return m_protected_values.uid; }
-    GroupID gid() const { return m_protected_values.gid; }
-    UserID suid() const { return m_protected_values.suid; }
-    GroupID sgid() const { return m_protected_values.sgid; }
     ProcessID ppid() const { return m_protected_values.ppid; }
+
+    NonnullRefPtr<Credentials> credentials() const;
+
+    UserID euid() const;
+    GroupID egid() const;
+    UserID uid() const;
+    GroupID gid() const;
+    UserID suid() const;
+    GroupID sgid() const;
 
     bool is_dumpable() const { return m_protected_values.dumpable; }
     void set_dumpable(bool);
@@ -353,8 +352,8 @@ public:
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
     ErrorOr<FlatPtr> sys$sigsuspend(Userspace<sigset_t const*>);
     ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<timespec const*>);
-    ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
-    ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<gid_t const*>);
+    ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<GroupID*>);
+    ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<GroupID const*>);
     ErrorOr<FlatPtr> sys$pipe(Userspace<int*>, int flags);
     ErrorOr<FlatPtr> sys$killpg(pid_t pgrp, int sig);
     ErrorOr<FlatPtr> sys$seteuid(UserID);
@@ -557,7 +556,7 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree);
+    Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree);
     static ErrorOr<NonnullLockRefPtr<Process>> try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory = nullptr, LockRefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     ErrorOr<void> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, LockRefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();

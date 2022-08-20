@@ -14,6 +14,7 @@ namespace Kernel {
 class BlockDevice;
 class CharacterDevice;
 class Coredump;
+class Credentials;
 class Custody;
 class DevTmpFSDeviceInode;
 class DevTmpFSDirectoryInode;

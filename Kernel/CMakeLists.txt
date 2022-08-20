@@ -43,6 +43,7 @@ set(KERNEL_SOURCES
     CMOS.cpp
     CommandLine.cpp
     Coredump.cpp
+    Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp

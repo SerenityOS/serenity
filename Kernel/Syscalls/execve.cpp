@@ -495,6 +495,42 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     if (has_interpreter)
         main_program_fd_allocation = TRY(allocate_fd());
 
+    auto old_credentials = this->credentials();
+    auto new_credentials = old_credentials;
+
+    bool executable_is_setid = false;
+
+    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+        auto main_program_metadata = main_program_description->metadata();
+
+        auto new_euid = old_credentials->euid();
+        auto new_egid = old_credentials->egid();
+        auto new_suid = old_credentials->suid();
+        auto new_sgid = old_credentials->sgid();
+
+        if (main_program_metadata.is_setuid()) {
+            executable_is_setid = true;
+            new_euid = main_program_metadata.uid;
+            new_suid = main_program_metadata.uid;
+        }
+        if (main_program_metadata.is_setgid()) {
+            executable_is_setid = true;
+            new_egid = main_program_metadata.gid;
+            new_sgid = main_program_metadata.gid;
+        }
+
+        if (executable_is_setid) {
+            new_credentials = TRY(Credentials::create(
+                old_credentials->uid(),
+                old_credentials->gid(),
+                new_euid,
+                new_egid,
+                new_suid,
+                new_sgid,
+                old_credentials->extra_gids()));
+        }
+    }
+
     // We commit to the new executable at this point. There is no turning back!
 
     // Prevent other processes from attaching to us with ptrace while we're doing this.
@@ -506,24 +542,10 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     kill_threads_except_self();
 
-    bool executable_is_setid = false;
-
-    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
-        auto main_program_metadata = main_program_description->metadata();
-        if (main_program_metadata.is_setuid()) {
-            executable_is_setid = true;
-            ProtectedDataMutationScope scope { *this };
-            m_protected_values.euid = main_program_metadata.uid;
-            m_protected_values.suid = main_program_metadata.uid;
-        }
-        if (main_program_metadata.is_setgid()) {
-            executable_is_setid = true;
-            ProtectedDataMutationScope scope { *this };
-            m_protected_values.egid = main_program_metadata.gid;
-            m_protected_values.sgid = main_program_metadata.gid;
-        }
+    {
+        ProtectedDataMutationScope scope { *this };
+        m_protected_values.credentials = move(new_credentials);
     }
-
     set_dumpable(!executable_is_setid);
 
     // We make sure to enter the new address space before destroying the old one.

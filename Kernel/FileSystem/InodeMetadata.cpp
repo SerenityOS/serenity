@@ -11,17 +11,20 @@ namespace Kernel {
 
 bool InodeMetadata::may_read(Process const& process) const
 {
-    return may_read(process.euid(), process.egid(), process.extra_gids());
+    auto credentials = process.credentials();
+    return may_read(credentials->euid(), credentials->egid(), credentials->extra_gids());
 }
 
 bool InodeMetadata::may_write(Process const& process) const
 {
-    return may_write(process.euid(), process.egid(), process.extra_gids());
+    auto credentials = process.credentials();
+    return may_write(credentials->euid(), credentials->egid(), credentials->extra_gids());
 }
 
 bool InodeMetadata::may_execute(Process const& process) const
 {
-    return may_execute(process.euid(), process.egid(), process.extra_gids());
+    auto credentials = process.credentials();
+    return may_execute(credentials->euid(), credentials->egid(), credentials->extra_gids());
 }
 
 }
