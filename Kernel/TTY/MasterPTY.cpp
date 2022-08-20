@@ -33,8 +33,9 @@ MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     , m_buffer(move(buffer))
 {
     auto& process = Process::current();
-    set_uid(process.uid());
-    set_gid(process.gid());
+    auto credentials = process.credentials();
+    set_uid(credentials->uid());
+    set_gid(credentials->gid());
 
     m_buffer->set_unblock_callback([this]() {
         if (m_slave)

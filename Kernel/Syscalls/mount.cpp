@@ -70,7 +70,8 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_no_promises());
-    if (!is_superuser())
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
         return EPERM;
 
     auto params = TRY(copy_typed_from_user(user_params));
@@ -86,7 +87,7 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
     else
         dbgln("mount {} @ {}", fs_type, target);
 
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), target->view(), current_directory()));
+    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
 
     if (params.flags & MS_REMOUNT) {
         // We're not creating a new mount, we're updating an existing one!
@@ -126,13 +127,14 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    if (!is_superuser())
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
         return EPERM;
 
     TRY(require_no_promises());
 
     auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), mountpoint->view(), current_directory()));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials, mountpoint->view(), current_directory()));
     auto& guest_inode = custody->inode();
     TRY(VirtualFileSystem::the().unmount(guest_inode));
     return 0;

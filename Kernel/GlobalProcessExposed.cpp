@@ -150,7 +150,8 @@ private:
             TRY(obj.add("bytes_in"sv, socket.bytes_in()));
             TRY(obj.add("packets_out"sv, socket.packets_out()));
             TRY(obj.add("bytes_out"sv, socket.bytes_out()));
-            if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
+            auto current_process_credentials = Process::current().credentials();
+            if (current_process_credentials->is_superuser() || current_process_credentials->uid() == socket.origin_uid()) {
                 TRY(obj.add("origin_pid"sv, socket.origin_pid().value()));
                 TRY(obj.add("origin_uid"sv, socket.origin_uid().value()));
                 TRY(obj.add("origin_gid"sv, socket.origin_gid().value()));
@@ -206,7 +207,8 @@ private:
             auto peer_address = TRY(socket.peer_address().to_string());
             TRY(obj.add("peer_address"sv, peer_address->view()));
             TRY(obj.add("peer_port"sv, socket.peer_port()));
-            if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
+            auto current_process_credentials = Process::current().credentials();
+            if (current_process_credentials->is_superuser() || current_process_credentials->uid() == socket.origin_uid()) {
                 TRY(obj.add("origin_pid"sv, socket.origin_pid().value()));
                 TRY(obj.add("origin_uid"sv, socket.origin_uid().value()));
                 TRY(obj.add("origin_gid"sv, socket.origin_gid().value()));
@@ -525,8 +527,9 @@ private:
             TRY(process_object.add("pgid"sv, process.tty() ? process.tty()->pgid().value() : 0));
             TRY(process_object.add("pgp"sv, process.pgid().value()));
             TRY(process_object.add("sid"sv, process.sid().value()));
-            TRY(process_object.add("uid"sv, process.uid().value()));
-            TRY(process_object.add("gid"sv, process.gid().value()));
+            auto credentials = process.credentials();
+            TRY(process_object.add("uid"sv, credentials->uid().value()));
+            TRY(process_object.add("gid"sv, credentials->gid().value()));
             TRY(process_object.add("ppid"sv, process.ppid().value()));
             if (process.tty()) {
                 auto tty_pseudo_name = TRY(process.tty()->pseudo_name());
@@ -822,7 +825,8 @@ private:
 
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        if (!Process::current().is_superuser())
+        auto current_process_credentials = Process::current().credentials();
+        if (!current_process_credentials->is_superuser())
             return EPERM;
         return builder.appendff("{}", kernel_load_base);
     }

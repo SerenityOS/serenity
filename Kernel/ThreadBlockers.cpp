@@ -783,10 +783,11 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
         siginfo_t siginfo {};
         {
             SpinlockLocker lock(g_scheduler_lock);
+            auto credentials = process.credentials();
             // We need to gather the information before we release the scheduler lock!
             siginfo.si_signo = SIGCHLD;
             siginfo.si_pid = process.pid().value();
-            siginfo.si_uid = process.uid().value();
+            siginfo.si_uid = credentials->uid().value();
             siginfo.si_status = signal;
 
             switch (flags) {

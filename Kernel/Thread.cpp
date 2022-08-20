@@ -1131,7 +1131,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             // Set for SI_TIMER, we don't have the data here.
             .si_errno = 0,
             .si_pid = sender_pid.value(),
-            .si_uid = sender ? sender->uid().value() : 0,
+            .si_uid = sender ? sender->credentials()->uid().value() : 0,
             // Set for SIGILL, SIGFPE, SIGSEGV and SIGBUS
             // FIXME: We don't generate these signals in a way that can be handled.
             .si_addr = 0,
@@ -1346,7 +1346,8 @@ static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& proces
     if (symbol.address == 0)
         return false;
 
-    bool mask_kernel_addresses = !process.is_superuser();
+    auto credentials = process.credentials();
+    bool mask_kernel_addresses = !credentials->is_superuser();
     if (!symbol.symbol) {
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
             TRY(builder.try_append("0xdeadc0de\n"sv));

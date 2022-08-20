@@ -40,8 +40,10 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
     MutexLocker ptrace_locker(peer->process().ptrace_lock());
 
-    if ((peer->process().uid() != caller.euid())
-        || (peer->process().uid() != peer->process().euid())) // Disallow tracing setuid processes
+    auto peer_credentials = peer->process().credentials();
+    auto caller_credentials = caller.credentials();
+    if ((peer_credentials->uid() != caller_credentials->euid())
+        || (peer_credentials->uid() != peer_credentials->euid())) // Disallow tracing setuid processes
         return EACCES;
 
     if (!peer->process().is_dumpable())

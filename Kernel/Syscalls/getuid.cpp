@@ -12,28 +12,32 @@ ErrorOr<FlatPtr> Process::sys$getuid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    return uid().value();
+    auto credentials = this->credentials();
+    return credentials->uid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getgid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    return gid().value();
+    auto credentials = this->credentials();
+    return credentials->gid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$geteuid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    return euid().value();
+    auto credentials = this->credentials();
+    return credentials->euid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getegid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    return egid().value();
+    auto credentials = this->credentials();
+    return credentials->egid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> user_ruid, Userspace<UserID*> user_euid, Userspace<UserID*> user_suid)

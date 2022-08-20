@@ -19,7 +19,8 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
         return EINVAL;
 
     u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    auto fifo = TRY(FIFO::try_create(uid()));
+    auto credentials = this->credentials();
+    auto fifo = TRY(FIFO::try_create(credentials->uid()));
 
     auto reader_description = TRY(fifo->open_direction(FIFO::Direction::Reader));
     auto writer_description = TRY(fifo->open_direction(FIFO::Direction::Writer));

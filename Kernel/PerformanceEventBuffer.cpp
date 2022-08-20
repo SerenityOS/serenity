@@ -206,7 +206,8 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
         TRY(strings.finish());
     }
 
-    bool show_kernel_addresses = Process::current().is_superuser();
+    auto current_process_credentials = Process::current().credentials();
+    bool show_kernel_addresses = current_process_credentials->is_superuser();
     auto array = TRY(object.add_array("events"sv));
     bool seen_first_sample = false;
     for (size_t i = 0; i < m_count; ++i) {

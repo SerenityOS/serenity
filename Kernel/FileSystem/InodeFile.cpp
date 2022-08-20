@@ -62,7 +62,8 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
 {
     switch (request) {
     case FIBMAP: {
-        if (!Process::current().is_superuser())
+        auto current_process_credentials = Process::current().credentials();
+        if (!current_process_credentials->is_superuser())
             return EPERM;
 
         auto user_block_number = static_ptr_cast<int*>(arg);

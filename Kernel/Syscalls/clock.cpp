@@ -38,7 +38,8 @@ ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<timesp
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::settime));
 
-    if (!is_superuser())
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
         return EPERM;
 
     auto time = TRY(copy_time_from_user(user_ts));
@@ -120,7 +121,8 @@ ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, User
 
     if (user_delta) {
         TRY(require_promise(Pledge::settime));
-        if (!is_superuser())
+        auto credentials = this->credentials();
+        if (!credentials->is_superuser())
             return EPERM;
         auto delta = TRY(copy_time_from_user(user_delta));
 
