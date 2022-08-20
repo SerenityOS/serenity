@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 // 25.1.4.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }

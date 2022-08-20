@@ -50,7 +50,7 @@ ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Va
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
     // 1. Let func be the this value.
-    auto function_value = vm.this_value(global_object);
+    auto function_value = vm.this_value();
 
     // 2. If IsCallable(func) is false, throw a TypeError exception.
     if (!function_value.is_function())
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     auto this_argument = vm.argument(0);
 
     // 1. Let Target be the this value.
-    auto target_value = vm.this_value(global_object);
+    auto target_value = vm.this_value();
 
     // 2. If IsCallable(Target) is false, throw a TypeError exception.
     if (!target_value.is_function())
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
     // 1. Let func be the this value.
-    auto function_value = vm.this_value(global_object);
+    auto function_value = vm.this_value();
 
     // 2. If IsCallable(func) is false, throw a TypeError exception.
     if (!function_value.is_function())
@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
     // 1. Let func be the this value.
-    auto function_value = vm.this_value(global_object);
+    auto function_value = vm.this_value();
 
     // If func is not a function, let's bail out early. The order of this step is not observable.
     if (!function_value.is_function()) {
@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
-    return TRY(ordinary_has_instance(global_object, vm.argument(0), vm.this_value(global_object)));
+    return TRY(ordinary_has_instance(global_object, vm.argument(0), vm.this_value()));
 }
 
 }

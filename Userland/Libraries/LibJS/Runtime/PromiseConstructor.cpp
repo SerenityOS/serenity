@@ -321,7 +321,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -355,7 +355,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -389,7 +389,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -423,7 +423,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto reason = vm.argument(0);
 
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -477,7 +477,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
     auto value = vm.argument(0);
 
     // 1. Let C be the this value.
-    auto constructor = vm.this_value(global_object);
+    auto constructor = vm.this_value();
 
     // 2. If Type(C) is not Object, throw a TypeError exception.
     if (!constructor.is_object())
@@ -491,7 +491,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
 {
     // 1. Return the this value.
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }

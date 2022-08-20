@@ -697,7 +697,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
             interpreter.realm(),
             [seen_items = HashTable<PropertyKey>(), items = move(properties)](VM& vm, GlobalObject& global_object) mutable -> ThrowCompletionOr<Value> {
                 auto& realm = *global_object.associated_realm();
-                auto iterated_object_value = vm.this_value(global_object);
+                auto iterated_object_value = vm.this_value();
                 if (!iterated_object_value.is_object())
                     return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next");
 

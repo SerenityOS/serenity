@@ -152,7 +152,7 @@ static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_obje
 // 23.1.3.1 Array.prototype.at ( index ), https://tc39.es/ecma262/#sec-array.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(relative_index).is_infinity())
@@ -172,7 +172,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
 // 23.1.3.2 Array.prototype.concat ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.concat
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     auto* new_array = TRY(array_species_create(global_object, *this_object, 0));
 
@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 // 23.1.3.4 Array.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-array.prototype.copywithin
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
     auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(global_object));
@@ -298,7 +298,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     return ArrayIterator::create(realm, this_object, Object::PropertyKind::KeyAndValue);
 }
@@ -310,7 +310,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -351,7 +351,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
 // 23.1.3.7 Array.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-array.prototype.fill
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
@@ -396,7 +396,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -454,7 +454,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -493,7 +493,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -532,7 +532,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -571,7 +571,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -641,7 +641,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
 // 23.1.3.13 Array.prototype.flat ( [ depth ] ), https://tc39.es/ecma262/#sec-array.prototype.flat
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
@@ -664,7 +664,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let sourceLen be ? LengthOfArrayLike(O).
     auto source_length = TRY(length_of_array_like(global_object, *object));
@@ -690,7 +690,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -761,7 +761,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *this_object));
@@ -817,7 +817,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *this_object));
@@ -884,7 +884,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 // 23.1.3.16 Array.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-array.prototype.includes
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     if (length == 0)
         return Value(false);
@@ -919,7 +919,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
     auto from_index = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -987,7 +987,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 // 23.1.3.18 Array.prototype.join ( separator ), https://tc39.es/ecma262/#sec-array.prototype.join
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     // This is not part of the spec, but all major engines do some kind of circular reference checks.
     // FWIW: engine262, a "100% spec compliant" ECMA-262 impl, aborts with "too much recursion".
@@ -1022,7 +1022,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     return ArrayIterator::create(realm, this_object, Object::PropertyKind::Key);
 }
@@ -1034,7 +1034,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
     auto from_index = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1102,7 +1102,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1145,7 +1145,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 // 23.1.3.22 Array.prototype.pop ( ), https://tc39.es/ecma262/#sec-array.prototype.pop
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     if (length == 0) {
         TRY(this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes));
@@ -1161,7 +1161,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 // 23.1.3.23 Array.prototype.push ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.push
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     auto argument_count = vm.argument_count();
     auto new_length = length + argument_count;
@@ -1181,7 +1181,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
     auto initial_value = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1263,7 +1263,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
     auto initial_value = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1341,7 +1341,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 // 23.1.3.26 Array.prototype.reverse ( ), https://tc39.es/ecma262/#sec-array.prototype.reverse
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
     auto middle = length / 2;
@@ -1376,7 +1376,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 // 23.1.3.27 Array.prototype.shift ( ), https://tc39.es/ecma262/#sec-array.prototype.shift
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     if (length == 0) {
         TRY(this_object->set(vm.names.length, Value(0), Object::ShouldThrowExceptions::Yes));
@@ -1403,7 +1403,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 // 23.1.3.28 Array.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-array.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     auto initial_length = TRY(length_of_array_like(global_object, *this_object));
 
@@ -1463,7 +1463,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
     auto this_arg = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1569,7 +1569,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn.to_string_without_side_effects());
 
     // 2. Let obj be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 3. Let len be ? LengthOfArrayLike(obj).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1611,7 +1611,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 // 23.1.3.31 Array.prototype.splice ( start, deleteCount, ...items ), https://tc39.es/ecma262/#sec-array.prototype.splice
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     auto initial_length = TRY(length_of_array_like(global_object, *this_object));
 
@@ -1703,7 +1703,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     auto options = vm.argument(1);
 
     // 1. Let array be ? ToObject(this value).
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     if (s_array_join_seen_objects.contains(this_object))
         return js_string(vm, "");
@@ -1756,7 +1756,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
     auto& realm = *global_object.associated_realm();
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1798,7 +1798,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 3. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1837,7 +1837,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     auto delete_count = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));
@@ -1963,7 +1963,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
     // 1. Let array be ? ToObject(this value).
-    auto* array = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* array = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let func be ? Get(array, "join").
     auto func = TRY(array->get(vm.names.join));
@@ -1979,7 +1979,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 // 23.1.3.34 Array.prototype.unshift ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.unshift
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     auto length = TRY(length_of_array_like(global_object, *this_object));
     auto arg_count = vm.argument_count();
     size_t new_length = length + arg_count;
@@ -2013,7 +2013,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
 
     return ArrayIterator::create(realm, this_object, Object::PropertyKind::Value);
 }
@@ -2027,7 +2027,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
     auto value = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
-    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(global_object));
 
     // 2. Let len be ? LengthOfArrayLike(O).
     auto length = TRY(length_of_array_like(global_object, *object));

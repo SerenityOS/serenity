@@ -90,7 +90,7 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species
 JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::symbol_species_getter)
 {
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }

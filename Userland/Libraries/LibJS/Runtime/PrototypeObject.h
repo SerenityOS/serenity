@@ -29,7 +29,7 @@ public:
     static ThrowCompletionOr<Object*> this_object(GlobalObject& global_object)
     {
         auto& vm = global_object.vm();
-        auto this_value = vm.this_value(global_object);
+        auto this_value = vm.this_value();
         if (!this_value.is_object())
             return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value);
         return &this_value.as_object();
@@ -39,7 +39,7 @@ public:
     static ThrowCompletionOr<ObjectType*> typed_this_object(GlobalObject& global_object)
     {
         auto& vm = global_object.vm();
-        auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+        auto* this_object = TRY(vm.this_value().to_object(global_object));
         if (!is<ObjectType>(this_object))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());
         return static_cast<ObjectType*>(this_object);
@@ -49,7 +49,7 @@ public:
     static ThrowCompletionOr<ObjectType*> typed_this_value(GlobalObject& global_object)
     {
         auto& vm = global_object.vm();
-        auto this_value = vm.this_value(global_object);
+        auto this_value = vm.this_value();
         if (!this_value.is_object() || !is<ObjectType>(this_value.as_object()))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());
         return static_cast<ObjectType*>(&this_value.as_object());

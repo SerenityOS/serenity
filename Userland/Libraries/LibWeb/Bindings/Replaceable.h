@@ -7,7 +7,7 @@
 #pragma once
 
 #define REPLACEABLE_PROPERTY_SETTER(ObjectType, property)                                         \
-    auto this_value = vm.this_value(global_object);                                               \
+    auto this_value = vm.this_value();                                                            \
     if (!this_value.is_object() || !is<ObjectType>(this_value.as_object()))                       \
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, #ObjectType); \
     TRY(this_value.as_object().internal_define_own_property(                                      \

@@ -160,7 +160,7 @@ void WebAssemblyModule::initialize(JS::Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
     auto name = TRY(vm.argument(0).to_string(global_object));
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     auto* object = TRY(this_value.to_object(global_object));
     if (!is<WebAssemblyModule>(object))
         return vm.throw_completion<JS::TypeError>("Not a WebAssemblyModule");

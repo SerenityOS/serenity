@@ -63,8 +63,11 @@ public:
 
     void gather_roots(HashTable<Cell*>&);
 
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    Symbol* well_known_symbol_##snake_name() const { return m_well_known_symbol_##snake_name; }
+#define __JS_ENUMERATE(SymbolName, snake_name)     \
+    Symbol* well_known_symbol_##snake_name() const \
+    {                                              \
+        return m_well_known_symbol_##snake_name;   \
+    }
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
@@ -144,10 +147,9 @@ public:
         return index < arguments.size() ? arguments[index] : js_undefined();
     }
 
-    Value this_value(Object& global_object) const
+    Value this_value() const
     {
-        if (m_execution_context_stack.is_empty())
-            return &global_object;
+        VERIFY(!m_execution_context_stack.is_empty());
         return running_execution_context().this_value;
     }
 

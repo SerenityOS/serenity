@@ -23,7 +23,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 {
     auto delta = TRY(vm.argument(0).to_u32(global_object));
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -53,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 {
     auto index = TRY(vm.argument(0).to_u32(global_object));
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 {
     auto index = TRY(vm.argument(0).to_u32(global_object));
 
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);
@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Table");
     auto* table_object = static_cast<WebAssemblyTableObject*>(this_object);

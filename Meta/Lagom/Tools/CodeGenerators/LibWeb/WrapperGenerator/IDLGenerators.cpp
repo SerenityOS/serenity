@@ -3368,7 +3368,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
         generator.append(R"~~~(
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     JS::Object* this_object = nullptr;
     if (this_value.is_nullish())
         this_object = &vm.current_realm()->global_object();
@@ -3540,7 +3540,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
     if (!callback.is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
 )~~~");
         generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key", interface);
@@ -3807,7 +3807,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(global_object));
     if (!is<@wrapper_class@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
     return &static_cast<@wrapper_class@*>(this_object)->impl();

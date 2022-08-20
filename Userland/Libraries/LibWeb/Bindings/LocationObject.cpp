@@ -76,7 +76,7 @@ AK::URL LocationObject::url() const
 static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::GlobalObject& global_object)
 {
     auto& vm = global_object.vm();
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     if (!this_value.is_object() || !is<LocationObject>(this_value.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Location");
     return static_cast<LocationObject*>(&this_value.as_object());

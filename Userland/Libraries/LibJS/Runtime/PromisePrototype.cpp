@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
     auto on_rejected = vm.argument(0);
 
     // 1. Let promise be the this value.
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
 
     // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
     return TRY(this_value.invoke(global_object, vm.names.then, js_undefined(), on_rejected));
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     auto on_finally = vm.argument(0);
 
     // 1. Let promise be the this value.
-    auto promise = vm.this_value(global_object);
+    auto promise = vm.this_value();
 
     // 2. If Type(promise) is not Object, throw a TypeError exception.
     if (!promise.is_object())

@@ -86,7 +86,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
     auto& realm = *global_object.associated_realm();
-    auto constructor = vm.this_value(global_object);
+    auto constructor = vm.this_value();
 
     FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto& realm = *global_object.associated_realm();
-    auto this_value = vm.this_value(global_object);
+    auto this_value = vm.this_value();
     Object* array;
     if (this_value.is_constructor())
         array = TRY(JS::construct(global_object, this_value.as_function(), Value(vm.argument_count())));
@@ -193,7 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
 {
-    return vm.this_value(global_object);
+    return vm.this_value();
 }
 
 }
