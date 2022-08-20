@@ -64,7 +64,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
     }
 
     // 5. Return ? CreateTemporalTimeZone(identifier, NewTarget).
-    return TRY(create_temporal_time_zone(global_object, identifier, &new_target));
+    return TRY(create_temporal_time_zone(vm, identifier, &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZoneConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Return ? ToTemporalTimeZone(item).
-    return TRY(to_temporal_time_zone(global_object, item));
+    return TRY(to_temporal_time_zone(vm, item));
 }
 
 }

@@ -47,7 +47,6 @@ ThrowCompletionOr<Value> PlainMonthDayConstructor::call()
 ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto iso_month = vm.argument(0);
     auto iso_day = vm.argument(1);
@@ -61,16 +60,16 @@ ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& n
     }
 
     // 3. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = TRY(to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainMonthDay));
+    auto m = TRY(to_integer_throw_on_infinity(vm, iso_month, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 4. Let d be ? ToIntegerThrowOnInfinity(isoDay).
-    auto d = TRY(to_integer_throw_on_infinity(global_object, iso_day, ErrorType::TemporalInvalidPlainMonthDay));
+    auto d = TRY(to_integer_throw_on_infinity(vm, iso_day, ErrorType::TemporalInvalidPlainMonthDay));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, calendar_like));
 
     // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISOYear).
-    auto ref = TRY(to_integer_throw_on_infinity(global_object, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay));
+    auto ref = TRY(to_integer_throw_on_infinity(vm, reference_iso_year, ErrorType::TemporalInvalidPlainMonthDay));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalMonthDay will immediately check that these values are valid
@@ -79,7 +78,7 @@ ThrowCompletionOr<Object*> PlainMonthDayConstructor::construct(FunctionObject& n
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 7. Return ? CreateTemporalMonthDay(m, d, calendar, ref, NewTarget).
-    return TRY(create_temporal_month_day(global_object, m, d, *calendar, ref, &new_target));
+    return TRY(create_temporal_month_day(vm, m, d, *calendar, ref, &new_target));
 }
 
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
@@ -88,21 +87,21 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(vm, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, options));
+        (void)TRY(to_temporal_overflow(vm, options));
 
         auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
 
         // b. Return ! CreateTemporalMonthDay(item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]], item.[[ISOYear]]).
-        return MUST(create_temporal_month_day(global_object, plain_month_day_object.iso_month(), plain_month_day_object.iso_day(), plain_month_day_object.calendar(), plain_month_day_object.iso_year()));
+        return MUST(create_temporal_month_day(vm, plain_month_day_object.iso_month(), plain_month_day_object.iso_day(), plain_month_day_object.calendar(), plain_month_day_object.iso_year()));
     }
 
     // 3. Return ? ToTemporalMonthDay(item, options).
-    return TRY(to_temporal_month_day(global_object, item, options));
+    return TRY(to_temporal_month_day(vm, item, options));
 }
 
 }

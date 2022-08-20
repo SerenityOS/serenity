@@ -63,7 +63,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "options"sv);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(Temporal::get_options_object(global_object, options_value));
+    auto* options = TRY(Temporal::get_options_object(vm, options_value));
 
     // 6. Let opt be a new Record.
     LocaleOptions opt {};
@@ -71,7 +71,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 7. Let localeData be %DisplayNames%.[[LocaleData]].
 
     // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
@@ -80,13 +80,13 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
-    auto style = TRY(get_option(global_object, *options, vm.names.style, OptionType::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
+    auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
 
     // 12. Set displayNames.[[Style]] to style.
     display_names->set_style(style.as_string().string());
 
     // 13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency", "calendar", "dateTimeField" », undefined).
-    auto type = TRY(get_option(global_object, *options, vm.names.type, OptionType::String, { "language"sv, "region"sv, "script"sv, "currency"sv, "calendar"sv, "dateTimeField"sv }, Empty {}));
+    auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "language"sv, "region"sv, "script"sv, "currency"sv, "calendar"sv, "dateTimeField"sv }, Empty {}));
 
     // 14. If type is undefined, throw a TypeError exception.
     if (type.is_undefined())
@@ -96,7 +96,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     display_names->set_type(type.as_string().string());
 
     // 16. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
-    auto fallback = TRY(get_option(global_object, *options, vm.names.fallback, OptionType::String, { "code"sv, "none"sv }, "code"sv));
+    auto fallback = TRY(get_option(vm, *options, vm.names.fallback, OptionType::String, { "code"sv, "none"sv }, "code"sv));
 
     // 17. Set displayNames.[[Fallback]] to fallback.
     display_names->set_fallback(fallback.as_string().string());
@@ -112,7 +112,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     // 22. Assert: types is a Record (see 12.4.3).
 
     // 23. Let languageDisplay be ? GetOption(options, "languageDisplay", "string", « "dialect", "standard" », "dialect").
-    auto language_display = TRY(get_option(global_object, *options, vm.names.languageDisplay, OptionType::String, { "dialect"sv, "standard"sv }, "dialect"sv));
+    auto language_display = TRY(get_option(vm, *options, vm.names.languageDisplay, OptionType::String, { "dialect"sv, "standard"sv }, "dialect"sv));
 
     // 24. Let typeFields be types.[[<type>]].
     // 25. Assert: typeFields is a Record (see 12.4.3).

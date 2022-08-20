@@ -98,13 +98,13 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     LocaleOptions opt {};
 
     // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 5. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
     // 6. Let calendar be ? GetOption(options, "calendar", "string", undefined, undefined).
-    auto calendar = TRY(get_option(global_object, *options, vm.names.calendar, OptionType::String, {}, Empty {}));
+    auto calendar = TRY(get_option(vm, *options, vm.names.calendar, OptionType::String, {}, Empty {}));
 
     // 7. If calendar is not undefined, then
     if (!calendar.is_undefined()) {
@@ -117,7 +117,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     }
 
     // 9. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
-    auto numbering_system = TRY(get_option(global_object, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
+    auto numbering_system = TRY(get_option(vm, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
     // 10. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
@@ -130,10 +130,10 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     }
 
     // 12. Let hour12 be ? GetOption(options, "hour12", "boolean", undefined, undefined).
-    auto hour12 = TRY(get_option(global_object, *options, vm.names.hour12, OptionType::Boolean, {}, Empty {}));
+    auto hour12 = TRY(get_option(vm, *options, vm.names.hour12, OptionType::Boolean, {}, Empty {}));
 
     // 13. Let hourCycle be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
-    auto hour_cycle = TRY(get_option(global_object, *options, vm.names.hourCycle, OptionType::String, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }, Empty {}));
+    auto hour_cycle = TRY(get_option(vm, *options, vm.names.hourCycle, OptionType::String, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }, Empty {}));
 
     // 14. If hour12 is not undefined, then
     if (!hour12.is_undefined()) {
@@ -274,7 +274,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         else {
             // i. Let values be a List whose elements are the strings given in the Values column of the row.
             // ii. Let value be ? GetOption(options, prop, "string", values, undefined).
-            auto value = TRY(get_option(global_object, *options, property, OptionType::String, values, Empty {}));
+            auto value = TRY(get_option(vm, *options, property, OptionType::String, values, Empty {}));
 
             // d. Set formatOptions.[[<prop>]] to value.
             if (!value.is_undefined()) {
@@ -290,17 +290,17 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     }));
 
     // 37. Let matcher be ? GetOption(options, "formatMatcher", "string", « "basic", "best fit" », "best fit").
-    matcher = TRY(get_option(global_object, *options, vm.names.formatMatcher, OptionType::String, AK::Array { "basic"sv, "best fit"sv }, "best fit"sv));
+    matcher = TRY(get_option(vm, *options, vm.names.formatMatcher, OptionType::String, AK::Array { "basic"sv, "best fit"sv }, "best fit"sv));
 
     // 38. Let dateStyle be ? GetOption(options, "dateStyle", "string", « "full", "long", "medium", "short" », undefined).
-    auto date_style = TRY(get_option(global_object, *options, vm.names.dateStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
+    auto date_style = TRY(get_option(vm, *options, vm.names.dateStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
     // 39. Set dateTimeFormat.[[DateStyle]] to dateStyle.
     if (!date_style.is_undefined())
         date_time_format.set_date_style(date_style.as_string().string());
 
     // 40. Let timeStyle be ? GetOption(options, "timeStyle", "string", « "full", "long", "medium", "short" », undefined).
-    auto time_style = TRY(get_option(global_object, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
+    auto time_style = TRY(get_option(vm, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
     // 41. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
     if (!time_style.is_undefined())

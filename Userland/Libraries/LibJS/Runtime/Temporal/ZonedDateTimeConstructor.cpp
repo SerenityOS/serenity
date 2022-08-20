@@ -61,20 +61,20 @@ ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& n
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
-    auto* time_zone = TRY(to_temporal_time_zone(global_object, vm.argument(1)));
+    auto* time_zone = TRY(to_temporal_time_zone(vm, vm.argument(1)));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, vm.argument(2)));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(2)));
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
-    return TRY(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
+    return TRY(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
 }
 
 // 6.2.2 Temporal.ZonedDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(vm, vm.argument(1)));
 
     auto item = vm.argument(0);
 
@@ -83,30 +83,30 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
         auto& item_object = static_cast<ZonedDateTime&>(item.as_object());
 
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, options));
+        (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Perform ? ToTemporalDisambiguation(options).
-        (void)TRY(to_temporal_disambiguation(global_object, options));
+        (void)TRY(to_temporal_disambiguation(vm, options));
 
         // c. Perform ? ToTemporalOffset(options, "reject").
-        (void)TRY(to_temporal_offset(global_object, options, "reject"));
+        (void)TRY(to_temporal_offset(vm, options, "reject"));
 
         // d. Return ! CreateTemporalZonedDateTime(item.[[Nanoseconds]], item.[[TimeZone]], item.[[Calendar]]).
-        return MUST(create_temporal_zoned_date_time(global_object, item_object.nanoseconds(), item_object.time_zone(), item_object.calendar()));
+        return MUST(create_temporal_zoned_date_time(vm, item_object.nanoseconds(), item_object.time_zone(), item_object.calendar()));
     }
 
     // 3. Return ? ToTemporalZonedDateTime(item, options).
-    return TRY(to_temporal_zoned_date_time(global_object, item, options));
+    return TRY(to_temporal_zoned_date_time(vm, item, options));
 }
 
 // 6.2.3 Temporal.ZonedDateTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.compare
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalZonedDateTime(one).
-    auto* one = TRY(to_temporal_zoned_date_time(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_zoned_date_time(vm, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalZonedDateTime(two).
-    auto* two = TRY(to_temporal_zoned_date_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_zoned_date_time(vm, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareEpochNanoseconds(one.[[Nanoseconds]], two.[[Nanoseconds]])).
     return Value(compare_epoch_nanoseconds(one->nanoseconds(), two->nanoseconds()));

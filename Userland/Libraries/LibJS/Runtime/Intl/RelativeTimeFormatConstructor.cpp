@@ -92,13 +92,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     LocaleOptions opt {};
 
     // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 5. Set opt.[[LocaleMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
     // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
-    auto numbering_system = TRY(get_option(global_object, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
+    auto numbering_system = TRY(get_option(vm, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
     // 7. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
@@ -128,13 +128,13 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
         relative_time_format.set_numbering_system(result.nu.release_value());
 
     // 15. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
-    auto style = TRY(get_option(global_object, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
+    auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 16. Set relativeTimeFormat.[[Style]] to style.
     relative_time_format.set_style(style.as_string().string());
 
     // 17. Let numeric be ? GetOption(options, "numeric", "string", « "always", "auto" », "always").
-    auto numeric = TRY(get_option(global_object, *options, vm.names.numeric, OptionType::String, { "always"sv, "auto"sv }, "always"sv));
+    auto numeric = TRY(get_option(vm, *options, vm.names.numeric, OptionType::String, { "always"sv, "auto"sv }, "always"sv));
 
     // 18. Set relativeTimeFormat.[[Numeric]] to numeric.
     relative_time_format.set_numeric(numeric.as_string().string());
