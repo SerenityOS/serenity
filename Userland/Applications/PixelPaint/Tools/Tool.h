@@ -79,6 +79,8 @@ protected:
     WeakPtr<ImageEditor> m_editor;
     RefPtr<GUI::Action> m_action;
 
+    Gfx::IntPoint editor_layer_location(Layer const& layer) const;
+
     virtual Gfx::IntPoint editor_stroke_position(Gfx::IntPoint const& pixel_coords, int stroke_thickness) const;
 
     void set_primary_slider(GUI::ValueSlider* primary) { m_primary_slider = primary; }

@@ -8,6 +8,7 @@
 
 #include "Tool.h"
 #include "../ImageEditor.h"
+#include "../Layer.h"
 #include <LibGUI/Action.h>
 
 namespace PixelPaint {
@@ -44,6 +45,11 @@ void Tool::on_keydown(GUI::KeyEvent& event)
     default:
         break;
     }
+}
+
+Gfx::IntPoint Tool::editor_layer_location(Layer const& layer) const
+{
+    return (Gfx::FloatPoint { layer.location() } * m_editor->scale()).to_rounded<int>();
 }
 
 Gfx::IntPoint Tool::editor_stroke_position(Gfx::IntPoint const& pixel_coords, int stroke_thickness) const
