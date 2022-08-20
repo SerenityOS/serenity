@@ -37,10 +37,16 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
 
     switch (m_fill_mode) {
     case FillMode::Outline:
-        if (m_antialias_enabled)
+        if (m_antialias_enabled) {
             aa_painter.draw_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
-        else
+        } else {
+            // For some reason for non-AA draw_ellipse() the ellipse is outside of the rect (unlike all other ellipse drawing functions).
+            // Scale the ellipse rect by sqrt(2) to get an ellipse arc that appears as if it was inside of the rect.
+            auto shrink_width = ellipse_intersecting_rect.width() * (1 - 1 / 1.41);
+            auto shrink_height = ellipse_intersecting_rect.height() * (1 - 1 / 1.41);
+            ellipse_intersecting_rect.shrink(shrink_width, shrink_height);
             painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
+        }
         break;
     case FillMode::Fill:
         if (m_antialias_enabled)
