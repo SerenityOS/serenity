@@ -139,8 +139,7 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index,
     if (!m_reader.matches("obj"))
         return error("Expected \"obj\" at beginning of indirect value");
     m_reader.move_by(3);
-    if (m_reader.matches_eol())
-        m_reader.consume_eol();
+    m_reader.consume_whitespace();
 
     push_reference({ index, generation });
     auto value = TRY(parse_value());
