@@ -11,6 +11,7 @@
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -162,7 +163,7 @@ static ErrorOr<void> run_command(String command, bool keep_open)
         arguments.append("-c"sv);
         arguments.append(command);
     }
-    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm"sv, "PAGER=more"sv, "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv }));
+    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm"sv, "PAGER=more"sv, "PATH="sv DEFAULT_PATH_SV }));
     TRY(Core::System::exec(shell, arguments, Core::System::SearchInPath::No, env.span()));
     VERIFY_NOT_REACHED();
 }

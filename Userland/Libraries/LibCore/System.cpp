@@ -958,7 +958,7 @@ ErrorOr<String> find_file_in_path(StringView filename)
     auto const* path_ptr = getenv("PATH");
     StringView path { path_ptr, strlen(path_ptr) };
     if (path.is_empty())
-        path = "/bin:/usr/bin"sv;
+        path = DEFAULT_PATH_SV;
     auto parts = path.split_view(':');
     for (auto& part : parts) {
         auto candidate = String::formatted("{}/{}", part, filename);
@@ -1043,7 +1043,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
             ScopedValueRollback errno_rollback(errno);
             String path = getenv("PATH");
             if (path.is_empty())
-                path = "/bin:/usr/bin";
+                path = DEFAULT_PATH;
             auto parts = path.split(':');
             for (auto& part : parts) {
                 auto candidate = String::formatted("{}/{}", part, filename);

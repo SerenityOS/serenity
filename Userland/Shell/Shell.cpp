@@ -2189,7 +2189,7 @@ Shell::Shell()
             path.append({ path_env_ptr, strlen(path_env_ptr) });
         if (path.length())
             path.append(":"sv);
-        path.append("/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv);
+        path.append(DEFAULT_PATH_SV);
         setenv("PATH", path.to_string().characters(), true);
     }
 
