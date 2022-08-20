@@ -498,9 +498,22 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 // 21.3.2.13 Math.cosh ( x ), https://tc39.es/ecma262/#sec-math.cosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 {
+    // 1. Let n be ? ToNumber(x).
     auto number = TRY(vm.argument(0).to_number(global_object));
+
+    // 2. If n is NaN, return NaN.
     if (number.is_nan())
         return js_nan();
+
+    // 3. If n is +∞𝔽 or n is -∞𝔽, return +∞𝔽.
+    if (number.is_positive_infinity() || number.is_negative_infinity())
+        return js_infinity();
+
+    // 4. If n is +0𝔽 or n is -0𝔽, return 1𝔽.
+    if (number.is_positive_zero() || number.is_negative_zero())
+        return Value(1);
+
+    // 5. Return an implementation-approximated Number value representing the result of the hyperbolic cosine of ℝ(n).
     return Value(::cosh(number.as_double()));
 }
 
