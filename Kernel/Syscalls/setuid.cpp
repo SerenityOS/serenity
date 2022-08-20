@@ -274,7 +274,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
 
     HashTable<GroupID> unique_extra_gids;
     for (auto& extra_gid : new_extra_gids) {
-        if (extra_gid != gid())
+        if (extra_gid != credentials->gid())
             TRY(unique_extra_gids.try_set(extra_gid));
     }
 
