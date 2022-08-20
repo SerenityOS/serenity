@@ -44,7 +44,7 @@ void SetPrototype::initialize(Realm& realm)
 // 24.2.3.1 Set.prototype.add ( value ), https://tc39.es/ecma262/#sec-set.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (value.is_negative_zero())
         value = Value(0);
@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 // 24.2.3.2 Set.prototype.clear ( ), https://tc39.es/ecma262/#sec-set.prototype.clear
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     set->set_clear();
     return js_undefined();
 }
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 // 24.2.3.4 Set.prototype.delete ( value ), https://tc39.es/ecma262/#sec-set.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     return Value(set->set_remove(vm.argument(0)));
 }
 
@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
 
     return SetIterator::create(realm, *set, Object::PropertyKind::KeyAndValue);
 }
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 // 24.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-set.prototype.foreach
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     if (!vm.argument(0).is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value();
@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 // 24.2.3.7 Set.prototype.has ( value ), https://tc39.es/ecma262/#sec-set.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     return Value(set->set_has(vm.argument(0)));
 }
 
@@ -101,7 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
 
     return SetIterator::create(realm, *set, Object::PropertyKind::Value);
 }
@@ -109,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
-    auto* set = TRY(typed_this_object(global_object));
+    auto* set = TRY(typed_this_object(vm));
     return Value(set->set_size());
 }
 

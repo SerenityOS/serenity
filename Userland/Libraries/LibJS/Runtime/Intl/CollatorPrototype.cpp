@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::compare_getter)
 
     // 1. Let collator be the this value.
     // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
-    auto* collator = TRY(typed_this_object(global_object));
+    auto* collator = TRY(typed_this_object(vm));
 
     // 3. If collator.[[BoundCompare]] is undefined, then
     if (!collator->bound_compare()) {
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::resolved_options)
 
     // 1. Let collator be the this value.
     // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
-    auto* collator = TRY(typed_this_object(global_object));
+    auto* collator = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

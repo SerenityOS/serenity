@@ -33,7 +33,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
 {
     // 1. Let segments be the this value.
     // 2. Perform ? RequireInternalSlot(segments, [[SegmentsSegmenter]]).
-    auto* segments = TRY(typed_this_object(global_object));
+    auto* segments = TRY(typed_this_object(vm));
 
     // 3. Let segmenter be segments.[[SegmentsSegmenter]].
     auto const& segmenter = segments->segments_segmenter();
@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::symbol_iterator)
 
     // 1. Let segments be the this value.
     // 2. Perform ? RequireInternalSlot(segments, [[SegmentsSegmenter]]).
-    auto* segments = TRY(typed_this_object(global_object));
+    auto* segments = TRY(typed_this_object(vm));
 
     // 3. Let segmenter be segments.[[SegmentsSegmenter]].
     auto& segmenter = segments->segments_segmenter();

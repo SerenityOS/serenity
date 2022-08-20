@@ -26,9 +26,8 @@ class PrototypeObject : public Object {
 public:
     virtual ~PrototypeObject() override = default;
 
-    static ThrowCompletionOr<Object*> this_object(GlobalObject& global_object)
+    static ThrowCompletionOr<Object*> this_object(VM& vm)
     {
-        auto& vm = global_object.vm();
         auto this_value = vm.this_value();
         if (!this_value.is_object())
             return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value);
@@ -36,9 +35,10 @@ public:
     }
 
     // Use typed_this_object() when the spec coerces |this| value to an object.
-    static ThrowCompletionOr<ObjectType*> typed_this_object(GlobalObject& global_object)
+    static ThrowCompletionOr<ObjectType*> typed_this_object(VM& vm)
     {
-        auto& vm = global_object.vm();
+        auto& realm = *vm.current_realm();
+        auto& global_object = realm.global_object();
         auto* this_object = TRY(vm.this_value().to_object(global_object));
         if (!is<ObjectType>(this_object))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());
@@ -46,9 +46,8 @@ public:
     }
 
     // Use typed_this_value() when the spec does not coerce |this| value to an object.
-    static ThrowCompletionOr<ObjectType*> typed_this_value(GlobalObject& global_object)
+    static ThrowCompletionOr<ObjectType*> typed_this_value(VM& vm)
     {
-        auto& vm = global_object.vm();
         auto this_value = vm.this_value();
         if (!this_value.is_object() || !is<ObjectType>(this_value.as_object()))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());

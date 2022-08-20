@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(global_object));
+    auto* number_format = TRY(typed_this_object(vm));
 
     // 4. If nf.[[BoundFormat]] is undefined, then
     if (!number_format->bound_format()) {
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(global_object));
+    auto* number_format = TRY(typed_this_object(vm));
 
     // 3. Let x be ? ToIntlMathematicalValue(value).
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
@@ -88,7 +88,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(global_object));
+    auto* number_format = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(global_object));
+    auto* number_format = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(global_object));
+    auto* number_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

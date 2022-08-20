@@ -34,7 +34,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* set_iterator = TRY(typed_this_value(global_object));
+    auto* set_iterator = TRY(typed_this_value(vm));
     if (set_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 

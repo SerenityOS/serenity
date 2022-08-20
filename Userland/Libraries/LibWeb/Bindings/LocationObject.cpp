@@ -73,9 +73,8 @@ AK::URL LocationObject::url() const
     return relevant_document ? relevant_document->url() : "about:blank"sv;
 }
 
-static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::VM& vm)
 {
-    auto& vm = global_object.vm();
     auto this_value = vm.this_value();
     if (!this_value.is_object() || !is<LocationObject>(this_value.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Location");
@@ -85,7 +84,7 @@ static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::GlobalObject&
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-href
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -115,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-pathname
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::pathname_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -126,7 +125,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::pathname_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::hostname_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -141,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::hostname_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-host
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -163,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -178,7 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-search
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::search_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -193,7 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::search_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
@@ -204,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-port
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 {
-    auto* location_object = TRY(typed_this_value(global_object));
+    auto* location_object = TRY(typed_this_value(vm));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 

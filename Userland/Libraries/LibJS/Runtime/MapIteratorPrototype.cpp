@@ -32,7 +32,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* map_iterator = TRY(typed_this_value(global_object));
+    auto* map_iterator = TRY(typed_this_value(vm));
     if (map_iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 

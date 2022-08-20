@@ -31,7 +31,7 @@ void StringIteratorPrototype::initialize(Realm& realm)
 // 22.1.5.1.1 %StringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
-    auto* iterator = TRY(typed_this_value(global_object));
+    auto* iterator = TRY(typed_this_value(vm));
     if (iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 

@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set dtf to ? UnwrapDateTimeFormat(dtf).
     // 3. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-    auto* date_time_format = TRY(typed_this_object(global_object));
+    auto* date_time_format = TRY(typed_this_object(vm));
 
     // 4. If dtf.[[BoundFormat]] is undefined, then
     if (!date_time_format->bound_format()) {
@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
 
     // 1. Let dtf be the this value.
     // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-    auto* date_time_format = TRY(typed_this_object(global_object));
+    auto* date_time_format = TRY(typed_this_object(vm));
 
     double date_value;
 
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
 
     // 1. Let dtf be this value.
     // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-    auto* date_time_format = TRY(typed_this_object(global_object));
+    auto* date_time_format = TRY(typed_this_object(vm));
 
     // 3. If startDate is undefined or endDate is undefined, throw a TypeError exception.
     if (start_date.is_undefined())
@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
 
     // 1. Let dtf be this value.
     // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-    auto* date_time_format = TRY(typed_this_object(global_object));
+    auto* date_time_format = TRY(typed_this_object(vm));
 
     // 3. If startDate is undefined or endDate is undefined, throw a TypeError exception.
     if (start_date.is_undefined())
@@ -150,7 +150,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set dtf to ? UnwrapDateTimeFormat(dtf).
     // 3. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
-    auto* date_time_format = TRY(typed_this_object(global_object));
+    auto* date_time_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

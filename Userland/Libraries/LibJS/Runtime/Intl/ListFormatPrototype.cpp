@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(vm));
 
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY(string_list_from_iterable(vm, list));
@@ -57,7 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(vm));
 
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY(string_list_from_iterable(vm, list));
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

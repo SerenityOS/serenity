@@ -33,7 +33,7 @@ void RegExpStringIteratorPrototype::initialize(Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
 {
     // For details, see the 'closure' of: https://tc39.es/ecma262/#sec-createregexpstringiterator
-    auto* iterator = TRY(typed_this_value(global_object));
+    auto* iterator = TRY(typed_this_value(vm));
     if (iterator->done())
         return create_iterator_result_object(global_object, js_undefined(), true);
 
