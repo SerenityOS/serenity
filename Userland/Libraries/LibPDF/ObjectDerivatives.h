@@ -113,6 +113,9 @@ public:
     template<typename... Args>
     bool contains(Args&&... keys) const { return (m_map.contains(keys) && ...); }
 
+    template<typename... Args>
+    bool contains_any_of(Args&&... keys) const { return (m_map.contains(keys) || ...); }
+
     ALWAYS_INLINE Optional<Value> get(FlyString const& key) const { return m_map.get(key); }
 
     Value get_value(FlyString const& key) const
