@@ -296,7 +296,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             return ENOEXEC;
         }
 
-        auto region_name = TRY(KString::formatted("{} (master-tls)", elf_name));
+        auto region_name = TRY(KString::formatted("{}: .tls (master-tls)", elf_name));
         master_tls_region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, program_header.size_in_memory(), PAGE_SIZE, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
         master_tls_size = program_header.size_in_memory();
         master_tls_alignment = program_header.alignment();
@@ -319,7 +319,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             prot |= PROT_READ;
         if (program_header.is_writable())
             prot |= PROT_WRITE;
-        auto region_name = TRY(KString::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
+        auto region_name = TRY(KString::formatted("{}: .data", elf_name));
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
@@ -357,10 +357,14 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         if (program_header.is_executable())
             prot |= PROT_EXEC;
 
+        StringBuilder region_name;
+        TRY(region_name.try_append(elf_name->view()));
+        TRY(region_name.try_append(program_header.is_executable() ? ": .text"sv : ": .rodata"sv));
+
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
-        auto region = TRY(new_space->allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), elf_name->view(), prot, true));
+        auto region = TRY(new_space->allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), region_name.string_view(), prot, true));
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);
