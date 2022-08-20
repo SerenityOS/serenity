@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -245,6 +246,9 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::id));
+
+    if (count > NGROUPS_MAX)
+        return EINVAL;
 
     auto credentials = this->credentials();
 
