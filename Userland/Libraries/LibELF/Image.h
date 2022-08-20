@@ -18,6 +18,41 @@
 
 namespace ELF {
 
+template<typename ElfHeader, typename ElfPhdr, typename ElfShdr>
+class BitnessSpecificImage {
+public:
+    using Header = ElfHeader;
+    using ProgramHeader = ElfPhdr;
+    using SectionHeader = ElfShdr;
+
+    BitnessSpecificImage(ByteBuffer& image)
+        : m_image(image)
+    {
+    }
+
+    ElfHeader& get_header()
+    {
+        return *reinterpret_cast<ElfHeader*>(m_image.data());
+    }
+
+    Span<ElfPhdr> get_program_headers()
+    {
+        auto& header = get_header();
+        auto program_headers = reinterpret_cast<ElfPhdr*>(m_image.data() + header.e_phoff);
+        return Span<ElfPhdr>(program_headers, header.e_phnum);
+    }
+
+    Span<ElfShdr> get_sections()
+    {
+        auto& header = get_header();
+        auto sections = reinterpret_cast<ElfShdr*>(m_image.data() + header.e_shoff);
+        return Span<ElfShdr>(sections, header.e_shnum);
+    }
+
+private:
+    ByteBuffer& m_image;
+};
+
 class Image {
 public:
     explicit Image(ReadonlyBytes, bool verbose_logging = true);
