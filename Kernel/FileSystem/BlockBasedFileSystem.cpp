@@ -27,7 +27,7 @@ public:
         , m_entries(move(entries_buffer))
     {
         for (size_t i = 0; i < EntryCount; ++i) {
-            entries()[i].data = m_cached_block_data->data() + i * m_fs.block_size();
+            entries()[i].data = m_cached_block_data->data() + i * m_fs->block_size();
             m_clean_list.append(entries()[i]);
         }
     }
@@ -72,7 +72,7 @@ public:
             // Not a single clean entry! Flush writes and try again.
             // NOTE: We want to make sure we only call FileBackedFileSystem flush here,
             //       not some FileBackedFileSystem subclass flush!
-            m_fs.flush_writes_impl();
+            m_fs->flush_writes_impl();
             return ensure(block_index);
         }
 
@@ -100,10 +100,10 @@ public:
     }
 
 private:
-    BlockBasedFileSystem& m_fs;
-    mutable HashMap<BlockBasedFileSystem::BlockIndex, CacheEntry*> m_hash;
-    mutable IntrusiveList<&CacheEntry::list_node> m_clean_list;
+    mutable NonnullRefPtr<BlockBasedFileSystem> m_fs;
     mutable IntrusiveList<&CacheEntry::list_node> m_dirty_list;
+    mutable IntrusiveList<&CacheEntry::list_node> m_clean_list;
+    mutable HashMap<BlockBasedFileSystem::BlockIndex, CacheEntry*> m_hash;
     NonnullOwnPtr<KBuffer> m_cached_block_data;
     NonnullOwnPtr<KBuffer> m_entries;
 };
@@ -115,6 +115,14 @@ BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description
 }
 
 BlockBasedFileSystem::~BlockBasedFileSystem() = default;
+
+void BlockBasedFileSystem::remove_disk_cache_before_last_unmount()
+{
+    VERIFY(m_lock.is_locked());
+    m_cache.with_exclusive([&](auto& cache) {
+        cache.clear();
+    });
+}
 
 ErrorOr<void> BlockBasedFileSystem::initialize_while_locked()
 {

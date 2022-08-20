@@ -118,6 +118,8 @@ private:
     u64 blocks_per_group() const;
     u64 inode_size() const;
 
+    ErrorOr<NonnullLockRefPtr<Ext2FSInode>> build_root_inode() const;
+
     ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 

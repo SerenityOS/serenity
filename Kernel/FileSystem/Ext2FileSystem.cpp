@@ -140,7 +140,7 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         }
     }
 
-    m_root_inode = static_ptr_cast<Ext2FSInode>(TRY(get_inode({ fsid(), EXT2_ROOT_INO })));
+    m_root_inode = TRY(build_root_inode());
     return {};
 }
 
@@ -770,10 +770,29 @@ ErrorOr<void> Ext2FSInode::flush_metadata()
     return {};
 }
 
+ErrorOr<NonnullLockRefPtr<Ext2FSInode>> Ext2FS::build_root_inode() const
+{
+    MutexLocker locker(m_lock);
+    BlockIndex block_index;
+    unsigned offset;
+    if (!find_block_containing_inode(EXT2_ROOT_INO, block_index, offset))
+        return EINVAL;
+
+    auto inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), EXT2_ROOT_INO)));
+
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&inode->m_raw_inode));
+    TRY(read_block(block_index, &buffer, sizeof(ext2_inode), offset));
+    return inode;
+}
+
 ErrorOr<NonnullLockRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
 {
     MutexLocker locker(m_lock);
     VERIFY(inode.fsid() == fsid());
+    VERIFY(m_root_inode);
+
+    if (inode.index() == EXT2_ROOT_INO)
+        return *m_root_inode;
 
     {
         auto it = m_inode_cache.find(inode.index());
@@ -1690,12 +1709,12 @@ unsigned Ext2FS::free_inode_count() const
 ErrorOr<void> Ext2FS::prepare_to_clear_last_mount()
 {
     MutexLocker locker(m_lock);
-
     for (auto& it : m_inode_cache) {
         if (it.value->ref_count() > 1)
             return EBUSY;
     }
 
+    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
     m_inode_cache.clear();
     m_root_inode = nullptr;
     return {};
