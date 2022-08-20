@@ -259,6 +259,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
+    TRY(Core::System::unveil("/bin/Run", "rx"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
@@ -410,6 +411,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto& file_menu = window->add_menu("&File");
+    auto new_process_action = GUI::Action::create("New Process", { Mod_Ctrl, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        GUI::Process::spawn_or_show_error(window, "/bin/Run"sv);
+    });
+    new_process_action->set_status_tip("Start a new process");
+    file_menu.add_action(new_process_action);
+
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
