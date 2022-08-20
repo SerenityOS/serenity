@@ -463,7 +463,22 @@ Completion SuperCall::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     // 4. Let argList be ? ArgumentListEvaluation of Arguments.
     MarkedVector<Value> arg_list(vm.heap());
-    TRY(argument_list_evaluation(interpreter, global_object, m_arguments, arg_list));
+    if (m_is_synthetic == IsPartOfSyntheticConstructor::Yes) {
+        // NOTE: This is the case where we have a fake constructor(...args) { super(...args); } which
+        //       shouldn't call @@iterator of %Array.prototype%.
+        VERIFY(m_arguments.size() == 1);
+        VERIFY(m_arguments[0].is_spread);
+        auto const& argument = m_arguments[0];
+        auto value = MUST(argument.value->execute(interpreter, global_object)).release_value();
+        VERIFY(value.is_object() && is<Array>(value.as_object()));
+
+        auto& array_value = static_cast<Array const&>(value.as_object());
+        auto length = MUST(length_of_array_like(global_object, array_value));
+        for (size_t i = 0; i < length; ++i)
+            arg_list.append(array_value.get_without_side_effects(PropertyKey { i }));
+    } else {
+        TRY(argument_list_evaluation(interpreter, global_object, m_arguments, arg_list));
+    }
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
     if (!func || !Value(func).is_constructor())
@@ -1827,7 +1842,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         vm.running_execution_context().private_environment = outer_private_environment;
     };
 
-    // FIXME: Step 14.a is done in the parser. But maybe it shouldn't?
+    // FIXME: Step 14.a is done in the parser. By using a synthetic super(...args) which does not call @@iterator of %Array.prototype%
     auto class_constructor_value = TRY(m_constructor->execute(interpreter, global_object)).release_value();
 
     update_function_name(class_constructor_value, class_name);

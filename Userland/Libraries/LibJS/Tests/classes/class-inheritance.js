@@ -449,3 +449,60 @@ test("super outside of derived class fails to parse", () => {
         new J();
     }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
 });
+
+test("When no constructor on deriving class @@iterator of %Array.prototype% is not visibly called", () => {
+    const oldIterator = Array.prototype[Symbol.iterator];
+    var calls = 0;
+    Array.prototype[Symbol.iterator] = function () {
+        ++calls;
+        expect().fail("Called @@iterator");
+    };
+
+    class Base {
+        constructor(value1, value2) {
+            this.value1 = value1;
+            this.value2 = value2;
+        }
+    }
+
+    class Derived extends Base {}
+
+    const noArgumentsDerived = new Derived();
+    expect(noArgumentsDerived.value1).toBeUndefined();
+    expect(noArgumentsDerived.value2).toBeUndefined();
+    expect(noArgumentsDerived).toBeInstanceOf(Base);
+    expect(noArgumentsDerived).toBeInstanceOf(Derived);
+
+    const singleArgumentDerived = new Derived(1);
+    expect(singleArgumentDerived.value1).toBe(1);
+    expect(singleArgumentDerived.value2).toBeUndefined();
+
+    const singleArrayArgumentDerived = new Derived([1, 2]);
+    expect(singleArrayArgumentDerived.value1).toEqual([1, 2]);
+    expect(singleArrayArgumentDerived.value2).toBeUndefined();
+
+    const doubleArgumentDerived = new Derived(1, 2);
+    expect(doubleArgumentDerived.value1).toBe(1);
+    expect(doubleArgumentDerived.value2).toBe(2);
+
+    expect(calls).toBe(0);
+
+    class Derived2 extends Base {
+        constructor(...args) {
+            super(...args);
+        }
+    }
+
+    expect(() => {
+        new Derived2();
+    }).toThrowWithMessage(ExpectationError, "Called @@iterator");
+
+    expect(calls).toBe(1);
+
+    Array.prototype[Symbol.iterator] = oldIterator;
+
+    // Now Derived2 is fine again.
+    expect(new Derived2()).toBeInstanceOf(Derived2);
+
+    expect(calls).toBe(1);
+});
