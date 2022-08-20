@@ -20,12 +20,12 @@ namespace Kernel {
 
 class FileSystem : public AtomicRefCounted<FileSystem> {
     friend class Inode;
+    friend class VirtualFileSystem;
 
 public:
     virtual ~FileSystem();
 
     FileSystemID fsid() const { return m_fsid; }
-    static FileSystem* from_fsid(FileSystemID);
     static void sync();
     static void lock_all();
 
@@ -80,17 +80,8 @@ private:
     bool m_readonly { false };
 
     SpinlockProtected<size_t> m_attach_count { LockRank::FileSystem, 0 };
+    IntrusiveListNode<FileSystem> m_file_system_node;
 };
-
-inline FileSystem* InodeIdentifier::fs() // NOLINT(readability-make-member-function-const) const InodeIdentifiers should not be able to modify the FileSystem
-{
-    return FileSystem::from_fsid(m_fsid);
-}
-
-inline FileSystem const* InodeIdentifier::fs() const
-{
-    return FileSystem::from_fsid(m_fsid);
-}
 
 }
 

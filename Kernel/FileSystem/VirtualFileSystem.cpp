@@ -111,6 +111,30 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
     return {};
 }
 
+void VirtualFileSystem::sync_filesystems()
+{
+    NonnullLockRefPtrVector<FileSystem, 32> file_systems;
+    m_file_systems_list.with([&](auto const& list) {
+        for (auto& fs : list)
+            file_systems.append(fs);
+    });
+
+    for (auto& fs : file_systems)
+        fs.flush_writes();
+}
+
+void VirtualFileSystem::lock_all_filesystems()
+{
+    NonnullLockRefPtrVector<FileSystem, 32> file_systems;
+    m_file_systems_list.with([&](auto const& list) {
+        for (auto& fs : list)
+            file_systems.append(fs);
+    });
+
+    for (auto& fs : file_systems)
+        fs.m_lock.lock();
+}
+
 ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
 {
     auto& guest_inode = mountpoint_custody.inode();
@@ -125,11 +149,27 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
             auto mountpoint_path = TRY(mount->absolute_path());
             if (custody_path->view() != mountpoint_path->view())
                 continue;
-            TRY(mount->guest_fs().prepare_to_unmount());
-            mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
-                mounted_count--;
+            NonnullRefPtr<FileSystem> fs = mount->guest_fs();
+            TRY(fs->prepare_to_unmount());
+            fs->mounted_count({}).with([&](auto& mounted_count) {
+                VERIFY(mounted_count > 0);
+                if (mounted_count == 1) {
+                    dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
+                    m_file_systems_list.with([&](auto& list) {
+                        list.remove(*fs);
+                    });
+                    if (fs->is_file_backed()) {
+                        dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
+                        auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                        m_file_backed_file_systems_list.with([&](auto& list) {
+                            list.remove(file_backed_fs);
+                        });
+                    }
+                } else {
+                    mounted_count--;
+                }
             });
-            dbgln("VirtualFileSystem: Unmounting file system {}...", mount->guest_fs().fsid());
+            dbgln("VirtualFileSystem: Unmounting file system {}...", fs->fsid());
             (void)mounts.unstable_take(i);
             return {};
         }
@@ -154,14 +194,19 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     }
 
     m_root_inode = root_inode;
-    auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
-    dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
-
     if (fs.is_file_backed()) {
+        auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
+        dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
         m_file_backed_file_systems_list.with([&](auto& list) {
             list.append(static_cast<FileBackedFileSystem&>(fs));
         });
+    } else {
+        dmesgln("VirtualFileSystem: mounted root({}) from {}", fs.fsid(), fs.class_name());
     }
+
+    m_file_systems_list.with([&](auto& fs_list) {
+        fs_list.append(fs);
+    });
 
     // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
     m_mounts.with([&](auto& mounts) {
@@ -278,6 +323,9 @@ ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already
         auto fs = TRY(callback(description));
         VERIFY(fs->is_file_backed());
         list.append(static_cast<FileBackedFileSystem&>(*fs));
+        m_file_systems_list.with([&](auto& fs_list) {
+            fs_list.append(*fs);
+        });
         return static_ptr_cast<FileBackedFileSystem>(fs);
     }));
 }

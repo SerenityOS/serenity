@@ -41,6 +41,8 @@ protected:
 
     u64 m_logical_block_size { 512 };
 
+    void remove_disk_cache_before_last_unmount();
+
 private:
     DiskCache& cache() const;
     void flush_specific_block_if_needed(BlockIndex index);

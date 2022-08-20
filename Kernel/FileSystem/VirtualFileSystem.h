@@ -77,6 +77,9 @@ public:
 
     InodeIdentifier root_inode_id() const;
 
+    void sync_filesystems();
+    void lock_all_filesystems();
+
     static void sync();
 
     NonnullRefPtr<Custody> root_custody();
@@ -106,6 +109,7 @@ private:
 
     SpinlockProtected<Vector<NonnullOwnPtr<Mount>, 16>> m_mounts { LockRank::None };
     SpinlockProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>> m_file_backed_file_systems_list { LockRank::None };
+    SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>> m_file_systems_list { LockRank::FileSystem };
 };
 
 }
