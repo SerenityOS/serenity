@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"sv));
 
-    Config::pledge_domain("Solitaire");
+    Config::pledge_domains({ "Games", "Solitaire" });
+    Config::monitor_domain("Games");
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
