@@ -644,51 +644,26 @@ bool DocumentParser::navigate_to_after_startxref()
 
 PDFErrorOr<RefPtr<DictObject>> DocumentParser::conditionally_parse_page_tree_node(u32 object_index)
 {
-    VERIFY(m_xref_table->has_object(object_index));
-    auto byte_offset = m_xref_table->byte_offset_for_object(object_index);
+    auto dict_value = TRY(parse_object_with_index(object_index));
+    auto dict_object = dict_value.get<NonnullRefPtr<Object>>();
+    if (!dict_object->is<DictObject>())
+        return error(String::formatted("Invalid page tree with xref index {}", object_index));
 
-    m_reader.move_to(byte_offset);
-    TRY(parse_number());
-    TRY(parse_number());
-    if (!m_reader.matches("obj"))
-        return error(String::formatted("Invalid page tree offset {}", object_index));
+    auto dict = dict_object->cast<DictObject>();
+    if (!dict->contains_any_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count))
+        // This is a page, not a page tree node
+        return RefPtr<DictObject> {};
 
-    m_reader.move_by(3);
-    m_reader.consume_whitespace();
+    if (!dict->contains(CommonNames::Type))
+        return RefPtr<DictObject> {};
+    auto type_object = TRY(dict->get_object(m_document, CommonNames::Type));
+    if (!type_object->is<NameObject>())
+        return RefPtr<DictObject> {};
+    auto type_name = type_object->cast<NameObject>();
+    if (type_name->name() != CommonNames::Pages)
+        return RefPtr<DictObject> {};
 
-    VERIFY(m_reader.consume('<') && m_reader.consume('<'));
-
-    m_reader.consume_whitespace();
-    HashMap<FlyString, Value> map;
-
-    while (true) {
-        if (m_reader.matches(">>"))
-            break;
-        auto name = TRY(parse_name());
-        auto name_string = name->name();
-        if (!name_string.is_one_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count)) {
-            // This is a page, not a page tree node
-            return RefPtr<DictObject> {};
-        }
-
-        auto value = TRY(parse_value());
-        if (name_string == CommonNames::Type) {
-            if (!value.has<NonnullRefPtr<Object>>())
-                return RefPtr<DictObject> {};
-            auto type_object = value.get<NonnullRefPtr<Object>>();
-            if (!type_object->is<NameObject>())
-                return RefPtr<DictObject> {};
-            auto type_name = type_object->cast<NameObject>();
-            if (type_name->name() != CommonNames::Pages)
-                return RefPtr<DictObject> {};
-        }
-        map.set(name->name(), value);
-    }
-
-    VERIFY(m_reader.consume('>') && m_reader.consume('>'));
-    m_reader.consume_whitespace();
-
-    return make_object<DictObject>(map);
+    return dict;
 }
 
 }
