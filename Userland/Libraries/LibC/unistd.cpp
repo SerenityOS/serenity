@@ -179,12 +179,15 @@ int execve(char const* filename, char* const argv[], char* const envp[])
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://linux.die.net/man/3/execvpe (GNU extension)
 int execvpe(char const* filename, char* const argv[], char* const envp[])
 {
     if (strchr(filename, '/'))
         return execve(filename, argv, envp);
 
     ScopedValueRollback errno_rollback(errno);
+
+    // TODO: Make this use the PATH search implementation from Core::File.
     String path = getenv("PATH");
     if (path.is_empty())
         path = DEFAULT_PATH;

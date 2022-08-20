@@ -49,7 +49,7 @@ int main(int argc, char** argv, char** env)
     if (arguments[0].contains("/"sv))
         executable_path = Core::File::real_path_for(arguments[0]);
     else
-        executable_path = Core::find_executable_in_path(arguments[0]);
+        executable_path = Core::File::resolve_executable_from_environment(arguments[0]).value_or({});
     if (executable_path.is_empty()) {
         reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;

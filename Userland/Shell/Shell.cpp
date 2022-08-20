@@ -1338,27 +1338,6 @@ String Shell::unescape_token(StringView token)
     return builder.build();
 }
 
-String Shell::find_in_path(StringView program_name)
-{
-    String path = getenv("PATH");
-    if (!path.is_empty()) {
-        auto directories = path.split(':');
-        for (auto const& directory : directories) {
-            Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
-            while (programs.has_next()) {
-                auto program = programs.next_path();
-                auto program_path = String::formatted("{}/{}", directory, program);
-                if (access(program_path.characters(), X_OK) != 0)
-                    continue;
-                if (program == program_name)
-                    return program_path;
-            }
-        }
-    }
-
-    return {};
-}
-
 void Shell::cache_path()
 {
     if (!m_is_interactive)
@@ -1387,6 +1366,7 @@ void Shell::cache_path()
         cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
+    // TODO: Can we make this rely on Core::File::resolve_executable_from_environment()?
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');

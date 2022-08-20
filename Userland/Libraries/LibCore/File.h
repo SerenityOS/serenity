@@ -110,6 +110,8 @@ public:
     static NonnullRefPtr<File> standard_output();
     static NonnullRefPtr<File> standard_error();
 
+    static Optional<String> resolve_executable_from_environment(StringView filename);
+
 private:
     File(Object* parent = nullptr)
         : IODevice(parent)

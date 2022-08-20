@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
@@ -12,12 +13,12 @@
 
 static ErrorOr<bool> is_dynamically_linked_executable(StringView filename)
 {
-    String exec_filename = filename;
-    if (!filename.contains('/')) {
-        exec_filename = TRY(Core::System::find_file_in_path(filename));
-    }
+    auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
 
-    auto file = TRY(Core::MappedFile::map(exec_filename));
+    if (!maybe_executable.has_value())
+        return ENOENT;
+
+    auto file = TRY(Core::MappedFile::map(maybe_executable.release_value()));
     ELF::Image elf_image(file->bytes());
     return elf_image.is_dynamic();
 }

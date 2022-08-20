@@ -232,9 +232,9 @@ int Shell::builtin_type(int argc, char const** argv)
         }
 
         // check if its an executable in PATH
-        auto fullpath = Core::find_executable_in_path(command);
-        if (!fullpath.is_empty()) {
-            printf("%s is %s\n", command.characters(), escape_token(fullpath).characters());
+        auto fullpath = Core::File::resolve_executable_from_environment(command);
+        if (fullpath.has_value()) {
+            printf("%s is %s\n", command.characters(), escape_token(fullpath.release_value()).characters());
             continue;
         }
         something_not_found = true;
@@ -1075,12 +1075,12 @@ int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
-    auto kill_path = find_in_path("kill"sv);
-    if (kill_path.is_empty()) {
+    auto kill_path = Core::File::resolve_executable_from_environment("kill"sv);
+    if (!kill_path.has_value()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
-    replaced_values.append(kill_path);
+    replaced_values.append(kill_path.release_value());
     for (auto i = 1; i < argc; ++i) {
         if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());

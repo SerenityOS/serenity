@@ -557,4 +557,35 @@ ErrorOr<void, File::RemoveError> File::remove(String const& path, RecursionMode 
     return {};
 }
 
+Optional<String> File::resolve_executable_from_environment(StringView filename)
+{
+    if (filename.is_empty())
+        return {};
+
+    // Paths that aren't just a file name generally count as already resolved.
+    if (filename.contains('/')) {
+        if (access(String { filename }.characters(), X_OK) != 0)
+            return {};
+
+        return filename;
+    }
+
+    auto const* path_str = getenv("PATH");
+    StringView path { path_str, strlen(path_str) };
+
+    if (path.is_empty())
+        path = DEFAULT_PATH_SV;
+
+    auto directories = path.split_view(':');
+
+    for (auto directory : directories) {
+        auto file = String::formatted("{}/{}", directory, filename);
+
+        if (access(file.characters(), X_OK) == 0)
+            return file;
+    }
+
+    return {};
+};
+
 }

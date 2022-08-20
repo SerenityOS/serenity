@@ -161,7 +161,6 @@ ErrorOr<Array<int, 2>> pipe2(int flags);
 #ifndef AK_OS_ANDROID
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 #endif
-ErrorOr<String> find_file_in_path(StringView filename);
 enum class SearchInPath {
     No,
     Yes,
