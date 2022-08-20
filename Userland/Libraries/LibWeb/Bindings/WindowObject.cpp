@@ -72,7 +72,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
@@ -432,6 +432,24 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
     return wrap(global_object, impl->performance());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_setter)
+{
+    // https://webidl.spec.whatwg.org/#dfn-attribute-setter
+    // 4.1. If no arguments were passed, then throw a TypeError.
+    if (vm.argument_count() == 0)
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "set performance");
+
+    auto* impl = TRY(impl_from(vm, global_object));
+
+    // 5. If attribute is declared with the [Replaceable] extended attribute, then:
+    // 1. Perform ? CreateDataProperty(esValue, id, V).
+    VERIFY(impl->wrapper());
+    TRY(impl->wrapper()->create_data_property("performance", vm.argument(0)));
+
+    // 2. Return undefined.
+    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_getter)
