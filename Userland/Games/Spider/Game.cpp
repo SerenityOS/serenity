@@ -196,7 +196,7 @@ void Game::detect_victory()
 
 void Game::paint_event(GUI::PaintEvent& event)
 {
-    static Gfx::Color s_background_color = palette().color(background_role());
+    Gfx::Color background_color = this->background_color();
 
     GUI::Frame::paint_event(event);
 
@@ -206,11 +206,11 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     if (!m_focused_cards.is_empty()) {
         for (auto& focused_card : m_focused_cards)
-            focused_card.clear(painter, s_background_color);
+            focused_card.clear(painter, background_color);
     }
 
     for (auto& stack : m_stacks) {
-        stack.draw(painter, s_background_color);
+        stack.draw(painter, background_color);
     }
 
     if (!m_focused_cards.is_empty()) {

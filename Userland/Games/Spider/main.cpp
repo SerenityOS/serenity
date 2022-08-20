@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-spider"sv));
 
-    Config::pledge_domain("Spider");
+    Config::pledge_domains({ "Games", "Spider" });
+    Config::monitor_domain("Games");
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 

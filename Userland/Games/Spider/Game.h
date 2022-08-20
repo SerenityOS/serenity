@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <LibCards/CardGame.h>
 #include <LibCards/CardStack.h>
-#include <LibGUI/Frame.h>
 
 using Cards::Card;
 using Cards::CardStack;
@@ -28,7 +29,7 @@ enum class GameOverReason {
     Quit,
 };
 
-class Game final : public GUI::Frame {
+class Game final : public Cards::CardGame {
     C_OBJECT(Game)
 public:
     static constexpr int width = 10 + 10 * Card::width + 90 + 10;
