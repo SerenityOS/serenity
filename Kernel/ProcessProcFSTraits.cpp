@@ -15,7 +15,8 @@ UserID Process::ProcessProcFSTraits::owner_user() const
     if (!process)
         return 0;
 
-    return process->uid();
+    auto credentials = process->credentials();
+    return credentials->uid();
 }
 
 GroupID Process::ProcessProcFSTraits::owner_group() const
@@ -24,7 +25,8 @@ GroupID Process::ProcessProcFSTraits::owner_group() const
     if (!process)
         return 0;
 
-    return process->gid();
+    auto credentials = process->credentials();
+    return credentials->gid();
 }
 
 InodeIndex Process::ProcessProcFSTraits::component_index() const

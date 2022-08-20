@@ -235,13 +235,6 @@ public:
 
     NonnullRefPtr<Credentials> credentials() const;
 
-    UserID euid() const;
-    GroupID egid() const;
-    UserID uid() const;
-    GroupID gid() const;
-    UserID suid() const;
-    GroupID sgid() const;
-
     bool is_dumpable() const
     {
         return with_protected_data([](auto& protected_data) { return protected_data.dumpable; });
@@ -475,8 +468,6 @@ public:
     ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, u32& prev_flags, int recursion_depth = 0);
 
     ErrorOr<LoadResult> load(NonnullLockRefPtr<OpenFileDescription> main_program_description, LockRefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
-
-    bool is_superuser() const { return euid() == 0; }
 
     void terminate_due_to_signal(u8 signal);
     ErrorOr<void> send_signal(u8 signal, Process* sender);

@@ -598,7 +598,8 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     }
     VERIFY(new_main_thread);
 
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path->view(), main_program_fd_allocation);
+    auto credentials = this->credentials();
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), path->view(), main_program_fd_allocation);
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.

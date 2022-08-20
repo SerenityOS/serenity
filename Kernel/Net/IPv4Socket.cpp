@@ -625,7 +625,8 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
         switch (request) {
         case SIOCADDRT: {
-            if (!Process::current().is_superuser())
+            auto current_process_credentials = Process::current().credentials();
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
                 return EAFNOSUPPORT;
@@ -639,7 +640,8 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return update_routing_table(destination, gateway, genmask, route.rt_flags, adapter, UpdateTable::Set);
         }
         case SIOCDELRT:
-            if (!Process::current().is_superuser())
+            auto current_process_credentials = Process::current().credentials();
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
                 return EAFNOSUPPORT;
@@ -659,9 +661,11 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         arpreq arp_req;
         TRY(copy_from_user(&arp_req, user_req));
 
+        auto current_process_credentials = Process::current().credentials();
+
         switch (request) {
         case SIOCSARP:
-            if (!Process::current().is_superuser())
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
                 return EAFNOSUPPORT;
@@ -669,7 +673,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return {};
 
         case SIOCDARP:
-            if (!Process::current().is_superuser())
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
                 return EAFNOSUPPORT;
@@ -693,9 +697,11 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         if (!adapter)
             return ENODEV;
 
+        auto current_process_credentials = Process::current().credentials();
+
         switch (request) {
         case SIOCSIFADDR:
-            if (!Process::current().is_superuser())
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (ifr.ifr_addr.sa_family != AF_INET)
                 return EAFNOSUPPORT;
@@ -703,7 +709,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return {};
 
         case SIOCSIFNETMASK:
-            if (!Process::current().is_superuser())
+            if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (ifr.ifr_addr.sa_family != AF_INET)
                 return EAFNOSUPPORT;

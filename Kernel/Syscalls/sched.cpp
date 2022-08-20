@@ -34,7 +34,9 @@ ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sch
     if (!peer)
         return ESRCH;
 
-    if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
+    auto credentials = this->credentials();
+    auto peer_credentials = peer->process().credentials();
+    if (!credentials->is_superuser() && credentials->euid() != peer_credentials->uid() && credentials->uid() != peer_credentials->uid())
         return EPERM;
 
     peer->set_priority((u32)param.sched_priority);
@@ -58,7 +60,9 @@ ErrorOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_p
         if (!peer)
             return ESRCH;
 
-        if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
+        auto credentials = this->credentials();
+        auto peer_credentials = peer->process().credentials();
+        if (!credentials->is_superuser() && credentials->euid() != peer_credentials->uid() && credentials->uid() != peer_credentials->uid())
             return EPERM;
 
         priority = (int)peer->priority();

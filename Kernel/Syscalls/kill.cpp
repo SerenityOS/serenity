@@ -13,7 +13,9 @@ ErrorOr<void> Process::do_kill(Process& process, int signal)
 {
     // FIXME: Allow sending SIGCONT to everyone in the process group.
     // FIXME: Should setuid processes have some special treatment here?
-    if (!is_superuser() && euid() != process.uid() && uid() != process.uid())
+    auto credentials = this->credentials();
+    auto kill_process_credentials = process.credentials();
+    if (!credentials->is_superuser() && credentials->euid() != kill_process_credentials->uid() && credentials->uid() != kill_process_credentials->uid())
         return EPERM;
     if (process.is_kernel_process()) {
         dbgln("Attempted to send signal {} to kernel process {} ({})", signal, process.name(), process.pid());

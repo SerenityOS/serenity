@@ -16,7 +16,8 @@ ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<Syscall::SC_setkeymap_params c
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::setkeymap));
 
-    if (!is_superuser())
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
         return EPERM;
 
     auto params = TRY(copy_typed_from_user(user_params));

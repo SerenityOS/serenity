@@ -522,10 +522,11 @@ Time kgettimeofday()
 
 siginfo_t Process::wait_info() const
 {
+    auto credentials = this->credentials();
     siginfo_t siginfo {};
     siginfo.si_signo = SIGCHLD;
     siginfo.si_pid = pid().value();
-    siginfo.si_uid = uid().value();
+    siginfo.si_uid = credentials->uid().value();
 
     with_protected_data([&](auto& protected_data) {
         if (protected_data.termination_signal != 0) {
@@ -939,36 +940,6 @@ ErrorOr<void> Process::require_promise(Pledge promise)
     Thread::current()->set_promise_violation_pending(true);
     (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
     return EPROMISEVIOLATION;
-}
-
-UserID Process::uid() const
-{
-    return credentials()->uid();
-}
-
-GroupID Process::gid() const
-{
-    return credentials()->gid();
-}
-
-UserID Process::euid() const
-{
-    return credentials()->euid();
-}
-
-GroupID Process::egid() const
-{
-    return credentials()->egid();
-}
-
-UserID Process::suid() const
-{
-    return credentials()->suid();
-}
-
-GroupID Process::sgid() const
-{
-    return credentials()->sgid();
 }
 
 NonnullRefPtr<Credentials> Process::credentials() const

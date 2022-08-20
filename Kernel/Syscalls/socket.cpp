@@ -36,7 +36,8 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
 
-    if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
+    auto credentials = this->credentials();
+    if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !credentials->is_superuser())
         return EACCES;
 
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
