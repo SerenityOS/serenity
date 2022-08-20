@@ -1,0 +1,147 @@
+ZWJ Sequence Emoji (limited cross-platform support)
+---------
+
+🐱‍🐶 - U+1F431 U+200D U+1F436 CATDOG FACE
+
+Yak Emoji (limited cross-platform support)
+---------
+
+􌴀 - U+10CD00 HAIRYAK
+􌴁 - U+10CD01 IMMINENTYAKSHAVE
+􌴂 - U+10CD02 SHAVEDYAK
+􌴃 - U+10CD03 YAKPLUS
+􌴄 - U+10CD04 YAKPING
+􌴅 - U+10CD05 YAKMINUS
+􌴆 - U+10CD06 YAKTANGLE
+􌴇 - U+10CD07 YAKBAIT
+􌴈 - U+10CD08 REYAKTED
+􌴉 - U+10CD09 SLEEPYAK
+􌴊 - U+10CD0A YAKBRAIN
+􌴋 - U+10CD0B GOLDYAK
+􌴌 - U+10CD0C YAKKING
+􌴍 - U+10CD0D YAKMAIL
+􌴎 - U+10CD0E YAKMAGNET
+􌴏 - U+10CD0F YAKFIRE
+􌴐 - U+10CD10 YAKSPLODE
+􌴑 - U+10CD11 YAKSHED
+􌴒 - U+10CD12 YAKFUSED
+􌴓 - U+10CD13 8BITYAK
+􌴔 - U+10CD14 SKELEYAK
+􌴕 - U+10CD15 NEOYAK
+􌴖 - U+10CD16 YAKEA
+􌴗 - U+10CD17 YAKID2
+􌴘 - U+10CD18 YAKSLICE
+􌴙 - U+10CD19 YAKSTICKER
+􌴚 - U+10CD1A YAKKIE
+􌴛 - U+10CD1B ANGELYAK
+􌴜 - U+10CD1C YAK
+􌴝 - U+10CD1D YAKGONE
+􌴞 - U+10CD1E YAKMEASURE
+􌴟 - U+10CD1F YAKCOWBOY
+􌴠 - U+10CD20 YAKSPEED
+􌴡 - U+10CD21 YAKMANDO
+􌴢 - U+10CD22 NINJYAK
+􌴣 - U+10CD23 YOWL
+􌵠 - U+10CD60 PARTYAK
+􌵡 - U+10CD61 YAKKISS
+􌵢 - U+10CD62 THOUSANDYAKSTARE
+􌵣 - U+10CD63 YAKBLUSH
+􌵤 - U+10CD64 YAKSHRUG
+􌵥 - U+10CD65 YAKTHONK
+􌵦 - U+10CD66 YAKSAD
+􌵧 - U+10CD67 BABYAK
+􌵨 - U+10CD68 YAKKETYSAX
+􌵩 - U+10CD69 YAKBANE
+􌶐 - U+10CD90 YAKSTACK
+􌶑 - U+10CD91 YAKCHAIN
+􌶒 - U+10CD92 YAKRING
+􌶓 - U+10CD93 YAKOVERFLOW
+􌶰 - U+10CDB0 XMASYAK
+􌶱 - U+10CDB1 YAKTOBERFEST
+􌷐 - U+10CDD0 YAKSTEPS
+􌷠 - U+10CDE0 YAKRAGE-FRAME-1
+􌷡 - U+10CDE1 YAKRAGE-FRAME-2
+􌷢 - U+10CDE2 YAKRAGE-FRAME-3
+􌷣 - U+10CDE3 YAKRAGE-FRAME-4
+􌷤 - U+10CDE4 YAKRAGE-FRAME-5
+􌷥 - U+10CDE5 YAKRAGE-FRAME-6
+
+ZWJ Sequence Flags (limited cross-platform support)
+------------------
+
+🏳️‍🐞 - U+1F3F3 U+FE0F U+200D U+1F41E        SerenityOS flag
+🏳️‍ - U+1F3F3 U+FE0F U+200D U+F8FF         Klingon flag
+🏳️‍🖖 - U+1F3F3 U+FE0F U+200D U+1F596        Vulcan flag
+
+Emoji Tag Sequence Flags (limited cross-platform support)
+------------------------
+
+🏴󠁣󠁡󠁱󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0071 U+E0063 U+E007F CA-QC Quebec
+🏴󠁤󠁥󠁢󠁢󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0062 U+E007F DE-BB Brandenburg
+🏴󠁤󠁥󠁢󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0065 U+E007F DE-BE Berlin
+🏴󠁤󠁥󠁢󠁷󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0077 U+E007F DE-BW Baden-Württemberg
+🏴󠁤󠁥󠁢󠁹󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0079 U+E007F DE-BY Bavaria
+🏴󠁤󠁥󠁨󠁢󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0062 U+E007F DE-HB Bremen
+🏴󠁤󠁥󠁨󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0065 U+E007F DE-HE Hesse
+🏴󠁤󠁥󠁨󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0068 U+E007F DE-HH Hamburg
+🏴󠁤󠁥󠁭󠁶󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006D U+E0076 U+E007F DE-MV Mecklenburg-Vorpommern
+🏴󠁤󠁥󠁮󠁩󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006E U+E0069 U+E007F DE-NI Lower Saxony
+🏴󠁤󠁥󠁮󠁷󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006E U+E0077 U+E007F DE-NW North Rhine-Westphalia
+🏴󠁤󠁥󠁲󠁰󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0072 U+E0070 U+E007F DE-RP Rhineland-Palatinate
+🏴󠁤󠁥󠁳󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E0068 U+E007F DE-SH Schleswig-Holstein
+🏴󠁤󠁥󠁳󠁬󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E006C U+E007F DE-SL Saarland
+🏴󠁤󠁥󠁳󠁮󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E006E U+E007F DE-SN Saxony
+🏴󠁤󠁥󠁳󠁴󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E0074 U+E007F DE-ST Saxony-Anhalt
+🏴󠁤󠁥󠁴󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0074 U+E0068 U+E007F DE-TH Thuringia
+🏴󠁥󠁳󠁣󠁴󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0063 U+E0074 U+E007F ES-CT Catalonia
+🏴󠁥󠁳󠁰󠁶󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0070 U+E0076 U+E007F ES-PV Basque Country
+🏴󠁦󠁩󠀰󠀳󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0033 U+E007F FI-03 South Ostrobothnia
+🏴󠁦󠁩󠀰󠀴󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0034 U+E007F FI-04 South Savonia
+🏴󠁦󠁩󠀰󠀵󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0035 U+E007F FI-05 Kainuu
+🏴󠁦󠁩󠀰󠀶󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0036 U+E007F FI-06 Kanta-Häme (Tavastia Proper)
+🏴󠁦󠁩󠀰󠀷󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0037 U+E007F FI-07 Central Ostrobothnia
+🏴󠁦󠁩󠀰󠀸󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0038 U+E007F FI-08 Central Finland
+🏴󠁦󠁩󠀱󠀳󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0033 U+E007F FI-13 North Karelia
+🏴󠁦󠁩󠀱󠀵󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0035 U+E007F FI-15 Northern Savonia
+🏴󠁦󠁩󠀱󠀶󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0036 U+E007F FI-16 Päijänne Tavastia
+🏴󠁦󠁩󠀱󠀷󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0037 U+E007F FI-17 Satakunta
+🏴󠁦󠁩󠀱󠀸󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0038 U+E007F FI-18 Uusimaa
+🏴󠁩󠁥󠁬󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006C U+E007F         IE-L Leinster
+🏴󠁩󠁥󠁭󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006D U+E007F         IE-M Munster
+🏴󠁩󠁥󠁵󠁿 - U+1F3F4 U+E0069 U+E0065 U+E0075 U+E007F         IE-U Ulster
+🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
+🏴󠁳󠁫󠁢󠁣󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E0063 U+E007F SK-BC Banská Bystrica
+🏴󠁳󠁫󠁢󠁬󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E006C U+E007F SK-BL Bratislava
+🏴󠁳󠁫󠁫󠁩󠁿 - U+1F3F4 U+E0073 U+E006B U+E006B U+E0069 U+E007F SK-KI Košice
+🏴󠁳󠁫󠁮󠁩󠁿 - U+1F3F4 U+E0073 U+E006B U+E006E U+E0069 U+E007F SK-NI Nitra
+🏴󠁳󠁫󠁰󠁶󠁿 - U+1F3F4 U+E0073 U+E006B U+E0070 U+E0076 U+E007F SK-PV Prešov
+🏴󠁳󠁫󠁴󠁡󠁿 - U+1F3F4 U+E0073 U+E006B U+E0074 U+E0061 U+E007F SK-TA Trnava
+🏴󠁳󠁫󠁴󠁣󠁿 - U+1F3F4 U+E0073 U+E006B U+E0074 U+E0063 U+E007F SK-TC Trenčín
+🏴󠁳󠁫󠁺󠁩󠁿 - U+1F3F4 U+E0073 U+E006B U+E007A U+E0069 U+E007F SK-ZI Žilina
+🏴󠁵󠁡󠀰󠀵󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0030 U+E0035 U+E007F UA-05 Vinnychchyna
+🏴󠁵󠁡󠀰󠀷󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0030 U+E0037 U+E007F UA-07 Volyn
+🏴󠁵󠁡󠀰󠀹󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0030 U+E0039 U+E007F UA-09 Luhanshchyna
+🏴󠁵󠁡󠀱󠀲󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0031 U+E0032 U+E007F UA-12 Dnipropetrovshchyna
+🏴󠁵󠁡󠀱󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0031 U+E0034 U+E007F UA-14 Donechchyna
+🏴󠁵󠁡󠀱󠀸󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0031 U+E0038 U+E007F UA-18 Zhytomyrshchyna
+🏴󠁵󠁡󠀲󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0032 U+E0031 U+E007F UA-21 Zakarpattia
+🏴󠁵󠁡󠀲󠀳󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0032 U+E0033 U+E007F UA-23 Zaporizhzhya
+🏴󠁵󠁡󠀲󠀶󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0032 U+E0036 U+E007F UA-26 Prykarpattia
+🏴󠁵󠁡󠀳󠀰󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0033 U+E0030 U+E007F UA-30 Kiev
+🏴󠁵󠁡󠀳󠀲󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0033 U+E0032 U+E007F UA-32 Kyivshchyna
+🏴󠁵󠁡󠀳󠀵󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0033 U+E0035 U+E007F UA-35 Kirovohradschyna
+🏴󠁵󠁡󠀴󠀰󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0034 U+E0030 U+E007F UA-40 Sevastopol
+🏴󠁵󠁡󠀴󠀳󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0034 U+E0033 U+E007F UA-43 Crimea
+🏴󠁵󠁡󠀴󠀶󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0034 U+E0036 U+E007F UA-46 Lvivshchyna
+🏴󠁵󠁡󠀴󠀸󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0034 U+E0038 U+E007F UA-48 Mykolayivschyna
+🏴󠁵󠁡󠀵󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0035 U+E0031 U+E007F UA-51 Odeshchyna
+🏴󠁵󠁡󠀵󠀳󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0035 U+E0033 U+E007F UA-53 Poltavshchyna
+🏴󠁵󠁡󠀵󠀶󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0035 U+E0036 U+E007F UA-56 Rivnenshchyna
+🏴󠁵󠁡󠀵󠀹󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0035 U+E0039 U+E007F UA-59 Sumshchyna
+🏴󠁵󠁡󠀶󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0036 U+E0031 U+E007F UA-61 Ternopilshchyna
+🏴󠁵󠁡󠀶󠀳󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0036 U+E0033 U+E007F UA-63 Kharkivshchyna
+🏴󠁵󠁡󠀶󠀵󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0036 U+E0035 U+E007F UA-65 Khersonshchyna
+🏴󠁵󠁡󠀶󠀸󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0036 U+E0038 U+E007F UA-68 Khmelnychchyna
+🏴󠁵󠁡󠀷󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0031 U+E007F UA-71 Cherkashchyna
+🏴󠁵󠁡󠀷󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0034 U+E007F UA-74 Chernihivshchyna
+🏴󠁵󠁡󠀷󠀷󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0037 U+E007F UA-77 Chernivtsi Oblast
