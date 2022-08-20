@@ -157,8 +157,6 @@ public:
     String resolve_path(String) const;
     String resolve_alias(StringView) const;
 
-    static String find_in_path(StringView program_name);
-
     static bool has_history_event(StringView);
 
     RefPtr<AST::Value> get_argument(size_t) const;
