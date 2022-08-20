@@ -55,13 +55,13 @@ void Game::setup(Mode mode)
         switch (m_mode) {
         case Mode::SingleSuit:
             for (int j = 0; j < 8; j++) {
-                deck.append(Card::construct(Card::Suit::Spades, i));
+                deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
             }
             break;
         case Mode::TwoSuit:
             for (int j = 0; j < 4; j++) {
-                deck.append(Card::construct(Card::Suit::Spades, i));
-                deck.append(Card::construct(Card::Suit::Hearts, i));
+                deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
+                deck.append(Card::construct(Cards::Suit::Hearts, static_cast<Cards::Rank>(i)));
             }
             break;
         default:
@@ -150,15 +150,14 @@ void Game::detect_full_stacks()
                 break;
 
             if (!started) {
-                if (card.value() != 0) {
+                if (card.rank() != Cards::Rank::Ace)
                     break;
-                }
 
                 started = true;
                 color = card.color();
-            } else if (card.value() != last_value + 1 || card.color() != color) {
+            } else if (to_underlying(card.rank()) != last_value + 1 || card.color() != color) {
                 break;
-            } else if (card.value() == Card::card_count - 1) {
+            } else if (card.rank() == Cards::Rank::King) {
                 // we have a full set
                 auto original_current_rect = current_pile.bounding_box();
 
@@ -174,7 +173,7 @@ void Game::detect_full_stacks()
                 update_score(101);
             }
 
-            last_value = card.value();
+            last_value = to_underlying(card.rank());
         }
     }
 

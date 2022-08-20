@@ -67,13 +67,13 @@ static constexpr Gfx::CharacterBitmap s_club {
 static RefPtr<Gfx::Bitmap> s_background;
 static RefPtr<Gfx::Bitmap> s_background_inverted;
 
-Card::Card(Suit suit, uint8_t value)
+Card::Card(Suit suit, Rank rank)
     : m_rect(Gfx::IntRect({}, { width, height }))
     , m_front(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors())
     , m_suit(suit)
-    , m_value(value)
+    , m_rank(rank)
 {
-    VERIFY(value < card_count);
+    VERIFY(to_underlying(rank) < card_count);
     Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
@@ -99,7 +99,6 @@ Card::Card(Suit suit, uint8_t value)
     Gfx::Painter painter(m_front);
     auto& font = Gfx::FontDatabase::default_font().bold_variant();
 
-    auto label = labels[value];
     painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, card_radius);
     paint_rect.shrink(2, 2);
     painter.fill_rect_with_rounded_corners(paint_rect, Color::White, card_radius - 1);
@@ -108,7 +107,7 @@ Card::Card(Suit suit, uint8_t value)
     paint_rect.shrink(10, 6);
 
     auto text_rect = Gfx::IntRect { 4, 6, font.width("10"sv), font.glyph_height() };
-    painter.draw_text(text_rect, label, font, Gfx::TextAlignment::Center, color());
+    painter.draw_text(text_rect, card_rank_label(m_rank), font, Gfx::TextAlignment::Center, color());
 
     auto const& symbol = [&]() -> Gfx::CharacterBitmap const& {
         switch (m_suit) {

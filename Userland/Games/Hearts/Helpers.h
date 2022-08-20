@@ -31,17 +31,17 @@ enum class CardValue : uint8_t {
 inline CardValue hearts_card_value(Card const& card)
 {
     // Ace has a higher value than all other cards in Hearts
-    if (card.value() == 0)
+    if (card.rank() == Cards::Rank::Ace)
         return CardValue::Ace;
     else
-        return static_cast<CardValue>(card.value() - 1);
+        return static_cast<CardValue>(to_underlying(card.rank()) - 1);
 }
 
 inline uint8_t hearts_card_points(Card const& card)
 {
-    if (card.suit() == Card::Suit::Hearts)
+    if (card.suit() == Cards::Suit::Hearts)
         return 1;
-    else if (card.suit() == Card::Suit::Spades && hearts_card_value(card) == CardValue::Queen)
+    else if (card.suit() == Cards::Suit::Spades && hearts_card_value(card) == CardValue::Queen)
         return 13;
     else
         return 0;

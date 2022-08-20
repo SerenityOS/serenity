@@ -170,12 +170,12 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint const& click_location, Nonnu
                 break;
             }
 
-            if (!color_match || card.value() != last_value - 1) {
+            if (!color_match || to_underlying(card.rank()) != last_value - 1) {
                 valid_stack = false;
                 break;
             }
         }
-        last_value = card.value();
+        last_value = to_underlying(card.rank());
         last_color = card.color();
     }
 
@@ -195,13 +195,13 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
     if (m_type == Type::Normal && is_empty()) {
         // FIXME: proper solution for this
         if (movement_rule == MovementRule::Alternating) {
-            return card.value() == 12;
+            return card.rank() == Rank::King;
         }
         return true;
     }
 
     if (m_type == Type::Foundation && is_empty())
-        return card.value() == 0;
+        return card.rank() == Rank::Ace;
 
     if (!is_empty()) {
         auto& top_card = peek();
@@ -212,7 +212,7 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
             // Prevent player from dragging an entire stack of cards to the foundation stack
             if (stack_size > 1)
                 return false;
-            return top_card.suit() == card.suit() && m_stack.size() == card.value();
+            return top_card.suit() == card.suit() && m_stack.size() == to_underlying(card.rank());
         } else if (m_type == Type::Normal) {
             bool color_match;
             switch (movement_rule) {
@@ -227,7 +227,7 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
                 break;
             }
 
-            return color_match && top_card.value() == card.value() + 1;
+            return color_match && to_underlying(top_card.rank()) == to_underlying(card.rank()) + 1;
         }
 
         VERIFY_NOT_REACHED();
