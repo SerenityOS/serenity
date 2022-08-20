@@ -76,7 +76,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* descript
     return entire_file.release_nonnull();
 }
 
-ErrorOr<NonnullLockRefPtr<Custody>> Inode::resolve_as_link(Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it

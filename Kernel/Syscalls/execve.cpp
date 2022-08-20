@@ -554,7 +554,7 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     m_space = load_result.space.release_nonnull();
 
-    m_executable = main_program_description->custody();
+    m_executable.with([&](auto& executable) { executable = main_program_description->custody(); });
     m_arguments = move(arguments);
     m_environment = move(environment);
 

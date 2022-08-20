@@ -8,22 +8,22 @@
 
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
-class Custody : public ListedRefCounted<Custody, LockType::Spinlock> {
+class Custody final : public ListedRefCounted<Custody, LockType::Spinlock> {
 public:
-    static ErrorOr<NonnullLockRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
+    static ErrorOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
     ~Custody();
 
-    Custody* parent() { return m_parent.ptr(); }
-    Custody const* parent() const { return m_parent.ptr(); }
+    RefPtr<Custody> parent() { return m_parent; }
+    RefPtr<Custody const> parent() const { return m_parent; }
     Inode& inode() { return *m_inode; }
     Inode const& inode() const { return *m_inode; }
     StringView name() const { return m_name->view(); }
@@ -35,7 +35,7 @@ public:
 private:
     Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode&, int mount_flags);
 
-    LockRefPtr<Custody> m_parent;
+    RefPtr<Custody> m_parent;
     NonnullOwnPtr<KString> m_name;
     NonnullLockRefPtr<Inode> m_inode;
     int m_mount_flags { 0 };

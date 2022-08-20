@@ -28,7 +28,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     };
 
     auto child_name = TRY(m_name->try_clone());
-    auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, current_directory(), m_executable, m_tty, this));
+    auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, current_directory(), executable(), m_tty, this));
 
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     child->ref();

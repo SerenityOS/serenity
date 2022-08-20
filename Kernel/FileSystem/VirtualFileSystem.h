@@ -67,7 +67,7 @@ public:
     ErrorOr<void> utimensat(StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options = 0);
     ErrorOr<void> rename(StringView oldpath, StringView newpath, Custody& base);
     ErrorOr<void> mknod(StringView path, mode_t, dev_t, Custody& base);
-    ErrorOr<NonnullLockRefPtr<Custody>> open_directory(StringView path, Custody& base);
+    ErrorOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
@@ -75,9 +75,9 @@ public:
 
     static void sync();
 
-    Custody& root_custody();
-    ErrorOr<NonnullLockRefPtr<Custody>> resolve_path(StringView path, Custody& base, LockRefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
-    ErrorOr<NonnullLockRefPtr<Custody>> resolve_path_without_veil(StringView path, Custody& base, LockRefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    NonnullRefPtr<Custody> root_custody();
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path(StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
 private:
     friend class OpenFileDescription;
@@ -92,13 +92,15 @@ private:
 
     bool mount_point_exists_at_inode(InodeIdentifier inode);
 
+    // FIXME: These functions are totally unsafe as someone could unmount the returned Mount underneath us.
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
     LockRefPtr<Inode> m_root_inode;
-    LockRefPtr<Custody> m_root_custody;
 
-    SpinlockProtected<Vector<Mount, 16>> m_mounts { LockRank::None };
+    SpinlockProtected<RefPtr<Custody>> m_root_custody;
+
+    SpinlockProtected<Vector<NonnullOwnPtr<Mount>, 16>> m_mounts { LockRank::None };
 };
 
 }

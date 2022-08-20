@@ -333,7 +333,7 @@ mode_t Process::binary_link_required_mode() const
 
 ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
 {
-    auto const* custody = executable();
+    auto custody = executable();
     if (!custody)
         return Error::from_errno(ENOEXEC);
     return builder.append(TRY(custody->try_serialize_absolute_path())->view());

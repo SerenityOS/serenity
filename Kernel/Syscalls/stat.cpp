@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/RefPtr.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>
@@ -29,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$stat(Userspace<Syscall::SC_stat_params const*> use
 
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    LockRefPtr<Custody> base;
+    RefPtr<Custody> base;
     if (params.dirfd == AT_FDCWD) {
         base = current_directory();
     } else {

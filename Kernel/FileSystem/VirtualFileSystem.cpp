@@ -6,6 +6,7 @@
 
 #include <AK/AnyOf.h>
 #include <AK/GenericLexer.h>
+#include <AK/RefPtr.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/POSIX/errno.h>
@@ -38,6 +39,7 @@ VirtualFileSystem& VirtualFileSystem::the()
 }
 
 UNMAP_AFTER_INIT VirtualFileSystem::VirtualFileSystem()
+    : m_root_custody(LockRank::None)
 {
 }
 
@@ -52,14 +54,15 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
 bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identifier)
 {
     return m_mounts.with([&](auto& mounts) -> bool {
-        return any_of(mounts, [&inode_identifier](Mount const& existing_mount) {
-            return existing_mount.host() && existing_mount.host()->identifier() == inode_identifier;
+        return any_of(mounts, [&inode_identifier](auto const& existing_mount) {
+            return existing_mount->host() && existing_mount->host()->identifier() == inode_identifier;
         });
     });
 }
 
 ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
+    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
         dbgln("VirtualFileSystem: Mounting {} at inode {} with flags {}",
@@ -70,14 +73,14 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
             dbgln("VirtualFileSystem: Mounting unsuccessful - inode {} is already a mount-point.", inode.identifier());
             return EBUSY;
         }
-        Mount mount { fs, &mount_point, flags };
-        mounts.append(move(mount));
+        mounts.append(move(new_mount));
         return {};
     });
 }
 
 ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
+    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(source.inode(), mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
         dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), inode.identifier());
@@ -86,8 +89,7 @@ ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_poin
                 mount_point.inode().identifier());
             return EBUSY;
         }
-        Mount mount { source.inode(), mount_point, flags };
-        mounts.append(move(mount));
+        mounts.append(move(new_mount));
         return {};
     });
 }
@@ -111,11 +113,11 @@ ErrorOr<void> VirtualFileSystem::unmount(Inode& guest_inode)
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         for (size_t i = 0; i < mounts.size(); ++i) {
             auto& mount = mounts[i];
-            if (&mount.guest() != &guest_inode)
+            if (&mount->guest() != &guest_inode)
                 continue;
-            TRY(mount.guest_fs().prepare_to_unmount());
-            dbgln("VirtualFileSystem: Unmounting file system {}...", mount.guest_fs().fsid());
-            mounts.unstable_take(i);
+            TRY(mount->guest_fs().prepare_to_unmount());
+            dbgln("VirtualFileSystem: Unmounting file system {}...", mount->guest_fs().fsid());
+            (void)mounts.unstable_take(i);
             return {};
         }
         dbgln("VirtualFileSystem: Nothing mounted on inode {}", guest_inode.identifier());
@@ -130,7 +132,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
         return EEXIST;
     }
 
-    Mount mount { fs, nullptr, root_mount_flags };
+    auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, nullptr, root_mount_flags)));
 
     auto& root_inode = fs.root_inode();
     if (!root_inode.is_directory()) {
@@ -143,10 +145,13 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), pseudo_path);
 
     m_mounts.with([&](auto& mounts) {
-        mounts.append(move(mount));
+        mounts.append(move(new_mount));
     });
 
-    m_root_custody = TRY(Custody::try_create(nullptr, ""sv, *m_root_inode, root_mount_flags));
+    RefPtr<Custody> new_root_custody = TRY(Custody::try_create(nullptr, ""sv, *m_root_inode, root_mount_flags));
+    m_root_custody.with([&](auto& root_custody) {
+        swap(root_custody, new_root_custody);
+    });
     return {};
 }
 
@@ -154,8 +159,8 @@ auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
 {
     return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
-            if (mount.host() && mount.host()->identifier() == id)
-                return &mount;
+            if (mount->host() && mount->host()->identifier() == id)
+                return mount.ptr();
         }
         return nullptr;
     });
@@ -165,8 +170,8 @@ auto VirtualFileSystem::find_mount_for_guest(InodeIdentifier id) -> Mount*
 {
     return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
-            if (mount.guest().identifier() == id)
-                return &mount;
+            if (mount->guest().identifier() == id)
+                return mount.ptr();
         }
         return nullptr;
     });
@@ -244,7 +249,7 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringVi
     if ((options & O_CREAT) && (options & O_DIRECTORY))
         return EINVAL;
 
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (custody_or_error.is_error()) {
         // NOTE: ENOENT with a non-null parent custody signals us that the immediate parent
@@ -332,7 +337,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return EINVAL;
 
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto existing_file_or_error = resolve_path(path, base, &parent_custody);
     if (!existing_file_or_error.is_error())
         return EEXIST;
@@ -397,7 +402,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
         path = "/"sv;
     }
 
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
     auto result = resolve_path_without_veil(path, base, &parent_custody);
@@ -446,7 +451,7 @@ ErrorOr<void> VirtualFileSystem::access(StringView path, int mode, Custody& base
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::open_directory(StringView path, Custody& base)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::open_directory(StringView path, Custody& base)
 {
     auto custody = TRY(resolve_path(path, base));
     auto& inode = custody->inode();
@@ -480,11 +485,11 @@ ErrorOr<void> VirtualFileSystem::chmod(StringView path, mode_t mode, Custody& ba
 
 ErrorOr<void> VirtualFileSystem::rename(StringView old_path, StringView new_path, Custody& base)
 {
-    LockRefPtr<Custody> old_parent_custody;
+    RefPtr<Custody> old_parent_custody;
     auto old_custody = TRY(resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR));
     auto& old_inode = old_custody->inode();
 
-    LockRefPtr<Custody> new_parent_custody;
+    RefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error().code() != ENOENT || !new_parent_custody)
@@ -630,7 +635,7 @@ ErrorOr<void> VirtualFileSystem::link(StringView old_path, StringView new_path, 
     auto old_custody = TRY(resolve_path(old_path, base));
     auto& old_inode = old_custody->inode();
 
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
     if (!new_custody_or_error.is_error())
         return EEXIST;
@@ -660,7 +665,7 @@ ErrorOr<void> VirtualFileSystem::link(StringView old_path, StringView new_path, 
 
 ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base)
 {
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
     auto& inode = custody->inode();
 
@@ -690,7 +695,7 @@ ErrorOr<void> VirtualFileSystem::unlink(StringView path, Custody& base)
 
 ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath, Custody& base)
 {
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto existing_custody_or_error = resolve_path(linkpath, base, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return EEXIST;
@@ -719,7 +724,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
 
 ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
 {
-    LockRefPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody = TRY(resolve_path(path, base, &parent_custody));
     auto& inode = custody->inode();
 
@@ -766,7 +771,7 @@ ErrorOr<void> VirtualFileSystem::for_each_mount(Function<ErrorOr<void>(Mount con
 {
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         for (auto& mount : mounts)
-            TRY(callback(mount));
+            TRY(callback(*mount));
         return {};
     });
 }
@@ -776,9 +781,9 @@ void VirtualFileSystem::sync()
     FileSystem::sync();
 }
 
-Custody& VirtualFileSystem::root_custody()
+NonnullRefPtr<Custody> VirtualFileSystem::root_custody()
 {
-    return *m_root_custody;
+    return m_root_custody.with([](auto& root_custody) -> NonnullRefPtr<Custody> { return *root_custody; });
 }
 
 UnveilNode const& VirtualFileSystem::find_matching_unveiled_path(StringView path)
@@ -871,7 +876,7 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
@@ -899,7 +904,7 @@ static bool safe_to_follow_symlink(Inode const& inode, InodeMetadata const& pare
     return false;
 }
 
-ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(StringView path, Custody& base, LockRefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     if (symlink_recursion_level >= symlink_recursion_limit)
         return ELOOP;
@@ -910,7 +915,7 @@ ErrorOr<NonnullLockRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil
     GenericLexer path_lexer(path);
     auto& current_process = Process::current();
 
-    NonnullLockRefPtr<Custody> custody = path[0] == '/' ? root_custody() : base;
+    NonnullRefPtr<Custody> custody = path[0] == '/' ? root_custody() : base;
     bool extra_iteration = path[path.length() - 1] == '/';
 
     while (!path_lexer.is_eof() || extra_iteration) {

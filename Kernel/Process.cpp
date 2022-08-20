@@ -222,7 +222,7 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
@@ -232,10 +232,10 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& firs
     return process;
 }
 
-Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, LockRefPtr<Custody> current_directory, LockRefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
-    , m_executable(move(executable))
+    , m_executable(LockRank::None, move(executable))
     , m_current_directory(LockRank::None, move(current_directory))
     , m_tty(tty)
     , m_unveil_data(LockRank::None, move(unveil_tree))
@@ -537,9 +537,9 @@ siginfo_t Process::wait_info() const
     return siginfo;
 }
 
-NonnullLockRefPtr<Custody> Process::current_directory()
+NonnullRefPtr<Custody> Process::current_directory()
 {
-    return m_current_directory.with([&](auto& current_directory) -> NonnullLockRefPtr<Custody> {
+    return m_current_directory.with([&](auto& current_directory) -> NonnullRefPtr<Custody> {
         if (!current_directory)
             current_directory = VirtualFileSystem::the().root_custody();
         return *current_directory;
@@ -642,7 +642,7 @@ void Process::finalize()
         TimerQueue::the().cancel_timer(m_alarm_timer.release_nonnull());
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     m_tty = nullptr;
-    m_executable = nullptr;
+    m_executable.with([](auto& executable) { executable = nullptr; });
     m_arguments.clear();
     m_environment.clear();
 
@@ -969,6 +969,16 @@ GroupID Process::sgid() const
 NonnullRefPtr<Credentials> Process::credentials() const
 {
     return *m_protected_values.credentials;
+}
+
+RefPtr<Custody> Process::executable()
+{
+    return m_executable.with([](auto& executable) { return executable; });
+}
+
+RefPtr<Custody const> Process::executable() const
+{
+    return m_executable.with([](auto& executable) { return executable; });
 }
 
 }
