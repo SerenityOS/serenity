@@ -55,7 +55,7 @@ template<typename T>
 static ThrowCompletionOr<Value> get_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian)
 {
     auto& vm = global_object.vm();
-    auto* view = TRY(DataViewPrototype::typed_this_value(global_object));
+    auto* view = TRY(DataViewPrototype::typed_this_value(vm));
     auto get_index = TRY(request_index.to_index(global_object));
     auto little_endian = is_little_endian.to_boolean();
 
@@ -85,7 +85,7 @@ template<typename T>
 static ThrowCompletionOr<Value> set_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian, Value value)
 {
     auto& vm = global_object.vm();
-    auto* view = TRY(DataViewPrototype::typed_this_value(global_object));
+    auto* view = TRY(DataViewPrototype::typed_this_value(vm));
     auto get_index = TRY(request_index.to_index(global_object));
 
     Value number_value;
@@ -233,14 +233,14 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_32)
 // 25.3.4.1 get DataView.prototype.buffer, https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer
 JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::buffer_getter)
 {
-    auto* data_view = TRY(typed_this_value(global_object));
+    auto* data_view = TRY(typed_this_value(vm));
     return data_view->viewed_array_buffer();
 }
 
 // 25.3.4.2 get DataView.prototype.byteLength, https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength
 JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
 {
-    auto* data_view = TRY(typed_this_value(global_object));
+    auto* data_view = TRY(typed_this_value(vm));
     if (data_view->viewed_array_buffer()->is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
     return Value(data_view->byte_length());
@@ -249,7 +249,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
 // 25.3.4.3 get DataView.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset
 JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
 {
-    auto* data_view = TRY(typed_this_value(global_object));
+    auto* data_view = TRY(typed_this_value(vm));
     if (data_view->viewed_array_buffer()->is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
     return Value(data_view->byte_offset());

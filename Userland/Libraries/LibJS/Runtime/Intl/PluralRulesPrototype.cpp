@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 {
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(global_object));
+    auto* plural_rules = TRY(typed_this_object(vm));
 
     // 3. Let n be ? ToNumber(value).
     auto number = TRY(vm.argument(0).to_number(global_object));
@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(global_object));
+    auto* plural_rules = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(global_object));
+    auto* plural_rules = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

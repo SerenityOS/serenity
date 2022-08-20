@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
 {
     // 1. Let df be this value.
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
-    auto* duration_format = TRY(typed_this_object(global_object));
+    auto* duration_format = TRY(typed_this_object(vm));
 
     // 3. Let record be ? ToDurationRecord(duration).
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
 
     // 1. Let df be this value.
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
-    auto* duration_format = TRY(typed_this_object(global_object));
+    auto* duration_format = TRY(typed_this_object(vm));
 
     // 3. Let record be ? ToDurationRecord(duration).
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
@@ -114,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::resolved_options)
 
     // 1. Let df be the this value.
     // 2. Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
-    auto* duration_format = TRY(typed_this_object(global_object));
+    auto* duration_format = TRY(typed_this_object(vm));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());

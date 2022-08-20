@@ -43,7 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 
     // 1. Let promise be the this value.
     // 2. If IsPromise(promise) is false, throw a TypeError exception.
-    auto* promise = TRY(typed_this_object(global_object));
+    auto* promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
     auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));

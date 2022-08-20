@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-    auto* array_buffer_object = TRY(typed_this_value(global_object));
+    auto* array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer
@@ -125,7 +125,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-    auto* array_buffer_object = TRY(typed_this_value(global_object));
+    auto* array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer

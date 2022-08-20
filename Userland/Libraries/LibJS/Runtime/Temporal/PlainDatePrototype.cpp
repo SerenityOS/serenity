@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::calendar_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return temporalDate.[[Calendar]].
     return Value(&temporal_date->calendar());
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_code_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -141,7 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_week_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::week_of_year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_week_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -197,7 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_month_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -211,7 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::days_in_year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -225,7 +225,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::months_in_year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -239,7 +239,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::in_leap_year_getter)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::era_getter)
 {
     // 1. Let plainDate be the this value.
     // 2. Perform ? RequireInternalSlot(plainDate, [[InitializedTemporalDate]]).
-    auto* plain_date = TRY(typed_this_object(global_object));
+    auto* plain_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be plainDate.[[Calendar]].
     auto& calendar = plain_date->calendar();
@@ -267,7 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::era_year_getter)
 {
     // 1. Let plainDate be the this value.
     // 2. Perform ? RequireInternalSlot(plainDate, [[InitializedTemporalDate]]).
-    auto* plain_date = TRY(typed_this_object(global_object));
+    auto* plain_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be plainDate.[[Calendar]].
     auto& calendar = plain_date->calendar();
@@ -281,7 +281,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_year_month)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -301,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be temporalDate.[[Calendar]].
     auto& calendar = temporal_date->calendar();
@@ -323,7 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::get_iso_fields)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(realm, global_object.object_prototype());
@@ -349,7 +349,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::add)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let duration be ? ToTemporalDuration(temporalDurationLike).
     auto* duration = TRY(to_temporal_duration(vm, vm.argument(0)));
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::subtract)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let duration be ? ToTemporalDuration(temporalDurationLike).
     auto* duration = TRY(to_temporal_duration(vm, vm.argument(0)));
@@ -388,7 +388,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. If Type(temporalDateLike) is not Object, then
     if (!temporal_date_like.is_object()) {
@@ -431,7 +431,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with_calendar)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
     auto* calendar = TRY(to_temporal_calendar(vm, calendar_like));
@@ -448,7 +448,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? DifferenceTemporalPlainDate(until, temporalDate, other, options).
     return TRY(difference_temporal_plain_date(vm, DifferenceOperation::Until, *temporal_date, other, options));
@@ -462,7 +462,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? DifferenceTemporalPlainDate(since, temporalDate, other, options).
     return TRY(difference_temporal_plain_date(vm, DifferenceOperation::Since, *temporal_date, other, options));
@@ -473,7 +473,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::equals)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Set other to ? ToTemporalDate(other).
     auto* other = TRY(to_temporal_date(vm, vm.argument(0)));
@@ -496,7 +496,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_date_time)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. If temporalTime is undefined, then
     if (vm.argument(0).is_undefined()) {
@@ -518,7 +518,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_zoned_date_time)
 
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     auto temporal_time_value = js_undefined();
     Object* time_zone;
@@ -580,7 +580,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(vm, vm.argument(0)));
@@ -598,7 +598,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_locale_string)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
     return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));
@@ -609,7 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_json)
 {
     // 1. Let temporalDate be the this value.
     // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
-    auto* temporal_date = TRY(typed_this_object(global_object));
+    auto* temporal_date = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalDateToString(temporalDate, "auto").
     return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, "auto"sv)));

@@ -34,7 +34,7 @@ void WeakMapPrototype::initialize(Realm& realm)
 // 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {
-    auto* weak_map = TRY(typed_this_object(global_object));
+    auto* weak_map = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
         return Value(false);
@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 // 24.3.3.3 WeakMap.prototype.get ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 {
-    auto* weak_map = TRY(typed_this_object(global_object));
+    auto* weak_map = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
         return js_undefined();
@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 // 24.3.3.4 WeakMap.prototype.has ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 {
-    auto* weak_map = TRY(typed_this_object(global_object));
+    auto* weak_map = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
         return Value(false);
@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 // 24.3.3.5 WeakMap.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-weakmap.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 {
-    auto* weak_map = TRY(typed_this_object(global_object));
+    auto* weak_map = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, value.to_string_without_side_effects());

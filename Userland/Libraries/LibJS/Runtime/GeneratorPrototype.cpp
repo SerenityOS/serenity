@@ -30,14 +30,14 @@ void GeneratorPrototype::initialize(Realm& realm)
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::next)
 {
-    auto* generator_object = TRY(typed_this_object(global_object));
+    auto* generator_object = TRY(typed_this_object(vm));
     return generator_object->next_impl(vm, global_object, vm.argument(0), {});
 }
 
 // 27.5.1.3 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.return
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
 {
-    auto* generator_object = TRY(typed_this_object(global_object));
+    auto* generator_object = TRY(typed_this_object(vm));
     generator_object->set_done();
     return generator_object->next_impl(vm, global_object, {}, {});
 }
@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
 // 27.5.1.4 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.throw
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::throw_)
 {
-    auto* generator_object = TRY(typed_this_object(global_object));
+    auto* generator_object = TRY(typed_this_object(vm));
     return generator_object->next_impl(vm, global_object, {}, vm.argument(0));
 }
 

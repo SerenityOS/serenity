@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Return monthDay.[[Calendar]].
     return Value(&month_day->calendar());
@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Let calendar be monthDay.[[Calendar]].
     auto& calendar = month_day->calendar();
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Let calendar be monthDay.[[Calendar]].
     auto& calendar = month_day->calendar();
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::with)
 
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. If Type(temporalMonthDayLike) is not Object, then
     if (!temporal_month_day_like.is_object()) {
@@ -131,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Set other to ? ToTemporalMonthDay(other).
     auto* other = TRY(to_temporal_month_day(vm, vm.argument(0)));
@@ -157,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(vm, vm.argument(0)));
@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalMonthDayToString(monthDay, "auto").
     return js_string(vm, TRY(temporal_month_day_to_string(vm, *month_day, "auto"sv)));
@@ -186,7 +186,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Return ? TemporalMonthDayToString(monthDay, "auto").
     return js_string(vm, TRY(temporal_month_day_to_string(vm, *month_day, "auto"sv)));
@@ -208,7 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
 
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
 
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day = TRY(typed_this_object(global_object));
+    auto* month_day = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(realm, global_object.object_prototype());

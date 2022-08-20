@@ -419,7 +419,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                  \
     {                                                                                      \
         /* 1. If Type(R) is not Object, throw a TypeError exception. */                    \
-        auto* regexp_object = TRY(this_object(global_object));                             \
+        auto* regexp_object = TRY(this_object(vm));                                        \
         /* 2. If R does not have an [[OriginalFlags]] internal slot, then */               \
         if (!is<RegExpObject>(regexp_object)) {                                            \
             /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */        \
@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
     // 1. Let R be the this value.
     // 2. Perform ? RequireInternalSlot(R, [[RegExpMatcher]]).
-    auto* regexp_object = TRY(typed_this_object(global_object));
+    auto* regexp_object = TRY(typed_this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -457,7 +457,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let result be the empty String.
     StringBuilder builder(8);
@@ -497,7 +497,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -573,7 +573,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -618,7 +618,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(string_value.to_utf16_string(global_object));
@@ -808,7 +808,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -847,7 +847,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. If R does not have an [[OriginalSource]] internal slot, then
     if (!is<RegExpObject>(regexp_object)) {
@@ -873,7 +873,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -1027,7 +1027,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let string be ? ToString(S).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
@@ -1044,7 +1044,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(global_object));
+    auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let pattern be ? ToString(? Get(R, "source")).
     auto source_attr = TRY(regexp_object->get(vm.names.source));
@@ -1067,7 +1067,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[RegExpMatcher]]).
-    auto* regexp_object = TRY(typed_this_object(global_object));
+    auto* regexp_object = TRY(typed_this_object(vm));
 
     // 3. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {

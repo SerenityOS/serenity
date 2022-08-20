@@ -39,7 +39,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
     // 1. Let O be the this value.
     // 2. If Type(O) is not Object, throw a TypeError exception.
-    auto* this_object = TRY(PrototypeObject::this_object(global_object));
+    auto* this_object = TRY(PrototypeObject::this_object(vm));
 
     // 3. Let name be ? Get(O, "name").
     auto name_property = TRY(this_object->get(vm.names.name));
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
 {
     // 1. Let E be the this value.
     // 2. If ! Type(E) is not Object, throw a TypeError exception.
-    auto* this_object = TRY(PrototypeObject::this_object(global_object));
+    auto* this_object = TRY(PrototypeObject::this_object(vm));
 
     // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
     if (!is<Error>(this_object))

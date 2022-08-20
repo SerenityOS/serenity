@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
 {
     // 1. Let iterator be the this value.
     // 2. Perform ? RequireInternalSlot(iterator, [[IteratingSegmenter]]).
-    auto* iterator = TRY(typed_this_object(global_object));
+    auto* iterator = TRY(typed_this_object(vm));
 
     // 3. Let segmenter be iterator.[[IteratingSegmenter]].
     auto const& segmenter = iterator->iterating_segmenter();

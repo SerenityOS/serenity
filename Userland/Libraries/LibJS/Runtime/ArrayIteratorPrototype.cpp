@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* iterator = TRY(typed_this_value(global_object));
+    auto* iterator = TRY(typed_this_value(vm));
     auto target_array = iterator->array();
     if (target_array.is_undefined())
         return create_iterator_result_object(global_object, js_undefined(), true);

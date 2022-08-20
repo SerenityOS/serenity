@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = TRY(typed_this_object(global_object));
+    auto* display_names = TRY(typed_this_object(vm));
 
     // 3. Let code be ? ToString(code).
     auto code_string = TRY(code.to_string(global_object));
@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = TRY(typed_this_object(global_object));
+    auto* display_names = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(realm, global_object.object_prototype());
