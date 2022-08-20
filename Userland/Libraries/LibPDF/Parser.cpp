@@ -53,7 +53,7 @@ String Parser::parse_comment()
     return str;
 }
 
-PDFErrorOr<Value> Parser::parse_value()
+PDFErrorOr<Value> Parser::parse_value(CanBeIndirectValue can_be_indirect_value)
 {
     parse_comment();
 
@@ -75,8 +75,12 @@ PDFErrorOr<Value> Parser::parse_value()
         return Value(false);
     }
 
-    if (m_reader.matches_number())
-        return parse_possible_indirect_value_or_ref();
+    if (m_reader.matches_number()) {
+        if (can_be_indirect_value == CanBeIndirectValue::Yes)
+            return parse_possible_indirect_value_or_ref();
+        else
+            return parse_number();
+    }
 
     if (m_reader.matches('/'))
         return MUST(parse_name());
@@ -513,7 +517,10 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
             continue;
         }
 
-        operator_args.append(TRY(parse_value()));
+        // Note: We disallow parsing indirect values here, since
+        //       operations like 0 0 0 RG would confuse the parser
+        auto v = TRY(parse_value(CanBeIndirectValue::No));
+        operator_args.append(v);
     }
 
     return operators;
