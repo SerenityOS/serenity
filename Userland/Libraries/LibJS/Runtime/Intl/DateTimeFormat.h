@@ -13,7 +13,6 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibUnicode/DateTimeFormat.h>
@@ -180,24 +179,22 @@ struct LocalTime {
     u16 millisecond { 0 }; // [[Millisecond]]
 };
 
-ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired, OptionDefaults);
+ThrowCompletionOr<Object*> to_date_time_options(VM&, Value options_value, OptionRequired, OptionDefaults);
 Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
 Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
 Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
-ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options);
-ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, double time);
-ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTimeFormat& date_time_format, double time);
-ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double time);
-ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end);
-ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end);
-ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end);
-ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, StringView time_zone);
+ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM&, DateTimeFormat&, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options);
+ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<String> format_date_time(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<Array*> format_date_time_to_parts(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<String> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<LocalTime> to_local_time(VM&, double time, StringView calendar, StringView time_zone);
 
 template<typename Callback>
-ThrowCompletionOr<void> for_each_calendar_field(GlobalObject& global_object, Unicode::CalendarPattern& pattern, Callback&& callback)
+ThrowCompletionOr<void> for_each_calendar_field(VM& vm, Unicode::CalendarPattern& pattern, Callback&& callback)
 {
-    auto& vm = global_object.vm();
-
     constexpr auto narrow_short_long = AK::Array { "narrow"sv, "short"sv, "long"sv };
     constexpr auto two_digit_numeric = AK::Array { "2-digit"sv, "numeric"sv };
     constexpr auto two_digit_numeric_narrow_short_long = AK::Array { "2-digit"sv, "numeric"sv, "narrow"sv, "short"sv, "long"sv };

@@ -81,12 +81,12 @@ struct WeekInfo {
     Vector<u8> weekend;    // [[Weekend]]
 };
 
-Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale);
-Array* collations_of_locale(GlobalObject& global_object, Locale const& locale);
-Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale);
-Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale);
-Array* time_zones_of_locale(GlobalObject& global_object, StringView region);
-StringView character_direction_of_locale(Locale const& locale);
-WeekInfo week_info_of_locale(Locale const& locale);
+Array* calendars_of_locale(VM&, Locale const&);
+Array* collations_of_locale(VM&, Locale const& locale);
+Array* hour_cycles_of_locale(VM&, Locale const& locale);
+Array* numbering_systems_of_locale(VM&, Locale const&);
+Array* time_zones_of_locale(VM&, StringView region);
+StringView character_direction_of_locale(Locale const&);
+WeekInfo week_info_of_locale(Locale const&);
 
 }

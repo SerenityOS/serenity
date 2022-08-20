@@ -54,10 +54,8 @@ StringView RelativeTimeFormat::numeric_string() const
 }
 
 // 17.5.1 SingularRelativeTimeUnit ( unit ), https://tc39.es/ecma402/#sec-singularrelativetimeunit
-ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(GlobalObject& global_object, StringView unit)
+ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(VM& vm, StringView unit)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(unit) is String.
 
     // 2. If unit is "seconds", return "second".
@@ -93,9 +91,10 @@ ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(GlobalObject& g
 }
 
 // 17.5.2 PartitionRelativeTimePattern ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-PartitionRelativeTimePattern
-ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_pattern(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_pattern(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Assert: relativeTimeFormat has an [[InitializedRelativeTimeFormat]] internal slot.
     // 2. Assert: Type(value) is Number.
@@ -106,7 +105,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaNOrInfinity);
 
     // 5. Let unit be ? SingularRelativeTimeUnit(unit).
-    auto time_unit = TRY(singular_relative_time_unit(global_object, unit));
+    auto time_unit = TRY(singular_relative_time_unit(vm, unit));
 
     // 6. Let localeData be %RelativeTimeFormat%.[[LocaleData]].
     // 7. Let dataLocale be relativeTimeFormat.[[DataLocale]].
@@ -178,7 +177,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto patterns = find_patterns_for_tense_or_number(tense);
 
     // 20. Let fv be ! PartitionNumberPattern(relativeTimeFormat.[[NumberFormat]], value).
-    auto value_partitions = partition_number_pattern(global_object, relative_time_format.number_format(), Value(value));
+    auto value_partitions = partition_number_pattern(vm, relative_time_format.number_format(), Value(value));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
     auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
@@ -226,10 +225,10 @@ Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView 
 }
 
 // 17.5.4 FormatRelativeTime ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTime
-ThrowCompletionOr<String> format_relative_time(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<String> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
-    auto parts = TRY(partition_relative_time_pattern(global_object, relative_time_format, value, unit));
+    auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be an empty String.
     StringBuilder result;
@@ -245,13 +244,13 @@ ThrowCompletionOr<String> format_relative_time(GlobalObject& global_object, Rela
 }
 
 // 17.5.5 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts
-ThrowCompletionOr<Array*> format_relative_time_to_parts(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
-    auto parts = TRY(partition_relative_time_pattern(global_object, relative_time_format, value, unit));
+    auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));

@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
     auto end_index = find_boundary(segmenter, string, n, Direction::After, segments->boundaries_cache());
 
     // 10. Return ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
-    return create_segment_data_object(global_object, segmenter, string, start_index, end_index);
+    return create_segment_data_object(vm, segmenter, string, start_index, end_index);
 }
 
 // 18.5.2.2 %SegmentsPrototype% [ @@iterator ] ( ), https://tc39.es/ecma402/#sec-%segmentsprototype%-@@iterator

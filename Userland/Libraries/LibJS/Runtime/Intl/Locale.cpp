@@ -55,10 +55,9 @@ Locale::Locale(Unicode::LocaleID const& locale_id, Object& prototype)
 }
 
 // 1.1.1 CreateArrayFromListOrRestricted ( list , restricted )
-static Array* create_array_from_list_or_restricted(GlobalObject& global_object, Vector<StringView> list, Optional<String> restricted)
+static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<String> restricted)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. If restricted is not undefined, then
     if (restricted.has_value()) {
@@ -73,7 +72,7 @@ static Array* create_array_from_list_or_restricted(GlobalObject& global_object, 
 }
 
 // 1.1.2 CalendarsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-calendars-of-locale
-Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale_object)
+Array* calendars_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Calendar]].
     Optional<String> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<String> {};
@@ -88,11 +87,11 @@ Array* calendars_of_locale(GlobalObject& global_object, Locale const& locale_obj
     auto list = Unicode::get_keywords_for_locale(locale, "ca"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
-    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+    return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.3 CollationsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-collations-of-locale
-Array* collations_of_locale(GlobalObject& global_object, Locale const& locale_object)
+Array* collations_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Collation]].
     Optional<String> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<String> {};
@@ -107,11 +106,11 @@ Array* collations_of_locale(GlobalObject& global_object, Locale const& locale_ob
     auto list = Unicode::get_keywords_for_locale(locale, "co"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
-    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+    return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.4 HourCyclesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-hour-cycles-of-locale
-Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale_object)
+Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[HourCycle]].
     Optional<String> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<String> {};
@@ -126,11 +125,11 @@ Array* hour_cycles_of_locale(GlobalObject& global_object, Locale const& locale_o
     auto list = Unicode::get_keywords_for_locale(locale, "hc"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
-    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+    return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.5 NumberingSystemsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-numbering-systems-of-locale
-Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& locale_object)
+Array* numbering_systems_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[NumberingSystem]].
     Optional<String> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<String> {};
@@ -145,15 +144,14 @@ Array* numbering_systems_of_locale(GlobalObject& global_object, Locale const& lo
     auto list = Unicode::get_keywords_for_locale(locale, "nu"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
-    return create_array_from_list_or_restricted(global_object, move(list), move(restricted));
+    return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.6 TimeZonesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-time-zones-of-locale
 // NOTE: Our implementation takes a region rather than a Locale object to avoid needlessly parsing the locale twice.
-Array* time_zones_of_locale(GlobalObject& global_object, StringView region)
+Array* time_zones_of_locale(VM& vm, StringView region)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let locale be loc.[[Locale]].
     // 2. Assert: locale matches the unicode_locale_id production.

@@ -64,10 +64,10 @@ StringView DateTimeFormat::style_to_string(Style style)
 }
 
 // 11.5.1 ToDateTimeOptions ( options, required, defaults ), https://tc39.es/ecma402/#sec-todatetimeoptions
-ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired required, OptionDefaults defaults)
+ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, OptionRequired required, OptionDefaults defaults)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If options is undefined, let options be null; otherwise let options be ? ToObject(options).
     Object* options = nullptr;
@@ -530,10 +530,10 @@ static Optional<StringView> resolve_day_period(StringView locale, StringView cal
 }
 
 // 11.5.6 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
-ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options)
+ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let x be TimeClip(x).
     time = time_clip(time);
@@ -594,7 +594,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     }
 
     // 13. Let tm be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto local_time = TRY(to_local_time(global_object, time, date_time_format.calendar(), date_time_format.time_zone()));
+    auto local_time = TRY(to_local_time(vm, time, date_time_format.calendar(), date_time_format.time_zone()));
 
     // 14. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -619,7 +619,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             value = floor(value * pow(10, static_cast<int>(*fractional_second_digits) - 3));
 
             // iii. Let fv be FormatNumeric(nf3, v).
-            auto formatted_value = format_numeric(global_object, *number_format3, Value(value));
+            auto formatted_value = format_numeric(vm, *number_format3, Value(value));
 
             // iv. Append a new Record { [[Type]]: "fractionalSecond", [[Value]]: fv } as the last element of result.
             result.append({ "fractionalSecond"sv, move(formatted_value) });
@@ -703,13 +703,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             // viii. If f is "numeric", then
             case Unicode::CalendarPatternStyle::Numeric:
                 // 1. Let fv be FormatNumeric(nf, v).
-                formatted_value = format_numeric(global_object, *number_format, Value(value));
+                formatted_value = format_numeric(vm, *number_format, Value(value));
                 break;
 
             // ix. Else if f is "2-digit", then
             case Unicode::CalendarPatternStyle::TwoDigit:
                 // 1. Let fv be FormatNumeric(nf2, v).
-                formatted_value = format_numeric(global_object, *number_format2, Value(value));
+                formatted_value = format_numeric(vm, *number_format2, Value(value));
 
                 // 2. If the "length" property of fv is greater than 2, let fv be the substring of fv containing the last two characters.
                 // NOTE: The first length check here isn't enough, but lets us avoid UTF-16 transcoding when the formatted value is ASCII.
@@ -815,23 +815,23 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
 }
 
 // 11.5.7 PartitionDateTimePattern ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-partitiondatetimepattern
-ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, double time)
+ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let patternParts be PartitionPattern(dateTimeFormat.[[Pattern]]).
     auto pattern_parts = partition_pattern(date_time_format.pattern());
 
     // 2. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
-    auto result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), time, nullptr));
+    auto result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, nullptr));
 
     // 3. Return result.
     return result;
 }
 
 // 11.5.8 FormatDateTime ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetime
-ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTimeFormat& date_time_format, double time)
+ThrowCompletionOr<String> format_date_time(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
-    auto parts = TRY(partition_date_time_pattern(global_object, date_time_format, time));
+    auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -847,13 +847,13 @@ ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTime
 }
 
 // 11.5.9 FormatDateTimeToParts ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetimetoparts
-ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double time)
+ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date_time_format, double time)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
-    auto parts = TRY(partition_date_time_pattern(global_object, date_time_format, time));
+    auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
 
     // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));
@@ -919,10 +919,8 @@ ThrowCompletionOr<void> for_each_range_pattern_with_source(Unicode::CalendarRang
 }
 
 // 11.5.10 PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-partitiondatetimerangepattern
-ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end)
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let x be TimeClip(x).
     start = time_clip(start);
 
@@ -938,10 +936,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidTime);
 
     // 5. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto start_local_time = TRY(to_local_time(global_object, start, date_time_format.calendar(), date_time_format.time_zone()));
+    auto start_local_time = TRY(to_local_time(vm, start, date_time_format.calendar(), date_time_format.time_zone()));
 
     // 6. Let tm2 be ToLocalTime(y, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto end_local_time = TRY(to_local_time(global_object, end, date_time_format.calendar(), date_time_format.time_zone()));
+    auto end_local_time = TRY(to_local_time(vm, end, date_time_format.calendar(), date_time_format.time_zone()));
 
     // 7. Let rangePatterns be dateTimeFormat.[[RangePatterns]].
     auto range_patterns = date_time_format.range_patterns();
@@ -1069,7 +1067,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto pattern_parts = partition_pattern(pattern);
 
         // c. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
-        auto raw_result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), start, nullptr));
+        auto raw_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), start, nullptr));
         auto result = PatternPartitionWithSource::create_from_parent_list(move(raw_result));
 
         // d. For each Record { [[Type]], [[Value]] } r in result, do
@@ -1126,7 +1124,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto pattern_parts = partition_pattern(pattern);
 
         // f. Let partResult be ? FormatDateTimePattern(dateTimeFormat, patternParts, z, rangePattern).
-        auto raw_part_result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), time, &range_pattern.value()));
+        auto raw_part_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, &range_pattern.value()));
         auto part_result = PatternPartitionWithSource::create_from_parent_list(move(raw_part_result));
 
         // g. For each Record { [[Type]], [[Value]] } r in partResult, do
@@ -1145,10 +1143,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 }
 
 // 11.5.11 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
-ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end)
+ThrowCompletionOr<String> format_date_time_range(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
-    auto parts = TRY(partition_date_time_range_pattern(global_object, date_time_format, start, end));
+    auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -1164,13 +1162,13 @@ ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, Da
 }
 
 // 11.5.12 FormatDateTimeRangeToParts ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerangetoparts
-ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, double start, double end)
+ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
-    auto parts = TRY(partition_date_time_range_pattern(global_object, date_time_format, start, end));
+    auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));
 
     // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));
@@ -1204,7 +1202,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_o
 }
 
 // 11.5.13 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
-ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, StringView time_zone)
+ThrowCompletionOr<LocalTime> to_local_time(VM& vm, double time, StringView calendar, StringView time_zone)
 {
     // 1. Assert: Type(t) is Number.
 
@@ -1248,7 +1246,7 @@ ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double t
     // 3. Else,
     //     a. Return a record with the fields of Column 1 of Table 7 calculated from t for the given calendar and timeZone. The calculations should use best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
     // FIXME: Implement this when non-Gregorian calendars are supported by LibUnicode.
-    return global_object.vm().throw_completion<InternalError>(ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
+    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
 }
 
 }

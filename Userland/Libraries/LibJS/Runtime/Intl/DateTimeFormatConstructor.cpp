@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& 
     auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(global_object, new_target, &GlobalObject::intl_date_time_format_prototype));
 
     // 3. Perform ? InitializeDateTimeFormat(dateTimeFormat, locales, options).
-    TRY(initialize_date_time_format(global_object, *date_time_format, locales, options));
+    TRY(initialize_date_time_format(vm, *date_time_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.
@@ -76,22 +76,23 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %DateTimeFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 // 11.1.2 InitializeDateTimeFormat ( dateTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-initializedatetimeformat
-ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& global_object, DateTimeFormat& date_time_format, Value locales_value, Value options_value)
+ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeFormat& date_time_format, Value locales_value, Value options_value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
     // 2. Set options to ? ToDateTimeOptions(options, "any", "date").
-    auto* options = TRY(to_date_time_options(global_object, options_value, OptionRequired::Any, OptionDefaults::Date));
+    auto* options = TRY(to_date_time_options(vm, options_value, OptionRequired::Any, OptionDefaults::Date));
 
     // 3. Let opt be a new Record.
     LocaleOptions opt {};
@@ -250,7 +251,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
     PropertyKey const* explicit_format_component = nullptr;
 
     // 36. For each row of Table 6, except the header row, in table order, do
-    TRY(for_each_calendar_field(global_object, format_options, [&](auto& option, auto const& property, auto const& values) -> ThrowCompletionOr<void> {
+    TRY(for_each_calendar_field(vm, format_options, [&](auto& option, auto const& property, auto const& values) -> ThrowCompletionOr<void> {
         using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
         // a. Let prop be the name given in the Property column of the row.
@@ -258,7 +259,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // b. If prop is "fractionalSecondDigits", then
         if constexpr (IsIntegral<ValueType>) {
             // i. Let value be ? GetNumberOption(options, "fractionalSecondDigits", 1, 3, undefined).
-            auto value = TRY(get_number_option(global_object, *options, property, 1, 3, {}));
+            auto value = TRY(get_number_option(vm, *options, property, 1, 3, {}));
 
             // d. Set formatOptions.[[<prop>]] to value.
             if (value.has_value()) {

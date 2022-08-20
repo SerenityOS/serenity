@@ -753,7 +753,7 @@ static void print_intl_number_format(JS::Intl::NumberFormat const& number_format
         print_value(JS::Value(number_format.max_significant_digits()), seen_objects);
     }
     js_out("\n  useGrouping: ");
-    print_value(number_format.use_grouping_to_value(number_format.global_object()), seen_objects);
+    print_value(number_format.use_grouping_to_value(number_format.vm()), seen_objects);
     js_out("\n  roundingType: ");
     print_value(js_string(number_format.vm(), number_format.rounding_type_string()), seen_objects);
     js_out("\n  roundingMode: ");
@@ -798,7 +798,7 @@ static void print_intl_date_time_format(JS::Intl::DateTimeFormat& date_time_form
         print_value(js_string(date_time_format.vm(), date_time_format.time_style_string()), seen_objects);
     }
 
-    JS::Intl::for_each_calendar_field(date_time_format.global_object(), date_time_format, [&](auto& option, auto const& property, auto const&) -> JS::ThrowCompletionOr<void> {
+    JS::Intl::for_each_calendar_field(date_time_format.vm(), date_time_format, [&](auto& option, auto const& property, auto const&) -> JS::ThrowCompletionOr<void> {
         using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
         if (!option.has_value())

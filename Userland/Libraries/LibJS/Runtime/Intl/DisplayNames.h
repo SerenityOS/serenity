@@ -70,7 +70,7 @@ private:
     Optional<LanguageDisplay> m_language_display {}; // [[LanguageDisplay]]
 };
 
-ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code);
+ThrowCompletionOr<Value> canonical_code_for_display_names(VM&, DisplayNames::Type, StringView code);
 bool is_valid_date_time_field_code(StringView field);
 
 }

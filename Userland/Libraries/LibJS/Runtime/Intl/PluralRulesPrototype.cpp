@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
     auto y = TRY(end.to_number(global_object));
 
     // 6. Return ? ResolvePluralRange(pr, x, y).
-    auto plurality = TRY(resolve_plural_range(global_object, *plural_rules, x, y));
+    auto plurality = TRY(resolve_plural_range(vm, *plural_rules, x, y));
     return js_string(vm, Unicode::plural_category_to_string(plurality));
 }
 

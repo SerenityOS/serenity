@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locale_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));
 
     // 4. If options is undefined, throw a TypeError exception.
     if (options_value.is_undefined())
@@ -144,10 +144,10 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
     // No-op, availability of each requested locale is checked via Unicode::is_locale_available()
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 }

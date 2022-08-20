@@ -331,7 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = Intl::format_numeric(global_object, *number_format, number_value);
+    auto formatted = Intl::format_numeric(vm, *number_format, number_value);
     return js_string(vm, move(formatted));
 }
 

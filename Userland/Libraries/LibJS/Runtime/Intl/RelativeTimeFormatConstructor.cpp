@@ -58,7 +58,7 @@ ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObje
     auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(global_object, new_target, &GlobalObject::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
-    return TRY(initialize_relative_time_format(global_object, *relative_time_format, locales, options));
+    return TRY(initialize_relative_time_format(vm, *relative_time_format, locales, options));
 }
 
 // 17.2.2 Intl.RelativeTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf
@@ -70,22 +70,23 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %RelativeTimeFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 // 17.1.2 InitializeRelativeTimeFormat ( relativeTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat
-ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
+ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(vm, options_value));
 
     // 3. Let opt be a new Record.
     LocaleOptions opt {};

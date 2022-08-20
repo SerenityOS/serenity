@@ -88,7 +88,7 @@ public:
     bool is_zero() const;
 
     String to_string() const;
-    Value to_value(GlobalObject&) const;
+    Value to_value(VM&) const;
 
 private:
     using ValueType = Variant<double, Crypto::SignedBigInteger, Symbol>;

@@ -242,10 +242,8 @@ void NumberFormatBase::set_trailing_zero_display(StringView trailing_zero_displa
         VERIFY_NOT_REACHED();
 }
 
-Value NumberFormat::use_grouping_to_value(GlobalObject& global_object) const
+Value NumberFormat::use_grouping_to_value(VM& vm) const
 {
-    auto& vm = global_object.vm();
-
     switch (m_use_grouping) {
     case UseGrouping::Always:
         return js_string(vm, "always"sv);
@@ -519,7 +517,7 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
 
 // 15.5.4 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-partitionnumberpattern
 // 1.1.6 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberpattern
-Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number)
+Vector<PatternPartition> partition_number_pattern(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     // 1. Let exponent be 0.
     int exponent = 0;
@@ -574,7 +572,7 @@ Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, N
     Unicode::NumberFormat found_pattern {};
 
     // 6. Let pattern be GetNumberFormatPattern(numberFormat, x).
-    auto pattern = get_number_format_pattern(global_object, number_format, number, found_pattern);
+    auto pattern = get_number_format_pattern(vm, number_format, number, found_pattern);
     if (!pattern.has_value())
         return {};
 
@@ -887,11 +885,11 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
 }
 
 // 15.5.6 FormatNumeric ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumber
-String format_numeric(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number)
+String format_numeric(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
     // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(global_object, number_format, move(number));
+    auto parts = partition_number_pattern(vm, number_format, move(number));
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -907,14 +905,14 @@ String format_numeric(GlobalObject& global_object, NumberFormat& number_format, 
 }
 
 // 15.5.7 FormatNumericToParts ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumbertoparts
-Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue number)
+Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
     // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(global_object, number_format, move(number));
+    auto parts = partition_number_pattern(vm, number_format, move(number));
 
     // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));
@@ -1261,7 +1259,7 @@ RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, 
 
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
 // 1.1.14 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getnumberformatpattern
-Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue const& number, Unicode::NumberFormat& found_pattern)
+Optional<Variant<StringView, String>> get_number_format_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, Unicode::NumberFormat& found_pattern)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
@@ -1288,7 +1286,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
         auto formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
-        auto plurality = resolve_plural(number_format, Unicode::PluralForm::Cardinal, number.to_value(global_object));
+        auto plurality = resolve_plural(number_format, Unicode::PluralForm::Cardinal, number.to_value(vm));
 
         if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end())
             patterns = move(*it);
@@ -1311,7 +1309,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(GlobalObject& gl
         // Handling of other [[CurrencyDisplay]] options will occur after [[SignDisplay]].
         if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
             auto formats = Unicode::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), Unicode::CompactNumberFormatType::CurrencyUnit);
-            auto plurality = resolve_plural(number_format, Unicode::PluralForm::Cardinal, number.to_value(global_object));
+            auto plurality = resolve_plural(number_format, Unicode::PluralForm::Cardinal, number.to_value(vm));
 
             if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end()) {
                 patterns = move(*it);
@@ -1580,8 +1578,11 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
 }
 
 // 1.1.18 ToIntlMathematicalValue ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-tointlmathematicalvalue
-ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(GlobalObject& global_object, Value value)
+ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value value)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Let primValue be ? ToPrimitive(value, number).
     auto primitive_value = TRY(value.to_primitive(global_object, Value::PreferredType::Number));
 
@@ -1720,10 +1721,8 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
 }
 
 // 1.1.21 PartitionNumberRangePattern ( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberrangepattern
-ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
-    auto& vm = global_object.vm();
-
     // 1. If x is NaN or y is NaN, throw a RangeError exception.
     if (start.is_nan())
         return vm.throw_completion<RangeError>(ErrorType::IntlNumberIsNaN, "start"sv);
@@ -1734,11 +1733,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     Vector<PatternPartitionWithSource> result;
 
     // 3. Let xResult be ? PartitionNumberPattern(numberFormat, x).
-    auto raw_start_result = partition_number_pattern(global_object, number_format, move(start));
+    auto raw_start_result = partition_number_pattern(vm, number_format, move(start));
     auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
 
     // 4. Let yResult be ? PartitionNumberPattern(numberFormat, y).
-    auto raw_end_result = partition_number_pattern(global_object, number_format, move(end));
+    auto raw_end_result = partition_number_pattern(vm, number_format, move(end));
     auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
 
     // 5. If xResult is equal to yResult, return FormatApproximately(numberFormat, xResult).
@@ -1806,10 +1805,10 @@ Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartition
 }
 
 // 1.1.24 FormatNumericRange( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumericrange
-ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
+ThrowCompletionOr<String> format_numeric_range(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
     // 1. Let parts be ? PartitionNumberRangePattern(numberFormat, x, y).
-    auto parts = TRY(partition_number_range_pattern(global_object, number_format, move(start), move(end)));
+    auto parts = TRY(partition_number_range_pattern(vm, number_format, move(start), move(end)));
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -1825,13 +1824,13 @@ ThrowCompletionOr<String> format_numeric_range(GlobalObject& global_object, Numb
 }
 
 // 1.1.25 FormatNumericRangeToParts( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumericrangetoparts
-ThrowCompletionOr<Array*> format_numeric_range_to_parts(GlobalObject& global_object, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
+ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionNumberRangePattern(numberFormat, x, y).
-    auto parts = TRY(partition_number_range_pattern(global_object, number_format, move(start), move(end)));
+    auto parts = TRY(partition_number_range_pattern(vm, number_format, move(start), move(end)));
 
     // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));

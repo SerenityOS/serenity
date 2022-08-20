@@ -32,9 +32,9 @@ private:
 
 Unicode::PluralOperands get_operands(String const& string);
 Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralForm type, Value number, Unicode::PluralOperands operands);
-Unicode::PluralCategory resolve_plural(PluralRules const& plural_rules, Value number);
+Unicode::PluralCategory resolve_plural(PluralRules const&, Value number);
 Unicode::PluralCategory resolve_plural(NumberFormatBase const& number_format, Unicode::PluralForm type, Value number);
 Unicode::PluralCategory plural_rule_select_range(StringView locale, Unicode::PluralForm, Unicode::PluralCategory start, Unicode::PluralCategory end);
-ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& global_object, PluralRules const& plural_rules, Value start, Value end);
+ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(VM&, PluralRules const&, Value start, Value end);
 
 }

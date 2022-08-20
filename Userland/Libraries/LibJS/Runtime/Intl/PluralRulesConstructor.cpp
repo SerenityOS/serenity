@@ -55,7 +55,7 @@ ThrowCompletionOr<Object*> PluralRulesConstructor::construct(FunctionObject& new
     auto* plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(global_object, new_target, &GlobalObject::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
-    return TRY(initialize_plural_rules(global_object, *plural_rules, locales, options));
+    return TRY(initialize_plural_rules(vm, *plural_rules, locales, options));
 }
 
 // 16.2.2 Intl.PluralRules.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.pluralrules.supportedlocalesof
@@ -67,22 +67,23 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesConstructor::supported_locales_of)
     // 1. Let availableLocales be %PluralRules%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 // 16.1.2 InitializePluralRules ( pluralRules, locales, options ), https://tc39.es/ecma402/#sec-initializepluralrules
-ThrowCompletionOr<PluralRules*> initialize_plural_rules(GlobalObject& global_object, PluralRules& plural_rules, Value locales_value, Value options_value)
+ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plural_rules, Value locales_value, Value options_value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
     // 2. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(vm, options_value));
 
     // 3. Let opt be a new Record.
     LocaleOptions opt {};
@@ -100,7 +101,7 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(GlobalObject& global_obj
     plural_rules.set_type(type.as_string().string());
 
     // 8. Perform ? SetNumberFormatDigitOptions(pluralRules, options, +0𝔽, 3𝔽, "standard").
-    TRY(set_number_format_digit_options(global_object, plural_rules, *options, 0, 3, NumberFormat::Notation::Standard));
+    TRY(set_number_format_digit_options(vm, plural_rules, *options, 0, 3, NumberFormat::Notation::Standard));
 
     // 9. Let localeData be %PluralRules%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%PluralRules%.[[AvailableLocales]], requestedLocales, opt, %PluralRules%.[[RelevantExtensionKeys]], localeData).

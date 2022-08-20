@@ -58,7 +58,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
     }
 
     // 5. Return ? FormatDateTime(dtf, x).
-    auto formatted = TRY(format_date_time(global_object, m_date_time_format, date_value));
+    auto formatted = TRY(format_date_time(vm, m_date_time_format, date_value));
     return js_string(vm, move(formatted));
 }
 

@@ -1009,13 +1009,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "date", "date").
-    options = Value(TRY(Intl::to_date_time_options(global_object, options, Intl::OptionRequired::Date, Intl::OptionDefaults::Date)));
+    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Date, Intl::OptionDefaults::Date)));
 
     // 4. Let dateFormat be ? Construct(%DateTimeFormat%, « locales, options »).
     auto* date_format = TRY(construct_date_time_format(global_object, locales, options));
 
     // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(global_object, *date_format, time));
+    auto formatted = TRY(Intl::format_date_time(vm, *date_format, time));
     return js_string(vm, move(formatted));
 }
 
@@ -1034,13 +1034,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "any", "all").
-    options = Value(TRY(Intl::to_date_time_options(global_object, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All)));
+    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All)));
 
     // 4. Let dateFormat be ? Construct(%DateTimeFormat%, « locales, options »).
     auto* date_format = TRY(construct_date_time_format(global_object, locales, options));
 
     // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(global_object, *date_format, time));
+    auto formatted = TRY(Intl::format_date_time(vm, *date_format, time));
     return js_string(vm, move(formatted));
 }
 
@@ -1059,13 +1059,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
         return js_string(vm, "Invalid Date"sv);
 
     // 3. Let options be ? ToDateTimeOptions(options, "time", "time").
-    options = Value(TRY(Intl::to_date_time_options(global_object, options, Intl::OptionRequired::Time, Intl::OptionDefaults::Time)));
+    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Time, Intl::OptionDefaults::Time)));
 
     // 4. Let timeFormat be ? Construct(%DateTimeFormat%, « locales, options »).
     auto* time_format = TRY(construct_date_time_format(global_object, locales, options));
 
     // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(global_object, *time_format, time));
+    auto formatted = TRY(Intl::format_date_time(vm, *time_format, time));
     return js_string(vm, move(formatted));
 }
 

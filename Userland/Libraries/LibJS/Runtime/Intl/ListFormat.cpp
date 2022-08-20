@@ -201,10 +201,10 @@ String format_list(ListFormat const& list_format, Vector<String> const& list)
 }
 
 // 13.5.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
-Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_format, Vector<String> const& list)
+Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<String> const& list)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
     auto parts = create_parts_from_list(list_format, list);
@@ -238,9 +238,10 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
 }
 
 // 13.5.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable
-ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global_object, Value iterable)
+ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterable)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If iterable is undefined, then
     if (iterable.is_undefined()) {

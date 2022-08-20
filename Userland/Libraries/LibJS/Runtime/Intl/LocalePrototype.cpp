@@ -225,7 +225,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)              \
     {                                                                \
         auto* locale_object = TRY(typed_this_object(global_object)); \
-        return keyword##_of_locale(global_object, *locale_object);   \
+        return keyword##_of_locale(vm, *locale_object);              \
     }
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
         return js_undefined();
 
     // 5. Return ! TimeZonesOfLocale(loc).
-    return time_zones_of_locale(global_object, locale->language_id.region.value());
+    return time_zones_of_locale(vm, locale->language_id.region.value());
 }
 
 // 1.4.21 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo

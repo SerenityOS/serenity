@@ -137,10 +137,8 @@ Unicode::PluralCategory plural_rule_select_range(StringView locale, Unicode::Plu
 }
 
 // 1.1.6 ResolvePluralRange ( pluralRules, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolvepluralrange
-ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(GlobalObject& global_object, PluralRules const& plural_rules, Value start, Value end)
+ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(VM& vm, PluralRules const& plural_rules, Value start, Value end)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
     // 3. Assert: Type(x) is Number.

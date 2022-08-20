@@ -34,8 +34,7 @@ void NumberFormatFunction::initialize(Realm& realm)
 
 ThrowCompletionOr<Value> NumberFormatFunction::call()
 {
-    auto& global_object = this->global_object();
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
     // 1. Let nf be F.[[NumberFormat]].
     // 2. Assert: Type(nf) is Object and nf has an [[InitializedNumberFormat]] internal slot.
@@ -43,11 +42,11 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
     auto value = vm.argument(0);
 
     // 4. Let x be ? ToIntlMathematicalValue(value).
-    auto mathematical_value = TRY(to_intl_mathematical_value(global_object, value));
+    auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 5. Return ? FormatNumeric(nf, x).
     // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = format_numeric(global_object, m_number_format, move(mathematical_value));
+    auto formatted = format_numeric(vm, m_number_format, move(mathematical_value));
     return js_string(vm, move(formatted));
 }
 

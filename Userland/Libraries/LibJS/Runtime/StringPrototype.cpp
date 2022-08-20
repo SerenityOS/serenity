@@ -326,8 +326,10 @@ enum class TargetCase {
 // 19.1.2.1 TransformCase ( S, locales, targetCase ), https://tc39.es/ecma402/#sec-transform-case
 static ThrowCompletionOr<String> transform_case(GlobalObject& global_object, StringView string, Value locales, TargetCase target_case)
 {
+    auto& vm = global_object.vm();
+
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(Intl::canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(Intl::canonicalize_locale_list(vm, locales));
 
     Optional<Unicode::LocaleID> requested_locale;
 

@@ -55,7 +55,7 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
     auto* segmenter = TRY(ordinary_create_from_constructor<Segmenter>(global_object, new_target, &GlobalObject::intl_segmenter_prototype));
 
     // 4. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 5. Set options to ? GetOptionsObject(options).
     auto* options = TRY(Temporal::get_options_object(global_object, options_value));
@@ -96,10 +96,10 @@ JS_DEFINE_NATIVE_FUNCTION(SegmenterConstructor::supported_locales_of)
     // 1. Let availableLocales be %Segmenter%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(vm, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(vm, requested_locales, options));
 }
 
 }

@@ -27,6 +27,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);
 };
 
-ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& global_object, DateTimeFormat& date_time_format, Value locales_value, Value options_value);
+ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM&, DateTimeFormat&, Value locales_value, Value options_value);
 
 }
