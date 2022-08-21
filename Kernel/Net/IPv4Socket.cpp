@@ -94,7 +94,7 @@ void IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
     *address_size = sizeof(sockaddr_in);
 }
 
-ErrorOr<void> IPv4Socket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
+ErrorOr<void> IPv4Socket::bind(Credentials const& credentials, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
@@ -107,9 +107,9 @@ ErrorOr<void> IPv4Socket::bind(Userspace<sockaddr const*> user_address, socklen_
         return set_so_error(EINVAL);
 
     auto requested_local_port = ntohs(address.sin_port);
-    if (!Process::current().is_superuser()) {
+    if (!credentials.is_superuser()) {
         if (requested_local_port > 0 && requested_local_port < 1024) {
-            dbgln("UID {} attempted to bind {} to port {}", Process::current().uid(), class_name(), requested_local_port);
+            dbgln("UID {} attempted to bind {} to port {}", credentials.uid(), class_name(), requested_local_port);
             return set_so_error(EACCES);
         }
     }

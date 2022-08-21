@@ -36,7 +36,7 @@ public:
     ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const& description) const override;
 
     // ^Socket
-    virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) override;
+    virtual ErrorOr<void> bind(Credentials const&, Userspace<sockaddr const*>, socklen_t) override;
     virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t) override;
     virtual ErrorOr<void> listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;

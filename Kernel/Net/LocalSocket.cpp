@@ -122,7 +122,7 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
     get_local_address(address, address_size);
 }
 
-ErrorOr<void> LocalSocket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
+ErrorOr<void> LocalSocket::bind(Credentials const& credentials, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size > sizeof(sockaddr_un))
@@ -139,7 +139,7 @@ ErrorOr<void> LocalSocket::bind(Userspace<sockaddr const*> user_address, socklen
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VirtualFileSystem::the().open(Process::current().credentials(), path->view(), O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current().current_directory(), owner);
+    auto result = VirtualFileSystem::the().open(credentials, path->view(), O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current().current_directory(), owner);
     if (result.is_error()) {
         if (result.error().code() == EEXIST)
             return set_so_error(EADDRINUSE);

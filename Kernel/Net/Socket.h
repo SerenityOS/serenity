@@ -72,7 +72,7 @@ public:
 
     ErrorOr<void> shutdown(int how);
 
-    virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) = 0;
+    virtual ErrorOr<void> bind(Credentials const&, Userspace<sockaddr const*>, socklen_t) = 0;
     virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t) = 0;
     virtual ErrorOr<void> listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;

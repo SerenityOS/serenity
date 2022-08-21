@@ -56,7 +56,7 @@ ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> addres
         return ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    TRY(socket.bind(address, address_length));
+    TRY(socket.bind(credentials(), address, address_length));
     return 0;
 }
 
