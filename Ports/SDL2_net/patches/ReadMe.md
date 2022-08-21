@@ -6,12 +6,7 @@ Undefine 'SIOCGIFCONF' on serenity
 
 FIXME: We don't know why yet.
 
-## `0002-Include-sys-select.h.patch`
-
-Include sys/select.h
-
-
-## `0003-libtool-Enable-shared-library-support-for-SerenityOS.patch`
+## `0002-libtool-Enable-shared-library-support-for-SerenityOS.patch`
 
 libtool: Enable shared library support for SerenityOS
 
