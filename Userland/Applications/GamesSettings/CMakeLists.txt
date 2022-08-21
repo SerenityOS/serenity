@@ -14,4 +14,4 @@ set(SOURCES
         )
 
 serenity_app(GamesSettings ICON games)
-target_link_libraries(GamesSettings LibGUI LibMain)
+target_link_libraries(GamesSettings LibGUI LibMain LibCards)
