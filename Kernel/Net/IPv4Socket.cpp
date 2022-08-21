@@ -138,7 +138,7 @@ ErrorOr<void> IPv4Socket::listen(size_t backlog)
     return protocol_listen(result.did_allocate);
 }
 
-ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size)
+ErrorOr<void> IPv4Socket::connect(Credentials const&, OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size)
 {
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);

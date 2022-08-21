@@ -152,7 +152,7 @@ ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> use
         return ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    TRY(socket.connect(*description, user_address, user_address_size));
+    TRY(socket.connect(credentials(), *description, user_address, user_address_size));
     return 0;
 }
 

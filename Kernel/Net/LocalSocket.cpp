@@ -160,7 +160,7 @@ ErrorOr<void> LocalSocket::bind(Credentials const& credentials, Userspace<sockad
     return {};
 }
 
-ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<sockaddr const*> user_address, socklen_t address_size)
+ErrorOr<void> LocalSocket::connect(Credentials const& credentials, OpenFileDescription& description, Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(!m_bound);
 
@@ -179,7 +179,7 @@ ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<s
     auto path = SOCKET_TRY(KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) }));
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
 
-    auto file = SOCKET_TRY(VirtualFileSystem::the().open(Process::current().credentials(), path->view(), O_RDWR, 0, Process::current().current_directory()));
+    auto file = SOCKET_TRY(VirtualFileSystem::the().open(credentials, path->view(), O_RDWR, 0, Process::current().current_directory()));
     auto inode = file->inode();
     m_inode = inode;
 
