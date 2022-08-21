@@ -67,10 +67,8 @@ bool is_cross_origin_accessible_window_property_name(JS::PropertyKey const& prop
 }
 
 // 7.2.3.2 CrossOriginPropertyFallback ( P ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertyfallback-(-p-)
-JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::GlobalObject& global_object, JS::PropertyKey const& property_key)
+JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::VM& vm, JS::PropertyKey const& property_key)
 {
-    auto& vm = global_object.vm();
-
     // 1. If P is "then", @@toStringTag, @@hasInstance, or @@isConcatSpreadable, then return PropertyDescriptor{ [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }.
     auto property_key_is_then = property_key.is_string() && property_key.as_string() == vm.names.then.as_string();
     auto property_key_is_allowed_symbol = property_key.is_symbol()
@@ -179,10 +177,8 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<Lo
 }
 
 // 7.2.3.5 CrossOriginGet ( O, P, Receiver ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginget-(-o,-p,-receiver-)
-JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject& global_object, JS::Object const& object, JS::PropertyKey const& property_key, JS::Value receiver)
+JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::VM& vm, JS::Object const& object, JS::PropertyKey const& property_key, JS::Value receiver)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let desc be ? O.[[GetOwnProperty]](P).
     auto descriptor = TRY(object.internal_get_own_property(property_key));
 
@@ -208,10 +204,8 @@ JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject& global_objec
 }
 
 // 7.2.3.6 CrossOriginSet ( O, P, V, Receiver ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginset-(-o,-p,-v,-receiver-)
-JS::ThrowCompletionOr<bool> cross_origin_set(JS::GlobalObject& global_object, JS::Object& object, JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> cross_origin_set(JS::VM& vm, JS::Object& object, JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let desc be ? O.[[GetOwnProperty]](P).
     auto descriptor = TRY(object.internal_get_own_property(property_key));
 

@@ -268,8 +268,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_prevent_extensions()
 // 7.10.5.5 [[GetOwnProperty]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-getownproperty
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal_get_own_property(JS::PropertyKey const& property_key) const
 {
-    auto& global_object = HTML::current_global_object();
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then:
     if (is_platform_object_same_origin(*this)) {
@@ -295,7 +294,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
         return property;
 
     // 4. Return ? CrossOriginPropertyFallback(P).
-    return TRY(cross_origin_property_fallback(global_object, property_key));
+    return TRY(cross_origin_property_fallback(vm, property_key));
 }
 
 // 7.10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://html.spec.whatwg.org/multipage/history.html#location-defineownproperty
@@ -318,27 +317,27 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
 JS::ThrowCompletionOr<JS::Value> LocationObject::internal_get(JS::PropertyKey const& property_key, JS::Value receiver) const
 {
-    auto& global_object = HTML::current_global_object();
+    auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinaryGet(this, P, Receiver).
     if (is_platform_object_same_origin(*this))
         return JS::Object::internal_get(property_key, receiver);
 
     // 2. Return ? CrossOriginGet(this, P, Receiver).
-    return cross_origin_get(global_object, static_cast<JS::Object const&>(*this), property_key, receiver);
+    return cross_origin_get(vm, static_cast<JS::Object const&>(*this), property_key, receiver);
 }
 
 // 7.10.5.8 [[Set]] ( P, V, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-set
 JS::ThrowCompletionOr<bool> LocationObject::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
 {
-    auto& global_object = HTML::current_global_object();
+    auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinarySet(this, P, V, Receiver).
     if (is_platform_object_same_origin(*this))
         return JS::Object::internal_set(property_key, value, receiver);
 
     // 2. Return ? CrossOriginSet(this, P, V, Receiver).
-    return cross_origin_set(global_object, static_cast<JS::Object&>(*this), property_key, value, receiver);
+    return cross_origin_set(vm, static_cast<JS::Object&>(*this), property_key, value, receiver);
 }
 
 // 7.10.5.9 [[Delete]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-delete
