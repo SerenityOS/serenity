@@ -229,7 +229,7 @@ public:
     void enable_default_host_import_module_dynamically_hook();
 
     Function<void(Promise&, Promise::RejectionOperation)> host_promise_rejection_tracker;
-    Function<ThrowCompletionOr<Value>(GlobalObject&, JobCallback&, Value, MarkedVector<Value>)> host_call_job_callback;
+    Function<ThrowCompletionOr<Value>(JobCallback&, Value, MarkedVector<Value>)> host_call_job_callback;
     Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
     Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
     Function<JobCallback(FunctionObject&)> host_make_job_callback;
