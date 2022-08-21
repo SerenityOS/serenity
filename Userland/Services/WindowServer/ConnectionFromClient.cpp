@@ -191,6 +191,8 @@ void ConnectionFromClient::update_menu_item(i32 menu_id, i32 identifier, [[maybe
     menu_item->set_default(is_default);
     if (checkable)
         menu_item->set_checked(checked);
+
+    menu.redraw(*menu_item);
 }
 
 void ConnectionFromClient::remove_menu_item(i32 menu_id, i32 identifier)

@@ -106,6 +106,8 @@ void Menu::redraw()
 
 void Menu::redraw(MenuItem const& menu_item)
 {
+    if (!menu_window())
+        return;
     draw(menu_item);
     menu_window()->invalidate(menu_item.rect());
 }
