@@ -121,11 +121,11 @@ public:
         return m_base_type == BaseType::Environment;
     }
 
-    ThrowCompletionOr<void> initialize_referenced_binding(GlobalObject& global_object, Value value) const;
+    ThrowCompletionOr<void> initialize_referenced_binding(VM&, Value value) const;
 
-    ThrowCompletionOr<void> put_value(GlobalObject&, Value);
-    ThrowCompletionOr<Value> get_value(GlobalObject&) const;
-    ThrowCompletionOr<bool> delete_(GlobalObject&);
+    ThrowCompletionOr<void> put_value(VM&, Value);
+    ThrowCompletionOr<Value> get_value(VM&) const;
+    ThrowCompletionOr<bool> delete_(VM&);
 
     String to_string() const;
 
@@ -134,7 +134,7 @@ public:
     Optional<EnvironmentCoordinate> environment_coordinate() const { return m_environment_coordinate; }
 
 private:
-    Completion throw_reference_error(GlobalObject&) const;
+    Completion throw_reference_error(VM&) const;
 
     BaseType m_base_type { BaseType::Unresolvable };
     union {

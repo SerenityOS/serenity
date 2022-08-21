@@ -337,10 +337,10 @@ Completion ExpressionStatement::execute(Interpreter& interpreter) const
 // TODO: This shouldn't exist. Refactor into EvaluateCall.
 ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_and_callee(Interpreter& interpreter, Reference const& callee_reference) const
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     if (callee_reference.is_property_reference()) {
         auto this_value = callee_reference.get_this_value();
-        auto callee = TRY(callee_reference.get_value(global_object));
+        auto callee = TRY(callee_reference.get_value(vm));
 
         return ThisAndCallee { this_value, callee };
     }
@@ -356,7 +356,7 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
         this_value,
         callee_reference.is_unresolvable()
             ? TRY(m_callee->execute(interpreter)).release_value()
-            : TRY(callee_reference.get_value(global_object))
+            : TRY(callee_reference.get_value(vm))
     };
 }
 
@@ -929,9 +929,9 @@ struct ForInOfHeadState {
         if (!destructuring) {
             VERIFY(lhs_reference.has_value());
             if (lhs_kind == LexicalBinding)
-                return lhs_reference->initialize_referenced_binding(global_object, next_value);
+                return lhs_reference->initialize_referenced_binding(vm, next_value);
             else
-                return lhs_reference->put_value(global_object, next_value);
+                return lhs_reference->put_value(vm, next_value);
         }
 
         // j. Else,
@@ -956,7 +956,6 @@ struct ForInOfHeadState {
 // For the same reason we also skip step 6 and 7 of ForIn/OfHeadEvaluation as this is done by the appropriate for loop type.
 static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& interpreter, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, Expression const& rhs)
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     ForInOfHeadState state(lhs);
@@ -982,7 +981,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
                 auto& binding_id = variable.target().get<NonnullRefPtr<Identifier>>()->string();
                 auto reference = TRY(interpreter.vm().resolve_binding(binding_id));
                 auto result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*variable.init(), binding_id));
-                TRY(reference.put_value(global_object, result));
+                TRY(reference.put_value(vm, result));
             }
         } else {
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
@@ -1444,7 +1443,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
     Value base_value;
 
     if (base_reference.is_valid_reference())
-        base_value = TRY(base_reference.get_value(global_object));
+        base_value = TRY(base_reference.get_value(vm));
     else
         base_value = TRY(m_object->execute(interpreter)).release_value();
 
@@ -1485,12 +1484,11 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 Completion UnaryExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
-
     auto& vm = interpreter.vm();
+
     if (m_op == UnaryOp::Delete) {
         auto reference = TRY(m_lhs->to_reference(interpreter));
-        return Value(TRY(reference.delete_(global_object)));
+        return Value(TRY(reference.delete_(vm)));
     }
 
     Value lhs_result;
@@ -1500,7 +1498,7 @@ Completion UnaryExpression::execute(Interpreter& interpreter) const
         if (reference.is_unresolvable())
             lhs_result = js_undefined();
         else
-            lhs_result = TRY(reference.get_value(global_object));
+            lhs_result = TRY(reference.get_value(vm));
         VERIFY(!lhs_result.is_empty());
     } else {
         // 1. Let expr be the result of evaluating UnaryExpression.
@@ -1853,7 +1851,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
         auto reference = TRY(m_super_class->to_reference(interpreter));
         if (reference.is_valid_reference()) {
-            super_class = TRY(reference.get_value(global_object));
+            super_class = TRY(reference.get_value(vm));
         } else {
             super_class = TRY(m_super_class->execute(interpreter)).release_value();
         }
@@ -2543,14 +2541,14 @@ void ForAwaitOfStatement::dump(int indent) const
 Completion Identifier::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 1. Return ? ResolveBinding(StringValue of Identifier).
-    auto reference = TRY(interpreter.vm().resolve_binding(m_string));
+    auto reference = TRY(vm.resolve_binding(m_string));
 
     // NOTE: The spec wants us to return the reference directly; this is not possible with ASTNode::execute() (short of letting it return a variant).
     // So, instead of calling GetValue at the call site, we do it here.
-    return TRY(reference.get_value(global_object));
+    return TRY(reference.get_value(vm));
 }
 
 void Identifier::dump(int indent) const
@@ -2631,7 +2629,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
                 }
 
                 // e. Perform ? PutValue(lref, rval).
-                TRY(reference.put_value(global_object, rhs_result));
+                TRY(reference.put_value(vm, rhs_result));
 
                 // f. Return rval.
                 return rhs_result;
@@ -2656,7 +2654,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
     auto reference = TRY(lhs_expression.to_reference(interpreter));
 
     // 2. Let lval be ? GetValue(lref).
-    auto lhs_result = TRY(reference.get_value(global_object));
+    auto lhs_result = TRY(reference.get_value(vm));
 
     //  AssignmentExpression : LeftHandSideExpression {&&=, ||=, ??=} AssignmentExpression
     if (m_op == AssignmentOp::AndAssignment || m_op == AssignmentOp::OrAssignment || m_op == AssignmentOp::NullishAssignment) {
@@ -2704,7 +2702,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
         }
 
         // 7. Perform ? PutValue(lref, rval).
-        TRY(reference.put_value(global_object, rhs_result));
+        TRY(reference.put_value(vm, rhs_result));
 
         // 8. Return rval.
         return rhs_result;
@@ -2764,7 +2762,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
     }
 
     // 8. Perform ? PutValue(lref, r).
-    TRY(reference.put_value(global_object, rhs_result));
+    TRY(reference.put_value(vm, rhs_result));
 
     // 9. Return r.
     return rhs_result;
@@ -2777,14 +2775,13 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
 Completion UpdateExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 1. Let expr be the result of evaluating <Expression>.
     auto reference = TRY(m_argument->to_reference(interpreter));
 
     // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-    auto old_value = TRY(reference.get_value(global_object));
+    auto old_value = TRY(reference.get_value(vm));
     old_value = TRY(old_value.to_numeric(vm));
 
     Value new_value;
@@ -2820,7 +2817,7 @@ Completion UpdateExpression::execute(Interpreter& interpreter) const
     }
 
     // 5. Perform ? PutValue(expr, newValue).
-    TRY(reference.put_value(global_object, new_value));
+    TRY(reference.put_value(vm, new_value));
 
     // 6. Return newValue.
     // 6. Return oldValue.
@@ -2918,6 +2915,7 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
@@ -2928,22 +2926,22 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
                     VERIFY(!initializer_result.is_empty());
 
                     if (m_declaration_kind == DeclarationKind::Var)
-                        return reference.put_value(global_object, initializer_result);
+                        return reference.put_value(vm, initializer_result);
                     else
-                        return reference.initialize_referenced_binding(global_object, initializer_result);
+                        return reference.initialize_referenced_binding(vm, initializer_result);
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<void> {
                     auto initializer_result = TRY(init->execute(interpreter)).release_value();
 
                     Environment* environment = m_declaration_kind == DeclarationKind::Var ? nullptr : interpreter.lexical_environment();
 
-                    return interpreter.vm().binding_initialization(pattern, initializer_result, environment, global_object);
+                    return vm.binding_initialization(pattern, initializer_result, environment, global_object);
                 }));
         } else if (m_declaration_kind != DeclarationKind::Var) {
             VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
             auto& identifier = declarator.target().get<NonnullRefPtr<Identifier>>();
             auto reference = TRY(identifier->to_reference(interpreter));
-            TRY(reference.initialize_referenced_binding(global_object, js_undefined()));
+            TRY(reference.initialize_referenced_binding(vm, js_undefined()));
         }
     }
     return normal_completion({});
@@ -3135,10 +3133,10 @@ String MemberExpression::to_string_approximation() const
 Completion MemberExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     auto reference = TRY(to_reference(interpreter));
-    return TRY(reference.get_value(global_object));
+    return TRY(reference.get_value(vm));
 }
 
 bool MemberExpression::ends_in_private_name() const
@@ -3185,11 +3183,12 @@ void OptionalChain::dump(int indent) const
 
 ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value(Interpreter& interpreter) const
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
+
     auto base_reference = TRY(m_base->to_reference(interpreter));
     auto base = base_reference.is_unresolvable()
         ? TRY(m_base->execute(interpreter)).release_value()
-        : TRY(base_reference.get_value(global_object));
+        : TRY(base_reference.get_value(vm));
 
     for (auto& reference : m_references) {
         auto is_optional = reference.visit([](auto& ref) { return ref.mode; }) == Mode::Optional;
@@ -3225,7 +3224,7 @@ ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_
             base = TRY(expression->execute(interpreter)).release_value();
         } else {
             base_reference = TRY(expression->to_reference(interpreter));
-            base = TRY(base_reference.get_value(global_object));
+            base = TRY(base_reference.get_value(vm));
         }
     }
 

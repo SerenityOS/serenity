@@ -66,13 +66,13 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
 
     auto reference = TRY(vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment));
 
-    auto value = TRY(reference.get_value(global_object));
+    auto value = TRY(reference.get_value(vm));
 
     if (!can_be_held_weakly(value))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, String::formatted("Variable with name {}", variable_name.string()));
 
     vm.heap().uproot_cell(&value.as_cell());
-    TRY(reference.delete_(global_object));
+    TRY(reference.delete_(vm));
 
     return JS::js_undefined();
 }
