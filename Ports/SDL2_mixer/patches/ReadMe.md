@@ -1,8 +1,8 @@
 # Patches for SDL2_mixer on SerenityOS
 
-## `0001-Skip-building-the-playmus-and-playwav-utilities.patch`
+## `0001-Skip-building-the-playmus-and-playwave-utilities.patch`
 
-Skip building the playmus and playwav utilities
+Skip building the playmus and playwave utilities
 
 
 ## `0002-libtool-Enable-shared-library-support-for-SerenityOS.patch`

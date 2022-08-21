@@ -13,15 +13,15 @@ Fix that by just adding the appropriate configuration options for
 automatically using libtool, without having to manually link the
 static library into a shared library.
 ---
- configure | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ configure | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
 diff --git a/configure b/configure
-index 4df0be5..9a5f606 100755
+index a4d59fc..dddffd3 100755
 --- a/configure
 +++ b/configure
-@@ -4480,6 +4480,10 @@ sysv4 | sysv4.3*)
- tpf*)
+@@ -5503,6 +5503,10 @@ tpf*)
+ os2*)
    lt_cv_deplibs_check_method=pass_all
    ;;
 +
@@ -31,7 +31,7 @@ index 4df0be5..9a5f606 100755
  esac
  
  fi
-@@ -7268,6 +7272,10 @@ $as_echo_n "checking for $compiler option to produce PIC... " >&6; }
+@@ -8176,6 +8180,10 @@ printf %s "checking for $compiler option to produce PIC... " >&6; }
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -42,7 +42,7 @@ index 4df0be5..9a5f606 100755
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -8504,6 +8512,10 @@ rm -f core conftest.err conftest.$ac_objext \
+@@ -9464,6 +9472,10 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
        hardcode_shlibpath_var=no
        ;;
  
@@ -53,7 +53,25 @@ index 4df0be5..9a5f606 100755
      *)
        ld_shlibs=no
        ;;
-@@ -9406,6 +9418,17 @@ uts4*)
+@@ -10389,6 +10401,17 @@ uts4*)
+   shlibpath_var=LD_LIBRARY_PATH
+   ;;
+ 
++serenity*)
++  version_type=linux
++  need_lib_prefix=no
++  need_version=no
++  library_names_spec='${libname}${release}${shared_ext}${versuffix} ${libname}${release}${shared_ext}${major} ${libname}${shared_ext}'
++  soname_spec='${libname}${release}${shared_ext}${major}'
++  shlibpath_var=LD_LIBRARY_PATH
++  shlibpath_overrides_runpath=no
++  dynamic_linker='SerenityOS LibELF'
++  ;;
++
+ *)
+   dynamic_linker=no
+   ;;
+@@ -15570,6 +15593,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
