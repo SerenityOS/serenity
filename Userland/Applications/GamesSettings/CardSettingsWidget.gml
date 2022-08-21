@@ -16,4 +16,15 @@
             has_alpha_channel: false
         }
     }
+
+    @GUI::GroupBox {
+        title: "Card Back"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
+        }
+
+        @GUI::IconView {
+            name: "cards_back_image"
+        }
+    }
 }
