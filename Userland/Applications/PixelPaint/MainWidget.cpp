@@ -567,6 +567,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 }
                 editor->image().add_layer(layer_or_error.release_value());
                 editor->layers_did_change();
+                editor->did_complete_action("New Layer"sv);
                 m_layer_list_widget->select_top_layer();
             }
         }));
