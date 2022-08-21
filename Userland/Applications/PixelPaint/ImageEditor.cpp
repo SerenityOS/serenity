@@ -31,7 +31,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, String()));
     m_image->add_client(*this);
     set_original_rect(m_image->rect());
     set_scale_bounds(0.1f, 100.0f);
@@ -48,11 +48,11 @@ ImageEditor::~ImageEditor()
     m_image->remove_client(*this);
 }
 
-void ImageEditor::did_complete_action()
+void ImageEditor::did_complete_action(String action_text)
 {
     if (on_modified_change)
         on_modified_change(true);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, move(action_text)));
 }
 
 bool ImageEditor::is_modified()

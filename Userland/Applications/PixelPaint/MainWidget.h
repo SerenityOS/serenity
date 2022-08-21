@@ -51,6 +51,8 @@ private:
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
     void create_image_from_clipboard();
 
+    void image_editor_did_update_undo_stack();
+
     void set_actions_enabled(bool enabled);
 
     virtual void drop_event(GUI::DropEvent&) override;

@@ -100,7 +100,39 @@ MainWidget::MainWidget()
         m_show_guides_action->set_checked(image_editor.guide_visibility());
         m_show_rulers_action->set_checked(image_editor.ruler_visibility());
         image_editor.on_scale_change(image_editor.scale());
+        image_editor.undo_stack().on_state_change = [this] {
+            image_editor_did_update_undo_stack();
+        };
+        // Ensure that our undo/redo actions are in sync with the current editor.
+        image_editor_did_update_undo_stack();
     };
+}
+
+void MainWidget::image_editor_did_update_undo_stack()
+{
+    auto* image_editor = current_image_editor();
+    if (!image_editor) {
+        m_undo_action->set_enabled(false);
+        m_redo_action->set_enabled(false);
+        return;
+    }
+
+    auto make_action_text = [](auto prefix, auto suffix) {
+        StringBuilder builder;
+        builder.append(prefix);
+        if (suffix.has_value()) {
+            builder.append(' ');
+            builder.append(suffix.value());
+        }
+        return builder.to_string();
+    };
+
+    auto& undo_stack = image_editor->undo_stack();
+    m_undo_action->set_enabled(undo_stack.can_undo());
+    m_redo_action->set_enabled(undo_stack.can_redo());
+
+    m_undo_action->set_text(make_action_text("&Undo"sv, undo_stack.undo_action_text()));
+    m_redo_action->set_text(make_action_text("&Redo"sv, undo_stack.redo_action_text()));
 }
 
 // Note: Update these together! v
@@ -642,7 +674,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flatten_all_layers();
-            editor->did_complete_action();
+            editor->did_complete_action("Flatten Image"sv);
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
@@ -650,7 +682,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().merge_visible_layers();
-            editor->did_complete_action();
+            editor->did_complete_action("Merge Visible"sv);
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
@@ -661,7 +693,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (!active_layer)
                 return;
             editor->image().merge_active_layer_up(*active_layer);
-            editor->did_complete_action();
+            editor->did_complete_action("Merge Active Layer Up"sv);
         }));
 
     m_layer_menu->add_action(GUI::Action::create(
@@ -672,7 +704,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (!active_layer)
                 return;
             editor->image().merge_active_layer_down(*active_layer);
-            editor->did_complete_action();
+            editor->did_complete_action("Merge Active Layer Down"sv);
         }));
 
     m_filter_menu = window.add_menu("&Filter");
@@ -694,7 +726,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(&window)) {
                 filter.apply(layer->content_bitmap(), layer->rect(), layer->content_bitmap(), layer->rect(), *parameters);
                 layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
+                editor->did_complete_action("Generic 5x5 Convolution"sv);
             }
         }
     }));

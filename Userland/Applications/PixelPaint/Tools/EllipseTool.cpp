@@ -88,7 +88,7 @@ void EllipseTool::on_mouseup(Layer* layer, MouseEvent& event)
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();
         m_editor->update();
-        m_editor->did_complete_action();
+        m_editor->did_complete_action(tool_name());
     }
 }
 

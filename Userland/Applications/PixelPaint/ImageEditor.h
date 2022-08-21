@@ -40,7 +40,7 @@ public:
     void set_active_tool(Tool*);
     void update_tool_cursor();
 
-    void did_complete_action();
+    void did_complete_action(String action_text);
     bool undo();
     bool redo();
 

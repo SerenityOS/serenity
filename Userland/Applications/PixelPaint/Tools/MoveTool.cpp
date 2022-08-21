@@ -69,7 +69,7 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
     if (layer_event.button() != GUI::MouseButton::Primary)
         return;
     m_layer_being_moved = nullptr;
-    m_editor->did_complete_action();
+    m_editor->did_complete_action(tool_name());
 }
 
 void MoveTool::on_keydown(GUI::KeyEvent& event)

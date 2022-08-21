@@ -134,7 +134,7 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
     flood_fill(layer->currently_edited_bitmap(), layer_event.position(), target_color, m_editor->color_for(layer_event), m_threshold);
 
     layer->did_modify_bitmap();
-    m_editor->did_complete_action();
+    m_editor->did_complete_action(tool_name());
 }
 
 GUI::Widget* BucketTool::get_properties_widget()

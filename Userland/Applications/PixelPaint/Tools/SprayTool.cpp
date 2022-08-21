@@ -88,7 +88,7 @@ void SprayTool::on_mouseup(Layer*, MouseEvent&)
 {
     if (m_timer->is_active()) {
         m_timer->stop();
-        m_editor->did_complete_action();
+        m_editor->did_complete_action(tool_name());
     }
 }
 

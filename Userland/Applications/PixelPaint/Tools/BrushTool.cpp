@@ -67,7 +67,7 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 void BrushTool::on_mouseup(Layer*, MouseEvent&)
 {
     if (m_was_drawing) {
-        m_editor->did_complete_action();
+        m_editor->did_complete_action(tool_name());
         m_was_drawing = false;
     }
 }
