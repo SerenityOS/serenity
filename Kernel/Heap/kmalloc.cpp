@@ -114,6 +114,8 @@ private:
     [[gnu::aligned(16)]] u8 m_data[];
 };
 
+static KmallocSlabBlock* s_free_slab_block = nullptr;
+
 class KmallocSlabheap {
 public:
     KmallocSlabheap(size_t slab_size)
@@ -126,16 +128,24 @@ public:
     void* allocate()
     {
         if (m_usable_blocks.is_empty()) {
-            // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
-            //        Handle this with a custom VM+page allocator instead of using kmalloc_aligned().
-            auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
-            if (!slot) {
-                // FIXME: Dare to return nullptr!
-                PANIC("OOM while growing slabheap ({})", m_slab_size);
+            if (s_free_slab_block) {
+                dbgln_if(KMALLOC_DEBUG, "[KMALLOC]: Reused empty slabblock for slabheap of size {}", m_slab_size);
+                new (s_free_slab_block) KmallocSlabBlock(m_slab_size);
+                m_usable_blocks.append(*s_free_slab_block);
+                s_free_slab_block = nullptr;
+            } else {
+                // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
+                //        Handle this with a custom VM+page allocator instead of using kmalloc_aligned().
+                auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
+                if (!slot) {
+                    // FIXME: Dare to return nullptr!
+                    PANIC("OOM while growing slabheap ({})", m_slab_size);
+                }
+                auto* block = new (slot) KmallocSlabBlock(m_slab_size);
+                m_usable_blocks.append(*block);
             }
-            auto* block = new (slot) KmallocSlabBlock(m_slab_size);
-            m_usable_blocks.append(*block);
         }
+
         auto* block = m_usable_blocks.first();
         auto* ptr = block->allocate();
         if (block->is_full())
@@ -152,8 +162,21 @@ public:
         auto* block = (KmallocSlabBlock*)((FlatPtr)ptr & KmallocSlabBlock::block_mask);
         bool block_was_full = block->is_full();
         block->deallocate(ptr);
-        if (block_was_full)
+        if (block_was_full) {
             m_usable_blocks.append(*block);
+        } else if (block->allocated_bytes() == 0) {
+            if (!s_free_slab_block) {
+                block->list_node.remove();
+                block->~KmallocSlabBlock();
+                s_free_slab_block = block;
+                dbgln_if(KMALLOC_DEBUG, "[KMALLOC]: Claimed empty slabblock from slabheap of size {}", m_slab_size);
+            } else {
+                dbgln_if(KMALLOC_DEBUG, "[KMALLOC]: Deallocated empty slabblock from SlabHeap of size {}", m_slab_size);
+                block->list_node.remove();
+                block->~KmallocSlabBlock();
+                kfree_aligned(block);
+            }
+        }
     }
 
     size_t allocated_bytes() const
@@ -172,29 +195,14 @@ public:
         return total;
     }
 
-    bool try_purge()
+    static bool try_purge()
     {
-        bool did_purge = false;
-
-        // Note: We cannot remove children from the list when using a structured loop,
-        //       Because we need to advance the iterator before we delete the underlying
-        //       value, so we have to iterate manually
-
-        auto block = m_usable_blocks.begin();
-        while (block != m_usable_blocks.end()) {
-            if (block->allocated_bytes() != 0) {
-                ++block;
-                continue;
-            }
-            auto& block_to_remove = *block;
-            ++block;
-            block_to_remove.list_node.remove();
-            block_to_remove.~KmallocSlabBlock();
-            kfree_aligned(&block_to_remove);
-
-            did_purge = true;
+        if (s_free_slab_block) {
+            s_free_slab_block->~KmallocSlabBlock();
+            s_free_slab_block = nullptr;
+            return true;
         }
-        return did_purge;
+        return false;
     }
 
 private:
@@ -238,16 +246,10 @@ struct KmallocGlobalData {
         if (size <= KmallocSlabBlock::block_size * 2 + sizeof(ptrdiff_t) + sizeof(size_t)) {
             // FIXME: We should propagate a freed pointer, to find the specific subheap it belonged to
             //        This would save us iterating over them in the next step and remove a recursion
-            bool did_purge = false;
-            for (auto& slabheap : slabheaps) {
-                if (slabheap.try_purge()) {
-                    dbgln_if(KMALLOC_DEBUG, "Kmalloc purged block(s) from slabheap of size {} to avoid expansion", slabheap.slab_size());
-                    did_purge = true;
-                    break;
-                }
-            }
-            if (did_purge)
+            if (KmallocSlabheap::try_purge()) {
+                dbgln_if(KMALLOC_DEBUG, "Kmalloc purged free-block cache from slabheap to avoid expansion");
                 return allocate(size);
+            }
         }
 
         if (!try_expand(size)) {
