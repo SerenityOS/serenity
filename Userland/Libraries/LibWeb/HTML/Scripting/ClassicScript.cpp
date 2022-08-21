@@ -120,7 +120,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
             settings.clean_up_after_running_script();
 
             // 2. Throw a "NetworkError" DOMException.
-            return Bindings::throw_dom_exception_if_needed(global_object, [] {
+            return Bindings::throw_dom_exception_if_needed(vm, [] {
                 return DOM::NetworkError::create("Script error.");
             }).release_error();
         }

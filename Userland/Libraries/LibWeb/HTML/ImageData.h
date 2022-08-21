@@ -18,7 +18,7 @@ class ImageData
 public:
     using WrapperType = Bindings::ImageDataWrapper;
 
-    static RefPtr<ImageData> create_with_size(JS::GlobalObject&, int width, int height);
+    static RefPtr<ImageData> create_with_size(JS::VM&, int width, int height);
 
     ~ImageData();
 

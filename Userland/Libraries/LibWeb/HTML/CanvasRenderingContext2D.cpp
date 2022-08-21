@@ -311,7 +311,7 @@ RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int hei
         dbgln("Hmm! Attempted to create ImageData for wrapper-less CRC2D.");
         return {};
     }
-    return ImageData::create_with_size(wrapper()->global_object(), width, height);
+    return ImageData::create_with_size(wrapper()->vm(), width, height);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
@@ -327,7 +327,7 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
-    auto image_data = ImageData::create_with_size(wrapper()->global_object(), width, height);
+    auto image_data = ImageData::create_with_size(wrapper()->vm(), width, height);
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
     if (!canvas_element().bitmap())

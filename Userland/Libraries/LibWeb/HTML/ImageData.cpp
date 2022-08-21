@@ -10,9 +10,9 @@
 
 namespace Web::HTML {
 
-RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, int width, int height)
+RefPtr<ImageData> ImageData::create_with_size(JS::VM& vm, int width, int height)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     if (width <= 0 || height <= 0)
         return nullptr;

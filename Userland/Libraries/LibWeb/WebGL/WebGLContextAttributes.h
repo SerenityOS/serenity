@@ -29,6 +29,6 @@ struct WebGLContextAttributes {
     bool desynchronized { false };
 };
 
-JS::ThrowCompletionOr<WebGLContextAttributes> convert_value_to_context_attributes_dictionary(JS::GlobalObject& global_object, JS::Value value);
+JS::ThrowCompletionOr<WebGLContextAttributes> convert_value_to_context_attributes_dictionary(JS::VM&, JS::Value value);
 
 }

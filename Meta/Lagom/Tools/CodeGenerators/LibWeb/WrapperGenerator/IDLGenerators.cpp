@@ -1545,7 +1545,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
     } else if (interface.enumerations.contains(type.name)) {
         scoped_generator.append(R"~~~(
-    @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
+    @result_expression@ JS::js_string(vm, Bindings::idl_enum_to_string(@value@));
 )~~~");
     } else if (interface.callback_functions.contains(type.name)) {
         // https://webidl.spec.whatwg.org/#es-callback-function
@@ -1666,12 +1666,12 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffix@)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
     if (is_static_function == StaticFunction::No) {
         function_generator.append(R"~~~(
-    auto* impl = TRY(impl_from(vm, global_object));
+    auto* impl = TRY(impl_from(vm));
 )~~~");
     }
 
@@ -1685,11 +1685,11 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
 
     if (is_static_function == StaticFunction::No) {
         function_generator.append(R"~~~(
-    [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@function.cpp_name@(@.arguments@); }));
+    [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@function.cpp_name@(@.arguments@); }));
 )~~~");
     } else {
         function_generator.append(R"~~~(
-    [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return @interface_fully_qualified_name@::@function.cpp_name@(@.arguments@); }));
+    [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return @interface_fully_qualified_name@::@function.cpp_name@(@.arguments@); }));
 )~~~");
     }
 
@@ -1751,7 +1751,7 @@ static void generate_overload_arbiter(SourceGenerator& generator, auto const& ov
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
     auto minimum_argument_count = get_shortest_function_length(overload_set.value);
@@ -2071,9 +2071,8 @@ void @wrapper_class@::visit_edges(JS::Cell::Visitor& visitor)
 
         // FIXME: This is a hack to avoid duplicating/refactoring a lot of code.
         scoped_generator.append(R"~~~(
-static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObject& global_object, [[maybe_unused]] auto& retval)
+static JS::Value wrap_for_legacy_platform_object_get_own_property([[maybe_unused]] JS::VM& vm, [[maybe_unused]] auto& retval)
 {
-    [[maybe_unused]] auto& vm = global_object.vm();
     [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
@@ -2168,6 +2167,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
 
             get_own_property_generator.append(R"~~~(
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
@@ -2189,7 +2189,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
                 // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of an indexed property with index as the index.
                 if (interface.indexed_property_getter->name.is_empty()) {
                     get_own_property_generator.append(R"~~~(
-            auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().determine_value_of_indexed_property(index); }));
+            auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().determine_value_of_indexed_property(index); }));
 )~~~");
                 }
 
@@ -2200,7 +2200,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
                     function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.indexed_property_getter->name.to_snakecase()));
 
                     function_scoped_generator.append(R"~~~(
-            auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().@function.cpp_name@(index); }));
+            auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().@function.cpp_name@(index); }));
 )~~~");
                 }
 
@@ -2209,7 +2209,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
             JS::PropertyDescriptor descriptor;
 
             // 6. Set desc.[[Value]] to the result of converting value to an ECMAScript value.
-            descriptor.value = wrap_for_legacy_platform_object_get_own_property(global_object, value);
+            descriptor.value = wrap_for_legacy_platform_object_get_own_property(vm, value);
 )~~~");
 
                 // 7. If O implements an interface with an indexed property setter, then set desc.[[Writable]] to true, otherwise set it to false.
@@ -2255,7 +2255,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
                 // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of a named property with P as the name.
                 if (interface.named_property_getter->name.is_empty()) {
                     get_own_property_generator.append(R"~~~(
-        auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().determine_value_of_named_property(property_name_string); }));
+        auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().determine_value_of_named_property(property_name_string); }));
 )~~~");
                 }
 
@@ -2265,7 +2265,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
                     function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.named_property_getter->name.to_snakecase()));
 
                     function_scoped_generator.append(R"~~~(
-        auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().@function.cpp_name@(property_name_string); }));
+        auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().@function.cpp_name@(property_name_string); }));
 )~~~");
                 }
 
@@ -2274,7 +2274,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
         JS::PropertyDescriptor descriptor;
 
         // 6. Set desc.[[Value]] to the result of converting value to an ECMAScript value.
-        descriptor.value = wrap_for_legacy_platform_object_get_own_property(global_object, value);
+        descriptor.value = wrap_for_legacy_platform_object_get_own_property(vm, value);
 )~~~");
 
                 // 7. If O implements an interface with a named property setter, then set desc.[[Writable]] to true, otherwise set it to false.
@@ -2328,10 +2328,8 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
             // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
-static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
+static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::VM& vm, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let creating be true if P is not a supported property name, and false otherwise.
     // NOTE: This is in it's own variable to enforce the type.
     // FIXME: Can this throw?
@@ -2350,10 +2348,10 @@ static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject
                 scoped_generator.append(R"~~~(
     if (creating) {
         // 5.1. If creating is true, then perform the steps listed in the interface description to set the value of a new named property with P as the name and value as the value.
-        TRY(throw_dom_exception_if_needed(global_object, [&] { impl.set_value_of_new_named_property(property_name, converted_value); }));
+        TRY(throw_dom_exception_if_needed(vm, [&] { impl.set_value_of_new_named_property(property_name, converted_value); }));
     } else {
         // 5.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing named property with P as the name and value as the value.
-        TRY(throw_dom_exception_if_needed(global_object, [&] { impl.set_value_of_existing_named_property(property_name, converted_value); }));
+        TRY(throw_dom_exception_if_needed(vm, [&] { impl.set_value_of_existing_named_property(property_name, converted_value); }));
     }
 )~~~");
             } else {
@@ -2363,7 +2361,7 @@ static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject
                 function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.named_property_setter->name.to_snakecase()));
 
                 function_scoped_generator.append(R"~~~(
-    TRY(throw_dom_exception_if_needed(global_object, [&] { impl.@function.cpp_name@(property_name, converted_value); }));
+    TRY(throw_dom_exception_if_needed(vm, [&] { impl.@function.cpp_name@(property_name, converted_value); }));
 )~~~");
             }
 
@@ -2379,7 +2377,7 @@ static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject
             // FIXME: It's not necessary to determine "creating" if the indexed property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_indices doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
-static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyKey const& property_name, JS::Value value)
+static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::VM& vm, @fully_qualified_name@& impl, JS::PropertyKey const& property_name, JS::Value value)
 {
     // 1. Let index be the result of calling ToUint32(P).
     u32 index = property_name.as_number();
@@ -2401,10 +2399,10 @@ static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObje
                 scoped_generator.append(R"~~~(
     if (creating) {
         // 6.1 If creating is true, then perform the steps listed in the interface description to set the value of a new indexed property with index as the index and value as the value.
-        TRY(throw_dom_exception_if_needed(global_object, [&] { impl.set_value_of_new_indexed_property(index, converted_value); }));
+        TRY(throw_dom_exception_if_needed(vm, [&] { impl.set_value_of_new_indexed_property(index, converted_value); }));
     } else {
         // 6.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing indexed property with index as the index and value as the value.
-        TRY(throw_dom_exception_if_needed(global_object, [&] { impl.set_value_of_existing_indexed_property(index, converted_value); }));
+        TRY(throw_dom_exception_if_needed(vm, [&] { impl.set_value_of_existing_indexed_property(index, converted_value); }));
     }
 )~~~");
             } else {
@@ -2414,7 +2412,7 @@ static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObje
                 function_scoped_generator.set("function.cpp_name", make_input_acceptable_cpp(interface.indexed_property_setter->name.to_snakecase()));
 
                 function_scoped_generator.append(R"~~~(
-    TRY(throw_dom_exception_if_needed(global_object, [&] { impl.@function.cpp_name@(index, converted_value); }));
+    TRY(throw_dom_exception_if_needed(vm, [&] { impl.@function.cpp_name@(index, converted_value); }));
 )~~~");
             }
 
@@ -2439,6 +2437,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
 JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
@@ -2455,7 +2454,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
                 scoped_generator.append(R"~~~(
         if (property_name.is_number()) {
             // 1. Invoke the indexed property setter on O with P and V.
-            TRY(invoke_indexed_property_setter(global_object, impl(), property_name, value));
+            TRY(invoke_indexed_property_setter(vm, impl(), property_name, value));
 
             // 2. Return true.
             return true;
@@ -2469,7 +2468,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
                 scoped_generator.append(R"~~~(
         if (property_name.is_string()) {
             // 1. Invoke the named property setter on O with P and V.
-            TRY(invoke_named_property_setter(global_object, impl(), property_name.as_string(), value));
+            TRY(invoke_named_property_setter(vm, impl(), property_name.as_string(), value));
 
             // 2. Return true.
             return true;
@@ -2520,7 +2519,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
             } else {
                 scoped_generator.append(R"~~~(
         // 3. Invoke the indexed property setter on O with P and Desc.[[Value]].
-        TRY(invoke_indexed_property_setter(global_object, impl(), property_name, *property_descriptor.value));
+        TRY(invoke_indexed_property_setter(vm, impl(), property_name, *property_descriptor.value));
 
         // 4. Return true.
         return true;
@@ -2577,7 +2576,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
                 return false;
 
             // 2. Invoke the named property setter on O with P and Desc.[[Value]].
-            TRY(invoke_named_property_setter(global_object, impl(), property_name_as_string, *property_descriptor.value));
+            TRY(invoke_named_property_setter(vm, impl(), property_name_as_string, *property_descriptor.value));
 
             // 3. Return true.
             return true;
@@ -2619,6 +2618,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const& property_name)
 {
     [[maybe_unused]] auto& global_object = this->global_object();
+    [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] auto& realm = *global_object.associated_realm();
 )~~~");
 
@@ -2665,7 +2665,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const&
                 if (interface.named_property_deleter->name.is_empty()) {
                     scoped_generator.append(R"~~~(
         // 1. Perform the steps listed in the interface description to delete an existing named property with P as the name.
-        bool succeeded = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().delete_existing_named_property(property_name_string); }));
+        bool succeeded = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().delete_existing_named_property(property_name_string); }));
 
         // 2. If the steps indicated that the deletion failed, then return false.
         if (!succeeded)
@@ -2678,7 +2678,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const&
 
                     function_scoped_generator.append(R"~~~(
         // 1. Perform method steps of operation with O as this and « P » as the argument values.
-        [[maybe_unused]] auto result = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl().@function.cpp_name@(property_name_string); }));
+        [[maybe_unused]] auto result = TRY(throw_dom_exception_if_needed(vm, [&] { return impl().@function.cpp_name@(property_name_string); }));
 )~~~");
 
                     // 2. If operation was declared with a return type of boolean and the steps returned false, then return false.
@@ -2984,11 +2984,11 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
-    auto impl = TRY(throw_dom_exception_if_needed(global_object, [&] { return @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@); }));
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@); }));
 )~~~");
         } else {
             generator.append(R"~~~(
-    auto impl = TRY(throw_dom_exception_if_needed(global_object, [&] { return @fully_qualified_name@::create_with_global_object(window); }));
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::create_with_global_object(window); }));
 )~~~");
         }
         generator.append(R"~~~(
@@ -3371,7 +3371,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
     if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
         generator.append(R"~~~(
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject&)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 {
     auto this_value = vm.this_value();
     JS::Object* this_object = nullptr;
@@ -3424,8 +3424,8 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
         attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
 )~~~");
 
         if (attribute.extended_attributes.contains("Reflect")) {
@@ -3440,7 +3440,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             }
         } else {
             attribute_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@attribute.cpp_name@(); }));
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); }));
 )~~~");
         }
 
@@ -3454,8 +3454,8 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
 
     auto value = vm.argument(0);
 )~~~");
@@ -3477,7 +3477,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
                 }
             } else {
                 attribute_generator.append(R"~~~(
-    TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
+    TRY(throw_dom_exception_if_needed(vm, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
 )~~~");
             }
 
@@ -3506,8 +3506,8 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
         stringifier_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
 
 )~~~");
         if (interface.stringifier_attribute.has_value()) {
@@ -3516,7 +3516,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 )~~~");
         } else {
             stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->to_string(); }));
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
 )~~~");
         }
         stringifier_generator.append(R"~~~(
@@ -3532,15 +3532,15 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
     auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    auto* impl = TRY(impl_from(vm));
 
     return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 {
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
 
     auto callback = vm.argument(0);
     if (!callback.is_function())
@@ -3562,7 +3562,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
     auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    auto* impl = TRY(impl_from(vm));
 
     return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Key));
 }
@@ -3570,7 +3570,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
     auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm, global_object));
+    auto* impl = TRY(impl_from(vm));
 
     return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Value));
 }
@@ -3813,7 +3813,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject&)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 {
     auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<@wrapper_class@>(this_object))
@@ -3823,8 +3823,8 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 {
-    auto* impl = TRY(impl_from(vm, global_object));
-    return TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->next(); }));
+    auto* impl = TRY(impl_from(vm));
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return impl->next(); }));
 }
 
 } // namespace Web::Bindings

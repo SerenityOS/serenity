@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<RefPtr<WebGLRenderingContext>> WebGLRenderingContext::crea
 {
     // We should be coming here from getContext being called on a wrapped <canvas> element.
     VERIFY(canvas_element.wrapper());
-    auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.wrapper()->global_object(), options));
+    auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.wrapper()->vm(), options));
 
     bool created_bitmap = canvas_element.create_bitmap(/* minimum_width= */ 1, /* minimum_height= */ 1);
     if (!created_bitmap) {

@@ -58,10 +58,8 @@ struct ExtractExceptionOrValueType<DOM::ExceptionOr<void>> {
     using Type = JS::Value;
 };
 
-ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& global_object, auto&& exception)
+ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& vm, auto&& exception)
 {
-    auto& vm = global_object.vm();
-
     return exception.visit(
         [&](DOM::SimpleException const& exception) {
             switch (exception.type) {
@@ -91,13 +89,13 @@ using ExtractExceptionOrValueType = typename Detail::ExtractExceptionOrValueType
 // ExceptionOr<T>: JS::ThrowCompletionOr<T>
 // T: JS::ThrowCompletionOr<T>
 template<typename F, typename T = decltype(declval<F>()()), typename Ret = Conditional<!IsExceptionOr<T> && !IsVoid<T> && !IsThrowCompletionOr<T>, T, ExtractExceptionOrValueType<T>>>
-JS::ThrowCompletionOr<Ret> throw_dom_exception_if_needed(auto&& global_object, F&& fn)
+JS::ThrowCompletionOr<Ret> throw_dom_exception_if_needed(auto&& vm, F&& fn)
 {
     if constexpr (IsExceptionOr<T>) {
         auto&& result = fn();
 
         if (result.is_exception())
-            return Detail::dom_exception_to_throw_completion(global_object, result.exception());
+            return Detail::dom_exception_to_throw_completion(vm, result.exception());
 
         if constexpr (requires(T v) { v.value(); })
             return result.value();
