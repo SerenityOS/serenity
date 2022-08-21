@@ -148,11 +148,18 @@ void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullO
             // FIXME: Propagate errors
             m_watcher = MUST(Core::FileWatcher::create());
             m_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
-                auto name = sanitize_entry_name(event.event_path);
-                dbgln("Removing QuickLaunch entry {}", name);
-                auto button = find_child_of_type_named<GUI::Button>(name);
-                if (button)
-                    remove_child(*button);
+                auto keys = Config::list_keys("Taskbar"sv, quick_launch);
+                for (auto& name : keys) {
+                    auto value = Config::read_string("Taskbar"sv, quick_launch, name);
+                    if (event.event_path == value) {
+                        auto sanitized_name = sanitize_entry_name(name);
+                        dbgln("Removing QuickLaunch entry {}", sanitized_name);
+                        auto button = find_child_of_type_named<GUI::Button>(sanitized_name);
+                        if (button)
+                            remove_child(*button);
+                        Config::remove_key("Taskbar"sv, quick_launch, name);
+                    }
+                }
             };
         }
         // FIXME: Propagate errors
