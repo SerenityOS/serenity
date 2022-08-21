@@ -7,6 +7,7 @@
  */
 
 #include "CardPainter.h"
+#include <LibConfig/Client.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 
@@ -16,6 +17,11 @@ CardPainter& CardPainter::the()
 {
     static CardPainter s_card_painter;
     return s_card_painter;
+}
+
+CardPainter::CardPainter()
+{
+    m_background_image_path = Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/icons/cards/buggie-deck.png"sv);
 }
 
 static constexpr Gfx::CharacterBitmap s_diamond {
@@ -122,6 +128,18 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
     return *m_card_back_inverted;
 }
 
+void CardPainter::set_background_image_path(String path)
+{
+    if (m_background_image_path == path)
+        return;
+
+    m_background_image_path = path;
+    if (!m_card_back.is_null())
+        paint_card_back(*m_card_back);
+    if (!m_card_back_inverted.is_null())
+        paint_inverted_card(*m_card_back_inverted, *m_card_back);
+}
+
 NonnullRefPtr<Gfx::Bitmap> CardPainter::create_card_bitmap()
 {
     return Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { Card::width, Card::height }).release_value_but_fixme_should_propagate_errors();
@@ -177,7 +195,7 @@ void CardPainter::paint_card_back(Gfx::Bitmap& bitmap)
     auto paint_rect = bitmap.rect();
     painter.clear_rect(paint_rect, Gfx::Color::Transparent);
 
-    auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto image = Gfx::Bitmap::try_load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
 
     float aspect_ratio = image->width() / static_cast<float>(image->height());
     Gfx::IntSize target_size { static_cast<int>(aspect_ratio * (Card::height - 5)), Card::height - 5 };
