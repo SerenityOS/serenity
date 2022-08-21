@@ -51,7 +51,7 @@ private:
     bool m_length_writable { true };
 };
 
-ThrowCompletionOr<double> compare_array_elements(GlobalObject&, Value x, Value y, FunctionObject* comparefn);
-ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(GlobalObject&, Object const&, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes);
+ThrowCompletionOr<double> compare_array_elements(VM&, Value x, Value y, FunctionObject* comparefn);
+ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(VM&, Object const&, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes);
 
 }
