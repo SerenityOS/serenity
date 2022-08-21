@@ -334,12 +334,12 @@ DoubleBuffer* LocalSocket::send_buffer_for(OpenFileDescription& description)
     return nullptr;
 }
 
-ErrorOr<size_t> LocalSocket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&)
+ErrorOr<size_t> LocalSocket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&, bool blocking)
 {
     auto* socket_buffer = receive_buffer_for(description);
     if (!socket_buffer)
         return set_so_error(EINVAL);
-    if (!description.is_blocking()) {
+    if (!blocking) {
         if (socket_buffer->is_empty()) {
             if (!has_attached_peer(description))
                 return 0;

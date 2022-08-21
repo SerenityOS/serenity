@@ -246,7 +246,7 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer cons
     return nsent_or_error;
 }
 
-ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
+ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, bool blocking)
 {
     MutexLocker locker(mutex());
 
@@ -255,7 +255,7 @@ ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& descripti
     if (m_receive_buffer->is_empty()) {
         if (protocol_is_disconnected())
             return 0;
-        if (!description.is_blocking())
+        if (!blocking)
             return set_so_error(EAGAIN);
 
         locker.unlock();
@@ -285,7 +285,7 @@ ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& descripti
     return nreceived_or_error;
 }
 
-ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
+ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp, bool blocking)
 {
     MutexLocker locker(mutex());
     ReceivedPacket taken_packet;
@@ -296,7 +296,7 @@ ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descrip
             //        But if so, we still need to deliver at least one EOF read to userspace.. right?
             if (protocol_is_disconnected())
                 return 0;
-            if (!description.is_blocking())
+            if (!blocking)
                 return set_so_error(EAGAIN);
         }
 
@@ -380,7 +380,7 @@ ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descrip
     return protocol_receive(packet->data->bytes(), buffer, buffer_length, flags);
 }
 
-ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
+ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp, bool blocking)
 {
     if (user_addr_length) {
         socklen_t addr_length;
@@ -398,9 +398,9 @@ ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKer
 
         ErrorOr<size_t> nreceived = 0;
         if (buffer_mode() == BufferMode::Bytes)
-            nreceived = receive_byte_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length);
+            nreceived = receive_byte_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length, blocking);
         else
-            nreceived = receive_packet_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length, packet_timestamp);
+            nreceived = receive_packet_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length, packet_timestamp, blocking);
 
         if (nreceived.is_error())
             total_nreceived = nreceived;

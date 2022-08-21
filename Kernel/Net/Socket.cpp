@@ -242,7 +242,7 @@ ErrorOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernel
     if (is_shut_down_for_reading())
         return 0;
     Time t {};
-    return recvfrom(description, buffer, size, 0, {}, 0, t);
+    return recvfrom(description, buffer, size, 0, {}, 0, t, description.is_blocking());
 }
 
 ErrorOr<size_t> Socket::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& data, size_t size)
