@@ -84,7 +84,7 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ArrayBuffer");
 
     auto& array_buffer_object = static_cast<JS::ArrayBuffer&>(array_buffer.as_object());
-    TRY(JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1)));
+    TRY(JS::detach_array_buffer(vm, array_buffer_object, vm.argument(1)));
     return JS::js_null();
 }
 

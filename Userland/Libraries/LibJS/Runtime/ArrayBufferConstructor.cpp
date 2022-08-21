@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new
         }
         return error;
     }
-    return TRY(allocate_array_buffer(global_object(), new_target, byte_length_or_error.release_value()));
+    return TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

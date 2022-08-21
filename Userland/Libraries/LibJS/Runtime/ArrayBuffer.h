@@ -75,13 +75,13 @@ private:
     Value m_detach_key;
 };
 
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject&, FunctionObject& constructor, size_t byte_length);
-ThrowCompletionOr<void> detach_array_buffer(GlobalObject&, ArrayBuffer& array_buffer, Optional<Value> key = {});
-ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
+ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
+ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>
-static Value raw_bytes_to_numeric(GlobalObject& global_object, ByteBuffer raw_value, bool is_little_endian)
+static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_endian)
 {
     if (!is_little_endian) {
         VERIFY(raw_value.size() % 2 == 0);
@@ -109,9 +109,9 @@ static Value raw_bytes_to_numeric(GlobalObject& global_object, ByteBuffer raw_va
     raw_value.span().copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
     if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
         if constexpr (IsSigned<UnderlyingBufferDataType>)
-            return js_bigint(global_object.heap(), Crypto::SignedBigInteger::create_from(int_value));
+            return js_bigint(vm, Crypto::SignedBigInteger::create_from(int_value));
         else
-            return js_bigint(global_object.heap(), Crypto::SignedBigInteger { Crypto::UnsignedBigInteger::create_from(int_value) });
+            return js_bigint(vm, Crypto::SignedBigInteger { Crypto::UnsignedBigInteger::create_from(int_value) });
     } else {
         return Value(int_value);
     }
@@ -121,21 +121,22 @@ static Value raw_bytes_to_numeric(GlobalObject& global_object, ByteBuffer raw_va
 template<typename T>
 Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
+    auto& vm = this->vm();
+
     auto element_size = sizeof(T);
 
     // FIXME: Check for shared buffer
 
     // FIXME: Propagate errors.
     auto raw_value = MUST(buffer_impl().slice(byte_index, element_size));
-    return raw_bytes_to_numeric<T>(global_object(), move(raw_value), is_little_endian);
+    return raw_bytes_to_numeric<T>(vm, move(raw_value), is_little_endian);
 }
 
 // 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
 template<typename T>
-static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value, bool is_little_endian)
+static ByteBuffer numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
 {
     VERIFY(value.is_number() || value.is_bigint());
-    auto& vm = global_object.vm();
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
     ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
     auto flip_if_needed = [&]() {
@@ -200,7 +201,9 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
 template<typename T>
 void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
-    auto raw_bytes = numeric_to_raw_bytes<T>(global_object(), value, is_little_endian);
+    auto& vm = this->vm();
+
+    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
 
     // FIXME: Check for shared buffer
 
@@ -211,7 +214,9 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
 template<typename T>
 Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
 {
-    auto raw_bytes = numeric_to_raw_bytes<T>(global_object(), value, is_little_endian);
+    auto& vm = this->vm();
+
+    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
 
     // FIXME: Check for shared buffer
 
@@ -220,7 +225,7 @@ Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWrit
     auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
     raw_bytes_modified.span().copy_to(buffer_impl().span().slice(byte_index));
 
-    return raw_bytes_to_numeric<T>(global_object(), raw_bytes_read, is_little_endian);
+    return raw_bytes_to_numeric<T>(vm, raw_bytes_read, is_little_endian);
 }
 
 }
