@@ -59,7 +59,7 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
     // 4. Repeat,
     while (true) {
         // a. Let next be Completion(IteratorStep(iteratorRecord)).
-        auto next_or_error = iterator_step(global_object, iterator_record);
+        auto next_or_error = iterator_step(vm, iterator_record);
 
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
         // c. ReturnIfAbrupt(next).
@@ -86,7 +86,7 @@ static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_obje
         }
 
         // e. Let nextValue be Completion(IteratorValue(next)).
-        auto next_value_or_error = iterator_value(global_object, *next);
+        auto next_value_or_error = iterator_value(vm, *next);
 
         // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
         // g. ReturnIfAbrupt(nextValue).
@@ -332,7 +332,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 
     // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
-    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
+    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(vm, vm.argument(0)));
 
     // 7. Let result be Completion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_all(global_object, iterator_record, constructor, promise_capability, promise_resolve);
@@ -341,7 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
-            result = iterator_close(global_object, iterator_record, result.release_error());
+            result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
         TRY_OR_REJECT(global_object, promise_capability, result);
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 
     // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
-    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
+    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(vm, vm.argument(0)));
 
     // 7. Let result be Completion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_all_settled(global_object, iterator_record, constructor, promise_capability, promise_resolve);
@@ -375,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
-            result = iterator_close(global_object, iterator_record, result.release_error());
+            result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
         TRY_OR_REJECT(global_object, promise_capability, result);
@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 
     // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
-    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
+    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(vm, vm.argument(0)));
 
     // 7. Let result be Completion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_any(global_object, iterator_record, constructor, promise_capability, promise_resolve);
@@ -409,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
-            result = iterator_close(global_object, iterator_record, result.release_error());
+            result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
         TRY_OR_REJECT(global_object, promise_capability, result);
@@ -434,7 +434,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 
     // 5. Let iteratorRecord be Completion(GetIterator(iterable)).
     // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
-    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(global_object, vm.argument(0)));
+    auto iterator_record = TRY_OR_REJECT(global_object, promise_capability, get_iterator(vm, vm.argument(0)));
 
     // 7. Let result be Completion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve)).
     auto result = perform_promise_race(global_object, iterator_record, constructor, promise_capability, promise_resolve);
@@ -443,7 +443,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
     if (result.is_error()) {
         // a. If iteratorRecord.[[Done]] is false, set result to Completion(IteratorClose(iteratorRecord, result)).
         if (!iterator_record.done)
-            result = iterator_close(global_object, iterator_record, result.release_error());
+            result = iterator_close(vm, iterator_record, result.release_error());
 
         // b. IfAbruptRejectPromise(result, promiseCapability).
         TRY_OR_REJECT(global_object, promise_capability, result);

@@ -22,17 +22,17 @@ enum class IteratorHint {
     Async,
 };
 
-ThrowCompletionOr<Iterator> get_iterator(GlobalObject&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
-ThrowCompletionOr<Object*> iterator_next(GlobalObject&, Iterator const&, Optional<Value> = {});
-ThrowCompletionOr<Object*> iterator_step(GlobalObject&, Iterator const&);
-ThrowCompletionOr<bool> iterator_complete(GlobalObject&, Object& iterator_result);
-ThrowCompletionOr<Value> iterator_value(GlobalObject&, Object& iterator_result);
-Completion iterator_close(GlobalObject&, Iterator const&, Completion);
-Completion async_iterator_close(GlobalObject&, Iterator const&, Completion);
-Object* create_iterator_result_object(GlobalObject&, Value, bool done);
-ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(GlobalObject&, Value iterable, Optional<Value> method = {});
+ThrowCompletionOr<Iterator> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
+ThrowCompletionOr<Object*> iterator_next(VM&, Iterator const&, Optional<Value> = {});
+ThrowCompletionOr<Object*> iterator_step(VM&, Iterator const&);
+ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
+ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
+Completion iterator_close(VM&, Iterator const&, Completion);
+Completion async_iterator_close(VM&, Iterator const&, Completion);
+Object* create_iterator_result_object(VM&, Value, bool done);
+ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, Optional<Value> method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
-Completion get_iterator_values(GlobalObject&, Value iterable, IteratorValueCallback callback, Optional<Value> method = {});
+Completion get_iterator_values(VM&, Value iterable, IteratorValueCallback callback, Optional<Value> method = {});
 
 }

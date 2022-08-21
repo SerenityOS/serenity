@@ -34,11 +34,11 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 
     auto* map_iterator = TRY(typed_this_value(vm));
     if (map_iterator->done())
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
 
     if (map_iterator->m_iterator.is_end()) {
         map_iterator->m_done = true;
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     }
 
     auto iteration_kind = map_iterator->iteration_kind();
@@ -46,11 +46,11 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     auto entry = *map_iterator->m_iterator;
     ++map_iterator->m_iterator;
     if (iteration_kind == Object::PropertyKind::Key)
-        return create_iterator_result_object(global_object, entry.key, false);
+        return create_iterator_result_object(vm, entry.key, false);
     if (iteration_kind == Object::PropertyKind::Value)
-        return create_iterator_result_object(global_object, entry.value, false);
+        return create_iterator_result_object(vm, entry.value, false);
 
-    return create_iterator_result_object(global_object, Array::create_from(realm, { entry.key, entry.value }), false);
+    return create_iterator_result_object(vm, Array::create_from(realm, { entry.key, entry.value }), false);
 }
 
 }

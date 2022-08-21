@@ -29,6 +29,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(throw_);
 };
 
-Iterator create_async_from_sync_iterator(GlobalObject&, Iterator sync_iterator);
+Iterator create_async_from_sync_iterator(VM&, Iterator sync_iterator);
 
 }

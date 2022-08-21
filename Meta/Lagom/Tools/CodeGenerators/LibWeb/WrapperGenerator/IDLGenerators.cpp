@@ -1361,7 +1361,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
     //      5. Set i to i + 1.
 
     sequence_generator.append(R"~~~(
-    auto iterator@recursion_depth@ = TRY(JS::get_iterator(global_object, @iterable_cpp_name@, JS::IteratorHint::Sync, @iterator_method_cpp_name@));
+    auto iterator@recursion_depth@ = TRY(JS::get_iterator(vm, @iterable_cpp_name@, JS::IteratorHint::Sync, @iterator_method_cpp_name@));
 )~~~");
 
     if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::Vector) {
@@ -1376,11 +1376,11 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 
     sequence_generator.append(R"~~~(
     for (;;) {
-        auto* next@recursion_depth@ = TRY(JS::iterator_step(global_object, iterator@recursion_depth@));
+        auto* next@recursion_depth@ = TRY(JS::iterator_step(vm, iterator@recursion_depth@));
         if (!next@recursion_depth@)
             break;
 
-        auto next_item@recursion_depth@ = TRY(JS::iterator_value(global_object, *next@recursion_depth@));
+        auto next_item@recursion_depth@ = TRY(JS::iterator_value(vm, *next@recursion_depth@));
 )~~~");
 
     // FIXME: Sequences types should be TypeWithExtendedAttributes, which would allow us to get [LegacyNullToEmptyString] here.

@@ -107,28 +107,28 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         else
             array = MUST(Array::create(realm, 0));
 
-        auto iterator = TRY(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
+        auto iterator = TRY(get_iterator(vm, items, IteratorHint::Sync, using_iterator));
 
         size_t k = 0;
         while (true) {
             if (k >= MAX_ARRAY_LIKE_INDEX) {
                 auto error = vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
-                return TRY(iterator_close(global_object, iterator, move(error)));
+                return TRY(iterator_close(vm, iterator, move(error)));
             }
 
-            auto* next = TRY(iterator_step(global_object, iterator));
+            auto* next = TRY(iterator_step(vm, iterator));
             if (!next) {
                 TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
                 return array;
             }
 
-            auto next_value = TRY(iterator_value(global_object, *next));
+            auto next_value = TRY(iterator_value(vm, *next));
 
             Value mapped_value;
             if (map_fn) {
                 auto mapped_value_or_error = JS::call(global_object, *map_fn, this_arg, next_value, Value(k));
                 if (mapped_value_or_error.is_error())
-                    return TRY(iterator_close(global_object, iterator, mapped_value_or_error.release_error()));
+                    return TRY(iterator_close(vm, iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
             } else {
                 mapped_value = next_value;
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
             auto result_or_error = array->create_data_property_or_throw(k, mapped_value);
             if (result_or_error.is_error())
-                return TRY(iterator_close(global_object, iterator, result_or_error.release_error()));
+                return TRY(iterator_close(vm, iterator, result_or_error.release_error()));
 
             ++k;
         }

@@ -36,12 +36,12 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 
     auto* set_iterator = TRY(typed_this_value(vm));
     if (set_iterator->done())
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
 
     auto& set = set_iterator->set();
     if (set_iterator->m_iterator == set.end()) {
         set_iterator->m_done = true;
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     }
 
     auto iteration_kind = set_iterator->iteration_kind();
@@ -50,9 +50,9 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
     auto value = (*set_iterator->m_iterator).key;
     ++set_iterator->m_iterator;
     if (iteration_kind == Object::PropertyKind::Value)
-        return create_iterator_result_object(global_object, value, false);
+        return create_iterator_result_object(vm, value, false);
 
-    return create_iterator_result_object(global_object, Array::create_from(realm, { value, value }), false);
+    return create_iterator_result_object(vm, Array::create_from(realm, { value, value }), false);
 }
 
 }

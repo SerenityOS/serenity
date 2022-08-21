@@ -183,10 +183,9 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 
 // FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
 // Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
-static Object* iterator_to_object(GlobalObject& global_object, Iterator iterator)
+static Object* iterator_to_object(VM& vm, Iterator iterator)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto* object = Object::create(realm, nullptr);
     object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
     object->define_direct_property(vm.names.next, iterator.next_method, 0);
@@ -194,9 +193,8 @@ static Object* iterator_to_object(GlobalObject& global_object, Iterator iterator
     return object;
 }
 
-static Iterator object_to_iterator(GlobalObject& global_object, Object& object)
+static Iterator object_to_iterator(VM& vm, Object& object)
 {
-    auto& vm = global_object.vm();
     return Iterator {
         .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
         .next_method = MUST(object.get(vm.names.next)),
@@ -206,25 +204,24 @@ static Iterator object_to_iterator(GlobalObject& global_object, Object& object)
 
 ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
     auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(global_object, *iterator_object);
+    auto iterator = object_to_iterator(vm, *iterator_object);
 
     auto* array = MUST(Array::create(interpreter.realm(), 0));
     size_t index = 0;
 
     while (true) {
-        auto* iterator_result = TRY(iterator_next(global_object, iterator));
+        auto* iterator_result = TRY(iterator_next(vm, iterator));
 
-        auto complete = TRY(iterator_complete(global_object, *iterator_result));
+        auto complete = TRY(iterator_complete(vm, *iterator_result));
 
         if (complete) {
             interpreter.accumulator() = array;
             return {};
         }
 
-        auto value = TRY(iterator_value(global_object, *iterator_result));
+        auto value = TRY(iterator_value(vm, *iterator_result));
 
         MUST(array->create_data_property_or_throw(index, value));
         index++;
@@ -677,8 +674,9 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
 
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto iterator = TRY(get_iterator(interpreter.global_object(), interpreter.accumulator()));
-    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), iterator);
+    auto& vm = interpreter.vm();
+    auto iterator = TRY(get_iterator(vm, interpreter.accumulator()));
+    interpreter.accumulator() = iterator_to_object(vm, iterator);
     return {};
 }
 
@@ -748,7 +746,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     if (key.is_number())
                         result_object->define_direct_property(vm.names.value, JS::Value(key.as_number()), default_attributes);
                     else if (key.is_string())
-                        result_object->define_direct_property(vm.names.value, js_string(vm.heap(), key.as_string()), default_attributes);
+                        result_object->define_direct_property(vm.names.value, js_string(vm, key.as_string()), default_attributes);
                     else
                         VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
 
@@ -756,10 +754,10 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                 }
             },
             1,
-            interpreter.vm().names.next),
+            vm.names.next),
         .done = false,
     };
-    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), move(iterator));
+    interpreter.accumulator() = iterator_to_object(vm, move(iterator));
     return {};
 }
 
@@ -767,9 +765,9 @@ ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interp
 {
     auto& vm = interpreter.vm();
     auto* iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(interpreter.global_object(), *iterator_object);
+    auto iterator = object_to_iterator(vm, *iterator_object);
 
-    interpreter.accumulator() = TRY(iterator_next(interpreter.global_object(), iterator));
+    interpreter.accumulator() = TRY(iterator_next(vm, iterator));
     return {};
 }
 
@@ -778,7 +776,7 @@ ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& 
     auto& vm = interpreter.vm();
     auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
-    auto complete = TRY(iterator_complete(interpreter.global_object(), *iterator_result));
+    auto complete = TRY(iterator_complete(vm, *iterator_result));
     interpreter.accumulator() = Value(complete);
     return {};
 }
@@ -788,7 +786,7 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
     auto& vm = interpreter.vm();
     auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
-    interpreter.accumulator() = TRY(iterator_value(interpreter.global_object(), *iterator_result));
+    interpreter.accumulator() = TRY(iterator_value(vm, *iterator_result));
     return {};
 }
 

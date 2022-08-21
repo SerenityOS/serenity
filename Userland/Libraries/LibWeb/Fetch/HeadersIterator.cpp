@@ -30,18 +30,18 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
     auto pairs = TRY(value_pairs_to_iterate_over());
 
     if (m_index >= pairs.size())
-        return create_iterator_result_object(global_object, JS::js_undefined(), true);
+        return create_iterator_result_object(vm, JS::js_undefined(), true);
 
     auto const& pair = pairs[m_index++];
 
     switch (m_iteration_kind) {
     case JS::Object::PropertyKind::Key:
-        return create_iterator_result_object(global_object, JS::js_string(vm, StringView { pair.name }), false);
+        return create_iterator_result_object(vm, JS::js_string(vm, StringView { pair.name }), false);
     case JS::Object::PropertyKind::Value:
-        return create_iterator_result_object(global_object, JS::js_string(vm, StringView { pair.value }), false);
+        return create_iterator_result_object(vm, JS::js_string(vm, StringView { pair.value }), false);
     case JS::Object::PropertyKind::KeyAndValue: {
         auto* array = JS::Array::create_from(realm, { JS::js_string(vm, StringView { pair.name }), JS::js_string(vm, StringView { pair.value }) });
-        return create_iterator_result_object(global_object, array, false);
+        return create_iterator_result_object(vm, array, false);
     }
     default:
         VERIFY_NOT_REACHED();

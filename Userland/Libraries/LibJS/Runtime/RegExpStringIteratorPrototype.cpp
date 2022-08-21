@@ -35,18 +35,18 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
     // For details, see the 'closure' of: https://tc39.es/ecma262/#sec-createregexpstringiterator
     auto* iterator = TRY(typed_this_value(vm));
     if (iterator->done())
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
 
     auto match = TRY(regexp_exec(global_object, iterator->regexp_object(), iterator->string()));
 
     if (match.is_null()) {
         iterator->set_done();
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     }
 
     if (!iterator->global()) {
         iterator->set_done();
-        return create_iterator_result_object(global_object, match, false);
+        return create_iterator_result_object(vm, match, false);
     }
 
     auto* match_object = TRY(match.to_object(vm));
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         TRY(iterator->regexp_object().set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
     }
 
-    return create_iterator_result_object(global_object, match, false);
+    return create_iterator_result_object(vm, match, false);
 }
 
 }

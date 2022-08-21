@@ -41,11 +41,8 @@ static Optional<OptionType> to_option_type(Value value)
 // 13.1 IterableToListOfType ( items, elementTypes ), https://tc39.es/proposal-temporal/#sec-iterabletolistoftype
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM& vm, Value items, Vector<OptionType> const& element_types)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let iteratorRecord be ? GetIterator(items, sync).
-    auto iterator_record = TRY(get_iterator(global_object, items, IteratorHint::Sync));
+    auto iterator_record = TRY(get_iterator(vm, items, IteratorHint::Sync));
 
     // 2. Let values be a new empty List.
     MarkedVector<Value> values(vm.heap());
@@ -55,19 +52,19 @@ ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM& vm, Value it
     // 4. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* iterator_result = TRY(iterator_step(global_object, iterator_record));
+        auto* iterator_result = TRY(iterator_step(vm, iterator_record));
         next = iterator_result;
 
         // b. If next is not false, then
         if (next) {
             // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(global_object, *iterator_result));
+            auto next_value = TRY(iterator_value(vm, *iterator_result));
             // ii. If Type(nextValue) is not an element of elementTypes, then
             if (auto type = to_option_type(next_value); !type.has_value() || !element_types.contains_slow(*type)) {
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
                 auto completion = vm.throw_completion<TypeError>(ErrorType::IterableToListOfTypeInvalidValue, next_value.to_string_without_side_effects());
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
-                return iterator_close(global_object, iterator_record, move(completion));
+                return iterator_close(vm, iterator_record, move(completion));
             }
             // iii. Append nextValue to the end of the List values.
             values.append(next_value);

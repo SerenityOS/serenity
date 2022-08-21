@@ -513,7 +513,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let iteratorRecord be ? GetIterator(fields, sync).
-    auto iterator_record = TRY(get_iterator(global_object, fields, IteratorHint::Sync));
+    auto iterator_record = TRY(get_iterator(vm, fields, IteratorHint::Sync));
 
     // 5. Let fieldNames be a new empty List.
     auto field_names = MarkedVector<Value> { vm.heap() };
@@ -522,14 +522,14 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     // 7. Repeat, while next is not false,
     while (true) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* next = TRY(iterator_step(global_object, iterator_record));
+        auto* next = TRY(iterator_step(vm, iterator_record));
 
         // b. If next is not false, then
         if (!next)
             break;
 
         // i. Let nextValue be ? IteratorValue(next).
-        auto next_value = TRY(iterator_value(global_object, *next));
+        auto next_value = TRY(iterator_value(vm, *next));
 
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {
@@ -537,7 +537,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<TypeError>(ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(global_object, iterator_record, move(completion)));
+            return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // iii. If fieldNames contains nextValue, then
@@ -546,7 +546,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(global_object, iterator_record, move(completion)));
+            return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
@@ -555,7 +555,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(global_object, iterator_record, move(completion)));
+            return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // v. Append nextValue to the end of the List fieldNames.

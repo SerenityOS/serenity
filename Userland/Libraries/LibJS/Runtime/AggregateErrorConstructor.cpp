@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
 
     TRY(aggregate_error->install_error_cause(vm.argument(2)));
 
-    auto errors_list = TRY(iterable_to_list(global_object, vm.argument(0)));
+    auto errors_list = TRY(iterable_to_list(vm, vm.argument(0)));
 
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(realm, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 

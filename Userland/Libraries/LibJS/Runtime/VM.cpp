@@ -274,6 +274,8 @@ ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Valu
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
 ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object)
 {
+    auto& vm = *this;
+
     // BindingPattern : ObjectBindingPattern
     if (target->kind == BindingPattern::Kind::Object) {
         // 1. Perform ? RequireObjectCoercible(value).
@@ -291,7 +293,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
     // BindingPattern : ArrayBindingPattern
     else {
         // 1. Let iteratorRecord be ? GetIterator(value).
-        auto iterator_record = TRY(get_iterator(global_object, value));
+        auto iterator_record = TRY(get_iterator(vm, value));
 
         // 2. Let result be Completion(IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment).
         auto result = iterator_binding_initialization(*target, iterator_record, environment, global_object);
@@ -301,7 +303,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
             // iterator_close() always returns a Completion, which ThrowCompletionOr will interpret as a throw
             // completion. So only return the result of iterator_close() if it is indeed a throw completion.
             auto completion = result.is_throw_completion() ? result.release_error() : normal_completion({});
-            if (completion = iterator_close(global_object, iterator_record, move(completion)); completion.is_error())
+            if (completion = iterator_close(vm, iterator_record, move(completion)); completion.is_error())
                 return completion.release_error();
         }
 
@@ -442,7 +444,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 // a. If iteratorRecord.[[Done]] is false, then
                 if (!iterator_record.done) {
                     // i. Let next be Completion(IteratorStep(iteratorRecord)).
-                    next = iterator_step(global_object, iterator_record);
+                    next = iterator_step(vm, iterator_record);
 
                     // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
                     // iii. ReturnIfAbrupt(next).
@@ -463,7 +465,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 }
 
                 // c. Let nextValue be Completion(IteratorValue(next)).
-                auto next_value = iterator_value(global_object, *next.value());
+                auto next_value = iterator_value(vm, *next.value());
 
                 // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
                 // e. ReturnIfAbrupt(nextValue).
@@ -488,7 +490,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             // 2. If iteratorRecord.[[Done]] is false, then
             if (!iterator_record.done) {
                 // a. Let next be Completion(IteratorStep(iteratorRecord)).
-                auto next = iterator_step(global_object, iterator_record);
+                auto next = iterator_step(vm, iterator_record);
 
                 // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
                 // c. ReturnIfAbrupt(next).
@@ -504,7 +506,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 // e. Else,
                 else {
                     // i. Set v to Completion(IteratorValue(next)).
-                    auto value_or_error = iterator_value(global_object, *next.value());
+                    auto value_or_error = iterator_value(vm, *next.value());
 
                     // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
                     // iii. ReturnIfAbrupt(v).
