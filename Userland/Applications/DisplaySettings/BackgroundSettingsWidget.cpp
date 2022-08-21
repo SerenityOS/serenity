@@ -34,9 +34,9 @@ namespace DisplaySettings {
 BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_changed)
     : m_background_settings_changed { background_settings_changed }
 {
-    m_modes.append("tile");
-    m_modes.append("center");
-    m_modes.append("stretch");
+    m_modes.append("Tile");
+    m_modes.append("Center");
+    m_modes.append("Stretch");
 
     create_frame();
     load_current_settings();
