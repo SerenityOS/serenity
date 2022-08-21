@@ -494,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {
-    return perform_eval(global_object, vm.argument(0), CallerMode::NonStrict, EvalMode::Indirect);
+    return perform_eval(vm, vm.argument(0), CallerMode::NonStrict, EvalMode::Indirect);
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -106,8 +106,7 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
 
     // 5. Let realm be F’s associated Realm.
     // See the comment about associated realm on step 4 of call_user_object_operation.
-    auto& global_object = function_object->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = function_object->shape().realm();
 
     // 6. Let relevant settings be realm’s settings object.
     auto& relevant_settings = verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined());
@@ -125,7 +124,8 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
     //        For simplicity, we currently make the caller do this. However, this means we can't throw exceptions at this point like the spec wants us to.
 
     // 11. Let callResult be Call(F, thisArg, esArgs).
-    auto call_result = JS::call(global_object, verify_cast<JS::FunctionObject>(*function_object), this_argument.value(), move(args));
+    auto& vm = function_object->vm();
+    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*function_object), this_argument.value(), move(args));
 
     // 12. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {

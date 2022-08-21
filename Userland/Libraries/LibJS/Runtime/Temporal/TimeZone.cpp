@@ -73,7 +73,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& ide
         new_target = global_object.temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
-    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(global_object, *new_target, &GlobalObject::temporal_time_zone_prototype));
+    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &GlobalObject::temporal_time_zone_prototype));
 
     // 3. Let offsetNanosecondsResult be Completion(ParseTimeZoneOffsetString(identifier)).
     auto offset_nanoseconds_result = parse_time_zone_offset_string(vm, identifier);
@@ -476,14 +476,11 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
 // 11.6.11 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, Instant& instant)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
     auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(vm, vm.names.getOffsetNanosecondsFor));
 
     // 2. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
-    auto offset_nanoseconds_value = TRY(call(global_object, get_offset_nanoseconds_for, time_zone, &instant));
+    auto offset_nanoseconds_value = TRY(call(vm, get_offset_nanoseconds_for, time_zone, &instant));
 
     // 3. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
     if (!offset_nanoseconds_value.is_number())

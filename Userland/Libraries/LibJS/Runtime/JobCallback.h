@@ -32,14 +32,11 @@ inline JobCallback make_job_callback(FunctionObject& callback)
 // 9.5.3 HostCallJobCallback ( jobCallback, V, argumentsList ), https://tc39.es/ecma262/#sec-hostcalljobcallback
 inline ThrowCompletionOr<Value> call_job_callback(VM& vm, JobCallback& job_callback, Value this_value, MarkedVector<Value> arguments_list)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
     VERIFY(!job_callback.callback.is_null());
 
     // 2. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
-    return call(global_object, job_callback.callback.cell(), this_value, move(arguments_list));
+    return call(vm, job_callback.callback.cell(), this_value, move(arguments_list));
 }
 
 }

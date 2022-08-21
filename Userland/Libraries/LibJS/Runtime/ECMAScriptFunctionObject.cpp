@@ -196,7 +196,6 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let callerContext be the running execution context.
     // NOTE: No-op, kept by the VM in its execution context stack.
@@ -209,7 +208,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     // 3. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-        this_argument = TRY(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
+        this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &GlobalObject::object_prototype));
     }
 
     ExecutionContext callee_context(heap());
@@ -409,9 +408,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (arguments_object_needed) {
         Object* arguments_object;
         if (is_strict_mode() || !has_simple_parameter_list())
-            arguments_object = create_unmapped_arguments_object(global_object, vm.running_execution_context().arguments);
+            arguments_object = create_unmapped_arguments_object(vm, vm.running_execution_context().arguments);
         else
-            arguments_object = create_mapped_arguments_object(global_object, *this, formal_parameters(), vm.running_execution_context().arguments, *environment);
+            arguments_object = create_mapped_arguments_object(vm, *this, formal_parameters(), vm.running_execution_context().arguments, *environment);
 
         if (is_strict_mode())
             MUST(environment->create_immutable_binding(vm, vm.names.arguments.as_string(), false));
@@ -728,7 +727,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto* execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+    auto* execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm, auto&) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
         auto result = async_body->execute(vm.interpreter());
 
@@ -740,12 +739,12 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
         // d. If result.[[Type]] is normal, then
         if (result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
-            MUST(call(global_object, promise_capability.resolve, js_undefined(), js_undefined()));
+            MUST(call(vm, promise_capability.resolve, js_undefined(), js_undefined()));
         }
         // e. Else if result.[[Type]] is return, then
         else if (result.type() == Completion::Type::Return) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
-            MUST(call(global_object, promise_capability.resolve, js_undefined(), *result.value()));
+            MUST(call(vm, promise_capability.resolve, js_undefined(), *result.value()));
         }
         // f. Else,
         else {
@@ -753,7 +752,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             VERIFY(result.type() == Completion::Type::Throw);
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
-            MUST(call(global_object, promise_capability.reject, js_undefined(), *result.value()));
+            MUST(call(vm, promise_capability.reject, js_undefined(), *result.value()));
         }
         // g. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.
@@ -766,7 +765,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
         return;
 
     // 5. Resume the suspended evaluation of asyncContext. Let result be the value returned by the resumed computation.
-    auto result = call(global_object, *execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);
+    auto result = call(vm, *execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);
 
     // 6. Assert: When we return here, asyncContext has already been removed from the execution context stack and runningContext is the currently running execution context.
     VERIFY(&vm.running_execution_context() == &running_context);
@@ -875,7 +874,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 3. If declResult is an abrupt completion, then
             if (declaration_result.is_throw_completion()) {
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-                MUST(call(global_object, promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
+                MUST(call(vm, promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
             }
             // 4. Else,
             else {

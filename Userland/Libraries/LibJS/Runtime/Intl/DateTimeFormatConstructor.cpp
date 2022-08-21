@@ -48,13 +48,12 @@ ThrowCompletionOr<Value> DateTimeFormatConstructor::call()
 ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
     // 2. Let dateTimeFormat be ? OrdinaryCreateFromConstructor(newTarget, "%DateTimeFormat.prototype%", « [[InitializedDateTimeFormat]], [[Locale]], [[Calendar]], [[NumberingSystem]], [[TimeZone]], [[Weekday]], [[Era]], [[Year]], [[Month]], [[Day]], [[DayPeriod]], [[Hour]], [[Minute]], [[Second]], [[FractionalSecondDigits]], [[TimeZoneName]], [[HourCycle]], [[Pattern]], [[BoundFormat]] »).
-    auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(global_object, new_target, &GlobalObject::intl_date_time_format_prototype));
+    auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(vm, new_target, &GlobalObject::intl_date_time_format_prototype));
 
     // 3. Perform ? InitializeDateTimeFormat(dateTimeFormat, locales, options).
     TRY(initialize_date_time_format(vm, *date_time_format, locales, options));

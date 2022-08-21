@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
         auto* iter_result = create_iterator_result_object(vm, vm.argument(0), true);
 
         // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
-        MUST(call(global_object, *promise_capability.reject, js_undefined(), iter_result));
+        MUST(call(vm, *promise_capability.reject, js_undefined(), iter_result));
 
         // c. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
@@ -129,14 +129,14 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     //     a. Let result be Completion(Call(return, syncIterator)).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
     auto result = TRY_OR_REJECT(vm, promise_capability,
-        (vm.argument_count() > 0 ? call(global_object, return_method, sync_iterator, vm.argument(0))
-                                 : call(global_object, return_method, sync_iterator)));
+        (vm.argument_count() > 0 ? call(vm, return_method, sync_iterator, vm.argument(0))
+                                 : call(vm, return_method, sync_iterator)));
 
     // 11. If Type(result) is not Object, then
     if (!result.is_object()) {
         auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorReturnResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-        MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+        MUST(call(vm, *promise_capability.reject, js_undefined(), error));
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
     }
@@ -167,7 +167,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     // 7. If throw is undefined, then
     if (throw_method == nullptr) {
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
-        MUST(call(global_object, *promise_capability.reject, js_undefined(), vm.argument(0)));
+        MUST(call(vm, *promise_capability.reject, js_undefined(), vm.argument(0)));
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;
     }
@@ -177,14 +177,14 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     //     a. Let result be Completion(Call(throw, syncIterator)).
     // 10. IfAbruptRejectPromise(result, promiseCapability).
     auto result = TRY_OR_REJECT(vm, promise_capability,
-        (vm.argument_count() > 0 ? call(global_object, throw_method, sync_iterator, vm.argument(0))
-                                 : call(global_object, throw_method, sync_iterator)));
+        (vm.argument_count() > 0 ? call(vm, throw_method, sync_iterator, vm.argument(0))
+                                 : call(vm, throw_method, sync_iterator)));
 
     // 11. If Type(result) is not Object, then
     if (!result.is_object()) {
         auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "SyncIteratorThrowResult"));
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-        MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+        MUST(call(vm, *promise_capability.reject, js_undefined(), error));
 
         // b. Return promiseCapability.[[Promise]].
         return promise_capability.promise;

@@ -80,10 +80,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     // 15. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-    auto* constructor = TRY(species_constructor(global_object, *array_buffer_object, *global_object.array_buffer_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *global_object.array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
-    auto* new_array_buffer = TRY(construct(global_object, *constructor, Value(new_length)));
+    auto* new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));
 
     // 17. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
     if (!is<ArrayBuffer>(new_array_buffer))

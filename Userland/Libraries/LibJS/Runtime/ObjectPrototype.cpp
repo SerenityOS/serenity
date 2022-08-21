@@ -264,7 +264,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
 // B.2.2.1.2 set Object.prototype.__proto__, https://tc39.es/ecma262/#sec-set-object.prototype.__proto__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
 {
-    auto object = TRY(require_object_coercible(global_object, vm.this_value()));
+    auto object = TRY(require_object_coercible(vm, vm.this_value()));
 
     auto proto = vm.argument(0);
     if (!proto.is_object() && !proto.is_null())

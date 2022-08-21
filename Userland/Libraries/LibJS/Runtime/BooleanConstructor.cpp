@@ -40,10 +40,9 @@ ThrowCompletionOr<Value> BooleanConstructor::call()
 ThrowCompletionOr<Object*> BooleanConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto b = vm.argument(0).to_boolean();
-    return TRY(ordinary_create_from_constructor<BooleanObject>(global_object, new_target, &GlobalObject::boolean_prototype, b));
+    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &GlobalObject::boolean_prototype, b));
 }
 
 }

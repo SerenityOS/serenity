@@ -44,7 +44,6 @@ static Value property_key_to_value(VM& vm, PropertyKey const& property_key)
 ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -65,7 +64,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
     }
 
     // 7. Let handlerProto be ? Call(trap, handler, « target »).
-    auto handler_proto = TRY(call(global_object, *trap, &m_handler, &m_target));
+    auto handler_proto = TRY(call(vm, *trap, &m_handler, &m_target));
 
     // 8. If Type(handlerProto) is neither Object nor Null, throw a TypeError exception.
     if (!handler_proto.is_object() && !handler_proto.is_null())
@@ -93,7 +92,6 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
 ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -114,7 +112,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, V »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, prototype)).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, prototype)).to_boolean();
 
     // 8. If booleanTrapResult is false, return false.
     if (!trap_result)
@@ -142,7 +140,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
 ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -163,7 +160,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target)).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target)).to_boolean();
 
     // 8. Let targetResult be ? IsExtensible(target).
     auto target_result = TRY(m_target.is_extensible());
@@ -180,7 +177,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
 ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -201,7 +197,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target)).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target)).to_boolean();
 
     // 8. If booleanTrapResult is true, then
     if (trap_result) {
@@ -244,7 +240,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     }
 
     // 7. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key)));
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key)));
 
     // 8. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (!trap_result.is_object() && !trap_result.is_undefined())
@@ -339,7 +335,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
     auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
 
     // 8. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), descriptor_object)).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), descriptor_object)).to_boolean();
 
     // 9. If booleanTrapResult is false, return false.
     if (!trap_result)
@@ -396,7 +392,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
 ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& property_key) const
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
 
@@ -419,7 +414,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
 
     // 8. If booleanTrapResult is false, then
     if (!trap_result) {
@@ -451,7 +446,6 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
     VERIFY(!receiver.is_empty());
 
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
     VERIFY(!receiver.is_empty());
@@ -491,7 +485,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
     }
 
     // 7. Let trapResult be ? Call(trap, handler, « target, P, Receiver »).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), receiver));
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), receiver));
 
     // 8. Let targetDesc be ? target.[[GetOwnProperty]](P).
     auto target_descriptor = TRY(m_target.internal_get_own_property(property_key));
@@ -520,7 +514,6 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
 ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_key, Value value, Value receiver)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
@@ -545,7 +538,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, P, V, Receiver »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), value, receiver)).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), value, receiver)).to_boolean();
 
     // 8. If booleanTrapResult is false, return false.
     if (!trap_result)
@@ -578,7 +571,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
 ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property_key)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
 
@@ -601,7 +593,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
     }
 
     // 7. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = TRY(call(global_object, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
+    auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key))).to_boolean();
 
     // 8. If booleanTrapResult is false, return false.
     if (!trap_result)
@@ -633,7 +625,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
 ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys() const
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -654,12 +645,11 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
     }
 
     // 7. Let trapResultArray be ? Call(trap, handler, « target »).
-    auto trap_result_array = TRY(call(global_object, *trap, &m_handler, &m_target));
+    auto trap_result_array = TRY(call(vm, *trap, &m_handler, &m_target));
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
     HashTable<PropertyKey> unique_keys;
-    auto trap_result = TRY(create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
-        auto& vm = global_object.vm();
+    auto trap_result = TRY(create_list_from_array_like(vm, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
         if (!value.is_string() && !value.is_symbol())
             return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
         auto property_key = MUST(value.to_property_key(vm));
@@ -780,14 +770,14 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     // 6. If trap is undefined, then
     if (!trap) {
         // a. Return ? Call(target, thisArgument, argumentsList).
-        return call(global_object, &m_target, this_argument, move(arguments_list));
+        return call(vm, &m_target, this_argument, move(arguments_list));
     }
 
     // 7. Let argArray be CreateArrayFromList(argumentsList).
     auto* arguments_array = Array::create_from(realm, arguments_list);
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
-    return call(global_object, trap, &m_handler, &m_target, this_argument, arguments_array);
+    return call(vm, trap, &m_handler, &m_target, this_argument, arguments_array);
 }
 
 bool ProxyObject::has_constructor() const
@@ -829,14 +819,14 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? Construct(target, argumentsList, newTarget).
-        return construct(global_object, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target);
+        return construct(vm, static_cast<FunctionObject&>(m_target), move(arguments_list), &new_target);
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).
     auto* arguments_array = Array::create_from(realm, arguments_list);
 
     // 9. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
-    auto new_object = TRY(call(global_object, trap, &m_handler, &m_target, arguments_array, &new_target));
+    auto new_object = TRY(call(vm, trap, &m_handler, &m_target, arguments_array, &new_target));
 
     // 10. If Type(newObj) is not Object, throw a TypeError exception.
     if (!new_object.is_object())

@@ -86,11 +86,11 @@ VM::VM(OwnPtr<CustomData> custom_data)
             NativeFunction::create(realm, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
                 VERIFY_NOT_REACHED();
             }),
-            NativeFunction::create(realm, "", [reject = make_handle(promise_capability.reject)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+            NativeFunction::create(realm, "", [reject = make_handle(promise_capability.reject)](auto& vm, auto&) -> ThrowCompletionOr<Value> {
                 auto error = vm.argument(0);
 
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-                MUST(call(global_object, reject.cell(), js_undefined(), error));
+                MUST(call(vm, reject.cell(), js_undefined(), error));
 
                 // b. Return undefined.
                 return js_undefined();
@@ -264,11 +264,11 @@ ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<Bi
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject&)
 {
     // 1. Let name be StringValue of Identifier.
     // 2. Return ? InitializeBoundName(name, value, environment).
-    return initialize_bound_name(global_object, target, value, environment);
+    return initialize_bound_name(*this, target, value, environment);
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
@@ -279,7 +279,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
     // BindingPattern : ObjectBindingPattern
     if (target->kind == BindingPattern::Kind::Object) {
         // 1. Perform ? RequireObjectCoercible(value).
-        TRY(require_object_coercible(global_object, value));
+        TRY(require_object_coercible(vm, value));
 
         // 2. Return ? BindingInitialization of ObjectBindingPattern with arguments value and environment.
 
@@ -1036,7 +1036,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto& realm = *current_realm();
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
-    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
         // a. Assert: result is undefined.
         VERIFY(result.is_undefined());
@@ -1052,12 +1052,12 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
         // e. If namespace is an abrupt completion, then
         if (namespace_.is_throw_completion()) {
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
-            MUST(call(global_object, reject_function.cell(), js_undefined(), *namespace_.throw_completion().value()));
+            MUST(call(vm, reject_function.cell(), js_undefined(), *namespace_.throw_completion().value()));
         }
         // f. Else,
         else {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
-            MUST(call(global_object, resolve_function.cell(), js_undefined(), namespace_.release_value()));
+            MUST(call(vm, resolve_function.cell(), js_undefined(), namespace_.release_value()));
         }
         // g. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.
@@ -1068,10 +1068,10 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
-    auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
+    auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
-        MUST(call(global_object, rejected_function.cell(), js_undefined(), error));
+        MUST(call(vm, rejected_function.cell(), js_undefined(), error));
 
         // b. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.

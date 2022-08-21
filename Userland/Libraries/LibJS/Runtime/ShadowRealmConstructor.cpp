@@ -40,7 +40,6 @@ ThrowCompletionOr<Value> ShadowRealmConstructor::call()
 ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 3. Let realmRec be CreateRealm().
     auto* realm = Realm::create(vm);
@@ -60,7 +59,7 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     // 2. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%ShadowRealm.prototype%", « [[ShadowRealm]], [[ExecutionContext]] »).
     // 4. Set O.[[ShadowRealm]] to realmRec.
     // 9. Set O.[[ExecutionContext]] to context.
-    auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(global_object, new_target, &GlobalObject::shadow_realm_prototype, *realm, move(context)));
+    auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(vm, new_target, &GlobalObject::shadow_realm_prototype, *realm, move(context)));
 
     // 10. Perform ? SetRealmGlobalObject(realmRec, undefined, undefined).
     auto* new_global_object = vm.heap().allocate_without_realm<GlobalObject>(*realm);

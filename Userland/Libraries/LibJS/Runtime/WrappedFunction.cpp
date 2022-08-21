@@ -94,10 +94,10 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     auto* caller_realm = function.realm();
 
     // 4. NOTE: Any exception objects produced after this point are associated with callerRealm.
-    auto& global_object = caller_realm->global_object();
+    VERIFY(vm.current_realm() == caller_realm);
 
     // 5. Let targetRealm be ? GetFunctionRealm(target).
-    auto* target_realm = TRY(get_function_realm(global_object, target));
+    auto* target_realm = TRY(get_function_realm(vm, target));
 
     // 6. Let wrappedArgs be a new empty List.
     auto wrapped_args = MarkedVector<Value> { vm.heap() };
@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     auto wrapped_this_argument = TRY(get_wrapped_value(vm, *target_realm, this_argument));
 
     // 9. Let result be the Completion Record of Call(target, wrappedThisArgument, wrappedArgs).
-    auto result = call(global_object, &target, wrapped_this_argument, move(wrapped_args));
+    auto result = call(vm, &target, wrapped_this_argument, move(wrapped_args));
 
     // 10. If result.[[Type]] is normal or result.[[Type]] is return, then
     if (!result.is_throw_completion()) {

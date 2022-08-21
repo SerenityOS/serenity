@@ -987,7 +987,7 @@ static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(VM& v
 {
     auto& realm = *vm.current_realm();
     auto& global_object = realm.global_object();
-    auto* date_time_format = TRY(construct(global_object, *global_object.intl_date_time_format_constructor(), locales, options));
+    auto* date_time_format = TRY(construct(vm, *global_object.intl_date_time_format_constructor(), locales, options));
     return static_cast<Intl::DateTimeFormat*>(date_time_format);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,28 +26,28 @@ PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer);
 Environment& get_this_environment(VM&);
 bool can_be_held_weakly(Value);
 Object* get_super_constructor(VM&);
-ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, PropertyKey const&, bool strict);
-ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
-ThrowCompletionOr<Value> call_impl(GlobalObject&, Value function, Value this_value, Optional<MarkedVector<Value>> = {});
-ThrowCompletionOr<Value> call_impl(GlobalObject&, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> = {});
-ThrowCompletionOr<Object*> construct_impl(GlobalObject&, FunctionObject&, Optional<MarkedVector<Value>> = {}, FunctionObject* new_target = nullptr);
-ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
-ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
-ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
-ThrowCompletionOr<Realm*> get_function_realm(GlobalObject&, FunctionObject const&);
-ThrowCompletionOr<void> initialize_bound_name(GlobalObject&, FlyString const&, Value, Environment*);
+ThrowCompletionOr<Reference> make_super_property_reference(VM&, Value actual_this, PropertyKey const&, bool strict);
+ThrowCompletionOr<Value> require_object_coercible(VM&, Value);
+ThrowCompletionOr<Value> call_impl(VM&, Value function, Value this_value, Optional<MarkedVector<Value>> = {});
+ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> = {});
+ThrowCompletionOr<Object*> construct_impl(VM&, FunctionObject&, Optional<MarkedVector<Value>> = {}, FunctionObject* new_target = nullptr);
+ThrowCompletionOr<size_t> length_of_array_like(VM&, Object const&);
+ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
+ThrowCompletionOr<FunctionObject*> species_constructor(VM&, Object const&, FunctionObject& default_constructor);
+ThrowCompletionOr<Realm*> get_function_realm(VM&, FunctionObject const&);
+ThrowCompletionOr<void> initialize_bound_name(VM&, FlyString const&, Value, Environment*);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
-ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
-Object* create_unmapped_arguments_object(GlobalObject&, Span<Value> arguments);
-Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
+ThrowCompletionOr<Object*> get_prototype_from_constructor(VM&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
+Object* create_unmapped_arguments_object(VM&, Span<Value> arguments);
+Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
 
 enum class CanonicalIndexMode {
     DetectNumericRoundtrip,
     IgnoreNumericRoundtrip,
 };
 CanonicalIndex canonical_numeric_index_string(PropertyKey const&, CanonicalIndexMode needs_numeric);
-ThrowCompletionOr<String> get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
+ThrowCompletionOr<String> get_substitution(VM&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
 
 enum class CallerMode {
     Strict,
@@ -57,84 +57,84 @@ enum class EvalMode {
     Direct,
     Indirect
 };
-ThrowCompletionOr<Value> perform_eval(GlobalObject&, Value, CallerMode, EvalMode);
+ThrowCompletionOr<Value> perform_eval(VM&, Value, CallerMode, EvalMode);
 
-ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
+ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, MarkedVector<Value> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, MarkedVector<Value> arguments_list)
 {
-    return call_impl(global_object, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, move(arguments_list));
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
-    return call_impl(global_object, function, this_value, move(arguments_list));
-}
-
-template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args&&... args)
-{
-    if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { global_object.heap() };
-        (..., arguments_list.append(forward<Args>(args)));
-        return call_impl(global_object, function, this_value, move(arguments_list));
-    }
-
-    return call_impl(global_object, function, this_value);
-}
-
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, MarkedVector<Value> arguments_list)
-{
-    return call_impl(global_object, function, this_value, move(arguments_list));
-}
-
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
-{
-    return call_impl(global_object, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, move(arguments_list));
 }
 
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args&&... args)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { global_object.heap() };
+        MarkedVector<Value> arguments_list { vm.heap() };
         (..., arguments_list.append(forward<Args>(args)));
-        return call_impl(global_object, function, this_value, move(arguments_list));
+        return call_impl(vm, function, this_value, move(arguments_list));
     }
 
-    return call_impl(global_object, function, this_value);
+    return call_impl(vm, function, this_value);
+}
+
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, MarkedVector<Value> arguments_list)
+{
+    return call_impl(vm, function, this_value, move(arguments_list));
+}
+
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+{
+    return call_impl(vm, function, this_value, move(arguments_list));
+}
+
+template<typename... Args>
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, Args&&... args)
+{
+    if constexpr (sizeof...(Args) > 0) {
+        MarkedVector<Value> arguments_list { vm.heap() };
+        (..., arguments_list.append(forward<Args>(args)));
+        return call_impl(vm, function, this_value, move(arguments_list));
+    }
+
+    return call_impl(vm, function, this_value);
 }
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Args&&... args)
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { global_object.heap() };
+        MarkedVector<Value> arguments_list { vm.heap() };
         (..., arguments_list.append(forward<Args>(args)));
-        return construct_impl(global_object, function, move(arguments_list));
+        return construct_impl(vm, function, move(arguments_list));
     }
 
-    return construct_impl(global_object, function);
+    return construct_impl(vm, function);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
 {
-    return construct_impl(global_object, function, move(arguments_list), new_target);
+    return construct_impl(vm, function, move(arguments_list), new_target);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<Object*> construct(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
 {
-    return construct_impl(global_object, function, move(arguments_list), new_target);
+    return construct_impl(vm, function, move(arguments_list), new_target);
 }
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
-ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
+ThrowCompletionOr<T*> ordinary_create_from_constructor(VM& vm, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
 {
-    auto& realm = *global_object.associated_realm();
-    auto* prototype = TRY(get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype));
+    auto& realm = *vm.current_realm();
+    auto* prototype = TRY(get_prototype_from_constructor(vm, constructor, intrinsic_default_prototype));
     return realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype);
 }
 

@@ -71,7 +71,7 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
     auto& realm = *global_object.associated_realm();
 
     if (&new_target != this)
-        return TRY(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
+        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &GlobalObject::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(realm, global_object.object_prototype());
@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
     auto proto = vm.argument(1);
 
     // 1. Set O to ? RequireObjectCoercible(O).
-    auto object = TRY(require_object_coercible(global_object, vm.argument(0)));
+    auto object = TRY(require_object_coercible(vm, vm.argument(0)));
 
     // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
     if (!proto.is_object() && !proto.is_null())
@@ -224,7 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 {
     auto& realm = *global_object.associated_realm();
-    auto iterable = TRY(require_object_coercible(global_object, vm.argument(0)));
+    auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
 
     auto* object = Object::create(realm, global_object.object_prototype());
 

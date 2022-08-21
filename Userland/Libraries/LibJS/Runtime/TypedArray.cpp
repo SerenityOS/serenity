@@ -264,11 +264,8 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(VM& vm, TypedArray<T>
 template<typename T>
 static ThrowCompletionOr<void> initialize_typed_array_from_array_like(VM& vm, TypedArray<T>& typed_array, Object const& array_like)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let len be ? LengthOfArrayLike(arrayLike).
-    auto length = TRY(length_of_array_like(global_object, array_like));
+    auto length = TRY(length_of_array_like(vm, array_like));
 
     // 2. Perform ? AllocateTypedArrayBuffer(O, len).
     TRY(allocate_typed_array_buffer(vm, typed_array, length));
@@ -321,14 +318,11 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(VM& vm, TypedArr
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
 ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& constructor, MarkedVector<Value> arguments)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     Optional<Value> first_argument;
     if (!arguments.is_empty())
         first_argument = arguments[0];
     // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-    auto* new_typed_array = TRY(construct(global_object, constructor, move(arguments)));
+    auto* new_typed_array = TRY(construct(vm, constructor, move(arguments)));
 
     // 2. Perform ? ValidateTypedArray(newTypedArray).
     if (!new_typed_array->is_typed_array())
@@ -369,16 +363,13 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM& vm, TypedArr
 // 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn, buffer ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
 ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
     VERIFY(((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint())));
 
     // 2. If comparefn is not undefined, then
     if (comparefn != nullptr) {
         // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-        auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
+        auto value = TRY(call(vm, comparefn, js_undefined(), x, y));
         auto value_number = TRY(value.to_number(vm));
 
         // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -438,8 +429,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                             \
     ThrowCompletionOr<ClassName*> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)                              \
     {                                                                                                                                  \
-        auto* prototype = TRY(get_prototype_from_constructor(                                                                          \
-            realm.global_object(), new_target, &GlobalObject::snake_name##_prototype));                                                \
+        auto* prototype = TRY(get_prototype_from_constructor(realm.vm(), new_target, &GlobalObject::snake_name##_prototype));          \
         auto* array_buffer = TRY(ArrayBuffer::create(realm, length * sizeof(UnderlyingBufferDataType)));                               \
         return realm.heap().allocate<ClassName>(realm, *prototype, length, *array_buffer);                                             \
     }                                                                                                                                  \

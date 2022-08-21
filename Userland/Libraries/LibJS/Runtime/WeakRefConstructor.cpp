@@ -39,16 +39,15 @@ ThrowCompletionOr<Value> WeakRefConstructor::call()
 ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto target = vm.argument(0);
     if (!can_be_held_weakly(target))
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     if (target.is_object())
-        return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, target.as_object()));
+        return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &GlobalObject::weak_ref_prototype, target.as_object()));
     VERIFY(target.is_symbol());
-    return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, target.as_symbol()));
+    return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &GlobalObject::weak_ref_prototype, target.as_symbol()));
 }
 
 }

@@ -129,8 +129,6 @@ JS::VM& main_thread_vm()
 
         // 8.1.5.3.1 HostCallJobCallback(callback, V, argumentsList), https://html.spec.whatwg.org/multipage/webappapis.html#hostcalljobcallback
         vm->host_call_job_callback = [](JS::JobCallback& callback, JS::Value this_value, JS::MarkedVector<JS::Value> arguments_list) {
-            auto& realm = *vm->current_realm();
-            auto& global_object = realm.global_object();
             auto& callback_host_defined = verify_cast<WebEngineCustomJobCallbackData>(*callback.custom_data);
 
             // 1. Let incumbent settings be callback.[[HostDefined]].[[IncumbentSettings]]. (NOTE: Not necessary)
@@ -144,7 +142,7 @@ JS::VM& main_thread_vm()
                 vm->push_execution_context(*callback_host_defined.active_script_context);
 
             // 5. Let result be Call(callback.[[Callback]], V, argumentsList).
-            auto result = JS::call(global_object, *callback.callback.cell(), this_value, move(arguments_list));
+            auto result = JS::call(*vm, *callback.callback.cell(), this_value, move(arguments_list));
 
             // 6. If script execution context is not null, then pop script execution context from the JavaScript execution context stack.
             if (callback_host_defined.active_script_context) {

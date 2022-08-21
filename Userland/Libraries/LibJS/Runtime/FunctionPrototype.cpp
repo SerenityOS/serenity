@@ -66,16 +66,16 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
         // FIXME: a. Perform PrepareForTailCall().
 
         // b. Return ? Call(func, thisArg).
-        return TRY(JS::call(global_object, function, this_arg));
+        return TRY(JS::call(vm, function, this_arg));
     }
 
     // 4. Let argList be ? CreateListFromArrayLike(argArray).
-    auto arguments = TRY(create_list_from_array_like(global_object, arg_array));
+    auto arguments = TRY(create_list_from_array_like(vm, arg_array));
 
     // FIXME: 5. Perform PrepareForTailCall().
 
     // 6. Return ? Call(func, thisArg, argList).
-    return TRY(JS::call(global_object, function, this_arg, move(arguments)));
+    return TRY(JS::call(vm, function, this_arg, move(arguments)));
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
     }
 
     // 4. Return ? Call(func, thisArg, args).
-    return TRY(JS::call(global_object, function, this_arg, move(arguments)));
+    return TRY(JS::call(vm, function, this_arg, move(arguments)));
 }
 
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring

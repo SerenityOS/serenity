@@ -45,6 +45,8 @@ BoundFunction::BoundFunction(Realm& realm, FunctionObject& bound_target_function
 // 10.4.1.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-call-thisargument-argumentslist
 ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, MarkedVector<Value> arguments_list)
 {
+    auto& vm = this->vm();
+
     // 1. Let target be F.[[BoundTargetFunction]].
     auto& target = *m_bound_target_function;
 
@@ -60,12 +62,14 @@ ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value thi
     args.extend(move(arguments_list));
 
     // 5. Return ? Call(target, boundThis, args).
-    return call(global_object(), &target, bound_this, move(args));
+    return call(vm, &target, bound_this, move(args));
 }
 
 // 10.4.1.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-construct-argumentslist-newtarget
 ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
+    auto& vm = this->vm();
+
     // 1. Let target be F.[[BoundTargetFunction]].
     auto& target = *m_bound_target_function;
 
@@ -86,7 +90,7 @@ ThrowCompletionOr<Object*> BoundFunction::internal_construct(MarkedVector<Value>
         final_new_target = &target;
 
     // 6. Return ? Construct(target, args, newTarget).
-    return construct(global_object(), target, move(args), final_new_target);
+    return construct(vm, target, move(args), final_new_target);
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)

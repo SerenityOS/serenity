@@ -356,16 +356,13 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
 ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String string)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let exec be ? Get(R, "exec").
     auto exec = TRY(regexp_object.get(vm.names.exec));
 
     // 2. If IsCallable(exec) is true, then
     if (exec.is_function()) {
         // a. Let result be ? Call(exec, R, « S »).
-        auto result = TRY(call(global_object, exec.as_function(), &regexp_object, js_string(vm, move(string))));
+        auto result = TRY(call(vm, exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
         // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
@@ -579,7 +576,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
-    auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *global_object.regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -596,7 +593,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     bool full_unicode = flags.contains('u') || flags.contains('v');
 
     // 6. Let matcher be ? Construct(C, « R, flags »).
-    auto* matcher = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(flags))));
+    auto* matcher = TRY(construct(vm, *constructor, regexp_object, js_string(vm, move(flags))));
 
     // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
@@ -694,7 +691,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 14. For each element result of results, do
     for (auto& result : results) {
         // a. Let resultLength be ? LengthOfArrayLike(result).
-        size_t result_length = TRY(length_of_array_like(global_object, *result));
+        size_t result_length = TRY(length_of_array_like(vm, *result));
 
         // b. Let nCaptures be max(resultLength - 1, 0).
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
@@ -761,7 +758,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             }
 
             // v. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-            auto replace_result = TRY(call(global_object, replace_value.as_function(), js_undefined(), move(replacer_args)));
+            auto replace_result = TRY(call(vm, replace_value.as_function(), js_undefined(), move(replacer_args)));
 
             // vi. Let replacement be ? ToString(replValue).
             replacement = TRY(replace_result.to_string(vm));
@@ -775,7 +772,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             }
 
             // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
-            replacement = TRY(get_substitution(global_object, matched.view(), string.view(), position, captures, named_captures, replace_value));
+            replacement = TRY(get_substitution(vm, matched.view(), string.view(), position, captures, named_captures, replace_value));
         }
 
         // m. If position ≥ nextSourcePosition, then
@@ -879,7 +876,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
-    auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *global_object.regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -894,7 +891,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
 
     // 10. Let splitter be ? Construct(C, « rx, newFlags »).
-    auto* splitter = TRY(construct(global_object, *constructor, regexp_object, js_string(vm, move(new_flags))));
+    auto* splitter = TRY(construct(vm, *constructor, regexp_object, js_string(vm, move(new_flags))));
 
     // 11. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(realm, 0));
@@ -982,7 +979,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         last_match_end = last_index;
 
         // 6. Let numberOfCaptures be ? LengthOfArrayLike(z).
-        auto number_of_captures = TRY(length_of_array_like(global_object, result.as_object()));
+        auto number_of_captures = TRY(length_of_array_like(vm, result.as_object()));
 
         // 7. Set numberOfCaptures to max(numberOfCaptures - 1, 0).
         if (number_of_captures > 0)

@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
             auto k_value = values[k];
             Value mapped_value;
             if (map_fn)
-                mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
+                mapped_value = TRY(JS::call(vm, *map_fn, this_arg, k_value, Value(k)));
             else
                 mapped_value = k_value;
             TRY(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     }
 
     auto array_like = MUST(source.to_object(vm));
-    auto length = TRY(length_of_array_like(global_object, *array_like));
+    auto length = TRY(length_of_array_like(vm, *array_like));
 
     MarkedVector<Value> arguments(vm.heap());
     arguments.empend(length);
@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
         auto k_value = TRY(array_like->get(k));
         Value mapped_value;
         if (map_fn)
-            mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
+            mapped_value = TRY(JS::call(vm, *map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
         TRY(target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes));

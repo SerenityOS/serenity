@@ -98,9 +98,6 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, String cons
 
 static ThrowCompletionOr<void> for_each_item(VM& vm, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     auto initial_length = typed_array->array_length();
@@ -112,7 +109,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, String const& name, Functio
     for (size_t i = 0; i < initial_length; ++i) {
         auto value = TRY(typed_array->get(i));
 
-        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
+        auto callback_result = TRY(call(vm, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -123,9 +120,6 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, String const& name, Functio
 
 static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     auto initial_length = typed_array->array_length();
@@ -137,7 +131,7 @@ static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, String const& nam
     for (ssize_t i = (ssize_t)initial_length - 1; i >= 0; --i) {
         auto value = TRY(typed_array->get(i));
 
-        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
+        auto callback_result = TRY(call(vm, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
@@ -156,7 +150,7 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, Typ
     auto* default_constructor = (global_object.*exemplar.intrinsic_constructor())();
 
     // 2. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
-    auto* constructor = TRY(species_constructor(global_object, exemplar, *default_constructor));
+    auto* constructor = TRY(species_constructor(vm, exemplar, *default_constructor));
 
     // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
     auto* result = TRY(typed_array_create(vm, *constructor, move(arguments)));
@@ -487,7 +481,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         auto value = MUST(typed_array->get(i));
 
         // c. Let selected be ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-        auto callback_result = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
+        auto callback_result = TRY(call(vm, *callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then
         if (callback_result) {
@@ -782,7 +776,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
         auto value = MUST(typed_array->get(i));
 
         // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-        auto mapped_value = TRY(call(global_object, *callback_function, this_value, value, Value((i32)i), typed_array));
+        auto mapped_value = TRY(call(vm, *callback_function, this_value, value, Value((i32)i), typed_array));
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
         TRY(return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes));
@@ -818,7 +812,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     for (; k < length; ++k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY(call(global_object, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(call(vm, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -848,7 +842,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     for (; k >= 0; --k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY(call(global_object, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(call(vm, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
@@ -1017,9 +1011,6 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
 // 23.2.3.26.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
 static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArrayBase& target, double target_offset, Value source)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     auto* target_buffer = target.viewed_array_buffer();
 
@@ -1034,7 +1025,7 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArra
     auto* src = TRY(source.to_object(vm));
 
     // 5. Let srcLength be ? LengthOfArrayLike(src).
-    auto source_length = TRY(length_of_array_like(global_object, *src));
+    auto source_length = TRY(length_of_array_like(vm, *src));
 
     // 6. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
@@ -1287,7 +1278,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         // b. If comparefn is not undefined, then
         if (!compare_fn.is_undefined()) {
             // i. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-            auto result = TRY(call(global_object, compare_fn.as_function(), js_undefined(), x, y));
+            auto result = TRY(call(vm, compare_fn.as_function(), js_undefined(), x, y));
             auto value = TRY(result.to_number(vm));
 
             // ii. If v is NaN, return +0𝔽.

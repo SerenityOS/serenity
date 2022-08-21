@@ -17,9 +17,6 @@ namespace JS {
 // 7.4.2 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
 ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint, Optional<Value> method)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If hint is not present, set hint to sync.
 
     // 2. If method is not present, then
@@ -54,7 +51,7 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
         return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects());
 
     // 3. Let iterator be ? Call(method, obj).
-    auto iterator = TRY(call(global_object, *method, value));
+    auto iterator = TRY(call(vm, *method, value));
 
     // 4. If Type(iterator) is not Object, throw a TypeError exception.
     if (!iterator.is_object())
@@ -73,18 +70,15 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
 // 7.4.3 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
 ThrowCompletionOr<Object*> iterator_next(VM& vm, Iterator const& iterator_record, Optional<Value> value)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     Value result;
 
     // 1. If value is not present, then
     if (!value.has_value()) {
         // a. Let result be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-        result = TRY(call(global_object, iterator_record.next_method, iterator_record.iterator));
+        result = TRY(call(vm, iterator_record.next_method, iterator_record.iterator));
     } else {
         // a. Let result be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]], « value »).
-        result = TRY(call(global_object, iterator_record.next_method, iterator_record.iterator, *value));
+        result = TRY(call(vm, iterator_record.next_method, iterator_record.iterator, *value));
     }
 
     // 3. If Type(result) is not Object, throw a TypeError exception.
@@ -155,7 +149,7 @@ static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, C
             return completion;
 
         // c. Set innerResult to Completion(Call(return, iterator)).
-        inner_result = call(global_object, return_method, iterator);
+        inner_result = call(vm, return_method, iterator);
 
         // Note: If this is AsyncIteratorClose perform one extra step.
         if (iterator_hint == IteratorHint::Async && !inner_result.is_error()) {

@@ -385,7 +385,6 @@ static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter
 Completion NewExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 1. Let ref be the result of evaluating constructExpr.
@@ -403,7 +402,7 @@ Completion NewExpression::execute(Interpreter& interpreter) const
         return throw_type_error_for_callee(interpreter, constructor, "constructor"sv);
 
     // 6. Return ? Construct(constructor, argList).
-    return Value { TRY(construct(global_object, constructor.as_function(), move(arg_list))) };
+    return Value { TRY(construct(vm, constructor.as_function(), move(arg_list))) };
 }
 
 Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter, Value callee_value, StringView call_type) const
@@ -450,10 +449,10 @@ Completion CallExpression::execute(Interpreter& interpreter) const
         && callee_reference.name().as_string() == vm.names.eval.as_string()) {
 
         auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
-        return perform_eval(global_object, script_value, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
+        return perform_eval(vm, script_value, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
 
-    return call(global_object, function, this_value, move(arg_list));
+    return call(vm, function, this_value, move(arg_list));
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
@@ -461,7 +460,6 @@ Completion CallExpression::execute(Interpreter& interpreter) const
 Completion SuperCall::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 1. Let newTarget be GetNewTarget().
@@ -485,7 +483,7 @@ Completion SuperCall::execute(Interpreter& interpreter) const
         VERIFY(value.is_object() && is<Array>(value.as_object()));
 
         auto& array_value = static_cast<Array const&>(value.as_object());
-        auto length = MUST(length_of_array_like(global_object, array_value));
+        auto length = MUST(length_of_array_like(vm, array_value));
         for (size_t i = 0; i < length; ++i)
             arg_list.append(array_value.get_without_side_effects(PropertyKey { i }));
     } else {
@@ -497,7 +495,7 @@ Completion SuperCall::execute(Interpreter& interpreter) const
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, "Super constructor");
 
     // 6. Let result be ? Construct(func, argList, newTarget).
-    auto* result = TRY(construct(global_object, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
+    auto* result = TRY(construct(vm, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
     auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(vm));
@@ -1196,7 +1194,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
     // 6. Repeat,
     while (true) {
         // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-        auto next_result = TRY(call(global_object, iterator.next_method, iterator.iterator));
+        auto next_result = TRY(call(vm, iterator.next_method, iterator.iterator));
 
         // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
         next_result = TRY(await(global_object, next_result));
@@ -1397,7 +1395,6 @@ ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) 
 
 ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpreter) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 13.3.7.1 Runtime Semantics: Evaluation
@@ -1434,7 +1431,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
         bool strict = interpreter.vm().in_strict_mode();
 
         // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-        return TRY(make_super_property_reference(global_object, actual_this, property_key, strict));
+        return TRY(make_super_property_reference(vm, actual_this, property_key, strict));
     }
 
     auto base_reference = TRY(m_object->to_reference(interpreter));
@@ -1456,7 +1453,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
         auto value = TRY(m_property->execute(interpreter)).release_value();
         VERIFY(!value.is_empty());
 
-        TRY(require_object_coercible(global_object, base_value));
+        TRY(require_object_coercible(vm, base_value));
 
         property_key = TRY(PropertyKey::from_value(vm, value));
     } else if (is<PrivateIdentifier>(*m_property)) {
@@ -1464,7 +1461,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
     } else {
         property_key = verify_cast<Identifier>(*m_property).string();
-        TRY(require_object_coercible(global_object, base_value));
+        TRY(require_object_coercible(vm, base_value));
     }
     if (!property_key.is_valid())
         return Reference {};
@@ -1760,7 +1757,7 @@ Completion ClassExpression::execute(Interpreter& interpreter) const
 // 15.7.15 Runtime Semantics: BindingClassDeclarationEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation
 static ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter& interpreter, ClassExpression const& class_expression)
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // ClassDeclaration : class ClassTail
     if (!class_expression.has_name()) {
@@ -1790,7 +1787,7 @@ static ThrowCompletionOr<Value> binding_class_declaration_evaluation(Interpreter
     auto* env = interpreter.lexical_environment();
 
     // 5. Perform ? InitializeBoundName(className, value, env).
-    TRY(initialize_bound_name(global_object, class_name, value, env));
+    TRY(initialize_bound_name(vm, class_name, value, env));
 
     // 6. Return value.
     return value;
@@ -1970,7 +1967,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             [&](Handle<ECMAScriptFunctionObject> static_block_function) -> ThrowCompletionOr<void> {
                 VERIFY(!static_block_function.is_null());
                 // We discard any value returned here.
-                TRY(call(global_object, *static_block_function.cell(), class_constructor_value));
+                TRY(call(vm, *static_block_function.cell(), class_constructor_value));
                 return {};
             }));
     }
@@ -3374,7 +3371,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
         if (!options_value.is_object()) {
             auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-            MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+            MUST(call(vm, *promise_capability.reject, js_undefined(), error));
 
             // ii. Return promiseCapability.[[Promise]].
             return Value { promise_capability.promise };
@@ -3390,7 +3387,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
             if (!assertion_object.is_object()) {
                 auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
                 // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+                MUST(call(vm, *promise_capability.reject, js_undefined(), error));
 
                 // 2. Return promiseCapability.[[Promise]].
                 return Value { promise_capability.promise };
@@ -3415,7 +3412,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
                 if (!value.is_string()) {
                     auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
                     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                    MUST(call(global_object, *promise_capability.reject, js_undefined(), error));
+                    MUST(call(vm, *promise_capability.reject, js_undefined(), error));
 
                     // b. Return promiseCapability.[[Promise]].
                     return Value { promise_capability.promise };
@@ -3619,7 +3616,7 @@ void TaggedTemplateLiteral::dump(int indent) const
 Completion TaggedTemplateLiteral::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // NOTE: This is both
     //  MemberExpression : MemberExpression TemplateLiteral
@@ -3652,7 +3649,7 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter) const
         arguments.append(TRY(expressions[i].execute(interpreter)).release_value());
 
     // 5. Return ? EvaluateCall(tagFunc, tagRef, TemplateLiteral, tailCall).
-    return call(global_object, tag, js_undefined(), move(arguments));
+    return call(vm, tag, js_undefined(), move(arguments));
 }
 
 // 13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
@@ -4364,7 +4361,7 @@ FlyString ExportStatement::local_name_for_default = "*default*";
 Completion ExportStatement::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     if (!is_default_export()) {
         if (m_statement) {
@@ -4418,7 +4415,7 @@ Completion ExportStatement::execute(Interpreter& interpreter) const
             auto* env = interpreter.lexical_environment();
 
             // b. Perform ? InitializeBoundName("*default*", value, env).
-            TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+            TRY(initialize_bound_name(vm, ExportStatement::local_name_for_default, value, env));
         }
 
         // 4. Return empty.
@@ -4432,13 +4429,13 @@ Completion ExportStatement::execute(Interpreter& interpreter) const
     // 2. Else,
     //     a. Let rhs be the result of evaluating AssignmentExpression.
     //     b. Let value be ? GetValue(rhs).
-    auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*m_statement, "default"));
+    auto value = TRY(vm.named_evaluation_if_anonymous_function(*m_statement, "default"));
 
     // 3. Let env be the running execution context's LexicalEnvironment.
     auto* env = interpreter.lexical_environment();
 
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    TRY(initialize_bound_name(global_object, ExportStatement::local_name_for_default, value, env));
+    TRY(initialize_bound_name(vm, ExportStatement::local_name_for_default, value, env));
 
     // 5. Return empty.
     return Optional<Value> {};

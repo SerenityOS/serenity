@@ -46,13 +46,12 @@ ThrowCompletionOr<Value> ListFormatConstructor::call()
 ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locale_value = vm.argument(0);
     auto options_value = vm.argument(1);
 
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
-    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype));
+    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(vm, new_target, &GlobalObject::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));

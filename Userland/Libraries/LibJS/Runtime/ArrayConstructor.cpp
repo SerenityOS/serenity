@@ -53,7 +53,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
     auto& global_object = this->global_object();
     auto& realm = *global_object.associated_realm();
 
-    auto* proto = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::array_prototype));
+    auto* proto = TRY(get_prototype_from_constructor(vm, new_target, &GlobalObject::array_prototype));
 
     if (vm.argument_count() == 0)
         return MUST(Array::create(realm, 0, proto));
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     if (using_iterator) {
         Object* array;
         if (constructor.is_constructor())
-            array = TRY(JS::construct(global_object, constructor.as_function(), {}));
+            array = TRY(JS::construct(vm, constructor.as_function(), {}));
         else
             array = MUST(Array::create(realm, 0));
 
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
             Value mapped_value;
             if (map_fn) {
-                auto mapped_value_or_error = JS::call(global_object, *map_fn, this_arg, next_value, Value(k));
+                auto mapped_value_or_error = JS::call(vm, *map_fn, this_arg, next_value, Value(k));
                 if (mapped_value_or_error.is_error())
                     return TRY(iterator_close(vm, iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
@@ -144,11 +144,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array_like = MUST(items.to_object(vm));
 
-    auto length = TRY(length_of_array_like(global_object, *array_like));
+    auto length = TRY(length_of_array_like(vm, *array_like));
 
     Object* array;
     if (constructor.is_constructor())
-        array = TRY(JS::construct(global_object, constructor.as_function(), Value(length)));
+        array = TRY(JS::construct(vm, constructor.as_function(), Value(length)));
     else
         array = TRY(Array::create(realm, length));
 
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         auto k_value = TRY(array_like->get(k));
         Value mapped_value;
         if (map_fn)
-            mapped_value = TRY(JS::call(global_object, *map_fn, this_arg, k_value, Value(k)));
+            mapped_value = TRY(JS::call(vm, *map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
         TRY(array->create_data_property_or_throw(k, mapped_value));
@@ -181,7 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
     auto this_value = vm.this_value();
     Object* array;
     if (this_value.is_constructor())
-        array = TRY(JS::construct(global_object, this_value.as_function(), Value(vm.argument_count())));
+        array = TRY(JS::construct(vm, this_value.as_function(), Value(vm.argument_count())));
     else
         array = TRY(Array::create(realm, vm.argument_count()));
     for (size_t k = 0; k < vm.argument_count(); ++k)

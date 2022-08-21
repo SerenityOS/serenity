@@ -47,13 +47,12 @@ ThrowCompletionOr<Value> DisplayNamesConstructor::call()
 ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locale_value = vm.argument(0);
     auto options_value = vm.argument(1);
 
     // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[LanguageDisplay]], [[Fields]] »).
-    auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(global_object, new_target, &GlobalObject::intl_display_names_prototype));
+    auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(vm, new_target, &GlobalObject::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));

@@ -546,7 +546,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto const& data_locale = date_time_format.data_locale();
 
     auto construct_number_format = [&](auto* options) -> ThrowCompletionOr<NumberFormat*> {
-        auto* number_format = TRY(construct(global_object, *global_object.intl_number_format_constructor(), js_string(vm, locale), options));
+        auto* number_format = TRY(construct(vm, *global_object.intl_number_format_constructor(), js_string(vm, locale), options));
         return static_cast<NumberFormat*>(number_format);
     };
 

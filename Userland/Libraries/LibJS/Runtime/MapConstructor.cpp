@@ -42,9 +42,8 @@ ThrowCompletionOr<Value> MapConstructor::call()
 ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
-    auto* map = TRY(ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype));
+    auto* map = TRY(ordinary_create_from_constructor<Map>(vm, new_target, &GlobalObject::map_prototype));
 
     if (vm.argument(0).is_nullish())
         return map;
@@ -59,7 +58,7 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
-        TRY(JS::call(global_object, adder.as_function(), map, key, value));
+        TRY(JS::call(vm, adder.as_function(), map, key, value));
 
         return {};
     }));

@@ -87,9 +87,10 @@ ThrowCompletionOr<Value> NumberConstructor::call()
 ThrowCompletionOr<Object*> NumberConstructor::construct(FunctionObject& new_target)
 {
     auto& global_object = this->global_object();
+    auto& vm = this->vm();
 
     auto number = TRY(get_value_from_constructor_argument(global_object));
-    return TRY(ordinary_create_from_constructor<NumberObject>(global_object, new_target, &GlobalObject::number_prototype, number.as_double()));
+    return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &GlobalObject::number_prototype, number.as_double()));
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite

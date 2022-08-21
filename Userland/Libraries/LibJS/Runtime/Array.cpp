@@ -159,9 +159,6 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 // 1.1.1.2 CompareArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparearrayelements
 ThrowCompletionOr<double> compare_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If x and y are both undefined, return +0𝔽.
     if (x.is_undefined() && y.is_undefined())
         return 0;
@@ -177,7 +174,7 @@ ThrowCompletionOr<double> compare_array_elements(VM& vm, Value x, Value y, Funct
     // 4. If comparefn is not undefined, then
     if (comparefn != nullptr) {
         // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-        auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
+        auto value = TRY(call(vm, comparefn, js_undefined(), x, y));
         auto value_number = TRY(value.to_number(vm));
 
         // b. If v is NaN, return +0𝔽.

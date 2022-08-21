@@ -66,7 +66,7 @@ ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
-    auto* object = TRY(ordinary_create_from_constructor<Instant>(global_object, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Instant>(vm, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
 
     // 6. Return object.
     return object;

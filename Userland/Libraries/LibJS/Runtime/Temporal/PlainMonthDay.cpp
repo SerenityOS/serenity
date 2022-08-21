@@ -167,7 +167,7 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM& vm, u8 iso_month
     // 8. Set object.[[ISODay]] to isoDay.
     // 9. Set object.[[Calendar]] to calendar.
     // 10. Set object.[[ISOYear]] to referenceISOYear.
-    auto* object = TRY(ordinary_create_from_constructor<PlainMonthDay>(global_object, *new_target, &GlobalObject::temporal_plain_month_day_prototype, iso_month, iso_day, reference_iso_year, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainMonthDay>(vm, *new_target, &GlobalObject::temporal_plain_month_day_prototype, iso_month, iso_day, reference_iso_year, calendar));
 
     // 11. Return object.
     return object;

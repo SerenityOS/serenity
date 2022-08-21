@@ -40,7 +40,6 @@ ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // NOTE: Step 1 is implemented in FinalizationRegistryConstructor::call()
 
@@ -57,7 +56,7 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
     // 7. Set finalizationRegistry.[[Cells]] to a new empty List.
     // NOTE: This is done inside FinalizationRegistry instead of here.
     // 8. Return finalizationRegistry.
-    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
+    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(vm, new_target, &GlobalObject::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
 }
 
 }
