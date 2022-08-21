@@ -17,10 +17,8 @@
 
 namespace JS {
 
-ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject& global_object, Value typed_array_value)
+ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM& vm, Value typed_array_value)
 {
-    auto& vm = global_object.vm();
-
     auto* this_object = TRY(typed_array_value.to_object(vm));
     if (!this_object->is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
@@ -29,10 +27,8 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject& global_object,
 }
 
 // 23.2.4.3 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
-ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array)
+ThrowCompletionOr<void> validate_typed_array(VM& vm, TypedArrayBase& typed_array)
 {
-    auto& vm = global_object.vm();
-
     // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     if (!typed_array.is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
@@ -50,10 +46,8 @@ ThrowCompletionOr<void> validate_typed_array(GlobalObject& global_object, TypedA
 }
 
 // 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
-static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalObject& global_object, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
+static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(VM& vm, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let elementSize be TypedArrayElementSize(O).
     auto element_size = typed_array.element_size();
 
@@ -132,9 +126,10 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
 
 // 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
+static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, TypedArray<T>& dest_array, TypedArrayBase& src_array)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let srcData be srcArray.[[ViewedArrayBuffer]].
     auto* src_data = src_array.viewed_array_buffer();
@@ -227,9 +222,10 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
 
 // 23.2.5.1.6 AllocateTypedArrayBuffer ( O, length ), https://tc39.es/ecma262/#sec-allocatetypedarraybuffer
 template<typename T>
-static ThrowCompletionOr<void> allocate_typed_array_buffer(GlobalObject& global_object, TypedArray<T>& typed_array, size_t length)
+static ThrowCompletionOr<void> allocate_typed_array_buffer(VM& vm, TypedArray<T>& typed_array, size_t length)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // Enforce 2GB "Excessive Length" limit
     if (length > NumericLimits<i32>::max() / sizeof(T))
@@ -266,13 +262,16 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(GlobalObject& global_
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, Object const& array_like)
+static ThrowCompletionOr<void> initialize_typed_array_from_array_like(VM& vm, TypedArray<T>& typed_array, Object const& array_like)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Let len be ? LengthOfArrayLike(arrayLike).
     auto length = TRY(length_of_array_like(global_object, array_like));
 
     // 2. Perform ? AllocateTypedArrayBuffer(O, len).
-    TRY(allocate_typed_array_buffer(global_object, typed_array, length));
+    TRY(allocate_typed_array_buffer(vm, typed_array, length));
 
     // 3. Let k be 0.
     // 4. Repeat, while k < len,
@@ -293,13 +292,13 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, MarkedVector<Value> const& list)
+static ThrowCompletionOr<void> initialize_typed_array_from_list(VM& vm, TypedArray<T>& typed_array, MarkedVector<Value> const& list)
 {
     // 1. Let len be the number of elements in values.
     auto length = list.size();
 
     // 2. Perform ? AllocateTypedArrayBuffer(O, len).
-    TRY(allocate_typed_array_buffer(global_object, typed_array, length));
+    TRY(allocate_typed_array_buffer(vm, typed_array, length));
 
     // 3. Let k be 0.
     // 4. Repeat, while k < len,
@@ -320,9 +319,10 @@ static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& gl
 }
 
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
-ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedVector<Value> arguments)
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& constructor, MarkedVector<Value> arguments)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     Optional<Value> first_argument;
     if (!arguments.is_empty())
@@ -334,7 +334,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
     if (!new_typed_array->is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
     auto& typed_array = *static_cast<TypedArrayBase*>(new_typed_array);
-    TRY(validate_typed_array(global_object, typed_array));
+    TRY(validate_typed_array(vm, typed_array));
 
     // 3. If argumentList is a List of a single Number, then
     if (first_argument.has_value() && first_argument->is_number()) {
@@ -348,14 +348,17 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
 }
 
 // 1.2.1.1 TypedArrayCreateSameType ( exemplar, argumentList ) https://tc39.es/proposal-change-array-by-copy/#typedarray-create-same-type
-ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
+ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM& vm, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
     // 2. Let constructor be the intrinsic object listed in column one of Table 63 (points to Table 72) for exemplar.[[TypedArrayName]].
     auto* constructor = (global_object.*exemplar.intrinsic_constructor())();
 
     // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
-    auto* result = TRY(typed_array_create(global_object, *constructor, move(arguments)));
+    auto* result = TRY(typed_array_create(vm, *constructor, move(arguments)));
 
     // 4. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
     // 5. Assert: result.[[ContentType]] is exemplar.[[ContentType]].
@@ -364,9 +367,11 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(GlobalObject& gl
 }
 
 // 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn, buffer ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
-ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
+ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
     VERIFY(((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint())));
 
@@ -530,18 +535,18 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             auto* typed_array = TRY(ClassName::create(realm, 0, new_target));                                                          \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
-                TRY(initialize_typed_array_from_typed_array(global_object, *typed_array, arg_typed_array));                            \
+                TRY(initialize_typed_array_from_typed_array(vm, *typed_array, arg_typed_array));                                       \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
-                TRY(initialize_typed_array_from_array_buffer(global_object, *typed_array, array_buffer,                                \
+                TRY(initialize_typed_array_from_array_buffer(vm, *typed_array, array_buffer,                                           \
                     vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
                 auto iterator = TRY(first_argument.get_method(vm, *vm.well_known_symbol_iterator()));                                  \
                 if (iterator) {                                                                                                        \
                     auto values = TRY(iterable_to_list(vm, first_argument, iterator));                                                 \
-                    TRY(initialize_typed_array_from_list(global_object, *typed_array, values));                                        \
+                    TRY(initialize_typed_array_from_list(vm, *typed_array, values));                                                   \
                 } else {                                                                                                               \
-                    TRY(initialize_typed_array_from_array_like(global_object, *typed_array, first_argument.as_object()));              \
+                    TRY(initialize_typed_array_from_array_like(vm, *typed_array, first_argument.as_object()));                         \
                 }                                                                                                                      \
             }                                                                                                                          \
             return typed_array;                                                                                                        \

@@ -20,8 +20,8 @@ namespace JS {
 
 class TypedArrayBase;
 
-ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject&, Value);
-ThrowCompletionOr<void> validate_typed_array(GlobalObject&, TypedArrayBase&);
+ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM&, Value);
+ThrowCompletionOr<void> validate_typed_array(VM&, TypedArrayBase&);
 
 class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);
@@ -450,9 +450,9 @@ private:
     virtual bool is_typed_array() const final { return true; }
 };
 
-ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedVector<Value> arguments);
-ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedVector<Value> arguments);
-ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn, ArrayBuffer&);
+ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM&, FunctionObject& constructor, MarkedVector<Value> arguments);
+ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM&, TypedArrayBase const& exemplar, MarkedVector<Value> arguments);
+ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, FunctionObject* comparefn, ArrayBuffer&);
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     class ClassName : public TypedArray<Type> {                                             \

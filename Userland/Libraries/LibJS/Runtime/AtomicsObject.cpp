@@ -22,7 +22,7 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
     // 1. If waitable is not present, set waitable to false.
 
     // 2. Perform ? ValidateTypedArray(typedArray).
-    TRY(validate_typed_array(global_object, typed_array));
+    TRY(validate_typed_array(vm, typed_array));
 
     // 3. Let buffer be typedArray.[[ViewedArrayBuffer]].
     auto* buffer = typed_array.viewed_array_buffer();
@@ -158,7 +158,7 @@ void AtomicsObject::initialize(Realm& realm)
 // 25.4.3 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_add = [](auto* storage, auto value) { return AK::atomic_fetch_add(storage, value); };
 
@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 // 25.4.4 Atomics.and ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.and
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_and = [](auto* storage, auto value) { return AK::atomic_fetch_and(storage, value); };
 
@@ -269,7 +269,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
 // 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 // 25.4.6 Atomics.exchange ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.exchange
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_exchange = [](auto* storage, auto value) { return AK::atomic_exchange(storage, value); };
 
@@ -315,7 +315,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
     TRY(validate_integer_typed_array(global_object, *typed_array));
 
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
@@ -335,7 +335,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 // 25.4.9 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_or = [](auto* storage, auto value) { return AK::atomic_fetch_or(storage, value); };
 
@@ -352,7 +352,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
     TRY(validate_integer_typed_array(global_object, *typed_array));
 
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
@@ -385,7 +385,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 // 25.4.11 Atomics.sub ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.sub
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_sub = [](auto* storage, auto value) { return AK::atomic_fetch_sub(storage, value); };
 
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 // 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
 {
-    auto* typed_array = TRY(typed_array_from(global_object, vm.argument(0)));
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
 
     auto atomic_xor = [](auto* storage, auto value) { return AK::atomic_fetch_xor(storage, value); };
 
