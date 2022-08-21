@@ -15,10 +15,8 @@
 namespace JS {
 
 // 25.4.2.1 ValidateIntegerTypedArray ( typedArray [ , waitable ] ), https://tc39.es/ecma262/#sec-validateintegertypedarray
-static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array, bool waitable = false)
+static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(VM& vm, TypedArrayBase& typed_array, bool waitable = false)
 {
-    auto& vm = global_object.vm();
-
     // 1. If waitable is not present, set waitable to false.
 
     // 2. Perform ? ValidateTypedArray(typedArray).
@@ -48,10 +46,8 @@ static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(GlobalObject
 }
 
 // 25.4.2.2 ValidateAtomicAccess ( typedArray, requestIndex ), https://tc39.es/ecma262/#sec-validateatomicaccess
-static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_object, TypedArrayBase& typed_array, Value request_index)
+static ThrowCompletionOr<size_t> validate_atomic_access(VM& vm, TypedArrayBase& typed_array, Value request_index)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let length be typedArray.[[ArrayLength]].
     auto length = typed_array.array_length();
 
@@ -75,15 +71,13 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
 }
 
 // 25.4.2.11 AtomicReadModifyWrite ( typedArray, index, value, op ), https://tc39.es/ecma262/#sec-atomicreadmodifywrite
-static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_object, TypedArrayBase& typed_array, Value index, Value value, ReadWriteModifyFunction operation)
+static ThrowCompletionOr<Value> atomic_read_modify_write(VM& vm, TypedArrayBase& typed_array, Value index, Value value, ReadWriteModifyFunction operation)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
-    auto* buffer = TRY(validate_integer_typed_array(global_object, typed_array));
+    auto* buffer = TRY(validate_integer_typed_array(vm, typed_array));
 
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
-    auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, index));
+    auto indexed_position = TRY(validate_atomic_access(vm, typed_array, index));
 
     Value value_to_set;
 
@@ -106,9 +100,8 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
 }
 
 template<typename T, typename AtomicFunction>
-static ThrowCompletionOr<Value> perform_atomic_operation(GlobalObject& global_object, TypedArrayBase& typed_array, AtomicFunction&& operation)
+static ThrowCompletionOr<Value> perform_atomic_operation(VM& vm, TypedArrayBase& typed_array, AtomicFunction&& operation)
 {
-    auto& vm = global_object.vm();
     auto index = vm.argument(1);
     auto value = vm.argument(2);
 
@@ -126,7 +119,7 @@ static ThrowCompletionOr<Value> perform_atomic_operation(GlobalObject& global_ob
         }
     };
 
-    return atomic_read_modify_write(global_object, typed_array, index, value, move(operation_wrapper));
+    return atomic_read_modify_write(vm, typed_array, index, value, move(operation_wrapper));
 }
 
 AtomicsObject::AtomicsObject(Realm& realm)
@@ -164,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_add)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_add)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -180,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_and)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -189,18 +182,16 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 
 // Implementation of 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
 template<typename T>
-static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& global_object, TypedArrayBase& typed_array)
+static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayBase& typed_array)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
-    auto* buffer = TRY(validate_integer_typed_array(global_object, typed_array));
+    auto* buffer = TRY(validate_integer_typed_array(vm, typed_array));
 
     // 2. Let block be buffer.[[ArrayBufferData]].
     auto& block = buffer->buffer();
 
     // 3. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
-    auto indexed_position = TRY(validate_atomic_access(global_object, typed_array, vm.argument(1)));
+    auto indexed_position = TRY(validate_atomic_access(vm, typed_array, vm.argument(1)));
 
     Value expected;
     Value replacement;
@@ -273,7 +264,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(atomic_compare_exchange_impl<Type>(global_object, *typed_array));
+        return TRY(atomic_compare_exchange_impl<Type>(vm, *typed_array));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -289,7 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_exchange)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_exchange)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -316,10 +307,10 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
-    TRY(validate_integer_typed_array(global_object, *typed_array));
+    TRY(validate_integer_typed_array(vm, *typed_array));
 
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
-    auto indexed_position = TRY(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
+    auto indexed_position = TRY(validate_atomic_access(vm, *typed_array, vm.argument(1)));
 
     // 3. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
@@ -341,7 +332,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_or)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_or)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -353,10 +344,10 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
-    TRY(validate_integer_typed_array(global_object, *typed_array));
+    TRY(validate_integer_typed_array(vm, *typed_array));
 
     // 2. Let indexedPosition be ? ValidateAtomicAccess(typedArray, index).
-    auto indexed_position = TRY(validate_atomic_access(global_object, *typed_array, vm.argument(1)));
+    auto indexed_position = TRY(validate_atomic_access(vm, *typed_array, vm.argument(1)));
 
     auto value = vm.argument(2);
     Value value_to_set;
@@ -391,7 +382,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_sub)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_sub)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
@@ -407,7 +398,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
-        return TRY(perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_xor)));
+        return TRY(perform_atomic_operation<Type>(vm, *typed_array, move(atomic_xor)));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
