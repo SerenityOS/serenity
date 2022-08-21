@@ -15,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix thread"));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("Games");
 
