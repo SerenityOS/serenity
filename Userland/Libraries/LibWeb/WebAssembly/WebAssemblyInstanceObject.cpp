@@ -27,6 +27,8 @@ void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
 {
     Object::initialize(realm);
 
+    auto& vm = this->vm();
+
     VERIFY(!m_exports_object);
     m_exports_object = create(realm, nullptr);
     auto& instance = this->instance();
@@ -36,7 +38,7 @@ void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
             [&](Wasm::FunctionAddress const& address) {
                 Optional<JS::FunctionObject*> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
-                    object = create_native_function(realm.global_object(), address, export_.name());
+                    object = create_native_function(vm, address, export_.name());
                     cache.function_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
