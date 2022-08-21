@@ -97,7 +97,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> ConsoleGlobalObject::internal
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<ConsoleGlobalObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");

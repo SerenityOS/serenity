@@ -32,7 +32,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(Fun
     auto& global_object = this->global_object();
     auto& realm = *global_object.associated_realm();
 
-    auto* module_argument = TRY(vm.argument(0).to_object(global_object));
+    auto* module_argument = TRY(vm.argument(0).to_object(vm));
     if (!is<WebAssemblyModuleObject>(module_argument))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);

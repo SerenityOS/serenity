@@ -21,7 +21,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject& global_object,
 {
     auto& vm = global_object.vm();
 
-    auto* this_object = TRY(typed_array_value.to_object(global_object));
+    auto* this_object = TRY(typed_array_value.to_object(vm));
     if (!this_object->is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
 
@@ -58,7 +58,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     auto element_size = typed_array.element_size();
 
     // 2. Let offset be ? ToIndex(byteOffset).
-    auto offset = TRY(byte_offset.to_index(global_object));
+    auto offset = TRY(byte_offset.to_index(vm));
 
     // 3. If offset modulo elementSize ≠ 0, throw a RangeError exception.
     if (offset % element_size != 0)
@@ -69,7 +69,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(GlobalOb
     // 4. If length is not undefined, then
     if (!length.is_undefined()) {
         // a. Let newLength be ? ToIndex(length).
-        new_length = TRY(length.to_index(global_object));
+        new_length = TRY(length.to_index(vm));
     }
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -374,7 +374,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
     if (comparefn != nullptr) {
         // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
         auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
-        auto value_number = TRY(value.to_number(global_object));
+        auto value_number = TRY(value.to_number(vm));
 
         // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
         if (buffer.is_detached())
@@ -536,7 +536,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 TRY(initialize_typed_array_from_array_buffer(global_object, *typed_array, array_buffer,                                \
                     vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
-                auto iterator = TRY(first_argument.get_method(global_object, *vm.well_known_symbol_iterator()));                       \
+                auto iterator = TRY(first_argument.get_method(vm, *vm.well_known_symbol_iterator()));                                  \
                 if (iterator) {                                                                                                        \
                     auto values = TRY(iterable_to_list(global_object, first_argument, iterator));                                      \
                     TRY(initialize_typed_array_from_list(global_object, *typed_array, values));                                        \
@@ -547,7 +547,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             return typed_array;                                                                                                        \
         }                                                                                                                              \
                                                                                                                                        \
-        auto array_length_or_error = first_argument.to_index(global_object);                                                           \
+        auto array_length_or_error = first_argument.to_index(vm);                                                                      \
         if (array_length_or_error.is_error()) {                                                                                        \
             auto error = array_length_or_error.release_error();                                                                        \
             if (error.value()->is_object() && is<RangeError>(error.value()->as_object())) {                                            \

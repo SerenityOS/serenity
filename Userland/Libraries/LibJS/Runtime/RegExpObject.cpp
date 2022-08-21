@@ -162,7 +162,7 @@ ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(GlobalObject& g
     if (flags.is_undefined()) {
         f = String::empty();
     } else {
-        f = TRY(flags.to_string(global_object));
+        f = TRY(flags.to_string(vm));
     }
 
     String original_pattern;
@@ -172,7 +172,7 @@ ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(GlobalObject& g
         original_pattern = String::empty();
         parsed_pattern = String::empty();
     } else {
-        original_pattern = TRY(pattern.to_string(global_object));
+        original_pattern = TRY(pattern.to_string(vm));
         bool unicode = f.find('u').has_value();
         bool unicode_sets = f.find('v').has_value();
         parsed_pattern = TRY(parse_regex_pattern(vm, original_pattern, unicode, unicode_sets));

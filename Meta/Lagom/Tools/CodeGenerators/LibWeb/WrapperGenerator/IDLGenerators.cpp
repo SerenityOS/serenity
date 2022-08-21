@@ -303,7 +303,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
     for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_string(global_object));
+        auto to_string_result = TRY(vm.argument(i).to_string(vm));
         @cpp_name@.append(move(to_string_result));
     }
 )~~~");
@@ -314,14 +314,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
         @cpp_name@ = String::empty();
     } else {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
     }
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
             }
         } else {
@@ -331,7 +331,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
             @cpp_name@ = String::empty();
         else
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
     })~~~");
             if (optional_default_value.has_value() && (!parameter.type->nullable || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
@@ -405,7 +405,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name == "double" || parameter.type->name == "float") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
+    @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(vm));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
@@ -419,7 +419,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(vm));
 )~~~");
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
@@ -471,7 +471,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(vm));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -495,7 +495,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(vm));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -519,7 +519,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(vm));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -543,7 +543,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
         scoped_generator.append(R"~~~(
-    @cpp_name@ = TRY(@js_name@@js_suffix@.to_bigint_int64(global_object));
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_bigint_int64(vm));
 )~~~");
         if (optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
@@ -623,7 +623,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         enum_generator.append(R"~~~(
-    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(global_object));
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
         auto first = true;
         for (auto& it : enumeration.translated_cpp_names) {
@@ -777,7 +777,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(global_object, *vm.well_known_symbol_iterator()));
+    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, *vm.well_known_symbol_iterator()));
     if (!iterator_method@recursion_depth@)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
 )~~~");
@@ -836,7 +836,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto record_keys@recursion_depth@ = TRY(@js_name@@js_suffix@_object.internal_own_property_keys());
 
     for (auto& key@recursion_depth@ : record_keys@recursion_depth@) {
-        auto property_key@recursion_depth@ = MUST(JS::PropertyKey::from_value(global_object, key@recursion_depth@));
+        auto property_key@recursion_depth@ = MUST(JS::PropertyKey::from_value(vm, key@recursion_depth@));
 
         auto descriptor@recursion_depth@ = TRY(@js_name@@js_suffix@_object.internal_get_own_property(property_key@recursion_depth@));
 
@@ -1045,7 +1045,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (sequence_type) {
             // 1. Let method be ? GetMethod(V, @@iterator).
             union_generator.append(R"~~~(
-        auto* method = TRY(@js_name@@js_suffix@.get_method(global_object, *vm.well_known_symbol_iterator()));
+        auto* method = TRY(@js_name@@js_suffix@.get_method(vm, *vm.well_known_symbol_iterator()));
 )~~~");
 
             // 2. If method is not undefined, return the result of creating a sequence of that type from V and method.
@@ -1176,7 +1176,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
             union_generator.append(R"~~~(
-        return TRY(@js_name@@js_suffix@.to_string(global_object));
+        return TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
         } else if (numeric_type && includes_bigint) {
             // 15. If types includes a numeric type and bigint, then return the result of converting V to either that numeric type or bigint.
@@ -1195,7 +1195,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             union_numeric_type_generator.set("numeric_type", cpp_type.name);
 
             union_numeric_type_generator.append(R"~~~(
-        auto x = TRY(@js_name@@js_suffix@.to_numeric(global_object));
+        auto x = TRY(@js_name@@js_suffix@.to_numeric(vm));
         if (x.is_bigint())
             return x.as_bigint();
         VERIFY(x.is_number());
@@ -1228,7 +1228,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else if (includes_bigint) {
             // 18. If types includes bigint, then return the result of converting V to bigint.
             union_generator.append(R"~~~(
-        return TRY(@js_name@@js_suffix@.to_bigint(global_object));
+        return TRY(@js_name@@js_suffix@.to_bigint(vm));
 )~~~");
         } else {
             // 19. Throw a TypeError.
@@ -2327,6 +2327,8 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
             scoped_generator.append(R"~~~(
 static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
 {
+    auto& vm = global_object.vm();
+
     // 1. Let creating be true if P is not a supported property name, and false otherwise.
     // NOTE: This is in it's own variable to enforce the type.
     // FIXME: Can this throw?
@@ -3366,14 +3368,14 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
     if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
         generator.append(R"~~~(
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject&)
 {
     auto this_value = vm.this_value();
     JS::Object* this_object = nullptr;
     if (this_value.is_nullish())
         this_object = &vm.current_realm()->global_object();
     else
-        this_object = TRY(this_value.to_object(global_object));
+        this_object = TRY(this_value.to_object(vm));
 )~~~");
 
         if (interface.name == "EventTarget") {
@@ -3805,9 +3807,9 @@ void @prototype_class@::initialize(JS::Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject&)
 {
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<@wrapper_class@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
     return &static_cast<@wrapper_class@*>(this_object)->impl();

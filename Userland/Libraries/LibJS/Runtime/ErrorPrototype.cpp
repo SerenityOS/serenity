@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
     auto name = name_property.is_undefined()
         ? String { "Error"sv }
-        : TRY(name_property.to_string(global_object));
+        : TRY(name_property.to_string(vm));
 
     // 5. Let msg be ? Get(O, "message").
     auto message_property = TRY(this_object->get(vm.names.message));
@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
     auto message = message_property.is_undefined()
         ? String::empty()
-        : TRY(message_property.to_string(global_object));
+        : TRY(message_property.to_string(vm));
 
     // 7. If name is the empty String, return msg.
     if (name.is_empty())
@@ -88,12 +88,12 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     String name = "Error";
     auto name_property = TRY(error.get(vm.names.name));
     if (!name_property.is_undefined())
-        name = TRY(name_property.to_string(global_object));
+        name = TRY(name_property.to_string(vm));
 
     String message = "";
     auto message_property = TRY(error.get(vm.names.message));
     if (!message_property.is_undefined())
-        message = TRY(message_property.to_string(global_object));
+        message = TRY(message_property.to_string(vm));
 
     String header = name;
     if (!message.is_empty())

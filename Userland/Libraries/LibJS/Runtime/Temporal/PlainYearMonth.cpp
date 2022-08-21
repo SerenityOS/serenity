@@ -35,9 +35,6 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
 // 9.5.1 ToTemporalYearMonth ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth
 ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM& vm, Value item, Object const* options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
@@ -68,7 +65,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM& vm, Value item, Ob
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(global_object));
+    auto string = TRY(item.to_string(vm));
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
     auto result = TRY(parse_temporal_year_month_string(vm, string));
@@ -220,9 +217,6 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
 // 9.5.7 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
 ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Type(yearMonth) is Object.
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
 
@@ -232,7 +226,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
     auto result = String::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
-    auto calendar_id = TRY(Value(&year_month.calendar()).to_string(global_object));
+    auto calendar_id = TRY(Value(&year_month.calendar()).to_string(vm));
 
     // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
     if (show_calendar == "always"sv || calendar_id != "iso8601") {
@@ -311,7 +305,6 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(VM& vm, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let duration be ? ToTemporalDuration(temporalDurationLike).
     auto* duration = TRY(to_temporal_duration(vm, temporal_duration_like));
@@ -373,7 +366,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
 
     // 16. For each element entry of entries, do
     for (auto& entry : entries) {
-        auto key = MUST(entry.as_array().get_without_side_effects(0).to_property_key(global_object));
+        auto key = MUST(entry.as_array().get_without_side_effects(0).to_property_key(vm));
         auto value = entry.as_array().get_without_side_effects(1);
 
         // a. Perform ! CreateDataPropertyOrThrow(optionsCopy, entry[0], entry[1]).

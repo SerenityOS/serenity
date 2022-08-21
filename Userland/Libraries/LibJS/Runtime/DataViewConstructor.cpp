@@ -48,7 +48,7 @@ ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_ta
 
     auto& array_buffer = static_cast<ArrayBuffer&>(buffer.as_object());
 
-    auto offset = TRY(vm.argument(1).to_index(global_object));
+    auto offset = TRY(vm.argument(1).to_index(vm));
 
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_ta
     if (vm.argument(2).is_undefined()) {
         view_byte_length = buffer_byte_length - offset;
     } else {
-        view_byte_length = TRY(vm.argument(2).to_index(global_object));
+        view_byte_length = TRY(vm.argument(2).to_index(vm));
         auto const checked_add = AK::make_checked(view_byte_length) + AK::make_checked(offset);
         if (checked_add.has_overflow() || checked_add.value() > buffer_byte_length)
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, vm.names.DataView);

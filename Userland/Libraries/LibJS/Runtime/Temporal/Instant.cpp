@@ -75,9 +75,6 @@ ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_
 // 8.5.3 ToTemporalInstant ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant
 ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If Type(item) is Object, then
     if (item.is_object()) {
         // a. If item has an [[InitializedTemporalInstant]] internal slot, then
@@ -96,7 +93,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
     }
 
     // 2. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(global_object));
+    auto string = TRY(item.to_string(vm));
 
     // 3. Let epochNanoseconds be ? ParseTemporalInstant(string).
     auto* epoch_nanoseconds = TRY(parse_temporal_instant(vm, string));

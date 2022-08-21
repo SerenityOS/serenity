@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
     auto length = string.length_in_code_units();
 
     // 6. Let n be ? ToIntegerOrInfinity(index).
-    auto n = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    auto n = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
     // 7. If n < 0 or n ≥ len, return undefined.
     if (n < 0 || n >= length)

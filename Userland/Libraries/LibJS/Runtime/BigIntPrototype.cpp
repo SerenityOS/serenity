@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
     auto* bigint = TRY(this_bigint_value(global_object, vm.this_value()));
     double radix = 10;
     if (!vm.argument(0).is_undefined()) {
-        radix = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+        radix = TRY(vm.argument(0).to_integer_or_infinity(vm));
         if (radix < 2 || radix > 36)
             return vm.throw_completion<RangeError>(ErrorType::InvalidRadix);
     }

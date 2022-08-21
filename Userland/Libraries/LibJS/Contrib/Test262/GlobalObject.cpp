@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,7 +35,7 @@ void GlobalObject::visit_edges(Cell::Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::print)
 {
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
     outln("{}", string);
     return js_undefined();
 }

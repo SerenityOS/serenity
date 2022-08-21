@@ -48,11 +48,12 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::Propert
 {
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);
+    auto& vm = this->vm();
     auto property_id = property_id_from_name(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver);
 
-    auto css_text = TRY(value.to_string(global_object()));
+    auto css_text = TRY(value.to_string(vm));
 
     impl().set_property(property_id, css_text);
     return true;

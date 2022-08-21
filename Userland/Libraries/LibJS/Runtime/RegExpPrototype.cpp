@@ -58,7 +58,7 @@ static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object,
 
     // Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
-    auto last_index = TRY(last_index_value.to_length(global_object));
+    auto last_index = TRY(last_index_value.to_length(vm));
 
     // Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
     last_index = advance_string_index(string, last_index, unicode);
@@ -174,7 +174,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     // 1. Let length be the length of S.
     // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
-    auto last_index = TRY(last_index_value.to_length(global_object));
+    auto last_index = TRY(last_index_value.to_length(vm));
 
     auto& regex = regexp_object.regex();
 
@@ -445,7 +445,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto* regexp_object = TRY(typed_this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Return ? RegExpBuiltinExec(R, S).
     return TRY(regexp_builtin_exec(global_object, *regexp_object, move(string)));
@@ -500,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let global be ToBoolean(? Get(rx, "global")).
     bool global = TRY(regexp_object->get(vm.names.global)).to_boolean();
@@ -533,10 +533,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // g. Repeat,
     while (true) {
         // i. Let result be ? RegExpExec(rx, S).
-        auto result = TRY(regexp_exec(global_object, *regexp_object, string));
+        auto result_value = TRY(regexp_exec(global_object, *regexp_object, string));
 
         // ii. If result is null, then
-        if (result.is_null()) {
+        if (result_value.is_null()) {
             // 1. If n = 0, return null.
             if (n == 0)
                 return js_null();
@@ -545,11 +545,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
             return array;
         }
 
+        VERIFY(result_value.is_object());
+        auto& result = result_value.as_object();
+
         // iii. Else,
 
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        auto match_value = TRY(result.get(global_object, 0));
-        auto match_str = TRY(match_value.to_string(global_object));
+        auto match_value = TRY(result.get(0));
+        auto match_str = TRY(match_value.to_string(vm));
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
         MUST(array->create_data_property_or_throw(n, js_string(vm, match_str)));
@@ -576,14 +579,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
     auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(global_object));
+    auto flags = TRY(flags_value.to_string(vm));
 
     // Steps 9-12 are performed early so that flags can be moved.
 
@@ -600,7 +603,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
-    auto last_index = TRY(last_index_value.to_length(global_object));
+    auto last_index = TRY(last_index_value.to_length(vm));
 
     // 8. Perform ? Set(matcher, "lastIndex", lastIndex, true).
     TRY(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
@@ -621,7 +624,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(string_value.to_utf16_string(global_object));
+    auto string = TRY(string_value.to_utf16_string(vm));
 
     // 4. Let lengthS be the number of code unit elements in S.
     // 5. Let functionalReplace be IsCallable(replaceValue).
@@ -629,7 +632,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 6. If functionalReplace is false, then
     if (!replace_value.is_function()) {
         // a. Set replaceValue to ? ToString(replaceValue).
-        auto replace_string = TRY(replace_value.to_string(global_object));
+        auto replace_string = TRY(replace_value.to_string(vm));
         replace_value = js_string(vm, move(replace_string));
     }
 
@@ -651,7 +654,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     }
 
     // 9. Let results be a new empty List.
-    MarkedVector<Value> results(vm.heap());
+    MarkedVector<Object*> results(vm.heap());
 
     // 10. Let done be false.
     // 11. Repeat, while done is false,
@@ -666,7 +669,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // c. Else,
 
         // i. Append result to the end of results.
-        results.append(result);
+        results.append(&result.as_object());
 
         // ii. If global is false, set done to true.
         if (!global)
@@ -675,8 +678,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // iii. Else,
 
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        auto match_value = TRY(result.get(global_object, 0));
-        auto match_str = TRY(match_value.to_string(global_object));
+        auto match_value = TRY(result.get(vm, 0));
+        auto match_str = TRY(match_value.to_string(vm));
 
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
@@ -694,21 +697,21 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 14. For each element result of results, do
     for (auto& result : results) {
         // a. Let resultLength be ? LengthOfArrayLike(result).
-        size_t result_length = TRY(length_of_array_like(global_object, result.as_object()));
+        size_t result_length = TRY(length_of_array_like(global_object, *result));
 
         // b. Let nCaptures be max(resultLength - 1, 0).
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
         // c. Let matched be ? ToString(? Get(result, "0")).
-        auto matched_value = TRY(result.get(global_object, 0));
-        auto matched = TRY(matched_value.to_utf16_string(global_object));
+        auto matched_value = TRY(result->get(0));
+        auto matched = TRY(matched_value.to_utf16_string(vm));
 
         // d. Let matchLength be the length of matched.
         auto matched_length = matched.length_in_code_units();
 
         // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
-        auto position_value = TRY(result.get(global_object, vm.names.index));
-        double position = TRY(position_value.to_integer_or_infinity(global_object));
+        auto position_value = TRY(result->get(vm.names.index));
+        double position = TRY(position_value.to_integer_or_infinity(vm));
 
         // f. Set position to the result of clamping position between 0 and lengthS.
         position = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
@@ -721,12 +724,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // i. Repeat, while n ≤ nCaptures,
         for (size_t n = 1; n <= n_captures; ++n) {
             // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
-            auto capture = TRY(result.get(global_object, n));
+            auto capture = TRY(result->get(n));
 
             // ii. If capN is not undefined, then
             if (!capture.is_undefined()) {
                 // 1. Set capN to ? ToString(capN).
-                capture = js_string(vm, TRY(capture.to_string(global_object)));
+                capture = js_string(vm, TRY(capture.to_string(vm)));
             }
 
             // iii. Append capN as the last element of captures.
@@ -737,7 +740,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         }
 
         // j. Let namedCaptures be ? Get(result, "groups").
-        auto named_captures = TRY(result.get(global_object, vm.names.groups));
+        auto named_captures = TRY(result->get(vm.names.groups));
 
         String replacement;
 
@@ -764,14 +767,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             auto replace_result = TRY(call(global_object, replace_value.as_function(), js_undefined(), move(replacer_args)));
 
             // vi. Let replacement be ? ToString(replValue).
-            replacement = TRY(replace_result.to_string(global_object));
+            replacement = TRY(replace_result.to_string(vm));
         }
         // l. Else,
         else {
             /// i. If namedCaptures is not undefined, then
             if (!named_captures.is_undefined()) {
                 // 1. Set namedCaptures to ? ToObject(namedCaptures).
-                named_captures = TRY(named_captures.to_object(global_object));
+                named_captures = TRY(named_captures.to_object(vm));
             }
 
             // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
@@ -811,7 +814,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let previousLastIndex be ? Get(rx, "lastIndex").
     auto previous_last_index = TRY(regexp_object->get(vm.names.lastIndex));
@@ -839,7 +842,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
         return Value(-1);
 
     // 10. Return ? Get(result, "index").
-    return TRY(result.get(global_object, vm.names.index));
+    return TRY(result.get(vm, vm.names.index));
 }
 
 // 22.2.5.13 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
@@ -876,14 +879,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
     auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(global_object));
+    auto flags = TRY(flags_value.to_string(vm));
 
     // 6. If flags contains "u", let unicodeMatching be true.
     // 7. Else, let unicodeMatching be false.
@@ -905,7 +908,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     // 13. If limit is undefined, let lim be 2^32 - 1; else let lim be ℝ(? ToUint32(limit)).
     auto limit = NumericLimits<u32>::max();
     if (!vm.argument(1).is_undefined())
-        limit = TRY(vm.argument(1).to_u32(global_object));
+        limit = TRY(vm.argument(1).to_u32(vm));
 
     // 14. If lim is 0, return A.
     if (limit == 0)
@@ -952,7 +955,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
         // i. Let e be ℝ(? ToLength(? Get(splitter, "lastIndex"))).
         auto last_index_value = TRY(splitter->get(vm.names.lastIndex));
-        auto last_index = TRY(last_index_value.to_length(global_object));
+        auto last_index = TRY(last_index_value.to_length(vm));
 
         // ii. Set e to min(e, size).
         last_index = min(last_index, string.length_in_code_units());
@@ -993,7 +996,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         for (size_t i = 1; i <= number_of_captures; ++i) {
 
             // a. Let nextCapture be ? Get(z, ! ToString(𝔽(i))).
-            auto next_capture = TRY(result.get(global_object, i));
+            auto next_capture = TRY(result.get(vm, i));
 
             // b. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), nextCapture).
             MUST(array->create_data_property_or_throw(array_length, next_capture));
@@ -1030,7 +1033,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     auto* regexp_object = TRY(this_object(vm));
 
     // 3. Let string be ? ToString(S).
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+    auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let match be ? RegExpExec(R, string).
     auto match = TRY(regexp_exec(global_object, *regexp_object, move(string)));
@@ -1048,11 +1051,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 
     // 3. Let pattern be ? ToString(? Get(R, "source")).
     auto source_attr = TRY(regexp_object->get(vm.names.source));
-    auto pattern = TRY(source_attr.to_string(global_object));
+    auto pattern = TRY(source_attr.to_string(vm));
 
     // 4. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_attr = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_attr.to_string(global_object));
+    auto flags = TRY(flags_attr.to_string(vm));
 
     // 5. Let result be the string-concatenation of "/", pattern, "/", and flags.
     // 6. Return result.

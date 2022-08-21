@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto byte_length_or_error = vm.argument(0).to_index(global_object());
+    auto byte_length_or_error = vm.argument(0).to_index(vm);
 
     if (byte_length_or_error.is_error()) {
         auto error = byte_length_or_error.release_error();

@@ -66,7 +66,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
             MUST(array->create_data_property_or_throw(0, length));
             int_length = 1;
         } else {
-            int_length = MUST(length.to_u32(global_object));
+            int_length = MUST(length.to_u32(vm));
             if (int_length != length.as_double())
                 return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
         }
@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     auto this_arg = vm.argument(2);
 
     auto items = vm.argument(0);
-    auto using_iterator = TRY(items.get_method(global_object, *vm.well_known_symbol_iterator()));
+    auto using_iterator = TRY(items.get_method(vm, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
         Object* array;
         if (constructor.is_constructor())
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         }
     }
 
-    auto* array_like = MUST(items.to_object(global_object));
+    auto* array_like = MUST(items.to_object(vm));
 
     auto length = TRY(length_of_array_like(global_object, *array_like));
 
@@ -171,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
-    return Value(TRY(value.is_array(global_object)));
+    return Value(TRY(value.is_array(vm)));
 }
 
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of

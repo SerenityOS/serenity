@@ -33,12 +33,11 @@ void RegExpConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> RegExpConstructor::call()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = TRY(pattern.is_regexp(global_object));
+    bool pattern_is_regexp = TRY(pattern.is_regexp(vm));
 
     if (pattern_is_regexp && flags.is_undefined()) {
         auto pattern_constructor = TRY(pattern.as_object().get(vm.names.constructor));
@@ -58,7 +57,7 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = TRY(pattern.is_regexp(global_object));
+    bool pattern_is_regexp = TRY(pattern.is_regexp(vm));
 
     Value pattern_value;
     Value flags_value;

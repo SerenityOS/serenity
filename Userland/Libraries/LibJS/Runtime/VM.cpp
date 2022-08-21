@@ -314,8 +314,9 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object)
 {
+    auto& vm = *this;
     auto& realm = *global_object.associated_realm();
-    auto* object = TRY(value.to_object(global_object));
+    auto* object = TRY(value.to_object(vm));
 
     HashTable<PropertyKey> seen_names;
     for (auto& property : binding.entries) {
@@ -335,7 +336,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             auto* rest_object = Object::create(realm, global_object.object_prototype());
             VERIFY(rest_object);
 
-            TRY(rest_object->copy_data_properties(object, seen_names, global_object));
+            TRY(rest_object->copy_data_properties(vm, object, seen_names));
             if (!environment)
                 return assignment_target.put_value(global_object, rest_object);
             else
@@ -349,7 +350,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<Expression> const& expression) -> ThrowCompletionOr<PropertyKey> {
                 auto result = TRY(expression->execute(interpreter())).release_value();
-                return result.to_property_key(global_object);
+                return result.to_property_key(vm);
             }));
 
         seen_names.set(name);

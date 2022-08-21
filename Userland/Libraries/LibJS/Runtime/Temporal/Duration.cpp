@@ -139,13 +139,10 @@ ThrowCompletionOr<Duration*> to_temporal_duration(VM& vm, Value item)
 // 7.5.9 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
 ThrowCompletionOr<DurationRecord> to_temporal_duration_record(VM& vm, Value temporal_duration_like)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Let string be ? ToString(temporalDurationLike).
-        auto string = TRY(temporal_duration_like.to_string(global_object));
+        auto string = TRY(temporal_duration_like.to_string(vm));
 
         // b. Return ? ParseTemporalDurationString(string).
         return parse_temporal_duration_string(vm, string);
@@ -566,7 +563,6 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(VM& vm, double days, doub
 ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If largestUnit is "year", or years, months, weeks, and days are all 0, then
     if (largest_unit == "year"sv || (years == 0 && months == 0 && weeks == 0 && days == 0)) {
@@ -615,10 +611,10 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
         }
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
-        auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
+        auto* date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
 
         // c. Let dateUntil be ? GetMethod(calendar, "dateUntil").
-        auto* date_until = TRY(Value(calendar).get_method(global_object, vm.names.dateUntil));
+        auto* date_until = TRY(Value(calendar).get_method(vm, vm.names.dateUntil));
 
         // d. Repeat, while years ≠ 0,
         while (years != 0) {
@@ -750,7 +746,6 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
 ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to_value)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If largestUnit is not one of "year", "month", or "week", or years, months, weeks, and days are all 0, then
     if (!largest_unit.is_one_of("year"sv, "month"sv, "week"sv) || (years == 0 && months == 0 && weeks == 0 && days == 0)) {
@@ -848,13 +843,13 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
         }
 
         // i. Let dateAdd be ? GetMethod(calendar, "dateAdd").
-        auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
+        auto* date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
 
         // j. Set newRelativeTo to ? CalendarDateAdd(calendar, relativeTo, oneYear, undefined, dateAdd).
         new_relative_to = TRY(calendar_date_add(vm, calendar, relative_to, *one_year, nullptr, date_add));
 
         // k. Let dateUntil be ? GetMethod(calendar, "dateUntil").
-        auto* date_until = TRY(Value(&calendar).get_method(global_object, vm.names.dateUntil));
+        auto* date_until = TRY(Value(&calendar).get_method(vm, vm.names.dateUntil));
 
         // l. Let untilOptions be OrdinaryObjectCreate(null).
         auto* until_options = Object::create(realm, nullptr);
@@ -971,7 +966,6 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
 ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     VERIFY(all_of(AK::Array { years1, months1, weeks1, days1, hours1, minutes1, seconds1, milliseconds1, microseconds1, nanoseconds1, years2, months2, weeks2, days2, hours2, minutes2, seconds2, milliseconds2, microseconds2, nanoseconds2 }, [](auto value) { return value == trunc(value); }));
 
@@ -1014,7 +1008,7 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         auto* date_duration2 = MUST(create_temporal_duration(vm, years2, months2, weeks2, days2, 0, 0, 0, 0, 0, 0));
 
         // d. Let dateAdd be ? GetMethod(calendar, "dateAdd").
-        auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
+        auto* date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
 
         // e. Let intermediate be ? CalendarDateAdd(calendar, relativeTo, dateDuration1, undefined, dateAdd).
         auto* intermediate = TRY(calendar_date_add(vm, calendar, &relative_to, *date_duration1, nullptr, date_add));
@@ -1102,7 +1096,6 @@ ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(VM& vm, ZonedDat
 ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     Object* calendar = nullptr;
     double fractional_seconds = 0;
@@ -1196,7 +1189,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto* years_duration = MUST(create_temporal_duration(vm, years, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
-        auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
+        auto* date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
 
         // c. Let yearsLater be ? CalendarDateAdd(calendar, relativeTo, yearsDuration, undefined, dateAdd).
         auto* years_later = TRY(calendar_date_add(vm, *calendar, relative_to, *years_duration, nullptr, date_add));
@@ -1286,7 +1279,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto* years_months = MUST(create_temporal_duration(vm, years, months, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
-        auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
+        auto* date_add = TRY(Value(calendar).get_method(vm, vm.names.dateAdd));
 
         // c. Let yearsMonthsLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonths, undefined, dateAdd).
         auto* years_months_later = TRY(calendar_date_add(vm, *calendar, relative_to, *years_months, nullptr, date_add));

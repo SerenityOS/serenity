@@ -132,16 +132,16 @@ template<typename T>
 inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
 {
     VERIFY(!value.is_empty());
-    auto& global_object = typed_array.global_object();
+    auto& vm = typed_array.vm();
 
     Value num_value;
 
     // 1. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
-        num_value = TRY(value.to_bigint(global_object));
+        num_value = TRY(value.to_bigint(vm));
     // 2. Otherwise, let numValue be ? ToNumber(value).
     else
-        num_value = TRY(value.to_number(global_object));
+        num_value = TRY(value.to_number(vm));
 
     // 3. If IsValidIntegerIndex(O, index) is true, then
     // NOTE: Inverted for flattened logic.
@@ -487,7 +487,10 @@ ThrowCompletionOr<double> compare_typed_array_elements(GlobalObject& global_obje
         virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;  \
                                                                                             \
     private:                                                                                \
-        virtual bool has_constructor() const override { return true; }                      \
+        virtual bool has_constructor() const override                                       \
+        {                                                                                   \
+            return true;                                                                    \
+        }                                                                                   \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \

@@ -120,9 +120,6 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
 // 6.5.2 ToTemporalZonedDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime
 ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item, Object const* options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
@@ -179,7 +176,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         // k. Else,
         else {
             // i. Set offsetString to ? ToString(offsetString).
-            offset_string = TRY(offset_string_value.to_string(global_object));
+            offset_string = TRY(offset_string_value.to_string(vm));
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
@@ -191,7 +188,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(global_object));
+        auto string = TRY(item.to_string(vm));
 
         // c. Let result be ? ParseTemporalZonedDateTimeString(string).
         auto parsed_result = TRY(parse_temporal_zoned_date_time_string(vm, string));
@@ -293,9 +290,6 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt
 // 6.5.4 TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar, showTimeZone, showOffset [ , increment, unit, roundingMode ] ), https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring
 ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If increment is not present, set increment to 1.
     if (!increment.has_value())
         increment = 1;
@@ -352,14 +346,14 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
     // 13. Else,
     else {
         // a. Let timeZoneID be ? ToString(timeZone).
-        auto time_zone_id = TRY(Value(&time_zone).to_string(global_object));
+        auto time_zone_id = TRY(Value(&time_zone).to_string(vm));
 
         // b. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
         time_zone_string = String::formatted("[{}]", time_zone_id);
     }
 
     // 14. Let calendarID be ? ToString(zonedDateTime.[[Calendar]]).
-    auto calendar_id = TRY(Value(&zoned_date_time.calendar()).to_string(global_object));
+    auto calendar_id = TRY(Value(&zoned_date_time.calendar()).to_string(vm));
 
     // 15. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
     auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);

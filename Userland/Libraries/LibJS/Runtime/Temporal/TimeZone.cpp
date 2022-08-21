@@ -418,9 +418,6 @@ String format_iso_time_zone_offset_string(double offset_nanoseconds)
 // 11.6.10 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zone_like)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If Type(temporalTimeZoneLike) is Object, then
     if (temporal_time_zone_like.is_object()) {
         // a. If temporalTimeZoneLike has an [[InitializedTemporalZonedDateTime]] internal slot, then
@@ -444,7 +441,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
     }
 
     // 2. Let identifier be ? ToString(temporalTimeZoneLike).
-    auto identifier = TRY(temporal_time_zone_like.to_string(global_object));
+    auto identifier = TRY(temporal_time_zone_like.to_string(vm));
 
     // 3. Let parseResult be ? ParseTemporalTimeZoneString(identifier).
     auto parse_result = TRY(parse_temporal_time_zone_string(vm, identifier));
@@ -483,7 +480,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
     auto& global_object = realm.global_object();
 
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
-    auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(global_object, vm.names.getOffsetNanosecondsFor));
+    auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(vm, vm.names.getOffsetNanosecondsFor));
 
     // 2. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
     auto offset_nanoseconds_value = TRY(call(global_object, get_offset_nanoseconds_for, time_zone, &instant));
@@ -674,7 +671,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
     // 2. Let possibleInstants be ? Invoke(timeZone, "getPossibleInstantsFor", « dateTime »).
-    auto possible_instants = TRY(time_zone.invoke(global_object, vm.names.getPossibleInstantsFor, &date_time));
+    auto possible_instants = TRY(time_zone.invoke(vm, vm.names.getPossibleInstantsFor, &date_time));
 
     // 3. Let iteratorRecord be ? GetIterator(possibleInstants, sync).
     auto iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
@@ -716,18 +713,15 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
 // 11.6.17 TimeZoneEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
 ThrowCompletionOr<bool> time_zone_equals(VM& vm, Object& one, Object& two)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If one and two are the same Object value, return true.
     if (&one == &two)
         return true;
 
     // 2. Let timeZoneOne be ? ToString(one).
-    auto time_zone_one = TRY(Value(&one).to_string(global_object));
+    auto time_zone_one = TRY(Value(&one).to_string(vm));
 
     // 3. Let timeZoneTwo be ? ToString(two).
-    auto time_zone_two = TRY(Value(&two).to_string(global_object));
+    auto time_zone_two = TRY(Value(&two).to_string(vm));
 
     // 4. If timeZoneOne is timeZoneTwo, return true.
     if (time_zone_one == time_zone_two)

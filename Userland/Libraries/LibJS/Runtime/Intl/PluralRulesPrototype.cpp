@@ -41,7 +41,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     auto* plural_rules = TRY(typed_this_object(vm));
 
     // 3. Let n be ? ToNumber(value).
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
 
     // 4. Return ! ResolvePlural(pr, n).
     auto plurality = resolve_plural(*plural_rules, number);
@@ -65,10 +65,10 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "end"sv);
 
     // 4. Let x be ? ToNumber(start).
-    auto x = TRY(start.to_number(global_object));
+    auto x = TRY(start.to_number(vm));
 
     // 5. Let y be ? ToNumber(end).
-    auto y = TRY(end.to_number(global_object));
+    auto y = TRY(end.to_number(vm));
 
     // 6. Return ? ResolvePluralRange(pr, x, y).
     auto plurality = TRY(resolve_plural_range(vm, *plural_rules, x, y));

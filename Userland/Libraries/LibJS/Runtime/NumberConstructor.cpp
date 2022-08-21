@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,7 +63,7 @@ static ThrowCompletionOr<Value> get_value_from_constructor_argument(GlobalObject
 
     Value number;
     if (vm.argument_count() > 0) {
-        auto primitive = TRY(vm.argument(0).to_numeric(global_object));
+        auto primitive = TRY(vm.argument(0).to_numeric(vm));
         if (primitive.is_bigint()) {
             // FIXME: How should huge values be handled here?
             auto& big_integer = primitive.as_bigint().big_integer();

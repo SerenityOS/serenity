@@ -41,7 +41,7 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
     // 5. If IsPropertyReference(V) is true, then
     if (is_property_reference()) {
         // a. Let baseObj be ? ToObject(V.[[Base]]).
-        auto* base_obj = TRY(m_base_value.to_object(global_object));
+        auto* base_obj = TRY(m_base_value.to_object(vm));
 
         // b. If IsPrivateReference(V) is true, then
         if (is_private_reference()) {
@@ -86,6 +86,8 @@ Completion Reference::throw_reference_error(GlobalObject& global_object) const
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
 ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
 {
+    auto& vm = global_object.vm();
+
     // 1. ReturnIfAbrupt(V).
     // 2. If V is not a Reference Record, return V.
 
@@ -105,7 +107,7 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
             // as things currently stand this does the "wrong thing" but
             // the error is unobservable
 
-            auto* base_obj = TRY(m_base_value.to_object(global_object));
+            auto* base_obj = TRY(m_base_value.to_object(vm));
 
             // i. Return ? PrivateGet(baseObj, V.[[ReferencedName]]).
             return base_obj->private_get(m_private_name);
@@ -123,7 +125,7 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
         else if (m_base_value.is_boolean())
             base_obj = global_object.boolean_prototype();
         else
-            base_obj = TRY(m_base_value.to_object(global_object));
+            base_obj = TRY(m_base_value.to_object(vm));
 
         // c. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
         return base_obj->internal_get(m_name, get_this_value());
@@ -173,7 +175,7 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
             return vm.throw_completion<ReferenceError>(ErrorType::UnsupportedDeleteSuperProperty);
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
-        auto* base_obj = MUST(m_base_value.to_object(global_object));
+        auto* base_obj = MUST(m_base_value.to_object(vm));
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
         bool delete_status = TRY(base_obj->internal_delete(m_name));

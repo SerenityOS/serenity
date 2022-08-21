@@ -191,11 +191,8 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_throw_on_infinity(VM& vm, Value argument, ErrorType error_type, Args... args)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let integer be ? ToIntegerOrInfinity(argument).
-    auto integer = TRY(argument.to_integer_or_infinity(global_object));
+    auto integer = TRY(argument.to_integer_or_infinity(vm));
 
     // 2. If integer is -∞ or +∞ , then
     if (Value(integer).is_infinity()) {
@@ -211,11 +208,8 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(VM& vm, Value argument, E
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_without_rounding(VM& vm, Value argument, ErrorType error_type, Args... args)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let number be ? ToNumber(argument).
-    auto number = TRY(argument.to_number(global_object));
+    auto number = TRY(argument.to_number(vm));
 
     // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())

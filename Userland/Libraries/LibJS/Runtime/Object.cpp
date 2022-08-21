@@ -262,7 +262,7 @@ ThrowCompletionOr<bool> Object::has_own_property(PropertyKey const& property_key
 // 7.3.16 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
 ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 {
-    auto& global_object = this->global_object();
+    auto& vm = this->vm();
 
     // 1. Let status be ? O.[[PreventExtensions]]().
     auto status = TRY(internal_prevent_extensions());
@@ -278,7 +278,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
     if (level == IntegrityLevel::Sealed) {
         // a. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_key = MUST(PropertyKey::from_value(global_object, key));
+            auto property_key = MUST(PropertyKey::from_value(vm, key));
 
             // i. Perform ? DefinePropertyOrThrow(O, k, PropertyDescriptor { [[Configurable]]: false }).
             TRY(define_property_or_throw(property_key, { .configurable = false }));
@@ -290,7 +290,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 
         // b. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_key = MUST(PropertyKey::from_value(global_object, key));
+            auto property_key = MUST(PropertyKey::from_value(vm, key));
 
             // i. Let currentDesc be ? O.[[GetOwnProperty]](k).
             auto current_descriptor = TRY(internal_get_own_property(property_key));
@@ -324,6 +324,8 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 // 7.3.17 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
 ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 {
+    auto& vm = this->vm();
+
     // 1. Let extensible be ? IsExtensible(O).
     auto extensible = TRY(is_extensible());
 
@@ -337,7 +339,7 @@ ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 
     // 5. For each element k of keys, do
     for (auto& key : keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object(), key));
+        auto property_key = MUST(PropertyKey::from_value(vm, key));
 
         // a. Let currentDesc be ? O.[[GetOwnProperty]](k).
         auto current_descriptor = TRY(internal_get_own_property(property_key));
@@ -368,6 +370,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
     //       spec text have been replaced with `continue`s in the loop below.
 
     auto& global_object = this->global_object();
+    auto& vm = this->vm();
     auto& realm = *global_object.associated_realm();
 
     // 1. Let ownKeys be ? O.[[OwnPropertyKeys]]().
@@ -381,7 +384,7 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
         // a. If Type(key) is String, then
         if (!key.is_string())
             continue;
-        auto property_key = MUST(PropertyKey::from_value(global_object, key));
+        auto property_key = MUST(PropertyKey::from_value(vm, key));
 
         // i. Let desc be ? O.[[GetOwnProperty]](key).
         auto descriptor = TRY(internal_get_own_property(property_key));
@@ -421,15 +424,15 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
 }
 
 // 7.3.26 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<void> Object::copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object)
+ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashTable<PropertyKey> const& seen_names)
 {
     if (source.is_nullish())
         return {};
 
-    auto* from_object = MUST(source.to_object(global_object));
+    auto* from_object = MUST(source.to_object(vm));
 
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
-        auto next_key = MUST(PropertyKey::from_value(global_object, next_key_value));
+        auto next_key = MUST(PropertyKey::from_value(vm, next_key_value));
         if (seen_names.contains(next_key))
             continue;
 
@@ -1121,9 +1124,10 @@ void Object::define_native_function(PropertyKey const& property_key, Function<Th
 ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 {
     auto& global_object = this->global_object();
+    auto& vm = this->vm();
 
     // 1. Let props be ? ToObject(Properties).
-    auto* props = TRY(properties.to_object(global_object));
+    auto* props = TRY(properties.to_object(vm));
 
     // 2. Let keys be ? props.[[OwnPropertyKeys]]().
     auto keys = TRY(props->internal_own_property_keys());
@@ -1138,7 +1142,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 
     // 4. For each element nextKey of keys, do
     for (auto& next_key : keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+        auto property_key = MUST(PropertyKey::from_value(vm, next_key));
 
         // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
         auto property_descriptor = TRY(props->internal_get_own_property(property_key));

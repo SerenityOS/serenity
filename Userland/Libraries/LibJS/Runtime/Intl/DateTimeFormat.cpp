@@ -67,12 +67,11 @@ StringView DateTimeFormat::style_to_string(Style style)
 ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, OptionRequired required, OptionDefaults defaults)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If options is undefined, let options be null; otherwise let options be ? ToObject(options).
     Object* options = nullptr;
     if (!options_value.is_undefined())
-        options = TRY(options_value.to_object(global_object));
+        options = TRY(options_value.to_object(vm));
 
     // 2. Let options be OrdinaryObjectCreate(options).
     options = Object::create(realm, options);

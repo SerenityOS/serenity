@@ -119,8 +119,10 @@ ThrowCompletionOr<Value> Console::trace()
 // 1.2.1. count(label), https://console.spec.whatwg.org/#count
 ThrowCompletionOr<Value> Console::count()
 {
+    auto& vm = this->vm();
+
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-count
-    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
 
     // 1. Let map be the associated count map.
     auto& map = m_counters;
@@ -139,7 +141,7 @@ ThrowCompletionOr<Value> Console::count()
 
     // 5. Perform Logger("count", « concat »).
     MarkedVector<Value> concat_as_vector { global_object().heap() };
-    concat_as_vector.append(js_string(vm(), concat));
+    concat_as_vector.append(js_string(vm, concat));
     if (m_client)
         TRY(m_client->logger(LogLevel::Count, concat_as_vector));
     return js_undefined();
@@ -148,8 +150,10 @@ ThrowCompletionOr<Value> Console::count()
 // 1.2.2. countReset(label), https://console.spec.whatwg.org/#countreset
 ThrowCompletionOr<Value> Console::count_reset()
 {
+    auto& vm = this->vm();
+
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-countreset
-    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
 
     // 1. Let map be the associated count map.
     auto& map = m_counters;
@@ -165,7 +169,7 @@ ThrowCompletionOr<Value> Console::count_reset()
         auto message = String::formatted("\"{}\" doesn't have a count", label);
         // 2. Perform Logger("countReset", « message »);
         MarkedVector<Value> message_as_vector { global_object().heap() };
-        message_as_vector.append(js_string(vm(), message));
+        message_as_vector.append(js_string(vm, message));
         if (m_client)
             TRY(m_client->logger(LogLevel::CountReset, message_as_vector));
     }
@@ -176,20 +180,22 @@ ThrowCompletionOr<Value> Console::count_reset()
 // 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
 ThrowCompletionOr<Value> Console::assert_()
 {
+    auto& vm = this->vm();
+
     // 1. If condition is true, return.
-    auto condition = vm().argument(0).to_boolean();
+    auto condition = vm.argument(0).to_boolean();
     if (condition)
         return js_undefined();
 
     // 2. Let message be a string without any formatting specifiers indicating generically an assertion failure (such as "Assertion failed").
-    auto message = js_string(vm(), "Assertion failed");
+    auto message = js_string(vm, "Assertion failed");
 
     // NOTE: Assemble `data` from the function arguments.
     MarkedVector<Value> data { global_object().heap() };
-    if (vm().argument_count() > 1) {
-        data.ensure_capacity(vm().argument_count() - 1);
-        for (size_t i = 1; i < vm().argument_count(); ++i) {
-            data.append(vm().argument(i));
+    if (vm.argument_count() > 1) {
+        data.ensure_capacity(vm.argument_count() - 1);
+        for (size_t i = 1; i < vm.argument_count(); ++i) {
+            data.append(vm.argument(i));
         }
     }
 
@@ -208,7 +214,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = js_string(vm(), String::formatted("{}: {}", message->string(), first.to_string(global_object()).value()));
+            auto concat = js_string(vm, String::formatted("{}: {}", message->string(), first.to_string(vm).value()));
             // 2. Set data[0] to concat.
             data[0] = concat;
         }
@@ -305,15 +311,17 @@ ThrowCompletionOr<Value> Console::group_end()
 // 1.4.1. time(label), https://console.spec.whatwg.org/#time
 ThrowCompletionOr<Value> Console::time()
 {
+    auto& vm = this->vm();
+
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-time
-    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
 
     // 1. If the associated timer table contains an entry with key label, return, optionally reporting
     // a warning to the console indicating that a timer with label `label` has already been started.
     if (m_timer_table.contains(label)) {
         if (m_client) {
             MarkedVector<Value> timer_already_exists_warning_message_as_vector { global_object().heap() };
-            timer_already_exists_warning_message_as_vector.append(js_string(vm(), String::formatted("Timer '{}' already exists.", label)));
+            timer_already_exists_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' already exists.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_already_exists_warning_message_as_vector)));
         }
         return js_undefined();
@@ -327,8 +335,10 @@ ThrowCompletionOr<Value> Console::time()
 // 1.4.2. timeLog(label, ...data), https://console.spec.whatwg.org/#timelog
 ThrowCompletionOr<Value> Console::time_log()
 {
+    auto& vm = this->vm();
+
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timelog
-    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
 
     // 1. Let timerTable be the associated timer table.
 
@@ -339,7 +349,7 @@ ThrowCompletionOr<Value> Console::time_log()
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
             MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { global_object().heap() };
-            timer_does_not_exist_warning_message_as_vector.append(js_string(vm(), String::formatted("Timer '{}' does not exist.", label)));
+            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
         return js_undefined();
@@ -354,10 +364,10 @@ ThrowCompletionOr<Value> Console::time_log()
 
     // 5. Prepend concat to data.
     MarkedVector<Value> data { global_object().heap() };
-    data.ensure_capacity(vm().argument_count());
-    data.append(js_string(vm(), concat));
-    for (size_t i = 1; i < vm().argument_count(); ++i)
-        data.append(vm().argument(i));
+    data.ensure_capacity(vm.argument_count());
+    data.append(js_string(vm, concat));
+    for (size_t i = 1; i < vm.argument_count(); ++i)
+        data.append(vm.argument(i));
 
     // 6. Perform Printer("timeLog", data).
     if (m_client)
@@ -368,8 +378,10 @@ ThrowCompletionOr<Value> Console::time_log()
 // 1.4.3. timeEnd(label), https://console.spec.whatwg.org/#timeend
 ThrowCompletionOr<Value> Console::time_end()
 {
+    auto& vm = this->vm();
+
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timeend
-    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+    auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
 
     // 1. Let timerTable be the associated timer table.
 
@@ -380,7 +392,7 @@ ThrowCompletionOr<Value> Console::time_end()
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
             MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { global_object().heap() };
-            timer_does_not_exist_warning_message_as_vector.append(js_string(vm(), String::formatted("Timer '{}' does not exist.", label)));
+            timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
         return js_undefined();
@@ -399,7 +411,7 @@ ThrowCompletionOr<Value> Console::time_end()
     // 6. Perform Printer("timeEnd", « concat »).
     if (m_client) {
         MarkedVector<Value> concat_as_vector { global_object().heap() };
-        concat_as_vector.append(js_string(vm(), concat));
+        concat_as_vector.append(js_string(vm, concat));
         TRY(m_client->printer(LogLevel::TimeEnd, move(concat_as_vector)));
     }
     return js_undefined();
@@ -443,11 +455,12 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
 
 ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> const& values)
 {
+    auto& vm = this->vm();
     StringBuilder builder;
     for (auto const& item : values) {
         if (!builder.is_empty())
             builder.append(' ');
-        builder.append(TRY(item.to_string(global_object())));
+        builder.append(TRY(item.to_string(vm)));
     }
     return builder.to_string();
 }
@@ -488,6 +501,7 @@ VM& ConsoleClient::vm()
 ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, MarkedVector<Value> const& args)
 {
     auto& global_object = this->global_object();
+    auto& vm = this->vm();
 
     // 1. If args is empty, return.
     if (args.is_empty())
@@ -507,7 +521,7 @@ ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, Mark
     }
 
     // 5. If first does not contain any format specifiers, perform Printer(logLevel, args).
-    if (!TRY(first.to_string(global_object)).contains('%')) {
+    if (!TRY(first.to_string(vm)).contains('%')) {
         TRY(printer(log_level, args));
     } else {
         // 6. Otherwise, perform Printer(logLevel, Formatter(args)).

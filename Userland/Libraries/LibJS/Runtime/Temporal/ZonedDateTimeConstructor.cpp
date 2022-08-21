@@ -51,10 +51,9 @@ ThrowCompletionOr<Value> ZonedDateTimeConstructor::call()
 ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = TRY(vm.argument(0).to_bigint(global_object));
+    auto* epoch_nanoseconds = TRY(vm.argument(0).to_bigint(vm));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))

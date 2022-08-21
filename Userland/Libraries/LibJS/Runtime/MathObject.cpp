@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -78,7 +78,7 @@ void MathObject::initialize(Realm& realm)
 // 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
 JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     if (number.is_negative_zero())
@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 // 21.3.2.32 Math.sqrt ( x ), https://tc39.es/ecma262/#sec-math.sqrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value(::sqrt(number.as_double()));
@@ -107,7 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 // 21.3.2.16 Math.floor ( x ), https://tc39.es/ecma262/#sec-math.floor
 JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value(::floor(number.as_double()));
@@ -116,7 +116,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 // 21.3.2.10 Math.ceil ( x ), https://tc39.es/ecma262/#sec-math.ceil
 JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     auto number_double = number.as_double();
@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 // 21.3.2.28 Math.round ( x ), https://tc39.es/ecma262/#sec-math.round
 JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     double integer = ::ceil(value);
     if (integer - 0.5 > value)
         integer--;
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
     Vector<Value> coerced;
     for (size_t i = 0; i < vm.argument_count(); ++i)
-        coerced.append(TRY(vm.argument(i).to_number(global_object)));
+        coerced.append(TRY(vm.argument(i).to_number(vm)));
 
     auto highest = js_negative_infinity();
     for (auto& number : coerced) {
@@ -157,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
     Vector<Value> coerced;
     for (size_t i = 0; i < vm.argument_count(); ++i)
-        coerced.append(TRY(vm.argument(i).to_number(global_object)));
+        coerced.append(TRY(vm.argument(i).to_number(vm)));
 
     auto lowest = js_infinity();
     for (auto& number : coerced) {
@@ -172,7 +172,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 // 21.3.2.35 Math.trunc ( x ), https://tc39.es/ecma262/#sec-math.trunc
 JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     if (number.as_double() < 0)
@@ -184,7 +184,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     // 2. If n is NaN, n is +0𝔽, or n is -0𝔽, return n.
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return number;
@@ -201,7 +201,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
 
     // 2. If n is NaN, n is +∞𝔽, or n is -∞𝔽, return NaN.
     if (number.is_nan() || number.is_infinity())
@@ -219,7 +219,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 {
     // Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
 
     // 2. If n is NaN, n is +0𝔽, or n is -0𝔽, return n.
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
@@ -236,15 +236,15 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 // 21.3.2.26 Math.pow ( base, exponent ), https://tc39.es/ecma262/#sec-math.pow
 JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
-    auto base = TRY(vm.argument(0).to_number(global_object));
-    auto exponent = TRY(vm.argument(1).to_number(global_object));
-    return JS::exp(global_object, base, exponent);
+    auto base = TRY(vm.argument(0).to_number(vm));
+    auto exponent = TRY(vm.argument(1).to_number(vm));
+    return JS::exp(vm, base, exponent);
 }
 
 // 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp
 JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value(::exp(number.as_double()));
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 // 21.3.2.15 Math.expm1 ( x ), https://tc39.es/ecma262/#sec-math.expm1
 JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value(::expm1(number.as_double()));
@@ -262,7 +262,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 // 21.3.2.29 Math.sign ( x ), https://tc39.es/ecma262/#sec-math.sign
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_positive_zero())
         return Value(0);
     if (number.is_negative_zero())
@@ -277,7 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 // 21.3.2.11 Math.clz32 ( x ), https://tc39.es/ecma262/#sec-math.clz32
 JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
-    auto number = TRY(vm.argument(0).to_u32(global_object));
+    auto number = TRY(vm.argument(0).to_u32(vm));
     if (number == 0)
         return Value(32);
     return Value(count_leading_zeroes(number));
@@ -286,7 +286,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 // 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan() || number.as_double() > 1 || number.as_double() < -1)
         return js_nan();
     if (number.as_double() == 1)
@@ -297,7 +297,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 // 21.3.2.3 Math.acosh ( x ), https://tc39.es/ecma262/#sec-math.acosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value < 1)
         return js_nan();
     return Value(::acosh(value));
@@ -306,7 +306,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 // 21.3.2.4 Math.asin ( x ), https://tc39.es/ecma262/#sec-math.asin
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return number;
     return Value(::asin(number.as_double()));
@@ -315,13 +315,13 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
 // 21.3.2.5 Math.asinh ( x ), https://tc39.es/ecma262/#sec-math.asinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
 {
-    return Value(::asinh(TRY(vm.argument(0).to_number(global_object)).as_double()));
+    return Value(::asinh(TRY(vm.argument(0).to_number(vm)).as_double()));
 }
 
 // 21.3.2.6 Math.atan ( x ), https://tc39.es/ecma262/#sec-math.atan
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return number;
     if (number.is_positive_infinity())
@@ -334,7 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 // 21.3.2.7 Math.atanh ( x ), https://tc39.es/ecma262/#sec-math.atanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value > 1 || value < -1)
         return js_nan();
     return Value(::atanh(value));
@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 // 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value < -1)
         return js_nan();
     return Value(::log1p(value));
@@ -352,7 +352,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
 // 21.3.2.9 Math.cbrt ( x ), https://tc39.es/ecma262/#sec-math.cbrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 {
-    return Value(::cbrt(TRY(vm.argument(0).to_number(global_object)).as_double()));
+    return Value(::cbrt(TRY(vm.argument(0).to_number(vm)).as_double()));
 }
 
 // 21.3.2.8 Math.atan2 ( y, x ), https://tc39.es/ecma262/#sec-math.atan2
@@ -360,8 +360,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
     auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
 
-    auto y = TRY(vm.argument(0).to_number(global_object));
-    auto x = TRY(vm.argument(1).to_number(global_object));
+    auto y = TRY(vm.argument(0).to_number(vm));
+    auto x = TRY(vm.argument(1).to_number(vm));
 
     if (y.is_nan() || x.is_nan())
         return js_nan();
@@ -417,7 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 // 21.3.2.17 Math.fround ( x ), https://tc39.es/ecma262/#sec-math.fround
 JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value((float)number.as_double());
@@ -428,7 +428,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 {
     Vector<Value> coerced;
     for (size_t i = 0; i < vm.argument_count(); ++i)
-        coerced.append(TRY(vm.argument(i).to_number(global_object)));
+        coerced.append(TRY(vm.argument(i).to_number(vm)));
 
     for (auto& number : coerced) {
         if (number.is_positive_infinity() || number.is_negative_infinity())
@@ -454,15 +454,15 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 // 21.3.2.19 Math.imul ( x, y ), https://tc39.es/ecma262/#sec-math.imul
 JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
 {
-    auto a = TRY(vm.argument(0).to_u32(global_object));
-    auto b = TRY(vm.argument(1).to_u32(global_object));
+    auto a = TRY(vm.argument(0).to_u32(vm));
+    auto b = TRY(vm.argument(1).to_u32(vm));
     return Value(static_cast<i32>(a * b));
 }
 
 // 21.3.2.20 Math.log ( x ), https://tc39.es/ecma262/#sec-math.log
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value < 0)
         return js_nan();
     return Value(::log(value));
@@ -471,7 +471,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
 // 21.3.2.23 Math.log2 ( x ), https://tc39.es/ecma262/#sec-math.log2
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value < 0)
         return js_nan();
     return Value(::log2(value));
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
 // 21.3.2.22 Math.log10 ( x ), https://tc39.es/ecma262/#sec-math.log10
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
 {
-    auto value = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
     if (value < 0)
         return js_nan();
     return Value(::log10(value));
@@ -489,7 +489,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
 // 21.3.2.31 Math.sinh ( x ), https://tc39.es/ecma262/#sec-math.sinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     return Value(::sinh(number.as_double()));
@@ -499,7 +499,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
 
     // 2. If n is NaN, return NaN.
     if (number.is_nan())
@@ -520,7 +520,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 // 21.3.2.34 Math.tanh ( x ), https://tc39.es/ecma262/#sec-math.tanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tanh)
 {
-    auto number = TRY(vm.argument(0).to_number(global_object));
+    auto number = TRY(vm.argument(0).to_number(vm));
     if (number.is_nan())
         return js_nan();
     if (number.is_positive_infinity())

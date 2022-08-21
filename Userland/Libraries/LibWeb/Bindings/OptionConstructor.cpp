@@ -38,6 +38,8 @@ JS::ThrowCompletionOr<JS::Value> OptionConstructor::call()
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option
 JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
 {
+    auto& vm = this->vm();
+
     // 1. Let document be the current global object's associated Document.
     auto& window = static_cast<WindowObject&>(HTML::current_global_object());
     auto& document = window.impl().associated_document();
@@ -46,8 +48,8 @@ JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
     auto option_element = static_ptr_cast<HTML::HTMLOptionElement>(DOM::create_element(document, HTML::TagNames::option, Namespace::HTML));
 
     // 3. If text is not the empty string, then append to option a new Text node whose data is text.
-    if (vm().argument_count() > 0) {
-        auto text = TRY(vm().argument(0).to_string(global_object()));
+    if (vm.argument_count() > 0) {
+        auto text = TRY(vm.argument(0).to_string(vm));
         if (!text.is_empty()) {
             auto new_text_node = adopt_ref(*new DOM::Text(document, text));
             option_element->append_child(new_text_node);
@@ -55,21 +57,21 @@ JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
     }
 
     // 4. If value is given, then set an attribute value for option using "value" and value.
-    if (vm().argument_count() > 1) {
-        auto value = TRY(vm().argument(1).to_string(global_object()));
+    if (vm.argument_count() > 1) {
+        auto value = TRY(vm.argument(1).to_string(vm));
         option_element->set_attribute(HTML::AttributeNames::value, value);
     }
 
     // 5. If defaultSelected is true, then set an attribute value for option using "selected" and the empty string.
-    if (vm().argument_count() > 2) {
-        auto default_selected = vm().argument(2).to_boolean();
+    if (vm.argument_count() > 2) {
+        auto default_selected = vm.argument(2).to_boolean();
         if (default_selected) {
             option_element->set_attribute(HTML::AttributeNames::selected, "");
         }
     }
 
     // 6. If selected is true, then set option's selectedness to true; otherwise set its selectedness to false (even if defaultSelected is true).
-    option_element->m_selected = vm().argument(3).to_boolean();
+    option_element->m_selected = vm.argument(3).to_boolean();
 
     // 7. Return option.
     return wrap(global_object(), option_element);

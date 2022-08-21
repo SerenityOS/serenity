@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
@@ -391,7 +391,9 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
         g_vm->pop_execution_context();
     }
 
+    g_vm->push_execution_context(global_execution_context);
     auto test_json = get_test_results(*interpreter);
+    g_vm->pop_execution_context();
     if (test_json.is_error()) {
         warnln("Received malformed JSON from test \"{}\"", test_path);
         cleanup_and_exit();

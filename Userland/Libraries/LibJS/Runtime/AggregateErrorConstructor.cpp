@@ -46,7 +46,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype));
 
     if (!vm.argument(1).is_undefined()) {
-        auto message = TRY(vm.argument(1).to_string(global_object));
+        auto message = TRY(vm.argument(1).to_string(vm));
         aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message));
     }
 

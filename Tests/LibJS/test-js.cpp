@@ -19,7 +19,7 @@ TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 
 TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
-    auto source = TRY(vm.argument(0).to_string(global_object));
+    auto source = TRY(vm.argument(0).to_string(vm));
     auto parser = JS::Parser(JS::Lexer(source));
     (void)parser.parse_program();
     return JS::Value(!parser.has_errors());
@@ -33,7 +33,7 @@ TESTJS_GLOBAL_FUNCTION(run_queued_promise_jobs, runQueuedPromiseJobs)
 
 TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 {
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<JS::WeakSet>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WeakSet");
     auto* weak_set = static_cast<JS::WeakSet*>(object);
@@ -42,7 +42,7 @@ TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 
 TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
 {
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<JS::WeakMap>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WeakMap");
     auto* weak_map = static_cast<JS::WeakMap*>(object);

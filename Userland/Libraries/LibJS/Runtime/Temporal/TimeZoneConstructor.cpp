@@ -45,10 +45,9 @@ ThrowCompletionOr<Value> TimeZoneConstructor::call()
 ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Set identifier to ? ToString(identifier).
-    auto identifier = TRY(vm.argument(0).to_string(global_object));
+    auto identifier = TRY(vm.argument(0).to_string(vm));
 
     // 3. Let parseResult be ParseText(StringToCodePoints(identifier), TimeZoneNumericUTCOffset).
     // 4. If parseResult is a List of errors, then

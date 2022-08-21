@@ -56,7 +56,7 @@ static ThrowCompletionOr<Value> get_view_value(GlobalObject& global_object, Valu
 {
     auto& vm = global_object.vm();
     auto* view = TRY(DataViewPrototype::typed_this_value(vm));
-    auto get_index = TRY(request_index.to_index(global_object));
+    auto get_index = TRY(request_index.to_index(vm));
     auto little_endian = is_little_endian.to_boolean();
 
     auto buffer = view->viewed_array_buffer();
@@ -86,13 +86,13 @@ static ThrowCompletionOr<Value> set_view_value(GlobalObject& global_object, Valu
 {
     auto& vm = global_object.vm();
     auto* view = TRY(DataViewPrototype::typed_this_value(vm));
-    auto get_index = TRY(request_index.to_index(global_object));
+    auto get_index = TRY(request_index.to_index(vm));
 
     Value number_value;
     if constexpr (IsIntegral<T> && sizeof(T) == 8)
-        number_value = TRY(value.to_bigint(global_object));
+        number_value = TRY(value.to_bigint(vm));
     else
-        number_value = TRY(value.to_number(global_object));
+        number_value = TRY(value.to_number(vm));
 
     auto little_endian = is_little_endian.to_boolean();
 

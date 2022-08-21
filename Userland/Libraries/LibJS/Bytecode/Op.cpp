@@ -47,6 +47,8 @@ namespace JS::Bytecode::Op {
 
 static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, PropertyKey name, Bytecode::Interpreter& interpreter, PropertyKind kind)
 {
+    auto& vm = interpreter.vm();
+
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
         VERIFY(value.is_function());
@@ -68,12 +70,12 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     }
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
-        if (!succeeded && interpreter.vm().in_strict_mode())
-            return interpreter.vm().throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
+        if (!succeeded && vm.in_strict_mode())
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
         break;
     }
     case PropertyKind::Spread:
-        TRY(object->copy_data_properties(value, {}, interpreter.global_object()));
+        TRY(object->copy_data_properties(vm, value, {}));
         break;
     case PropertyKind::ProtoSetter:
         if (value.is_object() || value.is_null())
@@ -102,22 +104,22 @@ ThrowCompletionOr<void> Store::execute_impl(Bytecode::Interpreter& interpreter) 
     return {};
 }
 
-static ThrowCompletionOr<Value> abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
+static ThrowCompletionOr<Value> abstract_inequals(VM& vm, Value src1, Value src2)
 {
-    return Value(!TRY(is_loosely_equal(global_object, src1, src2)));
+    return Value(!TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> abstract_equals(GlobalObject& global_object, Value src1, Value src2)
+static ThrowCompletionOr<Value> abstract_equals(VM& vm, Value src1, Value src2)
 {
-    return Value(TRY(is_loosely_equal(global_object, src1, src2)));
+    return Value(TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> typed_inequals(GlobalObject&, Value src1, Value src2)
+static ThrowCompletionOr<Value> typed_inequals(VM&, Value src1, Value src2)
 {
     return Value(!is_strictly_equal(src1, src2));
 }
 
-static ThrowCompletionOr<Value> typed_equals(GlobalObject&, Value src1, Value src2)
+static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
 {
     return Value(is_strictly_equal(src1, src2));
 }
@@ -125,9 +127,10 @@ static ThrowCompletionOr<Value> typed_equals(GlobalObject&, Value src1, Value sr
 #define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                                  \
     ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
     {                                                                                           \
+        auto& vm = interpreter.vm();                                                            \
         auto lhs = interpreter.reg(m_lhs_reg);                                                  \
         auto rhs = interpreter.accumulator();                                                   \
-        interpreter.accumulator() = TRY(op_snake_case(interpreter.global_object(), lhs, rhs));  \
+        interpreter.accumulator() = TRY(op_snake_case(vm, lhs, rhs));                           \
         return {};                                                                              \
     }                                                                                           \
     String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                       \
@@ -137,25 +140,26 @@ static ThrowCompletionOr<Value> typed_equals(GlobalObject&, Value src1, Value sr
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
 
-static ThrowCompletionOr<Value> not_(GlobalObject&, Value value)
+static ThrowCompletionOr<Value> not_(VM&, Value value)
 {
     return Value(!value.to_boolean());
 }
 
-static ThrowCompletionOr<Value> typeof_(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 {
-    return Value(js_string(global_object.vm(), value.typeof()));
+    return Value(js_string(vm, value.typeof()));
 }
 
-#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                                   \
-    ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const                 \
-    {                                                                                                           \
-        interpreter.accumulator() = TRY(op_snake_case(interpreter.global_object(), interpreter.accumulator())); \
-        return {};                                                                                              \
-    }                                                                                                           \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                                       \
-    {                                                                                                           \
-        return #OpTitleCase;                                                                                    \
+#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                   \
+    ThrowCompletionOr<void> OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const \
+    {                                                                                           \
+        auto& vm = interpreter.vm();                                                            \
+        interpreter.accumulator() = TRY(op_snake_case(vm, interpreter.accumulator()));          \
+        return {};                                                                              \
+    }                                                                                           \
+    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                       \
+    {                                                                                           \
+        return #OpTitleCase;                                                                    \
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
@@ -203,7 +207,8 @@ static Iterator object_to_iterator(GlobalObject& global_object, Object& object)
 ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
-    auto iterator_object = TRY(interpreter.accumulator().to_object(global_object));
+    auto& vm = interpreter.vm();
+    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
     auto iterator = object_to_iterator(global_object, *iterator_object);
 
     auto* array = MUST(Array::create(interpreter.realm(), 0));
@@ -250,7 +255,8 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* from_object = TRY(interpreter.reg(m_from_object).to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
 
     auto* to_object = Object::create(interpreter.realm(), interpreter.global_object().object_prototype());
 
@@ -262,7 +268,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {
-            auto property_key = TRY(key.to_property_key(interpreter.global_object()));
+            auto property_key = TRY(key.to_property_key(vm));
             auto property_value = TRY(from_object->get(property_key));
             to_object->define_direct_property(property_key, property_value, JS::default_attributes);
         }
@@ -274,7 +280,8 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 
 ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_lhs) = TRY(add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator()));
+    auto& vm = interpreter.vm();
+    interpreter.reg(m_lhs) = TRY(add(vm, interpreter.reg(m_lhs), interpreter.accumulator()));
     return {};
 }
 
@@ -328,10 +335,11 @@ ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& i
 
 ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& old_environment = interpreter.vm().running_execution_context().lexical_environment;
+    auto& vm = interpreter.vm();
+    auto& old_environment = vm.running_execution_context().lexical_environment;
     interpreter.saved_lexical_environment_stack().append(old_environment);
-    auto object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
-    interpreter.vm().running_execution_context().lexical_environment = new_object_environment(*object, true, old_environment);
+    auto object = TRY(interpreter.accumulator().to_object(vm));
+    vm.running_execution_context().lexical_environment = new_object_environment(*object, true, old_environment);
     return {};
 }
 
@@ -391,14 +399,16 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.accumulator().to_object(vm));
     interpreter.accumulator() = TRY(object->get(interpreter.current_executable().get_identifier(m_property)));
     return {};
 }
 
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto value = interpreter.accumulator();
     return put_by_property_key(object, value, name, interpreter, m_kind);
@@ -406,9 +416,10 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.accumulator().to_object(vm));
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
-    bool strict = interpreter.vm().in_strict_mode();
+    bool strict = vm.in_strict_mode();
     auto reference = Reference { object, identifier, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
     return {};
@@ -519,23 +530,25 @@ ThrowCompletionOr<void> Return::execute_impl(Bytecode::Interpreter& interpreter)
 
 ThrowCompletionOr<void> Increment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value = TRY(interpreter.accumulator().to_numeric(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto old_value = TRY(interpreter.accumulator().to_numeric(vm));
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() + 1);
     else
-        interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+        interpreter.accumulator() = js_bigint(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
     return {};
 }
 
 ThrowCompletionOr<void> Decrement::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto old_value = TRY(interpreter.accumulator().to_numeric(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto old_value = TRY(interpreter.accumulator().to_numeric(vm));
 
     if (old_value.is_number())
         interpreter.accumulator() = Value(old_value.as_double() - 1);
     else
-        interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+        interpreter.accumulator() = js_bigint(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
     return {};
 }
 
@@ -629,9 +642,10 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
 
-    auto property_key = TRY(interpreter.accumulator().to_property_key(interpreter.global_object()));
+    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
 
     interpreter.accumulator() = TRY(object->get(property_key));
     return {};
@@ -639,17 +653,19 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
 
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
 
-    auto property_key = TRY(interpreter.reg(m_property).to_property_key(interpreter.global_object()));
+    auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
     return put_by_property_key(object, interpreter.accumulator(), property_key, interpreter, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
-    auto property_key = TRY(interpreter.accumulator().to_property_key(interpreter.global_object()));
-    bool strict = interpreter.vm().in_strict_mode();
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
+    bool strict = vm.in_strict_mode();
     auto reference = Reference { object, property_key, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
     return {};
@@ -679,7 +695,8 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
 
     // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
     // Invariants 1 and 6 through 9 are implemented in `enumerable_own_property_names`, which implements the EnumerableOwnPropertyNames AO.
-    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* object = TRY(interpreter.accumulator().to_object(vm));
     // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
     //       so we just keep the order consistent anyway.
     OrderedHashTable<PropertyKey> properties;
@@ -688,7 +705,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
     for (auto* object_to_check = object; object_to_check && !seen_objects.contains(object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
         seen_objects.set(object_to_check);
         for (auto& key : TRY(object_to_check->enumerable_own_property_names(Object::PropertyKind::Key))) {
-            properties.set(TRY(PropertyKey::from_value(interpreter.global_object(), key)));
+            properties.set(TRY(PropertyKey::from_value(vm, key)));
         }
     }
     Iterator iterator {
@@ -744,7 +761,8 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
 
 ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* iterator_object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* iterator_object = TRY(interpreter.accumulator().to_object(vm));
     auto iterator = object_to_iterator(interpreter.global_object(), *iterator_object);
 
     interpreter.accumulator() = TRY(iterator_next(interpreter.global_object(), iterator));
@@ -753,7 +771,8 @@ ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interp
 
 ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* iterator_result = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
     auto complete = TRY(iterator_complete(interpreter.global_object(), *iterator_result));
     interpreter.accumulator() = Value(complete);
@@ -762,7 +781,8 @@ ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& 
 
 ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto* iterator_result = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
     interpreter.accumulator() = TRY(iterator_value(interpreter.global_object(), *iterator_result));
     return {};
@@ -781,14 +801,16 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
 // 13.5.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation
 ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
+
     // 1. Let val be the result of evaluating UnaryExpression.
     auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(interpreter.vm().resolve_binding(string));
+    auto reference = TRY(vm.resolve_binding(string));
 
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
     if (reference.is_unresolvable()) {
-        interpreter.accumulator() = js_string(interpreter.vm(), "undefined"sv);
+        interpreter.accumulator() = js_string(vm, "undefined"sv);
         return {};
     }
 
@@ -797,7 +819,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.
-    interpreter.accumulator() = js_string(interpreter.vm(), value.typeof());
+    interpreter.accumulator() = js_string(vm, value.typeof());
     return {};
 }
 

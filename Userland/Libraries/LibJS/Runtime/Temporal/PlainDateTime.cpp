@@ -127,9 +127,6 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(VM& vm, Objec
 // 5.5.4 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
 ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Object const* options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
@@ -189,7 +186,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Obje
         (void)TRY(to_temporal_overflow(vm, options));
 
         // b. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(global_object));
+        auto string = TRY(item.to_string(vm));
 
         // c. Let result be ? ParseTemporalDateTimeString(string).
         result = TRY(parse_temporal_date_time_string(vm, string));
@@ -274,9 +271,6 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
 // 5.5.7 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
 ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
     // 2. Let year be ! PadISOYear(isoYear).
@@ -289,7 +283,7 @@ ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 
     auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
 
     // 8. Let calendarID be ? ToString(calendar).
-    auto calendar_id = TRY(calendar.to_string(global_object));
+    auto calendar_id = TRY(calendar.to_string(vm));
 
     // 9. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
     auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);

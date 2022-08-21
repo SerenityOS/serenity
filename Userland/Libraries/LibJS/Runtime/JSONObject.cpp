@@ -45,6 +45,7 @@ void JSONObject::initialize(Realm& realm)
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
 ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object, Value value, Value replacer, Value space)
 {
+    auto& vm = global_object.vm();
     auto& realm = *global_object.associated_realm();
 
     StringifyState state;
@@ -53,7 +54,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object
         if (replacer.as_object().is_function()) {
             state.replacer_function = &replacer.as_function();
         } else {
-            auto is_array = TRY(replacer.is_array(global_object));
+            auto is_array = TRY(replacer.is_array(vm));
             if (is_array) {
                 auto& replacer_object = replacer.as_object();
                 auto replacer_length = TRY(length_of_array_like(global_object, replacer_object));
@@ -64,11 +65,11 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object
                     if (replacer_value.is_string()) {
                         item = replacer_value.as_string().string();
                     } else if (replacer_value.is_number()) {
-                        item = MUST(replacer_value.to_string(global_object));
+                        item = MUST(replacer_value.to_string(vm));
                     } else if (replacer_value.is_object()) {
                         auto& value_object = replacer_value.as_object();
                         if (is<StringObject>(value_object) || is<NumberObject>(value_object))
-                            item = TRY(replacer_value.to_string(global_object));
+                            item = TRY(replacer_value.to_string(vm));
                     }
                     if (!item.is_null() && !list.contains_slow(item)) {
                         list.append(item);
@@ -82,13 +83,13 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object
     if (space.is_object()) {
         auto& space_object = space.as_object();
         if (is<NumberObject>(space_object))
-            space = TRY(space.to_number(global_object));
+            space = TRY(space.to_number(vm));
         else if (is<StringObject>(space_object))
-            space = TRY(space.to_primitive_string(global_object));
+            space = TRY(space.to_primitive_string(vm));
     }
 
     if (space.is_number()) {
-        auto space_mv = MUST(space.to_integer_or_infinity(global_object));
+        auto space_mv = MUST(space.to_integer_or_infinity(vm));
         space_mv = min(10, space_mv);
         state.gap = space_mv < 1 ? String::empty() : String::repeated(' ', space_mv);
     } else if (space.is_string()) {
@@ -134,7 +135,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
     // 2. If Type(value) is Object or BigInt, then
     if (value.is_object() || value.is_bigint()) {
         // a. Let toJSON be ? GetV(value, "toJSON").
-        auto to_json = TRY(value.get(global_object, vm.names.toJSON));
+        auto to_json = TRY(value.get(vm, vm.names.toJSON));
 
         // b. If IsCallable(toJSON) is true, then
         if (to_json.is_function()) {
@@ -156,12 +157,12 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
         // a. If value has a [[NumberData]] internal slot, then
         if (is<NumberObject>(value_object)) {
             // i. Set value to ? ToNumber(value).
-            value = TRY(value.to_number(global_object));
+            value = TRY(value.to_number(vm));
         }
         // b. Else if value has a [[StringData]] internal slot, then
         else if (is<StringObject>(value_object)) {
             // i. Set value to ? ToString(value).
-            value = TRY(value.to_primitive_string(global_object));
+            value = TRY(value.to_primitive_string(vm));
         }
         // c. Else if value has a [[BooleanData]] internal slot, then
         else if (is<BooleanObject>(value_object)) {
@@ -192,7 +193,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
     if (value.is_number()) {
         // a. If value is finite, return ! ToString(value).
         if (value.is_finite_number())
-            return MUST(value.to_string(global_object));
+            return MUST(value.to_string(vm));
 
         // b. Return "null".
         return "null"sv;
@@ -205,7 +206,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
     // 11. If Type(value) is Object and IsCallable(value) is false, then
     if (value.is_object() && !value.is_function()) {
         // a. Let isArray be ? IsArray(value).
-        auto is_array = TRY(value.is_array(global_object));
+        auto is_array = TRY(value.is_array(vm));
 
         // b. If isArray is true, return ? SerializeJSONArray(state, value).
         if (is_array)
@@ -396,7 +397,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
     auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);
@@ -458,7 +459,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(GlobalObject& glo
     auto& vm = global_object.vm();
     auto value = TRY(holder->get(name));
     if (value.is_object()) {
-        auto is_array = TRY(value.is_array(global_object));
+        auto is_array = TRY(value.is_array(vm));
 
         auto& value_object = value.as_object();
         auto process_property = [&](PropertyKey const& key) -> ThrowCompletionOr<void> {

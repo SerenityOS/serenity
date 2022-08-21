@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
 {
     // 1. Let stableBytes be a copy of the bytes held by the buffer bytes.
     // Note: There's no need to copy the bytes here as the buffer data cannot change while we're compiling the module.
-    auto buffer = TRY(vm.argument(0).to_object(global_object));
+    auto buffer = TRY(vm.argument(0).to_object(vm));
 
     // 2. Compile stableBytes as a WebAssembly module and store the results as module.
     auto maybe_module = parse_module(global_object, buffer);
@@ -159,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     auto& realm = *global_object.associated_realm();
 
     // FIXME: This shouldn't block!
-    auto buffer_or_error = vm.argument(0).to_object(global_object);
+    auto buffer_or_error = vm.argument(0).to_object(vm);
     JS::Value rejection_value;
     if (buffer_or_error.is_error())
         rejection_value = *buffer_or_error.throw_completion().value();
@@ -184,7 +184,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
     auto import_argument = vm.argument(1);
     if (!import_argument.is_undefined()) {
-        auto* import_object = TRY(import_argument.to_object(global_object));
+        auto* import_object = TRY(import_argument.to_object(vm));
         dbgln("Trying to resolve stuff because import object was specified");
         for (Wasm::Linker::Name const& import_name : linker.unresolved_imports()) {
             dbgln("Trying to resolve {}::{}", import_name.module, import_name.name);
@@ -192,7 +192,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
             if (value_or_error.is_error())
                 break;
             auto value = value_or_error.release_value();
-            auto object_or_error = value.to_object(global_object);
+            auto object_or_error = value.to_object(vm);
             if (object_or_error.is_error())
                 break;
             auto* object = object_or_error.release_value();
@@ -322,7 +322,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     auto& realm = *global_object.associated_realm();
 
     // FIXME: This shouldn't block!
-    auto buffer_or_error = vm.argument(0).to_object(global_object);
+    auto buffer_or_error = vm.argument(0).to_object(vm);
     auto promise = JS::Promise::create(realm);
     bool should_return_module = false;
     if (buffer_or_error.is_error()) {
@@ -398,7 +398,7 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global
 
     switch (type.kind()) {
     case Wasm::ValueType::I64: {
-        auto bigint = TRY(value.to_bigint(global_object));
+        auto bigint = TRY(value.to_bigint(vm));
         auto value = bigint->big_integer().divided_by(two_64).remainder;
         VERIFY(value.unsigned_value().trimmed_length() <= 2);
         i64 integer = static_cast<i64>(value.unsigned_value().to_u64());
@@ -407,15 +407,15 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global
         return Wasm::Value { integer };
     }
     case Wasm::ValueType::I32: {
-        auto _i32 = TRY(value.to_i32(global_object));
+        auto _i32 = TRY(value.to_i32(vm));
         return Wasm::Value { static_cast<i32>(_i32) };
     }
     case Wasm::ValueType::F64: {
-        auto number = TRY(value.to_double(global_object));
+        auto number = TRY(value.to_double(vm));
         return Wasm::Value { static_cast<double>(number) };
     }
     case Wasm::ValueType::F32: {
-        auto number = TRY(value.to_double(global_object));
+        auto number = TRY(value.to_double(vm));
         return Wasm::Value { static_cast<float>(number) };
     }
     case Wasm::ValueType::FunctionReference:

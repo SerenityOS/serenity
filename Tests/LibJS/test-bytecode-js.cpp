@@ -27,7 +27,7 @@
     auto result = bytecode_interpreter.run(*executable);                \
     EXPECT(!result.is_error());                                         \
     if (result.is_error())                                              \
-        dbgln("Error: {}", MUST(result.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
+        dbgln("Error: {}", MUST(result.throw_completion().value()->to_string(vm)));
 
 #define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
     auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
@@ -37,7 +37,7 @@
                                                                             \
     EXPECT(!result_with_optimizations.is_error());                          \
     if (result_with_optimizations.is_error())                               \
-        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_string(bytecode_interpreter.global_object())));
+        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_string(vm)));
 
 #define EXPECT_NO_EXCEPTION_ALL(source)           \
     SETUP_AND_PARSE("(() => {\n" source "\n})()") \

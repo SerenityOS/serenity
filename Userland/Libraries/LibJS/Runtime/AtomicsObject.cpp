@@ -56,7 +56,7 @@ static ThrowCompletionOr<size_t> validate_atomic_access(GlobalObject& global_obj
     auto length = typed_array.array_length();
 
     // 2. Let accessIndex be ? ToIndex(requestIndex).
-    auto access_index = TRY(request_index.to_index(global_object));
+    auto access_index = TRY(request_index.to_index(vm));
 
     // 3. Assert: accessIndex ≥ 0.
 
@@ -89,10 +89,10 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(GlobalObject& global_ob
 
     // 3. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
-        value_to_set = TRY(value.to_bigint(global_object));
+        value_to_set = TRY(value.to_bigint(vm));
     // 4. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
     else
-        value_to_set = Value(TRY(value.to_integer_or_infinity(global_object)));
+        value_to_set = Value(TRY(value.to_integer_or_infinity(vm)));
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached())
@@ -208,18 +208,18 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     // 4. If typedArray.[[ContentType]] is BigInt, then
     if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
         // a. Let expected be ? ToBigInt(expectedValue).
-        expected = TRY(vm.argument(2).to_bigint(global_object));
+        expected = TRY(vm.argument(2).to_bigint(vm));
 
         // b. Let replacement be ? ToBigInt(replacementValue).
-        replacement = TRY(vm.argument(3).to_bigint(global_object));
+        replacement = TRY(vm.argument(3).to_bigint(vm));
     }
     // 5. Else,
     else {
         // a. Let expected be 𝔽(? ToIntegerOrInfinity(expectedValue)).
-        expected = Value(TRY(vm.argument(2).to_integer_or_infinity(global_object)));
+        expected = Value(TRY(vm.argument(2).to_integer_or_infinity(vm)));
 
         // b. Let replacement be 𝔽(? ToIntegerOrInfinity(replacementValue)).
-        replacement = Value(TRY(vm.argument(3).to_integer_or_infinity(global_object)));
+        replacement = Value(TRY(vm.argument(3).to_integer_or_infinity(vm)));
     }
 
     // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -299,7 +299,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 // 25.4.7 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 {
-    auto size = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    auto size = TRY(vm.argument(0).to_integer_or_infinity(vm));
     if (size == 1)
         return Value(AK::atomic_is_lock_free<u8>());
     if (size == 2)
@@ -363,10 +363,10 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     // 3. If typedArray.[[ContentType]] is BigInt, let v be ? ToBigInt(value).
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-        value_to_set = TRY(value.to_bigint(global_object));
+        value_to_set = TRY(value.to_bigint(vm));
     // 4. Otherwise, let v be 𝔽(? ToIntegerOrInfinity(value)).
     else
-        value_to_set = Value(TRY(value.to_integer_or_infinity(global_object)));
+        value_to_set = Value(TRY(value.to_integer_or_infinity(vm)));
 
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())

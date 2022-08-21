@@ -1580,11 +1580,9 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
 // 1.1.18 ToIntlMathematicalValue ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-tointlmathematicalvalue
 ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value value)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let primValue be ? ToPrimitive(value, number).
-    auto primitive_value = TRY(value.to_primitive(global_object, Value::PreferredType::Number));
+    auto primitive_value = TRY(value.to_primitive(vm, Value::PreferredType::Number));
 
     // 2. If Type(primValue) is BigInt, return the mathematical value of primValue.
     if (primitive_value.is_bigint())
@@ -1594,7 +1592,7 @@ ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value va
     //        We short-circuit some of these steps to avoid known pitfalls.
     //        See: https://github.com/tc39/proposal-intl-numberformat-v3/pull/82
     if (!primitive_value.is_string()) {
-        auto number = TRY(primitive_value.to_number(global_object));
+        auto number = TRY(primitive_value.to_number(vm));
         return number.as_double();
     }
 
@@ -1606,7 +1604,7 @@ ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value va
 
     // 5. If the grammar cannot interpret str as an expansion of StringNumericLiteral, return not-a-number.
     // 6. Let mv be the MV, a mathematical value, of ? ToNumber(str), as described in 7.1.4.1.1.
-    auto mathematical_value = TRY(primitive_value.to_number(global_object)).as_double();
+    auto mathematical_value = TRY(primitive_value.to_number(vm)).as_double();
 
     // 7. If mv is 0 and the first non white space code point in str is -, return negative-zero.
     if (mathematical_value == 0.0 && string.view().trim_whitespace(TrimMode::Left).starts_with('-'))

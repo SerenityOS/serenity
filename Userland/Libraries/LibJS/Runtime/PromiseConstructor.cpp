@@ -27,7 +27,7 @@ static ThrowCompletionOr<Value> get_promise_resolve(GlobalObject& global_object,
     auto& vm = global_object.vm();
 
     // 1. Let promiseResolve be ? Get(promiseConstructor, "resolve").
-    auto promise_resolve = TRY(constructor.get(global_object, vm.names.resolve));
+    auto promise_resolve = TRY(constructor.get(vm, vm.names.resolve));
 
     // 2. If IsCallable(promiseResolve) is false, throw a TypeError exception.
     if (!promise_resolve.is_function())
@@ -146,7 +146,7 @@ static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object,
             on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-            return next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
+            return next_promise.invoke(vm, vm.names.then, on_fulfilled, result_capability.reject);
         });
 }
 
@@ -190,7 +190,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-            return next_promise.invoke(global_object, vm.names.then, on_fulfilled, on_rejected);
+            return next_promise.invoke(vm, vm.names.then, on_fulfilled, on_rejected);
         });
 }
 
@@ -226,7 +226,7 @@ static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object,
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-            return next_promise.invoke(global_object, vm.names.then, result_capability.resolve, on_rejected);
+            return next_promise.invoke(vm, vm.names.then, result_capability.resolve, on_rejected);
         });
 }
 
@@ -243,7 +243,7 @@ static ThrowCompletionOr<Value> perform_promise_race(GlobalObject& global_object
         },
         [&](PromiseValueList&, RemainingElements&, Value next_promise, size_t) {
             // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-            return next_promise.invoke(global_object, vm.names.then, result_capability.resolve, result_capability.reject);
+            return next_promise.invoke(vm, vm.names.then, result_capability.resolve, result_capability.reject);
         });
 }
 
@@ -321,7 +321,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -355,7 +355,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -389,7 +389,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -423,7 +423,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto reason = vm.argument(0);
 
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(global_object));
+    auto* constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));

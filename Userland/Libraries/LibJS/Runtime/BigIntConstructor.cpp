@@ -46,14 +46,14 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
     auto value = vm.argument(0);
 
     // 2. Let prim be ? ToPrimitive(value, number).
-    auto primitive = TRY(value.to_primitive(global_object, Value::PreferredType::Number));
+    auto primitive = TRY(value.to_primitive(vm, Value::PreferredType::Number));
 
     // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
     if (primitive.is_number())
         return TRY(number_to_bigint(global_object, primitive));
 
     // 4. Otherwise, return ? ToBigInt(prim).
-    return TRY(primitive.to_bigint(global_object));
+    return TRY(primitive.to_bigint(vm));
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
@@ -66,10 +66,10 @@ ThrowCompletionOr<Object*> BigIntConstructor::construct(FunctionObject&)
 JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 {
     // 1. Set bits to ? ToIndex(bits).
-    auto bits = TRY(vm.argument(0).to_index(global_object));
+    auto bits = TRY(vm.argument(0).to_index(vm));
 
     // 2. Set bigint to ? ToBigInt(bigint).
-    auto* bigint = TRY(vm.argument(1).to_bigint(global_object));
+    auto* bigint = TRY(vm.argument(1).to_bigint(vm));
 
     // 3. Let mod be ℝ(bigint) modulo 2^bits.
     // FIXME: For large values of `bits`, this can likely be improved with a SignedBigInteger API to
@@ -92,10 +92,10 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
     // 1. Set bits to ? ToIndex(bits).
-    auto bits = TRY(vm.argument(0).to_index(global_object));
+    auto bits = TRY(vm.argument(0).to_index(vm));
 
     // 2. Set bigint to ? ToBigInt(bigint).
-    auto* bigint = TRY(vm.argument(1).to_bigint(global_object));
+    auto* bigint = TRY(vm.argument(1).to_bigint(vm));
 
     // 3. Return the BigInt value that represents ℝ(bigint) modulo 2bits.
     // FIXME: For large values of `bits`, this can likely be improved with a SignedBigInteger API to

@@ -77,9 +77,6 @@ TimeDurationRecord difference_time(VM& vm, u8 hour1, u8 minute1, u8 second1, u16
 // 4.5.2 ToTemporalTime ( item [ , overflow ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime
 ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<StringView> overflow)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If overflow is not present, set overflow to "constrain".
     if (!overflow.has_value())
         overflow = "constrain"sv;
@@ -124,7 +121,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<Stri
         auto* calendar = TRY(get_temporal_calendar_with_iso_default(vm, item_object));
 
         // e. If ? ToString(calendar) is not "iso8601", then
-        auto calendar_identifier = TRY(Value(calendar).to_string(global_object));
+        auto calendar_identifier = TRY(Value(calendar).to_string(vm));
         if (calendar_identifier != "iso8601"sv) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, calendar_identifier);
@@ -139,7 +136,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<Stri
     // 4. Else,
     else {
         // a. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(global_object));
+        auto string = TRY(item.to_string(vm));
 
         // b. Let result be ? ParseTemporalTimeString(string).
         result = TRY(parse_temporal_time_string(vm, string));

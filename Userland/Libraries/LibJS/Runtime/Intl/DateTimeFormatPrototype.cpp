@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     // 4. Else,
     else {
         // a. Let x be ? ToNumber(date).
-        date_value = TRY(date.to_number(global_object)).as_double();
+        date_value = TRY(date.to_number(vm)).as_double();
     }
 
     // 5. Return ? FormatDateTimeToParts(dtf, x).
@@ -105,10 +105,10 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
-    auto start_date_number = TRY(start_date.to_number(global_object)).as_double();
+    auto start_date_number = TRY(start_date.to_number(vm)).as_double();
 
     // 5. Let y be ? ToNumber(endDate).
-    auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
+    auto end_date_number = TRY(end_date.to_number(vm)).as_double();
 
     // 6. Return ? FormatDateTimeRange(dtf, x, y).
     auto formatted = TRY(format_date_time_range(vm, *date_time_format, start_date_number, end_date_number));
@@ -132,10 +132,10 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
         return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "endDate"sv);
 
     // 4. Let x be ? ToNumber(startDate).
-    auto start_date_number = TRY(start_date.to_number(global_object)).as_double();
+    auto start_date_number = TRY(start_date.to_number(vm)).as_double();
 
     // 5. Let y be ? ToNumber(endDate).
-    auto end_date_number = TRY(end_date.to_number(global_object)).as_double();
+    auto end_date_number = TRY(end_date.to_number(vm)).as_double();
 
     // 6. Return ? FormatDateTimeRangeToParts(dtf, x, y).
     return TRY(format_date_time_range_to_parts(vm, *date_time_format, start_date_number, end_date_number));

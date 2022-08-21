@@ -54,7 +54,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
     // 4. Else,
     else {
         // a. Let x be ? ToNumber(date).
-        date_value = TRY(date.to_number(global_object)).as_double();
+        date_value = TRY(date.to_number(vm)).as_double();
     }
 
     // 5. Return ? FormatDateTime(dtf, x).

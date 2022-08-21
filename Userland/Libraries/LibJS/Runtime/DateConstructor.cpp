@@ -223,7 +223,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
         // c. Else,
         else {
             // i. Let v be ? ToPrimitive(value).
-            auto primitive = TRY(value.to_primitive(global_object));
+            auto primitive = TRY(value.to_primitive(vm));
 
             // ii. If Type(v) is String, then
             if (primitive.is_string()) {
@@ -234,7 +234,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
             // iii. Else,
             else {
                 // 1. Let tv be ? ToNumber(v).
-                time_value = TRY(primitive.to_number(global_object)).as_double();
+                time_value = TRY(primitive.to_number(vm)).as_double();
             }
         }
 
@@ -245,12 +245,12 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
     else {
         // a. Assert: numberOfArgs ≥ 2.
         // b. Let y be ? ToNumber(values[0]).
-        auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
+        auto year = TRY(vm.argument(0).to_number(vm)).as_double();
         // c. Let m be ? ToNumber(values[1]).
-        auto month = TRY(vm.argument(1).to_number(global_object)).as_double();
+        auto month = TRY(vm.argument(1).to_number(vm)).as_double();
 
         auto arg_or = [&vm, &global_object](size_t i, double fallback) -> ThrowCompletionOr<double> {
-            return vm.argument_count() > i ? TRY(vm.argument(i).to_number(global_object)).as_double() : fallback;
+            return vm.argument_count() > i ? TRY(vm.argument(i).to_number(vm)).as_double() : fallback;
         };
 
         // d. If numberOfArgs > 2, let dt be ? ToNumber(values[2]); else let dt be 1𝔽.
@@ -304,7 +304,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     if (!vm.argument_count())
         return js_nan();
 
-    auto date_string = TRY(vm.argument(0).to_string(global_object));
+    auto date_string = TRY(vm.argument(0).to_string(vm));
 
     return Value(parse_date_string(date_string));
 }
@@ -313,11 +313,11 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
     auto arg_or = [&vm, &global_object](size_t i, double fallback) -> ThrowCompletionOr<double> {
-        return vm.argument_count() > i ? TRY(vm.argument(i).to_number(global_object)).as_double() : fallback;
+        return vm.argument_count() > i ? TRY(vm.argument(i).to_number(vm)).as_double() : fallback;
     };
 
     // 1. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto year = TRY(vm.argument(0).to_number(vm)).as_double();
     // 2. If month is present, let m be ? ToNumber(month); else let m be +0𝔽.
     auto month = TRY(arg_or(1, 0));
     // 3. If date is present, let dt be ? ToNumber(date); else let dt be 1𝔽.

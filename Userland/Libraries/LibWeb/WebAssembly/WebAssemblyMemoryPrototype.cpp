@@ -19,8 +19,8 @@ void WebAssemblyMemoryPrototype::initialize(JS::Realm& realm)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 {
-    auto page_count = TRY(vm.argument(0).to_u32(global_object));
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto page_count = TRY(vm.argument(0).to_u32(vm));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<WebAssemblyMemoryObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Memory");
     auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<WebAssemblyMemoryObject>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Memory");
     auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);

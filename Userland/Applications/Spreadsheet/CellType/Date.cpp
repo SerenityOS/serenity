@@ -20,8 +20,9 @@ DateCell::DateCell()
 JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
+        auto& vm = cell.sheet().global_object().vm();
         auto timestamp = TRY(js_value(cell, metadata));
-        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(cell.sheet().global_object()))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
+        auto string = Core::DateTime::from_timestamp(TRY(timestamp.to_i32(vm))).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S"sv : metadata.format.view());
 
         if (metadata.length >= 0)
             return string.substring(0, metadata.length);
@@ -32,8 +33,9 @@ JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata con
 
 JS::ThrowCompletionOr<JS::Value> DateCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
+    auto& vm = cell.sheet().global_object().vm();
     auto js_data = cell.js_data();
-    auto value = TRY(js_data.to_double(cell.sheet().global_object()));
+    auto value = TRY(js_data.to_double(vm));
     return JS::Value(value / 1000); // Turn it to seconds
 }
 

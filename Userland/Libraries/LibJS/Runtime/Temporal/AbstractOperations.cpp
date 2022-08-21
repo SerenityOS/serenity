@@ -104,9 +104,6 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
 {
     VERIFY(property.is_string());
 
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
@@ -133,7 +130,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     // 6. Else if type is "number", then
     else if (type == OptionType::Number) {
         // a. Set value to ? ToNumber(value).
-        value = TRY(value.to_number(global_object));
+        value = TRY(value.to_number(vm));
 
         // b. If value is NaN, throw a RangeError exception.
         if (value.is_nan())
@@ -145,7 +142,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
         VERIFY(type == OptionType::String);
 
         // b. Set value to ? ToString(value).
-        value = TRY(value.to_primitive_string(global_object));
+        value = TRY(value.to_primitive_string(vm));
     }
 
     // 8. If values is not undefined and values does not contain an element equal to value, throw a RangeError exception.
@@ -327,9 +324,6 @@ ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM& vm, Object c
 // 13.14 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Object const& normalized_options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let smallestUnit be ? GetTemporalUnit(normalizedOptions, "smallestUnit", time, undefined).
     auto smallest_unit = TRY(get_temporal_unit(vm, normalized_options, vm.names.smallestUnit, UnitGroup::Time, Optional<StringView> {}));
 
@@ -378,7 +372,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Ob
         // a. If fractionalDigitsVal is not undefined, then
         if (!fractional_digits_value.is_undefined()) {
             // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
-            if (TRY(fractional_digits_value.to_string(global_object)) != "auto"sv)
+            if (TRY(fractional_digits_value.to_string(vm)) != "auto"sv)
                 return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
         }
 
@@ -536,7 +530,6 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& norm
 ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& options)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(options) is Object.
 
@@ -617,7 +610,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 7. Else,
     else {
         // a. Let string be ? ToString(value).
-        auto string = TRY(value.to_string(global_object));
+        auto string = TRY(value.to_string(vm));
 
         // b. Let result be ? ParseTemporalRelativeToString(string).
         auto parsed_result = TRY(parse_temporal_relative_to_string(vm, string));
@@ -681,7 +674,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         if (offset_behavior == OffsetBehavior::Option) {
             // i. Set offsetString to ? ToString(offsetString).
             // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
-            auto actual_offset_string = TRY(offset_string.to_string(global_object));
+            auto actual_offset_string = TRY(offset_string.to_string(vm));
 
             // ii. Let offsetNs be ? ParseTimeZoneOffsetString(offsetString).
             offset_ns = TRY(parse_time_zone_offset_string(vm, actual_offset_string));
@@ -728,7 +721,6 @@ StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& options, String largest_unit)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let merged be OrdinaryObjectCreate(null).
     auto* merged = Object::create(realm, nullptr);
@@ -738,7 +730,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& optio
 
     // 3. For each element nextKey of keys, do
     for (auto& key : keys) {
-        auto next_key = MUST(PropertyKey::from_value(global_object, key));
+        auto next_key = MUST(PropertyKey::from_value(vm, key));
 
         // a. Let propValue be ? Get(options, nextKey).
         auto prop_value = TRY(options.get(next_key));
@@ -1729,7 +1721,6 @@ ThrowCompletionOr<double> to_positive_integer(VM& vm, Value argument)
 ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let result be OrdinaryObjectCreate(null).
     auto* result = Object::create(realm, nullptr);
@@ -1766,7 +1757,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv)) {
                 // a. Assert: Conversion is ToString.
                 // b. Set value to ? ToString(value).
-                value = TRY(value.to_primitive_string(global_object));
+                value = TRY(value.to_primitive_string(vm));
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
