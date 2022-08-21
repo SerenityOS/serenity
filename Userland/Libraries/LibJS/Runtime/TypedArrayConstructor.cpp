@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
         MarkedVector<Value> arguments(vm.heap());
         arguments.empend(values.size());
-        auto target_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
+        auto target_object = TRY(typed_array_create(vm, constructor.as_function(), move(arguments)));
 
         for (size_t k = 0; k < values.size(); ++k) {
             auto k_value = values[k];
@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     MarkedVector<Value> arguments(vm.heap());
     arguments.empend(length);
-    auto target_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
+    auto target_object = TRY(typed_array_create(vm, constructor.as_function(), move(arguments)));
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = TRY(array_like->get(k));
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
     MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(length));
-    auto new_object = TRY(typed_array_create(global_object, constructor.as_function(), move(arguments)));
+    auto new_object = TRY(typed_array_create(vm, constructor.as_function(), move(arguments)));
     for (size_t k = 0; k < length; ++k)
         TRY(new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes));
     return new_object;
