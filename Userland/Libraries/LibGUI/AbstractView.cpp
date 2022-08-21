@@ -770,7 +770,11 @@ void AbstractView::drag_enter_event(DragEvent& event)
 {
     if (!model())
         return;
-    // NOTE: Right now, AbstractView always accepts drags since we won't get "drag move" events
+
+    if (!is_editable())
+        return;
+
+    // NOTE: Right now, AbstractView accepts drags since we won't get "drag move" events
     //       unless we accept the "drag enter" event.
     //       We might be able to reduce event traffic by communicating the set of drag-accepting
     //       rects in this widget to the windowing system somehow.
