@@ -25,7 +25,7 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm&
     auto* wrapped = vm.heap().allocate<WrappedFunction>(realm, caller_realm, target, prototype);
 
     // 7. Let result be CopyNameAndLength(wrapped, Target).
-    auto result = copy_name_and_length(realm.global_object(), *wrapped, target);
+    auto result = copy_name_and_length(vm, *wrapped, target);
 
     // 8. If result is an Abrupt Completion, throw a TypeError exception.
     if (result.is_throw_completion())
@@ -106,14 +106,14 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     // 7. For each element arg of argumentsList, do
     for (auto const& arg : arguments_list) {
         // a. Let wrappedValue be ? GetWrappedValue(targetRealm, arg).
-        auto wrapped_value = TRY(get_wrapped_value(global_object, *target_realm, arg));
+        auto wrapped_value = TRY(get_wrapped_value(vm, *target_realm, arg));
 
         // b. Append wrappedValue to wrappedArgs.
         wrapped_args.append(wrapped_value);
     }
 
     // 8. Let wrappedThisArgument to ? GetWrappedValue(targetRealm, thisArgument).
-    auto wrapped_this_argument = TRY(get_wrapped_value(global_object, *target_realm, this_argument));
+    auto wrapped_this_argument = TRY(get_wrapped_value(vm, *target_realm, this_argument));
 
     // 9. Let result be the Completion Record of Call(target, wrappedThisArgument, wrappedArgs).
     auto result = call(global_object, &target, wrapped_this_argument, move(wrapped_args));
@@ -121,7 +121,7 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     // 10. If result.[[Type]] is normal or result.[[Type]] is return, then
     if (!result.is_throw_completion()) {
         // a. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
-        return get_wrapped_value(global_object, *caller_realm, result.value());
+        return get_wrapped_value(vm, *caller_realm, result.value());
     }
     // 11. Else,
     else {
