@@ -54,7 +54,6 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
 
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
-    auto fd_allocation = TRY(allocate_fd());
     RefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();
@@ -74,6 +73,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
 
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
+        auto fd_allocation = TRY(allocate_fd());
         fds[fd_allocation.fd].set(move(description), fd_flags);
         return fd_allocation.fd;
     });
