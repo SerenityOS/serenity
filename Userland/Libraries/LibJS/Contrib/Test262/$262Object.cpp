@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
 
 JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
 {
-    auto source = TRY(vm.argument(0).to_string(global_object));
+    auto source = TRY(vm.argument(0).to_string(vm));
     auto script_or_error = Script::parse(source, *vm.current_realm());
     if (script_or_error.is_error())
         return vm.throw_completion<SyntaxError>(script_or_error.error()[0].to_string());

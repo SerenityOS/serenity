@@ -15,7 +15,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
     auto& realm = *global_object.associated_realm();
-    auto filename = TRY(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(strerror(file.error().code()));
@@ -101,7 +101,7 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
     auto& realm = *global_object.associated_realm();
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<JS::Uint8Array>(object))
         return vm.throw_completion<JS::TypeError>("Expected a Uint8Array argument to parse_webassembly_module");
     auto& array = static_cast<JS::Uint8Array&>(*object);
@@ -139,11 +139,11 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 {
-    auto* lhs = TRY(vm.argument(0).to_object(global_object));
+    auto* lhs = TRY(vm.argument(0).to_object(vm));
     if (!is<JS::TypedArrayBase>(lhs))
         return vm.throw_completion<JS::TypeError>("Expected a TypedArray");
     auto& lhs_array = static_cast<JS::TypedArrayBase&>(*lhs);
-    auto* rhs = TRY(vm.argument(1).to_object(global_object));
+    auto* rhs = TRY(vm.argument(1).to_object(vm));
     if (!is<JS::TypedArrayBase>(rhs))
         return vm.throw_completion<JS::TypeError>("Expected a TypedArray");
     auto& rhs_array = static_cast<JS::TypedArrayBase&>(*rhs);
@@ -159,9 +159,9 @@ void WebAssemblyModule::initialize(JS::Realm& realm)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = TRY(vm.argument(0).to_string(global_object));
+    auto name = TRY(vm.argument(0).to_string(vm));
     auto this_value = vm.this_value();
-    auto* object = TRY(this_value.to_object(global_object));
+    auto* object = TRY(this_value.to_object(vm));
     if (!is<WebAssemblyModule>(object))
         return vm.throw_completion<JS::TypeError>("Not a WebAssemblyModule");
     auto instance = static_cast<WebAssemblyModule*>(object);
@@ -189,7 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 {
-    auto address = static_cast<unsigned long>(TRY(vm.argument(0).to_double(global_object)));
+    auto address = static_cast<unsigned long>(TRY(vm.argument(0).to_double(vm)));
     Wasm::FunctionAddress function_address { address };
     auto function_instance = WebAssemblyModule::machine().store().get(function_address);
     if (!function_instance)
@@ -208,14 +208,14 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         auto argument = vm.argument(index++);
         double double_value = 0;
         if (!argument.is_bigint())
-            double_value = TRY(argument.to_double(global_object));
+            double_value = TRY(argument.to_double(vm));
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
             arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
             break;
         case Wasm::ValueType::Kind::I64:
             if (argument.is_bigint()) {
-                auto value = TRY(argument.to_bigint_int64(global_object));
+                auto value = TRY(argument.to_bigint_int64(vm));
                 arguments.append(Wasm::Value(param, bit_cast<u64>(value)));
             } else {
                 arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));

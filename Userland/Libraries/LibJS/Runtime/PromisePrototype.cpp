@@ -64,7 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
     auto this_value = vm.this_value();
 
     // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
-    return TRY(this_value.invoke(global_object, vm.names.then, js_undefined(), on_rejected));
+    return TRY(this_value.invoke(vm, vm.names.then, js_undefined(), on_rejected));
 }
 
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* value_thunk = NativeFunction::create(realm, move(return_value), 0, "");
 
             // v. Return ? Invoke(promise, "then", « valueThunk »).
-            return TRY(Value(promise).invoke(global_object, vm.names.then, value_thunk));
+            return TRY(Value(promise).invoke(vm, vm.names.then, value_thunk));
         };
 
         // b. Let thenFinally be CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
@@ -152,7 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* thrower = NativeFunction::create(realm, move(throw_reason), 0, "");
 
             // v. Return ? Invoke(promise, "then", « thrower »).
-            return TRY(Value(promise).invoke(global_object, vm.names.then, thrower));
+            return TRY(Value(promise).invoke(vm, vm.names.then, thrower));
         };
 
         // d. Let catchFinally be CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     }
 
     // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
-    return TRY(promise.invoke(global_object, vm.names.then, then_finally, catch_finally));
+    return TRY(promise.invoke(vm, vm.names.then, then_finally, catch_finally));
 }
 
 }

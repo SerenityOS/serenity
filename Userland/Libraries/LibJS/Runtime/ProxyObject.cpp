@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_get_prototype_of() const
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "getPrototypeOf").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.getPrototypeOf));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.getPrototypeOf));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -105,7 +105,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set_prototype_of(Object* prototype
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "setPrototypeOf").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.setPrototypeOf));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.setPrototypeOf));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -154,7 +154,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_is_extensible() const
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "isExtensible").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.isExtensible));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.isExtensible));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -192,7 +192,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "preventExtensions").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.preventExtensions));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.preventExtensions));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -235,7 +235,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "getOwnPropertyDescriptor").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.getOwnPropertyDescriptor));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.getOwnPropertyDescriptor));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -327,7 +327,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "defineProperty").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.defineProperty));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.defineProperty));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -410,7 +410,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "has").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.has));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.has));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -482,7 +482,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
         return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
 
     // 5. Let trap be ? GetMethod(handler, "get").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.get));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.get));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -536,7 +536,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "set").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.set));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.set));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -592,7 +592,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "deleteProperty").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.deleteProperty));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.deleteProperty));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -645,7 +645,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "ownKeys").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.ownKeys));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.ownKeys));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -662,7 +662,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
         auto& vm = global_object.vm();
         if (!value.is_string() && !value.is_symbol())
             return vm.throw_completion<TypeError>(ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
-        auto property_key = MUST(value.to_property_key(global_object));
+        auto property_key = MUST(value.to_property_key(vm));
         unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
         return {};
     }));
@@ -688,7 +688,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object, key));
+        auto property_key = MUST(PropertyKey::from_value(vm, key));
 
         // a. Let desc be ? target.[[GetOwnProperty]](key).
         auto descriptor = TRY(m_target.internal_get_own_property(property_key));
@@ -775,7 +775,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     // 4. Let target be O.[[ProxyTarget]].
 
     // 5. Let trap be ? GetMethod(handler, "apply").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.apply));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.apply));
 
     // 6. If trap is undefined, then
     if (!trap) {
@@ -824,7 +824,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     // 5. Assert: IsConstructor(target) is true.
 
     // 6. Let trap be ? GetMethod(handler, "construct").
-    auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.construct));
+    auto trap = TRY(Value(&m_handler).get_method(vm, vm.names.construct));
 
     // 7. If trap is undefined, then
     if (!trap) {

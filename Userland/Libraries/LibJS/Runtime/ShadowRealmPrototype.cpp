@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::import_value)
     auto* object = TRY(typed_this_object(vm));
 
     // 3. Let specifierString be ? ToString(specifier).
-    auto specifier_string = TRY(specifier.to_string(global_object));
+    auto specifier_string = TRY(specifier.to_string(vm));
 
     // 4. If Type(exportName) is not String, throw a TypeError exception.
     if (!export_name.is_string())

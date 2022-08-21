@@ -39,10 +39,10 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
     auto* relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let value be ? ToNumber(value).
-    auto value = TRY(vm.argument(0).to_number(global_object));
+    auto value = TRY(vm.argument(0).to_number(vm));
 
     // 4. Let unit be ? ToString(unit).
-    auto unit = TRY(vm.argument(1).to_string(global_object));
+    auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTime(relativeTimeFormat, value, unit).
     auto formatted = TRY(format_relative_time(vm, *relative_time_format, value.as_double(), unit));
@@ -57,10 +57,10 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
     auto* relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let value be ? ToNumber(value).
-    auto value = TRY(vm.argument(0).to_number(global_object));
+    auto value = TRY(vm.argument(0).to_number(vm));
 
     // 4. Let unit be ? ToString(unit).
-    auto unit = TRY(vm.argument(1).to_string(global_object));
+    auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTimeToParts(relativeTimeFormat, value, unit).
     return TRY(format_relative_time_to_parts(vm, *relative_time_format, value.as_double(), unit));

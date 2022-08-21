@@ -131,14 +131,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     auto number_value = TRY(this_number_value(global_object, vm.this_value()));
 
     // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
-    auto fraction_digits = TRY(fraction_digits_value.to_integer_or_infinity(global_object));
+    auto fraction_digits = TRY(fraction_digits_value.to_integer_or_infinity(vm));
 
     // 3. Assert: If fractionDigits is undefined, then f is 0.
     VERIFY(!fraction_digits_value.is_undefined() || (fraction_digits == 0));
 
     // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, MUST(number_value.to_string(global_object)));
+        return js_string(vm, MUST(number_value.to_string(vm)));
 
     // 5. If f < 0 or f > 100, throw a RangeError exception.
     if (fraction_digits < 0 || fraction_digits > 100)
@@ -251,7 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
     // 3. Assert: If fractionDigits is undefined, then f is 0.
-    auto fraction_digits = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    auto fraction_digits = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
     // 4. If f is not finite, throw a RangeError exception.
     if (!Value(fraction_digits).is_finite_number())
@@ -263,7 +263,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 6. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, TRY(number_value.to_string(global_object)));
+        return js_string(vm, TRY(number_value.to_string(vm)));
 
     // 7. Set x to ℝ(x).
     auto number = number_value.as_double();
@@ -278,7 +278,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 10. If x ≥ 10^21, then
     if (fabs(number) >= 1e+21)
-        return js_string(vm, MUST(number_value.to_string(global_object)));
+        return js_string(vm, MUST(number_value.to_string(vm)));
 
     // 11. Else,
     // a. Let n be an integer for which n / (10^f) - x is as close to zero as possible. If there are two such n, pick the larger n.
@@ -345,14 +345,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
 
     // 2. If precision is undefined, return ! ToString(x).
     if (precision_value.is_undefined())
-        return js_string(vm, MUST(number_value.to_string(global_object)));
+        return js_string(vm, MUST(number_value.to_string(vm)));
 
     // 3. Let p be ? ToIntegerOrInfinity(precision).
-    auto precision = TRY(precision_value.to_integer_or_infinity(global_object));
+    auto precision = TRY(precision_value.to_integer_or_infinity(vm));
 
     // 4. If x is not finite, return Number::toString(x).
     if (!number_value.is_finite_number())
-        return js_string(vm, MUST(number_value.to_string(global_object)));
+        return js_string(vm, MUST(number_value.to_string(vm)));
 
     // 5. If p < 1 or p > 100, throw a RangeError exception.
     if ((precision < 1) || (precision > 100))
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
         radix_mv = 10;
     // 3. Else, let radixMV be ? ToIntegerOrInfinity(radix).
     else
-        radix_mv = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+        radix_mv = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
     // 4. If radixMV < 2 or radixMV > 36, throw a RangeError exception.
     if (radix_mv < 2 || radix_mv > 36)
@@ -488,7 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
     // 5. If radixMV = 10, return ! ToString(x).
     if (radix_mv == 10)
-        return js_string(vm, MUST(number_value.to_string(global_object)));
+        return js_string(vm, MUST(number_value.to_string(vm)));
 
     // 6. Return the String representation of this Number value using the radix specified by radixMV. Letters a-z are used for digits with values 10 through 35. The precise algorithm is implementation-defined, however the algorithm should be a generalization of that specified in 6.1.6.1.20.
     if (number_value.is_positive_infinity())

@@ -36,9 +36,6 @@ void PlainMonthDay::visit_edges(Visitor& visitor)
 // 10.5.1 ToTemporalMonthDay ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalmonthday
 ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM& vm, Value item, Object const* options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
@@ -122,7 +119,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM& vm, Value item, Obje
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 6. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(global_object));
+    auto string = TRY(item.to_string(vm));
 
     // 7. Let result be ? ParseTemporalMonthDayString(string).
     auto result = TRY(parse_temporal_month_day_string(vm, string));
@@ -179,9 +176,6 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM& vm, u8 iso_month
 // 10.5.3 TemporalMonthDayToString ( monthDay, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalmonthdaytostring
 ThrowCompletionOr<String> temporal_month_day_to_string(VM& vm, PlainMonthDay& month_day, StringView show_calendar)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Type(monthDay) is Object.
     // 2. Assert: monthDay has an [[InitializedTemporalMonthDay]] internal slot.
 
@@ -191,7 +185,7 @@ ThrowCompletionOr<String> temporal_month_day_to_string(VM& vm, PlainMonthDay& mo
     auto result = String::formatted("{:02}-{:02}", month_day.iso_month(), month_day.iso_day());
 
     // 6. Let calendarID be ? ToString(monthDay.[[Calendar]]).
-    auto calendar_id = TRY(Value(&month_day.calendar()).to_string(global_object));
+    auto calendar_id = TRY(Value(&month_day.calendar()).to_string(vm));
 
     // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
     if (show_calendar == "always"sv || calendar_id != "iso8601"sv) {

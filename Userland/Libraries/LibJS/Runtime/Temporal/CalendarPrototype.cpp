@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
-    return { js_string(vm, TRY(Value(calendar).to_string(global_object))) };
+    return { js_string(vm, TRY(Value(calendar).to_string(vm))) };
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
@@ -575,10 +575,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Set fields to ? ToObject(fields).
-    auto* fields = TRY(vm.argument(0).to_object(global_object));
+    auto* fields = TRY(vm.argument(0).to_object(vm));
 
     // 4. Set additionalFields to ? ToObject(additionalFields).
-    auto* additional_fields = TRY(vm.argument(1).to_object(global_object));
+    auto* additional_fields = TRY(vm.argument(1).to_object(vm));
 
     // 5. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -606,7 +606,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
-    return js_string(vm, TRY(Value(calendar).to_string(global_object)));
+    return js_string(vm, TRY(Value(calendar).to_string(vm)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era

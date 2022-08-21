@@ -202,15 +202,15 @@ template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
 template<typename... Args>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args)
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(VM& vm, PropertyKey const& property_key, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arglist { global_object.vm().heap() };
+        MarkedVector<Value> arglist { vm.heap() };
         (..., arglist.append(move(args)));
-        return invoke_internal(global_object, property_key, move(arglist));
+        return invoke_internal(vm, property_key, move(arglist));
     }
 
-    return invoke_internal(global_object, property_key, Optional<MarkedVector<Value>> {});
+    return invoke_internal(vm, property_key, Optional<MarkedVector<Value>> {});
 }
 
 }

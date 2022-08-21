@@ -32,7 +32,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     auto& global_object = this->global_object();
     auto& realm = *global_object.associated_realm();
 
-    auto descriptor = TRY(vm.argument(0).to_object(global_object));
+    auto descriptor = TRY(vm.argument(0).to_object(vm));
     auto element_value = TRY(descriptor->get("element"));
     if (!element_value.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
@@ -50,12 +50,12 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
     auto initial_value = TRY(descriptor->get("initial"));
     auto maximum_value = TRY(descriptor->get("maximum"));
 
-    auto initial = TRY(initial_value.to_u32(global_object));
+    auto initial = TRY(initial_value.to_u32(vm));
 
     Optional<u32> maximum;
 
     if (!maximum_value.is_undefined())
-        maximum = TRY(maximum_value.to_u32(global_object));
+        maximum = TRY(maximum_value.to_u32(vm));
 
     if (maximum.has_value() && maximum.value() < initial)
         return vm.throw_completion<JS::RangeError>("maximum should be larger than or equal to initial");

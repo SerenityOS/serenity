@@ -30,19 +30,19 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     auto& global_object = this->global_object();
     auto& realm = *global_object.associated_realm();
 
-    auto descriptor = TRY(vm.argument(0).to_object(global_object));
+    auto descriptor = TRY(vm.argument(0).to_object(vm));
     auto initial_value = TRY(descriptor->get("initial"));
     auto maximum_value = TRY(descriptor->get("maximum"));
 
     if (!initial_value.is_number())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Number");
 
-    u32 initial = TRY(initial_value.to_u32(global_object));
+    u32 initial = TRY(initial_value.to_u32(vm));
 
     Optional<u32> maximum;
 
     if (!maximum_value.is_undefined())
-        maximum = TRY(maximum_value.to_u32(global_object));
+        maximum = TRY(maximum_value.to_u32(vm));
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::MemoryType { Wasm::Limits { initial, maximum } });
     if (!address.has_value())

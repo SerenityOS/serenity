@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     auto& realm = *global_object.associated_realm();
 
     // 1. Let key be ? ToString(key).
-    auto key = TRY(vm.argument(0).to_string(global_object));
+    auto key = TRY(vm.argument(0).to_string(vm));
 
     Span<StringView const> list;
 

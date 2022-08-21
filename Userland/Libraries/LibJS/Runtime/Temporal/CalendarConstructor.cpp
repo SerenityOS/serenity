@@ -45,10 +45,9 @@ ThrowCompletionOr<Value> CalendarConstructor::call()
 ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 2. Set id to ? ToString(id).
-    auto identifier = TRY(vm.argument(0).to_string(global_object));
+    auto identifier = TRY(vm.argument(0).to_string(vm));
 
     // 3. If IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(identifier)) {

@@ -379,13 +379,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 // 19.2.3 isNaN ( number ), https://tc39.es/ecma262/#sec-isnan-number
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
 {
-    return Value(TRY(vm.argument(0).to_number(global_object)).is_nan());
+    return Value(TRY(vm.argument(0).to_number(vm)).is_nan());
 }
 
 // 19.2.2 isFinite ( number ), https://tc39.es/ecma262/#sec-isfinite-number
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
-    return Value(TRY(vm.argument(0).to_number(global_object)).is_finite_number());
+    return Value(TRY(vm.argument(0).to_number(vm)).is_finite_number());
 }
 
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
@@ -393,10 +393,10 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (vm.argument(0).is_number())
         return vm.argument(0);
-    auto input_string = TRY(vm.argument(0).to_string(global_object));
+    auto input_string = TRY(vm.argument(0).to_string(vm));
     auto trimmed_string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
     for (size_t length = trimmed_string.length(); length > 0; --length) {
-        auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object));
+        auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(vm));
         if (!number.is_nan())
             return number;
     }
@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
     // 1. Let inputString be ? ToString(string).
-    auto input_string = TRY(vm.argument(0).to_string(global_object));
+    auto input_string = TRY(vm.argument(0).to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
     auto string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
@@ -424,7 +424,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
         trimmed_view = trimmed_view.substring_view(1);
 
     // 6. Let R be ℝ(? ToInt32(radix)).
-    auto radix = TRY(vm.argument(1).to_i32(global_object));
+    auto radix = TRY(vm.argument(1).to_i32(vm));
 
     // 7. Let stripPrefix be true.
     auto strip_prefix = true;
@@ -614,7 +614,7 @@ static ThrowCompletionOr<String> decode(GlobalObject& global_object, String cons
 // 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(global_object));
+    auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto encoded = TRY(encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
     return js_string(vm, move(encoded));
 }
@@ -622,7 +622,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 // 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(global_object));
+    auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto decoded = TRY(decode(global_object, uri_string, ";/?:@&=+$,#"sv));
     return js_string(vm, move(decoded));
 }
@@ -630,7 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 // 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(global_object));
+    auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto encoded = TRY(encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
     return js_string(vm, move(encoded));
 }
@@ -638,7 +638,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 // 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(global_object));
+    auto uri_string = TRY(vm.argument(0).to_string(vm));
     auto decoded = TRY(decode(global_object, uri_string, ""sv));
     return js_string(vm, move(decoded));
 }
@@ -646,7 +646,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
     StringBuilder escaped;
     for (auto code_point : utf8_to_utf16(string)) {
         if (code_point < 256) {
@@ -664,7 +664,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
 {
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
     ssize_t length = string.length();
     StringBuilder unescaped(length);
     for (auto k = 0; k < length; ++k) {

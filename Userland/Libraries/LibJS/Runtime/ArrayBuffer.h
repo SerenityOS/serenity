@@ -135,6 +135,7 @@ template<typename T>
 static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value, bool is_little_endian)
 {
     VERIFY(value.is_number() || value.is_bigint());
+    auto& vm = global_object.vm();
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
     ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
     auto flip_if_needed = [&]() {
@@ -145,13 +146,13 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
             swap(raw_bytes[i], raw_bytes[sizeof(UnderlyingBufferDataType) - 1 - i]);
     };
     if constexpr (IsSame<UnderlyingBufferDataType, float>) {
-        float raw_value = MUST(value.to_double(global_object));
+        float raw_value = MUST(value.to_double(vm));
         ReadonlyBytes { &raw_value, sizeof(float) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;
     }
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
-        double raw_value = MUST(value.to_double(global_object));
+        double raw_value = MUST(value.to_double(vm));
         ReadonlyBytes { &raw_value, sizeof(double) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;
@@ -162,9 +163,9 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
         UnderlyingBufferDataType int_value;
 
         if constexpr (IsSigned<UnderlyingBufferDataType>)
-            int_value = MUST(value.to_bigint_int64(global_object));
+            int_value = MUST(value.to_bigint_int64(vm));
         else
-            int_value = MUST(value.to_bigint_uint64(global_object));
+            int_value = MUST(value.to_bigint_uint64(vm));
 
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         flip_if_needed();
@@ -173,20 +174,20 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
         UnderlyingBufferDataType int_value;
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
             if constexpr (sizeof(UnderlyingBufferDataType) == 4)
-                int_value = MUST(value.to_i32(global_object));
+                int_value = MUST(value.to_i32(vm));
             else if constexpr (sizeof(UnderlyingBufferDataType) == 2)
-                int_value = MUST(value.to_i16(global_object));
+                int_value = MUST(value.to_i16(vm));
             else
-                int_value = MUST(value.to_i8(global_object));
+                int_value = MUST(value.to_i8(vm));
         } else {
             if constexpr (sizeof(UnderlyingBufferDataType) == 4)
-                int_value = MUST(value.to_u32(global_object));
+                int_value = MUST(value.to_u32(vm));
             else if constexpr (sizeof(UnderlyingBufferDataType) == 2)
-                int_value = MUST(value.to_u16(global_object));
+                int_value = MUST(value.to_u16(vm));
             else if constexpr (!IsSame<T, ClampedU8>)
-                int_value = MUST(value.to_u8(global_object));
+                int_value = MUST(value.to_u8(vm));
             else
-                int_value = MUST(value.to_u8_clamp(global_object));
+                int_value = MUST(value.to_u8_clamp(vm));
         }
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         if constexpr (sizeof(UnderlyingBufferDataType) % 2 == 0)

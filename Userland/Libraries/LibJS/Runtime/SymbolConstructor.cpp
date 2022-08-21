@@ -38,9 +38,10 @@ void SymbolConstructor::initialize(Realm& realm)
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 ThrowCompletionOr<Value> SymbolConstructor::call()
 {
-    if (vm().argument(0).is_undefined())
-        return js_symbol(heap(), {}, false);
-    return js_symbol(heap(), TRY(vm().argument(0).to_string(global_object())), false);
+    auto& vm = this->vm();
+    if (vm.argument(0).is_undefined())
+        return js_symbol(vm, {}, false);
+    return js_symbol(vm, TRY(vm.argument(0).to_string(vm)), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -52,7 +53,7 @@ ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
-    auto description = TRY(vm.argument(0).to_string(global_object));
+    auto description = TRY(vm.argument(0).to_string(vm));
     return global_object.vm().get_global_symbol(description);
 }
 

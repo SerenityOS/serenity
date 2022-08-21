@@ -17,9 +17,6 @@ namespace JS::Intl {
 // 10.1.2 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
 static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collator, Value locales_value, Value options_value)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
@@ -66,7 +63,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     //     a. Let numeric be ! ToString(numeric).
     // 15. Set opt.[[kn]] to numeric.
     if (!numeric.is_undefined())
-        opt.kn = MUST(numeric.to_string(global_object));
+        opt.kn = MUST(numeric.to_string(vm));
 
     // 16. Let caseFirst be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.

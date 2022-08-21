@@ -48,7 +48,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
     auto result = generator_result.release_value();
     VERIFY(result.is_object());
 
-    auto promise_value = TRY(result.get(global_object, vm.names.value));
+    auto promise_value = TRY(result.get(vm, vm.names.value));
     if (!promise_value.is_object() || !is<Promise>(promise_value.as_object())) {
         auto promise = Promise::create(realm);
         promise->fulfill(promise_value);
@@ -56,7 +56,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
     }
 
     auto* promise = static_cast<Promise*>(&promise_value.as_object());
-    if (TRY(result.get(global_object, vm.names.done)).to_boolean())
+    if (TRY(result.get(vm, vm.names.done)).to_boolean())
         return promise;
 
     return promise->perform_then(m_on_fulfillment, m_on_rejection, PromiseCapability { promise, m_on_fulfillment, m_on_rejection });

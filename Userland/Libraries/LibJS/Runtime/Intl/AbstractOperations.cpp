@@ -186,7 +186,6 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
@@ -206,12 +205,12 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
     // 4. Else,
     else {
         // a. Let O be ? ToObject(locales).
-        object = TRY(locales.to_object(global_object));
+        object = TRY(locales.to_object(vm));
     }
 
     // 5. Let len be ? ToLength(? Get(O, "length")).
     auto length_value = TRY(object->get(vm.names.length));
-    auto length = TRY(length_value.to_length(global_object));
+    auto length = TRY(length_value.to_length(vm));
 
     // 6. Let k be 0.
     // 7. Repeat, while k < len,
@@ -241,7 +240,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
             // iv. Else,
             else {
                 // 1. Let tag be ? ToString(kValue).
-                tag = TRY(key_value.to_string(global_object));
+                tag = TRY(key_value.to_string(vm));
             }
 
             // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
@@ -597,7 +596,6 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& reques
 ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If options is undefined, then
     if (options.is_undefined()) {
@@ -606,7 +604,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
     }
 
     // 2. Return ? ToObject(options).
-    return TRY(options.to_object(global_object));
+    return TRY(options.to_object(vm));
 }
 
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
@@ -614,9 +612,6 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 // 1.2.12 GetStringOrBooleanOption ( options, property, values, trueValue, falsyValue, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getstringorbooleanoption
 ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
 
@@ -636,7 +631,7 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
         return falsy_value;
 
     // 6. Let value be ? ToString(value).
-    auto value_string = TRY(value.to_string(global_object));
+    auto value_string = TRY(value.to_string(vm));
 
     // 7. If values does not contain an element equal to value, return fallback.
     auto it = find(values.begin(), values.end(), value_string);
@@ -650,15 +645,12 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
 // 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
 ThrowCompletionOr<Optional<int>> default_number_option(VM& vm, Value value, int minimum, int maximum, Optional<int> fallback)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If value is undefined, return fallback.
     if (value.is_undefined())
         return fallback;
 
     // 2. Set value to ? ToNumber(value).
-    value = TRY(value.to_number(global_object));
+    value = TRY(value.to_number(vm));
 
     // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
     if (value.is_nan() || (value.as_double() < minimum) || (value.as_double() > maximum))

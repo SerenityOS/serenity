@@ -596,27 +596,28 @@ Completion WithStatement::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = global_object.vm();
 
     // 1. Let value be the result of evaluating Expression.
     auto value = TRY(m_object->execute(interpreter)).release_value();
 
     // 2. Let obj be ? ToObject(? GetValue(value)).
-    auto* object = TRY(value.to_object(global_object));
+    auto* object = TRY(value.to_object(vm));
 
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
-    auto* old_environment = interpreter.vm().running_execution_context().lexical_environment;
+    auto* old_environment = vm.running_execution_context().lexical_environment;
 
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
     auto* new_environment = new_object_environment(*object, true, old_environment);
 
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
-    interpreter.vm().running_execution_context().lexical_environment = new_environment;
+    vm.running_execution_context().lexical_environment = new_environment;
 
     // 6. Let C be the result of evaluating Statement.
     auto result = m_body->execute(interpreter);
 
     // 7. Set the running execution context's LexicalEnvironment to oldEnv.
-    interpreter.vm().running_execution_context().lexical_environment = old_environment;
+    vm.running_execution_context().lexical_environment = old_environment;
 
     // 8. Return ? UpdateEmpty(C, undefined).
     return result.update_empty(js_undefined());
@@ -1033,7 +1034,7 @@ Completion ForInStatement::execute(Interpreter& interpreter) const
 Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     auto for_in_head_state = TRY(for_in_of_head_execute(interpreter, m_lhs, *m_rhs));
 
@@ -1048,14 +1049,14 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyS
     }
 
     // b. Let obj be ! ToObject(exprValue).
-    auto* object = MUST(rhs_result.to_object(global_object));
+    auto* object = MUST(rhs_result.to_object(vm));
 
     // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
 
     // 2. Let oldEnv be the running execution context's LexicalEnvironment.
     Environment* old_environment = interpreter.lexical_environment();
     auto restore_scope = ScopeGuard([&] {
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        vm.running_execution_context().lexical_environment = old_environment;
     });
 
     // 3. Let V be undefined.
@@ -1068,7 +1069,7 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyS
         auto result = m_body->execute(interpreter);
 
         // m. Set the running execution context's LexicalEnvironment to oldEnv.
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        vm.running_execution_context().lexical_environment = old_environment;
 
         // n. If LoopContinues(result, labelSet) is false, then
         if (!loop_continues(result, label_set)) {
@@ -1250,7 +1251,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
 Completion BinaryExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // Special case in which we cannot execute the lhs.  RelationalExpression : PrivateIdentifier in ShiftExpression
     //  RelationalExpression : PrivateIdentifier in ShiftExpression, https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
@@ -1271,49 +1272,49 @@ Completion BinaryExpression::execute(Interpreter& interpreter) const
 
     switch (m_op) {
     case BinaryOp::Addition:
-        return TRY(add(global_object, lhs_result, rhs_result));
+        return TRY(add(vm, lhs_result, rhs_result));
     case BinaryOp::Subtraction:
-        return TRY(sub(global_object, lhs_result, rhs_result));
+        return TRY(sub(vm, lhs_result, rhs_result));
     case BinaryOp::Multiplication:
-        return TRY(mul(global_object, lhs_result, rhs_result));
+        return TRY(mul(vm, lhs_result, rhs_result));
     case BinaryOp::Division:
-        return TRY(div(global_object, lhs_result, rhs_result));
+        return TRY(div(vm, lhs_result, rhs_result));
     case BinaryOp::Modulo:
-        return TRY(mod(global_object, lhs_result, rhs_result));
+        return TRY(mod(vm, lhs_result, rhs_result));
     case BinaryOp::Exponentiation:
-        return TRY(exp(global_object, lhs_result, rhs_result));
+        return TRY(exp(vm, lhs_result, rhs_result));
     case BinaryOp::StrictlyEquals:
         return Value(is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::StrictlyInequals:
         return Value(!is_strictly_equal(lhs_result, rhs_result));
     case BinaryOp::LooselyEquals:
-        return Value(TRY(is_loosely_equal(global_object, lhs_result, rhs_result)));
+        return Value(TRY(is_loosely_equal(vm, lhs_result, rhs_result)));
     case BinaryOp::LooselyInequals:
-        return Value(!TRY(is_loosely_equal(global_object, lhs_result, rhs_result)));
+        return Value(!TRY(is_loosely_equal(vm, lhs_result, rhs_result)));
     case BinaryOp::GreaterThan:
-        return TRY(greater_than(global_object, lhs_result, rhs_result));
+        return TRY(greater_than(vm, lhs_result, rhs_result));
     case BinaryOp::GreaterThanEquals:
-        return TRY(greater_than_equals(global_object, lhs_result, rhs_result));
+        return TRY(greater_than_equals(vm, lhs_result, rhs_result));
     case BinaryOp::LessThan:
-        return TRY(less_than(global_object, lhs_result, rhs_result));
+        return TRY(less_than(vm, lhs_result, rhs_result));
     case BinaryOp::LessThanEquals:
-        return TRY(less_than_equals(global_object, lhs_result, rhs_result));
+        return TRY(less_than_equals(vm, lhs_result, rhs_result));
     case BinaryOp::BitwiseAnd:
-        return TRY(bitwise_and(global_object, lhs_result, rhs_result));
+        return TRY(bitwise_and(vm, lhs_result, rhs_result));
     case BinaryOp::BitwiseOr:
-        return TRY(bitwise_or(global_object, lhs_result, rhs_result));
+        return TRY(bitwise_or(vm, lhs_result, rhs_result));
     case BinaryOp::BitwiseXor:
-        return TRY(bitwise_xor(global_object, lhs_result, rhs_result));
+        return TRY(bitwise_xor(vm, lhs_result, rhs_result));
     case BinaryOp::LeftShift:
-        return TRY(left_shift(global_object, lhs_result, rhs_result));
+        return TRY(left_shift(vm, lhs_result, rhs_result));
     case BinaryOp::RightShift:
-        return TRY(right_shift(global_object, lhs_result, rhs_result));
+        return TRY(right_shift(vm, lhs_result, rhs_result));
     case BinaryOp::UnsignedRightShift:
-        return TRY(unsigned_right_shift(global_object, lhs_result, rhs_result));
+        return TRY(unsigned_right_shift(vm, lhs_result, rhs_result));
     case BinaryOp::In:
-        return TRY(in(global_object, lhs_result, rhs_result));
+        return TRY(in(vm, lhs_result, rhs_result));
     case BinaryOp::InstanceOf:
-        return TRY(instance_of(global_object, lhs_result, rhs_result));
+        return TRY(instance_of(vm, lhs_result, rhs_result));
     }
 
     VERIFY_NOT_REACHED();
@@ -1395,6 +1396,7 @@ ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) 
 ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 13.3.7.1 Runtime Semantics: Evaluation
     // SuperProperty : super [ Expression ]
@@ -1416,7 +1418,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
             auto property_name_value = TRY(m_property->execute(interpreter)).release_value();
 
             // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-            property_key = TRY(property_name_value.to_property_key(global_object));
+            property_key = TRY(property_name_value.to_property_key(vm));
         } else {
             // SuperProperty : super . IdentifierName
 
@@ -1453,7 +1455,7 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
 
         TRY(require_object_coercible(global_object, base_value));
 
-        property_key = TRY(PropertyKey::from_value(global_object, value));
+        property_key = TRY(PropertyKey::from_value(vm, value));
     } else if (is<PrivateIdentifier>(*m_property)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
@@ -1502,13 +1504,13 @@ Completion UnaryExpression::execute(Interpreter& interpreter) const
 
     switch (m_op) {
     case UnaryOp::BitwiseNot:
-        return TRY(bitwise_not(global_object, lhs_result));
+        return TRY(bitwise_not(vm, lhs_result));
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
     case UnaryOp::Plus:
-        return TRY(unary_plus(global_object, lhs_result));
+        return TRY(unary_plus(vm, lhs_result));
     case UnaryOp::Minus:
-        return TRY(unary_minus(global_object, lhs_result));
+        return TRY(unary_minus(vm, lhs_result));
     case UnaryOp::Typeof:
         return Value { js_string(vm, lhs_result.typeof()) };
     case UnaryOp::Void:
@@ -1534,7 +1536,7 @@ Completion ClassElement::execute(Interpreter&) const
 
 static ThrowCompletionOr<ClassElementName> class_key_to_property_name(Interpreter& interpreter, Expression const& key)
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     if (is<PrivateIdentifier>(key)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(key);
@@ -1546,9 +1548,9 @@ static ThrowCompletionOr<ClassElementName> class_key_to_property_name(Interprete
     auto prop_key = TRY(key.execute(interpreter)).release_value();
 
     if (prop_key.is_object())
-        prop_key = TRY(prop_key.to_primitive(global_object, Value::PreferredType::String));
+        prop_key = TRY(prop_key.to_primitive(vm, Value::PreferredType::String));
 
-    auto property_key = TRY(PropertyKey::from_value(global_object, prop_key));
+    auto property_key = TRY(PropertyKey::from_value(vm, prop_key));
     return ClassElementName { property_key };
 }
 
@@ -1857,7 +1859,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         } else if (!super_class.is_constructor()) {
             return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueNotAConstructorOrNull, super_class.to_string_without_side_effects());
         } else {
-            auto super_class_prototype = TRY(super_class.get(global_object, vm.names.prototype));
+            auto super_class_prototype = TRY(super_class.get(vm, vm.names.prototype));
             if (!super_class_prototype.is_null() && !super_class_prototype.is_object())
                 return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueInvalidPrototype, super_class_prototype.to_string_without_side_effects());
 
@@ -2597,6 +2599,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     if (m_op == AssignmentOp::Assignment) {
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
@@ -2713,40 +2716,40 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
     // 7. Let r be ? ApplyStringOrNumericBinaryOperator(lval, opText, rval).
     switch (m_op) {
     case AssignmentOp::AdditionAssignment:
-        rhs_result = TRY(add(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(add(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::SubtractionAssignment:
-        rhs_result = TRY(sub(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(sub(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::MultiplicationAssignment:
-        rhs_result = TRY(mul(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(mul(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::DivisionAssignment:
-        rhs_result = TRY(div(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(div(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::ModuloAssignment:
-        rhs_result = TRY(mod(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(mod(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::ExponentiationAssignment:
-        rhs_result = TRY(exp(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(exp(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::BitwiseAndAssignment:
-        rhs_result = TRY(bitwise_and(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(bitwise_and(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::BitwiseOrAssignment:
-        rhs_result = TRY(bitwise_or(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(bitwise_or(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::BitwiseXorAssignment:
-        rhs_result = TRY(bitwise_xor(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(bitwise_xor(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::LeftShiftAssignment:
-        rhs_result = TRY(left_shift(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(left_shift(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::RightShiftAssignment:
-        rhs_result = TRY(right_shift(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(right_shift(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::UnsignedRightShiftAssignment:
-        rhs_result = TRY(unsigned_right_shift(global_object, lhs_result, rhs_result));
+        rhs_result = TRY(unsigned_right_shift(vm, lhs_result, rhs_result));
         break;
     case AssignmentOp::Assignment:
     case AssignmentOp::AndAssignment:
@@ -2770,13 +2773,14 @@ Completion UpdateExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 1. Let expr be the result of evaluating <Expression>.
     auto reference = TRY(m_argument->to_reference(interpreter));
 
     // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
     auto old_value = TRY(reference.get_value(global_object));
-    old_value = TRY(old_value.to_numeric(global_object));
+    old_value = TRY(old_value.to_numeric(vm));
 
     Value new_value;
     switch (m_op) {
@@ -3037,6 +3041,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
@@ -3049,7 +3054,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
         // PropertyDefinition : ... AssignmentExpression
         if (property.type() == ObjectProperty::Type::Spread) {
             // 4. Perform ? CopyDataProperties(object, fromValue, excludedNames).
-            TRY(object->copy_data_properties(key, {}, global_object));
+            TRY(object->copy_data_properties(vm, key, {}));
 
             // 5. Return unused.
             continue;
@@ -3071,7 +3076,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
         if (value.is_function() && property.is_method())
             static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
-        auto property_key = TRY(PropertyKey::from_value(global_object, key));
+        auto property_key = TRY(PropertyKey::from_value(vm, key));
         auto name = TRY(get_function_property_name(property_key));
         if (property.type() == ObjectProperty::Type::Getter) {
             name = String::formatted("get {}", name);
@@ -3328,11 +3333,12 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
     //  1. Let referencingScriptOrModule be GetActiveScriptOrModule().
-    auto referencing_script_or_module = interpreter.vm().get_active_script_or_module();
+    auto referencing_script_or_module = vm.get_active_script_or_module();
 
     // 2. Let specifierRef be the result of evaluating specifierExpression.
     // 3. Let specifier be ? GetValue(specifierRef).
@@ -3354,7 +3360,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
     // 7. Let specifierString be Completion(ToString(specifier)).
     // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
-    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, specifier->to_string(global_object));
+    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, specifier->to_string(vm));
 
     // 9. Let assertions be a new empty List.
     Vector<ModuleRequest::Assertion> assertions;
@@ -3373,7 +3379,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
         // b. Let assertionsObj be Get(options, "assert").
         // c. IfAbruptRejectPromise(assertionsObj, promiseCapability).
-        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, options_value.get(global_object, interpreter.vm().names.assert));
+        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, options_value.get(vm, vm.names.assert));
 
         // d. If assertionsObj is not undefined,
         if (!assertion_object.is_undefined()) {
@@ -3396,11 +3402,11 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
             // v. For each String key of keys,
             for (auto const& key : keys) {
-                auto property_key = MUST(key.to_property_key(global_object));
+                auto property_key = MUST(key.to_property_key(vm));
 
                 // 1. Let value be Get(assertionsObj, key).
                 // 2. IfAbruptRejectPromise(value, promiseCapability).
-                auto value = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.get(global_object, property_key));
+                auto value = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.get(vm, property_key));
 
                 // 3. If Type(value) is not String, then
                 if (!value.is_string()) {
@@ -3571,7 +3577,7 @@ void TemplateLiteral::dump(int indent) const
 Completion TemplateLiteral::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     StringBuilder string_builder;
 
@@ -3583,7 +3589,7 @@ Completion TemplateLiteral::execute(Interpreter& interpreter) const
         auto sub = TRY(expression.execute(interpreter)).release_value();
 
         // 4. Let middle be ? ToString(sub).
-        auto string = TRY(sub.to_string(global_object));
+        auto string = TRY(sub.to_string(vm));
         string_builder.append(string);
 
         // 5. Let tail be the result of evaluating TemplateSpans.

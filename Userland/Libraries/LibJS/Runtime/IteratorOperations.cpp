@@ -26,12 +26,12 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
         // a. If hint is async, then
         if (hint == IteratorHint::Async) {
             // i. Set method to ? GetMethod(obj, @@asyncIterator).
-            auto* async_method = TRY(value.get_method(global_object, *vm.well_known_symbol_async_iterator()));
+            auto* async_method = TRY(value.get_method(vm, *vm.well_known_symbol_async_iterator()));
 
             // ii. If method is undefined, then
             if (async_method == nullptr) {
                 // 1. Let syncMethod be ? GetMethod(obj, @@iterator).
-                auto* sync_method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
+                auto* sync_method = TRY(value.get_method(vm, *vm.well_known_symbol_iterator()));
 
                 // 2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
                 auto sync_iterator_record = TRY(get_iterator(global_object, value, IteratorHint::Sync, sync_method));
@@ -44,7 +44,7 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
         }
         // b. Otherwise, set method to ? GetMethod(obj, @@iterator).
         else {
-            method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
+            method = TRY(value.get_method(vm, *vm.well_known_symbol_iterator()));
         }
     }
 
@@ -60,7 +60,7 @@ ThrowCompletionOr<Iterator> get_iterator(GlobalObject& global_object, Value valu
         return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects());
 
     // 5. Let nextMethod be ? GetV(iterator, "next").
-    auto next_method = TRY(iterator.get(global_object, vm.names.next));
+    auto next_method = TRY(iterator.get(vm, vm.names.next));
 
     // 6. Let iteratorRecord be the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
     auto iterator_record = Iterator { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
@@ -142,7 +142,7 @@ static Completion iterator_close_impl(GlobalObject& global_object, Iterator cons
 
     // 3. Let innerResult be Completion(GetMethod(iterator, "return")).
     auto inner_result = ThrowCompletionOr<Value> { js_undefined() };
-    auto get_method_result = Value(iterator).get_method(global_object, vm.names.return_);
+    auto get_method_result = Value(iterator).get_method(vm, vm.names.return_);
     if (get_method_result.is_error())
         inner_result = get_method_result.release_error();
 

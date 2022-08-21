@@ -195,10 +195,8 @@ static String double_to_string(double d)
 }
 
 // 7.2.2 IsArray ( argument ), https://tc39.es/ecma262/#sec-isarray
-ThrowCompletionOr<bool> Value::is_array(GlobalObject& global_object) const
+ThrowCompletionOr<bool> Value::is_array(VM& vm) const
 {
-    auto& vm = global_object.vm();
-
     if (!is_object())
         return false;
     auto& object = as_object();
@@ -208,7 +206,7 @@ ThrowCompletionOr<bool> Value::is_array(GlobalObject& global_object) const
         auto& proxy = static_cast<ProxyObject const&>(object);
         if (proxy.is_revoked())
             return vm.throw_completion<TypeError>(ErrorType::ProxyRevoked);
-        return Value(&proxy.target()).is_array(global_object);
+        return Value(&proxy.target()).is_array(vm);
     }
     return false;
 }
@@ -253,12 +251,11 @@ bool Value::is_constructor() const
 }
 
 // 7.2.8 IsRegExp ( argument ), https://tc39.es/ecma262/#sec-isregexp
-ThrowCompletionOr<bool> Value::is_regexp(GlobalObject& global_object) const
+ThrowCompletionOr<bool> Value::is_regexp(VM& vm) const
 {
     if (!is_object())
         return false;
 
-    auto& vm = global_object.vm();
     auto matcher = TRY(as_object().get(*vm.well_known_symbol_match()));
     if (!matcher.is_undefined())
         return matcher.to_boolean();
@@ -326,21 +323,20 @@ String Value::to_string_without_side_effects() const
     }
 }
 
-ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(GlobalObject& global_object)
+ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 {
     if (is_string())
         return &as_string();
-    auto string = TRY(to_string(global_object));
-    return js_string(global_object.heap(), string);
+    auto string = TRY(to_string(vm));
+    return js_string(vm, string);
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
-ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
+ThrowCompletionOr<String> Value::to_string(VM& vm) const
 {
     if (is_double())
         return double_to_string(m_value.as_double);
 
-    auto& vm = global_object.vm();
     switch (m_value.tag) {
     case UNDEFINED_TAG:
         return "undefined"sv;
@@ -357,20 +353,20 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
     case BIGINT_TAG:
         return as_bigint().big_integer().to_base(10);
     case OBJECT_TAG: {
-        auto primitive_value = TRY(to_primitive(global_object, PreferredType::String));
-        return primitive_value.to_string(global_object);
+        auto primitive_value = TRY(to_primitive(vm, PreferredType::String));
+        return primitive_value.to_string(vm);
     }
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-ThrowCompletionOr<Utf16String> Value::to_utf16_string(GlobalObject& global_object) const
+ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const
 {
     if (is_string())
         return as_string().utf16_string();
 
-    auto utf8_string = TRY(to_string(global_object));
+    auto utf8_string = TRY(to_string(vm));
     return Utf16String(utf8_string);
 }
 
@@ -408,7 +404,7 @@ bool Value::to_boolean() const
 }
 
 // 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
-ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
+ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_type) const
 {
     auto get_hint_for_preferred_type = [&]() -> String {
         switch (preferred_type) {
@@ -423,8 +419,9 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
         }
     };
     if (is_object()) {
-        auto& vm = global_object.vm();
-        auto to_primitive_method = TRY(get_method(global_object, *vm.well_known_symbol_to_primitive()));
+        auto& realm = *vm.current_realm();
+        auto& global_object = realm.global_object();
+        auto to_primitive_method = TRY(get_method(vm, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
             auto result = TRY(call(global_object, *to_primitive_method, *this, js_string(vm, hint)));
@@ -440,9 +437,9 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
 }
 
 // 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
-ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
+ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     VERIFY(!is_empty());
     if (is_number())
         return NumberObject::create(realm, as_double());
@@ -450,11 +447,11 @@ ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
     switch (m_value.tag) {
     case UNDEFINED_TAG:
     case NULL_TAG:
-        return global_object.vm().throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefined);
+        return vm.throw_completion<TypeError>(ErrorType::ToObjectNullOrUndefined);
     case BOOLEAN_TAG:
         return BooleanObject::create(realm, as_bool());
     case STRING_TAG:
-        return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *global_object.string_prototype());
+        return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *realm.global_object().string_prototype());
     case SYMBOL_TAG:
         return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
     case BIGINT_TAG:
@@ -467,16 +464,16 @@ ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 }
 
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
-FLATTEN ThrowCompletionOr<Value> Value::to_numeric(GlobalObject& global_object) const
+FLATTEN ThrowCompletionOr<Value> Value::to_numeric(VM& vm) const
 {
-    auto primitive = TRY(to_primitive(global_object, Value::PreferredType::Number));
+    auto primitive = TRY(to_primitive(vm, Value::PreferredType::Number));
     if (primitive.is_bigint())
         return primitive;
-    return primitive.to_number(global_object);
+    return primitive.to_number(vm);
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
-ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
+ThrowCompletionOr<Value> Value::to_number(VM& vm) const
 {
     VERIFY(!is_empty());
     if (is_number())
@@ -509,12 +506,12 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
         return Value(parsed_double);
     }
     case SYMBOL_TAG:
-        return global_object.vm().throw_completion<TypeError>(ErrorType::Convert, "symbol", "number");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "number");
     case BIGINT_TAG:
-        return global_object.vm().throw_completion<TypeError>(ErrorType::Convert, "BigInt", "number");
+        return vm.throw_completion<TypeError>(ErrorType::Convert, "BigInt", "number");
     case OBJECT_TAG: {
-        auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
-        return primitive.to_number(global_object);
+        auto primitive = TRY(to_primitive(vm, PreferredType::Number));
+        return primitive.to_number(vm);
     }
     default:
         VERIFY_NOT_REACHED();
@@ -522,10 +519,9 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
 }
 
 // 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
-ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
+ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
 {
-    auto& vm = global_object.vm();
-    auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
+    auto primitive = TRY(to_primitive(vm, PreferredType::Number));
 
     VERIFY(!primitive.is_empty());
     if (primitive.is_number())
@@ -544,7 +540,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
         return &primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
-        auto bigint = primitive.string_to_bigint(global_object);
+        auto bigint = primitive.string_to_bigint(vm);
 
         // 2. If n is undefined, throw a SyntaxError exception.
         if (!bigint.has_value())
@@ -606,7 +602,7 @@ static Optional<BigIntParseResult> parse_bigint_text(StringView text)
 }
 
 // 7.1.14 StringToBigInt ( str ), https://tc39.es/ecma262/#sec-stringtobigint
-Optional<BigInt*> Value::string_to_bigint(GlobalObject& global_object) const
+Optional<BigInt*> Value::string_to_bigint(VM& vm) const
 {
     VERIFY(is_string());
 
@@ -627,43 +623,43 @@ Optional<BigInt*> Value::string_to_bigint(GlobalObject& global_object) const
         bigint.negate();
 
     // 6. Return ℤ(mv).
-    return js_bigint(global_object.vm(), move(bigint));
+    return js_bigint(vm, move(bigint));
 }
 
 // 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/#sec-tobigint64
-ThrowCompletionOr<i64> Value::to_bigint_int64(GlobalObject& global_object) const
+ThrowCompletionOr<i64> Value::to_bigint_int64(VM& vm) const
 {
-    auto* bigint = TRY(to_bigint(global_object));
+    auto* bigint = TRY(to_bigint(vm));
     return static_cast<i64>(bigint->big_integer().to_u64());
 }
 
 // 7.1.16 ToBigUint64 ( argument ), https://tc39.es/ecma262/#sec-tobiguint64
-ThrowCompletionOr<u64> Value::to_bigint_uint64(GlobalObject& global_object) const
+ThrowCompletionOr<u64> Value::to_bigint_uint64(VM& vm) const
 {
-    auto* bigint = TRY(to_bigint(global_object));
+    auto* bigint = TRY(to_bigint(vm));
     return bigint->big_integer().to_u64();
 }
 
-ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
+ThrowCompletionOr<double> Value::to_double(VM& vm) const
 {
-    return TRY(to_number(global_object)).as_double();
+    return TRY(to_number(vm)).as_double();
 }
 
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
-ThrowCompletionOr<PropertyKey> Value::to_property_key(GlobalObject& global_object) const
+ThrowCompletionOr<PropertyKey> Value::to_property_key(VM& vm) const
 {
     if (is_int32() && as_i32() >= 0)
         return PropertyKey { as_i32() };
-    auto key = TRY(to_primitive(global_object, PreferredType::String));
+    auto key = TRY(to_primitive(vm, PreferredType::String));
     if (key.is_symbol())
         return &key.as_symbol();
-    return TRY(key.to_string(global_object));
+    return TRY(key.to_string(vm));
 }
 
-ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) const
+ThrowCompletionOr<i32> Value::to_i32_slow_case(VM& vm) const
 {
     VERIFY(!is_int32());
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -677,17 +673,17 @@ ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) cons
     return static_cast<i32>(int32bit);
 }
 
-ThrowCompletionOr<i32> Value::to_i32(GlobalObject& global_object) const
+ThrowCompletionOr<i32> Value::to_i32(VM& vm) const
 {
     if (is_int32())
         return as_i32();
-    return to_i32_slow_case(global_object);
+    return to_i32_slow_case(vm);
 }
 
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
-ThrowCompletionOr<u32> Value::to_u32(GlobalObject& global_object) const
+ThrowCompletionOr<u32> Value::to_u32(VM& vm) const
 {
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -700,9 +696,9 @@ ThrowCompletionOr<u32> Value::to_u32(GlobalObject& global_object) const
 }
 
 // 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
-ThrowCompletionOr<i16> Value::to_i16(GlobalObject& global_object) const
+ThrowCompletionOr<i16> Value::to_i16(VM& vm) const
 {
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -717,9 +713,9 @@ ThrowCompletionOr<i16> Value::to_i16(GlobalObject& global_object) const
 }
 
 // 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
-ThrowCompletionOr<u16> Value::to_u16(GlobalObject& global_object) const
+ThrowCompletionOr<u16> Value::to_u16(VM& vm) const
 {
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -732,9 +728,9 @@ ThrowCompletionOr<u16> Value::to_u16(GlobalObject& global_object) const
 }
 
 // 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
-ThrowCompletionOr<i8> Value::to_i8(GlobalObject& global_object) const
+ThrowCompletionOr<i8> Value::to_i8(VM& vm) const
 {
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto abs = fabs(value);
@@ -749,9 +745,9 @@ ThrowCompletionOr<i8> Value::to_i8(GlobalObject& global_object) const
 }
 
 // 7.1.11 ToUint8 ( argument ), https://tc39.es/ecma262/#sec-touint8
-ThrowCompletionOr<u8> Value::to_u8(GlobalObject& global_object) const
+ThrowCompletionOr<u8> Value::to_u8(VM& vm) const
 {
-    double value = TRY(to_number(global_object)).as_double();
+    double value = TRY(to_number(vm)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
     auto int_val = floor(fabs(value));
@@ -764,9 +760,9 @@ ThrowCompletionOr<u8> Value::to_u8(GlobalObject& global_object) const
 }
 
 // 7.1.12 ToUint8Clamp ( argument ), https://tc39.es/ecma262/#sec-touint8clamp
-ThrowCompletionOr<u8> Value::to_u8_clamp(GlobalObject& global_object) const
+ThrowCompletionOr<u8> Value::to_u8_clamp(VM& vm) const
 {
-    auto number = TRY(to_number(global_object));
+    auto number = TRY(to_number(vm));
     if (number.is_nan())
         return 0;
     double value = number.as_double();
@@ -785,9 +781,9 @@ ThrowCompletionOr<u8> Value::to_u8_clamp(GlobalObject& global_object) const
 }
 
 // 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
-ThrowCompletionOr<size_t> Value::to_length(GlobalObject& global_object) const
+ThrowCompletionOr<size_t> Value::to_length(VM& vm) const
 {
-    auto len = TRY(to_integer_or_infinity(global_object));
+    auto len = TRY(to_integer_or_infinity(vm));
     if (len <= 0)
         return 0;
     // FIXME: The spec says that this function's output range is 0 - 2^53-1. But we don't want to overflow the size_t.
@@ -796,25 +792,23 @@ ThrowCompletionOr<size_t> Value::to_length(GlobalObject& global_object) const
 }
 
 // 7.1.22 ToIndex ( argument ), https://tc39.es/ecma262/#sec-toindex
-ThrowCompletionOr<size_t> Value::to_index(GlobalObject& global_object) const
+ThrowCompletionOr<size_t> Value::to_index(VM& vm) const
 {
-    auto& vm = global_object.vm();
-
     if (is_undefined())
         return 0;
-    auto integer_index = TRY(to_integer_or_infinity(global_object));
+    auto integer_index = TRY(to_integer_or_infinity(vm));
     if (integer_index < 0)
         return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
-    auto index = MUST(Value(integer_index).to_length(global_object));
+    auto index = MUST(Value(integer_index).to_length(vm));
     if (integer_index != index)
         return vm.throw_completion<RangeError>(ErrorType::InvalidIndex);
     return index;
 }
 
 // 7.1.5 ToIntegerOrInfinity ( argument ), https://tc39.es/ecma262/#sec-tointegerorinfinity
-ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_object) const
+ThrowCompletionOr<double> Value::to_integer_or_infinity(VM& vm) const
 {
-    auto number = TRY(to_number(global_object));
+    auto number = TRY(to_number(vm));
     if (number.is_nan() || number.as_double() == 0)
         return 0;
     if (number.is_infinity())
@@ -854,28 +848,26 @@ double to_integer_or_infinity(double number)
 }
 
 // 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
-ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey const& property_key) const
+ThrowCompletionOr<Value> Value::get(VM& vm, PropertyKey const& property_key) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
 
     // 2. Let O be ? ToObject(V).
-    auto* object = TRY(to_object(global_object));
+    auto* object = TRY(to_object(vm));
 
     // 3. Return ? O.[[Get]](P, V).
     return TRY(object->internal_get(property_key, *this));
 }
 
 // 7.3.11 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyKey const& property_key) const
+ThrowCompletionOr<FunctionObject*> Value::get_method(VM& vm, PropertyKey const& property_key) const
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
 
     // 2. Let func be ? GetV(V, P).
-    auto function = TRY(get(global_object, property_key));
+    auto function = TRY(get(vm, property_key));
 
     // 3. If func is either undefined or null, return undefined.
     if (function.is_nullish())
@@ -890,63 +882,62 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
-ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> greater_than(VM& vm, Value lhs, Value rhs)
 {
     if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() > rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
+    TriState relation = TRY(is_less_than(vm, lhs, rhs, false));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
-ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> greater_than_equals(VM& vm, Value lhs, Value rhs)
 {
     if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() >= rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
+    TriState relation = TRY(is_less_than(vm, lhs, rhs, true));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
-ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> less_than(VM& vm, Value lhs, Value rhs)
 {
     if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() < rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
+    TriState relation = TRY(is_less_than(vm, lhs, rhs, true));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
-ThrowCompletionOr<Value> less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> less_than_equals(VM& vm, Value lhs, Value rhs)
 {
     if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() <= rhs.as_i32();
 
-    TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
+    TriState relation = TRY(is_less_than(vm, lhs, rhs, false));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
-ThrowCompletionOr<Value> bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> bitwise_and(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
             return Value(0);
-        return Value(TRY(lhs_numeric.to_i32(global_object)) & TRY(rhs_numeric.to_i32(global_object)));
+        return Value(TRY(lhs_numeric.to_i32(vm)) & TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer())));
@@ -954,11 +945,10 @@ ThrowCompletionOr<Value> bitwise_and(GlobalObject& global_object, Value lhs, Val
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
-ThrowCompletionOr<Value> bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> bitwise_or(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
             return Value(0);
@@ -966,7 +956,7 @@ ThrowCompletionOr<Value> bitwise_or(GlobalObject& global_object, Value lhs, Valu
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value(TRY(lhs_numeric.to_i32(global_object)) | TRY(rhs_numeric.to_i32(global_object)));
+        return Value(TRY(lhs_numeric.to_i32(vm)) | TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer())));
@@ -974,11 +964,10 @@ ThrowCompletionOr<Value> bitwise_or(GlobalObject& global_object, Value lhs, Valu
 }
 
 // 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
-ThrowCompletionOr<Value> bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
             return Value(0);
@@ -986,7 +975,7 @@ ThrowCompletionOr<Value> bitwise_xor(GlobalObject& global_object, Value lhs, Val
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value(TRY(lhs_numeric.to_i32(global_object)) ^ TRY(rhs_numeric.to_i32(global_object)));
+        return Value(TRY(lhs_numeric.to_i32(vm)) ^ TRY(rhs_numeric.to_i32(vm)));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer())));
@@ -994,26 +983,24 @@ ThrowCompletionOr<Value> bitwise_xor(GlobalObject& global_object, Value lhs, Val
 }
 
 // 13.5.6 Bitwise NOT Operator ( ~ ), https://tc39.es/ecma262/#sec-bitwise-not-operator
-ThrowCompletionOr<Value> bitwise_not(GlobalObject& global_object, Value lhs)
+ThrowCompletionOr<Value> bitwise_not(VM& vm, Value lhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
     if (lhs_numeric.is_number())
-        return Value(~TRY(lhs_numeric.to_i32(global_object)));
+        return Value(~TRY(lhs_numeric.to_i32(vm)));
     return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().bitwise_not()));
 }
 
 // 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
-ThrowCompletionOr<Value> unary_plus(GlobalObject& global_object, Value lhs)
+ThrowCompletionOr<Value> unary_plus(VM& vm, Value lhs)
 {
-    return TRY(lhs.to_number(global_object));
+    return TRY(lhs.to_number(vm));
 }
 
 // 13.5.5 Unary - Operator, https://tc39.es/ecma262/#sec-unary-minus-operator
-ThrowCompletionOr<Value> unary_minus(GlobalObject& global_object, Value lhs)
+ThrowCompletionOr<Value> unary_minus(VM& vm, Value lhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
     if (lhs_numeric.is_number()) {
         if (lhs_numeric.is_nan())
             return js_nan();
@@ -1027,19 +1014,18 @@ ThrowCompletionOr<Value> unary_minus(GlobalObject& global_object, Value lhs)
 }
 
 // 13.9.1 The Left Shift Operator ( << ), https://tc39.es/ecma262/#sec-left-shift-operator
-ThrowCompletionOr<Value> left_shift(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
-        auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
-        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
+        auto lhs_i32 = MUST(lhs_numeric.to_i32(vm));
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm)) % 32;
         return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1053,72 +1039,69 @@ ThrowCompletionOr<Value> left_shift(GlobalObject& global_object, Value lhs, Valu
 }
 
 // 13.9.2 The Signed Right Shift Operator ( >> ), https://tc39.es/ecma262/#sec-signed-right-shift-operator
-ThrowCompletionOr<Value> right_shift(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> right_shift(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        auto lhs_i32 = MUST(lhs_numeric.to_i32(global_object));
-        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
+        auto lhs_i32 = MUST(lhs_numeric.to_i32(vm));
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm)) % 32;
         return Value(lhs_i32 >> rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         auto rhs_negated = rhs_numeric.as_bigint().big_integer();
         rhs_negated.negate();
-        return left_shift(global_object, lhs, js_bigint(vm, rhs_negated));
+        return left_shift(vm, lhs, js_bigint(vm, rhs_negated));
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "right-shift");
 }
 
 // 13.9.3 The Unsigned Right Shift Operator ( >>> ), https://tc39.es/ecma262/#sec-unsigned-right-shift-operator
-ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> unsigned_right_shift(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
-        auto lhs_u32 = MUST(lhs_numeric.to_u32(global_object));
-        auto rhs_u32 = MUST(rhs_numeric.to_u32(global_object)) % 32;
+        auto lhs_u32 = MUST(lhs_numeric.to_u32(vm));
+        auto rhs_u32 = MUST(rhs_numeric.to_u32(vm)) % 32;
         return Value(lhs_u32 >> rhs_u32);
     }
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperator, "unsigned right-shift");
 }
 
 // 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
-ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
 {
     if (both_number(lhs, rhs)) {
         if (lhs.is_int32() && rhs.is_int32()) {
             Checked<i32> result;
-            result = MUST(lhs.to_i32(global_object));
-            result += MUST(rhs.to_i32(global_object));
+            result = MUST(lhs.to_i32(vm));
+            result += MUST(rhs.to_i32(vm));
             if (!result.has_overflow())
                 return Value(result.value());
         }
         return Value(lhs.as_double() + rhs.as_double());
     }
-    auto& vm = global_object.vm();
-    auto lhs_primitive = TRY(lhs.to_primitive(global_object));
-    auto rhs_primitive = TRY(rhs.to_primitive(global_object));
+    auto lhs_primitive = TRY(lhs.to_primitive(vm));
+    auto rhs_primitive = TRY(rhs.to_primitive(vm));
 
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = TRY(lhs_primitive.to_primitive_string(global_object));
-        auto rhs_string = TRY(rhs_primitive.to_primitive_string(global_object));
-        return js_rope_string(global_object.vm(), *lhs_string, *rhs_string);
+        auto lhs_string = TRY(lhs_primitive.to_primitive_string(vm));
+        auto rhs_string = TRY(rhs_primitive.to_primitive_string(vm));
+        return js_rope_string(vm, *lhs_string, *rhs_string);
     }
 
-    auto lhs_numeric = TRY(lhs_primitive.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs_primitive.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs_primitive.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs_primitive.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
@@ -1127,11 +1110,10 @@ ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
 }
 
 // 13.8.2 The Subtraction Operator ( - ), https://tc39.es/ecma262/#sec-subtraction-operator-minus
-ThrowCompletionOr<Value> sub(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> sub(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         double lhsd = lhs_numeric.as_double();
         double rhsd = rhs_numeric.as_double();
@@ -1144,11 +1126,10 @@ ThrowCompletionOr<Value> sub(GlobalObject& global_object, Value lhs, Value rhs)
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
-ThrowCompletionOr<Value> mul(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> mul(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
@@ -1157,11 +1138,10 @@ ThrowCompletionOr<Value> mul(GlobalObject& global_object, Value lhs, Value rhs)
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
-ThrowCompletionOr<Value> div(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> div(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1173,11 +1153,10 @@ ThrowCompletionOr<Value> div(GlobalObject& global_object, Value lhs, Value rhs)
 }
 
 // 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
-ThrowCompletionOr<Value> mod(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> mod(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric)) {
         // 6.1.6.1.6 Number::remainder ( n, d ), https://tc39.es/ecma262/#sec-numeric-types-number-remainder
         // The ECMA specification is describing the mathematical definition of modulus
@@ -1247,11 +1226,10 @@ static Value exp_double(Value base, Value exponent)
 }
 
 // 13.6 Exponentiation Operator, https://tc39.es/ecma262/#sec-exp-operator
-ThrowCompletionOr<Value> exp(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> exp(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
-    auto lhs_numeric = TRY(lhs.to_numeric(global_object));
-    auto rhs_numeric = TRY(rhs.to_numeric(global_object));
+    auto lhs_numeric = TRY(lhs.to_numeric(vm));
+    auto rhs_numeric = TRY(rhs.to_numeric(vm));
     if (both_number(lhs_numeric, rhs_numeric))
         return exp_double(lhs_numeric, rhs_numeric);
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1262,41 +1240,41 @@ ThrowCompletionOr<Value> exp(GlobalObject& global_object, Value lhs, Value rhs)
     return vm.throw_completion<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
 }
 
-ThrowCompletionOr<Value> in(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> in(VM& vm, Value lhs, Value rhs)
 {
     if (!rhs.is_object())
-        return global_object.vm().throw_completion<TypeError>(ErrorType::InOperatorWithObject);
-    auto lhs_property_key = TRY(lhs.to_property_key(global_object));
+        return vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject);
+    auto lhs_property_key = TRY(lhs.to_property_key(vm));
     return Value(TRY(rhs.as_object().has_property(lhs_property_key)));
 }
 
 // 13.10.2 InstanceofOperator ( V, target ), https://tc39.es/ecma262/#sec-instanceofoperator
-ThrowCompletionOr<Value> instance_of(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> instance_of(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
     if (!rhs.is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects());
-    auto has_instance_method = TRY(rhs.get_method(global_object, *vm.well_known_symbol_has_instance()));
+    auto has_instance_method = TRY(rhs.get_method(vm, *vm.well_known_symbol_has_instance()));
     if (has_instance_method) {
         auto has_instance_result = TRY(call(global_object, *has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());
     }
     if (!rhs.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects());
-    return TRY(ordinary_has_instance(global_object, lhs, rhs));
+    return TRY(ordinary_has_instance(vm, lhs, rhs));
 }
 
 // 7.3.22 OrdinaryHasInstance ( C, O ), https://tc39.es/ecma262/#sec-ordinaryhasinstance
-ThrowCompletionOr<Value> ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<Value> ordinary_has_instance(VM& vm, Value lhs, Value rhs)
 {
-    auto& vm = global_object.vm();
     if (!rhs.is_function())
         return Value(false);
     auto& rhs_function = rhs.as_function();
 
     if (is<BoundFunction>(rhs_function)) {
         auto& bound_target = static_cast<BoundFunction const&>(rhs_function);
-        return instance_of(global_object, lhs, Value(&bound_target.bound_target_function()));
+        return instance_of(vm, lhs, Value(&bound_target.bound_target_function()));
     }
 
     if (!lhs.is_object())
@@ -1393,7 +1371,7 @@ bool is_strictly_equal(Value lhs, Value rhs)
 }
 
 // 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal
-ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<bool> is_loosely_equal(VM& vm, Value lhs, Value rhs)
 {
     // 1. If Type(x) is the same as Type(y), then
     if (same_type_for_equality(lhs, rhs)) {
@@ -1421,47 +1399,47 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
 
     // 5. If Type(x) is Number and Type(y) is String, return ! IsLooselyEqual(x, ! ToNumber(y)).
     if (lhs.is_number() && rhs.is_string())
-        return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
+        return is_loosely_equal(vm, lhs, MUST(rhs.to_number(vm)));
 
     // 6. If Type(x) is String and Type(y) is Number, return ! IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_string() && rhs.is_number())
-        return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
+        return is_loosely_equal(vm, MUST(lhs.to_number(vm)), rhs);
 
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
         // a. Let n be StringToBigInt(y).
-        auto bigint = rhs.string_to_bigint(global_object);
+        auto bigint = rhs.string_to_bigint(vm);
 
         // b. If n is undefined, return false.
         if (!bigint.has_value())
             return false;
 
         // c. Return ! IsLooselyEqual(x, n).
-        return is_loosely_equal(global_object, lhs, *bigint);
+        return is_loosely_equal(vm, lhs, *bigint);
     }
 
     // 8. If Type(x) is String and Type(y) is BigInt, return ! IsLooselyEqual(y, x).
     if (lhs.is_string() && rhs.is_bigint())
-        return is_loosely_equal(global_object, rhs, lhs);
+        return is_loosely_equal(vm, rhs, lhs);
 
     // 9. If Type(x) is Boolean, return ! IsLooselyEqual(! ToNumber(x), y).
     if (lhs.is_boolean())
-        return is_loosely_equal(global_object, MUST(lhs.to_number(global_object)), rhs);
+        return is_loosely_equal(vm, MUST(lhs.to_number(vm)), rhs);
 
     // 10. If Type(y) is Boolean, return ! IsLooselyEqual(x, ! ToNumber(y)).
     if (rhs.is_boolean())
-        return is_loosely_equal(global_object, lhs, MUST(rhs.to_number(global_object)));
+        return is_loosely_equal(vm, lhs, MUST(rhs.to_number(vm)));
 
     // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return ! IsLooselyEqual(x, ? ToPrimitive(y)).
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
-        auto rhs_primitive = TRY(rhs.to_primitive(global_object));
-        return is_loosely_equal(global_object, lhs, rhs_primitive);
+        auto rhs_primitive = TRY(rhs.to_primitive(vm));
+        return is_loosely_equal(vm, lhs, rhs_primitive);
     }
 
     // 12. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return ! IsLooselyEqual(? ToPrimitive(x), y).
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_bigint() || rhs.is_symbol())) {
-        auto lhs_primitive = TRY(lhs.to_primitive(global_object));
-        return is_loosely_equal(global_object, lhs_primitive, rhs);
+        auto lhs_primitive = TRY(lhs.to_primitive(vm));
+        return is_loosely_equal(vm, lhs_primitive, rhs);
     }
 
     // 13. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
@@ -1474,9 +1452,9 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
         if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
-            return Crypto::SignedBigInteger { MUST(lhs.to_i32(global_object)) } == rhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { MUST(lhs.to_i32(vm)) } == rhs.as_bigint().big_integer();
         else
-            return Crypto::SignedBigInteger { MUST(rhs.to_i32(global_object)) } == lhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { MUST(rhs.to_i32(vm)) } == lhs.as_bigint().big_integer();
     }
 
     // 14. Return false.
@@ -1484,17 +1462,17 @@ ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs,
 }
 
 // 7.2.13 IsLessThan ( x, y, LeftFirst ), https://tc39.es/ecma262/#sec-islessthan
-ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs, Value rhs, bool left_first)
+ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left_first)
 {
     Value x_primitive;
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = TRY(lhs.to_primitive(global_object, Value::PreferredType::Number));
-        y_primitive = TRY(rhs.to_primitive(global_object, Value::PreferredType::Number));
+        x_primitive = TRY(lhs.to_primitive(vm, Value::PreferredType::Number));
+        y_primitive = TRY(rhs.to_primitive(vm, Value::PreferredType::Number));
     } else {
-        y_primitive = TRY(lhs.to_primitive(global_object, Value::PreferredType::Number));
-        x_primitive = TRY(rhs.to_primitive(global_object, Value::PreferredType::Number));
+        y_primitive = TRY(lhs.to_primitive(vm, Value::PreferredType::Number));
+        x_primitive = TRY(rhs.to_primitive(vm, Value::PreferredType::Number));
     }
 
     if (x_primitive.is_string() && y_primitive.is_string()) {
@@ -1524,7 +1502,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs,
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
-        auto y_bigint = y_primitive.string_to_bigint(global_object);
+        auto y_bigint = y_primitive.string_to_bigint(vm);
         if (!y_bigint.has_value())
             return TriState::Unknown;
 
@@ -1534,7 +1512,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs,
     }
 
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
-        auto x_bigint = x_primitive.string_to_bigint(global_object);
+        auto x_bigint = x_primitive.string_to_bigint(vm);
         if (!x_bigint.has_value())
             return TriState::Unknown;
 
@@ -1543,8 +1521,8 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs,
         return TriState::False;
     }
 
-    auto x_numeric = TRY(x_primitive.to_numeric(global_object));
-    auto y_numeric = TRY(y_primitive.to_numeric(global_object));
+    auto x_numeric = TRY(x_primitive.to_numeric(vm));
+    auto y_numeric = TRY(y_primitive.to_numeric(vm));
 
     if (x_numeric.is_nan() || y_numeric.is_nan())
         return TriState::Unknown;
@@ -1574,12 +1552,12 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs,
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
         x_lower_than_y = x_numeric.is_integral_number()
-            ? Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { MUST(x_numeric.to_i32(global_object)) + 1 } < y_numeric.as_bigint().big_integer());
+            ? Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) } < y_numeric.as_bigint().big_integer()
+            : (Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { MUST(x_numeric.to_i32(vm)) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
         x_lower_than_y = y_numeric.is_integral_number()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(global_object)) + 1 });
+            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) }
+            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { MUST(y_numeric.to_i32(vm)) + 1 });
     }
     if (x_lower_than_y)
         return TriState::True;
@@ -1588,10 +1566,11 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, Value lhs,
 }
 
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(VM& vm, PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
 {
-    auto& vm = global_object.vm();
-    auto property = TRY(get(global_object, property_key));
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+    auto property = TRY(get(vm, property_key));
     if (!property.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, property.to_string_without_side_effects());
 

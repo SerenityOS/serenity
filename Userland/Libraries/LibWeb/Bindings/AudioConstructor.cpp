@@ -37,6 +37,8 @@ JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
 // https://html.spec.whatwg.org/multipage/media.html#dom-audio
 JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
 {
+    auto& vm = this->vm();
+
     // 1. Let document be the current global object's associated Document.
     auto& window = static_cast<WindowObject&>(HTML::current_global_object());
     auto& document = window.impl().associated_document();
@@ -47,12 +49,12 @@ JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
     // 3. Set an attribute value for audio using "preload" and "auto".
     audio->set_attribute(HTML::AttributeNames::preload, "auto"sv);
 
-    auto src_value = vm().argument(0);
+    auto src_value = vm.argument(0);
 
     // 4. If src is given, then set an attribute value for audio using "src" and src.
     //    (This will cause the user agent to invoke the object's resource selection algorithm before returning.)
     if (!src_value.is_undefined()) {
-        auto src = TRY(src_value.to_string(global_object()));
+        auto src = TRY(src_value.to_string(vm));
         audio->set_attribute(HTML::AttributeNames::src, move(src));
     }
 

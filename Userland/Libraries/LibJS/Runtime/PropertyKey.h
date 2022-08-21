@@ -26,7 +26,7 @@ public:
         No,
     };
 
-    static ThrowCompletionOr<PropertyKey> from_value(GlobalObject& global_object, Value value)
+    static ThrowCompletionOr<PropertyKey> from_value(VM& vm, Value value)
     {
         if (value.is_empty())
             return PropertyKey {};
@@ -34,7 +34,7 @@ public:
             return PropertyKey { value.as_symbol() };
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return static_cast<u32>(value.as_double());
-        return TRY(value.to_string(global_object));
+        return TRY(value.to_string(vm));
     }
 
     PropertyKey() = default;

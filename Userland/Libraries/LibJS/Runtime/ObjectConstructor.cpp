@@ -75,7 +75,7 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(realm, global_object.object_prototype());
-    return value.to_object(global_object);
+    return value.to_object(vm);
 }
 
 enum class GetOwnPropertyKeysType {
@@ -89,7 +89,7 @@ static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(GlobalObject
     auto& vm = global_object.vm();
 
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(value.to_object(global_object));
+    auto* object = TRY(value.to_object(vm));
 
     // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
     auto keys = TRY(object->internal_own_property_keys());
@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Return ? obj.[[GetPrototypeOf]]().
     return TRY(object->internal_get_prototype_of());
@@ -235,7 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
 
-        auto property_key = TRY(key.to_property_key(global_object));
+        auto property_key = TRY(key.to_property_key(vm));
         MUST(object->create_data_property_or_throw(property_key, value));
 
         return {};
@@ -259,8 +259,8 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 // 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
-    auto* object = TRY(vm.argument(0).to_object(global_object));
-    auto key = TRY(vm.argument(1).to_property_key(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto key = TRY(vm.argument(1).to_property_key(vm));
     auto descriptor = TRY(object->internal_get_own_property(key));
     return from_property_descriptor(global_object, descriptor);
 }
@@ -271,7 +271,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto& realm = *global_object.associated_realm();
 
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
     auto own_keys = TRY(object->internal_own_property_keys());
@@ -281,7 +281,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
-        auto property_key = MUST(PropertyKey::from_value(global_object, key));
+        auto property_key = MUST(PropertyKey::from_value(vm, key));
 
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
         auto desc = TRY(object->internal_get_own_property(property_key));
@@ -303,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
 {
     if (!vm.argument(0).is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
-    auto key = TRY(vm.argument(1).to_property_key(global_object));
+    auto key = TRY(vm.argument(1).to_property_key(vm));
     auto descriptor = TRY(to_property_descriptor(global_object, vm.argument(2)));
     TRY(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
     return vm.argument(0);
@@ -334,7 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
     return Array::create_from(realm, name_list);
 }
@@ -344,7 +344,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
     return Array::create_from(realm, name_list);
 }
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
     auto& realm = *global_object.associated_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
     return Array::create_from(realm, name_list);
 }
@@ -388,10 +388,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Let key be ? ToPropertyKey(P).
-    auto key = TRY(vm.argument(1).to_property_key(global_object));
+    auto key = TRY(vm.argument(1).to_property_key(vm));
 
     // 3. Return ? HasOwnProperty(obj, key).
     return Value(TRY(object->has_own_property(key)));
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 {
     // 1. Let to be ? ToObject(target).
-    auto* to = TRY(vm.argument(0).to_object(global_object));
+    auto* to = TRY(vm.argument(0).to_object(vm));
 
     // 2. If only one argument was passed, return to.
     if (vm.argument_count() == 1)
@@ -416,14 +416,14 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             continue;
 
         // i. Let from be ! ToObject(nextSource).
-        auto* from = MUST(next_source.to_object(global_object));
+        auto* from = MUST(next_source.to_object(vm));
 
         // ii. Let keys be ? from.[[OwnPropertyKeys]]().
         auto keys = TRY(from->internal_own_property_keys());
 
         // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {
-            auto property_key = MUST(PropertyKey::from_value(global_object, next_key));
+            auto property_key = MUST(PropertyKey::from_value(vm, next_key));
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
             auto desc = TRY(from->internal_get_own_property(property_key));

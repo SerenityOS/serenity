@@ -119,6 +119,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 {
     VERIFY(wrapper());
     auto& global_object = wrapper()->global_object();
+    auto& vm = wrapper()->vm();
 
     // 1. If traverser’s active flag is set, then throw an "InvalidStateError" DOMException.
     if (m_active)
@@ -150,7 +151,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
     m_active = false;
 
     // 8. Return result.
-    auto result_value = TRY(result.value()->to_i32(global_object));
+    auto result_value = TRY(result.value()->to_i32(vm));
     return static_cast<NodeFilter::Result>(result_value);
 }
 

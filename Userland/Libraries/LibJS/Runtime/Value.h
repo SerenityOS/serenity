@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -141,10 +141,10 @@ public:
     bool is_bigint() const { return m_value.tag == BIGINT_TAG; };
     bool is_nullish() const { return (m_value.tag & IS_NULLISH_EXTRACT_PATTERN) == IS_NULLISH_PATTERN; }
     bool is_cell() const { return (m_value.tag & IS_CELL_PATTERN) == IS_CELL_PATTERN; }
-    ThrowCompletionOr<bool> is_array(GlobalObject&) const;
+    ThrowCompletionOr<bool> is_array(VM&) const;
     bool is_function() const;
     bool is_constructor() const;
-    ThrowCompletionOr<bool> is_regexp(GlobalObject&) const;
+    ThrowCompletionOr<bool> is_regexp(VM&) const;
 
     bool is_nan() const
     {
@@ -353,35 +353,35 @@ public:
 
     u64 encoded() const { return m_value.encoded; }
 
-    ThrowCompletionOr<String> to_string(GlobalObject&) const;
-    ThrowCompletionOr<Utf16String> to_utf16_string(GlobalObject&) const;
-    ThrowCompletionOr<PrimitiveString*> to_primitive_string(GlobalObject&);
-    ThrowCompletionOr<Value> to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
-    ThrowCompletionOr<Object*> to_object(GlobalObject&) const;
-    ThrowCompletionOr<Value> to_numeric(GlobalObject&) const;
-    ThrowCompletionOr<Value> to_number(GlobalObject&) const;
-    ThrowCompletionOr<BigInt*> to_bigint(GlobalObject&) const;
-    ThrowCompletionOr<i64> to_bigint_int64(GlobalObject&) const;
-    ThrowCompletionOr<u64> to_bigint_uint64(GlobalObject&) const;
-    ThrowCompletionOr<double> to_double(GlobalObject&) const;
-    ThrowCompletionOr<PropertyKey> to_property_key(GlobalObject&) const;
-    ThrowCompletionOr<i32> to_i32(GlobalObject& global_object) const;
-    ThrowCompletionOr<u32> to_u32(GlobalObject&) const;
-    ThrowCompletionOr<i16> to_i16(GlobalObject&) const;
-    ThrowCompletionOr<u16> to_u16(GlobalObject&) const;
-    ThrowCompletionOr<i8> to_i8(GlobalObject&) const;
-    ThrowCompletionOr<u8> to_u8(GlobalObject&) const;
-    ThrowCompletionOr<u8> to_u8_clamp(GlobalObject&) const;
-    ThrowCompletionOr<size_t> to_length(GlobalObject&) const;
-    ThrowCompletionOr<size_t> to_index(GlobalObject&) const;
-    ThrowCompletionOr<double> to_integer_or_infinity(GlobalObject&) const;
+    ThrowCompletionOr<String> to_string(VM&) const;
+    ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
+    ThrowCompletionOr<PrimitiveString*> to_primitive_string(VM&);
+    ThrowCompletionOr<Value> to_primitive(VM&, PreferredType preferred_type = PreferredType::Default) const;
+    ThrowCompletionOr<Object*> to_object(VM&) const;
+    ThrowCompletionOr<Value> to_numeric(VM&) const;
+    ThrowCompletionOr<Value> to_number(VM&) const;
+    ThrowCompletionOr<BigInt*> to_bigint(VM&) const;
+    ThrowCompletionOr<i64> to_bigint_int64(VM&) const;
+    ThrowCompletionOr<u64> to_bigint_uint64(VM&) const;
+    ThrowCompletionOr<double> to_double(VM&) const;
+    ThrowCompletionOr<PropertyKey> to_property_key(VM&) const;
+    ThrowCompletionOr<i32> to_i32(VM&) const;
+    ThrowCompletionOr<u32> to_u32(VM&) const;
+    ThrowCompletionOr<i16> to_i16(VM&) const;
+    ThrowCompletionOr<u16> to_u16(VM&) const;
+    ThrowCompletionOr<i8> to_i8(VM&) const;
+    ThrowCompletionOr<u8> to_u8(VM&) const;
+    ThrowCompletionOr<u8> to_u8_clamp(VM&) const;
+    ThrowCompletionOr<size_t> to_length(VM&) const;
+    ThrowCompletionOr<size_t> to_index(VM&) const;
+    ThrowCompletionOr<double> to_integer_or_infinity(VM&) const;
     bool to_boolean() const;
 
-    ThrowCompletionOr<Value> get(GlobalObject&, PropertyKey const&) const;
-    ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyKey const&) const;
+    ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
+    ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
     String to_string_without_side_effects() const;
-    Optional<BigInt*> string_to_bigint(GlobalObject& global_object) const;
+    Optional<BigInt*> string_to_bigint(VM&) const;
 
     Value value_or(Value fallback) const
     {
@@ -395,7 +395,7 @@ public:
     bool operator==(Value const&) const;
 
     template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args);
+    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(VM&, PropertyKey const& property_key, Args... args);
 
 private:
     Value(u64 tag, u64 val)
@@ -447,9 +447,9 @@ private:
         return reinterpret_cast<PointerType*>(ptr_val);
     }
 
-    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyKey const&, Optional<MarkedVector<Value>> arguments);
+    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(VM&, PropertyKey const&, Optional<MarkedVector<Value>> arguments);
 
-    ThrowCompletionOr<i32> to_i32_slow_case(GlobalObject&) const;
+    ThrowCompletionOr<i32> to_i32_slow_case(VM&) const;
 
     union {
         double as_double;
@@ -462,11 +462,11 @@ private:
 
     friend Value js_undefined();
     friend Value js_null();
-    friend ThrowCompletionOr<Value> greater_than(GlobalObject&, Value lhs, Value rhs);
-    friend ThrowCompletionOr<Value> greater_than_equals(GlobalObject&, Value lhs, Value rhs);
-    friend ThrowCompletionOr<Value> less_than(GlobalObject&, Value lhs, Value rhs);
-    friend ThrowCompletionOr<Value> less_than_equals(GlobalObject&, Value lhs, Value rhs);
-    friend ThrowCompletionOr<Value> add(GlobalObject&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> greater_than(VM&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> greater_than_equals(VM&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> less_than(VM&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> less_than_equals(VM&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> add(VM&, Value lhs, Value rhs);
     friend bool same_value_non_numeric(Value lhs, Value rhs);
 };
 
@@ -501,35 +501,35 @@ inline void Cell::Visitor::visit(Value value)
         visit_impl(value.as_cell());
 }
 
-ThrowCompletionOr<Value> greater_than(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> greater_than_equals(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> less_than(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> less_than_equals(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> bitwise_and(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> bitwise_or(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> bitwise_xor(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> bitwise_not(GlobalObject&, Value);
-ThrowCompletionOr<Value> unary_plus(GlobalObject&, Value);
-ThrowCompletionOr<Value> unary_minus(GlobalObject&, Value);
-ThrowCompletionOr<Value> left_shift(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> right_shift(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> add(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> sub(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> mul(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> div(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> mod(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> exp(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> in(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> instance_of(GlobalObject&, Value lhs, Value rhs);
-ThrowCompletionOr<Value> ordinary_has_instance(GlobalObject&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> greater_than(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> greater_than_equals(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> less_than(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> less_than_equals(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> bitwise_and(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> bitwise_or(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> bitwise_xor(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> bitwise_not(VM&, Value);
+ThrowCompletionOr<Value> unary_plus(VM&, Value);
+ThrowCompletionOr<Value> unary_minus(VM&, Value);
+ThrowCompletionOr<Value> left_shift(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> right_shift(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> unsigned_right_shift(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> add(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> sub(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> mul(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> div(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> mod(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> exp(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> in(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> instance_of(VM&, Value lhs, Value rhs);
+ThrowCompletionOr<Value> ordinary_has_instance(VM&, Value lhs, Value rhs);
 
-ThrowCompletionOr<bool> is_loosely_equal(GlobalObject&, Value lhs, Value rhs);
+ThrowCompletionOr<bool> is_loosely_equal(VM&, Value lhs, Value rhs);
 bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
-ThrowCompletionOr<TriState> is_less_than(GlobalObject&, Value lhs, Value rhs, bool left_first);
+ThrowCompletionOr<TriState> is_less_than(VM&, Value lhs, Value rhs, bool left_first);
 
 double to_integer_or_infinity(double);
 

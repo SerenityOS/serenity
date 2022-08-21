@@ -184,7 +184,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObje
     if (this_value.is_nullish())
         this_value = &global_object;
 
-    auto* this_object = MUST(this_value.to_object(global_object));
+    auto* this_object = MUST(this_value.to_object(vm));
 
     if (!is<WindowObject>(*this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WindowObject");
@@ -200,7 +200,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
     auto* impl = TRY(impl_from(vm, global_object));
     String message = "";
     if (vm.argument_count())
-        message = TRY(vm.argument(0).to_string(global_object));
+        message = TRY(vm.argument(0).to_string(vm));
     impl->alert(message);
     return JS::js_undefined();
 }
@@ -210,7 +210,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
     auto* impl = TRY(impl_from(vm, global_object));
     String message = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(global_object));
+        message = TRY(vm.argument(0).to_string(vm));
     return JS::Value(impl->confirm(message));
 }
 
@@ -220,9 +220,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
     String message = "";
     String default_ = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(global_object));
+        message = TRY(vm.argument(0).to_string(vm));
     if (!vm.argument(1).is_undefined())
-        default_ = TRY(vm.argument(1).to_string(global_object));
+        default_ = TRY(vm.argument(1).to_string(vm));
     auto response = impl->prompt(message, default_);
     if (response.is_null())
         return JS::js_null();
@@ -231,9 +231,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
 
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::GlobalObject& global_object, JS::Value handler)
 {
+    auto& vm = global_object.vm();
     if (handler.is_function())
         return Bindings::CallbackType(JS::make_handle<JS::Object>(handler.as_function()), HTML::incumbent_settings_object());
-    return TRY(handler.to_string(global_object));
+    return TRY(handler.to_string(vm));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
@@ -248,7 +249,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 
     i32 timeout = 0;
     if (vm.argument_count() >= 2)
-        timeout = TRY(vm.argument(1).to_i32(global_object));
+        timeout = TRY(vm.argument(1).to_i32(vm));
 
     JS::MarkedVector<JS::Value> arguments { vm.heap() };
     for (size_t i = 2; i < vm.argument_count(); ++i)
@@ -270,7 +271,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
 
     i32 timeout = 0;
     if (vm.argument_count() >= 2)
-        timeout = TRY(vm.argument(1).to_i32(global_object));
+        timeout = TRY(vm.argument(1).to_i32(vm));
 
     JS::MarkedVector<JS::Value> arguments { vm.heap() };
     for (size_t i = 2; i < vm.argument_count(); ++i)
@@ -287,7 +288,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
 
     i32 id = 0;
     if (vm.argument_count())
-        id = TRY(vm.argument(0).to_i32(global_object));
+        id = TRY(vm.argument(0).to_i32(vm));
 
     impl->clear_timeout(id);
     return JS::js_undefined();
@@ -300,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
 
     i32 id = 0;
     if (vm.argument_count())
-        id = TRY(vm.argument(0).to_i32(global_object));
+        id = TRY(vm.argument(0).to_i32(vm));
 
     impl->clear_interval(id);
     return JS::js_undefined();
@@ -311,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
-    auto* callback_object = TRY(vm.argument(0).to_object(global_object));
+    auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
@@ -323,7 +324,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
-    auto id = TRY(vm.argument(0).to_i32(global_object));
+    auto id = TRY(vm.argument(0).to_i32(vm));
     impl->cancel_animation_frame(id);
     return JS::js_undefined();
 }
@@ -333,7 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "queueMicrotask");
-    auto* callback_object = TRY(vm.argument(0).to_object(global_object));
+    auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
@@ -348,7 +349,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_idle_callback)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "requestIdleCallback");
-    auto* callback_object = TRY(vm.argument(0).to_object(global_object));
+    auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     // FIXME: accept options object
@@ -363,7 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_idle_callback)
     auto* impl = TRY(impl_from(vm, global_object));
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelIdleCallback");
-    auto id = TRY(vm.argument(0).to_u32(global_object));
+    auto id = TRY(vm.argument(0).to_u32(vm));
     impl->cancel_idle_callback(id);
     return JS::js_undefined();
 }
@@ -372,7 +373,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
     auto decoded = decode_base64(StringView(string));
     if (decoded.is_error())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidFormat, "Base64");
@@ -387,7 +388,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
-    auto string = TRY(vm.argument(0).to_string(global_object));
+    auto string = TRY(vm.argument(0).to_string(vm));
 
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
@@ -515,7 +516,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    auto* object = TRY(vm.argument(0).to_object(global_object));
+    auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<ElementWrapper>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "DOM element");
 
@@ -534,7 +535,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    auto media = TRY(vm.argument(0).to_string(global_object));
+    auto media = TRY(vm.argument(0).to_string(vm));
     return wrap(global_object, impl->match_media(move(media)));
 }
 
@@ -579,7 +580,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
     String behavior_string = "auto";
 
     if (vm.argument_count() == 1) {
-        auto* options = TRY(vm.argument(0).to_object(global_object));
+        auto* options = TRY(vm.argument(0).to_object(vm));
         auto left = TRY(options->get("left"));
         if (!left.is_undefined())
             x_value = left;
@@ -590,7 +591,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 
         auto behavior_string_value = TRY(options->get("behavior"));
         if (!behavior_string_value.is_undefined())
-            behavior_string = TRY(behavior_string_value.to_string(global_object));
+            behavior_string = TRY(behavior_string_value.to_string(vm));
         if (behavior_string != "smooth" && behavior_string != "auto")
             return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
 
@@ -602,10 +603,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
 
-    double x = TRY(x_value.to_double(global_object));
+    double x = TRY(x_value.to_double(vm));
     x = JS::Value(x).is_finite_number() ? x : 0.0;
 
-    double y = TRY(y_value.to_double(global_object));
+    double y = TRY(y_value.to_double(vm));
     y = JS::Value(y).is_finite_number() ? y : 0.0;
 
     // FIXME: Are we calculating the viewport in the way this function expects?
@@ -630,7 +631,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     if (vm.argument_count() == 0) {
         options = JS::Object::create(realm, nullptr);
     } else if (vm.argument_count() == 1) {
-        options = TRY(vm.argument(0).to_object(global_object));
+        options = TRY(vm.argument(0).to_object(vm));
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
         options = JS::Object::create(realm, nullptr);
@@ -640,10 +641,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     }
 
     auto left_value = TRY(options->get("left"));
-    auto left = TRY(left_value.to_double(global_object));
+    auto left = TRY(left_value.to_double(vm));
 
     auto top_value = TRY(options->get("top"));
-    auto top = TRY(top_value.to_double(global_object));
+    auto top = TRY(top_value.to_double(vm));
 
     left = JS::Value(left).is_finite_number() ? left : 0.0;
     top = JS::Value(top).is_finite_number() ? top : 0.0;
@@ -653,7 +654,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     top = top + current_scroll_position.y();
 
     auto behavior_string_value = TRY(options->get("behavior"));
-    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_string(global_object));
+    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
         return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
@@ -698,7 +699,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::post_message)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    auto target_origin = TRY(vm.argument(1).to_string(global_object));
+    auto target_origin = TRY(vm.argument(1).to_string(vm));
     impl->post_message(vm.argument(0), target_origin);
     return JS::js_undefined();
 }
@@ -733,7 +734,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_getter)
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_setter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    impl->set_name(TRY(vm.argument(0).to_string(global_object)));
+    impl->set_name(TRY(vm.argument(0).to_string(vm)));
     return JS::js_undefined();
 }
 

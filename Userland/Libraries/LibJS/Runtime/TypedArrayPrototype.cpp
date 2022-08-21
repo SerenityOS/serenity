@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
     auto length = typed_array->array_length();
-    auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(vm));
     if (Value(relative_index).is_infinity())
         return js_undefined();
     Checked<size_t> index { 0 };
@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     auto length = typed_array->array_length();
 
     // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
-    auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
     double to;
     if (Value(relative_target).is_negative_infinity()) {
@@ -241,7 +241,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     }
 
     // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
-    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     double from;
     if (Value(relative_start).is_negative_infinity()) {
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     if (vm.argument(2).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY(vm.argument(2).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(2).to_integer_or_infinity(vm));
 
     double final;
     if (Value(relative_end).is_negative_infinity()) {
@@ -415,11 +415,11 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 
     Value value;
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-        value = TRY(vm.argument(0).to_bigint(global_object));
+        value = TRY(vm.argument(0).to_bigint(vm));
     else
-        value = TRY(vm.argument(0).to_number(global_object));
+        value = TRY(vm.argument(0).to_number(vm));
 
-    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     u32 k;
     if (Value(relative_start).is_negative_infinity())
@@ -433,7 +433,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     if (vm.argument(2).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY(vm.argument(2).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(2).to_integer_or_infinity(vm));
 
     u32 final;
     if (Value(relative_end).is_negative_infinity())
@@ -591,7 +591,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
     if (length == 0)
         return Value(false);
 
-    auto n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    auto n = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -630,7 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
     if (length == 0)
         return Value(-1);
 
-    auto n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    auto n = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -669,7 +669,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     auto length = typed_array->array_length();
     String separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY(vm.argument(0).to_string(global_object));
+        separator = TRY(vm.argument(0).to_string(vm));
 
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
@@ -678,7 +678,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
         auto value = TRY(typed_array->get(i));
         if (value.is_nullish())
             continue;
-        auto string = TRY(value.to_string(global_object));
+        auto string = TRY(value.to_string(vm));
         builder.append(string);
     }
 
@@ -706,7 +706,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 
     double n;
     if (vm.argument_count() > 1)
-        n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+        n = TRY(vm.argument(1).to_integer_or_infinity(vm));
     else
         n = length - 1;
 
@@ -1026,7 +1026,7 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(GlobalObject& glo
     auto target_length = target.array_length();
 
     // 4. Let src be ? ToObject(source).
-    auto* src = TRY(source.to_object(global_object));
+    auto* src = TRY(source.to_object(vm));
 
     // 5. Let srcLength be ? LengthOfArrayLike(src).
     auto source_length = TRY(length_of_array_like(global_object, *src));
@@ -1081,7 +1081,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
     // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
 
     // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
-    auto target_offset = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    auto target_offset = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     // 5. If targetOffset < 0, throw a RangeError exception.
     if (target_offset < 0)
@@ -1118,7 +1118,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     auto length = typed_array->array_length();
 
     // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
-    auto relative_start = TRY(start.to_integer_or_infinity(global_object));
+    auto relative_start = TRY(start.to_integer_or_infinity(vm));
 
     i32 k = 0;
 
@@ -1138,7 +1138,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     if (end.is_undefined())
         relative_end = length;
     else
-        relative_end = TRY(end.to_integer_or_infinity(global_object));
+        relative_end = TRY(end.to_integer_or_infinity(vm));
 
     i32 final = 0;
 
@@ -1283,7 +1283,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         if (!compare_fn.is_undefined()) {
             // i. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
             auto result = TRY(call(global_object, compare_fn.as_function(), js_undefined(), x, y));
-            auto value = TRY(result.to_number(global_object));
+            auto value = TRY(result.to_number(vm));
 
             // ii. If v is NaN, return +0𝔽.
             if (value.is_nan())
@@ -1364,7 +1364,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     auto source_length = typed_array->array_length();
 
     // 6. Let relativeBegin be ? ToIntegerOrInfinity(begin).
-    auto relative_begin = TRY(begin.to_integer_or_infinity(global_object));
+    auto relative_begin = TRY(begin.to_integer_or_infinity(vm));
 
     i32 begin_index = 0;
 
@@ -1384,7 +1384,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     if (end.is_undefined())
         relative_end = source_length;
     else
-        relative_end = TRY(end.to_integer_or_infinity(global_object));
+        relative_end = TRY(end.to_integer_or_infinity(vm));
 
     i32 end_index = 0;
 
@@ -1462,8 +1462,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
         // c. If nextElement is not undefined or null, then
         if (!next_element.is_nullish()) {
             // i. Let S be ? ToString(? Invoke(nextElement, "toLocaleString", « locales, options »)).
-            auto locale_string_value = TRY(next_element.invoke(global_object, vm.names.toLocaleString, locales, options));
-            auto locale_string = TRY(locale_string_value.to_string(global_object));
+            auto locale_string_value = TRY(next_element.invoke(vm, vm.names.toLocaleString, locales, options));
+            auto locale_string = TRY(locale_string_value.to_string(vm));
 
             // ii. Set R to the string-concatenation of R and S.
             builder.append(locale_string);
@@ -1522,7 +1522,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be the this value.
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
 
     // 3. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
@@ -1574,7 +1574,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
     auto length = typed_array->array_length();
 
     // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
-    auto relative_index = TRY(index.to_integer_or_infinity(global_object));
+    auto relative_index = TRY(index.to_integer_or_infinity(vm));
 
     double actual_index = 0;
     // 5. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
@@ -1585,10 +1585,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 
     // 7. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-        value = TRY(value.to_bigint(global_object));
+        value = TRY(value.to_bigint(vm));
     // 8. Else, set value to ? ToNumber(value).
     else
-        value = TRY(value.to_number(global_object));
+        value = TRY(value.to_number(vm));
 
     // 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
     if (!is_valid_integer_index(*typed_array, CanonicalIndex(CanonicalIndex::Type::Index, actual_index)))

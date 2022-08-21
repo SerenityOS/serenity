@@ -37,6 +37,8 @@ JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-image
 JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
 {
+    auto& vm = this->vm();
+
     // 1. Let document be the current global object's associated Document.
     auto& window = static_cast<WindowObject&>(HTML::current_global_object());
     auto& document = window.impl().associated_document();
@@ -45,14 +47,14 @@ JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
     auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML);
 
     // 3. If width is given, then set an attribute value for img using "width" and width.
-    if (vm().argument_count() > 0) {
-        u32 width = TRY(vm().argument(0).to_u32(global_object()));
+    if (vm.argument_count() > 0) {
+        u32 width = TRY(vm.argument(0).to_u32(vm));
         image_element->set_attribute(HTML::AttributeNames::width, String::formatted("{}", width));
     }
 
     // 4. If height is given, then set an attribute value for img using "height" and height.
-    if (vm().argument_count() > 1) {
-        u32 height = TRY(vm().argument(1).to_u32(global_object()));
+    if (vm.argument_count() > 1) {
+        u32 height = TRY(vm.argument(1).to_u32(vm));
         image_element->set_attribute(HTML::AttributeNames::height, String::formatted("{}", height));
     }
 

@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(AgentObject::monotonic_now)
 
 JS_DEFINE_NATIVE_FUNCTION(AgentObject::sleep)
 {
-    auto milliseconds = TRY(vm.argument(0).to_i32(global_object));
+    auto milliseconds = TRY(vm.argument(0).to_i32(vm));
     ::usleep(milliseconds * 1000);
     return js_undefined();
 }

@@ -58,8 +58,8 @@ ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* proto
 // 20.1.3.2 Object.prototype.hasOwnProperty ( V ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
-    auto property_key = TRY(vm.argument(0).to_property_key(global_object));
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto property_key = TRY(vm.argument(0).to_property_key(vm));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
     return Value(TRY(this_object->has_own_property(property_key)));
 }
 
@@ -77,10 +77,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         return js_string(vm, "[object Null]");
 
     // 3. Let O be ! ToObject(this value).
-    auto* object = MUST(this_value.to_object(global_object));
+    auto* object = MUST(this_value.to_object(vm));
 
     // 4. Let isArray be ? IsArray(O).
-    auto is_array = TRY(Value(object).is_array(global_object));
+    auto is_array = TRY(Value(object).is_array(vm));
 
     String builtin_tag;
 
@@ -135,22 +135,22 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
     auto this_value = vm.this_value();
-    return this_value.invoke(global_object, vm.names.toString);
+    return this_value.invoke(vm, vm.names.toString);
 }
 
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
-    return TRY(vm.this_value().to_object(global_object));
+    return TRY(vm.this_value().to_object(vm));
 }
 
 // 20.1.3.4 Object.prototype.propertyIsEnumerable ( V ), https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
     // 1. Let P be ? ToPropertyKey(V).
-    auto property_key = TRY(vm.argument(0).to_property_key(global_object));
+    auto property_key = TRY(vm.argument(0).to_property_key(vm));
     // 2. Let O be ? ToObject(this value).
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
     auto property_descriptor = TRY(this_object->internal_get_own_property(property_key));
     // 4. If desc is undefined, return false.
@@ -167,7 +167,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
     if (!object_argument.is_object())
         return Value(false);
     auto* object = &object_argument.as_object();
-    auto* this_object = TRY(vm.this_value().to_object(global_object));
+    auto* this_object = TRY(vm.this_value().to_object(vm));
 
     for (;;) {
         object = TRY(object->internal_get_prototype_of());
@@ -181,7 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 // B.2.2.2 Object.prototype.__defineGetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
 
     auto getter = vm.argument(1);
     if (!getter.is_function())
@@ -189,7 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = TRY(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(vm));
 
     TRY(object->define_property_or_throw(key, descriptor));
 
@@ -199,7 +199,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 // B.2.2.3 Object.prototype.__defineSetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 {
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
 
     auto setter = vm.argument(1);
     if (!setter.is_function())
@@ -207,7 +207,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = TRY(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(vm));
 
     TRY(object->define_property_or_throw(key, descriptor));
 
@@ -217,9 +217,9 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 // B.2.2.4 Object.prototype.__lookupGetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
 
-    auto key = TRY(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(vm));
 
     while (object) {
         auto desc = TRY(object->internal_get_own_property(key));
@@ -237,9 +237,9 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 // B.2.2.5 Object.prototype.__lookupSetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 {
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
 
-    auto key = TRY(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(vm));
 
     while (object) {
         auto desc = TRY(object->internal_get_own_property(key));
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 // B.2.2.1.1 get Object.prototype.__proto__, https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(global_object));
+    auto* object = TRY(vm.this_value().to_object(vm));
     return TRY(object->internal_get_prototype_of());
 }
 

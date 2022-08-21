@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     auto source = vm.argument(0);
     auto this_arg = vm.argument(2);
 
-    auto using_iterator = TRY(source.get_method(global_object, *vm.well_known_symbol_iterator()));
+    auto using_iterator = TRY(source.get_method(vm, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
         auto values = TRY(iterable_to_list(global_object, source, using_iterator));
 
@@ -89,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
         return target_object;
     }
 
-    auto array_like = MUST(source.to_object(global_object));
+    auto array_like = MUST(source.to_object(vm));
     auto length = TRY(length_of_array_like(global_object, *array_like));
 
     MarkedVector<Value> arguments(vm.heap());

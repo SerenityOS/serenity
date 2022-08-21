@@ -1266,7 +1266,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObje
 {
     auto& realm = *global_object.associated_realm();
 
-    auto filename = TRY(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly))
         return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
@@ -1286,7 +1286,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObje
 
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto filename = TRY(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::File::construct(filename);
     if (!file->open(Core::OpenMode::ReadOnly))
         return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
@@ -1343,7 +1343,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
     if (!vm.argument_count())
         exit(0);
-    exit(TRY(vm.argument(0).to_number(global_object)).as_double());
+    exit(TRY(vm.argument(0).to_number(vm)).as_double());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
@@ -1735,7 +1735,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!variable.is_object())
                     break;
 
-                auto const* object = MUST(variable.to_object(interpreter->global_object()));
+                auto const* object = MUST(variable.to_object(*g_vm));
                 auto const& shape = object->shape();
                 list_all_properties(shape, property_name);
                 break;

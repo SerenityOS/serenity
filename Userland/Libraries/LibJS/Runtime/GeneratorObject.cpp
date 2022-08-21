@@ -26,7 +26,7 @@ ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(Realm& realm, Value 
     } else {
         generating_function_prototype = TRY(generating_function->get(vm.names.prototype));
     }
-    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(realm.global_object()));
+    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(vm));
     auto object = realm.heap().allocate<GeneratorObject>(realm, realm, *generating_function_prototype_object, move(execution_context));
     object->m_generating_function = generating_function;
     object->m_frame = move(frame);
@@ -66,7 +66,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     auto generated_continuation = [&](Value value) -> ThrowCompletionOr<Bytecode::BasicBlock const*> {
         if (value.is_object()) {
             auto number_value = TRY(value.as_object().get("continuation"));
-            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY(number_value.to_double(global_object))));
+            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY(number_value.to_double(vm))));
         }
         return nullptr;
     };

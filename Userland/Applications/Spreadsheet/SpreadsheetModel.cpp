@@ -24,13 +24,14 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             return String::empty();
 
         Function<String(JS::Value)> to_string_as_exception = [&](JS::Value value) {
+            auto& vm = cell->sheet().global_object().vm();
             StringBuilder builder;
             builder.append("Error: "sv);
             if (value.is_object()) {
                 auto& object = value.as_object();
                 if (is<JS::Error>(object)) {
                     auto message = object.get_without_side_effects("message");
-                    auto error = message.to_string(cell->sheet().global_object());
+                    auto error = message.to_string(vm);
                     if (error.is_throw_completion())
                         builder.append(message.to_string_without_side_effects());
                     else
@@ -38,7 +39,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                     return builder.to_string();
                 }
             }
-            auto error_message = value.to_string(cell->sheet().global_object());
+            auto error_message = value.to_string(vm);
 
             if (error_message.is_throw_completion())
                 return to_string_as_exception(*error_message.release_error().value());

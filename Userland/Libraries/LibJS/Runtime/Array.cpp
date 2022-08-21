@@ -68,7 +68,6 @@ Array::Array(Object& prototype)
 // 10.4.2.4 ArraySetLength ( A, Desc ), https://tc39.es/ecma262/#sec-arraysetlength
 ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_descriptor)
 {
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
 
     // 1. If Desc does not have a [[Value]] field, then
@@ -79,9 +78,9 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
     size_t new_length = indexed_properties().array_like_size();
     if (property_descriptor.value.has_value()) {
         // 3. Let newLen be ? ToUint32(Desc.[[Value]]).
-        new_length = TRY(property_descriptor.value->to_u32(global_object));
+        new_length = TRY(property_descriptor.value->to_u32(vm));
         // 4. Let numberLen be ? ToNumber(Desc.[[Value]]).
-        auto number_length = TRY(property_descriptor.value->to_number(global_object));
+        auto number_length = TRY(property_descriptor.value->to_number(vm));
         // 5. If newLen is not the same value as numberLen, throw a RangeError exception.
         if (new_length != number_length.as_double())
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array");
@@ -178,7 +177,7 @@ ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Va
     if (comparefn != nullptr) {
         // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
         auto value = TRY(call(global_object, comparefn, js_undefined(), x, y));
-        auto value_number = TRY(value.to_number(global_object));
+        auto value_number = TRY(value.to_number(vm));
 
         // b. If v is NaN, return +0𝔽.
         if (value_number.is_nan())
@@ -189,20 +188,20 @@ ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Va
     }
 
     // 5. Let xString be ? ToString(x).
-    auto* x_string = js_string(vm, TRY(x.to_string(global_object)));
+    auto* x_string = js_string(vm, TRY(x.to_string(vm)));
 
     // 6. Let yString be ? ToString(y).
-    auto* y_string = js_string(vm, TRY(y.to_string(global_object)));
+    auto* y_string = js_string(vm, TRY(y.to_string(vm)));
 
     // 7. Let xSmaller be ! IsLessThan(xString, yString, true).
-    auto x_smaller = MUST(is_less_than(global_object, x_string, y_string, true));
+    auto x_smaller = MUST(is_less_than(vm, x_string, y_string, true));
 
     // 8. If xSmaller is true, return -1𝔽.
     if (x_smaller == TriState::True)
         return -1;
 
     // 9. Let ySmaller be ! IsLessThan(yString, xString, true).
-    auto y_smaller = MUST(is_less_than(global_object, y_string, x_string, true));
+    auto y_smaller = MUST(is_less_than(vm, y_string, x_string, true));
 
     // 10. If ySmaller is true, return 1𝔽.
     if (y_smaller == TriState::True)

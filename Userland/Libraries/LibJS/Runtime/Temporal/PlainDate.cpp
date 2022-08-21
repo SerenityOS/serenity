@@ -83,9 +83,6 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_
 // 3.5.2 ToTemporalDate ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate
 ThrowCompletionOr<PlainDate*> to_temporal_date(VM& vm, Value item, Object const* options)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
@@ -143,7 +140,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(VM& vm, Value item, Object const*
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
-    auto string = TRY(item.to_string(global_object));
+    auto string = TRY(item.to_string(vm));
 
     // 6. Let result be ? ParseTemporalDateString(string).
     auto result = TRY(parse_temporal_date_string(vm, string));
@@ -419,9 +416,6 @@ String pad_iso_year(i32 y)
 // 3.5.8 TemporalDateToString ( temporalDate, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring
 ThrowCompletionOr<String> temporal_date_to_string(VM& vm, PlainDate& temporal_date, StringView show_calendar)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Type(temporalDate) is Object.
     // 2. Assert: temporalDate has an [[InitializedTemporalDate]] internal slot.
 
@@ -435,7 +429,7 @@ ThrowCompletionOr<String> temporal_date_to_string(VM& vm, PlainDate& temporal_da
     auto day = String::formatted("{:02}", temporal_date.iso_day());
 
     // 6. Let calendarID be ? ToString(temporalDate.[[Calendar]]).
-    auto calendar_id = TRY(Value(&temporal_date.calendar()).to_string(global_object));
+    auto calendar_id = TRY(Value(&temporal_date.calendar()).to_string(vm));
 
     // 7. Let calendar be ! FormatCalendarAnnotation(calendarID, showCalendar).
     auto calendar = format_calendar_annotation(calendar_id, show_calendar);

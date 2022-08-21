@@ -66,7 +66,7 @@ ThrowCompletionOr<void> copy_name_and_length(GlobalObject& global_object, Functi
             // iii. Else,
             else {
                 // 1. Let targetLenAsInt be ! ToIntegerOrInfinity(targetLen).
-                auto target_length_as_int = MUST(target_length.to_integer_or_infinity(global_object));
+                auto target_length_as_int = MUST(target_length.to_integer_or_infinity(vm));
 
                 // 2. Assert: targetLenAsInt is finite.
                 VERIFY(!isinf(target_length_as_int));

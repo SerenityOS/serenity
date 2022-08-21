@@ -85,9 +85,6 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatConstructor::supported_locales_of)
 // 11.1.2 InitializeDateTimeFormat ( dateTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-initializedatetimeformat
 ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeFormat& date_time_format, Value locales_value, Value options_value)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
 
@@ -225,7 +222,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 31. Else,
     else {
         // a. Set timeZone to ? ToString(timeZone).
-        time_zone = TRY(time_zone_value.to_string(global_object));
+        time_zone = TRY(time_zone_value.to_string(vm));
 
         // b. If the result of IsValidTimeZoneName(timeZone) is false, then
         if (!Temporal::is_valid_time_zone_name(time_zone)) {

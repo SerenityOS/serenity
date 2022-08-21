@@ -362,7 +362,7 @@ static ThrowCompletionOr<double> argument_or_number(GlobalObject& global_object,
     auto& vm = global_object.vm();
 
     if (vm.argument_count() > index)
-        return TRY(vm.argument(index).to_number(global_object)).as_double();
+        return TRY(vm.argument(index).to_number(vm)).as_double();
 
     return fallback;
 }
@@ -372,7 +372,7 @@ static ThrowCompletionOr<Optional<double>> argument_or_empty(GlobalObject& globa
     auto& vm = global_object.vm();
 
     if (vm.argument_count() > index)
-        return TRY(vm.argument(index).to_number(global_object)).as_double();
+        return TRY(vm.argument(index).to_number(vm)).as_double();
 
     return Optional<double> {};
 }
@@ -384,7 +384,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let dt be ? ToNumber(date).
-    auto date = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto date = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If t is NaN, return NaN.
     if (isnan(this_time))
@@ -418,7 +418,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto year = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If t is NaN, set t to +0𝔽; otherwise, set t to LocalTime(t).
     double time = 0;
@@ -453,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let h be ? ToNumber(hour).
-    auto hour = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto hour = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If min is present, let m be ? ToNumber(min).
     auto minute = TRY(argument_or_empty(global_object, 1));
@@ -505,7 +505,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Set ms to ? ToNumber(ms).
-    auto millisecond = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto millisecond = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If t is NaN, return NaN.
     if (isnan(this_time))
@@ -540,7 +540,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let m be ? ToNumber(min).
-    auto minute = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto minute = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If sec is present, let s be ? ToNumber(sec).
     auto second = TRY(argument_or_empty(global_object, 1));
@@ -587,7 +587,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let m be ? ToNumber(month).
-    auto month = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto month = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If date is present, let dt be ? ToNumber(date).
     auto date = TRY(argument_or_empty(global_object, 1));
@@ -627,7 +627,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     auto this_time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let s be ? ToNumber(sec).
-    auto second = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto second = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If ms is present, let milli be ? ToNumber(ms).
     auto millisecond = TRY(argument_or_empty(global_object, 1));
@@ -668,7 +668,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
     TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let t be ? ToNumber(time).
-    auto time = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto time = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. Let v be TimeClip(t).
     time = time_clip(time);
@@ -688,7 +688,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_date)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let dt be ? ToNumber(date).
-    auto date = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto date = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If t is NaN, return NaN.
     if (isnan(time))
@@ -724,7 +724,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_full_year)
         time = this_time;
 
     // 3. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto year = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 4. If month is not present, let m be MonthFromTime(t); otherwise, let m be ? ToNumber(month).
     auto month = TRY(argument_or_number(global_object, 1, month_from_time(time)));
@@ -754,7 +754,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_hours)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let h be ? ToNumber(hour).
-    auto hour = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto hour = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If min is present, let m be ? ToNumber(min).
     auto minute = TRY(argument_or_empty(global_object, 1));
@@ -803,7 +803,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_milliseconds)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Set ms to ? ToNumber(ms).
-    auto millisecond = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto millisecond = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If t is NaN, return NaN.
     if (isnan(time))
@@ -835,7 +835,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_minutes)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let m be ? ToNumber(min).
-    auto minute = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto minute = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If sec is present, let s be ? ToNumber(sec).
     auto second = TRY(argument_or_empty(global_object, 1));
@@ -879,7 +879,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_month)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let m be ? ToNumber(month).
-    auto month = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto month = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If date is present, let dt be ? ToNumber(date).
     auto date = TRY(argument_or_empty(global_object, 1));
@@ -916,7 +916,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_seconds)
     auto time = TRY(this_time_value(global_object, vm.this_value()));
 
     // 2. Let s be ? ToNumber(sec).
-    auto second = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto second = TRY(vm.argument(0).to_number(vm)).as_double();
 
     // 3. If ms is present, let milli be ? ToNumber(ms).
     auto millisecond = TRY(argument_or_empty(global_object, 1));
@@ -980,12 +980,12 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 {
     auto this_value = vm.this_value();
 
-    auto time_value = TRY(this_value.to_primitive(global_object, Value::PreferredType::Number));
+    auto time_value = TRY(this_value.to_primitive(vm, Value::PreferredType::Number));
 
     if (time_value.is_number() && !time_value.is_finite_number())
         return js_null();
 
-    return TRY(this_value.invoke(global_object, vm.names.toISOString));
+    return TRY(this_value.invoke(vm, vm.names.toISOString));
 }
 
 static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(GlobalObject& global_object, Value locales, Value options)
@@ -1282,7 +1282,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
         time = local_time(this_time);
 
     // 3. Let y be ? ToNumber(year).
-    auto year = TRY(vm.argument(0).to_number(global_object)).as_double();
+    auto year = TRY(vm.argument(0).to_number(vm)).as_double();
 
     auto* this_object = MUST(typed_this_object(vm));
 

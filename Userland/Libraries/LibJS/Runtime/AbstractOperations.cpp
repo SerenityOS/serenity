@@ -92,7 +92,7 @@ ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Obje
 {
     auto& vm = global_object.vm();
     auto result = TRY(object.get(vm.names.length));
-    return result.to_length(global_object);
+    return result.to_length(vm);
 }
 
 // 7.3.20 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
@@ -1220,7 +1220,8 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
 ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
 {
-    auto replace_string = TRY(replacement.to_utf16_string(global_object));
+    auto& vm = global_object.vm();
+    auto replace_string = TRY(replacement.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
     StringBuilder result;
@@ -1262,7 +1263,7 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
                 auto& value = captures[*capture_position - 1];
 
                 if (!value.is_undefined()) {
-                    auto value_string = TRY(value.to_string(global_object));
+                    auto value_string = TRY(value.to_string(vm));
                     result.append(value_string);
                 }
 
@@ -1290,7 +1291,7 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
-                    auto capture_string = TRY(capture.to_string(global_object));
+                    auto capture_string = TRY(capture.to_string(vm));
                     result.append(capture_string);
                 }
 
