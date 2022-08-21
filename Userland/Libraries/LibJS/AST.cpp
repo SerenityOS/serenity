@@ -251,7 +251,7 @@ Completion Program::execute(Interpreter& interpreter) const
 Completion FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     if (m_is_hoisted) {
         // Perform special annexB steps see step 3 of: https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
@@ -263,10 +263,10 @@ Completion FunctionDeclaration::execute(Interpreter& interpreter) const
         auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
         // iii. Let fobj be ! benv.GetBindingValue(F, false).
-        auto function_object = MUST(lexical_environment->get_binding_value(global_object, name(), false));
+        auto function_object = MUST(lexical_environment->get_binding_value(vm, name(), false));
 
         // iv. Perform ? genv.SetMutableBinding(F, fobj, false).
-        TRY(variable_environment->set_mutable_binding(global_object, name(), function_object, false));
+        TRY(variable_environment->set_mutable_binding(vm, name(), function_object, false));
 
         // v. Return unused.
         return Optional<Value> {};
@@ -289,6 +289,7 @@ Completion FunctionExpression::execute(Interpreter& interpreter) const
 Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, FlyString given_name) const
 {
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     if (given_name.is_empty())
@@ -300,10 +301,10 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     if (has_own_name) {
         VERIFY(environment);
         environment = new_declarative_environment(*environment);
-        MUST(environment->create_immutable_binding(global_object, name(), false));
+        MUST(environment->create_immutable_binding(vm, name(), false));
     }
 
-    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+    auto* private_environment = vm.running_execution_context().private_environment;
 
     auto closure = ECMAScriptFunctionObject::create(realm, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
@@ -311,7 +312,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     // FIXME: 7. Perform MakeConstructor(closure).
 
     if (has_own_name)
-        MUST(environment->initialize_binding(global_object, name(), closure));
+        MUST(environment->initialize_binding(vm, name(), closure));
 
     return closure;
 }
@@ -499,10 +500,10 @@ Completion SuperCall::execute(Interpreter& interpreter) const
     auto* result = TRY(construct(global_object, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
-    auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(interpreter.vm()));
+    auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(vm));
 
     // 8. Perform ? thisER.BindThisValue(result).
-    TRY(this_er.bind_this_value(global_object, result));
+    TRY(this_er.bind_this_value(vm, result));
 
     // 9. Let F be thisER.[[FunctionObject]].
     // 10. Assert: F is an ECMAScript function object.
@@ -743,7 +744,7 @@ Completion ForStatement::execute(Interpreter& interpreter) const
 Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // Note we don't always set a new environment but to use RAII we must do this here.
     auto* old_environment = interpreter.lexical_environment();
@@ -759,9 +760,9 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyStr
             auto& declaration = static_cast<VariableDeclaration const&>(*m_init);
             declaration.for_each_bound_name([&](auto const& name) {
                 if (declaration.declaration_kind() == DeclarationKind::Const) {
-                    MUST(loop_environment->create_immutable_binding(global_object, name, true));
+                    MUST(loop_environment->create_immutable_binding(vm, name, true));
                 } else {
-                    MUST(loop_environment->create_mutable_binding(global_object, name, false));
+                    MUST(loop_environment->create_mutable_binding(vm, name, false));
                     ++per_iteration_bindings_size;
                 }
             });
@@ -885,6 +886,7 @@ struct ForInOfHeadState {
         VERIFY(!next_value.is_empty());
 
         auto& global_object = interpreter.global_object();
+        auto& vm = interpreter.vm();
 
         Optional<Reference> lhs_reference;
         Environment* iteration_environment = nullptr;
@@ -911,9 +913,9 @@ struct ForInOfHeadState {
             auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
             for_declaration.for_each_bound_name([&](auto const& name) {
                 if (for_declaration.declaration_kind() == DeclarationKind::Const)
-                    MUST(iteration_environment->create_immutable_binding(global_object, name, false));
+                    MUST(iteration_environment->create_immutable_binding(vm, name, false));
                 else
-                    MUST(iteration_environment->create_mutable_binding(global_object, name, true));
+                    MUST(iteration_environment->create_mutable_binding(vm, name, true));
             });
             interpreter.vm().running_execution_context().lexical_environment = iteration_environment;
 
@@ -955,6 +957,8 @@ struct ForInOfHeadState {
 static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& interpreter, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, Expression const& rhs)
 {
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
+
     ForInOfHeadState state(lhs);
     if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<VariableDeclaration>(*(*ast_ptr))) {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
@@ -984,7 +988,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
             new_environment = new_declarative_environment(*interpreter.lexical_environment());
             variable_declaration.for_each_bound_name([&](auto const& name) {
-                MUST(new_environment->create_mutable_binding(global_object, name, false));
+                MUST(new_environment->create_mutable_binding(vm, name, false));
             });
         }
 
@@ -1404,9 +1408,10 @@ ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpr
     // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
     if (is<SuperExpression>(object())) {
         // 1. Let env be GetThisEnvironment().
-        auto& environment = get_this_environment(interpreter.vm());
+        auto& environment = get_this_environment(vm);
+
         // 2. Let actualThis be ? env.GetThisBinding().
-        auto actual_this = TRY(environment.get_this_binding(global_object));
+        auto actual_this = TRY(environment.get_this_binding(vm));
 
         PropertyKey property_key;
 
@@ -1824,7 +1829,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     };
 
     if (!binding_name.is_null())
-        MUST(class_environment->create_immutable_binding(global_object, binding_name, true));
+        MUST(class_environment->create_immutable_binding(vm, binding_name, true));
 
     auto* outer_private_environment = vm.running_execution_context().private_environment;
     auto* class_private_environment = new_private_environment(vm, outer_private_environment);
@@ -1949,7 +1954,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     restore_environment.disarm();
 
     if (!binding_name.is_null())
-        MUST(class_environment->initialize_binding(global_object, binding_name, class_constructor));
+        MUST(class_environment->initialize_binding(vm, binding_name, class_constructor));
 
     for (auto& field : instance_fields)
         class_constructor->add_field(field);
@@ -2583,10 +2588,10 @@ Completion SpreadExpression::execute(Interpreter& interpreter) const
 Completion ThisExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 1. Return ? ResolveThisBinding().
-    return interpreter.vm().resolve_this_binding(global_object);
+    return vm.resolve_this_binding();
 }
 
 void ThisExpression::dump(int indent) const
@@ -3795,13 +3800,13 @@ Completion TryStatement::execute(Interpreter& interpreter) const
             [&](FlyString const& parameter) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
                 // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
-                MUST(catch_environment->create_mutable_binding(global_object, parameter, false));
+                MUST(catch_environment->create_mutable_binding(vm, parameter, false));
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
                 pattern->for_each_bound_name([&](auto& name) {
                     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
-                    MUST(catch_environment->create_mutable_binding(global_object, name, false));
+                    MUST(catch_environment->create_mutable_binding(vm, name, false));
                 });
             });
 
@@ -3811,7 +3816,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
         // 5. Let status be Completion(BindingInitialization of CatchParameter with arguments thrownValue and catchEnv).
         auto status = m_handler->parameter().visit(
             [&](FlyString const& parameter) {
-                return catch_environment->initialize_binding(global_object, parameter, thrown_value);
+                return catch_environment->initialize_binding(vm, parameter, thrown_value);
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
                 return vm.binding_initialization(pattern, thrown_value, catch_environment, global_object);
@@ -4523,19 +4528,20 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     VERIFY(environment);
-    auto* private_environment = global_object.vm().running_execution_context().private_environment;
+    auto* private_environment = vm.running_execution_context().private_environment;
     // Note: All the calls here are ! and thus we do not need to TRY this callback.
     for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         auto is_constant_declaration = declaration.is_constant_declaration();
         declaration.for_each_bound_name([&](auto const& name) {
             if (is_constant_declaration) {
-                MUST(environment->create_immutable_binding(global_object, name, true));
+                MUST(environment->create_immutable_binding(vm, name, true));
             } else {
                 if (!MUST(environment->has_binding(name)))
-                    MUST(environment->create_mutable_binding(global_object, name, false));
+                    MUST(environment->create_mutable_binding(vm, name, false));
             }
         });
 
@@ -4543,7 +4549,7 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
             auto* function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
             VERIFY(is<DeclarativeEnvironment>(*environment));
-            static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, global_object, function_declaration.name(), function);
+            static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
         }
     });
 }
@@ -4552,6 +4558,7 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
 ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& interpreter, GlobalEnvironment& global_environment) const
 {
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
@@ -4560,18 +4567,18 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     TRY(for_each_lexically_declared_name([&](FlyString const& name) -> ThrowCompletionOr<void> {
         // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_var_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_lexical_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         // c. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
         auto has_restricted_global = TRY(global_environment.has_restricted_global_property(name));
 
         // d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
         if (has_restricted_global)
-            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::RestrictedGlobalProperty, name);
+            return vm.throw_completion<SyntaxError>(ErrorType::RestrictedGlobalProperty, name);
 
         return {};
     }));
@@ -4580,7 +4587,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     TRY(for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
         // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_lexical_declaration(name))
-            return interpreter.vm().throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
+            return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
 
         return {};
     }));
@@ -4612,7 +4619,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (!function_definable)
-            return interpreter.vm().throw_completion<TypeError>(ErrorType::CannotDeclareGlobalFunction, function.name());
+            return vm.throw_completion<TypeError>(ErrorType::CannotDeclareGlobalFunction, function.name());
 
         // 3. Append fn to declaredFunctionNames.
         // Note: Already done in step iv. above.
@@ -4641,7 +4648,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
             // b. If vnDefinable is false, throw a TypeError exception.
             if (!var_definable)
-                return interpreter.vm().throw_completion<TypeError>(ErrorType::CannotDeclareGlobalVariable, name);
+                return vm.throw_completion<TypeError>(ErrorType::CannotDeclareGlobalVariable, name);
 
             // c. If vn is not an element of declaredVarNames, then
             // i. Append vn to declaredVarNames.
@@ -4715,12 +4722,12 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ? env.CreateImmutableBinding(dn, true).
-                TRY(global_environment.create_immutable_binding(global_object, name, true));
+                TRY(global_environment.create_immutable_binding(vm, name, true));
             }
             // ii. Else,
             else {
                 // 1. Perform ? env.CreateMutableBinding(dn, false).
-                TRY(global_environment.create_mutable_binding(global_object, name, false));
+                TRY(global_environment.create_mutable_binding(vm, name, false));
             }
 
             return {};

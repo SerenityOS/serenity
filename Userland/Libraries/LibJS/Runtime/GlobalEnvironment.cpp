@@ -32,7 +32,7 @@ void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)
 }
 
 // 9.1.1.4.11 GetThisBinding ( ), https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding
-ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(GlobalObject&) const
+ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(VM&) const
 {
     // 1. Return envRec.[[GlobalThisValue]].
     return m_global_this_value;
@@ -52,83 +52,83 @@ ThrowCompletionOr<bool> GlobalEnvironment::has_binding(FlyString const& name, Op
 }
 
 // 9.1.1.4.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d
-ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
+ThrowCompletionOr<void> GlobalEnvironment::create_mutable_binding(VM& vm, FlyString const& name, bool can_be_deleted)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
-        return vm().throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
+        return vm.throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
     // 3. Return ! DclRec.CreateMutableBinding(N, D).
-    return MUST(m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted));
+    return MUST(m_declarative_record->create_mutable_binding(vm, name, can_be_deleted));
 }
 
 // 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
-ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<void> GlobalEnvironment::create_immutable_binding(VM& vm, FlyString const& name, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, throw a TypeError exception.
     if (MUST(m_declarative_record->has_binding(name)))
-        return vm().throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
+        return vm.throw_completion<TypeError>(ErrorType::GlobalEnvironmentAlreadyHasBinding, name);
 
     // 3. Return ! DclRec.CreateImmutableBinding(N, S).
-    return MUST(m_declarative_record->create_immutable_binding(global_object, name, strict));
+    return MUST(m_declarative_record->create_immutable_binding(vm, name, strict));
 }
 
 // 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
+ThrowCompletionOr<void> GlobalEnvironment::initialize_binding(VM& vm, FlyString const& name, Value value)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
         // a. Return ! DclRec.InitializeBinding(N, V).
-        return MUST(m_declarative_record->initialize_binding(global_object, name, value));
+        return MUST(m_declarative_record->initialize_binding(vm, name, value));
     }
 
     // 3. Assert: If the binding exists, it must be in the object Environment Record.
     // 4. Let ObjRec be envRec.[[ObjectRecord]].
     // 5. Return ? ObjRec.InitializeBinding(N, V).
-    return m_object_record->initialize_binding(global_object, name, value);
+    return m_object_record->initialize_binding(vm, name, value);
 }
 
 // 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
-ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+ThrowCompletionOr<void> GlobalEnvironment::set_mutable_binding(VM& vm, FlyString const& name, Value value, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
         // a. Return ? DclRec.SetMutableBinding(N, V, S).
-        return m_declarative_record->set_mutable_binding(global_object, name, value, strict);
+        return m_declarative_record->set_mutable_binding(vm, name, value, strict);
     }
 
     // 3. Let ObjRec be envRec.[[ObjectRecord]].
     // 4. Return ? ObjRec.SetMutableBinding(N, V, S).
-    return m_object_record->set_mutable_binding(global_object, name, value, strict);
+    return m_object_record->set_mutable_binding(vm, name, value, strict);
 }
 
 // 9.1.1.4.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s
-ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> GlobalEnvironment::get_binding_value(VM& vm, FlyString const& name, bool strict)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
         // a. Return ? DclRec.GetBindingValue(N, S).
-        return m_declarative_record->get_binding_value(global_object, name, strict);
+        return m_declarative_record->get_binding_value(vm, name, strict);
     }
 
     // 3. Let ObjRec be envRec.[[ObjectRecord]].
     // 4. Return ? ObjRec.GetBindingValue(N, S).
-    return m_object_record->get_binding_value(global_object, name, strict);
+    return m_object_record->get_binding_value(vm, name, strict);
 }
 
 // 9.1.1.4.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n
-ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(GlobalObject& global_object, FlyString const& name)
+ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(VM& vm, FlyString const& name)
 {
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, then
     if (MUST(m_declarative_record->has_binding(name))) {
         // a. Return ! DclRec.DeleteBinding(N).
-        return MUST(m_declarative_record->delete_binding(global_object, name));
+        return MUST(m_declarative_record->delete_binding(vm, name));
     }
 
     // 3. Let ObjRec be envRec.[[ObjectRecord]].
@@ -140,7 +140,7 @@ ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(GlobalObject& global_o
     // 6. If existingProp is true, then
     if (existing_prop) {
         // a. Let status be ? ObjRec.DeleteBinding(N).
-        bool status = TRY(m_object_record->delete_binding(global_object, name));
+        bool status = TRY(m_object_record->delete_binding(vm, name));
 
         // b. If status is true, then
         if (status) {
@@ -243,6 +243,8 @@ ThrowCompletionOr<bool> GlobalEnvironment::can_declare_global_function(FlyString
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
+    auto& vm = this->vm();
+
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = verify_cast<GlobalObject>(m_object_record->binding_object());
@@ -256,10 +258,10 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
     // 5. If hasProperty is false and extensible is true, then
     if (!has_property && extensible) {
         // a. Perform ? ObjRec.CreateMutableBinding(N, D).
-        TRY(m_object_record->create_mutable_binding(global_object, name, can_be_deleted));
+        TRY(m_object_record->create_mutable_binding(vm, name, can_be_deleted));
 
         // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-        TRY(m_object_record->initialize_binding(global_object, name, js_undefined()));
+        TRY(m_object_record->initialize_binding(vm, name, js_undefined()));
     }
 
     // 6. Let varDeclaredNames be envRec.[[VarNames]].

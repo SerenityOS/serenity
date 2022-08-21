@@ -35,15 +35,15 @@ public:
     virtual ~DeclarativeEnvironment() override = default;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
-    virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
-    virtual ThrowCompletionOr<void> create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<void> initialize_binding(GlobalObject&, FlyString const& name, Value) override;
-    virtual ThrowCompletionOr<void> set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
-    virtual ThrowCompletionOr<Value> get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
+    virtual ThrowCompletionOr<void> create_mutable_binding(VM&, FlyString const& name, bool can_be_deleted) override;
+    virtual ThrowCompletionOr<void> create_immutable_binding(VM&, FlyString const& name, bool strict) override;
+    virtual ThrowCompletionOr<void> initialize_binding(VM&, FlyString const& name, Value) override;
+    virtual ThrowCompletionOr<void> set_mutable_binding(VM&, FlyString const& name, Value, bool strict) override;
+    virtual ThrowCompletionOr<Value> get_binding_value(VM&, FlyString const& name, bool strict) override;
+    virtual ThrowCompletionOr<bool> delete_binding(VM&, FlyString const& name) override;
 
-    void initialize_or_set_mutable_binding(Badge<ScopeNode>, GlobalObject& global_object, FlyString const& name, Value value);
-    ThrowCompletionOr<void> initialize_or_set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value);
+    void initialize_or_set_mutable_binding(Badge<ScopeNode>, VM&, FlyString const& name, Value value);
+    ThrowCompletionOr<void> initialize_or_set_mutable_binding(VM&, FlyString const& name, Value value);
 
     // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
     [[nodiscard]] Vector<FlyString> bindings() const
@@ -57,9 +57,9 @@ public:
         return names;
     }
 
-    ThrowCompletionOr<void> initialize_binding_direct(GlobalObject&, size_t index, Value);
-    ThrowCompletionOr<Value> get_binding_value_direct(GlobalObject&, size_t index, bool strict);
-    ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
+    ThrowCompletionOr<void> initialize_binding_direct(VM&, size_t index, Value);
+    ThrowCompletionOr<Value> get_binding_value_direct(VM&, size_t index, bool strict);
+    ThrowCompletionOr<void> set_mutable_binding_direct(VM&, size_t index, Value, bool strict);
 
 protected:
     virtual void visit_edges(Visitor&) override;

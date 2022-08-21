@@ -61,21 +61,21 @@ bool FunctionEnvironment::has_super_binding() const
 }
 
 // 9.1.1.3.4 GetThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding
-ThrowCompletionOr<Value> FunctionEnvironment::get_this_binding(GlobalObject&) const
+ThrowCompletionOr<Value> FunctionEnvironment::get_this_binding(VM& vm) const
 {
     // 1. Assert: envRec.[[ThisBindingStatus]] is not lexical.
     VERIFY(m_this_binding_status != ThisBindingStatus::Lexical);
 
     // 2. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
     if (m_this_binding_status == ThisBindingStatus::Uninitialized)
-        return vm().throw_completion<ReferenceError>(ErrorType::ThisHasNotBeenInitialized);
+        return vm.throw_completion<ReferenceError>(ErrorType::ThisHasNotBeenInitialized);
 
     // 3. Return envRec.[[ThisValue]].
     return m_this_value;
 }
 
 // 9.1.1.3.1 BindThisValue ( V ), https://tc39.es/ecma262/#sec-bindthisvalue
-ThrowCompletionOr<Value> FunctionEnvironment::bind_this_value(GlobalObject&, Value this_value)
+ThrowCompletionOr<Value> FunctionEnvironment::bind_this_value(VM& vm, Value this_value)
 {
     VERIFY(!this_value.is_empty());
 
@@ -84,7 +84,7 @@ ThrowCompletionOr<Value> FunctionEnvironment::bind_this_value(GlobalObject&, Val
 
     // 2. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
     if (m_this_binding_status == ThisBindingStatus::Initialized)
-        return vm().throw_completion<ReferenceError>(ErrorType::ThisIsAlreadyInitialized);
+        return vm.throw_completion<ReferenceError>(ErrorType::ThisIsAlreadyInitialized);
 
     // 3. Set envRec.[[ThisValue]] to V.
     m_this_value = this_value;

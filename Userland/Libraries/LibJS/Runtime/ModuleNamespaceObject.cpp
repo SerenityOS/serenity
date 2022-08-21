@@ -136,6 +136,8 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_has_property(PropertyKey
 // 10.4.6.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver
 ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& property_key, Value receiver) const
 {
+    auto& vm = this->vm();
+
     // 1. If Type(P) is Symbol, then
     if (property_key.is_symbol()) {
         // a. Return ! OrdinaryGet(O, P, Receiver).
@@ -150,7 +152,7 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
 
     // 4. Let m be O.[[Module]].
     // 5. Let binding be ! m.ResolveExport(P).
-    auto binding = MUST(m_module->resolve_export(vm(), property_key.to_string()));
+    auto binding = MUST(m_module->resolve_export(vm, property_key.to_string()));
 
     // 6. Assert: binding is a ResolvedBinding Record.
     VERIFY(binding.is_valid());
@@ -164,7 +166,7 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
     // 9. If binding.[[BindingName]] is namespace, then
     if (binding.is_namespace()) {
         // a. Return ? GetModuleNamespace(targetModule).
-        return TRY(target_module->get_module_namespace(vm()));
+        return TRY(target_module->get_module_namespace(vm));
     }
 
     // 10. Let targetEnv be targetModule.[[Environment]].
@@ -172,10 +174,10 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
 
     // 11. If targetEnv is empty, throw a ReferenceError exception.
     if (!target_environment)
-        return vm().throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
+        return vm.throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
 
     // 12. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
-    return target_environment->get_binding_value(global_object(), binding.export_name, true);
+    return target_environment->get_binding_value(vm, binding.export_name, true);
 }
 
 // 10.4.6.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-set-p-v-receiver

@@ -17,15 +17,15 @@ public:
     GlobalEnvironment(GlobalObject&, Object& this_value);
 
     virtual bool has_this_binding() const final { return true; }
-    virtual ThrowCompletionOr<Value> get_this_binding(GlobalObject&) const final;
+    virtual ThrowCompletionOr<Value> get_this_binding(VM&) const final;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
-    virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;
-    virtual ThrowCompletionOr<void> create_immutable_binding(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<void> initialize_binding(GlobalObject&, FlyString const& name, Value) override;
-    virtual ThrowCompletionOr<void> set_mutable_binding(GlobalObject&, FlyString const& name, Value, bool strict) override;
-    virtual ThrowCompletionOr<Value> get_binding_value(GlobalObject&, FlyString const& name, bool strict) override;
-    virtual ThrowCompletionOr<bool> delete_binding(GlobalObject&, FlyString const& name) override;
+    virtual ThrowCompletionOr<void> create_mutable_binding(VM&, FlyString const& name, bool can_be_deleted) override;
+    virtual ThrowCompletionOr<void> create_immutable_binding(VM&, FlyString const& name, bool strict) override;
+    virtual ThrowCompletionOr<void> initialize_binding(VM&, FlyString const& name, Value) override;
+    virtual ThrowCompletionOr<void> set_mutable_binding(VM&, FlyString const& name, Value, bool strict) override;
+    virtual ThrowCompletionOr<Value> get_binding_value(VM&, FlyString const& name, bool strict) override;
+    virtual ThrowCompletionOr<bool> delete_binding(VM&, FlyString const& name) override;
 
     ObjectEnvironment& object_record() { return *m_object_record; }
     Object& global_this_value() { return *m_global_this_value; }

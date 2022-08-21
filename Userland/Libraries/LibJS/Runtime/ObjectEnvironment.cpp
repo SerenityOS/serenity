@@ -60,7 +60,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(FlyString const& name, Op
 }
 
 // 9.1.1.2.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d
-ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
+ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(VM&, FlyString const& name, bool can_be_deleted)
 {
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Perform ? DefinePropertyOrThrow(bindingObject, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
@@ -71,24 +71,24 @@ ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(GlobalObject&,
 }
 
 // 9.1.1.2.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s
-ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(GlobalObject&, FlyString const&, bool)
+ThrowCompletionOr<void> ObjectEnvironment::create_immutable_binding(VM&, FlyString const&, bool)
 {
     // "The CreateImmutableBinding concrete method of an object Environment Record is never used within this specification."
     VERIFY_NOT_REACHED();
 }
 
 // 9.1.1.2.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
+ThrowCompletionOr<void> ObjectEnvironment::initialize_binding(VM& vm, FlyString const& name, Value value)
 {
     // 1. Perform ? envRec.SetMutableBinding(N, V, false).
-    TRY(set_mutable_binding(global_object, name, value, false));
+    TRY(set_mutable_binding(vm, name, value, false));
 
     // 2. Return unused.
     return {};
 }
 
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s
-ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject&, FlyString const& name, Value value, bool strict)
+ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(VM&, FlyString const& name, Value value, bool strict)
 {
     auto& vm = this->vm();
 
@@ -123,7 +123,7 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(GlobalObject&, Fl
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
-ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject&, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(VM&, FlyString const& name, bool strict)
 {
     auto& vm = this->vm();
 
@@ -144,7 +144,7 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(GlobalObject&, Fly
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
-ThrowCompletionOr<bool> ObjectEnvironment::delete_binding(GlobalObject&, FlyString const& name)
+ThrowCompletionOr<bool> ObjectEnvironment::delete_binding(VM&, FlyString const& name)
 {
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Return ? bindingObject.[[Delete]](N).
