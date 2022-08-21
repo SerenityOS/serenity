@@ -34,7 +34,7 @@ If you already have the project open, you can go to `File -> Settings -> Build, 
 Source files are copied to the `Build` directory during the build, if you do not exclude them from CLion indexing they will show up
 in search results. This is often confusing, unintuitive, and can result in you losing changes you have made to files. To exclude
 these files navigate to the `Project` tool window, right-click the `Build` folder and select `Mark Directory as | Excluded`. If you
-want exclude Toolchain files as well, follow the same procedure with the following paths:
+want to exclude Toolchain files as well, follow the same procedure with the following paths:
 - `Toolchain/Local`
 - `Toolchain/Tarballs`
 - `Toolchain/Build`
