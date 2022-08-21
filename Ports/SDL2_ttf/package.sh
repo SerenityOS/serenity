@@ -1,10 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=SDL2_ttf
-version=2.0.18
-useconfigure=true
-use_fresh_config_sub=true
-files="https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz 7234eb8883514e019e7747c703e4a774575b18d435c22a4a29d068cb768a2251"
-auth_type=sha256
+port='SDL2_ttf'
+version='2.20.1'
+useconfigure='true'
+files="https://github.com/libsdl-org/SDL_ttf/releases/download/release-${version}/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz 78cdad51f3cc3ada6932b1bb6e914b33798ab970a1e817763f22ddbfd97d0c57"
+auth_type='sha256'
 depends=("SDL2" "freetype")
 
 configure() {
