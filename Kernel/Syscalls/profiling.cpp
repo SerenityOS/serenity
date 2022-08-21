@@ -24,6 +24,13 @@ ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> 
     TRY(require_no_promises());
 
     auto const event_mask = TRY(copy_typed_from_user(userspace_event_mask));
+    return profiling_enable(pid, event_mask);
+}
+
+// NOTE: This second entrypoint exists to allow the kernel to invoke the syscall to enable boot profiling.
+ErrorOr<FlatPtr> Process::profiling_enable(pid_t pid, u64 event_mask)
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
 
     if (pid == -1) {
         auto credentials = this->credentials();

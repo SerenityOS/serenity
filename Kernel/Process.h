@@ -416,6 +416,7 @@ public:
     ErrorOr<FlatPtr> sys$getkeymap(Userspace<Syscall::SC_getkeymap_params const*>);
     ErrorOr<FlatPtr> sys$setkeymap(Userspace<Syscall::SC_setkeymap_params const*>);
     ErrorOr<FlatPtr> sys$profiling_enable(pid_t, Userspace<u64 const*>);
+    ErrorOr<FlatPtr> profiling_enable(pid_t, u64 event_mask);
     ErrorOr<FlatPtr> sys$profiling_disable(pid_t);
     ErrorOr<FlatPtr> sys$profiling_free_buffer(pid_t);
     ErrorOr<FlatPtr> sys$futex(Userspace<Syscall::SC_futex_params const*>);
