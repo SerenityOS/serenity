@@ -113,11 +113,7 @@ public:
 private:
     Card(Suit, Rank);
 
-    static NonnullRefPtr<Gfx::Bitmap> invert_bitmap(Gfx::Bitmap&);
-
     Gfx::IntRect m_rect;
-    NonnullRefPtr<Gfx::Bitmap> m_front;
-    RefPtr<Gfx::Bitmap> m_front_inverted;
     Gfx::IntPoint m_old_position;
     Suit m_suit;
     Rank m_rank;
