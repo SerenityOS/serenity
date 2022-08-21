@@ -26,6 +26,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
+    virtual StringView tool_name() const override { return "Spray Tool"sv; }
+
     void paint_it();
 
     RefPtr<GUI::Widget> m_properties_widget;

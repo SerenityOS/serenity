@@ -31,6 +31,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
+    virtual StringView tool_name() const override { return "Guide Tool"sv; }
+
     RefPtr<Guide> closest_guide(Gfx::IntPoint const&);
 
     RefPtr<GUI::Widget> m_properties_widget;

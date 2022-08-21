@@ -29,6 +29,8 @@ protected:
     virtual void on_keyup(GUI::KeyEvent&) override;
 
 private:
+    virtual StringView tool_name() const override { return "Clone Tool"sv; }
+
     RefPtr<GUI::Widget> m_properties_widget;
 
     Optional<Gfx::IntPoint> m_sample_location;

@@ -29,6 +29,8 @@ public:
     void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, Color color, int thickness);
 
 private:
+    virtual StringView tool_name() const override { return "Line Tool"sv; }
+
     RefPtr<GUI::Widget> m_properties_widget;
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };

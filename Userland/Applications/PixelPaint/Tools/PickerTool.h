@@ -23,6 +23,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Eyedropper; }
 
 private:
+    virtual StringView tool_name() const override { return "Picker Tool"sv; }
+
     RefPtr<GUI::Widget> m_properties_widget;
     bool m_sample_all_layers { false };
 };

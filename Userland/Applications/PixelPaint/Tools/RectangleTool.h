@@ -28,6 +28,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
+    virtual StringView tool_name() const override { return "Rectangle Tool"sv; }
+
     enum class FillMode {
         Outline,
         Fill,

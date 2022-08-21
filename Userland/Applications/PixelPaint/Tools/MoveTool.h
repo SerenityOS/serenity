@@ -24,6 +24,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Move; }
 
 private:
+    virtual StringView tool_name() const override { return "Move Tool"sv; }
+
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;

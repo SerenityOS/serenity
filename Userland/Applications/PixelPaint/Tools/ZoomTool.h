@@ -22,6 +22,8 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Zoom; }
 
 private:
+    virtual StringView tool_name() const override { return "Zoom Tool"sv; }
+
     RefPtr<GUI::Widget> m_properties_widget;
     double m_sensitivity { 0.5 };
 };

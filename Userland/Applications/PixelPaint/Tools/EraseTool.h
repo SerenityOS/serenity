@@ -27,6 +27,8 @@ protected:
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point) override;
 
 private:
+    virtual StringView tool_name() const override { return "Erase Tool"sv; }
+
     RefPtr<GUI::Widget> m_properties_widget;
 
     enum class DrawMode {
