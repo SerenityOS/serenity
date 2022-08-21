@@ -43,10 +43,10 @@ void JSONObject::initialize(Realm& realm)
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
-ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object, Value value, Value replacer, Value space)
+ThrowCompletionOr<String> JSONObject::stringify_impl(VM& vm, Value value, Value replacer, Value space)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     StringifyState state;
 
@@ -104,7 +104,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(GlobalObject& global_object
 
     auto* wrapper = Object::create(realm, global_object.object_prototype());
     MUST(wrapper->create_data_property_or_throw(String::empty(), value));
-    return serialize_json_property(global_object, state, String::empty(), wrapper);
+    return serialize_json_property(vm, state, String::empty(), wrapper);
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
     auto replacer = vm.argument(1);
     auto space = vm.argument(2);
 
-    auto string = TRY(stringify_impl(global_object, value, replacer, space));
+    auto string = TRY(stringify_impl(vm, value, replacer, space));
     if (string.is_null())
         return js_undefined();
 
@@ -125,9 +125,10 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
-ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, PropertyKey const& key, Object* holder)
+ThrowCompletionOr<String> JSONObject::serialize_json_property(VM& vm, StringifyState& state, PropertyKey const& key, Object* holder)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let value be ? Get(holder, key).
     auto value = TRY(holder->get(key));
@@ -210,10 +211,10 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
 
         // b. If isArray is true, return ? SerializeJSONArray(state, value).
         if (is_array)
-            return serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
+            return serialize_json_array(vm, state, static_cast<Array&>(value.as_object()));
 
         // c. Return ? SerializeJSONObject(state, value).
-        return serialize_json_object(global_object, state, value.as_object());
+        return serialize_json_object(vm, state, value.as_object());
     }
 
     // 12. Return undefined.
@@ -221,9 +222,8 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
 }
 
 // 25.5.2.4 SerializeJSONObject ( state, value ), https://tc39.es/ecma262/#sec-serializejsonobject
-ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global_object, StringifyState& state, Object& object)
+ThrowCompletionOr<String> JSONObject::serialize_json_object(VM& vm, StringifyState& state, Object& object)
 {
-    auto& vm = global_object.vm();
     if (state.seen_objects.contains(&object))
         return vm.throw_completion<TypeError>(ErrorType::JsonCircular);
 
@@ -235,7 +235,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global
     auto process_property = [&](PropertyKey const& key) -> ThrowCompletionOr<void> {
         if (key.is_symbol())
             return {};
-        auto serialized_property_string = TRY(serialize_json_property(global_object, state, key, &object));
+        auto serialized_property_string = TRY(serialize_json_property(vm, state, key, &object));
         if (!serialized_property_string.is_null()) {
             property_strings.append(String::formatted(
                 "{}:{}{}",
@@ -290,9 +290,11 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global
 }
 
 // 25.5.2.5 SerializeJSONArray ( state, value ), https://tc39.es/ecma262/#sec-serializejsonarray
-ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_object, StringifyState& state, Object& object)
+ThrowCompletionOr<String> JSONObject::serialize_json_array(VM& vm, StringifyState& state, Object& object)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     if (state.seen_objects.contains(&object))
         return vm.throw_completion<TypeError>(ErrorType::JsonCircular);
 
@@ -307,7 +309,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(GlobalObject& global_
     property_strings.ensure_capacity(length);
 
     for (size_t i = 0; i < length; ++i) {
-        auto serialized_property_string = TRY(serialize_json_property(global_object, state, i, &object));
+        auto serialized_property_string = TRY(serialize_json_property(vm, state, i, &object));
         if (serialized_property_string.is_null()) {
             property_strings.append("null"sv);
         } else {
@@ -403,22 +405,22 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     auto json = JsonValue::from_string(string);
     if (json.is_error())
         return vm.throw_completion<SyntaxError>(ErrorType::JsonMalformed);
-    Value unfiltered = parse_json_value(global_object, json.value());
+    Value unfiltered = parse_json_value(vm, json.value());
     if (reviver.is_function()) {
         auto* root = Object::create(realm, global_object.object_prototype());
         auto root_name = String::empty();
         MUST(root->create_data_property_or_throw(root_name, unfiltered));
-        return internalize_json_property(global_object, root, root_name, reviver.as_function());
+        return internalize_json_property(vm, root, root_name, reviver.as_function());
     }
     return unfiltered;
 }
 
-Value JSONObject::parse_json_value(GlobalObject& global_object, JsonValue const& value)
+Value JSONObject::parse_json_value(VM& vm, JsonValue const& value)
 {
     if (value.is_object())
-        return Value(parse_json_object(global_object, value.as_object()));
+        return Value(parse_json_object(vm, value.as_object()));
     if (value.is_array())
-        return Value(parse_json_array(global_object, value.as_array()));
+        return Value(parse_json_array(vm, value.as_array()));
     if (value.is_null())
         return js_null();
     if (value.is_double())
@@ -426,44 +428,46 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, JsonValue const&
     if (value.is_number())
         return Value(value.to_i32(0));
     if (value.is_string())
-        return js_string(global_object.heap(), value.to_string());
+        return js_string(vm, value.to_string());
     if (value.is_bool())
         return Value(static_cast<bool>(value.as_bool()));
     VERIFY_NOT_REACHED();
 }
 
-Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject const& json_object)
+Object* JSONObject::parse_json_object(VM& vm, JsonObject const& json_object)
 {
-    auto& realm = *global_object.associated_realm();
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto& realm = *vm.current_realm();
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
-        object->define_direct_property(key, parse_json_value(global_object, value), default_attributes);
+        object->define_direct_property(key, parse_json_value(vm, value), default_attributes);
     });
     return object;
 }
 
-Array* JSONObject::parse_json_array(GlobalObject& global_object, JsonArray const& json_array)
+Array* JSONObject::parse_json_array(VM& vm, JsonArray const& json_array)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto* array = MUST(Array::create(realm, 0));
     size_t index = 0;
     json_array.for_each([&](auto& value) {
-        array->define_direct_property(index++, parse_json_value(global_object, value), default_attributes);
+        array->define_direct_property(index++, parse_json_value(vm, value), default_attributes);
     });
     return array;
 }
 
 // 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
-ThrowCompletionOr<Value> JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyKey const& name, FunctionObject& reviver)
+ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* holder, PropertyKey const& name, FunctionObject& reviver)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     auto value = TRY(holder->get(name));
     if (value.is_object()) {
         auto is_array = TRY(value.is_array(vm));
 
         auto& value_object = value.as_object();
         auto process_property = [&](PropertyKey const& key) -> ThrowCompletionOr<void> {
-            auto element = TRY(internalize_json_property(global_object, &value_object, key, reviver));
+            auto element = TRY(internalize_json_property(vm, &value_object, key, reviver));
             if (element.is_undefined())
                 TRY(value_object.internal_delete(key));
             else

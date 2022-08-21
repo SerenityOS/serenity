@@ -260,7 +260,7 @@ inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module
 inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
     auto results = MUST(interpreter.global_object().get("__TestResults__"));
-    auto json_string = MUST(JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined()));
+    auto json_string = MUST(JS::JSONObject::stringify_impl(*g_vm, results, JS::js_undefined(), JS::js_undefined()));
 
     return JsonValue::from_string(json_string);
 }
