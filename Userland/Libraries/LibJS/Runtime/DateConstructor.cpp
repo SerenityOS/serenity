@@ -218,7 +218,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
         // b. If Type(value) is Object and value has a [[DateValue]] internal slot, then
         if (value.is_object() && is<Date>(value.as_object())) {
             // i. Let tv be ! thisTimeValue(value).
-            time_value = MUST(this_time_value(global_object, value));
+            time_value = MUST(this_time_value(vm, value));
         }
         // c. Else,
         else {

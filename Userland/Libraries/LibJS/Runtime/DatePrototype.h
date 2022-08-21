@@ -71,7 +71,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(symbol_to_primitive);
 };
 
-ThrowCompletionOr<double> this_time_value(GlobalObject& global_object, Value value);
+ThrowCompletionOr<double> this_time_value(VM&, Value value);
 String time_string(double time);
 String date_string(double time);
 String time_zone_string(double time);
