@@ -526,14 +526,14 @@ Completion YieldExpression::execute(Interpreter&) const
 Completion AwaitExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 1. Let exprRef be the result of evaluating UnaryExpression.
     // 2. Let value be ? GetValue(exprRef).
     auto value = TRY(m_argument->execute(interpreter)).release_value();
 
     // 3. Return ? Await(value).
-    return await(global_object, value);
+    return await(vm, value);
 }
 
 // 14.10.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation
@@ -883,7 +883,6 @@ struct ForInOfHeadState {
     {
         VERIFY(!next_value.is_empty());
 
-        auto& global_object = interpreter.global_object();
         auto& vm = interpreter.vm();
 
         Optional<Reference> lhs_reference;
@@ -935,7 +934,7 @@ struct ForInOfHeadState {
         // j. Else,
         if (lhs_kind == Assignment) {
             VERIFY(pattern_lhs);
-            return interpreter.vm().destructuring_assignment_evaluation(*pattern_lhs, next_value, global_object);
+            return interpreter.vm().destructuring_assignment_evaluation(*pattern_lhs, next_value);
         }
         VERIFY(expression_lhs && is<VariableDeclaration>(*expression_lhs));
         auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
@@ -944,7 +943,7 @@ struct ForInOfHeadState {
 
         // At this point iteration_environment is undefined if lhs_kind == VarBinding which means this does both
         // branch j.ii and j.iii because ForBindingInitialization is just a forwarding call to BindingInitialization.
-        return interpreter.vm().binding_initialization(binding_pattern, next_value, iteration_environment, global_object);
+        return interpreter.vm().binding_initialization(binding_pattern, next_value, iteration_environment);
     }
 };
 
@@ -1165,7 +1164,6 @@ Completion ForAwaitOfStatement::execute(Interpreter& interpreter) const
 Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
@@ -1197,7 +1195,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
         auto next_result = TRY(call(vm, iterator.next_method, iterator.iterator));
 
         // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
-        next_result = TRY(await(global_object, next_result));
+        next_result = TRY(await(vm, next_result));
 
         // c. If Type(nextResult) is not Object, throw a TypeError exception.
         if (!next_result.is_object())
@@ -2597,7 +2595,6 @@ void ThisExpression::dump(int indent) const
 Completion AssignmentExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     if (m_op == AssignmentOp::Assignment) {
@@ -2615,7 +2612,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
                 if (lhs->is_identifier()) {
                     // i. Let rval be ? NamedEvaluation of AssignmentExpression with argument lref.[[ReferencedName]].
                     auto& identifier_name = static_cast<Identifier const&>(*lhs).string();
-                    rhs_result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(m_rhs, identifier_name));
+                    rhs_result = TRY(vm.named_evaluation_if_anonymous_function(m_rhs, identifier_name));
                 }
                 // d. Else,
                 else {
@@ -2637,7 +2634,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
                 auto rhs_result = TRY(m_rhs->execute(interpreter)).release_value();
 
                 // 5. Perform ? DestructuringAssignmentEvaluation of assignmentPattern with argument rval.
-                TRY(interpreter.vm().destructuring_assignment_evaluation(pattern, rhs_result, global_object));
+                TRY(vm.destructuring_assignment_evaluation(pattern, rhs_result));
 
                 // 6. Return rval.
                 return rhs_result;
@@ -2910,7 +2907,6 @@ void UpdateExpression::dump(int indent) const
 Completion VariableDeclaration::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     for (auto& declarator : m_declarations) {
@@ -2931,7 +2927,7 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
 
                     Environment* environment = m_declaration_kind == DeclarationKind::Var ? nullptr : interpreter.lexical_environment();
 
-                    return vm.binding_initialization(pattern, initializer_result, environment, global_object);
+                    return vm.binding_initialization(pattern, initializer_result, environment);
                 }));
         } else if (m_declaration_kind != DeclarationKind::Var) {
             VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
@@ -3781,7 +3777,6 @@ void ThrowStatement::dump(int indent) const
 Completion TryStatement::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
 
     // 14.15.2 Runtime Semantics: CatchClauseEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation
@@ -3815,7 +3810,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
                 return catch_environment->initialize_binding(vm, parameter, thrown_value);
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
-                return vm.binding_initialization(pattern, thrown_value, catch_environment, global_object);
+                return vm.binding_initialization(pattern, thrown_value, catch_environment);
             });
 
         // 6. If status is an abrupt completion, then

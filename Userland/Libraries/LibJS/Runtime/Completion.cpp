@@ -29,16 +29,15 @@ Completion::Completion(ThrowCompletionOr<Value> const& throw_completion_or_value
 }
 
 // 6.2.3.1 Await, https://tc39.es/ecma262/#await
-ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
+ThrowCompletionOr<Value> await(VM& vm, Value value)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let asyncContext be the running execution context.
     // NOTE: This is not needed, as we don't suspend anything.
 
     // 2. Let promise be ? PromiseResolve(%Promise%, value).
-    auto* promise_object = TRY(promise_resolve(vm, *global_object.promise_constructor(), value));
+    auto* promise_object = TRY(promise_resolve(vm, *realm.global_object().promise_constructor(), value));
 
     Optional<bool> success;
     Value result;

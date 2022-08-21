@@ -16,7 +16,7 @@ class Date final : public Object {
 
 public:
     static Date* create(Realm&, double date_value);
-    static Date* now(GlobalObject&);
+    static Date* now(VM&);
 
     Date(double date_value, Object& prototype);
     virtual ~Date() override = default;

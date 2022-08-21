@@ -217,7 +217,6 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(PropertyKey const& property_key) const
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
 
@@ -274,7 +273,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
     auto extensible_target = TRY(m_target.is_extensible());
 
     // 12. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
-    auto result_desc = TRY(to_property_descriptor(global_object, trap_result));
+    auto result_desc = TRY(to_property_descriptor(vm, trap_result));
 
     // 13. Perform CompletePropertyDescriptor(resultDesc).
     result_desc.complete();
@@ -309,7 +308,6 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey const& property_key, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     VERIFY(property_key.is_valid());
 
@@ -332,7 +330,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey co
     }
 
     // 7. Let descObj be FromPropertyDescriptor(Desc).
-    auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
+    auto descriptor_object = from_property_descriptor(vm, property_descriptor);
 
     // 8. Let booleanTrapResult be ToBoolean(? Call(trap, handler, « target, P, descObj »)).
     auto trap_result = TRY(call(vm, *trap, &m_handler, &m_target, property_key_to_value(vm, property_key), descriptor_object)).to_boolean();

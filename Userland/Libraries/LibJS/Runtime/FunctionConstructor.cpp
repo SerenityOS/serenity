@@ -36,12 +36,10 @@ void FunctionConstructor::initialize(Realm& realm)
 }
 
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction
-ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args)
+ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(VM& vm, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let currentRealm be the current Realm Record.
-    auto& current_realm = *vm.running_execution_context().realm;
+    auto& current_realm = *vm.current_realm();
 
     // 2. Perform ? HostEnsureCanCompileStrings(currentRealm).
     TRY(vm.host_ensure_can_compile_strings(current_realm));
@@ -234,7 +232,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 30. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-        prototype = Object::create(realm, global_object.generator_function_prototype_prototype());
+        prototype = Object::create(realm, realm.global_object().generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -242,7 +240,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 31. Else if kind is asyncGenerator, then
     else if (kind == FunctionKind::AsyncGenerator) {
         // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-        prototype = Object::create(realm, global_object.async_generator_function_prototype_prototype());
+        prototype = Object::create(realm, realm.global_object().async_generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -250,7 +248,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 32. Else if kind is normal, perform MakeConstructor(F).
     else if (kind == FunctionKind::Normal) {
         // FIXME: Implement MakeConstructor
-        prototype = Object::create(realm, global_object.object_prototype());
+        prototype = Object::create(realm, realm.global_object().object_prototype());
         prototype->define_direct_property(vm.names.constructor, function, Attribute::Writable | Attribute::Configurable);
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
@@ -271,7 +269,6 @@ ThrowCompletionOr<Value> FunctionConstructor::call()
 ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let C be the active function object.
     auto* constructor = vm.active_function_object();
@@ -280,7 +277,7 @@ ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_ta
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
-    return TRY(create_dynamic_function(global_object, *constructor, &new_target, FunctionKind::Normal, args));
+    return TRY(create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Normal, args));
 }
 
 }

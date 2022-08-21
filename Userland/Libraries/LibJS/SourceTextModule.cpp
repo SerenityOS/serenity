@@ -402,7 +402,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // Note: We're already working on that one.
 
     // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-    TRY(vm.push_execution_context(m_execution_context, realm().global_object()));
+    TRY(vm.push_execution_context(m_execution_context, {}));
 
     // 18. Let code be module.[[ECMAScriptCode]].
 
@@ -655,7 +655,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<Promis
         // a. Assert: capability is not present.
         VERIFY(!capability.has_value());
         // b. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-        TRY(vm.push_execution_context(module_context, realm().global_object()));
+        TRY(vm.push_execution_context(module_context, {}));
 
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
         auto result = m_ecmascript_code->execute(vm.interpreter());

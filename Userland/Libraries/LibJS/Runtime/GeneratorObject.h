@@ -22,7 +22,7 @@ public:
     virtual ~GeneratorObject() override = default;
     void visit_edges(Cell::Visitor&) override;
 
-    ThrowCompletionOr<Value> next_impl(VM&, GlobalObject&, Optional<Value> next_argument, Optional<Value> value_to_throw);
+    ThrowCompletionOr<Value> next_impl(VM&, Optional<Value> next_argument, Optional<Value> value_to_throw);
     void set_done() { m_done = true; }
 
 private:

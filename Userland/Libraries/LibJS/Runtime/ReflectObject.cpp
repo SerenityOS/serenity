@@ -102,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     auto key = TRY(property_key.to_property_key(vm));
 
     // 3. Let desc be ? ToPropertyDescriptor(attributes).
-    auto descriptor = TRY(to_property_descriptor(global_object, attributes));
+    auto descriptor = TRY(to_property_descriptor(vm, attributes));
 
     // 4. Return ? target.[[DefineOwnProperty]](key, desc).
     return Value(TRY(target.as_object().internal_define_own_property(key, descriptor)));
@@ -166,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
     auto descriptor = TRY(target.as_object().internal_get_own_property(key));
 
     // 4. Return FromPropertyDescriptor(desc).
-    return from_property_descriptor(global_object, descriptor);
+    return from_property_descriptor(vm, descriptor);
 }
 
 // 28.1.7 Reflect.getPrototypeOf ( target ), https://tc39.es/ecma262/#sec-reflect.getprototypeof

@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
         // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
         Object* base_obj = nullptr;
         if (m_base_value.is_string()) {
-            auto string_value = m_base_value.as_string().get(global_object, m_name);
+            auto string_value = m_base_value.as_string().get(vm, m_name);
             if (string_value.has_value())
                 return *string_value;
             base_obj = global_object.string_prototype();

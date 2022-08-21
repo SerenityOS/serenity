@@ -84,10 +84,8 @@ enum class GetOwnPropertyKeysType {
 };
 
 // 20.1.2.11.1 GetOwnPropertyKeys ( O, type ), https://tc39.es/ecma262/#sec-getownpropertykeys
-static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
+static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(VM& vm, Value value, GetOwnPropertyKeysType type)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY(value.to_object(vm));
 
@@ -116,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
     auto& realm = *global_object.associated_realm();
 
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
-    return Array::create_from(realm, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String)));
+    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::String)));
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
@@ -125,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
     auto& realm = *global_object.associated_realm();
 
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
-    return Array::create_from(realm, TRY(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
+    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
@@ -262,7 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     auto* object = TRY(vm.argument(0).to_object(vm));
     auto key = TRY(vm.argument(1).to_property_key(vm));
     auto descriptor = TRY(object->internal_get_own_property(key));
-    return from_property_descriptor(global_object, descriptor);
+    return from_property_descriptor(vm, descriptor);
 }
 
 // 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
@@ -287,7 +285,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
         auto desc = TRY(object->internal_get_own_property(property_key));
 
         // b. Let descriptor be FromPropertyDescriptor(desc).
-        auto descriptor = from_property_descriptor(global_object, desc);
+        auto descriptor = from_property_descriptor(vm, desc);
 
         // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
         if (!descriptor.is_undefined())
@@ -304,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
     if (!vm.argument(0).is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
     auto key = TRY(vm.argument(1).to_property_key(vm));
-    auto descriptor = TRY(to_property_descriptor(global_object, vm.argument(2)));
+    auto descriptor = TRY(to_property_descriptor(vm, vm.argument(2)));
     TRY(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
     return vm.argument(0);
 }

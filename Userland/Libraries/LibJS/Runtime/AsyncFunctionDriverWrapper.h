@@ -24,7 +24,7 @@ public:
     virtual ~AsyncFunctionDriverWrapper() override = default;
     void visit_edges(Cell::Visitor&) override;
 
-    ThrowCompletionOr<Value> react_to_async_task_completion(VM&, GlobalObject&, Value, bool is_successful);
+    ThrowCompletionOr<Value> react_to_async_task_completion(VM&, Value, bool is_successful);
 
 private:
     GeneratorObject* m_generator_object { nullptr };

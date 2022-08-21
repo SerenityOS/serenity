@@ -57,10 +57,8 @@ void NumberConstructor::initialize(Realm& realm)
 }
 
 // Most of 21.1.1.1 Number ( value ) factored into a separate function for sharing between call() and construct().
-static ThrowCompletionOr<Value> get_value_from_constructor_argument(GlobalObject& global_object)
+static ThrowCompletionOr<Value> get_value_from_constructor_argument(VM& vm)
 {
-    auto& vm = global_object.vm();
-
     Value number;
     if (vm.argument_count() > 0) {
         auto primitive = TRY(vm.argument(0).to_numeric(vm));
@@ -80,16 +78,15 @@ static ThrowCompletionOr<Value> get_value_from_constructor_argument(GlobalObject
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 ThrowCompletionOr<Value> NumberConstructor::call()
 {
-    return get_value_from_constructor_argument(global_object());
+    return get_value_from_constructor_argument(vm());
 }
 
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 ThrowCompletionOr<Object*> NumberConstructor::construct(FunctionObject& new_target)
 {
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
 
-    auto number = TRY(get_value_from_constructor_argument(global_object));
+    auto number = TRY(get_value_from_constructor_argument(vm));
     return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &GlobalObject::number_prototype, number.as_double()));
 }
 

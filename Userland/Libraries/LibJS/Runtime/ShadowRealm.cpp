@@ -161,7 +161,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
     eval_context.is_strict_mode = strict_eval;
 
     // 15. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
+    TRY(vm.push_execution_context(eval_context, {}));
 
     // 16. Let result be Completion(EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval)).
     auto eval_result = eval_declaration_instantiation(vm, program, variable_environment, lexical_environment, nullptr, strict_eval);
@@ -204,6 +204,9 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
 // 3.1.4 ShadowRealmImportValue ( specifierString: a String, exportNameString: a String, callerRealm: a Realm Record, evalRealm: a Realm Record, evalContext: an execution context, ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
 ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_string, String export_name_string, Realm& caller_realm, Realm& eval_realm, ExecutionContext& eval_context)
 {
+    // FIXME: evalRealm isn't being used anywhere in this AO (spec issue)
+    (void)eval_realm;
+
     auto& realm = *vm.current_realm();
 
     // 1. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
@@ -216,7 +219,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_stri
     // NOTE: We don't support this concept yet.
 
     // 5. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
+    TRY(vm.push_execution_context(eval_context, {}));
 
     // 6. Perform HostImportModuleDynamically(null, specifierString, innerCapability).
     vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability);

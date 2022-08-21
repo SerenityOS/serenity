@@ -102,7 +102,7 @@ void NumberPrototype::initialize(Realm& realm)
 }
 
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue
-static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<Value> this_number_value(VM& vm, Value value)
 {
     // 1. If Type(value) is Number, return value.
     if (value.is_number())
@@ -116,8 +116,6 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
         return Value(static_cast<NumberObject&>(value.as_object()).number());
     }
 
-    auto& vm = global_object.vm();
-
     // 3. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Number");
 }
@@ -128,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     auto fraction_digits_value = vm.argument(0);
 
     // 1. Let x be ? thisNumberValue(this value).
-    auto number_value = TRY(this_number_value(global_object, vm.this_value()));
+    auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
     auto fraction_digits = TRY(fraction_digits_value.to_integer_or_infinity(vm));
@@ -247,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
     // 1. Let x be ? thisNumberValue(this value).
-    auto number_value = TRY(this_number_value(global_object, vm.this_value()));
+    auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
     // 3. Assert: If fractionDigits is undefined, then f is 0.
@@ -324,7 +322,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisNumberValue(this value).
-    auto number_value = TRY(this_number_value(global_object, vm.this_value()));
+    auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
     auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *global_object.intl_number_format_constructor(), locales, options)));
@@ -341,7 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     auto precision_value = vm.argument(0);
 
     // 1. Let x be ? thisNumberValue(this value).
-    auto number_value = TRY(this_number_value(global_object, vm.this_value()));
+    auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. If precision is undefined, return ! ToString(x).
     if (precision_value.is_undefined())
@@ -471,7 +469,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
     // 1. Let x be ? thisNumberValue(this value).
-    auto number_value = TRY(this_number_value(global_object, vm.this_value()));
+    auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     double radix_mv;
 
@@ -553,7 +551,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
     // 1. Return ? thisNumberValue(this value).
-    return this_number_value(global_object, vm.this_value());
+    return this_number_value(vm, vm.this_value());
 }
 
 }

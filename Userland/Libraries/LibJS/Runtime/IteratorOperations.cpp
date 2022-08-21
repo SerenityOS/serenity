@@ -125,9 +125,6 @@ ThrowCompletionOr<Object*> iterator_step(VM& vm, Iterator const& iterator_record
 // NOTE: These only differ in that async awaits the inner value after the call.
 static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, Completion completion, IteratorHint iterator_hint)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
 
     // 2. Let iterator be iteratorRecord.[[Iterator]].
@@ -154,7 +151,7 @@ static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, C
         // Note: If this is AsyncIteratorClose perform one extra step.
         if (iterator_hint == IteratorHint::Async && !inner_result.is_error()) {
             // d. If innerResult.[[Type]] is normal, set innerResult to Completion(Await(innerResult.[[Value]])).
-            inner_result = await(global_object, inner_result.value());
+            inner_result = await(vm, inner_result.value());
         }
     }
 

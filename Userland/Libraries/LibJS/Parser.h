@@ -219,7 +219,7 @@ public:
     };
 
     // Needs to mess with m_state, and we're not going to expose a non-const getter for that :^)
-    friend ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(GlobalObject&, FunctionObject&, FunctionObject*, FunctionKind, MarkedVector<Value> const&);
+    friend ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(VM&, FunctionObject&, FunctionObject*, FunctionKind, MarkedVector<Value> const&);
 
 private:
     friend class ScopePusher;

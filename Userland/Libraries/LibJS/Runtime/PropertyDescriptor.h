@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,8 +14,8 @@ namespace JS {
 
 // 6.2.5 The Property Descriptor Specification Type, https://tc39.es/ecma262/#sec-property-descriptor-specification-type
 
-Value from_property_descriptor(GlobalObject&, Optional<PropertyDescriptor> const&);
-ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(GlobalObject&, Value);
+Value from_property_descriptor(VM&, Optional<PropertyDescriptor> const&);
+ThrowCompletionOr<PropertyDescriptor> to_property_descriptor(VM&, Value);
 
 class PropertyDescriptor {
 public:

@@ -95,7 +95,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
     module_context.lexical_environment = environment();
 
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
-    TRY(vm.push_execution_context(module_context, realm().global_object()));
+    TRY(vm.push_execution_context(module_context, {}));
 
     // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
     auto result = m_evaluation_steps(*this);

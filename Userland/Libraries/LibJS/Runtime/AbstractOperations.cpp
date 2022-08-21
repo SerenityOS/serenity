@@ -663,7 +663,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     eval_context.is_strict_mode = strict_eval;
 
     // 27. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
+    TRY(vm.push_execution_context(eval_context, {}));
 
     // NOTE: We use a ScopeGuard to automatically pop the execution context when any of the `TRY`s below return a throw completion.
     ScopeGuard pop_guard = [&] {
