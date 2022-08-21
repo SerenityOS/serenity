@@ -16,7 +16,7 @@ Co-Authored-By: Stephan Unverwerth <s.unverwerth@gmx.de>
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 Co-Authored-By: circl <circl.lastname@gmail.com>
 ---
- CMakeLists.txt                                |  29 +-
+ CMakeLists.txt                                |  25 +-
  build-scripts/config.sub                      |   3 +
  cmake/sdlchecks.cmake                         |  20 +
  include/SDL_config.h.cmake                    |   2 +
@@ -36,7 +36,7 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymouse.h        |  39 +
  src/video/serenity/SDL_serenityvideo.cpp      | 720 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        |  98 +++
- 20 files changed, 1414 insertions(+), 29 deletions(-)
+ 20 files changed, 1414 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -49,18 +49,10 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  create mode 100644 src/video/serenity/SDL_serenityvideo.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 644715a..2400d53 100644
+index 644715a..4cd432d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,7 +1,3 @@
--if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
--  message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the SDL source code and run \"cmake -S ${CMAKE_SOURCE_DIR} -B .\" from there")
--endif()
--
- cmake_minimum_required(VERSION 3.0.0)
- project(SDL2 C CXX)
- 
-@@ -17,6 +13,9 @@ endif()
+@@ -17,6 +17,9 @@ endif()
  #  etc. See https://github.com/libsdl-org/SDL/issues/4150
  add_library(sdl-build-options INTERFACE)
  

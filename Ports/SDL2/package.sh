@@ -8,9 +8,17 @@ configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-
 depends=("libiconv")
 
 configure() {
-    run cmake "${configopts[@]}"
+    mkdir -p "${PORT_BUILD_DIR}/SDL2-${version}-build"
+    cd "${PORT_BUILD_DIR}/SDL2-${version}-build"
+    cmake "${configopts[@]}" "${PORT_BUILD_DIR}/SDL2-${version}"
+}
+
+build() {
+    cd "${PORT_BUILD_DIR}/SDL2-${version}-build"
+    make "${makeopts[@]}"
 }
 
 install() {
-    run make install
+    cd "${PORT_BUILD_DIR}/SDL2-${version}-build"
+    make install
 }
