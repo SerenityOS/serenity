@@ -49,8 +49,8 @@ public:
     virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) override;
-    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) override;
+    virtual ErrorOr<void> chown(Credentials const&, OpenFileDescription&, UserID, GroupID) override;
+    virtual ErrorOr<void> chmod(Credentials const&, OpenFileDescription&, mode_t) override;
 
 private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);

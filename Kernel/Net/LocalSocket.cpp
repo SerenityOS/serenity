@@ -445,8 +445,10 @@ ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned requ
     return EINVAL;
 }
 
-ErrorOr<void> LocalSocket::chmod(OpenFileDescription&, mode_t mode)
+ErrorOr<void> LocalSocket::chmod(Credentials const&, OpenFileDescription&, mode_t mode)
 {
+    // FIXME: Use the credentials.
+
     auto inode = m_inode.strong_ref();
     if (inode)
         return inode->chmod(mode);
@@ -455,14 +457,15 @@ ErrorOr<void> LocalSocket::chmod(OpenFileDescription&, mode_t mode)
     return {};
 }
 
-ErrorOr<void> LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
+ErrorOr<void> LocalSocket::chown(Credentials const& credentials, OpenFileDescription&, UserID uid, GroupID gid)
 {
+    // FIXME: Use the credentials.
+
     auto inode = m_inode.strong_ref();
     if (inode)
         return inode->chown(uid, gid);
 
-    auto& current_process = Process::current();
-    if (!current_process.is_superuser() && (current_process.euid() != uid || !current_process.in_group(gid)))
+    if (!credentials.is_superuser() && (credentials.euid() != uid || !credentials.in_group(gid)))
         return set_so_error(EPERM);
 
     m_prebind_uid = uid;

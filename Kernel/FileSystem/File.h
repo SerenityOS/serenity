@@ -98,8 +98,8 @@ public:
 
     virtual ErrorOr<void> truncate(u64) { return EINVAL; }
     virtual ErrorOr<void> sync() { return EINVAL; }
-    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) { return EBADF; }
-    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) { return EBADF; }
+    virtual ErrorOr<void> chown(Credentials const&, OpenFileDescription&, UserID, GroupID) { return EBADF; }
+    virtual ErrorOr<void> chmod(Credentials const&, OpenFileDescription&, mode_t) { return EBADF; }
 
     virtual StringView class_name() const = 0;
 

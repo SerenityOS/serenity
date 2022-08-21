@@ -346,7 +346,7 @@ ErrorOr<void> Coredump::write()
     TRY(write_regions());
     TRY(write_notes_segment(builder.bytes()));
 
-    return m_description->chmod(0600); // Make coredump file read/writable
+    return m_description->chmod(Process::current().credentials(), 0600); // Make coredump file read/writable
 }
 
 }

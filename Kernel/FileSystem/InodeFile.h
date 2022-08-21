@@ -40,8 +40,8 @@ public:
 
     virtual ErrorOr<void> truncate(u64) override;
     virtual ErrorOr<void> sync() override;
-    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) override;
-    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) override;
+    virtual ErrorOr<void> chown(Credentials const&, OpenFileDescription&, UserID, GroupID) override;
+    virtual ErrorOr<void> chmod(Credentials const&, OpenFileDescription&, mode_t) override;
 
     virtual StringView class_name() const override { return "InodeFile"sv; }
 

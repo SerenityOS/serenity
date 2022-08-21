@@ -430,14 +430,14 @@ void OpenFileDescription::set_file_flags(u32 flags)
     });
 }
 
-ErrorOr<void> OpenFileDescription::chmod(mode_t mode)
+ErrorOr<void> OpenFileDescription::chmod(Credentials const& credentials, mode_t mode)
 {
-    return m_file->chmod(*this, mode);
+    return m_file->chmod(credentials, *this, mode);
 }
 
-ErrorOr<void> OpenFileDescription::chown(UserID uid, GroupID gid)
+ErrorOr<void> OpenFileDescription::chown(Credentials const& credentials, UserID uid, GroupID gid)
 {
-    return m_file->chown(*this, uid, gid);
+    return m_file->chown(credentials, *this, uid, gid);
 }
 
 FileBlockerSet& OpenFileDescription::blocker_set()

@@ -50,7 +50,7 @@ public:
     ErrorOr<size_t> read(UserOrKernelBuffer&, u64 offset, size_t);
     ErrorOr<size_t> write(u64 offset, UserOrKernelBuffer const&, size_t);
 
-    ErrorOr<void> chmod(mode_t);
+    ErrorOr<void> chmod(Credentials const& credentials, mode_t);
 
     bool can_read() const;
     bool can_write() const;
@@ -121,7 +121,7 @@ public:
 
     off_t offset() const;
 
-    ErrorOr<void> chown(UserID, GroupID);
+    ErrorOr<void> chown(Credentials const& credentials, UserID, GroupID);
 
     FileBlockerSet& blocker_set();
 

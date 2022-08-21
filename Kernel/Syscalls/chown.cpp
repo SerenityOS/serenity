@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::chown));
     auto description = TRY(open_file_description(fd));
-    TRY(description->chown(uid, gid));
+    TRY(description->chown(credentials(), uid, gid));
     return 0;
 }
 
