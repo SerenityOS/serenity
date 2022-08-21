@@ -95,7 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     auto buffer = TRY(vm.argument(0).to_object(vm));
 
     // 2. Compile stableBytes as a WebAssembly module and store the results as module.
-    auto maybe_module = parse_module(global_object, buffer);
+    auto maybe_module = parse_module(vm, buffer);
 
     // 3. If module is error, return false.
     if (maybe_module.is_error())
@@ -116,10 +116,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     return JS::Value(true);
 }
 
-JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::Object* buffer_object)
+JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object)
 {
-    auto& vm = global_object.vm();
-
     ReadonlyBytes data;
     if (is<JS::ArrayBuffer>(buffer_object)) {
         auto& buffer = static_cast<JS::ArrayBuffer&>(*buffer_object);
@@ -170,7 +168,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
         return promise;
     }
     auto* buffer = buffer_or_error.release_value();
-    auto result = parse_module(global_object, buffer);
+    auto result = parse_module(vm, buffer);
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
@@ -178,7 +176,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     return promise;
 }
 
-JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module const& module, JS::VM& vm, JS::GlobalObject& global_object)
+JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, Wasm::Module const& module)
 {
     Wasm::Linker linker { module };
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
@@ -214,7 +212,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                         [&](auto&, auto& arguments) -> Wasm::Result {
                             JS::MarkedVector<JS::Value> argument_values { vm.heap() };
                             for (auto& entry : arguments)
-                                argument_values.append(to_js_value(global_object, entry));
+                                argument_values.append(to_js_value(vm, entry));
 
                             auto result_or_error = JS::call(vm, function, JS::js_undefined(), move(argument_values));
                             if (result_or_error.is_error()) {
@@ -224,7 +222,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                                 return Wasm::Result { Vector<Wasm::Value> {} };
 
                             if (type.results().size() == 1) {
-                                auto value_or_error = to_webassembly_value(global_object, result_or_error.release_value(), type.results().first());
+                                auto value_or_error = to_webassembly_value(vm, result_or_error.release_value(), type.results().first());
                                 if (value_or_error.is_error())
                                     return Wasm::Trap {};
 
@@ -256,7 +254,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                             // FIXME: Throw a LinkError instead.
                             return vm.throw_completion<JS::TypeError>("LinkError: Import resolution attempted to cast a BigInteger to a Number");
                         }
-                        auto cast_value = TRY(to_webassembly_value(global_object, import_, type.type()));
+                        auto cast_value = TRY(to_webassembly_value(vm, import_, type.type()));
                         address = s_abstract_machine.store().allocate({ type.type(), false }, cast_value);
                     } else {
                         // FIXME: https://webassembly.github.io/spec/js-api/#read-the-imports step 5.2
@@ -334,7 +332,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 
     Wasm::Module const* module { nullptr };
     if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
-        auto result = parse_module(global_object, buffer);
+        auto result = parse_module(vm, buffer);
         if (result.is_error()) {
             promise->reject(*result.release_error().value());
             return promise;
@@ -350,7 +348,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     }
     VERIFY(module);
 
-    auto result = instantiate_module(*module, vm, global_object);
+    auto result = instantiate_module(vm, *module);
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
@@ -367,9 +365,9 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     return promise;
 }
 
-JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
+JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
         return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
@@ -381,7 +379,7 @@ JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
         return JS::Value(static_cast<double>(wasm_value.to<float>().value()));
     case Wasm::ValueType::FunctionReference:
         // FIXME: What's the name of a function reference that isn't exported?
-        return create_native_function(global_object, wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled");
+        return create_native_function(vm, wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled");
     case Wasm::ValueType::NullFunctionReference:
         return JS::js_null();
     case Wasm::ValueType::ExternReference:
@@ -391,10 +389,9 @@ JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
     VERIFY_NOT_REACHED();
 }
 
-JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global_object, JS::Value value, Wasm::ValueType const& type)
+JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value value, Wasm::ValueType const& type)
 {
     static ::Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
-    auto& vm = global_object.vm();
 
     switch (type.kind()) {
     case Wasm::ValueType::I64: {
@@ -441,9 +438,9 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global
     VERIFY_NOT_REACHED();
 }
 
-JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm::FunctionAddress address, String const& name)
+JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress address, String const& name)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     Optional<Wasm::FunctionType> type;
     WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](auto const& value) { type = value.type(); });
     if (auto entry = WebAssemblyObject::s_global_cache.function_instances.get(address); entry.has_value())
@@ -460,7 +457,7 @@ JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm
             // Grab as many values as needed and convert them.
             size_t index = 0;
             for (auto& type : type.parameters())
-                values.append(TRY(to_webassembly_value(global_object, vm.argument(index++), type)));
+                values.append(TRY(to_webassembly_value(vm, vm.argument(index++), type)));
 
             auto result = WebAssemblyObject::s_abstract_machine.invoke(address, move(values));
             // FIXME: Use the convoluted mapping of errors defined in the spec.
@@ -471,11 +468,11 @@ JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm
                 return JS::js_undefined();
 
             if (result.values().size() == 1)
-                return to_js_value(global_object, result.values().first());
+                return to_js_value(vm, result.values().first());
 
             Vector<JS::Value> result_values;
             for (auto& entry : result.values())
-                result_values.append(to_js_value(global_object, entry));
+                result_values.append(to_js_value(vm, entry));
 
             return JS::Value(JS::Array::create_from(realm, result_values));
         });

@@ -65,7 +65,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
         if (value_value.is_undefined())
             return Wasm::Value(*reference_type, 0ull);
 
-        return to_webassembly_value(global_object, value_value, *reference_type);
+        return to_webassembly_value(vm, value_value, *reference_type);
     }());
 
     auto& reference = reference_value.value().get<Wasm::Reference>();

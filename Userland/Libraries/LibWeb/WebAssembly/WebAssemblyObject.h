@@ -14,10 +14,10 @@
 namespace Web::Bindings {
 
 class WebAssemblyMemoryObject;
-JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::Object* buffer);
-JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm::FunctionAddress address, String const& name);
-JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value);
-JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global_object, JS::Value value, Wasm::ValueType const& type);
+JS::ThrowCompletionOr<size_t> parse_module(JS::VM&, JS::Object* buffer);
+JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress address, String const& name);
+JS::Value to_js_value(JS::VM&, Wasm::Value& wasm_value);
+JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM&, JS::Value value, Wasm::ValueType const& type);
 
 class WebAssemblyObject final : public JS::Object {
     JS_OBJECT(WebAssemblyObject, JS::Object);
@@ -29,7 +29,7 @@ public:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    static JS::ThrowCompletionOr<size_t> instantiate_module(Wasm::Module const&, JS::VM&, JS::GlobalObject&);
+    static JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM&, Wasm::Module const&);
 
     struct CompiledWebAssemblyModule {
         explicit CompiledWebAssemblyModule(Wasm::Module&& module)

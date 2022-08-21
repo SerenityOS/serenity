@@ -29,14 +29,13 @@ JS::ThrowCompletionOr<JS::Value> WebAssemblyInstanceConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* module_argument = TRY(vm.argument(0).to_object(vm));
     if (!is<WebAssemblyModuleObject>(module_argument))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
-    auto result = TRY(WebAssemblyObject::instantiate_module(module_object.module(), vm, global_object));
+    auto result = TRY(WebAssemblyObject::instantiate_module(vm, module_object.module()));
     return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);
 }
 
