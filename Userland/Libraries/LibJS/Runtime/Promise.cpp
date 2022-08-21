@@ -19,9 +19,10 @@
 namespace JS {
 
 // 27.2.4.7.1 PromiseResolve ( C, x ), https://tc39.es/ecma262/#sec-promise-resolve
-ThrowCompletionOr<Object*> promise_resolve(GlobalObject& global_object, Object& constructor, Value value)
+ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value value)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If IsPromise(x) is true, then
     if (value.is_object() && is<Promise>(value.as_object())) {
@@ -34,7 +35,7 @@ ThrowCompletionOr<Object*> promise_resolve(GlobalObject& global_object, Object& 
     }
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    auto promise_capability = TRY(new_promise_capability(global_object, &constructor));
+    auto promise_capability = TRY(new_promise_capability(vm, &constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
     (void)TRY(call(global_object, *promise_capability.resolve, js_undefined(), value));
@@ -150,7 +151,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
 
         // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Creating PromiseResolveThenableJob for thenable {}", &promise, resolution);
-        auto job = create_promise_resolve_thenable_job(global_object, promise, resolution, move(then_job_callback));
+        auto job = create_promise_resolve_thenable_job(vm, promise, resolution, move(then_job_callback));
 
         // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Enqueuing job @ {} in realm {}", &promise, &job.job, job.realm);
@@ -274,7 +275,7 @@ void Promise::trigger_reactions() const
     for (auto& reaction : reactions) {
         // a. Let job be NewPromiseReactionJob(reaction, argument).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, &reaction, m_result);
-        auto [job, realm] = create_promise_reaction_job(global_object(), *reaction, m_result);
+        auto [job, realm] = create_promise_reaction_job(vm, *reaction, m_result);
 
         // b. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Enqueuing job @ {} in realm {}", this, &job, realm);
@@ -344,7 +345,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
 
         // b. Let fulfillJob be NewPromiseReactionJob(fulfillReaction, value).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: State is State::Fulfilled, creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, fulfill_reaction, value);
-        auto [fulfill_job, realm] = create_promise_reaction_job(global_object(), *fulfill_reaction, value);
+        auto [fulfill_job, realm] = create_promise_reaction_job(vm, *fulfill_reaction, value);
 
         // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &fulfill_job, realm);
@@ -364,7 +365,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<Prom
 
         // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: State is State::Rejected, creating PromiseReactionJob for PromiseReaction @ {} with argument {}", this, reject_reaction, reason);
-        auto [reject_job, realm] = create_promise_reaction_job(global_object(), *reject_reaction, reason);
+        auto [reject_job, realm] = create_promise_reaction_job(vm, *reject_reaction, reason);
 
         // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &reject_job, realm);

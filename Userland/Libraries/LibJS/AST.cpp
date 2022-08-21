@@ -3359,11 +3359,11 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     // Note: options_value is undefined by default.
 
     // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
 
     // 7. Let specifierString be Completion(ToString(specifier)).
     // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
-    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, specifier->to_string(vm));
+    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier->to_string(vm));
 
     // 9. Let assertions be a new empty List.
     Vector<ModuleRequest::Assertion> assertions;
@@ -3382,7 +3382,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
         // b. Let assertionsObj be Get(options, "assert").
         // c. IfAbruptRejectPromise(assertionsObj, promiseCapability).
-        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, options_value.get(vm, vm.names.assert));
+        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, options_value.get(vm, vm.names.assert));
 
         // d. If assertionsObj is not undefined,
         if (!assertion_object.is_undefined()) {
@@ -3398,10 +3398,10 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
             // ii. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
             // iii. IfAbruptRejectPromise(keys, promiseCapability).
-            auto keys = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.as_object().enumerable_own_property_names(Object::PropertyKind::Key));
+            auto keys = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.as_object().enumerable_own_property_names(Object::PropertyKind::Key));
 
             // iv. Let supportedAssertions be ! HostGetSupportedImportAssertions().
-            auto supported_assertions = interpreter.vm().host_get_supported_import_assertions();
+            auto supported_assertions = vm.host_get_supported_import_assertions();
 
             // v. For each String key of keys,
             for (auto const& key : keys) {
@@ -3409,7 +3409,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 
                 // 1. Let value be Get(assertionsObj, key).
                 // 2. IfAbruptRejectPromise(value, promiseCapability).
-                auto value = TRY_OR_REJECT_WITH_VALUE(global_object, promise_capability, assertion_object.get(vm, property_key));
+                auto value = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.get(vm, property_key));
 
                 // 3. If Type(value) is not String, then
                 if (!value.is_string()) {

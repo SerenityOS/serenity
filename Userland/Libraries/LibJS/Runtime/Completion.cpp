@@ -38,7 +38,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
     // NOTE: This is not needed, as we don't suspend anything.
 
     // 2. Let promise be ? PromiseResolve(%Promise%, value).
-    auto* promise_object = TRY(promise_resolve(global_object, *global_object.promise_constructor(), value));
+    auto* promise_object = TRY(promise_resolve(vm, *global_object.promise_constructor(), value));
 
     Optional<bool> success;
     Value result;

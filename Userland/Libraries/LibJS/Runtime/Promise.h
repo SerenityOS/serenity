@@ -11,7 +11,7 @@
 
 namespace JS {
 
-ThrowCompletionOr<Object*> promise_resolve(GlobalObject&, Object& constructor, Value);
+ThrowCompletionOr<Object*> promise_resolve(VM&, Object& constructor, Value);
 
 class Promise : public Object {
     JS_OBJECT(Promise, Object);

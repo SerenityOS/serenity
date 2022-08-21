@@ -867,7 +867,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-            auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
+            auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
 
             // 2. Let declResult be Completion(FunctionDeclarationInstantiation(functionObject, argumentsList)).
             auto declaration_result = function_declaration_instantiation(ast_interpreter);

@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
-    auto result_capability = TRY(new_promise_capability(global_object, constructor));
+    auto result_capability = TRY(new_promise_capability(vm, constructor));
 
     // 5. Return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability).
     return promise->perform_then(on_fulfilled, on_rejected, result_capability);
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto result = TRY(call(global_object, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto* promise = TRY(promise_resolve(global_object, constructor, result));
+            auto* promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
             auto return_value = [value_handle = make_handle(value)](auto&, auto&) -> ThrowCompletionOr<Value> {
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto result = TRY(call(global_object, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
-            auto* promise = TRY(promise_resolve(global_object, constructor, result));
+            auto* promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
             auto throw_reason = [reason_handle = make_handle(reason)](auto&, auto&) -> ThrowCompletionOr<Value> {
