@@ -39,7 +39,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     auto* iterator = TRY(typed_this_value(vm));
     auto target_array = iterator->array();
     if (target_array.is_undefined())
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     VERIFY(target_array.is_object());
     auto& array = target_array.as_object();
 
@@ -61,19 +61,19 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 
     if (index >= length) {
         iterator->m_array = js_undefined();
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     }
 
     iterator->m_index++;
     if (iteration_kind == Object::PropertyKind::Key)
-        return create_iterator_result_object(global_object, Value(static_cast<i32>(index)), false);
+        return create_iterator_result_object(vm, Value(static_cast<i32>(index)), false);
 
     auto value = TRY(array.get(index));
 
     if (iteration_kind == Object::PropertyKind::Value)
-        return create_iterator_result_object(global_object, value, false);
+        return create_iterator_result_object(vm, value, false);
 
-    return create_iterator_result_object(global_object, Array::create_from(realm, { Value(static_cast<i32>(index)), value }), false);
+    return create_iterator_result_object(vm, Array::create_from(realm, { Value(static_cast<i32>(index)), value }), false);
 }
 
 }

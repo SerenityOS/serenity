@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'set' property of WeakMap");
 
-    (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 

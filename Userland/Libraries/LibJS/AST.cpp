@@ -363,13 +363,13 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
 static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, Vector<CallExpression::Argument> const& arguments, MarkedVector<Value>& list)
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     list.ensure_capacity(arguments.size());
 
     for (auto& argument : arguments) {
         auto value = TRY(argument.value->execute(interpreter)).release_value();
         if (argument.is_spread) {
-            TRY(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
+            TRY(get_iterator_values(vm, value, [&](Value iterator_value) -> Optional<Completion> {
                 list.append(iterator_value);
                 return {};
             }));
@@ -1103,7 +1103,7 @@ Completion ForOfStatement::execute(Interpreter& interpreter) const
 Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyString> const& label_set) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     auto for_of_head_state = TRY(for_in_of_head_execute(interpreter, m_lhs, m_rhs));
 
@@ -1115,7 +1115,7 @@ Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyS
     // 2. Let oldEnv be the running execution context's LexicalEnvironment.
     Environment* old_environment = interpreter.lexical_environment();
     auto restore_scope = ScopeGuard([&] {
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        vm.running_execution_context().lexical_environment = old_environment;
     });
 
     // 3. Let V be undefined.
@@ -1123,14 +1123,14 @@ Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<FlyS
 
     Optional<Completion> status;
 
-    (void)TRY(get_iterator_values(global_object, rhs_result, [&](Value value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(vm, rhs_result, [&](Value value) -> Optional<Completion> {
         TRY(for_of_head_state.execute_head(interpreter, value));
 
         // l. Let result be the result of evaluating stmt.
         auto result = m_body->execute(interpreter);
 
         // m. Set the running execution context's LexicalEnvironment to oldEnv.
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        vm.running_execution_context().lexical_environment = old_environment;
 
         // n. If LoopContinues(result, labelSet) is false, then
         if (!loop_continues(result, label_set)) {
@@ -1168,6 +1168,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
 
     // 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
     // Note: Performs only steps 1 through 5.
@@ -1177,16 +1178,14 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
 
     // NOTE: Perform step 7 from ForIn/OfHeadEvaluation. And since this is always async we only have to do step 7.d.
     // d. Return ? GetIterator(exprValue, iteratorHint).
-    auto iterator = TRY(get_iterator(global_object, rhs_result, IteratorHint::Async));
-
-    auto& vm = interpreter.vm();
+    auto iterator = TRY(get_iterator(vm, rhs_result, IteratorHint::Async));
 
     // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
     // NOTE: Here iteratorKind is always async.
     // 2. Let oldEnv be the running execution context's LexicalEnvironment.
     Environment* old_environment = interpreter.lexical_environment();
     auto restore_scope = ScopeGuard([&] {
-        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        vm.running_execution_context().lexical_environment = old_environment;
     });
     // 3. Let V be undefined.
     auto last_value = js_undefined();
@@ -1207,14 +1206,14 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
             return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
 
         // d. Let done be ? IteratorComplete(nextResult).
-        auto done = TRY(iterator_complete(global_object, next_result.as_object()));
+        auto done = TRY(iterator_complete(vm, next_result.as_object()));
 
         // e. If done is true, return V.
         if (done)
             return last_value;
 
         // f. Let nextValue be ? IteratorValue(nextResult).
-        auto next_value = TRY(iterator_value(global_object, next_result.as_object()));
+        auto next_value = TRY(iterator_value(vm, next_result.as_object()));
 
         // NOTE: This performs steps g. through to k.
         TRY(for_of_head_state.execute_head(interpreter, next_value));
@@ -1231,7 +1230,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
             auto status = result.update_empty(last_value);
 
             // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-            return async_iterator_close(global_object, iterator, move(status));
+            return async_iterator_close(vm, iterator, move(status));
         }
 
         // o. If result.[[Value]] is not empty, set V to result.[[Value]].
@@ -3541,6 +3540,7 @@ Completion ArrayExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
     auto& realm = *global_object.associated_realm();
 
     // 1. Let array be ! ArrayCreate(0).
@@ -3556,7 +3556,7 @@ Completion ArrayExpression::execute(Interpreter& interpreter) const
             value = TRY(element->execute(interpreter)).release_value();
 
             if (is<SpreadExpression>(*element)) {
-                (void)TRY(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
+                (void)TRY(get_iterator_values(vm, value, [&](Value iterator_value) -> Optional<Completion> {
                     array->indexed_properties().put(index++, iterator_value, default_attributes);
                     return {};
                 }));

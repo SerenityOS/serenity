@@ -665,16 +665,13 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
 // 11.6.16 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
 ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Value time_zone, PlainDateTime& date_time)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
 
     // 2. Let possibleInstants be ? Invoke(timeZone, "getPossibleInstantsFor", « dateTime »).
     auto possible_instants = TRY(time_zone.invoke(vm, vm.names.getPossibleInstantsFor, &date_time));
 
     // 3. Let iteratorRecord be ? GetIterator(possibleInstants, sync).
-    auto iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
+    auto iterator = TRY(get_iterator(vm, possible_instants, IteratorHint::Sync));
 
     // 4. Let list be a new empty List.
     auto list = MarkedVector<Instant*> { vm.heap() };
@@ -685,12 +682,12 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
     // 6. Repeat, while next is not false,
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        next = TRY(iterator_step(global_object, iterator));
+        next = TRY(iterator_step(vm, iterator));
 
         // b. If next is not false, then
         if (next) {
             // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = TRY(iterator_value(global_object, *next));
+            auto next_value = TRY(iterator_value(vm, *next));
 
             // ii. If Type(nextValue) is not Object or nextValue does not have an [[InitializedTemporalInstant]] internal slot, then
             if (!next_value.is_object() || !is<Instant>(next_value.as_object())) {
@@ -698,7 +695,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
                 auto completion = vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Instant");
 
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
-                return iterator_close(global_object, iterator, move(completion));
+                return iterator_close(vm, iterator, move(completion));
             }
 
             // iii. Append nextValue to the end of the List list.

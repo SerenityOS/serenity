@@ -33,20 +33,20 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
     auto* iterator = TRY(typed_this_value(vm));
     if (iterator->done())
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
 
     auto& utf8_iterator = iterator->iterator();
 
     if (utf8_iterator.done()) {
         iterator->m_done = true;
-        return create_iterator_result_object(global_object, js_undefined(), true);
+        return create_iterator_result_object(vm, js_undefined(), true);
     }
 
     StringBuilder builder;
     builder.append_code_point(*utf8_iterator);
     ++utf8_iterator;
 
-    return create_iterator_result_object(global_object, js_string(vm, builder.to_string()), false);
+    return create_iterator_result_object(vm, js_string(vm, builder.to_string()), false);
 }
 
 }

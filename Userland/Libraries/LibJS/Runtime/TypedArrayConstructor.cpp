@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     auto using_iterator = TRY(source.get_method(vm, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
-        auto values = TRY(iterable_to_list(global_object, source, using_iterator));
+        auto values = TRY(iterable_to_list(vm, source, using_iterator));
 
         MarkedVector<Value> arguments(vm.heap());
         arguments.empend(values.size());

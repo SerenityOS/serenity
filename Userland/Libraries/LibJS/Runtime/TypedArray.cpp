@@ -538,7 +538,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             } else {                                                                                                                   \
                 auto iterator = TRY(first_argument.get_method(vm, *vm.well_known_symbol_iterator()));                                  \
                 if (iterator) {                                                                                                        \
-                    auto values = TRY(iterable_to_list(global_object, first_argument, iterator));                                      \
+                    auto values = TRY(iterable_to_list(vm, first_argument, iterator));                                                 \
                     TRY(initialize_typed_array_from_list(global_object, *typed_array, values));                                        \
                 } else {                                                                                                               \
                     TRY(initialize_typed_array_from_array_like(global_object, *typed_array, first_argument.as_object()));              \
