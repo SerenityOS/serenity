@@ -71,7 +71,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
 
     auto& atime = times[0];
     auto& mtime = times[1];
-    TRY(VirtualFileSystem::the().utimensat(path->view(), *base, atime, mtime, follow_symlink));
+    TRY(VirtualFileSystem::the().utimensat(credentials(), path->view(), *base, atime, mtime, follow_symlink));
     return 0;
 }
 

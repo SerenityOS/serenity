@@ -105,15 +105,16 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
 
 ErrorOr<void> Process::validate_inode_mmap_prot(int prot, Inode const& inode, bool map_shared) const
 {
+    auto credentials = this->credentials();
     auto metadata = inode.metadata();
-    if ((prot & PROT_READ) && !metadata.may_read(*this))
+    if ((prot & PROT_READ) && !metadata.may_read(credentials))
         return EACCES;
 
     if (map_shared) {
         // FIXME: What about readonly filesystem mounts? We cannot make a
         // decision here without knowing the mount flags, so we would need to
         // keep a Custody or something from mmap time.
-        if ((prot & PROT_WRITE) && !metadata.may_write(*this))
+        if ((prot & PROT_WRITE) && !metadata.may_write(credentials))
             return EACCES;
         if (auto shared_vmobject = inode.shared_vmobject()) {
             if ((prot & PROT_EXEC) && shared_vmobject->writable_mappings())

@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$readlink(Userspace<Syscall::SC_readlink_params con
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));
-    auto description = TRY(VirtualFileSystem::the().open(path->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory()));
+    auto description = TRY(VirtualFileSystem::the().open(credentials(), path->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory()));
 
     if (!description->metadata().is_symlink())
         return EINVAL;

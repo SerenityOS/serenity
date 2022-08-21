@@ -82,7 +82,7 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Cus
     // contents as a path and resolves that. That is, it
     // behaves exactly how you would expect a symlink to work.
     auto contents = TRY(read_entire());
-    return VirtualFileSystem::the().resolve_path(StringView { contents->bytes() }, base, out_parent, options, symlink_recursion_level);
+    return VirtualFileSystem::the().resolve_path(Process::current().credentials(), StringView { contents->bytes() }, base, out_parent, options, symlink_recursion_level);
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)

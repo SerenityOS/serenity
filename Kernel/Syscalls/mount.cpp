@@ -86,7 +86,7 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
     else
         dbgln("mount {} @ {}", fs_type, target);
 
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(target->view(), current_directory()));
+    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), target->view(), current_directory()));
 
     if (params.flags & MS_REMOUNT) {
         // We're not creating a new mount, we're updating an existing one!
@@ -132,7 +132,7 @@ ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, siz
     TRY(require_no_promises());
 
     auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(mountpoint->view(), current_directory()));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), mountpoint->view(), current_directory()));
     auto& guest_inode = custody->inode();
     TRY(VirtualFileSystem::the().unmount(guest_inode));
     return 0;

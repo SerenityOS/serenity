@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$link(Userspace<Syscall::SC_link_params const*> use
     auto params = TRY(copy_typed_from_user(user_params));
     auto old_path = TRY(try_copy_kstring_from_user(params.old_path));
     auto new_path = TRY(try_copy_kstring_from_user(params.new_path));
-    TRY(VirtualFileSystem::the().link(old_path->view(), new_path->view(), current_directory()));
+    TRY(VirtualFileSystem::the().link(credentials(), old_path->view(), new_path->view(), current_directory()));
     return 0;
 }
 
@@ -29,7 +29,7 @@ ErrorOr<FlatPtr> Process::sys$symlink(Userspace<Syscall::SC_symlink_params const
 
     auto target = TRY(get_syscall_path_argument(params.target));
     auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
-    TRY(VirtualFileSystem::the().symlink(target->view(), linkpath->view(), current_directory()));
+    TRY(VirtualFileSystem::the().symlink(credentials(), target->view(), linkpath->view(), current_directory()));
     return 0;
 }
 

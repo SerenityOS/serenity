@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$rename(Userspace<Syscall::SC_rename_params const*>
     auto params = TRY(copy_typed_from_user(user_params));
     auto old_path = TRY(get_syscall_path_argument(params.old_path));
     auto new_path = TRY(get_syscall_path_argument(params.new_path));
-    TRY(VirtualFileSystem::the().rename(old_path->view(), new_path->view(), current_directory()));
+    TRY(VirtualFileSystem::the().rename(credentials(), old_path->view(), new_path->view(), current_directory()));
     return 0;
 }
 

@@ -28,7 +28,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
         base = base_description->custody();
     }
 
-    TRY(VirtualFileSystem::the().chmod(path->view(), params.mode, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    TRY(VirtualFileSystem::the().chmod(credentials(), path->view(), params.mode, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     return 0;
 }
 

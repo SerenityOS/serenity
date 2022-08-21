@@ -47,7 +47,7 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<Syscall::SC_inod
         return EBADF;
     auto* inode_watcher = description->inode_watcher();
     auto path = TRY(get_syscall_path_argument(params.user_path));
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), path->view(), current_directory()));
     if (!custody->inode().fs().supports_watchers())
         return ENOTSUP;
 

@@ -62,19 +62,21 @@ Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullLockRefPtr<OpenFil
 ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
-    auto dump_directory = TRY(VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody()));
+    auto dump_directory = TRY(VirtualFileSystem::the().open_directory(Process::current().credentials(), output_directory, VirtualFileSystem::the().root_custody()));
     auto dump_directory_metadata = dump_directory->inode().metadata();
     if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
         return EINVAL;
     }
-    auto credentials = process.credentials();
+
+    auto process_credentials = process.credentials();
     return TRY(VirtualFileSystem::the().open(
+        Process::current().credentials(),
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
         *dump_directory,
-        UidAndGid { credentials->uid(), credentials->gid() }));
+        UidAndGid { process_credentials->uid(), process_credentials->gid() }));
 }
 
 ErrorOr<void> Coredump::write_elf_header()

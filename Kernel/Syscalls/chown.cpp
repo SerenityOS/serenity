@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$chown(Userspace<Syscall::SC_chown_params const*> u
         base = base_description->custody();
     }
 
-    TRY(VirtualFileSystem::the().chown(path->view(), params.uid, params.gid, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    TRY(VirtualFileSystem::the().chown(credentials(), path->view(), params.uid, params.gid, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     return 0;
 }
 

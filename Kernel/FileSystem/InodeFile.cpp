@@ -119,14 +119,14 @@ ErrorOr<void> InodeFile::chown(OpenFileDescription& description, UserID uid, Gro
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VirtualFileSystem::the().chown(*description.custody(), uid, gid);
+    return VirtualFileSystem::the().chown(Process::current().credentials(), *description.custody(), uid, gid);
 }
 
 ErrorOr<void> InodeFile::chmod(OpenFileDescription& description, mode_t mode)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VirtualFileSystem::the().chmod(*description.custody(), mode);
+    return VirtualFileSystem::the().chmod(Process::current().credentials(), *description.custody(), mode);
 }
 
 }

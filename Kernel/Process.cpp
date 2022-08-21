@@ -583,8 +583,9 @@ ErrorOr<void> Process::dump_perfcore()
     auto base_filename = TRY(KString::formatted("{}_{}", name(), pid().value()));
     auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
     LockRefPtr<OpenFileDescription> description;
+    auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::the().open(credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;

@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$realpath(Userspace<Syscall::SC_realpath_params con
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
+    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), path->view(), current_directory()));
     auto absolute_path = TRY(custody->try_serialize_absolute_path());
 
     size_t ideal_size = absolute_path->length() + 1;

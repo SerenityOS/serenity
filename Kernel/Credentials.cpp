@@ -29,4 +29,9 @@ Credentials::Credentials(UserID uid, GroupID gid, UserID euid, GroupID egid, Use
 
 Credentials::~Credentials() = default;
 
+bool Credentials::in_group(Kernel::GroupID gid) const
+{
+    return m_gid == gid || m_extra_gids.contains_slow(gid);
+}
+
 }

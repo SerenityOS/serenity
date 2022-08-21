@@ -15,7 +15,7 @@ ErrorOr<FlatPtr> Process::sys$access(Userspace<char const*> user_path, size_t pa
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::rpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
-    TRY(VirtualFileSystem::the().access(path->view(), mode, current_directory()));
+    TRY(VirtualFileSystem::the().access(credentials(), path->view(), mode, current_directory()));
     return 0;
 }
 

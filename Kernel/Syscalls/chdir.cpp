@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$chdir(Userspace<char const*> user_path, size_t pat
     auto current_directory = m_current_directory.with([](auto& current_directory) -> NonnullRefPtr<Custody> {
         return *current_directory;
     });
-    RefPtr<Custody> new_directory = TRY(VirtualFileSystem::the().open_directory(path->view(), *current_directory));
+    RefPtr<Custody> new_directory = TRY(VirtualFileSystem::the().open_directory(credentials(), path->view(), *current_directory));
     m_current_directory.with([&](auto& current_directory) {
         // NOTE: We use swap() here to avoid manipulating the ref counts while holding the lock.
         swap(current_directory, new_directory);
@@ -34,7 +34,7 @@ ErrorOr<FlatPtr> Process::sys$fchdir(int fd)
     auto description = TRY(open_file_description(fd));
     if (!description->is_directory())
         return ENOTDIR;
-    if (!description->metadata().may_execute(*this))
+    if (!description->metadata().may_execute(credentials()))
         return EACCES;
     m_current_directory.with([&](auto& current_directory) {
         current_directory = description->custody();

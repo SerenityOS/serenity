@@ -27,6 +27,8 @@ public:
     GroupID sgid() const { return m_sgid; }
     Span<GroupID const> extra_gids() const { return m_extra_gids.span(); }
 
+    bool in_group(GroupID) const;
+
 private:
     Credentials(UserID uid, GroupID gid, UserID euid, GroupID egid, UserID suid, GroupID sgid, FixedArray<GroupID> extra_gids);
 

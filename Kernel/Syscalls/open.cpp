@@ -67,7 +67,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
         base = base_description->custody();
     }
 
-    auto description = TRY(VirtualFileSystem::the().open(path->view(), options, mode & ~umask(), *base));
+    auto description = TRY(VirtualFileSystem::the().open(credentials(), path->view(), options, mode & ~umask(), *base));
 
     if (description->inode() && description->inode()->bound_socket())
         return ENXIO;

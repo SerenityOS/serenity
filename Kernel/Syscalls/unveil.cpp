@@ -82,7 +82,7 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
     RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     OwnPtr<KString> new_unveiled_path;
-    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path->view(), VirtualFileSystem::the().root_custody(), &parent_custody);
+    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(credentials(), path->view(), VirtualFileSystem::the().root_custody(), &parent_custody);
     if (!custody_or_error.is_error()) {
         new_unveiled_path = TRY(custody_or_error.value()->try_serialize_absolute_path());
     } else if (custody_or_error.error().code() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {

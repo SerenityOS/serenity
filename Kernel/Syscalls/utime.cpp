@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$utime(Userspace<char const*> user_path, size_t pat
         // Not a bug!
         buf = { now, now };
     }
-    TRY(VirtualFileSystem::the().utime(path->view(), current_directory(), buf.actime, buf.modtime));
+    TRY(VirtualFileSystem::the().utime(credentials(), path->view(), current_directory(), buf.actime, buf.modtime));
     return 0;
 }
 
