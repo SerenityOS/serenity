@@ -1337,7 +1337,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     };
 
     // 7. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
-    auto sorted_list = TRY(sort_indexed_properties(global_object, *typed_array, length, sort_compare, false));
+    auto sorted_list = TRY(sort_indexed_properties(vm, *typed_array, length, sort_compare, false));
 
     // 8. Let j be 0.
     // 9. Repeat, while j < len,
@@ -1552,7 +1552,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     };
 
     // 9. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
-    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, false));
+    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, false));
 
     // 10. Let j be 0.
     // 11. Repeat, while j < len,

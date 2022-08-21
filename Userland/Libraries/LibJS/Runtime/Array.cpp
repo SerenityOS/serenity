@@ -157,9 +157,10 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 }
 
 // 1.1.1.2 CompareArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparearrayelements
-ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Value x, Value y, FunctionObject* comparefn)
+ThrowCompletionOr<double> compare_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. If x and y are both undefined, return +0𝔽.
     if (x.is_undefined() && y.is_undefined())
@@ -212,10 +213,10 @@ ThrowCompletionOr<double> compare_array_elements(GlobalObject& global_object, Va
 }
 
 // 1.1.1.3 SortIndexedProperties ( obj, len, SortCompare, skipHoles ), https://tc39.es/proposal-change-array-by-copy/#sec-sortindexedproperties
-ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(GlobalObject& global_object, Object const& object, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes)
+ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(VM& vm, Object const& object, size_t length, Function<ThrowCompletionOr<double>(Value, Value)> const& sort_compare, bool skip_holes)
 {
     // 1. Let items be a new empty List.
-    auto items = MarkedVector<Value> { global_object.heap() };
+    auto items = MarkedVector<Value> { vm.heap() };
 
     // 2. Let k be 0.
     // 3. Repeat, while k < len,
@@ -255,7 +256,7 @@ ThrowCompletionOr<MarkedVector<Value>> sort_indexed_properties(GlobalObject& glo
     // to be stable. FIXME: when initially scanning through the array, maintain a flag
     // for if an unstable sort would be indistinguishable from a stable sort (such as just
     // just strings or numbers), and in that case use quick sort instead for better performance.
-    TRY(array_merge_sort(global_object, sort_compare, items));
+    TRY(array_merge_sort(vm, sort_compare, items));
 
     // 5. Return items.
     return items;

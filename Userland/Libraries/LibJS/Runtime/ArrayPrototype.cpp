@@ -113,10 +113,10 @@ void ArrayPrototype::initialize(Realm& realm)
 }
 
 // 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate
-static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
+static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_array, size_t length)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     auto is_array = TRY(Value(&original_array).is_array(vm));
 
@@ -174,12 +174,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
-    auto* new_array = TRY(array_species_create(global_object, *this_object, 0));
+    auto* new_array = TRY(array_species_create(vm, *this_object, 0));
 
     size_t n = 0;
 
     // 23.1.3.2.1 IsConcatSpreadable ( O ), https://tc39.es/ecma262/#sec-isconcatspreadable
-    auto is_concat_spreadable = [&vm, &global_object](Value const& val) -> ThrowCompletionOr<bool> {
+    auto is_concat_spreadable = [&vm](Value const& val) -> ThrowCompletionOr<bool> {
         if (!val.is_object())
             return false;
         auto& object = val.as_object();
@@ -406,7 +406,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
-    auto* array = TRY(array_species_create(global_object, *object, 0));
+    auto* array = TRY(array_species_create(vm, *object, 0));
 
     // 5. Let k be 0.
     size_t k = 0;
@@ -604,10 +604,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 }
 
 // 23.1.3.13.1 FlattenIntoArray ( target, source, sourceLen, start, depth [ , mapperFunction [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-flattenintoarray
-static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, FunctionObject* mapper_func = {}, Value this_arg = {})
+static ThrowCompletionOr<size_t> flatten_into_array(VM& vm, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, FunctionObject* mapper_func = {}, Value this_arg = {})
 {
     VERIFY(!mapper_func || (!this_arg.is_empty() && depth == 1));
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     for (size_t j = 0; j < array_length; ++j) {
         auto value_exists = TRY(array.has_property(j));
@@ -624,7 +625,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
                 return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
 
             auto length = TRY(length_of_array_like(global_object, value.as_object()));
-            target_index = TRY(flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1));
+            target_index = TRY(flatten_into_array(vm, new_array, value.as_object(), length, target_index, depth - 1));
             continue;
         }
 
@@ -651,9 +652,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
         depth = max(depth_num, 0.0);
     }
 
-    auto* new_array = TRY(array_species_create(global_object, *this_object, 0));
+    auto* new_array = TRY(array_species_create(vm, *this_object, 0));
 
-    TRY(flatten_into_array(global_object, *new_array, *this_object, length, 0, depth));
+    TRY(flatten_into_array(vm, *new_array, *this_object, length, 0, depth));
     return new_array;
 }
 
@@ -674,10 +675,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, mapper_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
-    auto* array = TRY(array_species_create(global_object, *object, 0));
+    auto* array = TRY(array_species_create(vm, *object, 0));
 
     // 5. Perform ? FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg).
-    TRY(flatten_into_array(global_object, *array, *object, source_length, 0, 1, &mapper_function.as_function(), this_arg));
+    TRY(flatten_into_array(vm, *array, *object, source_length, 0, 1, &mapper_function.as_function(), this_arg));
 
     // 6. Return A.
     return array;
@@ -726,7 +727,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
 
 // 2.3 AddValueToKeyedGroup ( groups, key, value ), https://tc39.es/proposal-array-grouping/#sec-add-value-to-keyed-group
 template<typename GroupsType, typename KeyType>
-static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& groups, KeyType key, Value value)
+static void add_value_to_keyed_group(VM& vm, GroupsType& groups, KeyType key, Value value)
 {
     // 1. For each Record { [[Key]], [[Elements]] } g of groups, do
     //      a. If SameValue(g.[[Key]], key) is true, then
@@ -744,7 +745,7 @@ static void add_value_to_keyed_group(GlobalObject& global_object, GroupsType& gr
     }
 
     // 2. Let group be the Record { [[Key]]: key, [[Elements]]: « value » }.
-    MarkedVector<Value> new_elements { global_object.heap() };
+    MarkedVector<Value> new_elements { vm.heap() };
     new_elements.append(value);
 
     // 3. Append group as the last element of groups.
@@ -787,7 +788,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
         auto property_key = TRY(property_key_value.to_property_key(vm));
 
         // d. Perform AddValueToKeyedGroup(groups, propertyKey, kValue).
-        add_value_to_keyed_group(global_object, groups, property_key, k_value);
+        add_value_to_keyed_group(vm, groups, property_key, k_value);
 
         // e. Set k to k + 1.
     }
@@ -859,7 +860,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
             key = Value(0);
 
         // e. Perform AddValueToKeyedGroup(groups, key, kValue).
-        add_value_to_keyed_group(global_object, groups, make_handle(key), k_value);
+        add_value_to_keyed_group(vm, groups, make_handle(key), k_value);
 
         // f. Set k to k + 1.
     }
@@ -1112,7 +1113,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback_function.to_string_without_side_effects());
 
     // 4. Let A be ? ArraySpeciesCreate(O, len).
-    auto* array = TRY(array_species_create(global_object, *object, length));
+    auto* array = TRY(array_species_create(vm, *object, length));
 
     // 5. Let k be 0.
     // 6. Repeat, while k < len,
@@ -1436,7 +1437,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
     auto count = max(final - actual_start, 0.0);
 
-    auto* new_array = TRY(array_species_create(global_object, *this_object, count));
+    auto* new_array = TRY(array_species_create(vm, *this_object, count));
 
     size_t index = 0;
     size_t k = actual_start;
@@ -1501,14 +1502,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
     return Value(false);
 }
 
-ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, Function<ThrowCompletionOr<double>(Value, Value)> const& compare_func, MarkedVector<Value>& arr_to_sort)
+ThrowCompletionOr<void> array_merge_sort(VM& vm, Function<ThrowCompletionOr<double>(Value, Value)> const& compare_func, MarkedVector<Value>& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
     if (arr_to_sort.size() <= 1)
         return {};
-
-    auto& vm = global_object.vm();
 
     MarkedVector<Value> left(vm.heap());
     MarkedVector<Value> right(vm.heap());
@@ -1524,8 +1523,8 @@ ThrowCompletionOr<void> array_merge_sort(GlobalObject& global_object, Function<T
         }
     }
 
-    TRY(array_merge_sort(global_object, compare_func, left));
-    TRY(array_merge_sort(global_object, compare_func, right));
+    TRY(array_merge_sort(vm, compare_func, left));
+    TRY(array_merge_sort(vm, compare_func, right));
 
     arr_to_sort.clear();
 
@@ -1577,11 +1576,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // 4. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
         // a. Return ? CompareArrayElements(x, y, comparefn).
-        return TRY(compare_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
+        return TRY(compare_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
     };
 
     // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, true).
-    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, true));
+    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, true));
 
     // 7. Let itemCount be the number of elements in sortedList.
     auto item_count = sorted_list.size();
@@ -1644,7 +1643,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     if (new_length > MAX_ARRAY_LIKE_INDEX)
         return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
-    auto* removed_elements = TRY(array_species_create(global_object, *this_object, actual_delete_count));
+    auto* removed_elements = TRY(array_species_create(vm, *this_object, actual_delete_count));
 
     for (u64 i = 0; i < actual_delete_count; ++i) {
         auto from = actual_start + i;
@@ -1809,11 +1808,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
     // 5. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
         // a. Return ? CompareArrayElements(x, y, comparefn).
-        return TRY(compare_array_elements(global_object, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
+        return TRY(compare_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
     };
 
     // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
-    auto sorted_list = TRY(sort_indexed_properties(global_object, *object, length, sort_compare, false));
+    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, false));
 
     // 7. Let j be 0.
     // 8. Repeat, while j < len,
