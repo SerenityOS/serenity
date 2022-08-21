@@ -52,7 +52,6 @@ ThrowCompletionOr<Value> RegExpConstructor::call()
 ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
@@ -83,7 +82,7 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
         flags_value = flags;
     }
 
-    return TRY(regexp_create(global_object, pattern_value, flags_value));
+    return TRY(regexp_create(vm, pattern_value, flags_value));
 }
 
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species

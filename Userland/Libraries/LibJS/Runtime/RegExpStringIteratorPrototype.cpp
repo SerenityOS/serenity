@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
     if (iterator->done())
         return create_iterator_result_object(vm, js_undefined(), true);
 
-    auto match = TRY(regexp_exec(global_object, iterator->regexp_object(), iterator->string()));
+    auto match = TRY(regexp_exec(vm, iterator->regexp_object(), iterator->string()));
 
     if (match.is_null()) {
         iterator->set_done();

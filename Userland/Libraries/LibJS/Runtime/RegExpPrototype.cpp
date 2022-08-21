@@ -52,10 +52,8 @@ void RegExpPrototype::initialize(Realm& realm)
 }
 
 // Non-standard abstraction around steps used by multiple prototypes.
-static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object, Object& regexp_object, Utf16View const& string, bool unicode)
+static ThrowCompletionOr<void> increment_last_index(VM& vm, Object& regexp_object, Utf16View const& string, bool unicode)
 {
-    auto& vm = global_object.vm();
-
     // Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(vm));
@@ -80,9 +78,9 @@ struct Match {
 };
 
 // 22.2.5.2.7 GetMatchIndexPair ( S, match ), https://tc39.es/ecma262/#sec-getmatchindexpair
-static Value get_match_index_par(GlobalObject& global_object, Utf16View const& string, Match const& match)
+static Value get_match_index_par(VM& vm, Utf16View const& string, Match const& match)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
     VERIFY(match.start_index <= string.length_in_code_units());
@@ -96,7 +94,7 @@ static Value get_match_index_par(GlobalObject& global_object, Utf16View const& s
 }
 
 // 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
-static Value make_match_indices_index_pair_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
+static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -112,8 +110,7 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
     // Therefore, this implementation tracks the group names without the assertion that the group
     // names align with the indices. The end result is the same.
 
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let n be the number of elements in indices.
     // 2. Assert: n < 2^32-1.
@@ -142,14 +139,14 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
         //     i. Let matchIndicesArray be undefined.
         auto match_indices_array = js_undefined();
         if (match_indices.has_value())
-            match_indices_array = get_match_index_par(global_object, string, *match_indices);
+            match_indices_array = get_match_index_par(vm, string, *match_indices);
 
         // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), matchIndicesArray).
         MUST(array->create_data_property_or_throw(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
-        auto match_indices_array = get_match_index_par(global_object, string, entry.value);
+        auto match_indices_array = get_match_index_par(vm, string, entry.value);
 
         // e. If i > 0 and groupNames[i - 1] is not undefined, then
         //     i. Assert: groups is not undefined.
@@ -166,10 +163,9 @@ static Value make_match_indices_index_pair_array(GlobalObject& global_object, Ut
 }
 
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
-static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
+static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp_object, Utf16String string)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let length be the length of S.
     // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
@@ -344,7 +340,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     // 33. If hasIndices is true, then
     if (has_indices) {
         // a. Let indicesArray be MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups).
-        auto indices_array = make_match_indices_index_pair_array(global_object, string.view(), indices, group_names, has_groups);
+        auto indices_array = make_match_indices_index_pair_array(vm, string.view(), indices, group_names, has_groups);
         // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
         MUST(array->create_data_property(vm.names.indices, indices_array));
     }
@@ -358,9 +354,10 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string)
+ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String string)
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. Let exec be ? Get(R, "exec").
     auto exec = TRY(regexp_object.get(vm.names.exec));
@@ -383,7 +380,7 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp");
 
     // 4. Return ? RegExpBuiltinExec(R, S).
-    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
+    return regexp_builtin_exec(vm, static_cast<RegExpObject&>(regexp_object), move(string));
 }
 
 // 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
@@ -448,7 +445,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Return ? RegExpBuiltinExec(R, S).
-    return TRY(regexp_builtin_exec(global_object, *regexp_object, move(string)));
+    return TRY(regexp_builtin_exec(vm, *regexp_object, move(string)));
 }
 
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
@@ -508,7 +505,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // 5. If global is false, then
     if (!global) {
         // a. Return ? RegExpExec(rx, S).
-        return TRY(regexp_exec(global_object, *regexp_object, move(string)));
+        return TRY(regexp_exec(vm, *regexp_object, move(string)));
     }
 
     // 6. Else,
@@ -533,7 +530,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // g. Repeat,
     while (true) {
         // i. Let result be ? RegExpExec(rx, S).
-        auto result_value = TRY(regexp_exec(global_object, *regexp_object, string));
+        auto result_value = TRY(regexp_exec(vm, *regexp_object, string));
 
         // ii. If result is null, then
         if (result_value.is_null()) {
@@ -560,7 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         // 3. If matchStr is the empty String, then
         if (match_str.is_empty()) {
             // Steps 3a-3c are implemented by increment_last_index.
-            TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
+            TRY(increment_last_index(vm, *regexp_object, string.view(), full_unicode));
         }
 
         // 4. Set n to n + 1.
@@ -660,7 +657,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 11. Repeat, while done is false,
     while (true) {
         // a. Let result be ? RegExpExec(rx, S).
-        auto result = TRY(regexp_exec(global_object, *regexp_object, string));
+        auto result = TRY(regexp_exec(vm, *regexp_object, string));
 
         // b. If result is null, set done to true.
         if (result.is_null())
@@ -684,7 +681,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
             // Steps 2a-2c are implemented by increment_last_index.
-            TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
+            TRY(increment_last_index(vm, *regexp_object, string.view(), full_unicode));
         }
     }
 
@@ -826,7 +823,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     }
 
     // 6. Let result be ? RegExpExec(rx, S).
-    auto result = TRY(regexp_exec(global_object, *regexp_object, move(string)));
+    auto result = TRY(regexp_exec(vm, *regexp_object, move(string)));
 
     // 7. Let currentLastIndex be ? Get(rx, "lastIndex").
     auto current_last_index = TRY(regexp_object->get(vm.names.lastIndex));
@@ -918,7 +915,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     // 16. If size is 0, then
     if (string.is_empty()) {
         // a. Let z be ? RegExpExec(splitter, S).
-        auto result = TRY(regexp_exec(global_object, *splitter, string));
+        auto result = TRY(regexp_exec(vm, *splitter, string));
 
         // b. If z is not null, return A.
         if (!result.is_null())
@@ -943,7 +940,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         TRY(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
         // b. Let z be ? RegExpExec(splitter, S).
-        auto result = TRY(regexp_exec(global_object, *splitter, string));
+        auto result = TRY(regexp_exec(vm, *splitter, string));
 
         // c. If z is null, set q to AdvanceStringIndex(S, q, unicodeMatching).
         if (result.is_null()) {
@@ -1036,7 +1033,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let match be ? RegExpExec(R, string).
-    auto match = TRY(regexp_exec(global_object, *regexp_object, move(string)));
+    auto match = TRY(regexp_exec(vm, *regexp_object, move(string)));
 
     // 5. If match is not null, return true; else return false.
     return Value(!match.is_null());
@@ -1091,7 +1088,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
     //     b. Let F be flags.
 
     // 5. Return ? RegExpInitialize(O, P, F).
-    return TRY(regexp_object->regexp_initialize(global_object, pattern, flags));
+    return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
 }
 
 }
