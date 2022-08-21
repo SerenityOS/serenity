@@ -146,6 +146,8 @@ void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
     auto& segment = m_segments[index.value()];
     VERIFY(segment.button);
     segment.button->set_checked(true);
+    if (on_segment_change)
+        on_segment_change(index);
     relayout();
 }
 
