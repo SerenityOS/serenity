@@ -288,12 +288,14 @@ void Socket::set_connected(bool connected)
 
 void Socket::set_origin(Process const& process)
 {
-    m_origin = { process.pid().value(), process.uid().value(), process.gid().value() };
+    auto credentials = process.credentials();
+    m_origin = { process.pid().value(), credentials->uid().value(), credentials->gid().value() };
 }
 
 void Socket::set_acceptor(Process const& process)
 {
-    m_acceptor = { process.pid().value(), process.uid().value(), process.gid().value() };
+    auto credentials = process.credentials();
+    m_acceptor = { process.pid().value(), credentials->uid().value(), credentials->gid().value() };
 }
 
 }
