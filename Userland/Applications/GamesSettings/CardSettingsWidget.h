@@ -7,7 +7,9 @@
 #pragma once
 
 #include <LibGUI/ColorInput.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/IconView.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/SettingsWindow.h>
 
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
@@ -21,8 +23,14 @@ public:
 private:
     CardSettingsWidget();
 
+    void set_cards_background_color(Gfx::Color);
     bool set_card_back_image_path(String const&);
     String card_back_image_path() const;
+
+    RefPtr<GUI::Frame> m_preview_frame;
+    RefPtr<GUI::ImageWidget> m_preview_card_back;
+    RefPtr<GUI::ImageWidget> m_preview_card_front_ace;
+    RefPtr<GUI::ImageWidget> m_preview_card_front_queen;
 
     RefPtr<GUI::ColorInput> m_background_color_input;
     RefPtr<GUI::IconView> m_card_back_image_view;
