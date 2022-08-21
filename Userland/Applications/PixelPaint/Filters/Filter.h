@@ -20,7 +20,7 @@ public:
 
     virtual RefPtr<GUI::Widget> get_settings_widget();
 
-    virtual StringView filter_name() = 0;
+    virtual StringView filter_name() const = 0;
 
     virtual ~Filter() {};
 

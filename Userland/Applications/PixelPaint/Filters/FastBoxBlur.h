@@ -17,7 +17,7 @@ public:
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
     virtual RefPtr<GUI::Widget> get_settings_widget() override;
 
-    virtual StringView filter_name() override { return "Fast Box Blur (& Gauss)"sv; }
+    virtual StringView filter_name() const override { return "Fast Box Blur (& Gauss)"sv; }
 
     FastBoxBlur(ImageEditor* editor)
         : Filter(editor) {};

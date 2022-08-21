@@ -16,7 +16,7 @@ public:
 
     virtual RefPtr<GUI::Widget> get_settings_widget() override;
 
-    virtual StringView filter_name() override { return "Bloom Filter"sv; }
+    virtual StringView filter_name() const override { return "Bloom Filter"sv; }
 
     Bloom(ImageEditor* editor)
         : Filter(editor) {};

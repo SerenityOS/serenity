@@ -13,7 +13,7 @@ namespace PixelPaint::Filters {
 class LaplaceCardinal final : public Filter {
 public:
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
-    virtual StringView filter_name() override { return "Laplacian Cardinal"sv; }
+    virtual StringView filter_name() const override { return "Laplacian Cardinal"sv; }
 
     LaplaceCardinal(ImageEditor* editor)
         : Filter(editor) {};

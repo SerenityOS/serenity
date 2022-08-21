@@ -17,7 +17,7 @@ public:
 
     virtual RefPtr<GUI::Widget> get_settings_widget() override;
 
-    virtual StringView filter_name() override { return "Median Filter"sv; }
+    virtual StringView filter_name() const override { return "Median Filter"sv; }
 
     Median(ImageEditor* editor)
         : Filter(editor)

@@ -14,7 +14,7 @@ namespace PixelPaint::Filters {
 class GaussBlur3 final : public Filter {
 public:
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
-    virtual StringView filter_name() override { return "Gaussian Blur (3x3)"sv; }
+    virtual StringView filter_name() const override { return "Gaussian Blur (3x3)"sv; }
 
     GaussBlur3(ImageEditor* editor)
         : Filter(editor) {};
