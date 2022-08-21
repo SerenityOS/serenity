@@ -154,10 +154,8 @@ void RegExpObject::initialize(Realm& realm)
 }
 
 // 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
-ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(GlobalObject& global_object, Value pattern, Value flags)
+ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(VM& vm, Value pattern, Value flags)
 {
-    auto& vm = global_object.vm();
-
     String f;
     if (flags.is_undefined()) {
         f = String::empty();
@@ -205,11 +203,11 @@ String RegExpObject::escape_regexp_pattern() const
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
-ThrowCompletionOr<RegExpObject*> regexp_create(GlobalObject& global_object, Value pattern, Value flags)
+ThrowCompletionOr<RegExpObject*> regexp_create(VM& vm, Value pattern, Value flags)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto* regexp_object = RegExpObject::create(realm);
-    return TRY(regexp_object->regexp_initialize(global_object, pattern, flags));
+    return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
 }
 
 }

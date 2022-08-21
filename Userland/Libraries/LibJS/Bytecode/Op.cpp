@@ -243,10 +243,12 @@ ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
+
     auto source = interpreter.current_executable().get_string(m_source_index);
     auto flags = interpreter.current_executable().get_string(m_flags_index);
 
-    interpreter.accumulator() = TRY(regexp_create(interpreter.global_object(), js_string(interpreter.vm(), source), js_string(interpreter.vm(), flags)));
+    interpreter.accumulator() = TRY(regexp_create(vm, js_string(vm, source), js_string(vm, flags)));
     return {};
 }
 
