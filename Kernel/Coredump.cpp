@@ -68,12 +68,13 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Coredump::try_create_target_file
         dbgln("Refusing to put coredump in sketchy directory '{}'", output_directory);
         return EINVAL;
     }
+    auto credentials = process.credentials();
     return TRY(VirtualFileSystem::the().open(
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
         *dump_directory,
-        UidAndGid { process.uid(), process.gid() }));
+        UidAndGid { credentials->uid(), credentials->gid() }));
 }
 
 ErrorOr<void> Coredump::write_elf_header()
