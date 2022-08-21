@@ -5,6 +5,7 @@
  */
 
 #include "CardGame.h"
+#include <LibCards/CardPainter.h>
 #include <LibConfig/Client.h>
 #include <LibGfx/Palette.h>
 
@@ -18,9 +19,16 @@ CardGame::CardGame()
 
 void CardGame::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
-    if (domain == "Games" && group == "Cards" && key == "BackgroundColor") {
-        if (auto maybe_color = Gfx::Color::from_string(value); maybe_color.has_value()) {
-            set_background_color(maybe_color.value());
+    if (domain == "Games" && group == "Cards") {
+        if (key == "BackgroundColor") {
+            if (auto maybe_color = Gfx::Color::from_string(value); maybe_color.has_value())
+                set_background_color(maybe_color.value());
+            return;
+        }
+        if (key == "CardBackImage") {
+            CardPainter::the().set_background_image_path(value);
+            update();
+            return;
         }
     }
 }
