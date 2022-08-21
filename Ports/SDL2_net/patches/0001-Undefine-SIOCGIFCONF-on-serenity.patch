@@ -9,10 +9,10 @@ FIXME: We don't know why yet.
  1 file changed, 4 insertions(+)
 
 diff --git a/SDLnet.c b/SDLnet.c
-index 53d125a..87eab4c 100644
+index 24eb05b..847b185 100644
 --- a/SDLnet.c
 +++ b/SDLnet.c
-@@ -184,6 +184,10 @@ const char *SDLNet_ResolveIP(const IPaddress *ip)
+@@ -218,6 +218,10 @@ const char *SDLNet_ResolveIP(const IPaddress *ip)
      return inet_ntoa(in);
  }
  
