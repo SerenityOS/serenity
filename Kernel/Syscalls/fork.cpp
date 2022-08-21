@@ -49,18 +49,19 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     child->m_pg = m_pg;
 
-    {
-        ProtectedDataMutationScope scope { *child };
-        child->m_protected_values.promises = m_protected_values.promises.load();
-        child->m_protected_values.execpromises = m_protected_values.execpromises.load();
-        child->m_protected_values.has_promises = m_protected_values.has_promises.load();
-        child->m_protected_values.has_execpromises = m_protected_values.has_execpromises.load();
-        child->m_protected_values.sid = m_protected_values.sid;
-        child->m_protected_values.credentials = m_protected_values.credentials;
-        child->m_protected_values.umask = m_protected_values.umask;
-        child->m_protected_values.signal_trampoline = m_protected_values.signal_trampoline;
-        child->m_protected_values.dumpable = m_protected_values.dumpable;
-    }
+    with_protected_data([&](auto& my_protected_data) {
+        child->with_mutable_protected_data([&](auto& child_protected_data) {
+            child_protected_data.promises = my_protected_data.promises.load();
+            child_protected_data.execpromises = my_protected_data.execpromises.load();
+            child_protected_data.has_promises = my_protected_data.has_promises.load();
+            child_protected_data.has_execpromises = my_protected_data.has_execpromises.load();
+            child_protected_data.sid = my_protected_data.sid;
+            child_protected_data.credentials = my_protected_data.credentials;
+            child_protected_data.umask = my_protected_data.umask;
+            child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;
+            child_protected_data.dumpable = my_protected_data.dumpable;
+        });
+    });
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
     child->address_space().set_enforces_syscall_regions(address_space().enforces_syscall_regions());

@@ -46,43 +46,48 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*>
     if (promises) {
         if (!parse_pledge(promises->view(), new_promises))
             return EINVAL;
-
-        if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises)) {
-            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
-                return EPERM;
-            new_promises &= m_protected_values.promises;
-        }
     }
 
     u32 new_execpromises = 0;
     if (execpromises) {
         if (!parse_pledge(execpromises->view(), new_execpromises))
             return EINVAL;
-        if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises)) {
-            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
-                return EPERM;
-            new_execpromises &= m_protected_values.execpromises;
+    }
+
+    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        if (promises) {
+            if (protected_data.has_promises && (new_promises & ~protected_data.promises)) {
+                if (!(protected_data.promises & (1u << (u32)Pledge::no_error)))
+                    return EPERM;
+                new_promises &= protected_data.promises;
+            }
         }
-    }
 
-    // Only apply promises after all validation has occurred, this ensures
-    // we don't introduce logic bugs like applying the promises, and then
-    // erroring out when parsing the exec promises later. Such bugs silently
-    // leave the caller in an unexpected state.
+        if (execpromises) {
+            if (protected_data.has_execpromises && (new_execpromises & ~protected_data.execpromises)) {
+                if (!(protected_data.promises & (1u << (u32)Pledge::no_error)))
+                    return EPERM;
+                new_execpromises &= protected_data.execpromises;
+            }
+        }
 
-    ProtectedDataMutationScope scope { *this };
+        // Only apply promises after all validation has occurred, this ensures
+        // we don't introduce logic bugs like applying the promises, and then
+        // erroring out when parsing the exec promises later. Such bugs silently
+        // leave the caller in an unexpected state.
 
-    if (promises) {
-        m_protected_values.has_promises = true;
-        m_protected_values.promises = new_promises;
-    }
+        if (promises) {
+            protected_data.has_promises = true;
+            protected_data.promises = new_promises;
+        }
 
-    if (execpromises) {
-        m_protected_values.has_execpromises = true;
-        m_protected_values.execpromises = new_execpromises;
-    }
+        if (execpromises) {
+            protected_data.has_execpromises = true;
+            protected_data.execpromises = new_execpromises;
+        }
 
-    return 0;
+        return 0;
+    });
 }
 
 }

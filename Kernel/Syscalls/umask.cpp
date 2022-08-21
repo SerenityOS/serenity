@@ -12,10 +12,11 @@ ErrorOr<FlatPtr> Process::sys$umask(mode_t mask)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    auto old_mask = m_protected_values.umask;
-    ProtectedDataMutationScope scope { *this };
-    m_protected_values.umask = mask & 0777;
-    return old_mask;
+    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        auto old_mask = protected_data.umask;
+        protected_data.umask = mask & 0777;
+        return old_mask;
+    });
 }
 
 }

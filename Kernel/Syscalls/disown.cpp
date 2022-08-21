@@ -17,8 +17,9 @@ ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
         return ESRCH;
     if (process->ppid() != this->pid())
         return ECHILD;
-    ProtectedDataMutationScope scope(*process);
-    process->m_protected_values.ppid = 0;
+    process->with_mutable_protected_data([](auto& protected_data) {
+        protected_data.ppid = 0;
+    });
     process->disowned_by_waiter(*this);
     return 0;
 }

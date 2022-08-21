@@ -40,9 +40,10 @@ ErrorOr<FlatPtr> Process::sys$setsid()
 
     m_pg = TRY(ProcessGroup::try_create(ProcessGroupID(pid().value())));
     m_tty = nullptr;
-    ProtectedDataMutationScope scope { *this };
-    m_protected_values.sid = pid().value();
-    return sid().value();
+    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        protected_data.sid = pid().value();
+        return protected_data.sid.value();
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)

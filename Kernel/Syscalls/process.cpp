@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$getppid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
-    return m_protected_values.ppid.value();
+    return with_protected_data([](auto& protected_data) { return protected_data.ppid.value(); });
 }
 
 ErrorOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)

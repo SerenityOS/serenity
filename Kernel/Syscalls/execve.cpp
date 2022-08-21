@@ -542,11 +542,10 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     kill_threads_except_self();
 
-    {
-        ProtectedDataMutationScope scope { *this };
-        m_protected_values.credentials = move(new_credentials);
-    }
-    set_dumpable(!executable_is_setid);
+    with_mutable_protected_data([&](auto& protected_data) {
+        protected_data.credentials = move(new_credentials);
+        protected_data.dumpable = !executable_is_setid;
+    });
 
     // We make sure to enter the new address space before destroying the old one.
     // This ensures that the process always has a valid page directory.
@@ -627,19 +626,18 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     // NOTE: Be careful to not trigger any page faults below!
 
-    {
-        ProtectedDataMutationScope scope { *this };
-        m_protected_values.promises = m_protected_values.execpromises.load();
-        m_protected_values.has_promises = m_protected_values.has_execpromises.load();
+    with_mutable_protected_data([&](auto& protected_data) {
+        protected_data.promises = protected_data.execpromises.load();
+        protected_data.has_promises = protected_data.has_execpromises.load();
 
-        m_protected_values.execpromises = 0;
-        m_protected_values.has_execpromises = false;
+        protected_data.execpromises = 0;
+        protected_data.has_execpromises = false;
 
-        m_protected_values.signal_trampoline = signal_trampoline_region->vaddr();
+        protected_data.signal_trampoline = signal_trampoline_region->vaddr();
 
         // FIXME: PID/TID ISSUE
-        m_protected_values.pid = new_main_thread->tid().value();
-    }
+        protected_data.pid = new_main_thread->tid().value();
+    });
 
     auto tsr_result = new_main_thread->make_thread_specific_region({});
     if (tsr_result.is_error()) {
