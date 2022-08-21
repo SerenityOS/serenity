@@ -1,6 +1,7 @@
 set(SOURCES
     Card.cpp
     CardGame.cpp
+    CardPainter.cpp
     CardStack.cpp
 )
 
