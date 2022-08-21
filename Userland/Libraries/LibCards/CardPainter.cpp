@@ -195,18 +195,12 @@ void CardPainter::paint_card_back(Gfx::Bitmap& bitmap)
     auto paint_rect = bitmap.rect();
     painter.clear_rect(paint_rect, Gfx::Color::Transparent);
 
-    auto image = Gfx::Bitmap::try_load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
-
-    float aspect_ratio = image->width() / static_cast<float>(image->height());
-    Gfx::IntSize target_size { static_cast<int>(aspect_ratio * (Card::height - 5)), Card::height - 5 };
-
     painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, Card::card_radius);
     auto inner_paint_rect = paint_rect.shrunken(2, 2);
     painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, Card::card_radius - 1);
 
-    painter.draw_scaled_bitmap(
-        { { (Card::width - target_size.width()) / 2, (Card::height - target_size.height()) / 2 }, target_size },
-        *image, image->rect());
+    auto image = Gfx::Bitmap::try_load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
+    painter.blit({ (bitmap.width() - image->width()) / 2, (bitmap.height() - image->height()) / 2 }, image, image->rect());
 }
 
 void CardPainter::paint_inverted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const& source_to_invert)
