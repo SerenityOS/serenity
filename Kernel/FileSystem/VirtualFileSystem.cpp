@@ -966,7 +966,7 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Cre
 
             TRY(validate_path_against_process_veil(*custody, options));
 
-            auto symlink_target = TRY(child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1));
+            auto symlink_target = TRY(child_inode->resolve_as_link(credentials, parent, out_parent, options, symlink_recursion_level + 1));
             if (!have_more_parts)
                 return symlink_target;
 
