@@ -347,6 +347,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
         return existing_file_or_error.release_error();
     auto& parent_inode = parent_custody->inode();
     auto& current_process = Process::current();
+    auto current_process_credentials = current_process.credentials();
     if (!parent_inode.metadata().may_write(current_process))
         return EACCES;
     if (parent_custody->is_readonly())
@@ -354,7 +355,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
 
     auto basename = KLexicalPath::basename(path);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
-    (void)TRY(parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid()));
+    (void)TRY(parent_inode.create_child(basename, mode, dev, current_process_credentials->euid(), current_process_credentials->egid()));
     return {};
 }
 
@@ -372,14 +373,15 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::create(String
 
     auto& parent_inode = parent_custody.inode();
     auto& current_process = Process::current();
+    auto current_process_credentials = current_process.credentials();
     if (!parent_inode.metadata().may_write(current_process))
         return EACCES;
     if (parent_custody.is_readonly())
         return EROFS;
 
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
-    auto uid = owner.has_value() ? owner.value().uid : current_process.euid();
-    auto gid = owner.has_value() ? owner.value().gid : current_process.egid();
+    auto uid = owner.has_value() ? owner.value().uid : current_process_credentials->euid();
+    auto gid = owner.has_value() ? owner.value().gid : current_process_credentials->egid();
 
     auto inode = TRY(parent_inode.create_child(basename, mode, 0, uid, gid));
     auto custody = TRY(Custody::try_create(&parent_custody, basename, inode, parent_custody.mount_flags()));
@@ -416,6 +418,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     TRY(validate_path_against_process_veil(*parent_custody, O_CREAT));
     auto& parent_inode = parent_custody->inode();
     auto& current_process = Process::current();
+    auto current_process_credentials = current_process.credentials();
     if (!parent_inode.metadata().may_write(current_process))
         return EACCES;
     if (parent_custody->is_readonly())
@@ -423,7 +426,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
 
     auto basename = KLexicalPath::basename(path);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::mkdir: '{}' in {}", basename, parent_inode.identifier());
-    (void)TRY(parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process.euid(), current_process.egid()));
+    (void)TRY(parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process_credentials->euid(), current_process_credentials->egid()));
     return {};
 }
 
@@ -705,6 +708,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
         return existing_custody_or_error.release_error();
     auto& parent_inode = parent_custody->inode();
     auto& current_process = Process::current();
+    auto current_process_credentials = current_process.credentials();
     if (!parent_inode.metadata().may_write(current_process))
         return EACCES;
     if (parent_custody->is_readonly())
@@ -713,7 +717,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
     auto basename = KLexicalPath::basename(linkpath);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::symlink: '{}' (-> '{}') in {}", basename, target, parent_inode.identifier());
 
-    auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid()));
+    auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process_credentials->euid(), current_process_credentials->egid()));
 
     auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()));
     MutexLocker locker(inode->m_inode_lock);
