@@ -28,9 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
 
-    // FIXME: Port this to Core::Stream when it gets read_all.
-    auto proc_net_adapters_file = TRY(Core::File::open("/proc/net/adapters"sv, Core::OpenMode::ReadOnly));
-    auto data = proc_net_adapters_file->read_all();
+    auto proc_net_adapters_file = TRY(Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read));
+    auto data = TRY(proc_net_adapters_file->read_all());
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());
 
