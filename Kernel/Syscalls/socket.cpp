@@ -33,7 +33,7 @@ static void setup_socket_fd(Process::OpenFileDescriptions& fds, int fd, NonnullL
 
 ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
 
     auto credentials = this->credentials();

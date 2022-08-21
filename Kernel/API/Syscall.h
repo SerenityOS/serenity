@@ -174,7 +174,7 @@ enum class NeedsBigProcessLock {
     S(sigreturn, NeedsBigProcessLock::Yes)                  \
     S(sigsuspend, NeedsBigProcessLock::Yes)                 \
     S(sigtimedwait, NeedsBigProcessLock::Yes)               \
-    S(socket, NeedsBigProcessLock::Yes)                     \
+    S(socket, NeedsBigProcessLock::No)                      \
     S(socketpair, NeedsBigProcessLock::No)                  \
     S(stat, NeedsBigProcessLock::No)                        \
     S(statvfs, NeedsBigProcessLock::No)                     \
