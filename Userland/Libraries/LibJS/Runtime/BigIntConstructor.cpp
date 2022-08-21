@@ -41,7 +41,6 @@ void BigIntConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> BigIntConstructor::call()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto value = vm.argument(0);
 
@@ -50,7 +49,7 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
 
     // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
     if (primitive.is_number())
-        return TRY(number_to_bigint(global_object, primitive));
+        return TRY(number_to_bigint(vm, primitive));
 
     // 4. Otherwise, return ? ToBigInt(prim).
     return TRY(primitive.to_bigint(vm));

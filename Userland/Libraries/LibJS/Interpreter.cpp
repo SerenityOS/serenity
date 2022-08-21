@@ -45,9 +45,6 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // 1. Let globalEnv be scriptRecord.[[Realm]].[[GlobalEnv]].
     auto& global_environment = script_record.realm().global_environment();
 
-    // NOTE: This isn't in the spec but we require it.
-    auto& global_object = script_record.realm().global_object();
-
     // 2. Let scriptContext be a new ECMAScript code execution context.
     ExecutionContext script_context(vm.heap());
 
@@ -74,7 +71,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // FIXME: 9. Suspend the currently running execution context.
 
     // 10. Push scriptContext onto the execution context stack; scriptContext is now the running execution context.
-    TRY(vm.push_execution_context(script_context, global_object));
+    TRY(vm.push_execution_context(script_context, {}));
 
     // 11. Let script be scriptRecord.[[ECMAScriptCode]].
     auto& script = script_record.parse_node();

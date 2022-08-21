@@ -467,7 +467,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                         return reference.initialize_referenced_binding(vm, argument_value);
                 } else if (IsSame<NonnullRefPtr<BindingPattern> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
-                    return vm.binding_initialization(param, argument_value, used_environment, global_object);
+                    return vm.binding_initialization(param, argument_value, used_environment);
                 }
             }));
     }
@@ -627,7 +627,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     // FIXME: We don't have this concept yet.
 
     // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    TRY(vm.push_execution_context(callee_context, global_object()));
+    TRY(vm.push_execution_context(callee_context, {}));
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
     // 14. Return calleeContext.
@@ -719,7 +719,6 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
 void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: promiseCapability is a PromiseCapability Record.
 
@@ -760,7 +759,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     });
 
     // 4. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    auto push_result = vm.push_execution_context(async_context, global_object);
+    auto push_result = vm.push_execution_context(async_context, {});
     if (push_result.is_error())
         return;
 

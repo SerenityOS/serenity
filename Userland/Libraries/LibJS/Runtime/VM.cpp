@@ -255,16 +255,16 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
-ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value)
 {
     // Note: DestructuringAssignmentEvaluation is just like BindingInitialization without an environment
     //       And it allows member expressions. We thus trust the parser to disallow member expressions
     //       in any non assignment binding and just call BindingInitialization with a nullptr environment
-    return binding_initialization(target, value, nullptr, global_object);
+    return binding_initialization(target, value, nullptr);
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject&)
+ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment)
 {
     // 1. Let name be StringValue of Identifier.
     // 2. Return ? InitializeBoundName(name, value, environment).
@@ -272,7 +272,7 @@ ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Valu
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment)
 {
     auto& vm = *this;
 
@@ -285,7 +285,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
 
         // BindingInitialization of ObjectBindingPattern
         // 1. Perform ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
-        TRY(property_binding_initialization(*target, value, environment, global_object));
+        TRY(property_binding_initialization(*target, value, environment));
 
         // 2. Return unused.
         return {};
@@ -296,7 +296,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         auto iterator_record = TRY(get_iterator(vm, value));
 
         // 2. Let result be Completion(IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment).
-        auto result = iterator_binding_initialization(*target, iterator_record, environment, global_object);
+        auto result = iterator_binding_initialization(*target, iterator_record, environment);
 
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
         if (!iterator_record.done) {
@@ -314,10 +314,11 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
 
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
-ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment)
 {
     auto& vm = *this;
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
+
     auto* object = TRY(value.to_object(vm));
 
     HashTable<PropertyKey> seen_names;
@@ -335,7 +336,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 VERIFY_NOT_REACHED();
             }
 
-            auto* rest_object = Object::create(realm, global_object.object_prototype());
+            auto* rest_object = Object::create(realm, realm.global_object().object_prototype());
             VERIFY(rest_object);
 
             TRY(rest_object->copy_data_properties(vm, object, seen_names));
@@ -393,7 +394,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
-            TRY(binding_initialization(*binding_ptr, value_to_assign, environment, global_object));
+            TRY(binding_initialization(*binding_ptr, value_to_assign, environment));
         } else {
             VERIFY(reference_to_assign_to.has_value());
             if (!environment)
@@ -408,10 +409,10 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
 // 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
-ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object)
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment)
 {
     auto& vm = *this;
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // FIXME: this method is nearly identical to destructuring assignment!
     for (size_t i = 0; i < binding.entries.size(); i++) {
@@ -530,7 +531,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
-            TRY(binding_initialization(*binding_ptr, value, environment, global_object));
+            TRY(binding_initialization(*binding_ptr, value, environment));
         } else if (!entry.alias.has<Empty>()) {
             VERIFY(assignment_target.has_value());
             if (!environment)

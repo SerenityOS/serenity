@@ -87,12 +87,12 @@ Utf16View PrimitiveString::utf16_string_view() const
     return utf16_string().view();
 }
 
-Optional<Value> PrimitiveString::get(GlobalObject& global_object, PropertyKey const& property_key) const
+Optional<Value> PrimitiveString::get(VM& vm, PropertyKey const& property_key) const
 {
     if (property_key.is_symbol())
         return {};
     if (property_key.is_string()) {
-        if (property_key.as_string() == global_object.vm().names.length.as_string()) {
+        if (property_key.as_string() == vm.names.length.as_string()) {
             auto length = utf16_string().length_in_code_units();
             return Value(static_cast<double>(length));
         }
@@ -104,7 +104,7 @@ Optional<Value> PrimitiveString::get(GlobalObject& global_object, PropertyKey co
     auto length = str.length_in_code_units();
     if (length <= index.as_index())
         return {};
-    return js_string(vm(), str.substring_view(index.as_index(), 1));
+    return js_string(vm, str.substring_view(index.as_index(), 1));
 }
 
 PrimitiveString* js_string(Heap& heap, Utf16View const& view)

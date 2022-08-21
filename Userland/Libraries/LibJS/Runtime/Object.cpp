@@ -1133,7 +1133,6 @@ void Object::define_native_function(PropertyKey const& property_key, Function<Th
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties
 ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 {
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
 
     // 1. Let props be ? ToObject(Properties).
@@ -1163,7 +1162,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
             auto descriptor_object = TRY(props->get(property_key));
 
             // ii. Let desc be ? ToPropertyDescriptor(descObj).
-            auto descriptor = TRY(to_property_descriptor(global_object, descriptor_object));
+            auto descriptor = TRY(to_property_descriptor(vm, descriptor_object));
 
             // iii. Append the pair (a two element List) consisting of nextKey and desc to the end of descriptors.
             descriptors.append({ property_key, descriptor });

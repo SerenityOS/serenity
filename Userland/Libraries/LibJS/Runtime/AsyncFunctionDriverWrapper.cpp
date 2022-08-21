@@ -15,28 +15,28 @@ namespace JS {
 ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
 {
     auto wrapper = realm.heap().allocate<AsyncFunctionDriverWrapper>(realm, realm, generator_object);
-    return wrapper->react_to_async_task_completion(realm.vm(), realm.global_object(), js_undefined(), true);
+    return wrapper->react_to_async_task_completion(realm.vm(), js_undefined(), true);
 }
 
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, GeneratorObject* generator_object)
     : Promise(*realm.global_object().promise_prototype())
     , m_generator_object(generator_object)
-    , m_on_fulfillment(NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm, GlobalObject& global_object) {
-        return react_to_async_task_completion(vm, global_object, vm.argument(0), true);
+    , m_on_fulfillment(NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm, GlobalObject&) {
+        return react_to_async_task_completion(vm, vm.argument(0), true);
     }))
-    , m_on_rejection(NativeFunction::create(realm, "async.on_rejection"sv, [this](VM& vm, GlobalObject& global_object) {
-        return react_to_async_task_completion(vm, global_object, vm.argument(0), false);
+    , m_on_rejection(NativeFunction::create(realm, "async.on_rejection"sv, [this](VM& vm, GlobalObject&) {
+        return react_to_async_task_completion(vm, vm.argument(0), false);
     }))
 {
 }
 
-ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_completion(VM& vm, GlobalObject& global_object, Value value, bool is_successful)
+ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_completion(VM& vm, Value value, bool is_successful)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto generator_result = is_successful
-        ? m_generator_object->next_impl(vm, global_object, value, {})
-        : m_generator_object->next_impl(vm, global_object, {}, value);
+        ? m_generator_object->next_impl(vm, value, {})
+        : m_generator_object->next_impl(vm, {}, value);
 
     if (generator_result.is_throw_completion()) {
         VERIFY(generator_result.throw_completion().type() == Completion::Type::Throw);

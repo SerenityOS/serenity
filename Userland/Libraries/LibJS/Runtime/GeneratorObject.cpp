@@ -51,9 +51,9 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_previous_value);
 }
 
-ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> next_argument, Optional<Value> value_to_throw)
+ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, Optional<Value> next_argument, Optional<Value> value_to_throw)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
 
@@ -73,7 +73,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
 
     auto previous_generated_value = TRY(generated_value(m_previous_value));
 
-    auto result = Object::create(realm, global_object.object_prototype());
+    auto result = Object::create(realm, realm.global_object().object_prototype());
     result->define_direct_property("value", previous_generated_value, default_attributes);
 
     if (m_done) {
@@ -95,7 +95,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
     // Temporarily switch to the captured execution context
-    TRY(vm.push_execution_context(m_execution_context, global_object));
+    TRY(vm.push_execution_context(m_execution_context, {}));
 
     // Pretend that 'yield' returned the passed value, or threw
     if (value_to_throw.has_value()) {

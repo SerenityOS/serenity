@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,6 @@ private:
 
 BigInt* js_bigint(Heap&, Crypto::SignedBigInteger);
 BigInt* js_bigint(VM&, Crypto::SignedBigInteger);
-ThrowCompletionOr<BigInt*> number_to_bigint(GlobalObject&, Value);
+ThrowCompletionOr<BigInt*> number_to_bigint(VM&, Value);
 
 }

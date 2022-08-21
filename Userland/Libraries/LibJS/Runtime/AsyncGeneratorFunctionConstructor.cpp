@@ -39,7 +39,6 @@ ThrowCompletionOr<Value> AsyncGeneratorFunctionConstructor::call()
 ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let C be the active function object.
     auto* constructor = vm.active_function_object();
@@ -48,7 +47,7 @@ ThrowCompletionOr<Object*> AsyncGeneratorFunctionConstructor::construct(Function
     auto& args = vm.running_execution_context().arguments;
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-    return TRY(FunctionConstructor::create_dynamic_function(global_object, *constructor, &new_target, FunctionKind::AsyncGenerator, args));
+    return TRY(FunctionConstructor::create_dynamic_function(vm, *constructor, &new_target, FunctionKind::AsyncGenerator, args));
 }
 
 }

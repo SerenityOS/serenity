@@ -14,10 +14,9 @@
 namespace JS {
 
 // 10.5.14 ProxyCreate ( target, handler ), https://tc39.es/ecma262/#sec-proxycreate
-static ThrowCompletionOr<ProxyObject*> proxy_create(GlobalObject& global_object, Value target, Value handler)
+static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value handler)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     if (!target.is_object())
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
     if (!handler.is_object())
@@ -51,16 +50,16 @@ ThrowCompletionOr<Value> ProxyConstructor::call()
 ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    return TRY(proxy_create(global_object(), vm.argument(0), vm.argument(1)));
+    return TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let p be ? ProxyCreate(target, handler).
-    auto* proxy = TRY(proxy_create(global_object, vm.argument(0), vm.argument(1)));
+    auto* proxy = TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
 
     // 2. Let revokerClosure be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
     auto revoker_closure = [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {

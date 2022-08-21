@@ -28,10 +28,9 @@ BigInt* js_bigint(VM& vm, Crypto::SignedBigInteger big_integer)
 }
 
 // 21.2.1.1.1 NumberToBigInt ( number ), https://tc39.es/ecma262/#sec-numbertobigint
-ThrowCompletionOr<BigInt*> number_to_bigint(GlobalObject& global_object, Value number)
+ThrowCompletionOr<BigInt*> number_to_bigint(VM& vm, Value number)
 {
     VERIFY(number.is_number());
-    auto& vm = global_object.vm();
 
     // 1. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number())

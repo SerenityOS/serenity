@@ -96,7 +96,6 @@ NativeFunction::NativeFunction(FlyString name, Object& prototype)
 ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let callerContext be the running execution context.
     auto& caller_context = vm.running_execution_context();
@@ -148,7 +147,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     // </8.> --------------------------------------------------------------------------
 
     // 9. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    TRY(vm.push_execution_context(callee_context, global_object));
+    TRY(vm.push_execution_context(callee_context, {}));
 
     // 10. Let result be the Completion Record that is the result of evaluating F in a manner that conforms to the specification of F. thisArgument is the this value, argumentsList provides the named parameters, and the NewTarget value is undefined.
     auto result = call();
@@ -164,7 +163,6 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
 ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     // 1. Let callerContext be the running execution context.
     auto& caller_context = vm.running_execution_context();
@@ -212,7 +210,7 @@ ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedVector<Value
     // </8.> --------------------------------------------------------------------------
 
     // 9. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    TRY(vm.push_execution_context(callee_context, global_object));
+    TRY(vm.push_execution_context(callee_context, {}));
 
     // 10. Let result be the Completion Record that is the result of evaluating F in a manner that conforms to the specification of F. The this value is uninitialized, argumentsList provides the named parameters, and newTarget provides the NewTarget value.
     auto result = construct(new_target);

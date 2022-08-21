@@ -34,7 +34,7 @@ public:
     Utf16View utf16_string_view() const;
     bool has_utf16_string() const { return m_has_utf16_string; }
 
-    Optional<Value> get(GlobalObject&, PropertyKey const&) const;
+    Optional<Value> get(VM&, PropertyKey const&) const;
 
 private:
     virtual StringView class_name() const override { return "PrimitiveString"sv; }
