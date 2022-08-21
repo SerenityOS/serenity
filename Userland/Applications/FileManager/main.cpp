@@ -1141,6 +1141,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
         go_forward_action->set_enabled(directory_view->path_history_position() < directory_view->path_history_size() - 1);
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
+        open_child_directory_action->set_enabled(breadcrumbbar.selected_segment().has_value() && *breadcrumbbar.selected_segment() < breadcrumbbar.segment_count() - 1);
         directory_view->view_as_table_action().set_enabled(can_read_in_path);
         directory_view->view_as_icons_action().set_enabled(can_read_in_path);
         directory_view->view_as_columns_action().set_enabled(can_read_in_path);
