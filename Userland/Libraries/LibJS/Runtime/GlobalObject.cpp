@@ -394,7 +394,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     if (vm.argument(0).is_number())
         return vm.argument(0);
     auto input_string = TRY(vm.argument(0).to_string(vm));
-    auto trimmed_string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
+    auto trimmed_string = MUST(trim_string(vm, js_string(vm, input_string), TrimMode::Left));
     for (size_t length = trimmed_string.length(); length > 0; --length) {
         auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(vm));
         if (!number.is_nan())
@@ -410,7 +410,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     auto input_string = TRY(vm.argument(0).to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    auto string = MUST(trim_string(global_object, js_string(vm, input_string), TrimMode::Left));
+    auto string = MUST(trim_string(vm, js_string(vm, input_string), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
