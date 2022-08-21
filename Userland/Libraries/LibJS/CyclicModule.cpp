@@ -234,7 +234,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
         VERIFY(m_evaluation_error.is_error() && same_value(*m_evaluation_error.throw_completion().value(), *result.throw_completion().value()));
 
         // d. Perform ! Call(capability.[[Reject]], undefined, « result.[[Value]] »).
-        MUST(call(global_object, m_top_level_capability->reject, js_undefined(), *result.throw_completion().value()));
+        MUST(call(vm, m_top_level_capability->reject, js_undefined(), *result.throw_completion().value()));
     }
     // 10. Else,
     else {
@@ -248,7 +248,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
             // i. Assert: module.[[Status]] is evaluated.
             VERIFY(m_status == ModuleStatus::Evaluated);
             // ii. Perform ! Call(capability.[[Resolve]], undefined, « undefined »).
-            MUST(call(global_object, m_top_level_capability->resolve, js_undefined(), js_undefined()));
+            MUST(call(vm, m_top_level_capability->resolve, js_undefined(), js_undefined()));
         }
 
         // d. Assert: stack is empty.
@@ -551,9 +551,8 @@ void CyclicModule::async_module_execution_fulfilled(VM& vm)
         // a. Assert: module.[[CycleRoot]] is module.
         VERIFY(m_cycle_root == this);
 
-        VERIFY(vm.current_realm());
         // b. Perform ! Call(module.[[TopLevelCapability]].[[Resolve]], undefined, « undefined »).
-        MUST(call(vm.current_realm()->global_object(), m_top_level_capability->resolve, js_undefined(), js_undefined()));
+        MUST(call(vm, m_top_level_capability->resolve, js_undefined(), js_undefined()));
     }
 
     // 8. Let execList be a new empty List.
@@ -600,9 +599,8 @@ void CyclicModule::async_module_execution_fulfilled(VM& vm)
                     // a. Assert: m.[[CycleRoot]] is m.
                     VERIFY(module->m_cycle_root == module);
 
-                    VERIFY(vm.current_realm());
                     // b. Perform ! Call(m.[[TopLevelCapability]].[[Resolve]], undefined, « undefined »).
-                    MUST(call(vm.current_realm()->global_object(), module->m_top_level_capability->resolve, js_undefined(), js_undefined()));
+                    MUST(call(vm, module->m_top_level_capability->resolve, js_undefined(), js_undefined()));
                 }
             }
         }
@@ -650,9 +648,8 @@ void CyclicModule::async_module_execution_rejected(VM& vm, Value error)
         // a. Assert: module.[[CycleRoot]] is module.
         VERIFY(m_cycle_root == this);
 
-        VERIFY(vm.current_realm());
         // b. Perform ! Call(module.[[TopLevelCapability]].[[Reject]], undefined, « error »).
-        MUST(call(vm.current_realm()->global_object(), m_top_level_capability->reject, js_undefined(), error));
+        MUST(call(vm, m_top_level_capability->reject, js_undefined(), error));
     }
 
     // 9. Return unused.

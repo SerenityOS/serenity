@@ -145,11 +145,13 @@ NonnullRefPtr<SyntheticModule> SyntheticModule::create_default_export_synthetic_
 // 1.4 ParseJSONModule ( source ), https://tc39.es/proposal-json-modules/#sec-parse-json-module
 ThrowCompletionOr<NonnullRefPtr<Module>> parse_json_module(StringView source_text, Realm& realm, StringView filename)
 {
+    auto& vm = realm.vm();
+
     // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
     auto* json_parse = realm.global_object().json_parse_function();
 
     // 2. Let json be ? Call(jsonParse, undefined, « sourceText »).
-    auto json = TRY(call(realm.global_object(), *json_parse, js_undefined(), js_string(realm.vm(), source_text)));
+    auto json = TRY(call(vm, *json_parse, js_undefined(), js_string(realm.vm(), source_text)));
 
     // 3. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
     return SyntheticModule::create_default_export_synthetic_module(json, realm, filename);

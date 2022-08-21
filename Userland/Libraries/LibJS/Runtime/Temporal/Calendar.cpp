@@ -75,7 +75,7 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& iden
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
     // 4. Set object.[[Identifier]] to identifier.
-    auto* object = TRY(ordinary_create_from_constructor<Calendar>(global_object, *new_target, &GlobalObject::temporal_calendar_prototype, identifier));
+    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &GlobalObject::temporal_calendar_prototype, identifier));
 
     // 5. Return object.
     return object;
@@ -103,7 +103,6 @@ Calendar* get_iso8601_calendar(VM& vm)
 ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let fields be ? GetMethod(calendar, "fields").
     auto fields = TRY(Value(&calendar).get_method(vm, vm.names.fields));
@@ -117,7 +116,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
     // 3. If fields is not undefined, then
     if (fields) {
         // a. Set fieldsArray to ? Call(fields, calendar, « fieldsArray »).
-        fields_array = TRY(call(global_object, *fields, &calendar, fields_array));
+        fields_array = TRY(call(vm, *fields, &calendar, fields_array));
     }
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
@@ -132,9 +131,6 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
 // 12.2.5 CalendarMergeFields ( calendar, fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmergefields
 ThrowCompletionOr<Object*> calendar_merge_fields(VM& vm, Object& calendar, Object& fields, Object& additional_fields)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let mergeFields be ? GetMethod(calendar, "mergeFields").
     auto* merge_fields = TRY(Value(&calendar).get_method(vm, vm.names.mergeFields));
 
@@ -145,7 +141,7 @@ ThrowCompletionOr<Object*> calendar_merge_fields(VM& vm, Object& calendar, Objec
     }
 
     // 3. Let result be ? Call(mergeFields, calendar, « fields, additionalFields »).
-    auto result = TRY(call(global_object, merge_fields, &calendar, &fields, &additional_fields));
+    auto result = TRY(call(vm, merge_fields, &calendar, &fields, &additional_fields));
 
     // 4. If Type(result) is not Object, throw a TypeError exception.
     if (!result.is_object())
@@ -159,8 +155,6 @@ ThrowCompletionOr<Object*> calendar_merge_fields(VM& vm, Object& calendar, Objec
 ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
 {
     // NOTE: `date` is a `Value` because we sometimes need to pass a PlainDate, sometimes a PlainDateTime, and sometimes undefined.
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(calendar) is Object.
     // 2. If options is not present, set options to undefined.
@@ -171,7 +165,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value 
         date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
 
     // 5. Let addedDate be ? Call(dateAdd, calendar, « date, duration, options »).
-    auto added_date = TRY(call(global_object, date_add ?: js_undefined(), &calendar, date, &duration, options ?: js_undefined()));
+    auto added_date = TRY(call(vm, date_add ?: js_undefined(), &calendar, date, &duration, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
     auto* added_date_object = TRY(added_date.to_object(vm));
@@ -185,9 +179,6 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value 
 // 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
 ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Assert: Type(calendar) is Object.
 
     // 2. If dateUntil is not present, set dateUntil to ? GetMethod(calendar, "dateUntil").
@@ -195,7 +186,7 @@ ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value
         date_until = TRY(Value(&calendar).get_method(vm, vm.names.dateUntil));
 
     // 3. Let duration be ? Call(dateUntil, calendar, « one, two, options »).
-    auto duration = TRY(call(global_object, date_until ?: js_undefined(), &calendar, one, two, &options));
+    auto duration = TRY(call(vm, date_until ?: js_undefined(), &calendar, one, two, &options));
 
     // 4. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration_object = TRY(duration.to_object(vm));

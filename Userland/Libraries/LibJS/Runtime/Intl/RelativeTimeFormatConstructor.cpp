@@ -49,13 +49,12 @@ ThrowCompletionOr<Value> RelativeTimeFormatConstructor::call()
 ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
     // 2. Let relativeTimeFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%RelativeTimeFormat.prototype%", « [[InitializedRelativeTimeFormat]], [[Locale]], [[DataLocale]], [[Style]], [[Numeric]], [[NumberFormat]], [[NumberingSystem]], [[PluralRules]] »).
-    auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(global_object, new_target, &GlobalObject::intl_relative_time_format_prototype));
+    auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &GlobalObject::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
     return TRY(initialize_relative_time_format(vm, *relative_time_format, locales, options));
@@ -140,11 +139,11 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_numeric(numeric.as_string().string());
 
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto* number_format = MUST(construct(global_object, *global_object.intl_number_format_constructor(), js_string(vm, locale)));
+    auto* number_format = MUST(construct(vm, *global_object.intl_number_format_constructor(), js_string(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    auto* plural_rules = MUST(construct(global_object, *global_object.intl_plural_rules_constructor(), js_string(vm, locale)));
+    auto* plural_rules = MUST(construct(vm, *global_object.intl_plural_rules_constructor(), js_string(vm, locale)));
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.

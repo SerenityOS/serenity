@@ -214,7 +214,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     }
 
     // 24. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
-    auto* prototype = TRY(get_prototype_from_constructor(global_object, *new_target, fallback_prototype));
+    auto* prototype = TRY(get_prototype_from_constructor(vm, *new_target, fallback_prototype));
 
     // 25. Let realmF be the current Realm Record.
     auto& realm = *vm.current_realm();

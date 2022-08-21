@@ -518,9 +518,11 @@ ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement el
 // 7.3.30 PrivateGet ( O, P ), https://tc39.es/ecma262/#sec-privateget
 ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
 {
+    auto& vm = this->vm();
+
     auto* entry = private_element_find(name);
     if (!entry)
-        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
 
     auto& value = entry->value;
 
@@ -530,24 +532,26 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
     VERIFY(value.is_accessor());
     auto* getter = value.as_accessor().getter();
     if (!getter)
-        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldGetAccessorWithoutGetter, name.description);
 
     // 8. Return ? Call(getter, Receiver).
-    return TRY(call(global_object(), *getter, this));
+    return TRY(call(vm, *getter, this));
 }
 
 // 7.3.31 PrivateSet ( O, P, value ), https://tc39.es/ecma262/#sec-privateset
 ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value)
 {
+    auto& vm = this->vm();
+
     auto* entry = private_element_find(name);
     if (!entry)
-        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldDoesNotExistOnObject, name.description);
 
     if (entry->kind == PrivateElement::Kind::Field) {
         entry->value = value;
         return {};
     } else if (entry->kind == PrivateElement::Kind::Method) {
-        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldSetMethod, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldSetMethod, name.description);
     }
 
     VERIFY(entry->kind == PrivateElement::Kind::Accessor);
@@ -556,15 +560,17 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     VERIFY(accessor.is_accessor());
     auto* setter = accessor.as_accessor().setter();
     if (!setter)
-        return vm().throw_completion<TypeError>(ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
+        return vm.throw_completion<TypeError>(ErrorType::PrivateFieldSetAccessorWithoutSetter, name.description);
 
-    TRY(call(global_object(), *setter, this, value));
+    TRY(call(vm, *setter, this, value));
     return {};
 }
 
 // 7.3.32 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
 ThrowCompletionOr<void> Object::define_field(ClassFieldDefinition const& field)
 {
+    auto& vm = this->vm();
+
     // 1. Let fieldName be fieldRecord.[[Name]].
     auto const& field_name = field.name;
 
@@ -576,7 +582,7 @@ ThrowCompletionOr<void> Object::define_field(ClassFieldDefinition const& field)
     // 3. If initializer is not empty, then
     if (!initializer.is_null()) {
         // a. Let initValue be ? Call(initializer, receiver).
-        init_value = TRY(call(global_object(), initializer.cell(), this));
+        init_value = TRY(call(vm, initializer.cell(), this));
     }
     // 4. Else, let initValue be undefined.
 
@@ -757,6 +763,8 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
     VERIFY(!receiver.is_empty());
     VERIFY(property_key.is_valid());
 
+    auto& vm = this->vm();
+
     // 1. Let desc be ? O.[[GetOwnProperty]](P).
     auto descriptor = TRY(internal_get_own_property(property_key));
 
@@ -788,7 +796,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
         return js_undefined();
 
     // 7. Return ? Call(getter, Receiver).
-    return TRY(call(global_object(), *getter, receiver));
+    return TRY(call(vm, *getter, receiver));
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
@@ -811,6 +819,8 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
+
+    auto& vm = this->vm();
 
     // 1. If ownDesc is undefined, then
     if (!own_descriptor.has_value()) {
@@ -884,7 +894,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
         return false;
 
     // 6. Perform ? Call(setter, Receiver, « V »).
-    (void)TRY(call(global_object(), *setter, receiver, value));
+    (void)TRY(call(vm, *setter, receiver, value));
 
     // 7. Return true.
     return true;
@@ -1258,7 +1268,7 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
         // b. If IsCallable(method) is true, then
         if (method.is_function()) {
             // i. Let result be ? Call(method, O).
-            auto result = TRY(call(global_object(), method.as_function(), const_cast<Object*>(this)));
+            auto result = TRY(call(vm, method.as_function(), const_cast<Object*>(this)));
 
             // ii. If Type(result) is not Object, return result.
             if (!result.is_object())

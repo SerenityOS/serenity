@@ -61,7 +61,7 @@ ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_targ
         primitive_string = js_string(vm, "");
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
-    auto* prototype = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::string_prototype));
+    auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &GlobalObject::string_prototype));
     return StringObject::create(realm, *primitive_string, *prototype);
 }
 
@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto* cooked = TRY(vm.argument(0).to_object(vm));
     auto raw_value = TRY(cooked->get(vm.names.raw));
     auto* raw = TRY(raw_value.to_object(vm));
-    auto literal_segments = TRY(length_of_array_like(global_object, *raw));
+    auto literal_segments = TRY(length_of_array_like(vm, *raw));
 
     if (literal_segments == 0)
         return js_string(vm, "");

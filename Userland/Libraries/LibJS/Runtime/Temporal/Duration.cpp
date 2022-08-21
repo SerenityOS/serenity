@@ -348,7 +348,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, doub
     // 11. Set object.[[Milliseconds]] to ℝ(𝔽(milliseconds)).
     // 12. Set object.[[Microseconds]] to ℝ(𝔽(microseconds)).
     // 13. Set object.[[Nanoseconds]] to ℝ(𝔽(nanoseconds)).
-    auto* object = TRY(ordinary_create_from_constructor<Duration>(global_object, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Duration>(vm, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
     return object;

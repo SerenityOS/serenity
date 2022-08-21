@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     auto& global_object = this->global_object();
     auto& realm = *global_object.associated_realm();
 
-    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype));
+    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &GlobalObject::aggregate_error_prototype));
 
     if (!vm.argument(1).is_undefined()) {
         auto message = TRY(vm.argument(1).to_string(vm));

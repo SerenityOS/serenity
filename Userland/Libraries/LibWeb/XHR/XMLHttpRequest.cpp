@@ -83,16 +83,17 @@ DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {
     auto& global_object = wrapper()->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
 
     // 1. If this’s response type is the empty string or "text", then:
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
         // 1. If this’s state is not loading or done, then return the empty string.
         if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
-            return JS::Value(JS::js_string(global_object.heap(), ""));
+            return JS::Value(JS::js_string(vm, ""));
 
         // 2. Return the result of getting a text response for this.
-        return JS::Value(JS::js_string(global_object.heap(), get_text_response()));
+        return JS::Value(JS::js_string(vm, get_text_response()));
     }
     // 2. If this’s state is not done, then return null.
     if (m_ready_state != ReadyState::Done)
@@ -143,7 +144,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
         TextCodec::UTF8Decoder decoder;
 
-        auto json_object_result = JS::call(global_object, global_object.json_parse_function(), JS::js_undefined(), JS::js_string(global_object.heap(), decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
+        auto json_object_result = JS::call(vm, global_object.json_parse_function(), JS::js_undefined(), JS::js_string(global_object.heap(), decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
         if (json_object_result.is_error())
             return JS::Value(JS::js_null());
 

@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
     auto* bigint = TRY(this_bigint_value(global_object, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
-    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(global_object, *global_object.intl_number_format_constructor(), locales, options)));
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *global_object.intl_number_format_constructor(), locales, options)));
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     auto formatted = Intl::format_numeric(vm, *number_format, Value(bigint));

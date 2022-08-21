@@ -1262,9 +1262,9 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     return true;
 }
 
-static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::File::construct(filename);
@@ -1272,9 +1272,9 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObje
         return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file->fd()));
-    auto* object = JS::Object::create(realm, global_object.object_prototype());
+    auto* object = JS::Object::create(realm, realm.global_object().object_prototype());
     for (auto const& group : config_file->groups()) {
-        auto* group_object = JS::Object::create(realm, global_object.object_prototype());
+        auto* group_object = JS::Object::create(realm, realm.global_object().object_prototype());
         for (auto const& key : config_file->keys(group)) {
             auto entry = config_file->read_entry(group, key);
             group_object->define_direct_property(key, js_string(vm, move(entry)), JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable);
@@ -1284,7 +1284,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm, JS::GlobalObje
     return object;
 }
 
-static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::File::construct(filename);
@@ -1294,7 +1294,7 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObj
     auto json = JsonValue::from_string(file_contents);
     if (json.is_error())
         return vm.throw_completion<JS::SyntaxError>(JS::ErrorType::JsonMalformed);
-    return JS::JSONObject::parse_json_value(global_object, json.value());
+    return JS::JSONObject::parse_json_value(vm, json.value());
 }
 
 void ReplObject::initialize_global_object()
@@ -1360,12 +1360,12 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_ini)
 {
-    return load_ini_impl(vm, global_object);
+    return load_ini_impl(vm);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
 {
-    return load_json_impl(vm, global_object);
+    return load_json_impl(vm);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
@@ -1386,12 +1386,12 @@ void ScriptObject::initialize_global_object()
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_ini)
 {
-    return load_ini_impl(vm, global_object);
+    return load_ini_impl(vm);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
 {
-    return load_json_impl(vm, global_object);
+    return load_json_impl(vm);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)

@@ -46,7 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto* promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *promise, *global_object.promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
     auto result_capability = TRY(new_promise_capability(vm, constructor));
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, promise.to_string_without_side_effects());
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(global_object, promise.as_object(), *global_object.promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *global_object.promise_constructor()));
 
     // 4. Assert: IsConstructor(C) is true.
     VERIFY(constructor);
@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto value = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
-            auto result = TRY(call(global_object, on_finally, js_undefined()));
+            auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
             auto* promise = TRY(promise_resolve(vm, constructor, result));
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto reason = vm.argument(0);
 
             // i. Let result be ? Call(onFinally, undefined).
-            auto result = TRY(call(global_object, on_finally, js_undefined()));
+            auto result = TRY(call(vm, on_finally, js_undefined()));
 
             // ii. Let promise be ? PromiseResolve(C, result).
             auto* promise = TRY(promise_resolve(vm, constructor, result));

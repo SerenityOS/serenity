@@ -34,22 +34,19 @@
 namespace JS {
 
 // 7.2.1 RequireObjectCoercible ( argument ), https://tc39.es/ecma262/#sec-requireobjectcoercible
-ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, Value value)
+ThrowCompletionOr<Value> require_object_coercible(VM& vm, Value value)
 {
-    auto& vm = global_object.vm();
     if (value.is_nullish())
         return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
     return value;
 }
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ThrowCompletionOr<Value> call_impl(VM& vm, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
-    auto& vm = global_object.vm();
-
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { global_object.heap() };
+        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     if (!function.is_function())
@@ -59,11 +56,11 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, 
     return function.as_function().internal_call(this_value, move(*arguments_list));
 }
 
-ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ThrowCompletionOr<Value> call_impl(VM& vm, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { global_object.heap() };
+        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     // Note: Called with a FunctionObject ref
@@ -73,7 +70,7 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, FunctionObject& 
 }
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
-ThrowCompletionOr<Object*> construct_impl(GlobalObject& global_object, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
+ThrowCompletionOr<Object*> construct_impl(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
 {
     // 1. If newTarget is not present, set newTarget to F.
     if (!new_target)
@@ -81,26 +78,22 @@ ThrowCompletionOr<Object*> construct_impl(GlobalObject& global_object, FunctionO
 
     // 2. If argumentsList is not present, set argumentsList to a new empty List.
     if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { global_object.heap() };
+        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 3. Return ? F.[[Construct]](argumentsList, newTarget).
     return function.internal_construct(move(*arguments_list), *new_target);
 }
 
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
-ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Object const& object)
+ThrowCompletionOr<size_t> length_of_array_like(VM& vm, Object const& object)
 {
-    auto& vm = global_object.vm();
     auto result = TRY(object.get(vm.names.length));
     return result.to_length(vm);
 }
 
 // 7.3.20 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
-ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject& global_object, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
+ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM& vm, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
 {
-    auto& vm = global_object.vm();
-    auto& heap = global_object.heap();
-
     // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
 
     // 2. If Type(obj) is not Object, throw a TypeError exception.
@@ -110,10 +103,10 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&
     auto& array_like = value.as_object();
 
     // 3. Let len be ? LengthOfArrayLike(obj).
-    auto length = TRY(length_of_array_like(global_object, array_like));
+    auto length = TRY(length_of_array_like(vm, array_like));
 
     // 4. Let list be a new empty List.
-    auto list = MarkedVector<Value> { heap };
+    auto list = MarkedVector<Value> { vm.heap() };
     list.ensure_capacity(length);
 
     // 5. Let index be 0.
@@ -138,10 +131,8 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&
 }
 
 // 7.3.23 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
-ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
+ThrowCompletionOr<FunctionObject*> species_constructor(VM& vm, Object const& object, FunctionObject& default_constructor)
 {
-    auto& vm = global_object.vm();
-
     // 1. Let C be ? Get(O, "constructor").
     auto constructor = TRY(object.get(vm.names.constructor));
 
@@ -169,10 +160,8 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
 }
 
 // 7.3.25 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
-ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, FunctionObject const& function)
+ThrowCompletionOr<Realm*> get_function_realm(VM& vm, FunctionObject const& function)
 {
-    auto& vm = global_object.vm();
-
     // 1. If obj has a [[Realm]] internal slot, then
     if (function.realm()) {
         // a. Return obj.[[Realm]].
@@ -187,7 +176,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
         auto& target = bound_function.bound_target_function();
 
         // b. Return ? GetFunctionRealm(target).
-        return get_function_realm(global_object, target);
+        return get_function_realm(vm, target);
     }
 
     // 3. If obj is a Proxy exotic object, then
@@ -203,7 +192,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
 
         // c. Return ? GetFunctionRealm(proxyTarget).
         VERIFY(proxy_target.is_function());
-        return get_function_realm(global_object, static_cast<FunctionObject const&>(proxy_target));
+        return get_function_realm(vm, static_cast<FunctionObject const&>(proxy_target));
     }
 
     // 4. Return the current Realm Record.
@@ -211,10 +200,8 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
 }
 
 // 8.5.2.1 InitializeBoundName ( name, value, environment ), https://tc39.es/ecma262/#sec-initializeboundname
-ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlyString const& name, Value value, Environment* environment)
+ThrowCompletionOr<void> initialize_bound_name(VM& vm, FlyString const& name, Value value, Environment* environment)
 {
-    auto& vm = global_object.vm();
-
     // 1. If environment is not undefined, then
     if (environment) {
         // a. Perform ! environment.InitializeBinding(name, value).
@@ -375,10 +362,8 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
 }
 
 // 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto ), https://tc39.es/ecma262/#sec-getprototypefromconstructor
-ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
+ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
 
     // 2. Let proto be ? Get(constructor, "prototype").
@@ -387,7 +372,7 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject& global_o
     // 3. If Type(proto) is not Object, then
     if (!prototype.is_object()) {
         // a. Let realm be ? GetFunctionRealm(constructor).
-        auto* realm = TRY(get_function_realm(global_object, constructor));
+        auto* realm = TRY(get_function_realm(vm, constructor));
 
         // b. Set proto to realm's intrinsic object named intrinsicDefaultProto.
         prototype = (realm->global_object().*intrinsic_default_prototype)();
@@ -494,23 +479,26 @@ Object* get_super_constructor(VM& vm)
 }
 
 // 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict ), https://tc39.es/ecma262/#sec-makesuperpropertyreference
-ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_object, Value actual_this, PropertyKey const& property_key, bool strict)
+ThrowCompletionOr<Reference> make_super_property_reference(VM& vm, Value actual_this, PropertyKey const& property_key, bool strict)
 {
-    auto& vm = global_object.vm();
     // 1. Let env be GetThisEnvironment().
     auto& env = verify_cast<FunctionEnvironment>(get_this_environment(vm));
+
     // 2. Assert: env.HasSuperBinding() is true.
     VERIFY(env.has_super_binding());
+
     // 3. Let baseValue be ? env.GetSuperBase().
     auto base_value = TRY(env.get_super_base());
+
     // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    auto bv = TRY(require_object_coercible(global_object, base_value));
+    auto bv = TRY(require_object_coercible(vm, base_value));
+
     // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
     return Reference { bv, property_key, actual_this, strict };
 }
 
 // 19.2.1.1 PerformEval ( x, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
-ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, CallerMode strict_caller, EvalMode direct)
+ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller, EvalMode direct)
 {
     // 1. Assert: If direct is false, then strictCaller is also false.
     VERIFY(direct == EvalMode::Direct || strict_caller == CallerMode::NonStrict);
@@ -518,8 +506,6 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
     // 2. If Type(x) is not String, return x.
     if (!x.is_string())
         return x;
-
-    auto& vm = global_object.vm();
 
     // 3. Let evalRealm be the current Realm Record.
     auto& eval_realm = *vm.running_execution_context().realm;
@@ -688,7 +674,7 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
     };
 
     // 28. Let result be Completion(EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval)).
-    TRY(eval_declaration_instantiation(vm, eval_realm.global_object(), program, variable_environment, lexical_environment, private_environment, strict_eval));
+    TRY(eval_declaration_instantiation(vm, program, variable_environment, lexical_environment, private_environment, strict_eval));
 
     Optional<Value> eval_result;
 
@@ -724,9 +710,9 @@ ThrowCompletionOr<Value> perform_eval(GlobalObject& global_object, Value x, Call
 }
 
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
-ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
+ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     GlobalEnvironment* global_var_environment = variable_environment->is_global_environment() ? static_cast<GlobalEnvironment*>(variable_environment) : nullptr;
 
     // 1. Let varNames be the VarDeclaredNames of body.
@@ -1034,17 +1020,16 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 }
 
 // 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value> arguments)
+Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let len be the number of elements in argumentsList.
     auto length = arguments.size();
 
     // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
     object->set_has_parameter_map();
 
     // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
@@ -1063,11 +1048,11 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
     }
 
     // 7. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto* array_prototype_values = global_object.array_prototype_values_function();
+    auto* array_prototype_values = realm.global_object().array_prototype_values_function();
     MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
-    auto* throw_type_error = global_object.throw_type_error_function();
+    auto* throw_type_error = realm.global_object().throw_type_error_function();
     MUST(object->define_property_or_throw(vm.names.callee, { .get = throw_type_error, .set = throw_type_error, .enumerable = false, .configurable = false }));
 
     // 9. Return obj.
@@ -1075,10 +1060,9 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Span<Value
 }
 
 // 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Span<Value> arguments, Environment& environment)
+Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Span<Value> arguments, Environment& environment)
 {
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Assert: formals does not contain a rest parameter, any binding patterns, or any initializers. It may contain duplicate identifiers.
 
@@ -1146,7 +1130,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     }
 
     // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto* array_prototype_values = global_object.array_prototype_values_function();
+    auto* array_prototype_values = realm.global_object().array_prototype_values_function();
     MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 21. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Value]]: func, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
@@ -1218,9 +1202,8 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
-ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
+ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement)
 {
-    auto& vm = global_object.vm();
     auto replace_string = TRY(replacement.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 

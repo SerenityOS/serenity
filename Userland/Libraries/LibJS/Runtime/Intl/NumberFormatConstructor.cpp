@@ -45,13 +45,12 @@ ThrowCompletionOr<Value> NumberFormatConstructor::call()
 ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
     // 2. Let numberFormat be ? OrdinaryCreateFromConstructor(newTarget, "%NumberFormat.prototype%", « [[InitializedNumberFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[Unit]], [[UnitDisplay]], [[Currency]], [[CurrencyDisplay]], [[CurrencySign]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[Notation]], [[CompactDisplay]], [[UseGrouping]], [[SignDisplay]], [[BoundFormat]] »).
-    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
+    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(vm, new_target, &GlobalObject::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
     TRY(initialize_number_format(vm, *number_format, locales, options));

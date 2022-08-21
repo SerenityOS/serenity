@@ -492,27 +492,29 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& inter
 
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
+
     auto callee = interpreter.reg(m_callee);
 
     if (m_type == CallType::Call && !callee.is_function())
-        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
 
     if (m_type == CallType::Construct && !callee.is_constructor())
-        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
+        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
 
     auto& function = callee.as_function();
 
     auto this_value = interpreter.reg(m_this_value);
 
-    MarkedVector<Value> argument_values { interpreter.vm().heap() };
+    MarkedVector<Value> argument_values { vm.heap() };
     for (size_t i = 0; i < m_argument_count; ++i)
         argument_values.append(interpreter.reg(m_arguments[i]));
 
     Value return_value;
     if (m_type == CallType::Call)
-        return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
+        return_value = TRY(call(vm, function, this_value, move(argument_values)));
     else
-        return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
+        return_value = TRY(construct(vm, function, move(argument_values)));
 
     interpreter.accumulator() = return_value;
     return {};

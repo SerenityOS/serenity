@@ -160,7 +160,6 @@ ThrowCompletionOr<Value> CollatorConstructor::call()
 ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
@@ -172,7 +171,7 @@ ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_ta
     //     a. Append [[CaseFirst]] as the last element of internalSlotsList.
 
     // 5. Let collator be ? OrdinaryCreateFromConstructor(newTarget, "%Collator.prototype%", internalSlotsList).
-    auto* collator = TRY(ordinary_create_from_constructor<Collator>(global_object, new_target, &GlobalObject::intl_collator_prototype));
+    auto* collator = TRY(ordinary_create_from_constructor<Collator>(vm, new_target, &GlobalObject::intl_collator_prototype));
 
     // 6. Return ? InitializeCollator(collator, locales, options).
     return TRY(initialize_collator(vm, *collator, locales, options));

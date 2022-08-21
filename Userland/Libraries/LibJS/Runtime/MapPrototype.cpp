@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value();
     for (auto& entry : *map)
-        TRY(call(global_object, vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
+        TRY(call(vm, vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
     return js_undefined();
 }
 

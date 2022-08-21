@@ -331,7 +331,7 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(VM& vm, u8 hour, u8 minute, u
     // 9. Set object.[[ISOMicrosecond]] to microsecond.
     // 10. Set object.[[ISONanosecond]] to nanosecond.
     // 11. Set object.[[Calendar]] to ! GetISO8601Calendar().
-    auto* object = TRY(ordinary_create_from_constructor<PlainTime>(global_object, *new_target, &GlobalObject::temporal_plain_time_prototype, hour, minute, second, millisecond, microsecond, nanosecond, *get_iso8601_calendar(vm)));
+    auto* object = TRY(ordinary_create_from_constructor<PlainTime>(vm, *new_target, &GlobalObject::temporal_plain_time_prototype, hour, minute, second, millisecond, microsecond, nanosecond, *get_iso8601_calendar(vm)));
 
     // 12. Return object.
     return object;

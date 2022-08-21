@@ -55,11 +55,11 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, target.to_string_without_side_effects());
 
     // 2. Let args be ? CreateListFromArrayLike(argumentsList).
-    auto args = TRY(create_list_from_array_like(global_object, arguments_list));
+    auto args = TRY(create_list_from_array_like(vm, arguments_list));
 
     // 3. Perform PrepareForTailCall().
     // 4. Return ? Call(target, thisArgument, args).
-    return TRY(call(global_object, target.as_function(), this_argument, move(args)));
+    return TRY(call(vm, target.as_function(), this_argument, move(args)));
 }
 
 // 28.1.2 Reflect.construct ( target, argumentsList [ , newTarget ] ), https://tc39.es/ecma262/#sec-reflect.construct
@@ -81,10 +81,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, new_target.to_string_without_side_effects());
 
     // 4. Let args be ? CreateListFromArrayLike(argumentsList).
-    auto args = TRY(create_list_from_array_like(global_object, arguments_list));
+    auto args = TRY(create_list_from_array_like(vm, arguments_list));
 
     // 5. Return ? Construct(target, args, newTarget).
-    return TRY(JS::construct(global_object, target.as_function(), move(args), &new_target.as_function()));
+    return TRY(JS::construct(vm, target.as_function(), move(args), &new_target.as_function()));
 }
 
 // 28.1.3 Reflect.defineProperty ( target, propertyKey, attributes ), https://tc39.es/ecma262/#sec-reflect.defineproperty

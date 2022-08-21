@@ -40,9 +40,8 @@ ThrowCompletionOr<Value> WeakMapConstructor::call()
 ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
-    auto* weak_map = TRY(ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype));
+    auto* weak_map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &GlobalObject::weak_map_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_map;
@@ -57,7 +56,7 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
-        TRY(JS::call(global_object, adder.as_function(), weak_map, key, value));
+        TRY(JS::call(vm, adder.as_function(), weak_map, key, value));
 
         return {};
     }));

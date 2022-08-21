@@ -40,9 +40,8 @@ ThrowCompletionOr<Value> WeakSetConstructor::call()
 ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
-    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype));
+    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &GlobalObject::weak_set_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_set;
@@ -52,7 +51,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'add' property of WeakSet");
 
     (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
-        TRY(JS::call(global_object, adder.as_function(), weak_set, iterator_value));
+        TRY(JS::call(vm, adder.as_function(), weak_set, iterator_value));
         return {};
     }));
 

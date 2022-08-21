@@ -21,9 +21,6 @@ namespace JS {
 // 27.2.4.7.1 PromiseResolve ( C, x ), https://tc39.es/ecma262/#sec-promise-resolve
 ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value value)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. If IsPromise(x) is true, then
     if (value.is_object() && is<Promise>(value.as_object())) {
         // a. Let xConstructor be ? Get(x, "constructor").
@@ -38,7 +35,7 @@ ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value va
     auto promise_capability = TRY(new_promise_capability(vm, &constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
-    (void)TRY(call(global_object, *promise_capability.resolve, js_undefined(), value));
+    (void)TRY(call(vm, *promise_capability.resolve, js_undefined(), value));
 
     // 4. Return promiseCapability.[[Promise]].
     return promise_capability.promise;

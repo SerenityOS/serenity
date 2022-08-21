@@ -419,12 +419,10 @@ ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_typ
         }
     };
     if (is_object()) {
-        auto& realm = *vm.current_realm();
-        auto& global_object = realm.global_object();
         auto to_primitive_method = TRY(get_method(vm, *vm.well_known_symbol_to_primitive()));
         if (to_primitive_method) {
             auto hint = get_hint_for_preferred_type();
-            auto result = TRY(call(global_object, *to_primitive_method, *this, js_string(vm, hint)));
+            auto result = TRY(call(vm, *to_primitive_method, *this, js_string(vm, hint)));
             if (!result.is_object())
                 return result;
             return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
@@ -1251,13 +1249,11 @@ ThrowCompletionOr<Value> in(VM& vm, Value lhs, Value rhs)
 // 13.10.2 InstanceofOperator ( V, target ), https://tc39.es/ecma262/#sec-instanceofoperator
 ThrowCompletionOr<Value> instance_of(VM& vm, Value lhs, Value rhs)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
     if (!rhs.is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects());
     auto has_instance_method = TRY(rhs.get_method(vm, *vm.well_known_symbol_has_instance()));
     if (has_instance_method) {
-        auto has_instance_result = TRY(call(global_object, *has_instance_method, rhs, lhs));
+        auto has_instance_result = TRY(call(vm, *has_instance_method, rhs, lhs));
         return Value(has_instance_result.to_boolean());
     }
     if (!rhs.is_function())
@@ -1568,13 +1564,11 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
 ThrowCompletionOr<Value> Value::invoke_internal(VM& vm, PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
     auto property = TRY(get(vm, property_key));
     if (!property.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, property.to_string_without_side_effects());
 
-    return call(global_object, property.as_function(), *this, move(arguments));
+    return call(vm, property.as_function(), *this, move(arguments));
 }
 
 }

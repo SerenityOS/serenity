@@ -81,7 +81,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 11. Return undefined.
@@ -123,7 +123,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -165,7 +165,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(global_object, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
     }
 
     // 15. Return undefined.
@@ -202,7 +202,7 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-        return JS::call(global_object, *m_capability.reject, js_undefined(), error);
+        return JS::call(vm, *m_capability.reject, js_undefined(), error);
     }
 
     return js_undefined();

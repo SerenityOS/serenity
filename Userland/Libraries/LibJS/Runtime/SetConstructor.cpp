@@ -42,9 +42,8 @@ ThrowCompletionOr<Value> SetConstructor::call()
 ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
-    auto* set = TRY(ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype));
+    auto* set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &GlobalObject::set_prototype));
 
     if (vm.argument(0).is_nullish())
         return set;
@@ -54,7 +53,7 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'add' property of Set");
 
     (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
-        TRY(JS::call(global_object, adder.as_function(), set, iterator_value));
+        TRY(JS::call(vm, adder.as_function(), set, iterator_value));
         return {};
     }));
 

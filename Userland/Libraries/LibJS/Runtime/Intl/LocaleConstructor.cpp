@@ -243,7 +243,6 @@ ThrowCompletionOr<Value> LocaleConstructor::call()
 ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto tag_value = vm.argument(0);
     auto options_value = vm.argument(1);
@@ -258,7 +257,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     //     a. Append [[Numeric]] as the last element of internalSlotsList.
 
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
-    auto* locale = TRY(ordinary_create_from_constructor<Locale>(global_object, new_target, &GlobalObject::intl_locale_prototype));
+    auto* locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &GlobalObject::intl_locale_prototype));
 
     String tag;
 

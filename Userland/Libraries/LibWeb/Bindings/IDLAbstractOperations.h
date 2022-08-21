@@ -57,8 +57,7 @@ JS::Completion call_user_object_operation(Bindings::CallbackType& callback, Stri
     auto& object = *callback.callback.cell();
 
     // 4. Let realm be O’s associated Realm.
-    auto& global_object = object.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = object.shape().realm();
 
     // 5. Let relevant settings be realm’s settings object.
     auto& relevant_settings = verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined());
@@ -105,7 +104,8 @@ JS::Completion call_user_object_operation(Bindings::CallbackType& callback, Stri
 
     // 12. Let callResult be Call(X, thisArg, esArgs).
     VERIFY(actual_function_object);
-    auto call_result = JS::call(global_object, verify_cast<JS::FunctionObject>(*actual_function_object), this_argument.value(), forward<Args>(args)...);
+    auto& vm = object.vm();
+    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*actual_function_object), this_argument.value(), forward<Args>(args)...);
 
     // 13. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {

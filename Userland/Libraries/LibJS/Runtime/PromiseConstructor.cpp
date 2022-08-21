@@ -41,9 +41,6 @@ using InvokeElementFunctionCallback = Function<ThrowCompletionOr<Value>(PromiseV
 
 static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     VERIFY(constructor.is_constructor());
     VERIFY(promise_resolve.is_function());
 
@@ -100,7 +97,7 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
         values->values().append(js_undefined());
 
         // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-        auto next_promise = TRY(call(global_object, promise_resolve.as_function(), constructor, next_value));
+        auto next_promise = TRY(call(vm, promise_resolve.as_function(), constructor, next_value));
 
         // j-q. are handled in `invoke_element_function`
 
@@ -119,7 +116,6 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
 static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     return perform_promise_common(
         vm, iterator_record, constructor, result_capability, promise_resolve,
@@ -128,7 +124,7 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
             auto* values_array = Array::create_from(realm, values.values());
 
             // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-            TRY(call(global_object, *result_capability.resolve, js_undefined(), values_array));
+            TRY(call(vm, *result_capability.resolve, js_undefined(), values_array));
 
             // iv. Return resultCapability.[[Promise]].
             return Value(result_capability.promise);
@@ -154,14 +150,13 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
 static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     return perform_promise_common(
         vm, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             auto* values_array = Array::create_from(realm, values.values());
 
-            TRY(call(global_object, *result_capability.resolve, js_undefined(), values_array));
+            TRY(call(vm, *result_capability.resolve, js_undefined(), values_array));
 
             return Value(result_capability.promise);
         },
@@ -283,7 +278,6 @@ ThrowCompletionOr<Value> PromiseConstructor::call()
 ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     auto executor = vm.argument(0);
 
@@ -296,18 +290,18 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     // 5. Set promise.[[PromiseFulfillReactions]] to a new empty List.
     // 6. Set promise.[[PromiseRejectReactions]] to a new empty List.
     // 7. Set promise.[[PromiseIsHandled]] to false.
-    auto* promise = TRY(ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype));
+    auto* promise = TRY(ordinary_create_from_constructor<Promise>(vm, new_target, &GlobalObject::promise_prototype));
 
     // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
     // 9. Let completion be Completion(Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
-    auto completion = JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
+    auto completion = JS::call(vm, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
 
     // 10. If completion is an abrupt completion, then
     if (completion.is_error()) {
         // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
-        TRY(JS::call(global_object, reject_function, js_undefined(), *completion.release_error().value()));
+        TRY(JS::call(vm, reject_function, js_undefined(), *completion.release_error().value()));
     }
 
     // 11. Return promise.
@@ -462,7 +456,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-    [[maybe_unused]] auto result = TRY(JS::call(global_object, *promise_capability.reject, js_undefined(), reason));
+    [[maybe_unused]] auto result = TRY(JS::call(vm, *promise_capability.reject, js_undefined(), reason));
 
     // 4. Return promiseCapability.[[Promise]].
     return promise_capability.promise;

@@ -425,8 +425,8 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell = make<Cell>(obj.get("value"sv).to_string(), position, *sheet);
                 break;
             case Cell::Formula: {
-                auto& interpreter = sheet->interpreter();
-                auto value_or_error = JS::call(interpreter.global_object(), parse_function, json, JS::js_string(interpreter.heap(), obj.get("value"sv).as_string()));
+                auto& vm = sheet->interpreter().vm();
+                auto value_or_error = JS::call(vm, parse_function, json, JS::js_string(vm, obj.get("value"sv).as_string()));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
                     value_or_error = JS::js_undefined();
@@ -557,9 +557,10 @@ JsonObject Sheet::to_json() const
         JsonObject data;
         data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
         if (it.value->kind() == Cell::Formula) {
+            auto& vm = interpreter().vm();
             data.set("source", it.value->data());
             auto json = interpreter().global_object().get_without_side_effects("JSON");
-            auto stringified_or_error = JS::call(interpreter().global_object(), json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
+            auto stringified_or_error = JS::call(vm, json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
             data.set("value", stringified_or_error.release_value().to_string_without_side_effects());
         } else {

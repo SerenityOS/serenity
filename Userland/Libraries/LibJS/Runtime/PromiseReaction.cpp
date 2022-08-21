@@ -15,7 +15,6 @@ namespace JS {
 ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constructor)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If IsConstructor(C) is false, throw a TypeError exception.
     if (!constructor.is_constructor())
@@ -59,7 +58,7 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constr
     auto* executor = NativeFunction::create(realm, move(executor_closure), 2, "");
 
     // 6. Let promise be ? Construct(C, « executor »).
-    auto* promise = TRY(construct(global_object, constructor.as_function(), executor));
+    auto* promise = TRY(construct(vm, constructor.as_function(), executor));
 
     // 7. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
     if (!promise_capability_functions.resolve.is_function())

@@ -327,7 +327,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
     auto number_value = TRY(this_number_value(global_object, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
-    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(global_object, *global_object.intl_number_format_constructor(), locales, options)));
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *global_object.intl_number_format_constructor(), locales, options)));
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     // Note: Our implementation of FormatNumeric does not throw.

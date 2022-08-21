@@ -57,7 +57,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(VM& vm, Value value, Value 
             auto is_array = TRY(replacer.is_array(vm));
             if (is_array) {
                 auto& replacer_object = replacer.as_object();
-                auto replacer_length = TRY(length_of_array_like(global_object, replacer_object));
+                auto replacer_length = TRY(length_of_array_like(vm, replacer_object));
                 Vector<String> list;
                 for (size_t i = 0; i < replacer_length; ++i) {
                     auto replacer_value = TRY(replacer_object.get(i));
@@ -127,9 +127,6 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
 ThrowCompletionOr<String> JSONObject::serialize_json_property(VM& vm, StringifyState& state, PropertyKey const& key, Object* holder)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let value be ? Get(holder, key).
     auto value = TRY(holder->get(key));
 
@@ -141,14 +138,14 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(VM& vm, StringifyS
         // b. If IsCallable(toJSON) is true, then
         if (to_json.is_function()) {
             // i. Set value to ? Call(toJSON, value, « key »).
-            value = TRY(call(global_object, to_json.as_function(), value, js_string(vm, key.to_string())));
+            value = TRY(call(vm, to_json.as_function(), value, js_string(vm, key.to_string())));
         }
     }
 
     // 3. If state.[[ReplacerFunction]] is not undefined, then
     if (state.replacer_function) {
         // a. Set value to ? Call(state.[[ReplacerFunction]], holder, « key, value »).
-        value = TRY(call(global_object, *state.replacer_function, holder, js_string(vm, key.to_string()), value));
+        value = TRY(call(vm, *state.replacer_function, holder, js_string(vm, key.to_string()), value));
     }
 
     // 4. If Type(value) is Object, then
@@ -292,9 +289,6 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(VM& vm, StringifySta
 // 25.5.2.5 SerializeJSONArray ( state, value ), https://tc39.es/ecma262/#sec-serializejsonarray
 ThrowCompletionOr<String> JSONObject::serialize_json_array(VM& vm, StringifyState& state, Object& object)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     if (state.seen_objects.contains(&object))
         return vm.throw_completion<TypeError>(ErrorType::JsonCircular);
 
@@ -303,7 +297,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_array(VM& vm, StringifyStat
     state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
-    auto length = TRY(length_of_array_like(global_object, object));
+    auto length = TRY(length_of_array_like(vm, object));
 
     // Optimization
     property_strings.ensure_capacity(length);
@@ -458,9 +452,6 @@ Array* JSONObject::parse_json_array(VM& vm, JsonArray const& json_array)
 // 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
 ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* holder, PropertyKey const& name, FunctionObject& reviver)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     auto value = TRY(holder->get(name));
     if (value.is_object()) {
         auto is_array = TRY(value.is_array(vm));
@@ -476,7 +467,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* h
         };
 
         if (is_array) {
-            auto length = TRY(length_of_array_like(global_object, value_object));
+            auto length = TRY(length_of_array_like(vm, value_object));
             for (size_t i = 0; i < length; ++i)
                 TRY(process_property(i));
         } else {
@@ -486,7 +477,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* h
         }
     }
 
-    return TRY(call(global_object, reviver, holder, js_string(vm, name.to_string()), value));
+    return TRY(call(vm, reviver, holder, js_string(vm, name.to_string()), value));
 }
 
 }
