@@ -1,11 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=SDL2_mixer
-version=2.0.4
-useconfigure=true
-use_fresh_config_sub=true
-config_sub_paths=("build-scripts/config.sub")
-files="https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz b4cf5a382c061cd75081cf246c2aa2f9df8db04bdda8dcdc6b6cca55bede2419"
-auth_type=sha256
+port='SDL2_mixer'
+version='2.6.2'
+useconfigure='true'
+files="https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz 8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371"
+auth_type='sha256'
 depends=("libmodplug" "libmpg123" "libvorbis" "SDL2")
 
 configure() {
