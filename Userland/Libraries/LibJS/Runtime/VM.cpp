@@ -606,12 +606,15 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
 }
 
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
-ThrowCompletionOr<Value> VM::resolve_this_binding(GlobalObject& global_object)
+ThrowCompletionOr<Value> VM::resolve_this_binding()
 {
+    auto& vm = *this;
+
     // 1. Let envRec be GetThisEnvironment().
-    auto& environment = get_this_environment(*this);
+    auto& environment = get_this_environment(vm);
+
     // 2. Return ? envRec.GetThisBinding().
-    return TRY(environment.get_this_binding(global_object));
+    return TRY(environment.get_this_binding(vm));
 }
 
 String VM::join_arguments(size_t start_index) const

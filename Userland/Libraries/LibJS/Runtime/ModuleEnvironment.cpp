@@ -18,7 +18,7 @@ ModuleEnvironment::ModuleEnvironment(Environment* outer_environment)
 }
 
 // 9.1.1.5.1 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s
-ThrowCompletionOr<Value> ModuleEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+ThrowCompletionOr<Value> ModuleEnvironment::get_binding_value(VM& vm, FlyString const& name, bool strict)
 {
     // 1. Assert: S is true.
     VERIFY(strict);
@@ -36,16 +36,16 @@ ThrowCompletionOr<Value> ModuleEnvironment::get_binding_value(GlobalObject& glob
 
         // c. If targetEnv is empty, throw a ReferenceError exception.
         if (!target_env)
-            return vm().throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
+            return vm.throw_completion<ReferenceError>(ErrorType::ModuleNoEnvironment);
 
         // d. Return ? targetEnv.GetBindingValue(N2, true).
-        return target_env->get_binding_value(global_object, indirect_binding->binding_name, true);
+        return target_env->get_binding_value(vm, indirect_binding->binding_name, true);
     }
 
     // 4. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     // 5. Return the value currently bound to N in envRec.
     // Note: Step 4 & 5 are the steps performed by declarative environment GetBindingValue
-    return DeclarativeEnvironment::get_binding_value(global_object, name, strict);
+    return DeclarativeEnvironment::get_binding_value(vm, name, strict);
 }
 
 // Not defined in the spec, see comment in the header.
@@ -60,14 +60,14 @@ ThrowCompletionOr<bool> ModuleEnvironment::has_binding(FlyString const& name, Op
 }
 
 // 9.1.1.5.2 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n
-ThrowCompletionOr<bool> ModuleEnvironment::delete_binding(GlobalObject&, FlyString const&)
+ThrowCompletionOr<bool> ModuleEnvironment::delete_binding(VM&, FlyString const&)
 {
     // The DeleteBinding concrete method of a module Environment Record is never used within this specification.
     VERIFY_NOT_REACHED();
 }
 
 // 9.1.1.5.4 GetThisBinding ( ), https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding
-ThrowCompletionOr<Value> ModuleEnvironment::get_this_binding(GlobalObject&) const
+ThrowCompletionOr<Value> ModuleEnvironment::get_this_binding(VM&) const
 {
     // 1. Return undefined.
     return js_undefined();

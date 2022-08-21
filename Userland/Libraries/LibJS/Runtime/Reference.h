@@ -121,13 +121,7 @@ public:
         return m_base_type == BaseType::Environment;
     }
 
-    // 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
-    ThrowCompletionOr<void> initialize_referenced_binding(GlobalObject& global_object, Value value) const
-    {
-        VERIFY(!is_unresolvable());
-        VERIFY(m_base_type == BaseType::Environment);
-        return m_base_environment->initialize_binding(global_object, m_name.as_string(), value);
-    }
+    ThrowCompletionOr<void> initialize_referenced_binding(GlobalObject& global_object, Value value) const;
 
     ThrowCompletionOr<void> put_value(GlobalObject&, Value);
     ThrowCompletionOr<Value> get_value(GlobalObject&) const;

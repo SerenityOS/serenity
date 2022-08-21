@@ -153,7 +153,7 @@ public:
         return running_execution_context().this_value;
     }
 
-    ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
+    ThrowCompletionOr<Value> resolve_this_binding();
 
     StackInfo const& stack_info() const { return m_stack_info; };
 

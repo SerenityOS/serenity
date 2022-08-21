@@ -50,8 +50,6 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
     // 2. Assert: realm is not undefined.
     // Note: This must be true because we use a reference.
 
-    auto& global_object = realm().global_object();
-
     // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
     auto* environment = vm.heap().allocate_without_realm<ModuleEnvironment>(&realm().global_environment());
 
@@ -61,10 +59,10 @@ ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
     // 5. For each exportName in module.[[ExportNames]],
     for (auto& export_name : m_export_names) {
         // a. Perform ! envRec.CreateMutableBinding(exportName, false).
-        MUST(environment->create_mutable_binding(global_object, export_name, false));
+        MUST(environment->create_mutable_binding(vm, export_name, false));
 
         // b. Perform ! envRec.InitializeBinding(exportName, undefined).
-        MUST(environment->initialize_binding(global_object, export_name, js_undefined()));
+        MUST(environment->initialize_binding(vm, export_name, js_undefined()));
     }
 
     // 6. Return unused.
@@ -123,9 +121,11 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
 // 1.2.2 SetSyntheticModuleExport ( module, exportName, exportValue ), https://tc39.es/proposal-json-modules/#sec-setsyntheticmoduleexport
 ThrowCompletionOr<void> SyntheticModule::set_synthetic_module_export(FlyString const& export_name, Value export_value)
 {
+    auto& vm = this->realm().vm();
+
     // Note: Has some changes from PR: https://github.com/tc39/proposal-json-modules/pull/13.
     // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
-    return environment()->set_mutable_binding(realm().global_object(), export_name, export_value, true);
+    return environment()->set_mutable_binding(vm, export_name, export_value, true);
 }
 
 // 1.3 CreateDefaultExportSyntheticModule ( defaultExport ), https://tc39.es/proposal-json-modules/#sec-create-default-export-synthetic-module

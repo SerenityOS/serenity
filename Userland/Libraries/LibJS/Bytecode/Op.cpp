@@ -357,15 +357,15 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
             return vm.throw_completion<InternalError>(String::formatted("Lexical environment already has binding '{}'", name));
 
         if (m_is_immutable)
-            vm.lexical_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+            vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
         else
-            vm.lexical_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+            vm.lexical_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
     } else {
         if (!m_is_global) {
             if (m_is_immutable)
-                vm.variable_environment()->create_immutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+                vm.variable_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
             else
-                vm.variable_environment()->create_mutable_binding(interpreter.global_object(), name, vm.in_strict_mode());
+                vm.variable_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
         } else {
             // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
             //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
@@ -391,7 +391,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     case InitializationMode::InitializeOrSet:
         VERIFY(reference.is_environment_reference());
         VERIFY(reference.base_environment().is_declarative_environment());
-        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(interpreter.global_object(), name, interpreter.accumulator()));
+        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(vm, name, interpreter.accumulator()));
         break;
     }
     return {};
@@ -433,7 +433,8 @@ ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) c
 
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(interpreter.vm().resolve_this_binding(interpreter.global_object()));
+    auto& vm = interpreter.vm();
+    interpreter.accumulator() = TRY(vm.resolve_this_binding());
     return {};
 }
 

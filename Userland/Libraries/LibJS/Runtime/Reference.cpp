@@ -69,9 +69,9 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
 
     // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
     if (m_environment_coordinate.has_value())
-        return static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(vm, m_environment_coordinate->index, value, m_strict);
     else
-        return m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
+        return m_base_environment->set_mutable_binding(vm, m_name.as_string(), value, m_strict);
 }
 
 Completion Reference::throw_reference_error(GlobalObject& global_object) const
@@ -140,8 +140,8 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
 
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]) (see 9.1).
     if (m_environment_coordinate.has_value())
-        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
-    return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(vm, m_environment_coordinate->index, m_strict);
+    return m_base_environment->get_binding_value(vm, m_name.as_string(), m_strict);
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
@@ -195,7 +195,7 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
     VERIFY(m_base_type == BaseType::Environment);
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
-    return m_base_environment->delete_binding(global_object, m_name.as_string());
+    return m_base_environment->delete_binding(vm, m_name.as_string());
 }
 
 String Reference::to_string() const
@@ -232,6 +232,16 @@ String Reference::to_string() const
 
     builder.append(" }"sv);
     return builder.to_string();
+}
+
+// 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
+ThrowCompletionOr<void> Reference::initialize_referenced_binding(GlobalObject& global_object, Value value) const
+{
+    auto& vm = global_object.vm();
+
+    VERIFY(!is_unresolvable());
+    VERIFY(m_base_type == BaseType::Environment);
+    return m_base_environment->initialize_binding(vm, m_name.as_string(), value);
 }
 
 // 6.2.4.9 MakePrivateReference ( baseValue, privateIdentifier ), https://tc39.es/ecma262/#sec-makeprivatereference

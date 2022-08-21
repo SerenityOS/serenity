@@ -325,8 +325,6 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // 4. Assert: realm is not undefined.
     // Note: This must be true because we use a reference.
 
-    auto& global_object = realm().global_object();
-
     // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
     auto* environment = vm.heap().allocate_without_realm<ModuleEnvironment>(&realm().global_environment());
 
@@ -345,10 +343,10 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             auto* namespace_ = TRY(imported_module->get_module_namespace(vm));
 
             // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-            MUST(environment->create_immutable_binding(global_object, import_entry.local_name, true));
+            MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
             // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-            MUST(environment->initialize_binding(global_object, import_entry.local_name, namespace_));
+            MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
         }
         // d. Else,
         else {
@@ -365,10 +363,10 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 auto* namespace_ = TRY(resolution.module->get_module_namespace(vm));
 
                 // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-                MUST(environment->create_immutable_binding(global_object, import_entry.local_name, true));
+                MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
                 // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-                MUST(environment->initialize_binding(global_object, import_entry.local_name, namespace_));
+                MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
             }
             // iv. Else,
             else {
@@ -420,10 +418,10 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
         // i. If dn is not an element of declaredVarNames, then
         if (!declared_var_names.contains_slow(name)) {
             // 1. Perform ! env.CreateMutableBinding(dn, false).
-            MUST(environment->create_mutable_binding(global_object, name, false));
+            MUST(environment->create_mutable_binding(vm, name, false));
 
             // 2. Perform ! env.InitializeBinding(dn, undefined).
-            MUST(environment->initialize_binding(global_object, name, js_undefined()));
+            MUST(environment->initialize_binding(vm, name, js_undefined()));
 
             // 3. Append dn to declaredVarNames.
             declared_var_names.empend(name);
@@ -443,12 +441,12 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ! env.CreateImmutableBinding(dn, true).
-                MUST(environment->create_immutable_binding(global_object, name, true));
+                MUST(environment->create_immutable_binding(vm, name, true));
             }
             // ii. Else,
             else {
                 // 1. Perform ! env.CreateMutableBinding(dn, false).
-                MUST(environment->create_mutable_binding(global_object, name, false));
+                MUST(environment->create_mutable_binding(vm, name, false));
             }
 
             // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
@@ -460,7 +458,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 auto* function = ECMAScriptFunctionObject::create(realm(), function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
 
                 // 2. Perform ! env.InitializeBinding(dn, fo).
-                MUST(environment->initialize_binding(global_object, name, function));
+                MUST(environment->initialize_binding(vm, name, function));
             }
         });
     });
@@ -479,7 +477,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] Adding default export to lexical declarations: local name: {}, Expression: {}", name, statement.class_name());
 
             // 1. Perform ! env.CreateMutableBinding(dn, false).
-            MUST(environment->create_mutable_binding(global_object, name, false));
+            MUST(environment->create_mutable_binding(vm, name, false));
 
             // Note: Since this is not a function declaration 24.a.iii never applies
         }

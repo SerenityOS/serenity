@@ -283,7 +283,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     }
 
     // 12. Let thisBinding be ? constructorEnv.GetThisBinding().
-    auto this_binding = TRY(constructor_env->get_this_binding(global_object));
+    auto this_binding = TRY(constructor_env->get_this_binding(vm));
 
     // 13. Assert: Type(thisBinding) is Object.
     VERIFY(this_binding.is_object());
@@ -401,9 +401,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (MUST(environment->has_binding(parameter_name)))
             continue;
 
-        MUST(environment->create_mutable_binding(global_object, parameter_name, false));
+        MUST(environment->create_mutable_binding(vm, parameter_name, false));
         if (has_duplicates)
-            MUST(environment->initialize_binding(global_object, parameter_name, js_undefined()));
+            MUST(environment->initialize_binding(vm, parameter_name, js_undefined()));
     }
 
     if (arguments_object_needed) {
@@ -414,11 +414,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             arguments_object = create_mapped_arguments_object(global_object, *this, formal_parameters(), vm.running_execution_context().arguments, *environment);
 
         if (is_strict_mode())
-            MUST(environment->create_immutable_binding(global_object, vm.names.arguments.as_string(), false));
+            MUST(environment->create_immutable_binding(vm, vm.names.arguments.as_string(), false));
         else
-            MUST(environment->create_mutable_binding(global_object, vm.names.arguments.as_string(), false));
+            MUST(environment->create_mutable_binding(vm, vm.names.arguments.as_string(), false));
 
-        MUST(environment->initialize_binding(global_object, vm.names.arguments.as_string(), arguments_object));
+        MUST(environment->initialize_binding(vm, vm.names.arguments.as_string(), arguments_object));
         parameter_names.set(vm.names.arguments.as_string());
     }
 
@@ -483,8 +483,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
-                    MUST(environment->create_mutable_binding(global_object, name, false));
-                    MUST(environment->initialize_binding(global_object, name, js_undefined()));
+                    MUST(environment->create_mutable_binding(vm, name, false));
+                    MUST(environment->initialize_binding(vm, name, js_undefined()));
                 }
             });
         }
@@ -497,15 +497,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     return;
-                MUST(var_environment->create_mutable_binding(global_object, name, false));
+                MUST(var_environment->create_mutable_binding(vm, name, false));
 
                 Value initial_value;
                 if (!parameter_names.contains(name) || function_names.contains(name))
                     initial_value = js_undefined();
                 else
-                    initial_value = MUST(environment->get_binding_value(global_object, name, false));
+                    initial_value = MUST(environment->get_binding_value(vm, name, false));
 
-                MUST(var_environment->initialize_binding(global_object, name, initial_value));
+                MUST(var_environment->initialize_binding(vm, name, initial_value));
             });
         }
     }
@@ -518,8 +518,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 return;
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
             if (!instantiated_var_names.contains(function_name) && function_name != vm.names.arguments.as_string()) {
-                MUST(var_environment->create_mutable_binding(global_object, function_name, false));
-                MUST(var_environment->initialize_binding(global_object, function_name, js_undefined()));
+                MUST(var_environment->create_mutable_binding(vm, function_name, false));
+                MUST(var_environment->initialize_binding(vm, function_name, js_undefined()));
                 instantiated_var_names.set(function_name);
             }
 
@@ -560,9 +560,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
             declaration.for_each_bound_name([&](auto const& name) {
                 if (declaration.is_constant_declaration())
-                    MUST(lex_environment->create_immutable_binding(global_object, name, true));
+                    MUST(lex_environment->create_immutable_binding(vm, name, true));
                 else
-                    MUST(lex_environment->create_mutable_binding(global_object, name, false));
+                    MUST(lex_environment->create_mutable_binding(vm, name, false));
             });
         });
     }
@@ -570,7 +570,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     auto* private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
-        MUST(var_environment->set_mutable_binding(global_object, declaration.name(), function, false));
+        MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
     }
 
     return {};
@@ -692,7 +692,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     // 7. Assert: localEnv is a function Environment Record.
     // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
     // 9. Perform ! localEnv.BindThisValue(thisValue).
-    MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value));
+    MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(vm, this_value));
 
     // 10. Return unused.
 }

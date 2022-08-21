@@ -218,7 +218,7 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
     // 1. If environment is not undefined, then
     if (environment) {
         // a. Perform ! environment.InitializeBinding(name, value).
-        MUST(environment->initialize_binding(global_object, name, value));
+        MUST(environment->initialize_binding(vm, name, value));
 
         // b. Return unused.
         return {};
@@ -897,8 +897,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         // i. Perform ! varEnv.CreateMutableBinding(F, true).
                         // ii. Perform ! varEnv.InitializeBinding(F, undefined).
-                        MUST(variable_environment->create_mutable_binding(global_object, function_name, true));
-                        MUST(variable_environment->initialize_binding(global_object, function_name, js_undefined()));
+                        MUST(variable_environment->create_mutable_binding(vm, function_name, true));
+                        MUST(variable_environment->initialize_binding(vm, function_name, js_undefined()));
                     }
                 }
             }
@@ -960,12 +960,12 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
-                TRY(lexical_environment->create_immutable_binding(global_object, name, true));
+                TRY(lexical_environment->create_immutable_binding(vm, name, true));
             }
             // ii. Else,
             else {
                 // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
-                TRY(lexical_environment->create_mutable_binding(global_object, name, false));
+                TRY(lexical_environment->create_mutable_binding(vm, name, false));
             }
             return {};
         });
@@ -991,15 +991,15 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (!binding_exists) {
                 // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
                 // 2. Perform ! varEnv.CreateMutableBinding(fn, true).
-                MUST(variable_environment->create_mutable_binding(global_object, declaration.name(), true));
+                MUST(variable_environment->create_mutable_binding(vm, declaration.name(), true));
 
                 // 3. Perform ! varEnv.InitializeBinding(fn, fo).
-                MUST(variable_environment->initialize_binding(global_object, declaration.name(), function));
+                MUST(variable_environment->initialize_binding(vm, declaration.name(), function));
             }
             // iii. Else,
             else {
                 // 1. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-                MUST(variable_environment->set_mutable_binding(global_object, declaration.name(), function, false));
+                MUST(variable_environment->set_mutable_binding(vm, declaration.name(), function, false));
             }
         }
     }
@@ -1021,10 +1021,10 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (!binding_exists) {
                 // 1. NOTE: The following invocation cannot return an abrupt completion because of the validation preceding step 14.
                 // 2. Perform ! varEnv.CreateMutableBinding(vn, true).
-                MUST(variable_environment->create_mutable_binding(global_object, var_name, true));
+                MUST(variable_environment->create_mutable_binding(vm, var_name, true));
 
                 // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
-                MUST(variable_environment->initialize_binding(global_object, var_name, js_undefined()));
+                MUST(variable_environment->initialize_binding(vm, var_name, js_undefined()));
             }
         }
     }
@@ -1134,11 +1134,11 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
             // 3. Perform ! map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
                 PropertyKey { index },
-                [&environment, name](VM&, GlobalObject& global_object_getter) -> ThrowCompletionOr<Value> {
-                    return MUST(environment.get_binding_value(global_object_getter, name, false));
+                [&environment, name](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+                    return MUST(environment.get_binding_value(vm, name, false));
                 },
-                [&environment, name](VM& vm, GlobalObject& global_object_setter) {
-                    MUST(environment.set_mutable_binding(global_object_setter, name, vm.argument(0), false));
+                [&environment, name](VM& vm, GlobalObject&) {
+                    MUST(environment.set_mutable_binding(vm, name, vm.argument(0), false));
                     return js_undefined();
                 },
                 Attribute::Configurable);
