@@ -235,10 +235,10 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
 
     // 11. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
-    auto expected_bytes = numeric_to_raw_bytes<T>(global_object, expected, is_little_endian);
+    auto expected_bytes = numeric_to_raw_bytes<T>(vm, expected, is_little_endian);
 
     // 12. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
-    auto replacement_bytes = numeric_to_raw_bytes<T>(global_object, replacement, is_little_endian);
+    auto replacement_bytes = numeric_to_raw_bytes<T>(vm, replacement, is_little_endian);
 
     // FIXME: Implement SharedArrayBuffer case.
     // 13. If IsSharedArrayBuffer(buffer) is true, then
@@ -263,7 +263,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
     }
 
     // 15. Return RawBytesToNumeric(elementType, rawBytesRead, isLittleEndian).
-    return raw_bytes_to_numeric<T>(global_object, raw_bytes_read, is_little_endian);
+    return raw_bytes_to_numeric<T>(vm, raw_bytes_read, is_little_endian);
 }
 
 // 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange

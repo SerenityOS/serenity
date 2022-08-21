@@ -897,9 +897,6 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 // 23.2.3.26.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
 static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArrayBase& target, double target_offset, TypedArrayBase& source)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     auto* target_buffer = target.viewed_array_buffer();
 
@@ -962,7 +959,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         auto source_byte_length = source.byte_length();
 
         // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength).
-        source_buffer = TRY(clone_array_buffer(global_object, *source_buffer, source_byte_offset, source_byte_length));
+        source_buffer = TRY(clone_array_buffer(vm, *source_buffer, source_byte_offset, source_byte_length));
 
         // c. Let srcByteIndex be 0.
         source_byte_index = 0;

@@ -164,12 +164,12 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, T
     // 10. If elementType is the same as srcType, then
     if (dest_array.element_name() == src_array.element_name()) {
         // a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength).
-        data = TRY(clone_array_buffer(global_object, *src_data, src_byte_offset, byte_length.value()));
+        data = TRY(clone_array_buffer(vm, *src_data, src_byte_offset, byte_length.value()));
     }
     // 11. Else,
     else {
         // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
-        data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length.value()));
+        data = TRY(allocate_array_buffer(vm, *global_object.array_buffer_constructor(), byte_length.value()));
 
         // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
         if (src_data->is_detached())
@@ -242,7 +242,7 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(VM& vm, TypedArray<T>
     auto byte_length = element_size * length;
 
     // 4. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-    auto* data = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), byte_length));
+    auto* data = TRY(allocate_array_buffer(vm, *global_object.array_buffer_constructor(), byte_length));
 
     // 5. Set O.[[ViewedArrayBuffer]] to data.
     typed_array.set_viewed_array_buffer(data);

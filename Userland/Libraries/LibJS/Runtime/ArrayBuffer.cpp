@@ -51,15 +51,18 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length)
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
+
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
     auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(global_object, constructor, &GlobalObject::array_buffer_prototype, nullptr));
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
     if (block.is_error())
-        return global_object.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
+        return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
     // 3. Set obj.[[ArrayBufferData]] to block.
     obj->set_buffer(block.release_value());
@@ -71,10 +74,8 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
 }
 
 // 25.1.2.3 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
-ThrowCompletionOr<void> detach_array_buffer(GlobalObject& global_object, ArrayBuffer& array_buffer, Optional<Value> key)
+ThrowCompletionOr<void> detach_array_buffer(VM& vm, ArrayBuffer& array_buffer, Optional<Value> key)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
     // FIXME: Check for shared buffer
 
@@ -95,13 +96,15 @@ ThrowCompletionOr<void> detach_array_buffer(GlobalObject& global_object, ArrayBu
 }
 
 // 25.1.2.4 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer
-ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject& global_object, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length)
+ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Assert: IsDetachedBuffer(srcBuffer) is false.
     VERIFY(!source_buffer.is_detached());
 
     // 2. Let targetBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, srcLength).
-    auto* target_buffer = TRY(allocate_array_buffer(global_object, *global_object.array_buffer_constructor(), source_length));
+    auto* target_buffer = TRY(allocate_array_buffer(vm, *realm.global_object().array_buffer_constructor(), source_length));
 
     // 3. Let srcBlock be srcBuffer.[[ArrayBufferData]].
     auto& source_block = source_buffer.buffer();

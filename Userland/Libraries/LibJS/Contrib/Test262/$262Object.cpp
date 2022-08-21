@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
         return vm.throw_completion<TypeError>();
 
     auto& array_buffer_object = static_cast<ArrayBuffer&>(array_buffer.as_object());
-    TRY(JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1)));
+    TRY(JS::detach_array_buffer(vm, array_buffer_object, vm.argument(1)));
     return js_null();
 }
 
