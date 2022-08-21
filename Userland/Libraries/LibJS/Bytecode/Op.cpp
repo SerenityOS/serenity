@@ -287,35 +287,38 @@ ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interp
 
 ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
+
     auto get_reference = [&]() -> ThrowCompletionOr<Reference> {
         auto const& string = interpreter.current_executable().get_identifier(m_identifier);
         if (m_cached_environment_coordinate.has_value()) {
-            auto* environment = interpreter.vm().running_execution_context().lexical_environment;
+            auto* environment = vm.running_execution_context().lexical_environment;
             for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
                 environment = environment->outer_environment();
             VERIFY(environment);
             VERIFY(environment->is_declarative_environment());
             if (!environment->is_permanently_screwed_by_eval()) {
-                return Reference { *environment, string, interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
+                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
             }
             m_cached_environment_coordinate = {};
         }
 
-        auto reference = TRY(interpreter.vm().resolve_binding(string));
+        auto reference = TRY(vm.resolve_binding(string));
         if (reference.environment_coordinate().has_value())
             m_cached_environment_coordinate = reference.environment_coordinate();
         return reference;
     };
     auto reference = TRY(get_reference());
-    interpreter.accumulator() = TRY(reference.get_value(interpreter.global_object()));
+    interpreter.accumulator() = TRY(reference.get_value(vm));
     return {};
 }
 
 ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
     auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(interpreter.vm().resolve_binding(string));
-    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    auto reference = TRY(vm.resolve_binding(string));
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
 
@@ -383,10 +386,10 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     auto reference = TRY(vm.resolve_binding(name, environment));
     switch (m_initialization_mode) {
     case InitializationMode::Initialize:
-        TRY(reference.initialize_referenced_binding(interpreter.global_object(), interpreter.accumulator()));
+        TRY(reference.initialize_referenced_binding(vm, interpreter.accumulator()));
         break;
     case InitializationMode::Set:
-        TRY(reference.put_value(interpreter.global_object(), interpreter.accumulator()));
+        TRY(reference.put_value(vm, interpreter.accumulator()));
         break;
     case InitializationMode::InitializeOrSet:
         VERIFY(reference.is_environment_reference());
@@ -421,7 +424,7 @@ ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpre
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, identifier, {}, strict };
-    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 };
 
@@ -668,7 +671,7 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
     auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, property_key, {}, strict };
-    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
 
@@ -816,7 +819,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     }
 
     // 3. Set val to ? GetValue(val).
-    auto value = TRY(reference.get_value(interpreter.global_object()));
+    auto value = TRY(reference.get_value(vm));
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.

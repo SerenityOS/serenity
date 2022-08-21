@@ -13,10 +13,8 @@
 namespace JS {
 
 // 6.2.4.6 PutValue ( V, W ), https://tc39.es/ecma262/#sec-putvalue
-ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value value)
+ThrowCompletionOr<void> Reference::put_value(VM& vm, Value value)
 {
-    auto& vm = global_object.vm();
-
     // 1. ReturnIfAbrupt(V).
     // 2. ReturnIfAbrupt(W).
 
@@ -28,9 +26,11 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
     if (is_unresolvable()) {
         // a. If V.[[Strict]] is true, throw a ReferenceError exception.
         if (m_strict)
-            return throw_reference_error(global_object);
+            return throw_reference_error(vm);
 
         // b. Let globalObj be GetGlobalObject().
+        auto& global_object = vm.get_global_object();
+
         // c. Perform ? Set(globalObj, V.[[ReferencedName]], W, false).
         TRY(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
 
@@ -74,9 +74,8 @@ ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value 
         return m_base_environment->set_mutable_binding(vm, m_name.as_string(), value, m_strict);
 }
 
-Completion Reference::throw_reference_error(GlobalObject& global_object) const
+Completion Reference::throw_reference_error(VM& vm) const
 {
-    auto& vm = global_object.vm();
     if (!m_name.is_valid())
         return vm.throw_completion<ReferenceError>(ErrorType::ReferenceUnresolvable);
     else
@@ -84,16 +83,17 @@ Completion Reference::throw_reference_error(GlobalObject& global_object) const
 }
 
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
-ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
+ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
 {
-    auto& vm = global_object.vm();
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
 
     // 1. ReturnIfAbrupt(V).
     // 2. If V is not a Reference Record, return V.
 
     // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
     if (!is_valid_reference() || is_unresolvable())
-        return throw_reference_error(global_object);
+        return throw_reference_error(vm);
 
     // 4. If IsPropertyReference(V) is true, then
     if (is_property_reference()) {
@@ -145,7 +145,7 @@ ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
-ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
+ThrowCompletionOr<bool> Reference::delete_(VM& vm)
 {
     // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
     // UnaryExpression : delete UnaryExpression
@@ -162,8 +162,6 @@ ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
         // b. Return true.
         return true;
     }
-
-    auto& vm = global_object.vm();
 
     // 5. If IsPropertyReference(ref) is true, then
     if (is_property_reference()) {
@@ -235,10 +233,8 @@ String Reference::to_string() const
 }
 
 // 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
-ThrowCompletionOr<void> Reference::initialize_referenced_binding(GlobalObject& global_object, Value value) const
+ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value) const
 {
-    auto& vm = global_object.vm();
-
     VERIFY(!is_unresolvable());
     VERIFY(m_base_type == BaseType::Environment);
     return m_base_environment->initialize_binding(vm, m_name.as_string(), value);

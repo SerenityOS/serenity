@@ -183,6 +183,8 @@ public:
 
     Value get_new_target();
 
+    GlobalObject& get_global_object();
+
     CommonPropertyNames names;
 
     void run_queued_promise_jobs();

@@ -463,9 +463,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     Reference reference = TRY(vm.resolve_binding(param, used_environment));
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
-                        return reference.put_value(global_object, argument_value);
+                        return reference.put_value(vm, argument_value);
                     else
-                        return reference.initialize_referenced_binding(global_object, argument_value);
+                        return reference.initialize_referenced_binding(vm, argument_value);
                 } else if (IsSame<NonnullRefPtr<BindingPattern> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
                     return vm.binding_initialization(param, argument_value, used_environment, global_object);

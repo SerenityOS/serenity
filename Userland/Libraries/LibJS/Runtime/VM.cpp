@@ -338,9 +338,9 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
             TRY(rest_object->copy_data_properties(vm, object, seen_names));
             if (!environment)
-                return assignment_target.put_value(global_object, rest_object);
+                return assignment_target.put_value(vm, rest_object);
             else
-                return assignment_target.initialize_referenced_binding(global_object, rest_object);
+                return assignment_target.initialize_referenced_binding(vm, rest_object);
         }
 
         auto name = TRY(property.name.visit(
@@ -366,9 +366,9 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             }
 
             if (!environment)
-                TRY(reference.put_value(global_object, value_to_assign));
+                TRY(reference.put_value(vm, value_to_assign));
             else
-                TRY(reference.initialize_referenced_binding(global_object, value_to_assign));
+                TRY(reference.initialize_referenced_binding(vm, value_to_assign));
             continue;
         }
 
@@ -395,9 +395,9 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         } else {
             VERIFY(reference_to_assign_to.has_value());
             if (!environment)
-                TRY(reference_to_assign_to->put_value(global_object, value_to_assign));
+                TRY(reference_to_assign_to->put_value(vm, value_to_assign));
             else
-                TRY(reference_to_assign_to->initialize_referenced_binding(global_object, value_to_assign));
+                TRY(reference_to_assign_to->initialize_referenced_binding(vm, value_to_assign));
         }
     }
 
@@ -408,6 +408,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
 ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment, GlobalObject& global_object)
 {
+    auto& vm = *this;
     auto& realm = *global_object.associated_realm();
 
     // FIXME: this method is nearly identical to destructuring assignment!
@@ -531,9 +532,9 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         } else if (!entry.alias.has<Empty>()) {
             VERIFY(assignment_target.has_value());
             if (!environment)
-                TRY(assignment_target->put_value(global_object, value));
+                TRY(assignment_target->put_value(vm, value));
             else
-                TRY(assignment_target->initialize_referenced_binding(global_object, value));
+                TRY(assignment_target->initialize_referenced_binding(vm, value));
         }
     }
 
@@ -637,6 +638,16 @@ Value VM::get_new_target()
     // 2. Assert: envRec has a [[NewTarget]] field.
     // 3. Return envRec.[[NewTarget]].
     return verify_cast<FunctionEnvironment>(env).new_target();
+}
+
+// 9.4.5 GetGlobalObject ( ), https://tc39.es/ecma262/#sec-getglobalobject
+GlobalObject& VM::get_global_object()
+{
+    // 1. Let currentRealm be the current Realm Record.
+    auto& current_realm = *this->current_realm();
+
+    // 2. Return currentRealm.[[GlobalObject]].
+    return current_realm.global_object();
 }
 
 bool VM::in_strict_mode() const

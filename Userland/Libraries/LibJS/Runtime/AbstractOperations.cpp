@@ -229,7 +229,7 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
         auto lhs = TRY(vm.resolve_binding(name));
 
         // b. Return ? PutValue(lhs, value).
-        return TRY(lhs.put_value(global_object, value));
+        return TRY(lhs.put_value(vm, value));
     }
 
     VERIFY_NOT_REACHED();

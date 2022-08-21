@@ -1726,7 +1726,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto reference_or_error = g_vm->resolve_binding(variable_name, &global_environment);
                 if (reference_or_error.is_error())
                     return {};
-                auto value_or_error = reference_or_error.value().get_value(interpreter->global_object());
+                auto value_or_error = reference_or_error.value().get_value(*g_vm);
                 if (value_or_error.is_error())
                     return {};
                 auto variable = value_or_error.value();
