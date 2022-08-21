@@ -17,10 +17,10 @@ static library into a shared library.
  1 file changed, 34 insertions(+)
 
 diff --git a/configure b/configure
-index 02724d0..fec4760 100755
+index 9afa3e1..2ed54b6 100755
 --- a/configure
 +++ b/configure
-@@ -4841,6 +4841,10 @@ tpf*)
+@@ -5729,6 +5729,10 @@ tpf*)
  os2*)
    lt_cv_deplibs_check_method=pass_all
    ;;
@@ -31,7 +31,7 @@ index 02724d0..fec4760 100755
  esac
  
  fi
-@@ -7634,6 +7638,10 @@ $as_echo_n "checking for $compiler option to produce PIC... " >&6; }
+@@ -8402,6 +8406,10 @@ printf %s "checking for $compiler option to produce PIC... " >&6; }
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -42,7 +42,7 @@ index 02724d0..fec4760 100755
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -8919,6 +8927,10 @@ rm -f core conftest.err conftest.$ac_objext \
+@@ -9690,6 +9698,10 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
        hardcode_shlibpath_var=no
        ;;
  
@@ -53,7 +53,7 @@ index 02724d0..fec4760 100755
      *)
        ld_shlibs=no
        ;;
-@@ -9846,6 +9858,17 @@ uts4*)
+@@ -10615,6 +10627,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
@@ -71,7 +71,7 @@ index 02724d0..fec4760 100755
  *)
    dynamic_linker=no
    ;;
-@@ -15654,6 +15677,17 @@ uts4*)
+@@ -16924,6 +16947,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
