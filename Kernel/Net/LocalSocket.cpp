@@ -445,25 +445,25 @@ ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned requ
     return EINVAL;
 }
 
-ErrorOr<void> LocalSocket::chmod(Credentials const&, OpenFileDescription&, mode_t mode)
+ErrorOr<void> LocalSocket::chmod(Credentials const& credentials, OpenFileDescription& description, mode_t mode)
 {
-    // FIXME: Use the credentials.
-
-    auto inode = m_inode.strong_ref();
-    if (inode)
-        return inode->chmod(mode);
+    if (m_inode) {
+        if (auto custody = description.custody())
+            return VirtualFileSystem::the().chmod(credentials, *custody, mode);
+        VERIFY_NOT_REACHED();
+    }
 
     m_prebind_mode = mode & 0777;
     return {};
 }
 
-ErrorOr<void> LocalSocket::chown(Credentials const& credentials, OpenFileDescription&, UserID uid, GroupID gid)
+ErrorOr<void> LocalSocket::chown(Credentials const& credentials, OpenFileDescription& description, UserID uid, GroupID gid)
 {
-    // FIXME: Use the credentials.
-
-    auto inode = m_inode.strong_ref();
-    if (inode)
-        return inode->chown(uid, gid);
+    if (m_inode) {
+        if (auto custody = description.custody())
+            return VirtualFileSystem::the().chown(credentials, *custody, uid, gid);
+        VERIFY_NOT_REACHED();
+    }
 
     if (!credentials.is_superuser() && (credentials.euid() != uid || !credentials.in_group(gid)))
         return set_so_error(EPERM);
