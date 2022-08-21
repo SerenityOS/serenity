@@ -17,11 +17,11 @@ static library into a shared library.
  1 file changed, 23 insertions(+)
 
 diff --git a/configure b/configure
-index 7eb305d..4299214 100755
+index 75f4d1e..6d3ee95 100755
 --- a/configure
 +++ b/configure
-@@ -4601,6 +4601,10 @@ sysv4 | sysv4.3*)
- tpf*)
+@@ -5276,6 +5276,10 @@ tpf*)
+ os2*)
    lt_cv_deplibs_check_method=pass_all
    ;;
 +
@@ -31,7 +31,7 @@ index 7eb305d..4299214 100755
  esac
  
  fi
-@@ -7389,6 +7393,10 @@ $as_echo_n "checking for $compiler option to produce PIC... " >&6; }
+@@ -7949,6 +7953,10 @@ printf %s "checking for $compiler option to produce PIC... " >&6; }
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -42,7 +42,7 @@ index 7eb305d..4299214 100755
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -8625,6 +8633,10 @@ rm -f core conftest.err conftest.$ac_objext \
+@@ -9237,6 +9245,10 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
        hardcode_shlibpath_var=no
        ;;
  
@@ -53,7 +53,7 @@ index 7eb305d..4299214 100755
      *)
        ld_shlibs=no
        ;;
-@@ -9527,6 +9539,17 @@ uts4*)
+@@ -10162,6 +10174,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
