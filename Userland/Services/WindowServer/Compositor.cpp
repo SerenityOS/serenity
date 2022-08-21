@@ -33,11 +33,11 @@ Compositor& Compositor::the()
 
 static WallpaperMode mode_to_enum(String const& name)
 {
-    if (name == "tile")
+    if (name == "Tile")
         return WallpaperMode::Tile;
-    if (name == "stretch")
+    if (name == "Stretch")
         return WallpaperMode::Stretch;
-    if (name == "center")
+    if (name == "Center")
         return WallpaperMode::Center;
     return WallpaperMode::Center;
 }
@@ -139,7 +139,7 @@ void Compositor::did_construct_window_manager(Badge<WindowManager>)
 
     m_current_window_stack = &wm.current_window_stack();
 
-    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "center"));
+    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "Center"));
     m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
 
     invalidate_screen();

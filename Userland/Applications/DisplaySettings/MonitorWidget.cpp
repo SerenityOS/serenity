@@ -124,12 +124,12 @@ void MonitorWidget::redraw_desktop_if_needed()
     auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
     auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh).release_value_but_fixme_should_propagate_errors();
 
-    if (m_desktop_wallpaper_mode == "center") {
+    if (m_desktop_wallpaper_mode == "Center") {
         auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());
         painter.blit(centered_rect.location(), *scaled_bitmap, scaled_bitmap->rect());
-    } else if (m_desktop_wallpaper_mode == "tile") {
+    } else if (m_desktop_wallpaper_mode == "Tile") {
         painter.draw_tiled_bitmap(m_desktop_bitmap->rect(), *scaled_bitmap);
-    } else if (m_desktop_wallpaper_mode == "stretch") {
+    } else if (m_desktop_wallpaper_mode == "Stretch") {
         painter.draw_scaled_bitmap(m_desktop_bitmap->rect(), *m_wallpaper_bitmap, m_wallpaper_bitmap->rect());
     } else {
         VERIFY_NOT_REACHED();
