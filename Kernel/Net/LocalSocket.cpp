@@ -73,8 +73,9 @@ LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, No
     , m_for_server(move(server_buffer))
 {
     auto& current_process = Process::current();
-    m_prebind_uid = current_process.euid();
-    m_prebind_gid = current_process.egid();
+    auto current_process_credentials = current_process.credentials();
+    m_prebind_uid = current_process_credentials->euid();
+    m_prebind_gid = current_process_credentials->egid();
     m_prebind_mode = 0666;
 
     m_for_client->set_unblock_callback([this]() {
