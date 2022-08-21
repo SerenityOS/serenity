@@ -68,6 +68,7 @@ void Breadcrumbbar::clear_segments()
 {
     m_segments.clear();
     remove_all_children();
+    m_selected_segment = {};
 }
 
 void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String data, String tooltip)
@@ -120,6 +121,8 @@ void Breadcrumbbar::remove_end_segments(size_t start_segment_index)
         auto segment = m_segments.take_last();
         remove_child(*segment.button);
     }
+    if (m_selected_segment.has_value() && *m_selected_segment >= start_segment_index)
+        m_selected_segment = {};
 }
 
 Optional<size_t> Breadcrumbbar::find_segment_with_data(String const& data)
