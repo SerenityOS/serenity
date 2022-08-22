@@ -68,7 +68,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap())));
 
     registers().resize(executable.number_of_registers);
-    registers()[Register::global_object_index] = Value(&m_realm.global_object());
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());
