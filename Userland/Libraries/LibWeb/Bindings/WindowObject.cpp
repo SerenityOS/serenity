@@ -626,7 +626,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollby
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* impl = TRY(impl_from(vm));
     if (!impl->page())

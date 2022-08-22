@@ -61,7 +61,7 @@ void Intl::initialize(Realm& realm)
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales
 JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto locales = vm.argument(0);
 
@@ -109,7 +109,7 @@ static Vector<StringView> available_time_zones()
 // 2.2.2 Intl.supportedValuesOf ( key ), https://tc39.es/proposal-intl-enumeration/#sec-intl.supportedvaluesof
 JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let key be ? ToString(key).
     auto key = TRY(vm.argument(0).to_string(vm));

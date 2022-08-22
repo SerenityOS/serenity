@@ -40,7 +40,7 @@ void DateTimeFormatPrototype::initialize(Realm& realm)
 // 11.3.3 get Intl.DateTimeFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let dtf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
@@ -65,6 +65,8 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
 // 11.3.4 Intl.DateTimeFormat.prototype.formatToParts ( date ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatToParts
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
 {
+    auto& realm = *vm.current_realm();
+
     auto date = vm.argument(0);
 
     // 1. Let dtf be the this value.
@@ -76,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     // 3. If date is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date_value = MUST(call(vm, global_object.date_constructor_now_function(), js_undefined())).as_double();
+        date_value = MUST(call(vm, realm.global_object().date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {
@@ -144,7 +146,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
 // 11.3.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let dtf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
@@ -153,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     auto* date_time_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, global_object.object_prototype());
+    auto* options = Object::create(realm, realm.global_object().object_prototype());
 
     // 5. For each row of Table 5, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

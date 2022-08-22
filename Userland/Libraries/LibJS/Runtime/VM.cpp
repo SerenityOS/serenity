@@ -83,10 +83,10 @@ VM::VM(OwnPtr<CustomData> custom_data)
         promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()));
 
         promise->perform_then(
-            NativeFunction::create(realm, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
+            NativeFunction::create(realm, "", [](auto&) -> ThrowCompletionOr<Value> {
                 VERIFY_NOT_REACHED();
             }),
-            NativeFunction::create(realm, "", [reject = make_handle(promise_capability.reject)](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+            NativeFunction::create(realm, "", [reject = make_handle(promise_capability.reject)](auto& vm) -> ThrowCompletionOr<Value> {
                 auto error = vm.argument(0);
 
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
@@ -1037,7 +1037,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto& realm = *current_realm();
 
     // 1. Let fulfilledClosure be a new Abstract Closure with parameters (result) that captures referencingScriptOrModule, specifier, and promiseCapability and performs the following steps when called:
-    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [referencing_script_or_module, module_request = move(module_request), resolve_function = make_handle(promise_capability.resolve), reject_function = make_handle(promise_capability.reject)](VM& vm) -> ThrowCompletionOr<Value> {
         auto result = vm.argument(0);
         // a. Assert: result is undefined.
         VERIFY(result.is_undefined());
@@ -1069,7 +1069,7 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 3. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures promiseCapability and performs the following steps when called:
-    auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto rejected_closure = [rejected_function = make_handle(promise_capability.reject)](VM& vm) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
         // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
         MUST(call(vm, rejected_function.cell(), js_undefined(), error));

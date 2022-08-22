@@ -31,7 +31,7 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constr
     } promise_capability_functions;
 
     // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
-    auto executor_closure = [&promise_capability_functions](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+    auto executor_closure = [&promise_capability_functions](auto& vm) -> ThrowCompletionOr<Value> {
         auto resolve = vm.argument(0);
         auto reject = vm.argument(1);
 

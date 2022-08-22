@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<WebAssemblyMemoryObject>(this_object))

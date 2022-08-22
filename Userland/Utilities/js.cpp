@@ -1311,10 +1311,11 @@ void ReplObject::initialize_global_object()
 
     define_native_accessor(
         "_",
-        [](JS::VM&, JS::GlobalObject&) {
+        [](JS::VM&) {
             return g_last_value.value();
         },
-        [](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
+        [](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto& global_object = vm.get_global_object();
             VERIFY(is<ReplObject>(global_object));
             outln("Disable writing last value to '_'");
 

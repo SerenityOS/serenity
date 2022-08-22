@@ -318,6 +318,8 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 // 19.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
 {
+    auto& realm = *vm.current_realm();
+
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
@@ -325,7 +327,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
     auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
-    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *global_object.intl_number_format_constructor(), locales, options)));
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *realm.global_object().intl_number_format_constructor(), locales, options)));
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     // Note: Our implementation of FormatNumeric does not throw.

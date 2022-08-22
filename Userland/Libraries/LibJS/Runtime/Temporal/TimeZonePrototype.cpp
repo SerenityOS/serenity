@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_instant_for)
 // 11.4.8 Temporal.TimeZone.prototype.getPossibleInstantsFor ( dateTime ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getpossibleinstantsfor
 JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimezone]]).

@@ -322,7 +322,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::subtract)
 // 7.3.20 Temporal.Duration.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -446,7 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
 // 7.3.21 Temporal.Duration.prototype.total ( totalOf ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).

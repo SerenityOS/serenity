@@ -517,7 +517,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
 // 5.3.30 Temporal.PlainDateTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -728,14 +728,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
 // 5.3.41 Temporal.PlainDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.getisofields
 JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
     auto* date_time = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(realm, global_object.object_prototype());
+    auto* fields = Object::create(realm, realm.global_object().object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", dateTime.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&date_time->calendar())));

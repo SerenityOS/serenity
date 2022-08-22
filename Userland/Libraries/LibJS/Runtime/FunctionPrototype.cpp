@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 // 3.1.2.1 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/proposal-shadowrealm/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto this_argument = vm.argument(0);
 

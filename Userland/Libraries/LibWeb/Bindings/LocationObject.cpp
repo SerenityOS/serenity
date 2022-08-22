@@ -95,6 +95,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
     auto& window = static_cast<WindowObject&>(global_object);
 
     // FIXME: 1. If this's relevant Document is null, then return.
@@ -218,6 +220,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
     auto& window = static_cast<WindowObject&>(global_object);
     window.impl().did_call_location_reload({});
     return JS::js_undefined();
@@ -226,6 +230,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
 {
+    auto& realm = *vm.current_realm();
+    auto& global_object = realm.global_object();
     auto& window = static_cast<WindowObject&>(global_object);
     auto url = TRY(vm.argument(0).to_string(vm));
     // FIXME: This needs spec compliance work.

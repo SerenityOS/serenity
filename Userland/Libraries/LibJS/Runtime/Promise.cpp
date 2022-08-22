@@ -71,10 +71,10 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
 
     // 27.2.1.3.2 Promise Resolve Functions, https://tc39.es/ecma262/#sec-promise-resolve-functions
-    auto* resolve_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto& global_object, auto& promise, auto& already_resolved) {
+    auto* resolve_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto& promise, auto& already_resolved) {
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Resolve function was called", &promise);
 
-        auto& realm = *global_object.associated_realm();
+        auto& realm = *vm.current_realm();
 
         auto resolution = vm.argument(0);
 
@@ -166,7 +166,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
 
     // 27.2.1.3.1 Promise Reject Functions, https://tc39.es/ecma262/#sec-promise-reject-functions
-    auto* reject_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto&, auto& promise, auto& already_resolved) {
+    auto* reject_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto& promise, auto& already_resolved) {
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Reject function was called", &promise);
 
         auto reason = vm.argument(0);

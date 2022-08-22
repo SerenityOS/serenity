@@ -198,7 +198,6 @@ ThrowCompletionOr<Value> DateConstructor::call()
 ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
 
     double date_value;
 
@@ -249,7 +248,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
         // c. Let m be ? ToNumber(values[1]).
         auto month = TRY(vm.argument(1).to_number(vm)).as_double();
 
-        auto arg_or = [&vm, &global_object](size_t i, double fallback) -> ThrowCompletionOr<double> {
+        auto arg_or = [&vm](size_t i, double fallback) -> ThrowCompletionOr<double> {
             return vm.argument_count() > i ? TRY(vm.argument(i).to_number(vm)).as_double() : fallback;
         };
 
@@ -312,7 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
-    auto arg_or = [&vm, &global_object](size_t i, double fallback) -> ThrowCompletionOr<double> {
+    auto arg_or = [&vm](size_t i, double fallback) -> ThrowCompletionOr<double> {
         return vm.argument_count() > i ? TRY(vm.argument(i).to_number(vm)).as_double() : fallback;
     };
 

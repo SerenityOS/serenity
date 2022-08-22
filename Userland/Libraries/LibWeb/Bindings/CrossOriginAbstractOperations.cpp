@@ -126,7 +126,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<Lo
             // 2. If IsCallable(value) is true, then set value to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the IDL operation P on object O.
             if (value->is_function()) {
                 value = JS::NativeFunction::create(
-                    realm, [function = JS::make_handle(*value)](auto& vm, auto&) {
+                    realm, [function = JS::make_handle(*value)](auto& vm) {
                         return JS::call(vm, function.value(), JS::js_undefined());
                     },
                     0, "");
@@ -143,7 +143,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<Lo
             // 2. If e.[[NeedsGet]] is true, then set crossOriginGet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the getter of the IDL attribute P on object O.
             if (*entry.needs_get) {
                 cross_origin_get = JS::NativeFunction::create(
-                    realm, [object_ptr, getter = JS::make_handle(*original_descriptor->get)](auto& vm, auto&) {
+                    realm, [object_ptr, getter = JS::make_handle(*original_descriptor->get)](auto& vm) {
                         return JS::call(vm, getter.cell(), object_ptr);
                     },
                     0, "");
@@ -155,7 +155,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<Lo
             // If e.[[NeedsSet]] is true, then set crossOriginSet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the setter of the IDL attribute P on object O.
             if (*entry.needs_set) {
                 cross_origin_set = JS::NativeFunction::create(
-                    realm, [object_ptr, setter = JS::make_handle(*original_descriptor->set)](auto& vm, auto&) {
+                    realm, [object_ptr, setter = JS::make_handle(*original_descriptor->set)](auto& vm) {
                         return JS::call(vm, setter.cell(), object_ptr);
                     },
                     0, "");

@@ -189,7 +189,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         return TRY(val.is_array(vm));
     };
 
-    auto append_to_new_array = [&vm, &is_concat_spreadable, &new_array, &global_object, &n](Value arg) -> ThrowCompletionOr<void> {
+    auto append_to_new_array = [&vm, &is_concat_spreadable, &new_array, &n](Value arg) -> ThrowCompletionOr<void> {
         auto spreadable = TRY(is_concat_spreadable(arg));
         if (spreadable) {
             VERIFY(arg.is_object());
@@ -295,7 +295,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 // 23.1.3.5 Array.prototype.entries ( ), https://tc39.es/ecma262/#sec-array.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -753,7 +753,7 @@ static void add_value_to_keyed_group(VM& vm, GroupsType& groups, KeyType key, Va
 // 2.1 Array.prototype.group ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.group
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -809,7 +809,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group)
 // 2.2 Array.prototype.groupToMap ( callbackfn [ , thisArg ] ), https://tc39.es/proposal-array-grouping/#sec-array.prototype.grouptomap
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::group_to_map)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1018,7 +1018,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 // 23.1.3.19 Array.prototype.keys ( ), https://tc39.es/ecma262/#sec-array.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -1749,7 +1749,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 // 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let O be ? ToObject(this value).
     auto* object = TRY(vm.this_value().to_object(vm));
@@ -1785,7 +1785,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
 // 1.1.1.5 Array.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSorted
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto comparefn = vm.argument(0);
 
@@ -1827,7 +1827,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 // 1.1.1.6 Array.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSpliced
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto start = vm.argument(0);
     auto delete_count = vm.argument(1);
@@ -1958,6 +1958,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 // 23.1.3.33 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Let array be ? ToObject(this value).
     auto* array = TRY(vm.this_value().to_object(vm));
 
@@ -1966,7 +1968,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 
     // 3. If IsCallable(func) is false, set func to the intrinsic function %Object.prototype.toString%.
     if (!func.is_function())
-        func = global_object.object_prototype_to_string_function();
+        func = realm.global_object().object_prototype_to_string_function();
 
     // 4. Return ? Call(func, array).
     return TRY(call(vm, func.as_function(), array));
@@ -2007,7 +2009,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 // 23.1.3.35 Array.prototype.values ( ), https://tc39.es/ecma262/#sec-array.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -2017,7 +2019,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 // 1.1.1.7 Array.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto index = vm.argument(0);
     auto value = vm.argument(1);

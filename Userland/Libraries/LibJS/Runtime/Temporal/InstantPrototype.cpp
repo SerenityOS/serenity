@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 // 8.3.11 Temporal.Instant.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).

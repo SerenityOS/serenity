@@ -38,6 +38,8 @@ void PromisePrototype::initialize(Realm& realm)
 // 27.2.5.4 Promise.prototype.then ( onFulfilled, onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.then
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 {
+    auto& realm = *vm.current_realm();
+
     auto on_fulfilled = vm.argument(0);
     auto on_rejected = vm.argument(1);
 
@@ -46,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto* promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, *promise, *global_object.promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *promise, *realm.global_object().promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
     auto result_capability = TRY(new_promise_capability(vm, constructor));
@@ -70,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto on_finally = vm.argument(0);
 
@@ -82,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, promise.to_string_without_side_effects());
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *global_object.promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *realm.global_object().promise_constructor()));
 
     // 4. Assert: IsConstructor(C) is true.
     VERIFY(constructor);
@@ -101,8 +103,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     // 6. Else,
     else {
         // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
-        auto then_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-            auto& realm = *global_object.associated_realm();
+        auto then_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm) -> ThrowCompletionOr<Value> {
+            auto& realm = *vm.current_realm();
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
@@ -114,7 +116,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
-            auto return_value = [value_handle = make_handle(value)](auto&, auto&) -> ThrowCompletionOr<Value> {
+            auto return_value = [value_handle = make_handle(value)](auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return value.
                 return value_handle.value();
             };
@@ -130,8 +132,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         then_finally = NativeFunction::create(realm, move(then_finally_closure), 1, "");
 
         // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
-        auto catch_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-            auto& realm = *global_object.associated_realm();
+        auto catch_finally_closure = [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm) -> ThrowCompletionOr<Value> {
+            auto& realm = *vm.current_realm();
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
@@ -143,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* promise = TRY(promise_resolve(vm, constructor, result));
 
             // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
-            auto throw_reason = [reason_handle = make_handle(reason)](auto&, auto&) -> ThrowCompletionOr<Value> {
+            auto throw_reason = [reason_handle = make_handle(reason)](auto&) -> ThrowCompletionOr<Value> {
                 // 1. Return ThrowCompletion(reason).
                 return throw_completion(reason_handle.value());
             };

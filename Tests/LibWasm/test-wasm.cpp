@@ -14,7 +14,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
@@ -100,7 +100,7 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<JS::Uint8Array>(object))
         return vm.throw_completion<JS::TypeError>("Expected a Uint8Array argument to parse_webassembly_module");

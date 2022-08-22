@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 // 24.2.3.5 Set.prototype.entries ( ), https://tc39.es/ecma262/#sec-set.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* set = TRY(typed_this_object(vm));
 
@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 // 24.2.3.10 Set.prototype.values ( ), https://tc39.es/ecma262/#sec-set.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* set = TRY(typed_this_object(vm));
 

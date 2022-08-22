@@ -215,7 +215,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 // 28.1.10 Reflect.ownKeys ( target ), https://tc39.es/ecma262/#sec-reflect.ownkeys
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto target = vm.argument(0);
 

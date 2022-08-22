@@ -50,7 +50,7 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
     auto value_wrapper = TRY_OR_MUST_REJECT(vm, promise_capability, promise_resolve(vm, *global_object.promise_constructor(), value));
 
     // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
-    auto unwrap = [done](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto unwrap = [done](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Return CreateIterResultObject(value, done).
         return create_iterator_result_object(vm, vm.argument(0), done);
     };
@@ -69,12 +69,14 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
 // 27.1.4.2.1 %AsyncFromSyncIteratorPrototype%.next ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 4. Let syncIteratorRecord be O.[[SyncIteratorRecord]].
     auto& sync_iterator_record = this_object->sync_iterator_record();
@@ -95,14 +97,14 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
 // 27.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
 JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;
@@ -148,14 +150,14 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 // 27.1.4.2.3 %AsyncFromSyncIteratorPrototype%.throw ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw
 JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;

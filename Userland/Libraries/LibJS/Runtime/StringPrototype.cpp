@@ -648,7 +648,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 // 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto object = TRY(require_object_coercible(vm, vm.this_value()));
 
@@ -771,7 +771,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 // 22.1.3.34 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
     auto string = TRY(this_object.to_string(vm));
@@ -1076,6 +1076,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 // 19.1.1 String.prototype.localeCompare ( that [ , locales [ , options ] ] ), https://tc39.es/ecma402/#sup-String.prototype.localeCompare
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Let O be ? RequireObjectCoercible(this value).
     auto object = TRY(require_object_coercible(vm, vm.this_value()));
 
@@ -1086,7 +1088,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
     auto that_value = TRY(vm.argument(0).to_string(vm));
 
     // 4. Let collator be ? Construct(%Collator%, « locales, options »).
-    auto* collator = TRY(construct(vm, *global_object.intl_collator_constructor(), vm.argument(1), vm.argument(2)));
+    auto* collator = TRY(construct(vm, *realm.global_object().intl_collator_constructor(), vm.argument(1), vm.argument(2)));
 
     // 5. Return CompareStrings(collator, S, thatValue).
     return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), Utf8View(string), Utf8View(that_value));

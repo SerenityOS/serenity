@@ -726,7 +726,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto* execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+    auto* execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability](auto& vm) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
         auto result = async_body->execute(vm.interpreter());
 

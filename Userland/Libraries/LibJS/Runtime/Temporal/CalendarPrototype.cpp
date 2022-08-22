@@ -501,7 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 // NOTE: This is the minimum fields implementation for engines without ECMA-402.
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto fields = vm.argument(0);
 

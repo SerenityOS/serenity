@@ -9,10 +9,10 @@
 #include <AK/Types.h>
 
 #define JS_DECLARE_NATIVE_FUNCTION(name) \
-    static JS::ThrowCompletionOr<JS::Value> name(JS::VM&, JS::GlobalObject&)
+    static JS::ThrowCompletionOr<JS::Value> name(JS::VM&)
 
 #define JS_DEFINE_NATIVE_FUNCTION(name) \
-    JS::ThrowCompletionOr<JS::Value> name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object)
+    JS::ThrowCompletionOr<JS::Value> name([[maybe_unused]] JS::VM& vm)
 
 // NOTE: Proxy is not included here as it doesn't have a prototype - m_proxy_constructor is initialized separately.
 #define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                                                                        \

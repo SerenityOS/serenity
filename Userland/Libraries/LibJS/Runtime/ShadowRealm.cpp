@@ -232,7 +232,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_stri
     // NOTE: We don't support this concept yet.
 
     // 9. Let steps be the steps of an ExportGetter function as described below.
-    auto steps = [string = move(export_name_string)](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+    auto steps = [string = move(export_name_string)](auto& vm) -> ThrowCompletionOr<Value> {
         // 1. Assert: exports is a module namespace exotic object.
         VERIFY(vm.argument(0).is_object());
         auto& exports = vm.argument(0).as_object();
@@ -271,7 +271,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_stri
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
-    auto* throw_type_error = NativeFunction::create(realm, {}, [](auto& vm, auto&) -> ThrowCompletionOr<Value> {
+    auto* throw_type_error = NativeFunction::create(realm, {}, [](auto& vm) -> ThrowCompletionOr<Value> {
         return vm.template throw_completion<TypeError>(vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
     });
 

@@ -34,6 +34,8 @@ void ArrayBufferPrototype::initialize(Realm& realm)
 // 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
     auto* array_buffer_object = TRY(typed_this_value(vm));
@@ -80,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     // 15. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *global_object.array_buffer_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *realm.global_object().array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
     auto* new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));
