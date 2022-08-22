@@ -2124,6 +2124,16 @@ void WindowManager::did_popup_a_menu(Badge<Menu>)
     set_automatic_cursor_tracking_window(nullptr);
 }
 
+void WindowManager::restore_modal_chain(Window& window)
+{
+    for_each_window_in_modal_chain(window, [&](auto& w) {
+        w.set_minimized(false);
+        w.window_stack().move_to_front(w);
+        return IterationDecision::Continue;
+    });
+    move_to_front_and_make_active(window);
+}
+
 void WindowManager::minimize_windows(Window& window, bool minimized)
 {
     for_each_window_in_modal_chain(window, [&](auto& w) {

@@ -90,8 +90,7 @@ void WindowSwitcher::on_key_event(KeyEvent const& event)
     if (event.type() == Event::KeyUp) {
         if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_Super : Key_Alt)) {
             if (auto* window = selected_window()) {
-                window->set_minimized(false);
-                WindowManager::the().move_to_front_and_make_active(*window);
+                WindowManager::the().restore_modal_chain(*window);
             }
             WindowManager::the().set_highlight_window(nullptr);
             hide();
@@ -227,7 +226,7 @@ void WindowSwitcher::refresh()
     auto add_window_stack_windows = [&](WindowStack& window_stack) {
         window_stack.for_each_window_of_type_from_front_to_back(
             WindowType::Normal, [&](Window& window) {
-                if (window.is_frameless())
+                if (window.is_frameless() || window.is_modal())
                     return IterationDecision::Continue;
                 ++window_count;
                 longest_title_width = max(longest_title_width, wm.font().width(window.computed_title()));

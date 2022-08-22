@@ -233,6 +233,7 @@ public:
     void start_menu_doubleclick(Window& window, MouseEvent const& event);
     bool is_menu_doubleclick(Window& window, MouseEvent const& event) const;
 
+    void restore_modal_chain(Window&);
     void minimize_windows(Window&, bool);
     void hide_windows(Window&, bool);
     void maximize_windows(Window&, bool);
