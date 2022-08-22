@@ -63,6 +63,12 @@ set(WORD_BREAK_PROP_PATH "${UCD_PATH}/${WORD_BREAK_PROP_SOURCE}")
 set(SENTENCE_BREAK_PROP_SOURCE "auxiliary/SentenceBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/${SENTENCE_BREAK_PROP_SOURCE}")
 
+string(REGEX REPLACE "([0-9]+\\.[0-9]+)\\.[0-9]+" "\\1" EMOJI_VERSION "${UCD_VERSION}")
+set(EMOJI_TEST_URL "https://unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test.txt")
+set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
+set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
+set(EMOJI_INSTALL_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji.txt")
+
 set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_VERSION}/cldr-${CLDR_VERSION}-json-modern.zip")
 set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
 
@@ -119,6 +125,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${GRAPHEME_BREAK_PROP_SOURCE}" "${GRAPHEME_BREAK_PROP_PATH}")
     extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${WORD_BREAK_PROP_SOURCE}" "${WORD_BREAK_PROP_PATH}")
     extract_path("${UCD_PATH}" "${UCD_ZIP_PATH}" "${SENTENCE_BREAK_PROP_SOURCE}" "${SENTENCE_BREAK_PROP_PATH}")
+
+    download_file("${EMOJI_TEST_URL}" "${EMOJI_TEST_PATH}")
 
     download_file("${CLDR_ZIP_URL}" "${CLDR_ZIP_PATH}")
     extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_BCP47_SOURCE}/**" "${CLDR_BCP47_PATH}")
@@ -225,6 +233,18 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_RELATIVE_TIME_FORMAT_IMPLEMENTATION}"
         arguments -d "${CLDR_DATES_PATH}"
     )
+
+    add_custom_command(
+        OUTPUT "${EMOJI_INSTALL_PATH}"
+        COMMAND "${SerenityOS_SOURCE_DIR}/Meta/generate-emoji-txt.sh" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"
+        # This will make this command only run when the modified time of the directory changes,
+        # which only happens if files within it are added or deleted, but not when a file is modified.
+        # This is fine for this use-case, because the contents of a file changing should not affect
+        # the generated emoji.txt file.
+        DEPENDS "${EMOJI_RES_PATH}" "${EMOJI_TEST_PATH}"
+        USES_TERMINAL
+    )
+    add_custom_target(generate_emoji_txt ALL DEPENDS "${EMOJI_INSTALL_PATH}")
 
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
