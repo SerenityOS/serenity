@@ -135,6 +135,10 @@
         .grad-repeat-3 {
             background-image: -webkit-repeating-linear-gradient(left, red 10%, blue 30%);
         }
+
+        .grad-double-position {
+            background-image: linear-gradient(to right,red 20%, orange 20% 40%, yellow 40% 60%, green 60% 80%, blue 80%)
+        }
     </style>
   </head>
   <body>
@@ -173,6 +177,8 @@
     <div class="box grad-repeat-1"></div>
     <div class="box grad-repeat-2"></div>
     <div class="box grad-repeat-3"></div>
+    <b>Double-position color stops</b><br>
+    <div class="box grad-double-position"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
