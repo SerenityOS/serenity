@@ -1023,7 +1023,12 @@ private:
     GradientType m_gradient_type;
     Repeating m_repeating;
 
-    mutable Optional<Painting::LinearGradientData> m_resolved_data;
+    struct ResolvedData {
+        Painting::LinearGradientData data;
+        Gfx::FloatSize size;
+    };
+
+    mutable Optional<ResolvedData> m_resolved;
 };
 
 class InheritStyleValue final : public StyleValue {

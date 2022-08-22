@@ -1612,13 +1612,15 @@ float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize const& gradient_siz
 
 void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
 {
-    m_resolved_data = Painting::resolve_linear_gradient_data(node, size, *this);
+    if (m_resolved.has_value() && m_resolved->size == size)
+        return;
+    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size, *this), size };
 }
 
 void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
-    VERIFY(m_resolved_data.has_value());
-    Painting::paint_linear_gradient(context, dest_rect, *m_resolved_data);
+    VERIFY(m_resolved.has_value());
+    Painting::paint_linear_gradient(context, dest_rect, m_resolved->data);
 }
 
 bool InheritStyleValue::equals(StyleValue const& other) const
