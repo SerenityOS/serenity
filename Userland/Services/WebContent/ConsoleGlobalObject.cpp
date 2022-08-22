@@ -20,9 +20,9 @@ ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::Bindings::Window
 {
 }
 
-void ConsoleGlobalObject::initialize_global_object()
+void ConsoleGlobalObject::initialize_global_object(JS::Realm& realm)
 {
-    Base::initialize_global_object();
+    Base::initialize_global_object(realm);
 
     // $0 magic variable
     define_native_accessor("$0", inspected_node_getter, nullptr, 0);

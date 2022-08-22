@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual void initialize_global_object() override;
+    virtual void initialize_global_object(Realm&) override;
     virtual ~GlobalObject() override = default;
 
     $262Object* $262() const { return m_$262; }
