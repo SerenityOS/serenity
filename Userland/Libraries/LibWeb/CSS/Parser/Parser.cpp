@@ -2509,15 +2509,16 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         auto& token = tokens.next_token();
 
         Gfx::Color color;
-        Optional<LengthPercentage> length;
+        Optional<LengthPercentage> position;
+        Optional<LengthPercentage> second_position;
         auto dimension = parse_dimension(token);
         if (dimension.has_value() && dimension->is_length_percentage()) {
             // [<length-percentage> <color>] or [<length-percentage>]
-            length = dimension->length_percentage();
+            position = dimension->length_percentage();
             tokens.skip_whitespace();
             // <length-percentage>
             if (!tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma)) {
-                element.transition_hint = GradientColorHint { *length };
+                element.transition_hint = GradientColorHint { *position };
                 return ElementType::ColorHint;
             }
             // <length-percentage> <color>
@@ -2532,16 +2533,21 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
                 return ElementType::Garbage;
             color = *maybe_color;
             tokens.skip_whitespace();
-            if (tokens.has_next_token() && !tokens.peek_token().is(Token::Type::Comma)) {
-                auto token = tokens.next_token();
-                auto dimension = parse_dimension(token);
-                if (!dimension.has_value() || !dimension->is_length_percentage())
-                    return ElementType::Garbage;
-                length = dimension->length_percentage();
+            // Allow up to [<color> <length-percentage> <length-percentage>] (double-position color stops)
+            // Note: Double-position color stops only appear to be valid in this order.
+            for (auto stop_position : Array { &position, &second_position }) {
+                if (tokens.has_next_token() && !tokens.peek_token().is(Token::Type::Comma)) {
+                    auto token = tokens.next_token();
+                    auto dimension = parse_dimension(token);
+                    if (!dimension.has_value() || !dimension->is_length_percentage())
+                        return ElementType::Garbage;
+                    *stop_position = dimension->length_percentage();
+                    tokens.skip_whitespace();
+                }
             }
         }
 
-        element.color_stop = GradientColorStop { color, length };
+        element.color_stop = GradientColorStop { color, position, second_position };
         return ElementType::ColorStop;
     };
 

@@ -1512,8 +1512,9 @@ String LinearGradientStyleValue::to_string() const
         }
 
         serialize_a_srgb_value(builder, element.color_stop.color);
-        if (element.color_stop.length.has_value()) {
-            builder.appendff(" {}"sv, element.color_stop.length->to_string());
+        for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
+            if (position->has_value())
+                builder.appendff(" {}"sv, (*position)->to_string());
         }
         first = false;
     }
@@ -1537,7 +1538,7 @@ static bool operator==(GradientColorHint a, GradientColorHint b)
 
 static bool operator==(GradientColorStop a, GradientColorStop b)
 {
-    return a.color == b.color && a.length == b.length;
+    return a.color == b.color && a.position == b.position && a.second_position == b.second_position;
 }
 
 static bool operator==(ColorStopListElement a, ColorStopListElement b)
