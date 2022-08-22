@@ -5,23 +5,43 @@
  */
 
 #include "MagnifierWidget.h"
+#include <AK/LexicalPath.h>
 #include <LibCore/System.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/BMPWriter.h>
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
+#include <LibGfx/PNGWriter.h>
+#include <LibGfx/QOIWriter.h>
 #include <LibMain/Main.h>
+
+static ErrorOr<ByteBuffer> dump_bitmap(RefPtr<Gfx::Bitmap> bitmap, AK::StringView extension)
+{
+    if (extension == "bmp") {
+        Gfx::BMPWriter dumper;
+        return dumper.dump(bitmap);
+    } else if (extension == "png") {
+        return Gfx::PNGWriter::encode(*bitmap);
+    } else if (extension == "qoi") {
+        return Gfx::QOIWriter::encode(*bitmap);
+    } else {
+        return Error::from_string_literal("invalid image format");
+    }
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-magnifier"sv);
@@ -38,6 +58,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
+    })));
+
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+        AK::String filename = "file for saving";
+        auto do_save = [&]() -> ErrorOr<void> {
+            auto file = TRY(FileSystemAccessClient::Client::the().try_save_file(window, "Capture", "png"));
+            auto path = AK::LexicalPath(file->filename());
+            filename = path.basename();
+            auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
+
+            if (!file->write(encoded.data(), encoded.size())) {
+                return Error::from_errno(file->error());
+            }
+            return {};
+        };
+
+        auto result = do_save();
+        if (result.is_error()) {
+            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+            warnln("Error saving bitmap to {}: {}", filename, result.error().string_literal());
+        }
     })));
 
     auto size_action_group = make<GUI::ActionGroup>();
