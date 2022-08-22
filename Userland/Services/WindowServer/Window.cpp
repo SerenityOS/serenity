@@ -679,18 +679,12 @@ bool Window::is_active() const
 
 Window* Window::blocking_modal_window()
 {
-    // A window is blocked if any immediate child, or any child further
-    // down the chain is modal
-    for (auto& window : m_child_windows) {
-        if (window && !window->is_destroyed()) {
-            if (window->is_modal())
-                return window;
-
-            if (auto* blocking_window = window->blocking_modal_window())
-                return blocking_window;
-        }
-    }
-    return nullptr;
+    auto maybe_blocker = WindowManager::the().for_each_window_in_modal_chain(*this, [&](auto& window) {
+        if (window.is_blocking() && this != &window)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+    return maybe_blocker;
 }
 
 void Window::set_default_icon()

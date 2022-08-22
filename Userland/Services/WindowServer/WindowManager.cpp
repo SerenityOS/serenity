@@ -342,23 +342,22 @@ void WindowManager::add_window(Window& window)
 
 void WindowManager::move_to_front_and_make_active(Window& window)
 {
-    auto move_window_to_front = [&](Window& wnd, bool make_active, bool make_input) {
-        do_move_to_front(wnd, make_active, make_input);
-    };
-    for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
-        move_window_to_front(w, is_stack_top, is_stack_top);
-        return IterationDecision::Continue;
-    });
+    if (auto* blocker = window.blocking_modal_window()) {
+        blocker->window_stack().move_to_front(*blocker);
+        set_active_window(blocker, true);
+    } else {
+        window.window_stack().move_to_front(window);
+        set_active_window(&window, true);
 
-    Compositor::the().invalidate_occlusions();
-}
-
-void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
-{
-    window.window_stack().move_to_front(window);
-
-    if (make_active)
-        set_active_window(&window, make_input);
+        for (auto& child : window.child_windows()) {
+            if (!child || !child->is_modal())
+                continue;
+            if (child->is_rendering_above())
+                child->window_stack().move_to_front(*child);
+            if (child->is_capturing_input())
+                set_active_input_window(child);
+        }
+    }
 
     if (m_switcher->is_visible()) {
         m_switcher->refresh();
@@ -368,10 +367,7 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
         }
     }
 
-    for (auto& child_window : window.child_windows()) {
-        if (child_window)
-            do_move_to_front(*child_window, make_active, make_input);
-    }
+    Compositor::the().invalidate_occlusions();
 }
 
 void WindowManager::remove_window(Window& window)
@@ -1438,14 +1434,14 @@ void WindowManager::event(Core::Event& event)
     Core::Object::event(event);
 }
 
-bool WindowManager::is_window_in_modal_stack(Window& window_in_modal_stack, Window& other_window)
+bool WindowManager::is_window_in_modal_chain(Window& chain_window, Window& other_window)
 {
-    auto result = for_each_window_in_modal_stack(window_in_modal_stack, [&](auto& window, auto) {
+    auto result = for_each_window_in_modal_chain(chain_window, [&](auto& window) {
         if (&other_window == &window)
             return IterationDecision::Break;
         return IterationDecision::Continue;
     });
-    return result == IterationDecision::Break;
+    return result;
 }
 
 void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* carry_window, bool show_overlay)
@@ -1455,14 +1451,13 @@ void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* ca
     if (carry_window && !is_stationary_window_type(carry_window->type()) && &carry_window->window_stack() != &window_stack) {
         auto& from_stack = carry_window->window_stack();
 
-        auto* blocking_modal = carry_window->blocking_modal_window();
         for_each_visible_window_from_back_to_front([&](Window& window) {
             if (is_stationary_window_type(window.type()))
                 return IterationDecision::Continue;
 
             if (&window.window_stack() != &carry_window->window_stack())
                 return IterationDecision::Continue;
-            if (&window == carry_window || ((carry_window->is_modal() || blocking_modal) && is_window_in_modal_stack(*carry_window, window)))
+            if (&window == carry_window || is_window_in_modal_chain(*carry_window, window))
                 m_carry_window_to_new_stack.append(window);
             return IterationDecision::Continue;
         },
@@ -2131,7 +2126,7 @@ void WindowManager::did_popup_a_menu(Badge<Menu>)
 
 void WindowManager::minimize_windows(Window& window, bool minimized)
 {
-    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+    for_each_window_in_modal_chain(window, [&](auto& w) {
         w.set_minimized(minimized);
         return IterationDecision::Continue;
     });
@@ -2139,21 +2134,21 @@ void WindowManager::minimize_windows(Window& window, bool minimized)
 
 void WindowManager::hide_windows(Window& window, bool hidden)
 {
-    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+    for_each_window_in_modal_chain(window, [&](auto& w) {
         w.set_hidden(hidden);
-
         if (!hidden)
             pick_new_active_window(&window);
-
         return IterationDecision::Continue;
     });
 }
 
 void WindowManager::maximize_windows(Window& window, bool maximized)
 {
-    for_each_window_in_modal_stack(window, [&](auto& w, bool stack_top) {
-        if (stack_top)
-            w.set_maximized(maximized);
+    for_each_window_in_modal_chain(window, [&](auto& w) {
+        if (&window == &w) {
+            window.set_maximized(maximized);
+            return IterationDecision::Continue;
+        }
         if (w.is_minimized())
             w.set_minimized(false);
         return IterationDecision::Continue;
@@ -2162,7 +2157,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
 
 void WindowManager::set_always_on_top(Window& window, bool always_on_top)
 {
-    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+    for_each_window_in_modal_chain(window, [&](auto& w) {
         w.set_always_on_top(always_on_top);
         return IterationDecision::Continue;
     });
