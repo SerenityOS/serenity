@@ -184,11 +184,6 @@ ErrorOr<void> ProcFSSystemBoolean::truncate(u64 size)
     return {};
 }
 
-ErrorOr<void> ProcFSSystemBoolean::set_mtime(time_t)
-{
-    return {};
-}
-
 ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(offset == 0);

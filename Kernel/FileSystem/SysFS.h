@@ -54,7 +54,6 @@ protected:
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
-    virtual ErrorOr<void> set_mtime(time_t) override;
 
     virtual ErrorOr<void> attach(OpenFileDescription& description) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;

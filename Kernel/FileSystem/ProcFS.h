@@ -84,7 +84,6 @@ protected:
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView) override;
     virtual ErrorOr<void> truncate(u64) override final;
-    virtual ErrorOr<void> set_mtime(time_t) override final;
 
     NonnullLockRefPtr<ProcFSExposedComponent> m_associated_component;
 };

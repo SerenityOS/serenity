@@ -49,7 +49,7 @@ ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, U
         nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
     }
     if (nwritten > 0) {
-        auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
+        auto mtime_result = m_inode->update_timestamps({}, {}, kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
         evaluate_block_conditions();
         if (mtime_result.is_error())
@@ -106,7 +106,7 @@ ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const
 ErrorOr<void> InodeFile::truncate(u64 size)
 {
     TRY(m_inode->truncate(size));
-    TRY(m_inode->set_mtime(kgettimeofday().to_truncated_seconds()));
+    TRY(m_inode->update_timestamps({}, {}, kgettimeofday().to_truncated_seconds()));
     return {};
 }
 

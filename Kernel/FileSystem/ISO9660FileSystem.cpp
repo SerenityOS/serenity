@@ -528,17 +528,7 @@ ErrorOr<void> ISO9660Inode::truncate(u64)
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::set_atime(time_t)
-{
-    return EROFS;
-}
-
-ErrorOr<void> ISO9660Inode::set_ctime(time_t)
-{
-    return EROFS;
-}
-
-ErrorOr<void> ISO9660Inode::set_mtime(time_t)
+ErrorOr<void> ISO9660Inode::update_timestamps(Optional<time_t>, Optional<time_t>, Optional<time_t>)
 {
     return EROFS;
 }

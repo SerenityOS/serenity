@@ -74,7 +74,6 @@ public:
     virtual ErrorOr<NonnullLockRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
-    virtual ErrorOr<void> set_mtime(time_t) { return ENOTIMPL; }
 
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }
@@ -201,7 +200,6 @@ private:
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override final;
     virtual mode_t required_mode() const override final { return 0644; }
     virtual ErrorOr<void> truncate(u64) override final;
-    virtual ErrorOr<void> set_mtime(time_t) override final;
 };
 
 }

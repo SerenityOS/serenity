@@ -145,11 +145,6 @@ ErrorOr<void> ProcFSGlobalInode::truncate(u64 size)
     return m_associated_component->truncate(size);
 }
 
-ErrorOr<void> ProcFSGlobalInode::set_mtime(time_t time)
-{
-    return m_associated_component->set_mtime(time);
-}
-
 InodeMetadata ProcFSGlobalInode::metadata() const
 {
     MutexLocker locker(m_inode_lock);

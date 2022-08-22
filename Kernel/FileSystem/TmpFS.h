@@ -59,9 +59,7 @@ public:
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
-    virtual ErrorOr<void> set_atime(time_t) override;
-    virtual ErrorOr<void> set_ctime(time_t) override;
-    virtual ErrorOr<void> set_mtime(time_t) override;
+    virtual ErrorOr<void> update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime) override;
 
 private:
     TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
