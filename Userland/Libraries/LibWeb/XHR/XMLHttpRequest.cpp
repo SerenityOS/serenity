@@ -124,7 +124,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
         auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
         auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
-        m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(global_object)));
+        m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(realm)));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
@@ -568,9 +568,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     return {};
 }
 
-JS::Object* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* XMLHttpRequest::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 Bindings::CallbackType* XMLHttpRequest::onreadystatechange()

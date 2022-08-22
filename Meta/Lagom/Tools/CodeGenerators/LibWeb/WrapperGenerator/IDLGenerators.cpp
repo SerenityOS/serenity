@@ -913,7 +913,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
 
         StringBuilder to_variant_captures;
-        to_variant_captures.append("&global_object, &vm"sv);
+        to_variant_captures.append("&global_object, &vm, &realm"sv);
 
         if (dictionary_type)
             to_variant_captures.append(String::formatted(", &{}{}_to_dictionary", js_name, js_suffix));
@@ -925,6 +925,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // These might be unused.
         (void)global_object;
         (void)vm;
+        (void)realm;
 )~~~");
 
         // 1. If the union type includes undefined and V is undefined, then return the unique undefined value.
@@ -1507,10 +1508,11 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
             auto cpp_type = IDL::idl_type_name_to_cpp_type(current_union_type, interface);
             union_generator.set("current_type", cpp_type.name);
             union_generator.append(R"~~~(
-        [&vm, &global_object](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
+        [&vm, &global_object, &realm](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
             // These may be unused.
             (void)vm;
             (void)global_object;
+            (void) realm;
 )~~~");
 
             // NOTE: While we are using const&, the underlying type for wrappable types in unions is (Nonnull)RefPtr, which are not references.
@@ -1609,11 +1611,11 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
-    @result_expression@ wrap(global_object, const_cast<@type@&>(*@value@));
+    @result_expression@ wrap(realm, const_cast<@type@&>(*@value@));
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    @result_expression@ wrap(global_object, const_cast<@type@&>(@value@));
+    @result_expression@ wrap(realm, const_cast<@type@&>(@value@));
 )~~~");
         }
     }
@@ -1948,7 +1950,7 @@ inline String idl_enum_to_string(@enum.type.name@ value) {
 
     if (should_emit_wrapper_factory(interface)) {
         generator.append(R"~~~(
-@wrapper_class@* wrap(JS::GlobalObject&, @fully_qualified_name@&);
+@wrapper_class@* wrap(JS::Realm&, @fully_qualified_name@&);
 )~~~");
     }
 
@@ -2045,9 +2047,9 @@ void @wrapper_class@::initialize(JS::Realm& realm)
 
     if (should_emit_wrapper_factory(interface)) {
         generator.append(R"~~~(
-@wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+@wrapper_class@* wrap(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+    return static_cast<@wrapper_class@*>(wrap_impl(realm, impl));
 }
 )~~~");
     }
@@ -2072,6 +2074,7 @@ void @wrapper_class@::visit_edges(JS::Cell::Visitor& visitor)
 static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObject& global_object, [[maybe_unused]] auto& retval)
 {
     [[maybe_unused]] auto& vm = global_object.vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
         if (interface.named_property_getter.has_value()) {
@@ -2989,7 +2992,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
         }
         generator.append(R"~~~(
-    return wrap(global_object, *impl);
+    return wrap(realm, *impl);
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.
@@ -3528,9 +3531,10 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
         iterator_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
-    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
+    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
@@ -3557,16 +3561,18 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
-    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Key));
+    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Key));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
 
-    return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Value));
+    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Value));
 }
 )~~~");
     }
@@ -3613,7 +3619,7 @@ private:
     NonnullRefPtr<@fully_qualified_name@> m_impl;
 };
 
-@wrapper_class@* wrap(JS::GlobalObject&, @fully_qualified_name@&);
+@wrapper_class@* wrap(JS::Realm&, @fully_qualified_name@&);
 
 } // namespace Web::Bindings
 )~~~");
@@ -3696,9 +3702,9 @@ void @wrapper_class@::visit_edges(Cell::Visitor& visitor)
     impl().visit_edges(visitor);
 }
 
-@wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+@wrapper_class@* wrap(JS::Realm& realm, @fully_qualified_name@& impl)
 {
-    return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+    return static_cast<@wrapper_class@*>(wrap_impl(realm, impl));
 }
 
 } // namespace Web::Bindings

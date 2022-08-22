@@ -262,9 +262,9 @@ JS::Promise* Blob::array_buffer()
     return promise;
 }
 
-JS::Object* Blob::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Blob::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 }

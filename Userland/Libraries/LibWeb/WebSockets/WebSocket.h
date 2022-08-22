@@ -77,7 +77,7 @@ public:
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     void on_open();
     void on_message(ByteBuffer message, bool is_text);

@@ -88,7 +88,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<NonnullRefPtr<DOM::DOMEv
 
         // 6. Let global be listener callback’s associated Realm’s global object.
         auto& callback = listener->callback->callback();
-        auto& global = callback.callback.cell()->global_object();
+        auto& realm = callback.callback->shape().realm();
+        auto& global = realm.global_object();
 
         // 7. Let currentEvent be undefined.
         RefPtr<Event> current_event;
@@ -112,8 +113,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<NonnullRefPtr<DOM::DOMEv
 
         // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value. If this throws an exception, then:
         // FIXME: These should be wrapped for us in call_user_object_operation, but it currently doesn't do that.
-        auto* this_value = Bindings::wrap(global, *event.current_target());
-        auto* wrapped_event = Bindings::wrap(global, event);
+        auto* this_value = Bindings::wrap(realm, *event.current_target());
+        auto* wrapped_event = Bindings::wrap(realm, event);
         auto result = Bindings::IDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
 
         // If this throws an exception, then:

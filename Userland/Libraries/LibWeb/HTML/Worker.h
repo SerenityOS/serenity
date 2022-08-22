@@ -58,7 +58,7 @@ public:
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     MessagePort* implicit_message_port() { return m_implicit_port; }
     RefPtr<MessagePort> outside_message_port() { return m_outside_port; }
@@ -102,6 +102,6 @@ private:
 
 namespace Web::Bindings {
 
-WorkerWrapper* wrap(JS::GlobalObject&, HTML::Worker&);
+WorkerWrapper* wrap(JS::Realm&, HTML::Worker&);
 
 }

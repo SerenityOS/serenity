@@ -343,18 +343,17 @@ void queue_mutation_observer_microtask(DOM::Document& document)
             // 4. If records is not empty, then invoke mo’s callback with « records, mo », and mo. If this throws an exception, catch it, and report the exception.
             if (!records.is_empty()) {
                 auto& callback = mutation_observer.callback();
-                auto& global_object = callback.callback_context.global_object();
                 auto& realm = callback.callback_context.realm();
 
                 auto* wrapped_records = MUST(JS::Array::create(realm, 0));
                 for (size_t i = 0; i < records.size(); ++i) {
                     auto& record = records.at(i);
-                    auto* wrapped_record = Bindings::wrap(global_object, record);
+                    auto* wrapped_record = Bindings::wrap(realm, record);
                     auto property_index = JS::PropertyKey { i };
                     MUST(wrapped_records->create_data_property(property_index, wrapped_record));
                 }
 
-                auto* wrapped_mutation_observer = Bindings::wrap(global_object, mutation_observer);
+                auto* wrapped_mutation_observer = Bindings::wrap(realm, mutation_observer);
 
                 auto result = IDL::invoke_callback(callback, wrapped_mutation_observer, wrapped_records, wrapped_mutation_observer);
                 if (result.is_abrupt())

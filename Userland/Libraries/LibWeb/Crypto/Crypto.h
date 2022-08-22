@@ -39,6 +39,6 @@ private:
 
 namespace Web::Bindings {
 
-CryptoWrapper* wrap(JS::GlobalObject&, Crypto::Crypto&);
+CryptoWrapper* wrap(JS::Realm&, Crypto::Crypto&);
 
 }

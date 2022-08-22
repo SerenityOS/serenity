@@ -38,6 +38,7 @@ JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let document be the current global object's associated Document.
     auto& window = static_cast<WindowObject&>(HTML::current_global_object());
@@ -59,7 +60,7 @@ JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
     }
 
     // 5. Return img.
-    return wrap(global_object(), image_element);
+    return wrap(realm, image_element);
 }
 
 }

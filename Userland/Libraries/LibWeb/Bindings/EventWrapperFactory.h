@@ -11,6 +11,6 @@
 
 namespace Web::Bindings {
 
-EventWrapper* wrap(JS::GlobalObject&, DOM::Event&);
+EventWrapper* wrap(JS::Realm&, DOM::Event&);
 
 }

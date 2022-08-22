@@ -427,14 +427,16 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
-    return wrap(global_object, impl->associated_document());
+    return wrap(realm, impl->associated_document());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
-    return wrap(global_object, impl->performance());
+    return wrap(realm, impl->performance());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_setter)
@@ -457,16 +459,18 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_setter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
-    return wrap(global_object, impl->screen());
+    return wrap(realm, impl->screen());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     if (!impl->current_event())
         return JS::js_undefined();
-    return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
+    return wrap(realm, const_cast<DOM::Event&>(*impl->current_event()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_setter)
@@ -491,8 +495,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::location_setter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::crypto_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
-    return wrap(global_object, impl->crypto());
+    return wrap(realm, impl->crypto());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)
@@ -515,28 +520,31 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<ElementWrapper>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "DOM element");
 
-    return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
+    return wrap(realm, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     auto* selection = impl->get_selection();
     if (!selection)
         return JS::js_null();
-    return wrap(global_object, *selection);
+    return wrap(realm, *selection);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     auto media = TRY(vm.argument(0).to_string(vm));
-    return wrap(global_object, impl->match_media(move(media)));
+    return wrap(realm, impl->match_media(move(media)));
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
@@ -668,8 +676,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
-    return wrap(global_object, impl->associated_document().history());
+    return wrap(realm, impl->associated_document().history());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_left_getter)
@@ -713,16 +722,18 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::origin_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     // FIXME: localStorage may throw. We have to deal with that here.
-    return wrap(global_object, *impl->local_storage());
+    return wrap(realm, *impl->local_storage());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::session_storage_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm, global_object));
     // FIXME: sessionStorage may throw. We have to deal with that here.
-    return wrap(global_object, *impl->session_storage());
+    return wrap(realm, *impl->session_storage());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_getter)

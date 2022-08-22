@@ -64,6 +64,6 @@ private:
 
 namespace Web::Bindings {
 
-HTMLCollectionWrapper* wrap(JS::GlobalObject&, DOM::HTMLCollection&);
+HTMLCollectionWrapper* wrap(JS::Realm&, DOM::HTMLCollection&);
 
 }

@@ -11,6 +11,6 @@
 
 namespace Web::Bindings {
 
-JS::Object* wrap(JS::GlobalObject&, DOM::EventTarget&);
+JS::Object* wrap(JS::Realm&, DOM::EventTarget&);
 
 }

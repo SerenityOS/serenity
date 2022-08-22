@@ -284,9 +284,9 @@ bool Window::dispatch_event(NonnullRefPtr<DOM::Event> event)
     return DOM::EventDispatcher::dispatch(*this, event, true);
 }
 
-JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Window::create_wrapper(JS::Realm& realm)
 {
-    return &global_object;
+    return &realm.global_object();
 }
 
 // https://www.w3.org/TR/cssom-view-1/#dom-window-innerwidth
@@ -653,8 +653,8 @@ u32 Window::request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
     auto handler = [callback = move(callback)](NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        auto& global_object = callback->callback.cell()->global_object();
-        auto* wrapped_deadline = Bindings::wrap(global_object, *deadline);
+        auto& realm = callback->callback.cell()->shape().realm();
+        auto* wrapped_deadline = Bindings::wrap(realm, *deadline);
         return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, JS::Value(wrapped_deadline));
     };
     window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));

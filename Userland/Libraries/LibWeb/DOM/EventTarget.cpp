@@ -384,10 +384,10 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
             return nullptr;
         }
 
-        auto& global_object = settings_object.global_object();
+        auto& vm = Bindings::main_thread_vm();
 
         // 8. Push settings object's realm execution context onto the JavaScript execution context stack; it is now the running JavaScript execution context.
-        global_object.vm().push_execution_context(settings_object.realm_execution_context());
+        vm.push_execution_context(settings_object.realm_execution_context());
 
         // 9. Let function be the result of calling OrdinaryFunctionCreate, with arguments:
         // functionPrototype
@@ -419,19 +419,19 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         // 3. If eventHandler is an element's event handler, then set scope to NewObjectEnvironment(document, true, scope).
         //    (Otherwise, eventHandler is a Window object's event handler.)
         if (is<Element>(this)) {
-            auto* wrapped_document = Bindings::wrap(global_object, *document);
+            auto* wrapped_document = Bindings::wrap(realm, *document);
             scope = JS::new_object_environment(*wrapped_document, true, scope);
         }
 
         //  4. If form owner is not null, then set scope to NewObjectEnvironment(form owner, true, scope).
         if (form_owner) {
-            auto* wrapped_form_owner = Bindings::wrap(global_object, *form_owner);
+            auto* wrapped_form_owner = Bindings::wrap(realm, *form_owner);
             scope = JS::new_object_environment(*wrapped_form_owner, true, scope);
         }
 
         //  5. If element is not null, then set scope to NewObjectEnvironment(element, true, scope).
         if (element) {
-            auto* wrapped_element = Bindings::wrap(global_object, *element);
+            auto* wrapped_element = Bindings::wrap(realm, *element);
             scope = JS::new_object_environment(*wrapped_element, true, scope);
         }
 
@@ -441,8 +441,8 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         VERIFY(function);
 
         // 10. Remove settings object's realm execution context from the JavaScript execution context stack.
-        VERIFY(global_object.vm().execution_context_stack().last() == &settings_object.realm_execution_context());
-        global_object.vm().pop_execution_context();
+        VERIFY(vm.execution_context_stack().last() == &settings_object.realm_execution_context());
+        vm.pop_execution_context();
 
         // 11. Set function.[[ScriptOrModule]] to null.
         function->set_script_or_module({});
@@ -602,6 +602,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
 
     // Needed for wrapping.
     auto* callback_object = callback->callback.cell();
+    auto& realm = callback_object->shape().realm();
 
     if (special_error_event_handling) {
         // -> If special error event handling is true
@@ -619,7 +620,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         // NOTE: current_target is always non-null here, as the event dispatcher takes care to make sure it's non-null (and uses it as the this value for the callback!)
         // FIXME: This is rewrapping the this value of the callback defined in activate_event_handler. While I don't think this is observable as the event dispatcher
         //        calls directly into the callback without considering things such as proxies, it is a waste. However, if it observable, then we must reuse the this_value that was given to the callback.
-        auto* this_value = Bindings::wrap(callback_object->global_object(), *error_event.current_target());
+        auto* this_value = Bindings::wrap(realm, *error_event.current_target());
 
         return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_message, wrapped_filename, wrapped_lineno, wrapped_colno, error_event.error());
     } else {
@@ -627,10 +628,10 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         // Invoke callback with one argument, the value of which is the Event object event, with the callback this value set to event's currentTarget. Let return value be the callback's return value. [WEBIDL]
 
         // FIXME: This has the same rewrapping issue as this_value.
-        auto* wrapped_event = Bindings::wrap(callback_object->global_object(), event);
+        auto* wrapped_event = Bindings::wrap(realm, event);
 
         // FIXME: The comments about this in the special_error_event_handling path also apply here.
-        auto* this_value = Bindings::wrap(callback_object->global_object(), *event.current_target());
+        auto* this_value = Bindings::wrap(realm, *event.current_target());
 
         return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_event);
     }

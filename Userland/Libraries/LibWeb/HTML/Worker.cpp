@@ -314,9 +314,9 @@ void Worker::post_message(JS::Value message, JS::Value)
     target_port->post_message(message);
 }
 
-JS::Object* Worker::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Worker::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 #undef __ENUMERATE

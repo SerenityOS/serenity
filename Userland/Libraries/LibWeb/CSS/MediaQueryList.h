@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +43,7 @@ public:
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     void add_listener(RefPtr<DOM::IDLEventListener> listener);
     void remove_listener(RefPtr<DOM::IDLEventListener> listener);
@@ -62,6 +62,6 @@ private:
 
 namespace Web::Bindings {
 
-MediaQueryListWrapper* wrap(JS::GlobalObject&, CSS::MediaQueryList&);
+MediaQueryListWrapper* wrap(JS::Realm&, CSS::MediaQueryList&);
 
 }

@@ -49,6 +49,6 @@ private:
 
 namespace Web::Bindings {
 
-StorageWrapper* wrap(JS::GlobalObject&, HTML::Storage&);
+StorageWrapper* wrap(JS::Realm&, HTML::Storage&);
 
 }

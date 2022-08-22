@@ -97,6 +97,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> ConsoleGlobalObject::internal
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
+    auto& realm = *vm.current_realm();
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<ConsoleGlobalObject>(this_object))
@@ -108,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
     if (!inspected_node)
         return JS::js_undefined();
 
-    return Web::Bindings::wrap(global_object, *inspected_node);
+    return Web::Bindings::wrap(realm, *inspected_node);
 }
 
 }

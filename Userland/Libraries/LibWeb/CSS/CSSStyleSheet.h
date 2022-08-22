@@ -66,6 +66,6 @@ private:
 
 namespace Web::Bindings {
 
-CSSStyleSheetWrapper* wrap(JS::GlobalObject&, CSS::CSSStyleSheet&);
+CSSStyleSheetWrapper* wrap(JS::Realm&, CSS::CSSStyleSheet&);
 
 }

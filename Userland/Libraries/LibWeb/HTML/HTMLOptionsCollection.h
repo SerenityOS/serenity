@@ -34,6 +34,6 @@ protected:
 
 namespace Web::Bindings {
 
-HTMLOptionsCollectionWrapper* wrap(JS::GlobalObject&, HTML::HTMLOptionsCollection&);
+HTMLOptionsCollectionWrapper* wrap(JS::Realm&, HTML::HTMLOptionsCollection&);
 
 }
