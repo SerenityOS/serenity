@@ -805,7 +805,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
     consume_whitespace();
 }
 
-void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
+static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
         auto parameterized_type = static_ptr_cast<ParameterizedType>(type);
@@ -826,7 +826,7 @@ void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<St
     for (auto& attribute : it->value.extended_attributes)
         extended_attributes->set(attribute.key, attribute.value);
 }
-void resolve_parameters_typedefs(Interface& interface, Vector<Parameter>& parameters)
+static void resolve_parameters_typedefs(Interface& interface, Vector<Parameter>& parameters)
 {
     for (auto& parameter : parameters)
         resolve_typedef(interface, parameter.type, &parameter.extended_attributes);

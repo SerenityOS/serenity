@@ -1,8 +1,7 @@
-set(SOURCES "")
-
-lagom_tool(WrapperGenerator SOURCES
+set(SOURCES
     IDLGenerators.cpp
-    IDLParser.cpp
-    main.cpp)
+    main.cpp
+)
 
+lagom_tool(WrapperGenerator LIBS LibIDL)
 target_compile_options(WrapperGenerator PUBLIC -g)

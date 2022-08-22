@@ -7,10 +7,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "IDLTypes.h"
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
+#include <LibIDL/Types.h>
 
 Vector<StringView> s_header_search_paths;
 
