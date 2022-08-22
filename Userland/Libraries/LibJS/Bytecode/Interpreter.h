@@ -26,13 +26,12 @@ struct RegisterWindow {
 
 class Interpreter {
 public:
-    Interpreter(GlobalObject&, Realm&);
+    explicit Interpreter(Realm&);
     ~Interpreter();
 
     // FIXME: Remove this thing once we don't need it anymore!
     static Interpreter* current();
 
-    GlobalObject& global_object() { return m_global_object; }
     Realm& realm() { return m_realm; }
     VM& vm() { return m_vm; }
 
@@ -90,7 +89,6 @@ private:
     static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
-    GlobalObject& m_global_object;
     Realm& m_realm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;

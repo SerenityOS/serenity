@@ -25,9 +25,8 @@ Interpreter* Interpreter::current()
     return s_current;
 }
 
-Interpreter::Interpreter(GlobalObject& global_object, Realm& realm)
-    : m_vm(global_object.vm())
-    , m_global_object(global_object)
+Interpreter::Interpreter(Realm& realm)
+    : m_vm(realm.vm())
     , m_realm(realm)
 {
     VERIFY(!s_current);
@@ -51,7 +50,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
-        execution_context.this_value = &global_object();
+        execution_context.this_value = &m_realm.global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
         execution_context.lexical_environment = &m_realm.global_environment();
@@ -69,7 +68,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap())));
 
     registers().resize(executable.number_of_registers);
-    registers()[Register::global_object_index] = Value(&global_object());
+    registers()[Register::global_object_index] = Value(&m_realm.global_object());
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());

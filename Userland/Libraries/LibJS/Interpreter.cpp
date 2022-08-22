@@ -25,7 +25,6 @@ NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_realm(Realm& realm)
     auto& vm = realm.vm();
     DeferGC defer_gc(vm.heap());
     auto interpreter = adopt_own(*new Interpreter(vm));
-    interpreter->m_global_object = make_handle(&realm.global_object());
     interpreter->m_realm = make_handle(&realm);
     return interpreter;
 }
@@ -138,16 +137,6 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     vm.run_queued_finalization_registry_cleanup_jobs();
 
     return js_undefined();
-}
-
-GlobalObject& Interpreter::global_object()
-{
-    return static_cast<GlobalObject&>(*m_global_object.cell());
-}
-
-GlobalObject const& Interpreter::global_object() const
-{
-    return static_cast<GlobalObject const&>(*m_global_object.cell());
 }
 
 Realm& Interpreter::realm()
