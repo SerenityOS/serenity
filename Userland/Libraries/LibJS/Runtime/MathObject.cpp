@@ -176,8 +176,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
     if (number.is_nan())
         return js_nan();
     if (number.as_double() < 0)
-        return MathObject::ceil(vm, global_object);
-    return MathObject::floor(vm, global_object);
+        return MathObject::ceil(vm);
+    return MathObject::floor(vm);
 }
 
 // 21.3.2.30 Math.sin ( x ), https://tc39.es/ecma262/#sec-math.sin

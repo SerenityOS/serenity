@@ -1788,12 +1788,12 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 
         if (arguments_match_check.is_empty()) {
             function_generator.append(R"~~~(
-    return @function.name:snakecase@@overload_suffix@(vm, global_object);
+    return @function.name:snakecase@@overload_suffix@(vm);
 )~~~");
         } else {
             function_generator.append(R"~~~(
     if (@arguments_match_check@)
-        return @function.name:snakecase@@overload_suffix@(vm, global_object);
+        return @function.name:snakecase@@overload_suffix@(vm);
 )~~~");
         }
 

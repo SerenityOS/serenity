@@ -524,7 +524,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     //          document.body.remove();
     //          location.reload();
     //       The body element is no longer in the DOM and there is no variable holding onto it. However, the onunload handler is still called, meaning the callback keeps the body element alive.
-    auto callback_function = JS::NativeFunction::create(realm, "", [event_target = NonnullRefPtr(*this), name](JS::VM& vm, auto&) mutable -> JS::ThrowCompletionOr<JS::Value> {
+    auto callback_function = JS::NativeFunction::create(realm, "", [event_target = NonnullRefPtr(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
         // The event dispatcher should only call this with one argument.
         VERIFY(vm.argument_count() == 1);
 

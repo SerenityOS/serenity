@@ -130,7 +130,7 @@ extern bool g_collect_on_every_allocation;
 extern bool g_run_bytecode;
 extern String g_currently_running_test;
 struct FunctionWithLength {
-    JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&, JS::GlobalObject&);
+    JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&);
     size_t length { 0 };
 };
 extern HashMap<String, FunctionWithLength> s_exposed_global_functions;
@@ -206,8 +206,8 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
         define_native_function(
-            entry.key, [fn = entry.value.function](auto& vm, auto& global_object) {
-                return fn(vm, global_object);
+            entry.key, [fn = entry.value.function](auto& vm) {
+                return fn(vm);
             },
             entry.value.length, JS::default_attributes);
     }

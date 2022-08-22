@@ -412,12 +412,13 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                     \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                  \
     {                                                                                      \
+        auto& realm = *vm.current_realm();                                                 \
         /* 1. If Type(R) is not Object, throw a TypeError exception. */                    \
         auto* regexp_object = TRY(this_object(vm));                                        \
         /* 2. If R does not have an [[OriginalFlags]] internal slot, then */               \
         if (!is<RegExpObject>(regexp_object)) {                                            \
             /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */        \
-            if (same_value(regexp_object, global_object.regexp_prototype()))               \
+            if (same_value(regexp_object, realm.global_object().regexp_prototype()))       \
                 return js_undefined();                                                     \
             /* b. Otherwise, throw a TypeError exception. */                               \
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp"); \
@@ -487,7 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%2540%2540match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
@@ -566,7 +567,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
@@ -576,7 +577,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *global_object.regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.global_object().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -842,6 +843,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 // 22.2.5.13 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
+    auto& realm = *vm.current_realm();
+
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(vm));
@@ -849,7 +852,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     // 3. If R does not have an [[OriginalSource]] internal slot, then
     if (!is<RegExpObject>(regexp_object)) {
         // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
-        if (same_value(regexp_object, global_object.regexp_prototype()))
+        if (same_value(regexp_object, realm.global_object().regexp_prototype()))
             return js_string(vm, "(?:)");
 
         // b. Otherwise, throw a TypeError exception.
@@ -866,7 +869,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 // 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
@@ -876,7 +879,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *global_object.regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.global_object().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));

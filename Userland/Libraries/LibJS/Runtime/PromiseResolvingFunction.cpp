@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +32,7 @@ void PromiseResolvingFunction::initialize(Realm& realm)
 
 ThrowCompletionOr<Value> PromiseResolvingFunction::call()
 {
-    return m_native_function(vm(), global_object(), m_promise, m_already_resolved);
+    return m_native_function(vm(), m_promise, m_already_resolved);
 }
 
 void PromiseResolvingFunction::visit_edges(Cell::Visitor& visitor)

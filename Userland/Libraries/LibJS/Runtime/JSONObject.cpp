@@ -391,7 +391,7 @@ String JSONObject::quote_json_string(String string)
 // 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto string = TRY(vm.argument(0).to_string(vm));
     auto reviver = vm.argument(1);
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         return vm.throw_completion<SyntaxError>(ErrorType::JsonMalformed);
     Value unfiltered = parse_json_value(vm, json.value());
     if (reviver.is_function()) {
-        auto* root = Object::create(realm, global_object.object_prototype());
+        auto* root = Object::create(realm, realm.global_object().object_prototype());
         auto root_name = String::empty();
         MUST(root->create_data_property_or_throw(root_name, unfiltered));
         return internalize_json_property(vm, root, root_name, reviver.as_function());

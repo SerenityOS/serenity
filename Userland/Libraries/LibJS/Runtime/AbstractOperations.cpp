@@ -1118,10 +1118,10 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
             // 3. Perform ! map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
                 PropertyKey { index },
-                [&environment, name](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+                [&environment, name](VM& vm) -> ThrowCompletionOr<Value> {
                     return MUST(environment.get_binding_value(vm, name, false));
                 },
-                [&environment, name](VM& vm, GlobalObject&) {
+                [&environment, name](VM& vm) {
                     MUST(environment.set_mutable_binding(vm, name, vm.argument(0), false));
                     return js_undefined();
                 },

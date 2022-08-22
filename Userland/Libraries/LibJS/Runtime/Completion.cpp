@@ -42,7 +42,7 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     Optional<bool> success;
     Value result;
     // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-    auto fulfilled_closure = [&success, &result](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [&success, &result](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Let prevContext be the running execution context.
         // b. Suspend prevContext.
         // FIXME: We don't have this concept yet.
@@ -66,7 +66,7 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 1, "");
 
     // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-    auto rejected_closure = [&success, &result](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto rejected_closure = [&success, &result](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Let prevContext be the running execution context.
         // b. Suspend prevContext.
         // FIXME: We don't have this concept yet.

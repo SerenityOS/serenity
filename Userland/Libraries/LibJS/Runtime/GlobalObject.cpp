@@ -226,7 +226,7 @@ void GlobalObject::initialize_global_object()
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(
-        realm, [](VM& vm, GlobalObject&) {
+        realm, [](VM& vm) {
             return vm.throw_completion<TypeError>(ErrorType::RestrictedFunctionPropertiesAccess);
         },
         0, "", &realm);

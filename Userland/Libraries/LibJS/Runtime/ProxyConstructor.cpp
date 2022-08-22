@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
     auto* proxy = TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
 
     // 2. Let revokerClosure be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
-    auto revoker_closure = [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
+    auto revoker_closure = [proxy_handle = make_handle(proxy)](auto&) -> ThrowCompletionOr<Value> {
         // a. Let F be the active function object.
 
         // b. Let p be F.[[RevocableProxy]].
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
     auto* revoker = NativeFunction::create(realm, move(revoker_closure), 0, "");
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(realm, global_object.object_prototype());
+    auto* result = Object::create(realm, realm.global_object().object_prototype());
 
     // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
     MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));

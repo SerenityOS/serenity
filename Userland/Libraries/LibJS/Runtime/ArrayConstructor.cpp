@@ -85,7 +85,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto constructor = vm.this_value();
 
     FunctionObject* map_fn = nullptr;
@@ -177,7 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto this_value = vm.this_value();
     Object* array;
     if (this_value.is_constructor())

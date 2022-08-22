@@ -54,7 +54,7 @@ ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     auto description = TRY(vm.argument(0).to_string(vm));
-    return global_object.vm().get_global_symbol(description);
+    return vm.get_global_symbol(description);
 }
 
 // 20.4.2.6 Symbol.keyFor ( sym ), https://tc39.es/ecma262/#sec-symbol.keyfor

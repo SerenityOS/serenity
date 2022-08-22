@@ -1318,7 +1318,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_gmt_string)
 {
     // NOTE: The toUTCString method is preferred. The toGMTString method is provided principally for compatibility with old code.
-    return to_utc_string(vm, global_object);
+    return to_utc_string(vm);
 }
 
 }

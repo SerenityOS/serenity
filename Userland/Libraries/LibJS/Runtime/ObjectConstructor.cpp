@@ -111,7 +111,7 @@ static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(VM& vm, Valu
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
     return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::String)));
@@ -120,7 +120,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
     return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
@@ -221,10 +221,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
 // 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
 
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
 
     (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
@@ -266,7 +266,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 // 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY(vm.argument(0).to_object(vm));
@@ -275,7 +275,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto own_keys = TRY(object->internal_own_property_keys());
 
     // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
-    auto* descriptors = Object::create(realm, global_object.object_prototype());
+    auto* descriptors = Object::create(realm, realm.global_object().object_prototype());
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
@@ -330,7 +330,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 // 20.1.2.18 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
@@ -340,7 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 // 20.1.2.23 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
@@ -350,7 +350,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 // 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
@@ -360,7 +360,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 // 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto proto = vm.argument(0);
     auto properties = vm.argument(1);

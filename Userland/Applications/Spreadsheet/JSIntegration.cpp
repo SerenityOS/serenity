@@ -177,7 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_name)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
 
     auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
-    return JS::js_string(global_object.heap(), sheet_object->m_sheet.name());
+    return JS::js_string(vm, sheet_object->m_sheet.name());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
@@ -240,7 +240,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -258,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     if (!position.has_value())
         return JS::js_undefined();
 
-    auto object = JS::Object::create(realm, global_object.object_prototype());
+    auto object = JS::Object::create(realm, realm.global_object().object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.value().row), JS::default_attributes);
 
@@ -267,7 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     if (vm.argument_count() != 0)
         return vm.throw_completion<JS::TypeError>("Expected no arguments to current_cell_position()");
@@ -284,7 +284,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 
     auto position = current_cell->position();
 
-    auto object = JS::Object::create(realm, global_object.object_prototype());
+    auto object = JS::Object::create(realm, realm.global_object().object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.row), JS::default_attributes);
 

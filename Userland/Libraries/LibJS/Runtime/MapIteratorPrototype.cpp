@@ -30,7 +30,7 @@ void MapIteratorPrototype::initialize(Realm& realm)
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* map_iterator = TRY(typed_this_value(vm));
     if (map_iterator->done())

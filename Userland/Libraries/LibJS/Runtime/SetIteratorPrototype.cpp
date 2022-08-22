@@ -32,7 +32,7 @@ void SetIteratorPrototype::initialize(Realm& realm)
 // 24.2.5.2.1 %SetIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%setiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* set_iterator = TRY(typed_this_value(vm));
     if (set_iterator->done())

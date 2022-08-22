@@ -154,7 +154,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(vm);
@@ -317,7 +317,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(vm);
@@ -449,8 +449,8 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
     auto function = JS::NativeFunction::create(
         realm,
         name,
-        [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
-            auto& realm = *global_object.associated_realm();
+        [address, type = type.release_value()](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto& realm = *vm.current_realm();
             Vector<Wasm::Value> values;
             values.ensure_capacity(type.parameters().size());
 

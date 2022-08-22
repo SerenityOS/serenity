@@ -386,7 +386,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 // 23.2.3.7 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::KeyAndValue);
@@ -688,7 +688,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 // 23.2.3.19 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Key);
@@ -1622,7 +1622,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 // 23.2.3.33 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* typed_array = TRY(typed_array_from_this(vm));
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Value);

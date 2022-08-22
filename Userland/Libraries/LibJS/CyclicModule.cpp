@@ -446,7 +446,7 @@ void CyclicModule::execute_async_module(VM& vm)
     auto capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
 
     // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
-    auto fulfilled_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto fulfilled_closure = [&](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Perform AsyncModuleExecutionFulfilled(module).
         async_module_execution_fulfilled(vm);
 
@@ -458,7 +458,7 @@ void CyclicModule::execute_async_module(VM& vm)
     auto* on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 0, "");
 
     // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
-    auto rejected_closure = [&](VM& vm, GlobalObject&) -> ThrowCompletionOr<Value> {
+    auto rejected_closure = [&](VM& vm) -> ThrowCompletionOr<Value> {
         auto error = vm.argument(0);
 
         // a. Perform AsyncModuleExecutionRejected(module, error).

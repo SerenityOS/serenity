@@ -64,7 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
 // 18.5.2.2 %SegmentsPrototype% [ @@iterator ] ( ), https://tc39.es/ecma402/#sec-%segmentsprototype%-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::symbol_iterator)
 {
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let segments be the this value.
     // 2. Perform ? RequireInternalSlot(segments, [[SegmentsSegmenter]]).
