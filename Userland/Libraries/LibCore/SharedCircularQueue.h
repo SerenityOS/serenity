@@ -99,7 +99,7 @@ public:
             return QueueStatus::Full;
         auto our_tail = m_queue->m_queue->m_tail.load() % Size;
         m_queue->m_queue->m_data[our_tail] = to_insert;
-        ++m_queue->m_queue->m_tail;
+        m_queue->m_queue->m_tail.fetch_add(1);
 
         return {};
     }
@@ -129,14 +129,15 @@ public:
     {
         VERIFY(!m_queue.is_null());
         while (true) {
-            // The >= is not strictly necessary, but it feels safer :^)
-            if (head() >= m_queue->m_queue->m_tail.load())
-                return QueueStatus::Empty;
-
             // This CAS only succeeds if nobody is currently dequeuing.
             auto size_max = NumericLimits<size_t>::max();
             if (m_queue->m_queue->m_head_protector.compare_exchange_strong(size_max, m_queue->m_queue->m_head.load())) {
                 auto old_head = m_queue->m_queue->m_head.load();
+                // This check looks like it's in a weird place (especially since we have to roll back the protector), but it's actually protecting against a race between multiple dequeuers.
+                if (old_head >= m_queue->m_queue->m_tail.load()) {
+                    m_queue->m_queue->m_head_protector.store(NumericLimits<size_t>::max(), AK::MemoryOrder::memory_order_release);
+                    return QueueStatus::Empty;
+                }
                 auto data = move(m_queue->m_queue->m_data[old_head % Size]);
                 m_queue->m_queue->m_head.fetch_add(1);
                 m_queue->m_queue->m_head_protector.store(NumericLimits<size_t>::max(), AK::MemoryOrder::memory_order_release);
