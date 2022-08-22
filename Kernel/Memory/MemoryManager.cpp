@@ -140,7 +140,6 @@ UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker mm_lock(s_mm_lock);
     // Disable writing to the .ro_after_init section
     for (auto i = (FlatPtr)&start_of_ro_after_init; i < (FlatPtr)&end_of_ro_after_init; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -152,7 +151,6 @@ UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 void MemoryManager::unmap_text_after_init()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker mm_lock(s_mm_lock);
 
     auto start = page_round_down((FlatPtr)&start_of_unmap_after_init);
     auto end = page_round_up((FlatPtr)&end_of_unmap_after_init).release_value_but_fixme_should_propagate_errors();
@@ -169,7 +167,6 @@ void MemoryManager::unmap_text_after_init()
 
 UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
 {
-    SpinlockLocker mm_lock(s_mm_lock);
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
 
     auto start = page_round_down((FlatPtr)start_of_kernel_ksyms);
@@ -543,7 +540,6 @@ PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -560,7 +556,6 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
 PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -602,7 +597,6 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, IsLastPTERelease is_last_pte_release)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -1038,7 +1032,6 @@ void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddres
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
 
     VirtualAddress vaddr(KERNEL_QUICKMAP_PD_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
@@ -1058,7 +1051,6 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
 
     VirtualAddress vaddr(KERNEL_QUICKMAP_PT_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
@@ -1162,7 +1154,6 @@ void MemoryManager::dump_kernel_regions()
 void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable)
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker lock(s_mm_lock);
     auto* pte = ensure_pte(kernel_page_directory(), vaddr);
     VERIFY(pte);
     if (pte->is_writable() == writable)

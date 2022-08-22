@@ -213,7 +213,6 @@ bool Region::map_individual_page_impl(size_t page_index, LockRefPtr<PhysicalPage
         PANIC("About to map mmap'ed page at a kernel address");
     }
 
-    SpinlockLocker lock(s_mm_lock);
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
         return false;
