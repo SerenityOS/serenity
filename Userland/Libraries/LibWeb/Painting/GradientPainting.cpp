@@ -49,13 +49,13 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
 
     // 1. If the first color stop does not have a position, set its position to 0%.
     auto& first_stop = color_stop_list.first().color_stop;
-    resolved_color_stops.first().position = first_stop.length.has_value()
-        ? first_stop.length->resolved(node, gradient_length).to_px(node)
+    resolved_color_stops.first().position = first_stop.position.has_value()
+        ? first_stop.position->resolved(node, gradient_length).to_px(node)
         : 0;
     //    If the last color stop does not have a position, set its position to 100%
     auto& last_stop = color_stop_list.last().color_stop;
-    resolved_color_stops.last().position = last_stop.length.has_value()
-        ? last_stop.length->resolved(node, gradient_length).to_px(node)
+    resolved_color_stops.last().position = last_stop.position.has_value()
+        ? last_stop.position->resolved(node, gradient_length).to_px(node)
         : gradient_length_px;
 
     // 2. If a color stop or transition hint has a position that is less than the
@@ -71,8 +71,8 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
             resolved_color_stops[i].transition_hint = value;
             max_previous_color_stop_or_hint = value;
         }
-        if (stop.color_stop.length.has_value()) {
-            float value = stop.color_stop.length->resolved(node, gradient_length).to_px(node);
+        if (stop.color_stop.position.has_value()) {
+            float value = stop.color_stop.position->resolved(node, gradient_length).to_px(node);
             value = max(value, max_previous_color_stop_or_hint);
             resolved_color_stops[i].position = value;
             max_previous_color_stop_or_hint = value;
@@ -86,7 +86,7 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
     size_t i = 1;
     auto find_run_end = [&] {
         auto color_stop_has_position = [](auto& color_stop) {
-            return color_stop.transition_hint.has_value() || color_stop.color_stop.length.has_value();
+            return color_stop.transition_hint.has_value() || color_stop.color_stop.position.has_value();
         };
         while (i < color_stop_list.size() - 1 && !color_stop_has_position(color_stop_list[i])) {
             i++;
@@ -95,7 +95,7 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
     };
     while (i < color_stop_list.size() - 1) {
         auto& stop = color_stop_list[i];
-        if (!stop.color_stop.length.has_value()) {
+        if (!stop.color_stop.position.has_value()) {
             auto run_start = i - 1;
             auto start_position = resolved_color_stops[i++].transition_hint.value_or(resolved_color_stops[run_start].position);
             auto run_end = find_run_end();

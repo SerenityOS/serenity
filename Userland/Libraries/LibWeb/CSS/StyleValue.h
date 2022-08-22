@@ -74,7 +74,8 @@ enum class SideOrCorner {
 
 struct GradientColorStop {
     Color color;
-    Optional<LengthPercentage> length;
+    Optional<LengthPercentage> position;
+    Optional<LengthPercentage> second_position = {};
 };
 
 struct GradientColorHint {
