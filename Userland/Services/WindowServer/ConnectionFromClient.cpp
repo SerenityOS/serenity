@@ -474,7 +474,7 @@ static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
 
     // NOTE: Windows with a title bar have a minimum size enforced by the system,
     //       because we want to always keep their title buttons accessible.
-    if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow) {
+    if (window.type() == WindowType::Normal) {
         auto palette = WindowManager::the().palette();
 
         int required_width = 0;

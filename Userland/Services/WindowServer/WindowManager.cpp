@@ -577,7 +577,7 @@ void WindowManager::tell_wms_current_window_stack_changed()
 
 static bool window_type_has_title(WindowType type)
 {
-    return type == WindowType::Normal || type == WindowType::ToolWindow;
+    return type == WindowType::Normal;
 }
 
 void WindowManager::notify_modified_changed(Window& window)
@@ -649,7 +649,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     Window* first_candidate = nullptr;
 
     for_each_visible_window_from_front_to_back([&](Window& candidate) {
-        if (candidate.type() != WindowType::Normal && candidate.type() != WindowType::ToolWindow)
+        if (candidate.type() != WindowType::Normal)
             return IterationDecision::Continue;
         if (candidate.is_destroyed())
             return IterationDecision::Continue;
@@ -1246,7 +1246,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     }
 
     if (event.type() == Event::MouseDown) {
-        if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow)
+        if (window.type() == WindowType::Normal)
             move_to_front_and_make_active(window);
         else if (window.type() == WindowType::Desktop)
             set_active_window(&window);
@@ -1420,7 +1420,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
     case WindowType::Desktop:
         return Screen::bounding_rect();
     case WindowType::Normal:
-    case WindowType::ToolWindow:
         return desktop_rect(screen);
     case WindowType::Menu:
     case WindowType::WindowSwitcher:
@@ -1797,7 +1796,7 @@ bool WindowManager::is_active_window_or_accessory(Window& window) const
 
 static bool window_type_can_become_active(WindowType type)
 {
-    return type == WindowType::Normal || type == WindowType::ToolWindow || type == WindowType::Desktop;
+    return type == WindowType::Normal || type == WindowType::Desktop;
 }
 
 void WindowManager::restore_active_input_window(Window* window)
@@ -2193,7 +2192,7 @@ void WindowManager::set_always_on_top(Window& window, bool always_on_top)
 Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
-    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
+    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + 10);
 
     Window const* overlap_window = nullptr;
     current_window_stack().for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
@@ -2209,7 +2208,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
         point = overlap_window->position() + shift;
         point = { point.x() % screen.width(),
             (point.y() >= (screen.height() - (screen.is_main_screen() ? TaskbarWindow::taskbar_height() : 0)))
-                ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette())
+                ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
                 : point.y() };
     } else {
         point = desired;

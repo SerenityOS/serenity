@@ -60,7 +60,7 @@ static constexpr Array pangrams = {
 ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 {
     auto window = TRY(GUI::Window::try_create(this));
-    window->set_window_type(GUI::WindowType::ToolWindow);
+    window->set_window_mode(GUI::WindowMode::RenderAbove);
     window->set_title("Preview");
     window->resize(400, 150);
     window->center_within(*this->window());
