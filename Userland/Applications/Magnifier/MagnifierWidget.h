@@ -18,6 +18,7 @@ public:
     virtual ~MagnifierWidget() override = default;
     void set_scale_factor(int scale_factor);
     void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
+
     void pause_capture(bool pause)
     {
         m_pause_capture = pause;
@@ -26,6 +27,7 @@ public:
     }
     void display_previous_frame();
     void display_next_frame();
+    RefPtr<Gfx::Bitmap> current_bitmap() const { return m_grabbed_bitmap; };
 
 private:
     MagnifierWidget();
