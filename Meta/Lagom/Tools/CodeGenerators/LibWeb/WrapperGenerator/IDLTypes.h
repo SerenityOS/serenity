@@ -21,7 +21,7 @@
 namespace IDL {
 
 template<typename FunctionType>
-static size_t get_function_length(FunctionType& function)
+static size_t get_function_shortest_length(FunctionType& function)
 {
     size_t length = 0;
     for (auto& parameter : function.parameters) {
@@ -83,14 +83,14 @@ struct Function {
     size_t overload_index { 0 };
     bool is_overloaded { false };
 
-    size_t length() const { return get_function_length(*this); }
+    size_t shortest_length() const { return get_function_shortest_length(*this); }
 };
 
 struct Constructor {
     String name;
     Vector<Parameter> parameters;
 
-    size_t length() const { return get_function_length(*this); }
+    size_t shortest_length() const { return get_function_shortest_length(*this); }
 };
 
 struct Constant {
@@ -163,7 +163,7 @@ static inline size_t get_shortest_function_length(Vector<Function&> const& overl
 {
     size_t shortest_length = SIZE_MAX;
     for (auto const& function : overload_set)
-        shortest_length = min(function.length(), shortest_length);
+        shortest_length = min(function.shortest_length(), shortest_length);
     return shortest_length;
 }
 
