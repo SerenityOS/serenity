@@ -140,6 +140,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         auto natural_image_width = image.natural_width().value_or(background_positioning_area.width());
         auto natural_image_height = image.natural_height().value_or(background_positioning_area.height());
 
+        // If any of these are zero, the NaNs will pop up in the painting code.
+        if (background_positioning_area.is_empty() || natural_image_height <= 0 || natural_image_width <= 0)
+            continue;
+
         // Size
         Gfx::FloatRect image_rect;
         switch (layer.size_type) {
@@ -180,6 +184,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         }
         }
+
+        // If after sizing we have a 0px image, we're done. Attempting to paint this would be an infinite loop.
+        if (image_rect.is_empty())
+            continue;
 
         // If background-repeat is round for one (or both) dimensions, there is a second step.
         // The UA must scale the image in that dimension (or both dimensions) so that it fits a
