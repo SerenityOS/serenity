@@ -551,6 +551,7 @@ void ImageEditor::image_did_change_rect(Gfx::IntRect const& new_image_rect)
 {
     set_original_rect(new_image_rect);
     set_content_rect(new_image_rect);
+    relayout();
 }
 
 void ImageEditor::image_select_layer(Layer* layer)
