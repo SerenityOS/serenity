@@ -287,8 +287,9 @@ void Window::set_closeable(bool closeable)
 
 void Window::set_taskbar_rect(Gfx::IntRect const& rect)
 {
+    if (m_taskbar_rect == rect)
+        return;
     m_taskbar_rect = rect;
-    m_have_taskbar_rect = !m_taskbar_rect.is_empty();
 }
 
 static Gfx::IntRect interpolate_rect(Gfx::IntRect const& from_rect, Gfx::IntRect const& to_rect, float progress)
@@ -312,26 +313,13 @@ void Window::start_minimize_animation()
         return;
     if (!WindowManager::the().system_effects().animate_windows())
         return;
-    if (!m_have_taskbar_rect) {
-        // If this is a modal window, it may not have its own taskbar
-        // button, so there is no rectangle. In that case, walk the
-        // modal stack until we find a window that may have one
-        WindowManager::the().for_each_window_in_modal_stack(*this, [&](Window& w, bool) {
-            if (w.has_taskbar_rect()) {
-                // We purposely do NOT set m_have_taskbar_rect to true here
-                // because we want to only copy the rectangle from the
-                // window that has it, but since this window wouldn't receive
-                // any updates down the road we want to query it again
-                // next time we want to start the animation
-                m_taskbar_rect = w.taskbar_rect();
-
-                VERIFY(!m_have_taskbar_rect); // should remain unset!
-                return IterationDecision::Break;
-            };
-            return IterationDecision::Continue;
-        });
+    if (is_modal()) {
+        if (auto modeless = modeless_ancestor(); modeless) {
+            auto rect = modeless->taskbar_rect();
+            VERIFY(!rect.is_empty());
+            m_taskbar_rect = rect;
+        }
     }
-
     m_animation = Animation::create();
     m_animation->set_duration(150);
     m_animation->on_update = [this](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {

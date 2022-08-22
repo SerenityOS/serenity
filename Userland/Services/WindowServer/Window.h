@@ -292,7 +292,6 @@ public:
     void request_update(Gfx::IntRect const&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
-    bool has_taskbar_rect() const { return m_have_taskbar_rect; };
     void start_minimize_animation();
 
     void start_launch_animation(Gfx::IntRect const&);
@@ -422,7 +421,6 @@ private:
     bool m_fullscreen { false };
     bool m_destroyed { false };
     bool m_default_positioned { false };
-    bool m_have_taskbar_rect { false };
     bool m_invalidated { true };
     bool m_invalidated_all { true };
     bool m_invalidated_frame { true };
