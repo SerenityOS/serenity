@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -51,9 +51,9 @@ bool MediaQueryList::evaluate()
     return now_matches;
 }
 
-JS::Object* MediaQueryList::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* MediaQueryList::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-mediaquerylist-addlistener

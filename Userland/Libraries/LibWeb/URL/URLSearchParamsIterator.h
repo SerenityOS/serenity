@@ -41,6 +41,6 @@ private:
 
 namespace Web::Bindings {
 
-URLSearchParamsIteratorWrapper* wrap(JS::GlobalObject&, URL::URLSearchParamsIterator&);
+URLSearchParamsIteratorWrapper* wrap(JS::Realm&, URL::URLSearchParamsIterator&);
 
 }

@@ -226,9 +226,9 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     TODO();
 }
 
-JS::Object* WebSocket::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* WebSocket::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 #undef __ENUMERATE

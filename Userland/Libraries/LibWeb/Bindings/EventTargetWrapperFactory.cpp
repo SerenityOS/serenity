@@ -9,9 +9,9 @@
 
 namespace Web::Bindings {
 
-JS::Object* wrap(JS::GlobalObject& global_object, DOM::EventTarget& target)
+JS::Object* wrap(JS::Realm& realm, DOM::EventTarget& target)
 {
-    return target.create_wrapper(global_object);
+    return target.create_wrapper(realm);
 }
 
 }

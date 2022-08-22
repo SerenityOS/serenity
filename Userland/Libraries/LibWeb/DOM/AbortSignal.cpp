@@ -19,9 +19,9 @@ AbortSignal::AbortSignal()
 {
 }
 
-JS::Object* AbortSignal::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* AbortSignal::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add
@@ -38,6 +38,10 @@ void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
 void AbortSignal::signal_abort(JS::Value reason)
 {
+    VERIFY(wrapper());
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
+
     // 1. If signal is aborted, then return.
     if (aborted())
         return;
@@ -46,7 +50,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     if (!reason.is_undefined())
         m_abort_reason = reason;
     else
-        m_abort_reason = wrap(wrapper()->global_object(), AbortError::create("Aborted without reason"));
+        m_abort_reason = wrap(realm, AbortError::create("Aborted without reason"));
 
     // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)

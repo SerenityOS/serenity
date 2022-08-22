@@ -58,6 +58,6 @@ private:
 
 namespace Web::Bindings {
 
-DOMTokenListWrapper* wrap(JS::GlobalObject&, DOM::DOMTokenList&);
+DOMTokenListWrapper* wrap(JS::Realm&, DOM::DOMTokenList&);
 
 }

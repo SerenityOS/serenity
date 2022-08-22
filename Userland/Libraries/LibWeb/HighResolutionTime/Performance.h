@@ -32,7 +32,7 @@ public:
     virtual void ref_event_target() override;
     virtual void unref_event_target() override;
 
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
 private:
     HTML::Window& m_window;

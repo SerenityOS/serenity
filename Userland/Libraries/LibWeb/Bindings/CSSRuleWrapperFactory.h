@@ -11,6 +11,6 @@
 
 namespace Web::Bindings {
 
-CSSRuleWrapper* wrap(JS::GlobalObject&, CSS::CSSRule&);
+CSSRuleWrapper* wrap(JS::Realm&, CSS::CSSRule&);
 
 }

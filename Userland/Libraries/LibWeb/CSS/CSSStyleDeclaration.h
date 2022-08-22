@@ -119,6 +119,6 @@ private:
 
 namespace Web::Bindings {
 
-CSSStyleDeclarationWrapper* wrap(JS::GlobalObject&, CSS::CSSStyleDeclaration&);
+CSSStyleDeclarationWrapper* wrap(JS::Realm&, CSS::CSSStyleDeclaration&);
 
 }

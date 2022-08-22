@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Promise.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -17,15 +18,15 @@ namespace Web::Crypto {
 
 JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {
-    auto& global_object = wrapper()->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = Bindings::main_thread_vm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
-        auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to copy bytes from ArrayBuffer"));
+        auto* error = wrap(realm, DOM::OperationError::create("Failed to copy bytes from ArrayBuffer"));
         auto* promise = JS::Promise::create(realm);
         promise->reject(error);
         return promise;
@@ -46,7 +47,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
-        auto* error = wrap(wrapper()->global_object(), DOM::NotSupportedError::create(String::formatted("Invalid hash function '{}'", algorithm)));
+        auto* error = wrap(realm, DOM::NotSupportedError::create(String::formatted("Invalid hash function '{}'", algorithm)));
         auto* promise = JS::Promise::create(realm);
         promise->reject(error);
         return promise;
@@ -67,7 +68,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     auto digest = hash.digest();
     auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
     if (result_buffer.is_error()) {
-        auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to create result buffer"));
+        auto* error = wrap(realm, DOM::OperationError::create("Failed to create result buffer"));
         promise->reject(error);
         return promise;
     }

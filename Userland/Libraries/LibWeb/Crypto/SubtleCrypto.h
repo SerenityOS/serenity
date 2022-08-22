@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,6 +32,6 @@ private:
 
 namespace Web::Bindings {
 
-SubtleCryptoWrapper* wrap(JS::GlobalObject&, Crypto::SubtleCrypto&);
+SubtleCryptoWrapper* wrap(JS::Realm&, Crypto::SubtleCrypto&);
 
 }

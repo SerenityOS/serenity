@@ -44,7 +44,7 @@ public:
     virtual void ref_event_target() override { RefCounted::ref(); }
     virtual void unref_event_target() override { RefCounted::unref(); }
     virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     Page* page();
     Page const* page() const;

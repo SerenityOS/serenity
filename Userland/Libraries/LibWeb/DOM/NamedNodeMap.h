@@ -64,6 +64,6 @@ private:
 
 namespace Web::Bindings {
 
-NamedNodeMapWrapper* wrap(JS::GlobalObject&, DOM::NamedNodeMap&);
+NamedNodeMapWrapper* wrap(JS::Realm&, DOM::NamedNodeMap&);
 
 }

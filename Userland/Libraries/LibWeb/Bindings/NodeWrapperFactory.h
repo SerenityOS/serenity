@@ -12,7 +12,7 @@
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::GlobalObject&, DOM::Node&);
+NodeWrapper* wrap(JS::Realm&, DOM::Node&);
 
 }
 }

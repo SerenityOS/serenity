@@ -20,22 +20,22 @@
 
 namespace Web::Bindings {
 
-CSSRuleWrapper* wrap(JS::GlobalObject& global_object, CSS::CSSRule& rule)
+CSSRuleWrapper* wrap(JS::Realm& realm, CSS::CSSRule& rule)
 {
     if (rule.wrapper())
         return static_cast<CSSRuleWrapper*>(rule.wrapper());
 
     if (is<CSS::CSSStyleRule>(rule))
-        return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSStyleRule>(rule)));
+        return static_cast<CSSRuleWrapper*>(wrap_impl(realm, verify_cast<CSS::CSSStyleRule>(rule)));
     if (is<CSS::CSSImportRule>(rule))
-        return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSImportRule>(rule)));
+        return static_cast<CSSRuleWrapper*>(wrap_impl(realm, verify_cast<CSS::CSSImportRule>(rule)));
     if (is<CSS::CSSMediaRule>(rule))
-        return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSMediaRule>(rule)));
+        return static_cast<CSSRuleWrapper*>(wrap_impl(realm, verify_cast<CSS::CSSMediaRule>(rule)));
     if (is<CSS::CSSFontFaceRule>(rule))
-        return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSFontFaceRule>(rule)));
+        return static_cast<CSSRuleWrapper*>(wrap_impl(realm, verify_cast<CSS::CSSFontFaceRule>(rule)));
     if (is<CSS::CSSSupportsRule>(rule))
-        return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSSupportsRule>(rule)));
-    return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, rule));
+        return static_cast<CSSRuleWrapper*>(wrap_impl(realm, verify_cast<CSS::CSSSupportsRule>(rule)));
+    return static_cast<CSSRuleWrapper*>(wrap_impl(realm, rule));
 }
 
 }

@@ -39,7 +39,7 @@ public:
     virtual bool dispatch_event(NonnullRefPtr<Event>);
     ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
 
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;
+    virtual JS::Object* create_wrapper(JS::Realm&) = 0;
 
     virtual EventTarget* get_parent(Event const&) { return nullptr; }
 

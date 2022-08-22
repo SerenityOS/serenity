@@ -39,9 +39,9 @@ void Performance::unref_event_target()
     m_window.unref();
 }
 
-JS::Object* Performance::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Performance::create_wrapper(JS::Realm& realm)
 {
-    return Bindings::wrap(global_object, *this);
+    return Bindings::wrap(realm, *this);
 }
 
 }

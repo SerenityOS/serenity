@@ -42,6 +42,6 @@ private:
 
 namespace Web::Bindings {
 
-HeadersIteratorWrapper* wrap(JS::GlobalObject&, Fetch::HeadersIterator&);
+HeadersIteratorWrapper* wrap(JS::Realm&, Fetch::HeadersIterator&);
 
 }

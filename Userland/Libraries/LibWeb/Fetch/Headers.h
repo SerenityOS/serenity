@@ -72,6 +72,6 @@ private:
 
 namespace Web::Bindings {
 
-HeadersWrapper* wrap(JS::GlobalObject&, Fetch::Headers&);
+HeadersWrapper* wrap(JS::Realm&, Fetch::Headers&);
 
 }

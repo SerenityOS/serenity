@@ -57,6 +57,6 @@ private:
 
 namespace Web::Bindings {
 
-StyleSheetListWrapper* wrap(JS::GlobalObject&, CSS::StyleSheetList&);
+StyleSheetListWrapper* wrap(JS::Realm&, CSS::StyleSheetList&);
 
 }

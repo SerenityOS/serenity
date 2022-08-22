@@ -39,6 +39,7 @@ JS::ThrowCompletionOr<JS::Value> OptionConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let document be the current global object's associated Document.
     auto& window = static_cast<WindowObject&>(HTML::current_global_object());
@@ -74,7 +75,7 @@ JS::ThrowCompletionOr<JS::Object*> OptionConstructor::construct(FunctionObject&)
     option_element->m_selected = vm.argument(3).to_boolean();
 
     // 7. Return option.
-    return wrap(global_object(), option_element);
+    return wrap(realm, option_element);
 }
 
 }

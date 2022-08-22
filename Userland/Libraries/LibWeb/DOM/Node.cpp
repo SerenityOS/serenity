@@ -806,9 +806,9 @@ bool Node::is_editable() const
     return parent() && parent()->is_editable();
 }
 
-JS::Object* Node::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Node::create_wrapper(JS::Realm& realm)
 {
-    return wrap(global_object, *this);
+    return wrap(realm, *this);
 }
 
 void Node::removed_last_ref()

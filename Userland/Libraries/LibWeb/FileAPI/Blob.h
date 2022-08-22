@@ -52,7 +52,7 @@ public:
     JS::Promise* text();
     JS::Promise* array_buffer();
 
-    virtual JS::Object* create_wrapper(JS::GlobalObject&);
+    virtual JS::Object* create_wrapper(JS::Realm&);
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 

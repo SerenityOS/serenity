@@ -43,9 +43,9 @@ protected:
     }
 
 private:
-    virtual JS::Object* create_wrapper(JS::GlobalObject& global_object) override
+    virtual JS::Object* create_wrapper(JS::Realm& realm) override
     {
-        return wrap(global_object, *this);
+        return wrap(realm, *this);
     }
 };
 
