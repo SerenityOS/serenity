@@ -715,6 +715,51 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Merge Active Layer Down"sv);
         }));
 
+    m_layer_menu->add_separator();
+    m_layer_menu->add_action(GUI::Action::create(
+        "Flip Layer &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            active_layer->flip(Gfx::Orientation::Vertical);
+            editor->did_complete_action("Flip Layer Vertically"sv);
+        }));
+    m_layer_menu->add_action(GUI::Action::create(
+        "Flip Layer &Horizontally", g_icon_bag.edit_flip_horizontal, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            active_layer->flip(Gfx::Orientation::Horizontal);
+            editor->did_complete_action("Flip Layer Horizontally"sv);
+        }));
+    m_layer_menu->add_separator();
+
+    m_layer_menu->add_action(GUI::Action::create("Rotate Layer &Counterclockwise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            active_layer->rotate(Gfx::RotationDirection::CounterClockwise);
+            editor->did_complete_action("Rotate Layer Counterclockwise"sv);
+        }));
+
+    m_layer_menu->add_action(GUI::Action::create("Rotate Layer Clock&wise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv).release_value_but_fixme_should_propagate_errors(),
+        [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            active_layer->rotate(Gfx::RotationDirection::Clockwise);
+            editor->did_complete_action("Rotate Layer Clockwise"sv);
+        }));
+
     m_filter_menu = window.add_menu("&Filter");
 
     m_filter_menu->add_action(GUI::Action::create("Filter &Gallery", g_icon_bag.filter, [&](auto&) {
