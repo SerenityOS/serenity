@@ -1760,7 +1760,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
 
     // Optimization: overloaded functions' arguments count is checked by the overload arbiter
     if (!function.is_overloaded)
-        generate_argument_count_check(generator, function.name, function.length());
+        generate_argument_count_check(generator, function.name, function.shortest_length());
 
     StringBuilder arguments_builder;
     generate_arguments(generator, function.parameters, arguments_builder, interface);
@@ -1841,7 +1841,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     generate_argument_count_check(function_generator, overload_set.key, minimum_argument_count);
 
     auto overloaded_functions = overload_set.value;
-    quick_sort(overloaded_functions, [](auto const& a, auto const& b) { return a.length() < b.length(); });
+    quick_sort(overloaded_functions, [](auto const& a, auto const& b) { return a.shortest_length() < b.shortest_length(); });
     auto fetched_arguments = 0u;
     for (auto i = 0u; i < overloaded_functions.size(); ++i) {
         auto const& overloaded_function = overloaded_functions[i];
@@ -2064,7 +2064,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
         // Single constructor
 
         auto& constructor = interface.constructors[0];
-        generator.set("constructor.length", String::number(constructor.length()));
+        generator.set("constructor.length", String::number(constructor.shortest_length()));
 
         generator.append(R"~~~(
     auto& vm = this->vm();
@@ -2074,7 +2074,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
-            generate_argument_count_check(generator, constructor.name, constructor.length());
+            generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
 
             StringBuilder arguments_builder;
             generate_arguments(generator, constructor.parameters, arguments_builder, interface);
