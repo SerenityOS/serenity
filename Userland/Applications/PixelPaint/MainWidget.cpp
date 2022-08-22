@@ -510,12 +510,14 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Vertical);
+            editor->did_complete_action("Flip Image Vertically"sv);
         }));
     m_image_menu->add_action(GUI::Action::create(
         "Flip &Horizontally", g_icon_bag.edit_flip_horizontal, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flip(Gfx::Orientation::Horizontal);
+            editor->did_complete_action("Flip Image Horizontally"sv);
         }));
     m_image_menu->add_separator();
 
@@ -524,6 +526,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().rotate(Gfx::RotationDirection::CounterClockwise);
+            editor->did_complete_action("Rotate Image Counterclockwise"sv);
         }));
 
     m_image_menu->add_action(GUI::CommonActions::make_rotate_clockwise_action(
@@ -531,6 +534,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().rotate(Gfx::RotationDirection::Clockwise);
+            editor->did_complete_action("Rotate Image Clockwise"sv);
         }));
     m_image_menu->add_separator();
     m_image_menu->add_action(GUI::Action::create(
@@ -538,11 +542,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
-            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
+                editor->did_complete_action("Resize Image"sv);
+            }
         }));
     m_image_menu->add_action(GUI::Action::create(
-        "&Crop To Selection", g_icon_bag.crop, [&](auto&) {
+        "&Crop to Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             // FIXME: disable this action if there is no selection
@@ -551,6 +557,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto crop_rect = editor->image().rect().intersected(editor->selection().bounding_rect());
             editor->image().crop(crop_rect);
             editor->selection().clear();
+            editor->did_complete_action("Crop to Selection"sv);
         }));
 
     m_layer_menu = window.add_menu("&Layer");
