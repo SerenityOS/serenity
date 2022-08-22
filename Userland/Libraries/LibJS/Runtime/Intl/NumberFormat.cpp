@@ -908,7 +908,6 @@ String format_numeric(VM& vm, NumberFormat& number_format, MathematicalValue num
 Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
     // Note: Our implementation of PartitionNumberPattern does not throw.
@@ -923,7 +922,7 @@ Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, Mathematical
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, global_object.object_prototype());
+        auto* object = Object::create(realm, realm.global_object().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
@@ -1825,7 +1824,6 @@ ThrowCompletionOr<String> format_numeric_range(VM& vm, NumberFormat& number_form
 ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionNumberRangePattern(numberFormat, x, y).
     auto parts = TRY(partition_number_range_pattern(vm, number_format, move(start), move(end)));
@@ -1839,7 +1837,7 @@ ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& nu
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, global_object.object_prototype());
+        auto* object = Object::create(realm, realm.global_object().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));

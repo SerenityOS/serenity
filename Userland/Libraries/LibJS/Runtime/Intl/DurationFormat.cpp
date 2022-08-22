@@ -307,7 +307,6 @@ static String convert_number_format_pattern_to_duration_format_template(Unicode:
 ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -403,7 +402,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
         }
 
         // o. Let nf be ? Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
-        auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *global_object.intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
+        auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *realm.global_object().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
 
         // FIXME: durationFormat.[[NumberFormat]] is not a thing, the spec likely means 'nf' in this case
         // p. Let num be ! FormatNumeric(durationFormat.[[NumberFormat]], value).
@@ -432,7 +431,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
         // t. Else,
         else {
             // i. Let pr be ? Construct(%PluralRules%, « durationFormat.[[Locale]] »).
-            auto* plural_rules = TRY(construct(vm, *global_object.intl_plural_rules_constructor(), js_string(vm, duration_format.locale())));
+            auto* plural_rules = TRY(construct(vm, *realm.global_object().intl_plural_rules_constructor(), js_string(vm, duration_format.locale())));
 
             // ii. Let prv be ! ResolvePlural(pr, value).
             auto plurality = resolve_plural(static_cast<PluralRules&>(*plural_rules), value);
@@ -480,7 +479,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     }
 
     // 3. Let lf be ? Construct(%ListFormat%, « durationFormat.[[Locale]] »).
-    auto* list_format = static_cast<Intl::ListFormat*>(TRY(construct(vm, *global_object.intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
+    auto* list_format = static_cast<Intl::ListFormat*>(TRY(construct(vm, *realm.global_object().intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right

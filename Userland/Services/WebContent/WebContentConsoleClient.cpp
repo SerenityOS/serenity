@@ -25,13 +25,13 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
 
     auto& vm = m_interpreter->vm();
     auto& realm = m_interpreter->realm();
-    auto& global_object = realm.global_object();
+    auto& window = static_cast<Web::Bindings::WindowObject&>(realm.global_object());
 
-    auto console_global_object = m_interpreter->heap().allocate_without_realm<ConsoleGlobalObject>(m_interpreter->realm(), static_cast<Web::Bindings::WindowObject&>(global_object));
+    auto console_global_object = m_interpreter->heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
 
     // NOTE: We need to push an execution context here for NativeFunction::create() to succeed during global object initialization.
     // It gets removed immediately after creating the interpreter in Document::interpreter().
-    auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().host_defined());
+    auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*realm.host_defined());
     vm.push_execution_context(eso.realm_execution_context());
     console_global_object->set_associated_realm(realm);
     console_global_object->initialize_global_object(realm);

@@ -247,7 +247,7 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
 
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
-    auto& global_object = verify_cast<GlobalObject>(m_object_record->binding_object());
+    auto& global_object = m_object_record->binding_object();
 
     // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
     auto has_property = TRY(global_object.has_own_property(name));

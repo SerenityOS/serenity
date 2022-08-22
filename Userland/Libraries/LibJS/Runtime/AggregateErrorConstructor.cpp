@@ -40,8 +40,7 @@ ThrowCompletionOr<Value> AggregateErrorConstructor::call()
 ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &GlobalObject::aggregate_error_prototype));
 

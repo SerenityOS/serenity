@@ -51,7 +51,6 @@ ISODateRecord create_iso_date_record(i32 year, u8 month, u8 day)
 ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: isoYear is an integer.
     // 2. Assert: isoMonth is an integer.
@@ -68,7 +67,7 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_
 
     // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.
     if (!new_target)
-        new_target = global_object.temporal_plain_date_constructor();
+        new_target = realm.global_object().temporal_plain_date_constructor();
 
     // 8. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainDate.prototype%", « [[InitializedTemporalDate]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[Calendar]] »).
     // 9. Set object.[[ISOYear]] to isoYear.

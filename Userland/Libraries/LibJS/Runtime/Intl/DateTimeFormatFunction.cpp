@@ -36,8 +36,8 @@ void DateTimeFormatFunction::initialize(Realm& realm)
 
 ThrowCompletionOr<Value> DateTimeFormatFunction::call()
 {
-    auto& global_object = this->global_object();
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
 
     auto date = vm.argument(0);
 
@@ -49,7 +49,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
     // 3. If date is not provided or is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date_value = MUST(JS::call(vm, global_object.date_constructor_now_function(), js_undefined())).as_double();
+        date_value = MUST(JS::call(vm, realm.global_object().date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {

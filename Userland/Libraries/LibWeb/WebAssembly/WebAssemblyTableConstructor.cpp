@@ -29,8 +29,7 @@ JS::ThrowCompletionOr<JS::Value> WebAssemblyTableConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto descriptor = TRY(vm.argument(0).to_object(vm));
     auto element_value = TRY(descriptor->get("element"));

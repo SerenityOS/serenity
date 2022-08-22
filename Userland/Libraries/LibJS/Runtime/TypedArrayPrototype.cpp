@@ -144,10 +144,9 @@ static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, String const& nam
 static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let defaultConstructor be the intrinsic object listed in column one of Table 72 for exemplar.[[TypedArrayName]].
-    auto* default_constructor = (global_object.*exemplar.intrinsic_constructor())();
+    auto* default_constructor = (realm.global_object().*exemplar.intrinsic_constructor())();
 
     // 2. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
     auto* constructor = TRY(species_constructor(vm, exemplar, *default_constructor));

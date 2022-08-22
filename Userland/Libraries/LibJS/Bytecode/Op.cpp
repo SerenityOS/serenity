@@ -237,7 +237,10 @@ ThrowCompletionOr<void> NewString::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = Object::create(interpreter.realm(), interpreter.global_object().object_prototype());
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
+
+    interpreter.accumulator() = Object::create(realm, realm.global_object().object_prototype());
     return {};
 }
 
@@ -255,9 +258,11 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
 ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
+
     auto* from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
 
-    auto* to_object = Object::create(interpreter.realm(), interpreter.global_object().object_prototype());
+    auto* to_object = Object::create(realm, realm.global_object().object_prototype());
 
     HashTable<Value, ValueTraits> excluded_names;
     for (size_t i = 0; i < m_excluded_names_count; ++i)

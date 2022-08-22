@@ -260,7 +260,7 @@ inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module
 
 inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
-    auto results = MUST(interpreter.global_object().get("__TestResults__"));
+    auto results = MUST(interpreter.realm().global_object().get("__TestResults__"));
     auto json_string = MUST(JS::JSONObject::stringify_impl(*g_vm, results, JS::js_undefined(), JS::js_undefined()));
 
     return JsonValue::from_string(json_string);
@@ -383,7 +383,7 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
             executable->name = test_path;
             if (JS::Bytecode::g_dump_bytecode)
                 executable->dump();
-            JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
+            JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm().global_object(), interpreter->realm());
             (void)bytecode_interpreter.run(*executable);
         }
     } else {
@@ -403,7 +403,7 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
     JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
 
     // Collect logged messages
-    auto user_output = MUST(interpreter->global_object().get("__UserOutput__"));
+    auto user_output = MUST(interpreter->realm().global_object().get("__UserOutput__"));
 
     auto& arr = user_output.as_array();
     for (auto& entry : arr.indexed_properties()) {

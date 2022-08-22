@@ -15,9 +15,8 @@ namespace Web::Fetch {
 // https://webidl.spec.whatwg.org/#es-iterable, Step 2
 JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
 {
-    auto& global_object = wrapper()->global_object();
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
 
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {

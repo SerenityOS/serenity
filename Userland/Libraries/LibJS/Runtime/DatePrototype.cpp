@@ -986,8 +986,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(VM& vm, Value locales, Value options)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-    auto* date_time_format = TRY(construct(vm, *global_object.intl_date_time_format_constructor(), locales, options));
+    auto* date_time_format = TRY(construct(vm, *realm.global_object().intl_date_time_format_constructor(), locales, options));
     return static_cast<Intl::DateTimeFormat*>(date_time_format);
 }
 

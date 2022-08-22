@@ -22,10 +22,10 @@ namespace JS {
 
 NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_realm(Realm& realm)
 {
-    auto& global_object = realm.global_object();
-    DeferGC defer_gc(global_object.heap());
-    auto interpreter = adopt_own(*new Interpreter(global_object.vm()));
-    interpreter->m_global_object = make_handle(&global_object);
+    auto& vm = realm.vm();
+    DeferGC defer_gc(vm.heap());
+    auto interpreter = adopt_own(*new Interpreter(vm));
+    interpreter->m_global_object = make_handle(&realm.global_object());
     interpreter->m_realm = make_handle(&realm);
     return interpreter;
 }

@@ -53,8 +53,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
 ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     PrimitiveString* primitive_string;
     if (!vm.argument_count())

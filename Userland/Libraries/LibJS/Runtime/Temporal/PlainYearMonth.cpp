@@ -186,7 +186,6 @@ ISOYearMonth balance_iso_year_month(double year, double month)
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: isoYear, isoMonth, and referenceISODay are integers.
     // 2. Assert: Type(calendar) is Object.
@@ -201,7 +200,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
 
     // 5. If newTarget is not present, set newTarget to %Temporal.PlainYearMonth%.
     if (!new_target)
-        new_target = global_object.temporal_plain_year_month_constructor();
+        new_target = realm.global_object().temporal_plain_year_month_constructor();
 
     // 6. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainYearMonth.prototype%", « [[InitializedTemporalYearMonth]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[Calendar]] »).
     // 7. Set object.[[ISOYear]] to isoYear.

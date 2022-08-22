@@ -318,8 +318,7 @@ void ECMAScriptFunctionObject::make_method(Object& home_object)
 ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation(Interpreter* interpreter)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto& callee_context = vm.running_execution_context();
 
@@ -780,8 +779,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
 Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (m_kind == FunctionKind::AsyncGenerator)
@@ -865,7 +863,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-            auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+            auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
             // 2. Let declResult be Completion(FunctionDeclarationInstantiation(functionObject, argumentsList)).
             auto declaration_result = function_declaration_instantiation(ast_interpreter);

@@ -71,8 +71,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
 JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
 {
-    auto& global_object = settings_object().global_object();
-    auto& vm = global_object.vm();
+    auto& vm = settings_object().realm().vm();
 
     // 1. Let settings be the settings object of script.
     auto& settings = settings_object();

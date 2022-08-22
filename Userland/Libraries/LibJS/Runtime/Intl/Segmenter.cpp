@@ -48,7 +48,6 @@ StringView Segmenter::segmenter_granularity_string() const
 Object* create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View const& string, double start_index, double end_index)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let len be the length of string.
     auto length = string.length_in_code_units();
@@ -63,7 +62,7 @@ Object* create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View
     VERIFY(start_index < end_index);
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(realm, global_object.object_prototype());
+    auto* result = Object::create(realm, realm.global_object().object_prototype());
 
     // 6. Let segment be the substring of string from startIndex to endIndex.
     auto segment = string.substring_view(start_index, end_index - start_index);

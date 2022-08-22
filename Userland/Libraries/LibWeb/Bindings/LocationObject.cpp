@@ -95,9 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
 
     // FIXME: 1. If this's relevant Document is null, then return.
 
@@ -220,9 +218,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
     window.impl().did_call_location_reload({});
     return JS::js_undefined();
 }
@@ -230,9 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
 {
-    auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
     auto url = TRY(vm.argument(0).to_string(vm));
     // FIXME: This needs spec compliance work.
     window.impl().did_call_location_replace({}, move(url));
@@ -306,8 +300,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
 // 7.10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://html.spec.whatwg.org/multipage/history.html#location-defineownproperty
 JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::PropertyKey const& property_key, JS::PropertyDescriptor const& descriptor)
 {
-    auto& global_object = HTML::current_global_object();
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then:
     if (is_platform_object_same_origin(*this)) {
@@ -349,8 +342,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_set(JS::PropertyKey const& 
 // 7.10.5.9 [[Delete]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-delete
 JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey const& property_key)
 {
-    auto& global_object = HTML::current_global_object();
-    auto& vm = global_object.vm();
+    auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinaryDelete(this, P).
     if (is_platform_object_same_origin(*this))

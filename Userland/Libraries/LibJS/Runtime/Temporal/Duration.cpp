@@ -327,7 +327,6 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
 ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If ! IsValidDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) is false, throw a RangeError exception.
     if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
@@ -335,7 +334,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, doub
 
     // 2. If newTarget is not present, set newTarget to %Temporal.Duration%.
     if (!new_target)
-        new_target = global_object.temporal_duration_constructor();
+        new_target = realm.global_object().temporal_duration_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Duration.prototype%", « [[InitializedTemporalDuration]], [[Years]], [[Months]], [[Weeks]], [[Days]], [[Hours]], [[Minutes]], [[Seconds]], [[Milliseconds]], [[Microseconds]], [[Nanoseconds]] »).
     // 4. Set object.[[Years]] to ℝ(𝔽(years)).

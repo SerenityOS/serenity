@@ -311,7 +311,6 @@ TemporalTime constrain_time(double hour, double minute, double second, double mi
 ThrowCompletionOr<PlainTime*> create_temporal_time(VM& vm, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
@@ -321,7 +320,7 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(VM& vm, u8 hour, u8 minute, u
 
     // 3. If newTarget is not present, set newTarget to %Temporal.PlainTime%.
     if (!new_target)
-        new_target = global_object.temporal_plain_time_constructor();
+        new_target = realm.global_object().temporal_plain_time_constructor();
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainTime.prototype%", « [[InitializedTemporalTime]], [[ISOHour]], [[ISOMinute]], [[ISOSecond]], [[ISOMillisecond]], [[ISOMicrosecond]], [[ISONanosecond]], [[Calendar]] »).
     // 5. Set object.[[ISOHour]] to hour.

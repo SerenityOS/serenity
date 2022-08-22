@@ -53,7 +53,6 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_nanoseconds, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
@@ -62,7 +61,7 @@ ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_
 
     // 3. If newTarget is not present, set newTarget to %Temporal.Instant%.
     if (!new_target)
-        new_target = global_object.temporal_instant_constructor();
+        new_target = realm.global_object().temporal_instant_constructor();
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
