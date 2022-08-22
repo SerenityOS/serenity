@@ -173,6 +173,31 @@ static bool impl_is_wrapper(Type const& type)
     return false;
 }
 
+CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface);
+
+static String union_type_to_variant(UnionType const& union_type, Interface const& interface)
+{
+    StringBuilder builder;
+    builder.append("Variant<"sv);
+
+    auto flattened_types = union_type.flattened_member_types();
+    for (size_t type_index = 0; type_index < flattened_types.size(); ++type_index) {
+        auto& type = flattened_types.at(type_index);
+
+        if (type_index > 0)
+            builder.append(", "sv);
+
+        auto cpp_type = idl_type_name_to_cpp_type(type, interface);
+        builder.append(cpp_type.name);
+    }
+
+    if (union_type.includes_undefined())
+        builder.append(", Empty"sv);
+
+    builder.append('>');
+    return builder.to_string();
+}
+
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
     if (is_wrappable_type(type)) {
@@ -243,7 +268,7 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
     if (is<UnionType>(type)) {
         auto& union_type = verify_cast<UnionType>(type);
-        return { .name = union_type.to_variant(interface), .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = union_type_to_variant(union_type, interface), .sequence_storage_type = SequenceStorageType::Vector };
     }
 
     if (!type.nullable) {
@@ -921,7 +946,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto union_generator = scoped_generator.fork();
 
         auto& union_type = verify_cast<IDL::UnionType>(*parameter.type);
-        union_generator.set("union_type", union_type.to_variant(interface));
+        union_generator.set("union_type", union_type_to_variant(union_type, interface));
         union_generator.set("recursion_depth", String::number(recursion_depth));
 
         // NOTE: This is handled out here as we need the dictionary conversion code for the {} optional default value.
@@ -2805,5 +2830,4 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 
     outln("{}", generator.as_string_view());
 }
-
 }
