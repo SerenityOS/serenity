@@ -153,7 +153,6 @@ void Window::show()
         m_fullscreen,
         m_frameless,
         m_forced_shadow,
-        m_accessory,
         m_opacity_when_windowless,
         m_alpha_hit_threshold,
         m_base_size,

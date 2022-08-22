@@ -564,7 +564,7 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
 
 void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool minimizable, bool closeable, bool resizable,
-    bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
+    bool fullscreen, bool frameless, bool forced_shadow, float opacity,
     float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
     Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
     String const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
@@ -597,7 +597,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
         return;
     }
 
-    auto window = Window::construct(*this, (WindowType)type, (WindowMode)mode, window_id, minimizable, closeable, frameless, resizable, fullscreen, accessory, parent_window);
+    auto window = Window::construct(*this, (WindowType)type, (WindowMode)mode, window_id, minimizable, closeable, frameless, resizable, fullscreen, parent_window);
 
     window->set_forced_shadow(forced_shadow);
 
@@ -644,13 +644,6 @@ void ConnectionFromClient::destroy_window(Window& window, Vector<i32>& destroyed
             continue;
         VERIFY(child_window->window_id() != window.window_id());
         destroy_window(*child_window, destroyed_window_ids);
-    }
-
-    for (auto& accessory_window : window.accessory_windows()) {
-        if (!accessory_window)
-            continue;
-        VERIFY(accessory_window->window_id() != window.window_id());
-        destroy_window(*accessory_window, destroyed_window_ids);
     }
 
     destroyed_window_ids.append(window.window_id());

@@ -278,7 +278,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
         return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
         return Gfx::WindowTheme::WindowState::Moving;
-    if (wm.is_active_window_or_accessory(m_window))
+    if (wm.is_active_window_or_capturing_modal(m_window))
         return Gfx::WindowTheme::WindowState::Active;
     return Gfx::WindowTheme::WindowState::Inactive;
 }

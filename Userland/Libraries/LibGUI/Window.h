@@ -124,9 +124,6 @@ public:
     bool is_active() const;
     bool is_active_input() const { return m_is_active_input; }
 
-    bool is_accessory() const { return m_accessory; }
-    void set_accessory(bool accessory) { m_accessory = accessory; }
-
     void show();
     void hide();
     virtual void close();
@@ -306,7 +303,6 @@ private:
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
-    bool m_accessory { false };
     bool m_moved_by_client { false };
 };
 

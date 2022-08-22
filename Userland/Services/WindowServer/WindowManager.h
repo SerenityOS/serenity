@@ -194,7 +194,7 @@ public:
     void tell_wms_super_digit_key_pressed(u8);
     void tell_wms_current_window_stack_changed();
 
-    bool is_active_window_or_accessory(Window&) const;
+    bool is_active_window_or_capturing_modal(Window&) const;
 
     void check_hide_geometry_overlay(Window&);
 
