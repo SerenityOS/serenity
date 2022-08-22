@@ -343,25 +343,8 @@ void WindowManager::add_window(Window& window)
 void WindowManager::move_to_front_and_make_active(Window& window)
 {
     auto move_window_to_front = [&](Window& wnd, bool make_active, bool make_input) {
-        if (wnd.is_accessory()) {
-            auto* parent = wnd.parent_window();
-            do_move_to_front(*parent, true, false);
-            make_active = false;
-
-            for (auto& accessory_window : parent->accessory_windows()) {
-                if (accessory_window && accessory_window.ptr() != &wnd)
-                    do_move_to_front(*accessory_window, false, false);
-            }
-        }
-
         do_move_to_front(wnd, make_active, make_input);
     };
-
-    // If a window that is currently blocked by a modal child is being
-    // brought to the front, bring the entire stack of modal windows
-    // to the front and activate the modal window. Also set the
-    // active input window to that same window (which would pull
-    // active input from any accessory window)
     for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
         move_window_to_front(w, is_stack_top, is_stack_top);
         return IterationDecision::Continue;
@@ -379,7 +362,7 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
 
     if (m_switcher->is_visible()) {
         m_switcher->refresh();
-        if (!window.is_accessory()) {
+        if (!window.is_modal()) {
             m_switcher->select_window(window);
             set_highlight_window(&window);
         }
@@ -655,7 +638,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
             return IterationDecision::Continue;
         if (previous_active != first_candidate)
             first_candidate = &candidate;
-        if ((!previous_active && !candidate.is_accessory()) || (previous_active && !candidate.is_accessory_of(*previous_active))) {
+        if ((!previous_active && !candidate.is_capturing_input()) || (previous_active && !candidate.is_capturing_active_input_from(*previous_active))) {
             set_active_window(&candidate);
             new_window_picked = true;
             return IterationDecision::Break;
@@ -1460,10 +1443,6 @@ bool WindowManager::is_window_in_modal_stack(Window& window_in_modal_stack, Wind
     auto result = for_each_window_in_modal_stack(window_in_modal_stack, [&](auto& window, auto) {
         if (&other_window == &window)
             return IterationDecision::Break;
-        for (auto& accessory : window.accessory_windows()) {
-            if (accessory.ptr() == &other_window)
-                return IterationDecision::Break;
-        }
         return IterationDecision::Continue;
     });
     return result == IterationDecision::Break;
@@ -1786,9 +1765,9 @@ void WindowManager::set_highlight_window(Window* new_highlight_window)
     Compositor::the().invalidate_occlusions();
 }
 
-bool WindowManager::is_active_window_or_accessory(Window& window) const
+bool WindowManager::is_active_window_or_capturing_modal(Window& window) const
 {
-    if (window.is_accessory())
+    if (window.is_capturing_input())
         return window.parent_window()->is_active();
 
     return window.is_active();
@@ -1857,9 +1836,9 @@ void WindowManager::set_active_window(Window* new_active_window, bool make_input
     }
 
     auto* new_active_input_window = new_active_window;
-    if (new_active_window && new_active_window->is_accessory()) {
-        // The parent of an accessory window is always the active
-        // window, but input is routed to the accessory window
+    if (new_active_window && new_active_window->is_capturing_input()) {
+        // The parent of a capturing modal is always the active
+        // window, but input is routed to the capturing window
         new_active_window = new_active_window->parent_window();
     }
 

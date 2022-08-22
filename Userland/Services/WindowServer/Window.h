@@ -182,6 +182,9 @@ public:
     bool is_passive() { return m_mode == WindowMode::Passive; }
     bool is_rendering_above() { return m_mode == WindowMode::RenderAbove; }
 
+    bool is_capturing_input() const { return m_mode == WindowMode::CaptureInput; }
+    bool is_capturing_active_input_from(Window const&) const;
+
     bool is_blocking() const { return m_mode == WindowMode::Blocking; }
     Window* blocking_modal_window();
 
@@ -308,14 +311,7 @@ public:
     Vector<WeakPtr<Window>>& child_windows() { return m_child_windows; }
     Vector<WeakPtr<Window>> const& child_windows() const { return m_child_windows; }
 
-    Vector<WeakPtr<Window>>& accessory_windows() { return m_accessory_windows; }
-    Vector<WeakPtr<Window>> const& accessory_windows() const { return m_accessory_windows; }
-
     bool is_descendant_of(Window&) const;
-
-    void set_accessory(bool accessory) { m_accessory = accessory; }
-    bool is_accessory() const;
-    bool is_accessory_of(Window&) const;
 
     void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
@@ -383,14 +379,13 @@ public:
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
 private:
-    Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent const&);
     void handle_keydown_event(KeyEvent const&);
     void add_child_window(Window&);
-    void add_accessory_window(Window&);
     void ensure_window_menu();
     void update_window_menu_items();
     void modal_unparented();
@@ -399,7 +394,6 @@ private:
 
     WeakPtr<Window> m_parent_window;
     Vector<WeakPtr<Window>> m_child_windows;
-    Vector<WeakPtr<Window>> m_accessory_windows;
 
     Menubar m_menubar;
 
@@ -426,7 +420,6 @@ private:
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     WindowMinimizedState m_minimized_state { WindowMinimizedState::None };
     bool m_fullscreen { false };
-    bool m_accessory { false };
     bool m_destroyed { false };
     bool m_default_positioned { false };
     bool m_have_taskbar_rect { false };

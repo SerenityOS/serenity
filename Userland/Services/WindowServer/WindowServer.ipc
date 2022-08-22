@@ -50,7 +50,6 @@ endpoint WindowServer
         bool fullscreen,
         bool frameless,
         bool forced_shadow,
-        bool accessory,
         float opacity,
         float alpha_hit_threshold,
         Gfx::IntSize base_size,

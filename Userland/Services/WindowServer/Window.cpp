@@ -90,7 +90,7 @@ Window::Window(Core::Object& parent, WindowType type)
     frame().window_was_constructed({});
 }
 
-Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
+Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window)
     : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
@@ -100,7 +100,6 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
     , m_frameless(frameless)
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
-    , m_accessory(accessory)
     , m_window_id(window_id)
     , m_client_id(client.client_id())
     , m_icon(default_window_icon())
@@ -974,19 +973,11 @@ void Window::add_child_window(Window& child_window)
     m_child_windows.append(child_window);
 }
 
-void Window::add_accessory_window(Window& accessory_window)
-{
-    m_accessory_windows.append(accessory_window);
-}
-
 void Window::set_parent_window(Window& parent_window)
 {
     VERIFY(!m_parent_window);
     m_parent_window = parent_window;
-    if (m_accessory)
-        parent_window.add_accessory_window(*this);
-    else
-        parent_window.add_child_window(*this);
+    parent_window.add_child_window(*this);
 }
 
 Window* Window::modeless_ancestor()
@@ -1000,21 +991,9 @@ Window* Window::modeless_ancestor()
     return nullptr;
 }
 
-bool Window::is_accessory() const
+bool Window::is_capturing_active_input_from(Window const& window) const
 {
-    if (!m_accessory)
-        return false;
-    if (parent_window() != nullptr)
-        return true;
-
-    // If accessory window was unparented, convert to a regular window
-    const_cast<Window*>(this)->set_accessory(false);
-    return false;
-}
-
-bool Window::is_accessory_of(Window& window) const
-{
-    if (!is_accessory())
+    if (!is_capturing_input())
         return false;
     return parent_window() == &window;
 }
@@ -1030,14 +1009,9 @@ void Window::set_progress(Optional<int> progress)
 
 bool Window::is_descendant_of(Window& window) const
 {
-    for (auto* parent = parent_window(); parent; parent = parent->parent_window()) {
+    for (auto* parent = parent_window(); parent; parent = parent->parent_window())
         if (parent == &window)
             return true;
-        for (auto& accessory : parent->accessory_windows()) {
-            if (accessory == &window)
-                return true;
-        }
-    }
     return false;
 }
 
