@@ -16,7 +16,7 @@ namespace Web::Painting {
 
 struct ColorStop {
     Gfx::Color color;
-    float position = 0;
+    float position = AK::NaN<float>;
     Optional<float> transition_hint = {};
 };
 
