@@ -164,14 +164,6 @@ void Window::set_rect_without_repaint(Gfx::IntRect const& rect)
     auto old_rect = m_rect;
     m_rect = rect;
 
-    if (old_rect.size() == m_rect.size()) {
-        auto delta = m_rect.location() - old_rect.location();
-        for (auto& child_window : m_child_windows) {
-            if (child_window)
-                child_window->move_by(delta);
-        }
-    }
-
     invalidate(true, old_rect.size() != rect.size());
     m_frame.window_rect_changed(old_rect, rect);
     invalidate_last_rendered_screen_rects();
