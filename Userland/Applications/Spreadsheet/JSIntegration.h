@@ -30,7 +30,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
-    virtual void initialize_global_object() override;
+    virtual void initialize_global_object(JS::Realm&) override;
 
     JS_DECLARE_NATIVE_FUNCTION(get_real_cell_contents);
     JS_DECLARE_NATIVE_FUNCTION(set_real_cell_contents);

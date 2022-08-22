@@ -23,7 +23,7 @@ $262Object::$262Object(Realm& realm)
 {
 }
 
-void $262Object::initialize(JS::Realm& realm)
+void $262Object::initialize(Realm& realm)
 {
     Base::initialize(realm);
 
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::create_realm)
     VERIFY(realm_global_object);
     realm->set_global_object(realm_global_object, nullptr);
     realm_global_object->set_associated_realm(*realm);
-    realm_global_object->initialize_global_object();
+    realm_global_object->initialize_global_object(*realm);
     return Value(realm_global_object->$262());
 }
 

@@ -24,7 +24,8 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
     JS::DeferGC defer_gc(m_interpreter->heap());
 
     auto& vm = m_interpreter->vm();
-    auto& global_object = m_interpreter->global_object();
+    auto& realm = m_interpreter->realm();
+    auto& global_object = realm.global_object();
 
     auto console_global_object = m_interpreter->heap().allocate_without_realm<ConsoleGlobalObject>(m_interpreter->realm(), static_cast<Web::Bindings::WindowObject&>(global_object));
 
@@ -32,8 +33,8 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
     // It gets removed immediately after creating the interpreter in Document::interpreter().
     auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().host_defined());
     vm.push_execution_context(eso.realm_execution_context());
-    console_global_object->set_associated_realm(m_interpreter->realm());
-    console_global_object->initialize_global_object();
+    console_global_object->set_associated_realm(realm);
+    console_global_object->initialize_global_object(realm);
     vm.pop_execution_context();
 
     m_console_global_object = JS::make_handle(console_global_object);

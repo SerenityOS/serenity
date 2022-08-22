@@ -145,15 +145,13 @@ GlobalObject::GlobalObject(Realm& realm)
 {
 }
 
-void GlobalObject::initialize_global_object()
+void GlobalObject::initialize_global_object(Realm& realm)
 {
     auto& vm = this->vm();
 
     ensure_shape_is_unique();
 
     // These are done first since other prototypes depend on their presence.
-    VERIFY(associated_realm());
-    auto& realm = *associated_realm();
     m_empty_object_shape = heap().allocate_without_realm<Shape>(realm);
     m_object_prototype = heap().allocate_without_realm<ObjectPrototype>(realm);
     m_function_prototype = heap().allocate_without_realm<FunctionPrototype>(realm);
@@ -200,7 +198,7 @@ void GlobalObject::initialize_global_object()
 
     // Must be allocated before `Intl::Intl` below.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    initialize_constructor(vm.names.ClassName, m_intl_##snake_name##_constructor, m_intl_##snake_name##_prototype);
+    initialize_constructor(realm, vm.names.ClassName, m_intl_##snake_name##_constructor, m_intl_##snake_name##_prototype);
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
@@ -212,7 +210,7 @@ void GlobalObject::initialize_global_object()
 
     // Must be allocated before `Temporal::Temporal` below.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    initialize_constructor(vm.names.ClassName, m_temporal_##snake_name##_constructor, m_temporal_##snake_name##_prototype);
+    initialize_constructor(realm, vm.names.ClassName, m_temporal_##snake_name##_constructor, m_temporal_##snake_name##_prototype);
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
@@ -259,44 +257,44 @@ void GlobalObject::initialize_global_object()
     define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
 
     // This must be initialized before allocating AggregateErrorConstructor, which uses ErrorConstructor as its prototype.
-    initialize_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
+    initialize_constructor(realm, vm.names.Error, m_error_constructor, m_error_prototype);
 
-    add_constructor(vm.names.AggregateError, m_aggregate_error_constructor, m_aggregate_error_prototype);
-    add_constructor(vm.names.Array, m_array_constructor, m_array_prototype);
-    add_constructor(vm.names.ArrayBuffer, m_array_buffer_constructor, m_array_buffer_prototype);
-    add_constructor(vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
-    add_constructor(vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
-    add_constructor(vm.names.DataView, m_data_view_constructor, m_data_view_prototype);
-    add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
-    add_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
-    add_constructor(vm.names.FinalizationRegistry, m_finalization_registry_constructor, m_finalization_registry_prototype);
-    add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
-    add_constructor(vm.names.Map, m_map_constructor, m_map_prototype);
-    add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);
-    add_constructor(vm.names.Object, m_object_constructor, m_object_prototype);
-    add_constructor(vm.names.Promise, m_promise_constructor, m_promise_prototype);
-    add_constructor(vm.names.Proxy, m_proxy_constructor, nullptr);
-    add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
-    add_constructor(vm.names.Set, m_set_constructor, m_set_prototype);
-    add_constructor(vm.names.ShadowRealm, m_shadow_realm_constructor, m_shadow_realm_prototype);
-    add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
-    add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
-    add_constructor(vm.names.WeakMap, m_weak_map_constructor, m_weak_map_prototype);
-    add_constructor(vm.names.WeakRef, m_weak_ref_constructor, m_weak_ref_prototype);
-    add_constructor(vm.names.WeakSet, m_weak_set_constructor, m_weak_set_prototype);
+    add_constructor(realm, vm.names.AggregateError, m_aggregate_error_constructor, m_aggregate_error_prototype);
+    add_constructor(realm, vm.names.Array, m_array_constructor, m_array_prototype);
+    add_constructor(realm, vm.names.ArrayBuffer, m_array_buffer_constructor, m_array_buffer_prototype);
+    add_constructor(realm, vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
+    add_constructor(realm, vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
+    add_constructor(realm, vm.names.DataView, m_data_view_constructor, m_data_view_prototype);
+    add_constructor(realm, vm.names.Date, m_date_constructor, m_date_prototype);
+    add_constructor(realm, vm.names.Error, m_error_constructor, m_error_prototype);
+    add_constructor(realm, vm.names.FinalizationRegistry, m_finalization_registry_constructor, m_finalization_registry_prototype);
+    add_constructor(realm, vm.names.Function, m_function_constructor, m_function_prototype);
+    add_constructor(realm, vm.names.Map, m_map_constructor, m_map_prototype);
+    add_constructor(realm, vm.names.Number, m_number_constructor, m_number_prototype);
+    add_constructor(realm, vm.names.Object, m_object_constructor, m_object_prototype);
+    add_constructor(realm, vm.names.Promise, m_promise_constructor, m_promise_prototype);
+    add_constructor(realm, vm.names.Proxy, m_proxy_constructor, nullptr);
+    add_constructor(realm, vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
+    add_constructor(realm, vm.names.Set, m_set_constructor, m_set_prototype);
+    add_constructor(realm, vm.names.ShadowRealm, m_shadow_realm_constructor, m_shadow_realm_prototype);
+    add_constructor(realm, vm.names.String, m_string_constructor, m_string_prototype);
+    add_constructor(realm, vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
+    add_constructor(realm, vm.names.WeakMap, m_weak_map_constructor, m_weak_map_prototype);
+    add_constructor(realm, vm.names.WeakRef, m_weak_ref_constructor, m_weak_ref_prototype);
+    add_constructor(realm, vm.names.WeakSet, m_weak_set_constructor, m_weak_set_prototype);
 
-    initialize_constructor(vm.names.TypedArray, m_typed_array_constructor, m_typed_array_prototype);
+    initialize_constructor(realm, vm.names.TypedArray, m_typed_array_constructor, m_typed_array_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    add_constructor(vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
+    add_constructor(realm, vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
     JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
     // NOTE: These constructors cannot be initialized with add_constructor as they have no global binding.
-    initialize_constructor(vm.names.GeneratorFunction, m_generator_function_constructor, m_generator_function_prototype, Attribute::Configurable);
-    initialize_constructor(vm.names.AsyncGeneratorFunction, m_async_generator_function_constructor, m_async_generator_function_prototype, Attribute::Configurable);
-    initialize_constructor(vm.names.AsyncFunction, m_async_function_constructor, m_async_function_prototype, Attribute::Configurable);
+    initialize_constructor(realm, vm.names.GeneratorFunction, m_generator_function_constructor, m_generator_function_prototype, Attribute::Configurable);
+    initialize_constructor(realm, vm.names.AsyncGeneratorFunction, m_async_generator_function_constructor, m_async_generator_function_prototype, Attribute::Configurable);
+    initialize_constructor(realm, vm.names.AsyncFunction, m_async_function_constructor, m_async_function_prototype, Attribute::Configurable);
 
     // 27.5.1.1 Generator.prototype.constructor, https://tc39.es/ecma262/#sec-generator.prototype.constructor
     m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_prototype, Attribute::Configurable);

@@ -33,7 +33,7 @@ class WindowObject
 
 public:
     explicit WindowObject(JS::Realm&, HTML::Window&);
-    virtual void initialize_global_object() override;
+    virtual void initialize_global_object(JS::Realm&) override;
     virtual ~WindowObject() override = default;
 
     HTML::Window& impl() { return *m_impl; }

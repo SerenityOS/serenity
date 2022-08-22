@@ -18,7 +18,7 @@ class GlobalObject : public Object {
 
 public:
     explicit GlobalObject(Realm&);
-    virtual void initialize_global_object();
+    virtual void initialize_global_object(Realm&);
 
     virtual ~GlobalObject() override;
 
@@ -103,9 +103,9 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void initialize_constructor(PropertyKey const&, ConstructorType*&, Object* prototype, PropertyAttributes = Attribute::Writable | Attribute::Configurable);
+    void initialize_constructor(Realm&, PropertyKey const&, ConstructorType*&, Object* prototype, PropertyAttributes = Attribute::Writable | Attribute::Configurable);
     template<typename ConstructorType>
-    void add_constructor(PropertyKey const&, ConstructorType*&, Object* prototype);
+    void add_constructor(Realm&, PropertyKey const&, ConstructorType*&, Object* prototype);
 
 private:
     virtual bool is_global_object() const final { return true; }
@@ -174,10 +174,9 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype, PropertyAttributes attributes)
+inline void GlobalObject::initialize_constructor(Realm& realm, PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype, PropertyAttributes attributes)
 {
     auto& vm = this->vm();
-    auto& realm = *associated_realm();
     constructor = heap().allocate<ConstructorType>(realm, realm);
     constructor->define_direct_property(vm.names.name, js_string(heap(), property_key.as_string()), Attribute::Configurable);
     if (prototype)
@@ -185,11 +184,11 @@ inline void GlobalObject::initialize_constructor(PropertyKey const& property_key
 }
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::add_constructor(Realm& realm, PropertyKey const& property_key, ConstructorType*& constructor, Object* prototype)
 {
     // Some constructors are pre-initialized separately.
     if (!constructor)
-        initialize_constructor(property_key, constructor, prototype);
+        initialize_constructor(realm, property_key, constructor, prototype);
     define_direct_property(property_key, constructor, Attribute::Writable | Attribute::Configurable);
 }
 

@@ -14,11 +14,10 @@
 
 namespace JS::Test262 {
 
-void GlobalObject::initialize_global_object()
+void GlobalObject::initialize_global_object(Realm& realm)
 {
-    Base::initialize_global_object();
+    Base::initialize_global_object(realm);
 
-    auto& realm = *associated_realm();
     m_$262 = vm().heap().allocate<$262Object>(realm, realm);
 
     // https://github.com/tc39/test262/blob/master/INTERPRETING.md#host-defined-functions

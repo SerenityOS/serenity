@@ -57,13 +57,11 @@ WindowObject::WindowObject(JS::Realm& realm, HTML::Window& impl)
     impl.set_wrapper({}, *this);
 }
 
-void WindowObject::initialize_global_object()
+void WindowObject::initialize_global_object(JS::Realm& realm)
 {
-    Base::initialize_global_object();
+    Base::initialize_global_object(realm);
 
     Object::set_prototype(&ensure_web_prototype<WindowPrototype>("Window"));
-
-    auto& realm = *associated_realm();
 
     // FIXME: These should be native accessors, not properties
     define_direct_property("window", this, JS::Attribute::Enumerable);

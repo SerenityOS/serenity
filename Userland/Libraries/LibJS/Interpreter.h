@@ -44,11 +44,13 @@ public:
         VM::InterpreterExecutionScope scope(*interpreter);
 
         GlobalObject* global_object { nullptr };
+        Realm* realm { nullptr };
 
         interpreter->m_global_execution_context = MUST(Realm::initialize_host_defined_realm(
             vm,
-            [&](Realm& realm) -> GlobalObject* {
-                global_object = interpreter->heap().allocate_without_realm<GlobalObjectType>(realm, forward<Args>(args)...);
+            [&](Realm& realm_) -> GlobalObject* {
+                global_object = interpreter->heap().allocate_without_realm<GlobalObjectType>(realm_, forward<Args>(args)...);
+                realm = &realm_;
                 return global_object;
             },
             nullptr));
@@ -58,7 +60,7 @@ public:
         interpreter->m_global_execution_context->function_name = global_execution_context_name;
 
         interpreter->m_global_object = make_handle(global_object);
-        interpreter->m_realm = make_handle(global_object->associated_realm());
+        interpreter->m_realm = make_handle(realm);
 
         return interpreter;
     }
