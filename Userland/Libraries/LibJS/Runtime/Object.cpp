@@ -369,9 +369,8 @@ ThrowCompletionOr<MarkedVector<Value>> Object::enumerable_own_property_names(Pro
     // NOTE: This has been flattened for readability, so some `else` branches in the
     //       spec text have been replaced with `continue`s in the loop below.
 
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let ownKeys be ? O.[[OwnPropertyKeys]]().
     auto own_keys = TRY(internal_own_property_keys());

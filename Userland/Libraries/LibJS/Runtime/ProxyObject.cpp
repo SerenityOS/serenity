@@ -743,8 +743,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // A Proxy exotic object only has a [[Call]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Call]] internal method.
     // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
@@ -792,8 +791,7 @@ bool ProxyObject::has_constructor() const
 ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // A Proxy exotic object only has a [[Construct]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Construct]] internal method.
     // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.

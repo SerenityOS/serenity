@@ -145,7 +145,6 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM& vm, Value item, Obje
 ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM& vm, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: isoMonth, isoDay, and referenceISOYear are integers.
     // 2. Assert: Type(calendar) is Object.
@@ -160,7 +159,7 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM& vm, u8 iso_month
 
     // 5. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.
     if (!new_target)
-        new_target = global_object.temporal_plain_month_day_constructor();
+        new_target = realm.global_object().temporal_plain_month_day_constructor();
 
     // 6. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainMonthDay.prototype%", « [[InitializedTemporalMonthDay]], [[ISOMonth]], [[ISODay]], [[ISOYear]], [[Calendar]] »).
     // 7. Set object.[[ISOMonth]] to isoMonth.

@@ -82,7 +82,6 @@ DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 // https://xhr.spec.whatwg.org/#response
 DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {
-    auto& global_object = wrapper()->global_object();
     auto& vm = wrapper()->vm();
     auto& realm = *vm.current_realm();
 
@@ -144,7 +143,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
         TextCodec::UTF8Decoder decoder;
 
-        auto json_object_result = JS::call(vm, global_object.json_parse_function(), JS::js_undefined(), JS::js_string(global_object.heap(), decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
+        auto json_object_result = JS::call(vm, realm.global_object().json_parse_function(), JS::js_undefined(), JS::js_string(vm, decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
         if (json_object_result.is_error())
             return JS::Value(JS::js_null());
 
@@ -623,8 +622,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
 {
     // 1. If the current global object is a Window object and this’s synchronous flag is set,
     //    then throw an "InvalidAccessError" DOMException.
-    auto& global_object = wrapper()->global_object();
-    if (global_object.class_name() == "WindowObject" && m_synchronous)
+    if (is<Bindings::WindowObject>(HTML::current_global_object()) && m_synchronous)
         return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
 
     // 2. Set this’s timeout to the given value.

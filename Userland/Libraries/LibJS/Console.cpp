@@ -500,7 +500,6 @@ VM& ConsoleClient::vm()
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger
 ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, MarkedVector<Value> const& args)
 {
-    auto& global_object = this->global_object();
     auto& vm = this->vm();
 
     // 1. If args is empty, return.
@@ -515,7 +514,7 @@ ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, Mark
 
     // 4. If rest is empty, perform Printer(logLevel, « first ») and return.
     if (rest_size == 0) {
-        MarkedVector<Value> first_as_vector { global_object.heap() };
+        MarkedVector<Value> first_as_vector { vm.heap() };
         first_as_vector.append(first);
         return printer(log_level, move(first_as_vector));
     }

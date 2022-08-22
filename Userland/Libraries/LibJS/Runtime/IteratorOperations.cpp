@@ -187,10 +187,9 @@ Completion async_iterator_close(VM& vm, Iterator const& iterator_record, Complet
 Object* create_iterator_result_object(VM& vm, Value value, bool done)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
 
     // 2. Perform ! CreateDataPropertyOrThrow(obj, "value", value).
     MUST(object->create_data_property_or_throw(vm.names.value, value));

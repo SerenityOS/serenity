@@ -228,7 +228,6 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
 ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
     // 2. Assert: Type(calendar) is Object.
@@ -249,7 +248,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
 
     // 6. If newTarget is not present, set newTarget to %Temporal.PlainDateTime%.
     if (!new_target)
-        new_target = global_object.temporal_plain_date_time_constructor();
+        new_target = realm.global_object().temporal_plain_date_time_constructor();
 
     // 7. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainDateTime.prototype%", « [[InitializedTemporalDateTime]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[ISOHour]], [[ISOMinute]], [[ISOSecond]], [[ISOMillisecond]], [[ISOMicrosecond]], [[ISONanosecond]], [[Calendar]] »).
     // 8. Set object.[[ISOYear]] to isoYear.

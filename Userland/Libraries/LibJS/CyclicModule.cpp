@@ -197,11 +197,11 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
     // 5. Let stack be a new empty List.
     Vector<Module*> stack;
 
-    auto& global_object = realm().global_object();
+    auto& realm = *vm.current_realm();
 
     // 6. Let capability be ! NewPromiseCapability(%Promise%).
     // 7. Set module.[[TopLevelCapability]] to capability.
-    m_top_level_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    m_top_level_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 8. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
     auto result = inner_module_evaluation(vm, stack, 0);
@@ -433,8 +433,7 @@ ThrowCompletionOr<void> CyclicModule::execute_module(VM&, Optional<PromiseCapabi
 // 16.2.1.5.2.2 ExecuteAsyncModule ( module ), https://tc39.es/ecma262/#sec-execute-async-module
 void CyclicModule::execute_async_module(VM& vm)
 {
-    auto& global_object = realm().global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] executing async module {}", filename());
     // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
@@ -443,7 +442,7 @@ void CyclicModule::execute_async_module(VM& vm)
     VERIFY(m_has_top_level_await);
 
     // 3. Let capability be ! NewPromiseCapability(%Promise%).
-    auto capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    auto capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
     auto fulfilled_closure = [&](VM& vm) -> ThrowCompletionOr<Value> {

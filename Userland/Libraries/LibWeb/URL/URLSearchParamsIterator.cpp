@@ -14,9 +14,8 @@ namespace Web::URL {
 
 JS::Object* URLSearchParamsIterator::next()
 {
-    auto& global_object = wrapper()->global_object();
-    auto& vm = global_object.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
 
     if (m_index >= m_url_search_params.m_list.size())
         return create_iterator_result_object(vm, JS::js_undefined(), true);

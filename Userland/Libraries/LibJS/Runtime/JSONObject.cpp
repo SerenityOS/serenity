@@ -46,7 +46,6 @@ void JSONObject::initialize(Realm& realm)
 ThrowCompletionOr<String> JSONObject::stringify_impl(VM& vm, Value value, Value replacer, Value space)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     StringifyState state;
 
@@ -102,7 +101,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(VM& vm, Value value, Value 
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create(realm, global_object.object_prototype());
+    auto* wrapper = Object::create(realm, realm.global_object().object_prototype());
     MUST(wrapper->create_data_property_or_throw(String::empty(), value));
     return serialize_json_property(vm, state, String::empty(), wrapper);
 }

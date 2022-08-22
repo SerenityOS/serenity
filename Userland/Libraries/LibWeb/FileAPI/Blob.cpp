@@ -221,8 +221,8 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::slice(Optional<i64> start, Optional<
 // https://w3c.github.io/FileAPI/#dom-blob-text
 JS::Promise* Blob::text()
 {
-    auto& global_object = wrapper()->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
 
     // FIXME: 1. Let stream be the result of calling get stream on this.
     // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
@@ -230,7 +230,7 @@ JS::Promise* Blob::text()
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader
     auto* promise = JS::Promise::create(realm);
-    auto* result = JS::js_string(global_object.heap(), String { m_byte_buffer.bytes() });
+    auto* result = JS::js_string(vm, String { m_byte_buffer.bytes() });
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
     promise->fulfill(result);
@@ -240,8 +240,8 @@ JS::Promise* Blob::text()
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
 JS::Promise* Blob::array_buffer()
 {
-    auto& global_object = wrapper()->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = wrapper()->vm();
+    auto& realm = *vm.current_realm();
 
     // FIXME: 1. Let stream be the result of calling get stream on this.
     // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.

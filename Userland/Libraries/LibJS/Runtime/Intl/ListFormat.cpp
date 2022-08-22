@@ -204,7 +204,6 @@ String format_list(ListFormat const& list_format, Vector<String> const& list)
 Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<String> const& list)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
     auto parts = create_parts_from_list(list_format, list);
@@ -218,7 +217,7 @@ Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<String
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, global_object.object_prototype());
+        auto* object = Object::create(realm, realm.global_object().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));

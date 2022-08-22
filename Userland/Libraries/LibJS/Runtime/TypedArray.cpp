@@ -129,7 +129,6 @@ template<typename T>
 static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, TypedArray<T>& dest_array, TypedArrayBase& src_array)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let srcData be srcArray.[[ViewedArrayBuffer]].
     auto* src_data = src_array.viewed_array_buffer();
@@ -169,7 +168,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, T
     // 11. Else,
     else {
         // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
-        data = TRY(allocate_array_buffer(vm, *global_object.array_buffer_constructor(), byte_length.value()));
+        data = TRY(allocate_array_buffer(vm, *realm.global_object().array_buffer_constructor(), byte_length.value()));
 
         // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
         if (src_data->is_detached())
@@ -225,7 +224,6 @@ template<typename T>
 static ThrowCompletionOr<void> allocate_typed_array_buffer(VM& vm, TypedArray<T>& typed_array, size_t length)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // Enforce 2GB "Excessive Length" limit
     if (length > NumericLimits<i32>::max() / sizeof(T))
@@ -242,7 +240,7 @@ static ThrowCompletionOr<void> allocate_typed_array_buffer(VM& vm, TypedArray<T>
     auto byte_length = element_size * length;
 
     // 4. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-    auto* data = TRY(allocate_array_buffer(vm, *global_object.array_buffer_constructor(), byte_length));
+    auto* data = TRY(allocate_array_buffer(vm, *realm.global_object().array_buffer_constructor(), byte_length));
 
     // 5. Set O.[[ViewedArrayBuffer]] to data.
     typed_array.set_viewed_array_buffer(data);
@@ -345,11 +343,10 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& co
 ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM& vm, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
     // 2. Let constructor be the intrinsic object listed in column one of Table 63 (points to Table 72) for exemplar.[[TypedArrayName]].
-    auto* constructor = (global_object.*exemplar.intrinsic_constructor())();
+    auto* constructor = (realm.global_object().*exemplar.intrinsic_constructor())();
 
     // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
     auto* result = TRY(typed_array_create(vm, *constructor, move(arguments)));
@@ -514,8 +511,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                                  \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
-        auto& global_object = this->global_object();                                                                                   \
-        auto& realm = *global_object.associated_realm();                                                                               \
+        auto& realm = *vm.current_realm();                                                                                             \
                                                                                                                                        \
         if (vm.argument_count() == 0)                                                                                                  \
             return TRY(ClassName::create(realm, 0, new_target));                                                                       \

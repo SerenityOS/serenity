@@ -34,7 +34,6 @@ void AsyncFromSyncIteratorPrototype::initialize(Realm& realm)
 static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, PromiseCapability& promise_capability)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. NOTE: Because promiseCapability is derived from the intrinsic %Promise%, the calls to promiseCapability.[[Reject]] entailed by the use IfAbruptRejectPromise below are guaranteed not to throw.
     // 2. Let done be Completion(IteratorComplete(result)).
@@ -47,7 +46,7 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
 
     // 6. Let valueWrapper be PromiseResolve(%Promise%, value).
     // 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
-    auto value_wrapper = TRY_OR_MUST_REJECT(vm, promise_capability, promise_resolve(vm, *global_object.promise_constructor(), value));
+    auto value_wrapper = TRY_OR_MUST_REJECT(vm, promise_capability, promise_resolve(vm, *realm.global_object().promise_constructor(), value));
 
     // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm) -> ThrowCompletionOr<Value> {

@@ -532,7 +532,6 @@ static Optional<StringView> resolve_day_period(StringView locale, StringView cal
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let x be TimeClip(x).
     time = time_clip(time);
@@ -546,7 +545,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
     auto const& data_locale = date_time_format.data_locale();
 
     auto construct_number_format = [&](auto* options) -> ThrowCompletionOr<NumberFormat*> {
-        auto* number_format = TRY(construct(vm, *global_object.intl_number_format_constructor(), js_string(vm, locale), options));
+        auto* number_format = TRY(construct(vm, *realm.global_object().intl_number_format_constructor(), js_string(vm, locale), options));
         return static_cast<NumberFormat*>(number_format);
     };
 
@@ -849,7 +848,6 @@ ThrowCompletionOr<String> format_date_time(VM& vm, DateTimeFormat& date_time_for
 ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
     auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
@@ -863,7 +861,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, global_object.object_prototype());
+        auto* object = Object::create(realm, realm.global_object().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
@@ -1164,7 +1162,6 @@ ThrowCompletionOr<String> format_date_time_range(VM& vm, DateTimeFormat& date_ti
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
     auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));
@@ -1178,7 +1175,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
     // 4. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%ObjectPrototype%).
-        auto* object = Object::create(realm, global_object.object_prototype());
+        auto* object = Object::create(realm, realm.global_object().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));

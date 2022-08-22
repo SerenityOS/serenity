@@ -399,7 +399,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
             sheet->add_column();
     }
 
-    auto json = sheet->interpreter().global_object().get_without_side_effects("JSON");
+    auto json = sheet->global_object().get_without_side_effects("JSON");
     auto& parse_function = json.as_object().get_without_side_effects("parse").as_function();
 
     auto read_format = [](auto& format, auto const& obj) {
@@ -559,7 +559,7 @@ JsonObject Sheet::to_json() const
         if (it.value->kind() == Cell::Formula) {
             auto& vm = interpreter().vm();
             data.set("source", it.value->data());
-            auto json = interpreter().global_object().get_without_side_effects("JSON");
+            auto json = interpreter().realm().global_object().get_without_side_effects("JSON");
             auto stringified_or_error = JS::call(vm, json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
             data.set("value", stringified_or_error.release_value().to_string_without_side_effects());
@@ -702,8 +702,8 @@ JsonObject Sheet::gather_documentation() const
             dbgln("Sheet::gather_documentation(): Failed to parse the documentation for '{}'!", it.key.to_display_string());
     };
 
-    for (auto& it : interpreter().global_object().shape().property_table())
-        add_docs_from(it, interpreter().global_object());
+    for (auto& it : interpreter().realm().global_object().shape().property_table())
+        add_docs_from(it, interpreter().realm().global_object());
 
     for (auto& it : global_object().shape().property_table())
         add_docs_from(it, global_object());

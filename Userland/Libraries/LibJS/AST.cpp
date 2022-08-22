@@ -288,9 +288,8 @@ Completion FunctionExpression::execute(Interpreter& interpreter) const
 // 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
 Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, FlyString given_name) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     if (given_name.is_empty())
         given_name = "";
@@ -426,8 +425,8 @@ Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter,
 Completion CallExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
 
     auto callee_reference = TRY(m_callee->to_reference(interpreter));
 
@@ -443,7 +442,7 @@ Completion CallExpression::execute(Interpreter& interpreter) const
 
     auto& function = callee.as_function();
 
-    if (&function == global_object.eval_function()
+    if (&function == realm.global_object().eval_function()
         && callee_reference.is_environment_reference()
         && callee_reference.name().is_string()
         && callee_reference.name().as_string() == vm.names.eval.as_string()) {
@@ -594,8 +593,7 @@ Completion IfStatement::execute(Interpreter& interpreter) const
 Completion WithStatement::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
-    auto& vm = global_object.vm();
+    auto& vm = interpreter.vm();
 
     // 1. Let value be the result of evaluating Expression.
     auto value = TRY(m_object->execute(interpreter)).release_value();
@@ -1664,8 +1662,8 @@ private:
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, Object& target) const
 {
-    auto& global_object = interpreter.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
 
     auto property_key_or_private_name = TRY(class_key_to_property_name(interpreter, *m_key));
     Handle<ECMAScriptFunctionObject> initializer {};
@@ -1713,8 +1711,8 @@ Optional<FlyString> ClassMethod::private_bound_identifier() const
 // 15.7.11 Runtime Semantics: ClassStaticBlockDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_evaluation(Interpreter& interpreter, Object& home_object) const
 {
-    auto& global_object = interpreter.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let lex be the running execution context's LexicalEnvironment.
     auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
@@ -1807,9 +1805,8 @@ Completion ClassDeclaration::execute(Interpreter& interpreter) const
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
 ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(Interpreter& interpreter, FlyString const& binding_name, FlyString const& class_name) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* environment = vm.lexical_environment();
     VERIFY(environment);
@@ -3035,12 +3032,11 @@ Completion ObjectProperty::execute(Interpreter& interpreter) const
 Completion ObjectExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
 
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with argument obj.
     for (auto& property : m_properties) {
@@ -3252,8 +3248,8 @@ void MetaProperty::dump(int indent) const
 Completion MetaProperty::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
 
     // NewTarget : new . target
     if (m_type == MetaProperty::Type::NewTarget) {
@@ -3328,9 +3324,8 @@ void ImportCall::dump(int indent) const
 Completion ImportCall::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
     //  1. Let referencingScriptOrModule be GetActiveScriptOrModule().
@@ -3352,7 +3347,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     // Note: options_value is undefined by default.
 
     // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, global_object.promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
 
     // 7. Let specifierString be Completion(ToString(specifier)).
     // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
@@ -3501,8 +3496,8 @@ void RegExpLiteral::dump(int indent) const
 Completion RegExpLiteral::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let pattern be CodePointsToString(BodyText of RegularExpressionLiteral).
     auto pattern = this->pattern();
@@ -3532,9 +3527,8 @@ void ArrayExpression::dump(int indent) const
 Completion ArrayExpression::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let array be ! ArrayCreate(0).
     auto* array = MUST(Array::create(realm, 0));
@@ -3651,9 +3645,10 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter) const
 // 13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
 ThrowCompletionOr<Value> TaggedTemplateLiteral::get_template_object(Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
+
     // 1. Let realm be the current Realm Record.
-    auto& global_object = interpreter.global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 2. Let templateRegistry be realm.[[TemplateMap]].
     // 3. For each element e of templateRegistry, do
@@ -4518,9 +4513,8 @@ bool ImportStatement::has_bound_name(FlyString const& name) const
 void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Environment* environment) const
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     VERIFY(environment);
     auto* private_environment = vm.running_execution_context().private_environment;
@@ -4548,9 +4542,8 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
 // 16.1.7 GlobalDeclarationInstantiation ( script, env ), https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
 ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& interpreter, GlobalEnvironment& global_environment) const
 {
-    auto& global_object = interpreter.global_object();
     auto& vm = interpreter.vm();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
     // 2. Let varNames be the VarDeclaredNames of script.

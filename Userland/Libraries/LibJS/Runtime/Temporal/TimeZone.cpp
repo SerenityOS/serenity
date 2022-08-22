@@ -66,11 +66,10 @@ String default_time_zone()
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& identifier, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. If newTarget is not present, set newTarget to %Temporal.TimeZone%.
     if (!new_target)
-        new_target = global_object.temporal_time_zone_constructor();
+        new_target = realm.global_object().temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
     auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &GlobalObject::temporal_time_zone_prototype));

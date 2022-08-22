@@ -67,14 +67,13 @@ ThrowCompletionOr<Value> ObjectConstructor::call()
 ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     if (&new_target != this)
         return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &GlobalObject::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create(realm, global_object.object_prototype());
+        return Object::create(realm, realm.global_object().object_prototype());
     return value.to_object(vm);
 }
 

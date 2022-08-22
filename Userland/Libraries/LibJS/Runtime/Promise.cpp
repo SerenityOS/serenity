@@ -58,8 +58,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / create_resolving_functions()]", this);
 
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let alreadyResolved be the Record { [[Value]]: false }.
     auto* already_resolved = vm.heap().allocate_without_realm<AlreadyResolved>();

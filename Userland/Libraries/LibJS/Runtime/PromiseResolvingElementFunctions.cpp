@@ -68,8 +68,7 @@ PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index,
 ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 8. Set values[index] to x.
     m_values.values()[m_index] = vm.argument(0);
@@ -101,11 +100,10 @@ PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction
 ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_element()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv)));
@@ -143,11 +141,10 @@ PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(s
 ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, global_object.object_prototype());
+    auto* object = Object::create(realm, realm.global_object().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv)));
@@ -185,8 +182,7 @@ PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, P
 ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     // 8. Set errors[index] to x.
     m_values.values()[m_index] = vm.argument(0);

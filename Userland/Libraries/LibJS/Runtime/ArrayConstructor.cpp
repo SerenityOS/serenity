@@ -50,8 +50,7 @@ ThrowCompletionOr<Value> ArrayConstructor::call()
 ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto& global_object = this->global_object();
-    auto& realm = *global_object.associated_realm();
+    auto& realm = *vm.current_realm();
 
     auto* proto = TRY(get_prototype_from_constructor(vm, new_target, &GlobalObject::array_prototype));
 

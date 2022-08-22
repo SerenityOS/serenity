@@ -891,7 +891,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
             // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
             dictionary_generator.append(R"~~~(
-    auto @js_name@@js_suffix@_to_dictionary = [&global_object, &vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
+    auto @js_name@@js_suffix@_to_dictionary = [&vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
 )~~~");
 
             IDL::Parameter dictionary_parameter { .type = *dictionary_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
@@ -913,7 +913,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
 
         StringBuilder to_variant_captures;
-        to_variant_captures.append("&global_object, &vm, &realm"sv);
+        to_variant_captures.append("&vm, &realm"sv);
 
         if (dictionary_type)
             to_variant_captures.append(String::formatted(", &{}{}_to_dictionary", js_name, js_suffix));
@@ -923,7 +923,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         union_generator.append(R"~~~(
     auto @js_name@@js_suffix@_to_variant = [@to_variant_captures@](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@union_type@> {
         // These might be unused.
-        (void)global_object;
         (void)vm;
         (void)realm;
 )~~~");
@@ -1371,7 +1370,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 )~~~");
     } else {
         sequence_generator.append(R"~~~(
-    @sequence.storage_type@ @cpp_name@ { global_object.heap() };
+    @sequence.storage_type@ @cpp_name@ { vm.heap() };
 )~~~");
     }
 
@@ -1508,10 +1507,9 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
             auto cpp_type = IDL::idl_type_name_to_cpp_type(current_union_type, interface);
             union_generator.set("current_type", cpp_type.name);
             union_generator.append(R"~~~(
-        [&vm, &global_object, &realm](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
+        [&vm, &realm](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
             // These may be unused.
             (void)vm;
-            (void)global_object;
             (void) realm;
 )~~~");
 
@@ -1574,7 +1572,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto dictionary_generator = scoped_generator.fork();
 
         dictionary_generator.append(R"~~~(
-    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, global_object.object_prototype());
+    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, realm.global_object().object_prototype());
 )~~~");
 
         auto* current_dictionary = &interface.dictionaries.find(type.name)->value;
@@ -2166,9 +2164,8 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
 )~~~");
 
             get_own_property_generator.append(R"~~~(
-    [[maybe_unused]] auto& global_object = this->global_object();
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
             // 1. If O supports indexed properties...
@@ -2436,9 +2433,8 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
-    [[maybe_unused]] auto& global_object = this->global_object();
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
         // The step 1 if statement will be empty if the interface has no setters, so don't generate the if statement if there's no setters.
@@ -2496,9 +2492,8 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyKey const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] auto& global_object = this->global_object();
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
         // 1. If O supports indexed properties...
@@ -2617,9 +2612,8 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
         scoped_generator.append(R"~~~(
 JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const& property_name)
 {
-    [[maybe_unused]] auto& global_object = this->global_object();
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
         // 1. If O supports indexed properties...
@@ -2969,11 +2963,10 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
         generator.set("constructor.length", String::number(constructor.length()));
 
         generator.append(R"~~~(
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] auto& global_object = this->global_object();
-    [[maybe_unused]] auto& realm = *global_object.associated_realm();
+    auto& vm = this->vm();
+    [[maybe_unused]] auto& realm = *vm.current_realm();
 
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto& window = static_cast<WindowObject&>(realm.global_object());
 )~~~");
 
         if (!constructor.parameters.is_empty()) {

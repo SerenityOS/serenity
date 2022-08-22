@@ -79,7 +79,6 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatConstructor::supported_locales_of)
 ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
@@ -139,11 +138,11 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_numeric(numeric.as_string().string());
 
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto* number_format = MUST(construct(vm, *global_object.intl_number_format_constructor(), js_string(vm, locale)));
+    auto* number_format = MUST(construct(vm, *realm.global_object().intl_number_format_constructor(), js_string(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    auto* plural_rules = MUST(construct(vm, *global_object.intl_plural_rules_constructor(), js_string(vm, locale)));
+    auto* plural_rules = MUST(construct(vm, *realm.global_object().intl_plural_rules_constructor(), js_string(vm, locale)));
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.

@@ -324,7 +324,7 @@ JS::GlobalObject& current_global_object()
 JS::Realm& relevant_realm(JS::Object const& object)
 {
     // The relevant Realm for a platform object is the value of its [[Realm]] field.
-    return *object.global_object().associated_realm();
+    return object.shape().realm();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object

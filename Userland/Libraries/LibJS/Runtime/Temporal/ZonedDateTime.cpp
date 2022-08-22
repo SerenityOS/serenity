@@ -268,14 +268,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
     VERIFY(is_valid_epoch_nanoseconds(epoch_nanoseconds));
 
     // 2. If newTarget is not present, set newTarget to %Temporal.ZonedDateTime%.
     if (!new_target)
-        new_target = global_object.temporal_zoned_date_time_constructor();
+        new_target = realm.global_object().temporal_zoned_date_time_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.ZonedDateTime.prototype%", « [[InitializedTemporalZonedDateTime]], [[Nanoseconds]], [[TimeZone]], [[Calendar]] »).
     // 4. Set object.[[Nanoseconds]] to epochNanoseconds.

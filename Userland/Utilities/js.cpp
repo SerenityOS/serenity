@@ -1170,7 +1170,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 executable->dump();
 
             if (s_run_bytecode) {
-                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
+                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm().global_object(), interpreter.realm());
                 auto result_or_error = bytecode_interpreter.run_and_return_frame(*executable, nullptr);
                 if (result_or_error.value.is_error())
                     result = result_or_error.value.release_error();
@@ -1556,8 +1556,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (evaluate_script.is_empty() && script_paths.is_empty()) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
-        ReplConsoleClient console_client(interpreter->global_object().console());
-        interpreter->global_object().console().set_client(console_client);
+        ReplConsoleClient console_client(interpreter->realm().global_object().console());
+        interpreter->realm().global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         auto& global_environment = interpreter->realm().global_environment();
@@ -1743,7 +1743,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 break;
             }
             case CompleteVariable: {
-                auto const& variable = interpreter->global_object();
+                auto const& variable = interpreter->realm().global_object();
                 list_all_properties(variable.shape(), variable_name);
 
                 for (auto const& name : global_environment.declarative_record().bindings()) {
@@ -1766,8 +1766,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         s_editor->save_history(s_history_path);
     } else {
         interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
-        ReplConsoleClient console_client(interpreter->global_object().console());
-        interpreter->global_object().console().set_client(console_client);
+        ReplConsoleClient console_client(interpreter->realm().global_object().console());
+        interpreter->realm().global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         signal(SIGINT, [](int) {
