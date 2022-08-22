@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
@@ -29,9 +30,6 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
 {
     auto directory = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PageDirectory));
 
-    // NOTE: Take the MM lock since we need it for quickmap.
-    SpinlockLocker lock(s_mm_lock);
-
 #if ARCH(X86_64)
     directory->m_pml4t = TRY(MM.allocate_physical_page());
 #endif
@@ -47,6 +45,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
 
 #if ARCH(X86_64)
     {
+        InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_pml4t);
         table.raw[0] = (FlatPtr)directory->m_directory_table->paddr().as_ptr() | 7;
         MM.unquickmap_page();
@@ -54,6 +53,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
 #endif
 
     {
+        InterruptDisabler disabler;
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_directory_table);
         for (size_t i = 0; i < sizeof(m_directory_pages) / sizeof(m_directory_pages[0]); i++) {
             if (directory->m_directory_pages[i]) {

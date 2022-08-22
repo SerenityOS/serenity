@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
@@ -516,8 +517,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     }
     auto new_physical_page = new_physical_page_or_error.release_value();
     {
-        // NOTE: The MM lock is required for quick-mapping.
-        SpinlockLocker mm_locker(s_mm_lock);
+        InterruptDisabler disabler;
         u8* dest_ptr = MM.quickmap_page(*new_physical_page);
         memcpy(dest_ptr, page_buffer, PAGE_SIZE);
         MM.unquickmap_page();

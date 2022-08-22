@@ -8,6 +8,7 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
@@ -880,7 +881,7 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
 
 LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 {
-    VERIFY(s_mm_lock.is_locked());
+    SpinlockLocker mm_locker(s_mm_lock);
     LockRefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
@@ -905,9 +906,9 @@ LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 
 NonnullLockRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
-    SpinlockLocker lock(s_mm_lock);
     auto page = find_free_physical_page(true);
     if (should_zero_fill == ShouldZeroFill::Yes) {
+        InterruptDisabler disabler;
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
@@ -1069,7 +1070,6 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
 
@@ -1090,7 +1090,6 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 void MemoryManager::unquickmap_page()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
@@ -1184,7 +1183,6 @@ void CommittedPhysicalPageSet::uncommit_one()
 
 void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buffer[PAGE_SIZE])
 {
-    SpinlockLocker locker(s_mm_lock);
     auto* quickmapped_page = quickmap_page(physical_page);
     memcpy(page_buffer, quickmapped_page, PAGE_SIZE);
     unquickmap_page();

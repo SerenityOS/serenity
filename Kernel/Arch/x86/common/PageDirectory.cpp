@@ -7,11 +7,13 @@
 
 #include <AK/Singleton.h>
 
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel::Memory {
 
+// FIXME: This needs real locking:
 static Singleton<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>> s_cr3_map;
 
 static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
@@ -22,11 +24,13 @@ static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
 
 void PageDirectory::register_page_directory(PageDirectory* directory)
 {
+    InterruptDisabler disabler;
     cr3_map().insert(directory->cr3(), *directory);
 }
 
 void PageDirectory::deregister_page_directory(PageDirectory* directory)
 {
+    InterruptDisabler disabler;
     cr3_map().remove(directory->cr3());
 }
 
