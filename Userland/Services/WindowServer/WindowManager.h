@@ -312,7 +312,6 @@ public:
     {
         switch (window_type) {
         case WindowType::Normal:
-        case WindowType::ToolWindow:
         case WindowType::Tooltip:
             return false;
         default:
@@ -516,8 +515,6 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
-        return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
@@ -560,8 +557,6 @@ inline IterationDecision WindowManager::for_each_visible_window_from_front_to_ba
     if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
         return IterationDecision::Break;

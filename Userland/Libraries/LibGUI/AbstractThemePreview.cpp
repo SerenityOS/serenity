@@ -108,7 +108,7 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
 
     int window_button_width = m_preview_palette.window_title_button_width();
     int window_button_height = m_preview_palette.window_title_button_height();
-    auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+    auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette);
     int pos = titlebar_text_rect.right() + 1;
 
     Array possible_buttons {
@@ -126,7 +126,7 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
         button.rect = button_rect;
     }
 
-    auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
+    auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette, 0);
 
     auto paint_shadow = [](Gfx::Painter& painter, Gfx::IntRect& frame_rect, Gfx::Bitmap const& shadow_bitmap) {
         auto total_shadow_size = shadow_bitmap.height();
@@ -142,7 +142,7 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
 
     Gfx::PainterStateSaver saver(painter);
     painter.translate(frame_rect.location());
-    Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, buttons.last().rect, 0, false);
+    Gfx::WindowTheme::current().paint_normal_frame(painter, state, Gfx::WindowTheme::WindowMode::Other, rect, title, icon, m_preview_palette, buttons.last().rect, 0, false);
     painter.fill_rect(rect.translated(-frame_rect.location()), m_preview_palette.color(Gfx::ColorRole::Background));
 
     for (auto& button : buttons) {
@@ -171,7 +171,7 @@ void AbstractThemePreview::center_window_group_within(Span<Window> windows, Gfx:
 
     auto to_frame_rect = [&](Gfx::IntRect const& rect) {
         return Gfx::WindowTheme::current().frame_rect_for_window(
-            Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
+            Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette, 0);
     };
 
     auto leftmost_x_value = windows[0].rect.x();

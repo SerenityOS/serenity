@@ -76,7 +76,7 @@ void Canvas::draw(Gfx::Painter& painter)
 {
     auto active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    Gfx::WindowTheme::current().paint_normal_frame(painter, Gfx::WindowTheme::WindowState::Active, { 4, 18, WIDTH - 8, HEIGHT - 29 }, "Well hello friends 🐞"sv, *active_window_icon, palette(), { WIDTH - 20, 6, 16, 16 }, 0, false);
+    Gfx::WindowTheme::current().paint_normal_frame(painter, Gfx::WindowTheme::WindowState::Active, Gfx::WindowTheme::WindowMode::Other, { 4, 18, WIDTH - 8, HEIGHT - 29 }, "Well hello friends 🐞"sv, *active_window_icon, palette(), { WIDTH - 20, 6, 16, 16 }, 0, false);
 
     painter.fill_rect({ 4, 25, WIDTH - 8, HEIGHT - 30 }, palette().color(Gfx::ColorRole::Background));
     painter.draw_rect({ 20, 34, WIDTH - 40, HEIGHT - 45 }, palette().color(Gfx::ColorRole::Selection), true);

@@ -134,10 +134,7 @@ public:
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
 
-    bool is_movable() const
-    {
-        return m_type == WindowType::Normal || m_type == WindowType::ToolWindow;
-    }
+    bool is_movable() const { return m_type == WindowType::Normal; }
 
     WindowFrame& frame() { return m_frame; }
     WindowFrame const& frame() const { return m_frame; }
@@ -183,6 +180,7 @@ public:
 
     bool is_modal() const { return m_mode != WindowMode::Modeless; }
     bool is_passive() { return m_mode == WindowMode::Passive; }
+    bool is_rendering_above() { return m_mode == WindowMode::RenderAbove; }
 
     bool is_blocking() const { return m_mode == WindowMode::Blocking; }
     Window* blocking_modal_window();

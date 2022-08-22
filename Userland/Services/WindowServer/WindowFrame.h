@@ -122,7 +122,6 @@ public:
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
-    void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
     MultiScaleBitmaps const* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(Gfx::IntRect const&) const;
