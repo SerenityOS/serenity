@@ -31,30 +31,30 @@ void PlainYearMonthPrototype::initialize(Realm& realm)
     // 9.3.2 Temporal.PlainYearMonth.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainYearMonth"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.daysInYear, days_in_year_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.monthsInYear, months_in_year_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.era, era_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.month, month_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.daysInYear, days_in_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.monthsInYear, months_in_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.era, era_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.with, with, 1, attr);
-    define_native_function(vm.names.add, add, 1, attr);
-    define_native_function(vm.names.subtract, subtract, 1, attr);
-    define_native_function(vm.names.until, until, 1, attr);
-    define_native_function(vm.names.since, since, 1, attr);
-    define_native_function(vm.names.equals, equals, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_native_function(vm.names.toPlainDate, to_plain_date, 1, attr);
-    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
+    define_native_function(realm, vm.names.with, with, 1, attr);
+    define_native_function(realm, vm.names.add, add, 1, attr);
+    define_native_function(realm, vm.names.subtract, subtract, 1, attr);
+    define_native_function(realm, vm.names.until, until, 1, attr);
+    define_native_function(realm, vm.names.since, since, 1, attr);
+    define_native_function(realm, vm.names.equals, equals, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.toPlainDate, to_plain_date, 1, attr);
+    define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
 // 9.3.3 get Temporal.PlainYearMonth.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendar

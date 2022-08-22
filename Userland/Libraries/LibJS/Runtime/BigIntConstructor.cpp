@@ -31,8 +31,8 @@ void BigIntConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().bigint_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.asIntN, as_int_n, 2, attr);
-    define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
+    define_native_function(realm, vm.names.asIntN, as_int_n, 2, attr);
+    define_native_function(realm, vm.names.asUintN, as_uint_n, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

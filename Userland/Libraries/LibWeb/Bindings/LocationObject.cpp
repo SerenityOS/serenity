@@ -35,19 +35,19 @@ void LocationObject::initialize(JS::Realm& realm)
 
     Object::initialize(realm);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_accessor("href", href_getter, href_setter, attr);
-    define_native_accessor("host", host_getter, {}, attr);
-    define_native_accessor("hostname", hostname_getter, {}, attr);
-    define_native_accessor("pathname", pathname_getter, {}, attr);
-    define_native_accessor("hash", hash_getter, {}, attr);
-    define_native_accessor("search", search_getter, {}, attr);
-    define_native_accessor("protocol", protocol_getter, {}, attr);
-    define_native_accessor("port", port_getter, {}, attr);
+    define_native_accessor(realm, "href", href_getter, href_setter, attr);
+    define_native_accessor(realm, "host", host_getter, {}, attr);
+    define_native_accessor(realm, "hostname", hostname_getter, {}, attr);
+    define_native_accessor(realm, "pathname", pathname_getter, {}, attr);
+    define_native_accessor(realm, "hash", hash_getter, {}, attr);
+    define_native_accessor(realm, "search", search_getter, {}, attr);
+    define_native_accessor(realm, "protocol", protocol_getter, {}, attr);
+    define_native_accessor(realm, "port", port_getter, {}, attr);
 
-    define_native_function("reload", reload, 0, JS::Attribute::Enumerable);
-    define_native_function("replace", replace, 1, JS::Attribute::Enumerable);
+    define_native_function(realm, "reload", reload, 0, JS::Attribute::Enumerable);
+    define_native_function(realm, "replace", replace, 1, JS::Attribute::Enumerable);
 
-    define_native_function(vm.names.toString, href_getter, 0, JS::Attribute::Enumerable);
+    define_native_function(realm, vm.names.toString, href_getter, 0, JS::Attribute::Enumerable);
 
     // 5. Set the value of the [[DefaultProperties]] internal slot of location to location.[[OwnPropertyKeys]]().
     // NOTE: In LibWeb this happens before the ESO is set up, so we must avoid location's custom [[OwnPropertyKeys]].

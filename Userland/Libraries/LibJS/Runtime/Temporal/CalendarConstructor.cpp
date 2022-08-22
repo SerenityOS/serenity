@@ -26,7 +26,7 @@ void CalendarConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().temporal_calendar_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

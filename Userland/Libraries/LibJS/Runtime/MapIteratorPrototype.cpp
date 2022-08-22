@@ -23,7 +23,7 @@ void MapIteratorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
 
-    define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
+    define_native_function(realm, vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Map Iterator"), Attribute::Configurable);
 }
 

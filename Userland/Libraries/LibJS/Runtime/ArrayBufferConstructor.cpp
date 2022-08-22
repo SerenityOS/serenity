@@ -27,10 +27,10 @@ void ArrayBufferConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().array_buffer_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.isView, is_view, 1, attr);
+    define_native_function(realm, vm.names.isView, is_view, 1, attr);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
-    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

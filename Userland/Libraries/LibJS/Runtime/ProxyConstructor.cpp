@@ -34,7 +34,7 @@ void ProxyConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
     NativeFunction::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.revocable, revocable, 2, attr);
+    define_native_function(realm, vm.names.revocable, revocable, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }

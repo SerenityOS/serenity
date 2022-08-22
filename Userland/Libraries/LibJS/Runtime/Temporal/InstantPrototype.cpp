@@ -33,24 +33,24 @@ void InstantPrototype::initialize(Realm& realm)
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Instant"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.add, add, 1, attr);
-    define_native_function(vm.names.subtract, subtract, 1, attr);
-    define_native_function(vm.names.until, until, 1, attr);
-    define_native_function(vm.names.since, since, 1, attr);
-    define_native_function(vm.names.round, round, 1, attr);
-    define_native_function(vm.names.equals, equals, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
-    define_native_function(vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
+    define_native_function(realm, vm.names.add, add, 1, attr);
+    define_native_function(realm, vm.names.subtract, subtract, 1, attr);
+    define_native_function(realm, vm.names.until, until, 1, attr);
+    define_native_function(realm, vm.names.since, since, 1, attr);
+    define_native_function(realm, vm.names.round, round, 1, attr);
+    define_native_function(realm, vm.names.equals, equals, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
+    define_native_function(realm, vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds

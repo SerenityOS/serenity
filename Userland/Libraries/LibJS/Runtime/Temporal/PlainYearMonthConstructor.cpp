@@ -32,8 +32,8 @@ void PlainYearMonthConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
-    define_native_function(vm.names.compare, compare, 2, attr);
+    define_native_function(realm, vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.compare, compare, 2, attr);
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth

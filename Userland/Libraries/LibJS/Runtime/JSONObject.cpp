@@ -35,8 +35,8 @@ void JSONObject::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.stringify, stringify, 3, attr);
-    define_native_function(vm.names.parse, parse, 2, attr);
+    define_native_function(realm, vm.names.stringify, stringify, 3, attr);
+    define_native_function(realm, vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "JSON"), Attribute::Configurable);

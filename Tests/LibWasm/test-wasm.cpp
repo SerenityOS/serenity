@@ -153,8 +153,8 @@ TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 void WebAssemblyModule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    define_native_function("getExport", get_export, 1, JS::default_attributes);
-    define_native_function("invoke", wasm_invoke, 1, JS::default_attributes);
+    define_native_function(realm, "getExport", get_export, 1, JS::default_attributes);
+    define_native_function(realm, "invoke", wasm_invoke, 1, JS::default_attributes);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)

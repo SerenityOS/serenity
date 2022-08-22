@@ -146,7 +146,7 @@ void CollatorConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+    define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 }
 
 // 10.1.1 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator

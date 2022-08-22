@@ -67,64 +67,64 @@ void WindowObject::initialize_global_object(JS::Realm& realm)
     define_direct_property("window", this, JS::Attribute::Enumerable);
     define_direct_property("frames", this, JS::Attribute::Enumerable);
     define_direct_property("self", this, JS::Attribute::Enumerable);
-    define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("name", name_getter, name_setter, JS::Attribute::Enumerable);
-    define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "name", name_getter, name_setter, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "screen", screen_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
-    define_native_function("alert", alert, 0, attr);
-    define_native_function("confirm", confirm, 0, attr);
-    define_native_function("prompt", prompt, 0, attr);
-    define_native_function("setInterval", set_interval, 1, attr);
-    define_native_function("setTimeout", set_timeout, 1, attr);
-    define_native_function("clearInterval", clear_interval, 1, attr);
-    define_native_function("clearTimeout", clear_timeout, 1, attr);
-    define_native_function("requestAnimationFrame", request_animation_frame, 1, attr);
-    define_native_function("cancelAnimationFrame", cancel_animation_frame, 1, attr);
-    define_native_function("atob", atob, 1, attr);
-    define_native_function("btoa", btoa, 1, attr);
+    define_native_function(realm, "alert", alert, 0, attr);
+    define_native_function(realm, "confirm", confirm, 0, attr);
+    define_native_function(realm, "prompt", prompt, 0, attr);
+    define_native_function(realm, "setInterval", set_interval, 1, attr);
+    define_native_function(realm, "setTimeout", set_timeout, 1, attr);
+    define_native_function(realm, "clearInterval", clear_interval, 1, attr);
+    define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
+    define_native_function(realm, "requestAnimationFrame", request_animation_frame, 1, attr);
+    define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
+    define_native_function(realm, "atob", atob, 1, attr);
+    define_native_function(realm, "btoa", btoa, 1, attr);
 
-    define_native_function("queueMicrotask", queue_microtask, 1, attr);
+    define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
-    define_native_function("requestIdleCallback", request_idle_callback, 1, attr);
-    define_native_function("cancelIdleCallback", cancel_idle_callback, 1, attr);
+    define_native_function(realm, "requestIdleCallback", request_idle_callback, 1, attr);
+    define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
-    define_native_function("getComputedStyle", get_computed_style, 1, attr);
-    define_native_function("matchMedia", match_media, 1, attr);
-    define_native_function("getSelection", get_selection, 0, attr);
+    define_native_function(realm, "getComputedStyle", get_computed_style, 1, attr);
+    define_native_function(realm, "matchMedia", match_media, 1, attr);
+    define_native_function(realm, "getSelection", get_selection, 0, attr);
 
-    define_native_function("postMessage", post_message, 1, attr);
+    define_native_function(realm, "postMessage", post_message, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_accessor("scrollX", scroll_x_getter, {}, attr);
-    define_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
-    define_native_accessor("scrollY", scroll_y_getter, {}, attr);
-    define_native_accessor("pageYOffset", scroll_y_getter, {}, attr);
+    define_native_accessor(realm, "scrollX", scroll_x_getter, {}, attr);
+    define_native_accessor(realm, "pageXOffset", scroll_x_getter, {}, attr);
+    define_native_accessor(realm, "scrollY", scroll_y_getter, {}, attr);
+    define_native_accessor(realm, "pageYOffset", scroll_y_getter, {}, attr);
 
-    define_native_function("scroll", scroll, 2, attr);
-    define_native_function("scrollTo", scroll, 2, attr);
-    define_native_function("scrollBy", scroll_by, 2, attr);
+    define_native_function(realm, "scroll", scroll, 2, attr);
+    define_native_function(realm, "scrollTo", scroll, 2, attr);
+    define_native_function(realm, "scrollBy", scroll_by, 2, attr);
 
-    define_native_accessor("screenX", screen_x_getter, {}, attr);
-    define_native_accessor("screenY", screen_y_getter, {}, attr);
-    define_native_accessor("screenLeft", screen_left_getter, {}, attr);
-    define_native_accessor("screenTop", screen_top_getter, {}, attr);
+    define_native_accessor(realm, "screenX", screen_x_getter, {}, attr);
+    define_native_accessor(realm, "screenY", screen_y_getter, {}, attr);
+    define_native_accessor(realm, "screenLeft", screen_left_getter, {}, attr);
+    define_native_accessor(realm, "screenTop", screen_top_getter, {}, attr);
 
     define_direct_property("CSS", heap().allocate<CSSNamespace>(realm, realm), 0);
 
-    define_native_accessor("localStorage", local_storage_getter, {}, attr);
-    define_native_accessor("sessionStorage", session_storage_getter, {}, attr);
-    define_native_accessor("origin", origin_getter, {}, attr);
+    define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
+    define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
+    define_native_accessor(realm, "origin", origin_getter, {}, attr);
 
     // Legacy
-    define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
     m_location_object = heap().allocate<LocationObject>(realm, realm);
 
@@ -133,14 +133,14 @@ void WindowObject::initialize_global_object(JS::Realm& realm)
     define_direct_property("clientInformation", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
-    define_native_accessor("location", location_getter, location_setter, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(realm, realm), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \
-    define_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
+    define_native_accessor(realm, #attribute, attribute##_getter, attribute##_setter, attr);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE

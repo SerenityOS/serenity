@@ -19,7 +19,7 @@ void WeakRefPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
 
-    define_native_function(vm.names.deref, deref, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function(realm, vm.names.deref, deref, 0, Attribute::Writable | Attribute::Configurable);
 
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.WeakRef.as_string()), Attribute::Configurable);
 }

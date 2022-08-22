@@ -22,7 +22,7 @@ void GlobalObject::initialize_global_object(Realm& realm)
 
     // https://github.com/tc39/test262/blob/master/INTERPRETING.md#host-defined-functions
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("print", print, 1, attr);
+    define_native_function(realm, "print", print, 1, attr);
     define_direct_property("$262", m_$262, attr);
 }
 

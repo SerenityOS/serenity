@@ -22,8 +22,8 @@ void BooleanPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     BooleanObject::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
 }
 
 // 20.3.3.2 Boolean.prototype.toString ( ), https://tc39.es/ecma262/#sec-boolean.prototype.tostring

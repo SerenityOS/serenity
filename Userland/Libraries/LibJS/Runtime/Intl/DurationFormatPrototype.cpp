@@ -26,9 +26,9 @@ void DurationFormatPrototype::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DurationFormat"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.format, format, 1, attr);
-    define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
-    define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_native_function(realm, vm.names.format, format, 1, attr);
+    define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
+    define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
 // 1.4.3 Intl.DurationFormat.prototype.format ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.format

@@ -133,16 +133,16 @@ void AtomicsObject::initialize(Realm& realm)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.add, add, 3, attr);
-    define_native_function(vm.names.and_, and_, 3, attr);
-    define_native_function(vm.names.compareExchange, compare_exchange, 4, attr);
-    define_native_function(vm.names.exchange, exchange, 3, attr);
-    define_native_function(vm.names.isLockFree, is_lock_free, 1, attr);
-    define_native_function(vm.names.load, load, 2, attr);
-    define_native_function(vm.names.or_, or_, 3, attr);
-    define_native_function(vm.names.store, store, 3, attr);
-    define_native_function(vm.names.sub, sub, 3, attr);
-    define_native_function(vm.names.xor_, xor_, 3, attr);
+    define_native_function(realm, vm.names.add, add, 3, attr);
+    define_native_function(realm, vm.names.and_, and_, 3, attr);
+    define_native_function(realm, vm.names.compareExchange, compare_exchange, 4, attr);
+    define_native_function(realm, vm.names.exchange, exchange, 3, attr);
+    define_native_function(realm, vm.names.isLockFree, is_lock_free, 1, attr);
+    define_native_function(realm, vm.names.load, load, 2, attr);
+    define_native_function(realm, vm.names.or_, or_, 3, attr);
+    define_native_function(realm, vm.names.store, store, 3, attr);
+    define_native_function(realm, vm.names.sub, sub, 3, attr);
+    define_native_function(realm, vm.names.xor_, xor_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Atomics"), Attribute::Configurable);

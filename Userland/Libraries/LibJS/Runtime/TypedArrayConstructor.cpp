@@ -30,10 +30,10 @@ void TypedArrayConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().typed_array_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
-    define_native_function(vm.names.of, of, 0, attr);
+    define_native_function(realm, vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.of, of, 0, attr);
 
-    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

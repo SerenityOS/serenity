@@ -25,19 +25,19 @@ void ReflectObject::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.apply, apply, 3, attr);
-    define_native_function(vm.names.construct, construct, 2, attr);
-    define_native_function(vm.names.defineProperty, define_property, 3, attr);
-    define_native_function(vm.names.deleteProperty, delete_property, 2, attr);
-    define_native_function(vm.names.get, get, 2, attr);
-    define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
-    define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
-    define_native_function(vm.names.has, has, 2, attr);
-    define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
-    define_native_function(vm.names.ownKeys, own_keys, 1, attr);
-    define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
-    define_native_function(vm.names.set, set, 3, attr);
-    define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
+    define_native_function(realm, vm.names.apply, apply, 3, attr);
+    define_native_function(realm, vm.names.construct, construct, 2, attr);
+    define_native_function(realm, vm.names.defineProperty, define_property, 3, attr);
+    define_native_function(realm, vm.names.deleteProperty, delete_property, 2, attr);
+    define_native_function(realm, vm.names.get, get, 2, attr);
+    define_native_function(realm, vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
+    define_native_function(realm, vm.names.getPrototypeOf, get_prototype_of, 1, attr);
+    define_native_function(realm, vm.names.has, has, 2, attr);
+    define_native_function(realm, vm.names.isExtensible, is_extensible, 1, attr);
+    define_native_function(realm, vm.names.ownKeys, own_keys, 1, attr);
+    define_native_function(realm, vm.names.preventExtensions, prevent_extensions, 1, attr);
+    define_native_function(realm, vm.names.set, set, 3, attr);
+    define_native_function(realm, vm.names.setPrototypeOf, set_prototype_of, 2, attr);
 
     // 28.1.14 Reflect [ @@toStringTag ], https://tc39.es/ecma262/#sec-reflect-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Reflect.as_string()), Attribute::Configurable);

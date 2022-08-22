@@ -31,8 +31,8 @@ void ZonedDateTimeConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().temporal_zoned_date_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
-    define_native_function(vm.names.compare, compare, 2, attr);
+    define_native_function(realm, vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }

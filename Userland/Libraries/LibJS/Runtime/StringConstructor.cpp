@@ -31,9 +31,9 @@ void StringConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().string_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.raw, raw, 1, attr);
-    define_native_function(vm.names.fromCharCode, from_char_code, 1, attr);
-    define_native_function(vm.names.fromCodePoint, from_code_point, 1, attr);
+    define_native_function(realm, vm.names.raw, raw, 1, attr);
+    define_native_function(realm, vm.names.fromCharCode, from_char_code, 1, attr);
+    define_native_function(realm, vm.names.fromCodePoint, from_code_point, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

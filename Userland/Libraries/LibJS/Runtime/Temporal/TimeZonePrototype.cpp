@@ -29,16 +29,16 @@ void TimeZonePrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
-    define_native_function(vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
-    define_native_function(vm.names.getOffsetStringFor, get_offset_string_for, 1, attr);
-    define_native_function(vm.names.getPlainDateTimeFor, get_plain_date_time_for, 1, attr);
-    define_native_function(vm.names.getInstantFor, get_instant_for, 1, attr);
-    define_native_function(vm.names.getPossibleInstantsFor, get_possible_instants_for, 1, attr);
-    define_native_function(vm.names.getNextTransition, get_next_transition, 1, attr);
-    define_native_function(vm.names.getPreviousTransition, get_previous_transition, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
+    define_native_accessor(realm, vm.names.id, id_getter, {}, Attribute::Configurable);
+    define_native_function(realm, vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
+    define_native_function(realm, vm.names.getOffsetStringFor, get_offset_string_for, 1, attr);
+    define_native_function(realm, vm.names.getPlainDateTimeFor, get_plain_date_time_for, 1, attr);
+    define_native_function(realm, vm.names.getInstantFor, get_instant_for, 1, attr);
+    define_native_function(realm, vm.names.getPossibleInstantsFor, get_possible_instants_for, 1, attr);
+    define_native_function(realm, vm.names.getNextTransition, get_next_transition, 1, attr);
+    define_native_function(realm, vm.names.getPreviousTransition, get_previous_transition, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
 
     // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.TimeZone"), Attribute::Configurable);

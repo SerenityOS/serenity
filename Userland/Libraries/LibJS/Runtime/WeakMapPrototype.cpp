@@ -22,10 +22,10 @@ void WeakMapPrototype::initialize(Realm& realm)
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function(vm.names.delete_, delete_, 1, attr);
-    define_native_function(vm.names.get, get, 1, attr);
-    define_native_function(vm.names.has, has, 1, attr);
-    define_native_function(vm.names.set, set, 2, attr);
+    define_native_function(realm, vm.names.delete_, delete_, 1, attr);
+    define_native_function(realm, vm.names.get, get, 1, attr);
+    define_native_function(realm, vm.names.has, has, 1, attr);
+    define_native_function(realm, vm.names.set, set, 2, attr);
 
     // 24.3.3.6 WeakMap.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-weakmap.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.WeakMap.as_string()), Attribute::Configurable);

@@ -30,11 +30,11 @@ void FunctionPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.apply, apply, 2, attr);
-    define_native_function(vm.names.bind, bind, 1, attr);
-    define_native_function(vm.names.call, call, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(*vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
+    define_native_function(realm, vm.names.apply, apply, 2, attr);
+    define_native_function(realm, vm.names.bind, bind, 1, attr);
+    define_native_function(realm, vm.names.call, call, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, *vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
     define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
 }

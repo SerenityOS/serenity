@@ -33,19 +33,19 @@ void ObjectPrototype::initialize(Realm& realm)
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.hasOwnProperty, has_own_property, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_native_function(vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
-    define_native_function(vm.names.isPrototypeOf, is_prototype_of, 1, attr);
+    define_native_function(realm, vm.names.hasOwnProperty, has_own_property, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
+    define_native_function(realm, vm.names.isPrototypeOf, is_prototype_of, 1, attr);
 
     // Annex B
-    define_native_function(vm.names.__defineGetter__, define_getter, 2, attr);
-    define_native_function(vm.names.__defineSetter__, define_setter, 2, attr);
-    define_native_function(vm.names.__lookupGetter__, lookup_getter, 1, attr);
-    define_native_function(vm.names.__lookupSetter__, lookup_setter, 1, attr);
-    define_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
+    define_native_function(realm, vm.names.__defineGetter__, define_getter, 2, attr);
+    define_native_function(realm, vm.names.__defineSetter__, define_setter, 2, attr);
+    define_native_function(realm, vm.names.__lookupGetter__, lookup_getter, 1, attr);
+    define_native_function(realm, vm.names.__lookupSetter__, lookup_setter, 1, attr);
+    define_native_accessor(realm, vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
 }
 
 // 10.4.7.1 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects-setprototypeof-v

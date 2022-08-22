@@ -27,11 +27,11 @@ void ErrorPrototype::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, js_string(vm, "Error"), attr);
     define_direct_property(vm.names.message, js_string(vm, ""), attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
     // Non standard property "stack"
     // Every other engine seems to have this in some way or another, and the spec
     // proposal for this is only Stage 1
-    define_native_accessor(vm.names.stack, stack_getter, stack_setter, attr);
+    define_native_accessor(realm, vm.names.stack, stack_getter, stack_setter, attr);
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring

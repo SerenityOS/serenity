@@ -253,14 +253,14 @@ void PromiseConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().promise_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.all, all, 1, attr);
-    define_native_function(vm.names.allSettled, all_settled, 1, attr);
-    define_native_function(vm.names.any, any, 1, attr);
-    define_native_function(vm.names.race, race, 1, attr);
-    define_native_function(vm.names.reject, reject, 1, attr);
-    define_native_function(vm.names.resolve, resolve, 1, attr);
+    define_native_function(realm, vm.names.all, all, 1, attr);
+    define_native_function(realm, vm.names.allSettled, all_settled, 1, attr);
+    define_native_function(realm, vm.names.any, any, 1, attr);
+    define_native_function(realm, vm.names.race, race, 1, attr);
+    define_native_function(realm, vm.names.reject, reject, 1, attr);
+    define_native_function(realm, vm.names.resolve, resolve, 1, attr);
 
-    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

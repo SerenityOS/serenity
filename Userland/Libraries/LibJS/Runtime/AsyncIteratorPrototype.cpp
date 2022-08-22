@@ -18,7 +18,7 @@ void AsyncIteratorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(*vm.well_known_symbol_async_iterator(), symbol_async_iterator, 0, attr);
+    define_native_function(realm, *vm.well_known_symbol_async_iterator(), symbol_async_iterator, 0, attr);
 }
 
 // 27.1.3.1 %AsyncIteratorPrototype% [ @@asyncIterator ] ( ), https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator

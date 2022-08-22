@@ -34,32 +34,32 @@ void CalendarPrototype::initialize(Realm& realm)
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Calendar"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.id, id_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.dateFromFields, date_from_fields, 1, attr);
-    define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
-    define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
-    define_native_function(vm.names.dateAdd, date_add, 2, attr);
-    define_native_function(vm.names.dateUntil, date_until, 2, attr);
-    define_native_function(vm.names.year, year, 1, attr);
-    define_native_function(vm.names.month, month, 1, attr);
-    define_native_function(vm.names.monthCode, month_code, 1, attr);
-    define_native_function(vm.names.day, day, 1, attr);
-    define_native_function(vm.names.dayOfWeek, day_of_week, 1, attr);
-    define_native_function(vm.names.dayOfYear, day_of_year, 1, attr);
-    define_native_function(vm.names.weekOfYear, week_of_year, 1, attr);
-    define_native_function(vm.names.daysInWeek, days_in_week, 1, attr);
-    define_native_function(vm.names.daysInMonth, days_in_month, 1, attr);
-    define_native_function(vm.names.daysInYear, days_in_year, 1, attr);
-    define_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
-    define_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
-    define_native_function(vm.names.fields, fields, 1, attr);
-    define_native_function(vm.names.mergeFields, merge_fields, 2, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.era, era, 1, attr);
-    define_native_function(vm.names.eraYear, era_year, 1, attr);
+    define_native_function(realm, vm.names.dateFromFields, date_from_fields, 1, attr);
+    define_native_function(realm, vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
+    define_native_function(realm, vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
+    define_native_function(realm, vm.names.dateAdd, date_add, 2, attr);
+    define_native_function(realm, vm.names.dateUntil, date_until, 2, attr);
+    define_native_function(realm, vm.names.year, year, 1, attr);
+    define_native_function(realm, vm.names.month, month, 1, attr);
+    define_native_function(realm, vm.names.monthCode, month_code, 1, attr);
+    define_native_function(realm, vm.names.day, day, 1, attr);
+    define_native_function(realm, vm.names.dayOfWeek, day_of_week, 1, attr);
+    define_native_function(realm, vm.names.dayOfYear, day_of_year, 1, attr);
+    define_native_function(realm, vm.names.weekOfYear, week_of_year, 1, attr);
+    define_native_function(realm, vm.names.daysInWeek, days_in_week, 1, attr);
+    define_native_function(realm, vm.names.daysInMonth, days_in_month, 1, attr);
+    define_native_function(realm, vm.names.daysInYear, days_in_year, 1, attr);
+    define_native_function(realm, vm.names.monthsInYear, months_in_year, 1, attr);
+    define_native_function(realm, vm.names.inLeapYear, in_leap_year, 1, attr);
+    define_native_function(realm, vm.names.fields, fields, 1, attr);
+    define_native_function(realm, vm.names.mergeFields, merge_fields, 2, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
+    define_native_function(realm, vm.names.era, era, 1, attr);
+    define_native_function(realm, vm.names.eraYear, era_year, 1, attr);
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id

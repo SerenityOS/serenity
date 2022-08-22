@@ -31,10 +31,10 @@ void $262Object::initialize(Realm& realm)
     m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm, realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("clearKeptObjects", clear_kept_objects, 0, attr);
-    define_native_function("createRealm", create_realm, 0, attr);
-    define_native_function("detachArrayBuffer", detach_array_buffer, 1, attr);
-    define_native_function("evalScript", eval_script, 1, attr);
+    define_native_function(realm, "clearKeptObjects", clear_kept_objects, 0, attr);
+    define_native_function(realm, "createRealm", create_realm, 0, attr);
+    define_native_function(realm, "detachArrayBuffer", detach_array_buffer, 1, attr);
+    define_native_function(realm, "evalScript", eval_script, 1, attr);
 
     define_direct_property("agent", m_agent, attr);
     define_direct_property("gc", realm.global_object().get_without_side_effects("gc"), attr);

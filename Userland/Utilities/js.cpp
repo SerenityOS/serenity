@@ -1302,14 +1302,15 @@ void ReplObject::initialize_global_object(JS::Realm& realm)
     Base::initialize_global_object(realm);
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("exit", exit_interpreter, 0, attr);
-    define_native_function("help", repl_help, 0, attr);
-    define_native_function("save", save_to_file, 1, attr);
-    define_native_function("loadINI", load_ini, 1, attr);
-    define_native_function("loadJSON", load_json, 1, attr);
-    define_native_function("print", print, 1, attr);
+    define_native_function(realm, "exit", exit_interpreter, 0, attr);
+    define_native_function(realm, "help", repl_help, 0, attr);
+    define_native_function(realm, "save", save_to_file, 1, attr);
+    define_native_function(realm, "loadINI", load_ini, 1, attr);
+    define_native_function(realm, "loadJSON", load_json, 1, attr);
+    define_native_function(realm, "print", print, 1, attr);
 
     define_native_accessor(
+        realm,
         "_",
         [](JS::VM&) {
             return g_last_value.value();
@@ -1380,9 +1381,9 @@ void ScriptObject::initialize_global_object(JS::Realm& realm)
     Base::initialize_global_object(realm);
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("loadINI", load_ini, 1, attr);
-    define_native_function("loadJSON", load_json, 1, attr);
-    define_native_function("print", print, 1, attr);
+    define_native_function(realm, "loadINI", load_ini, 1, attr);
+    define_native_function(realm, "loadJSON", load_json, 1, attr);
+    define_native_function(realm, "print", print, 1, attr);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_ini)

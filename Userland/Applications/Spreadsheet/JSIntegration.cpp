@@ -148,14 +148,14 @@ void SheetGlobalObject::initialize_global_object(JS::Realm& realm)
 {
     Base::initialize_global_object(realm);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("get_real_cell_contents", get_real_cell_contents, 1, attr);
-    define_native_function("set_real_cell_contents", set_real_cell_contents, 2, attr);
-    define_native_function("parse_cell_name", parse_cell_name, 1, attr);
-    define_native_function("current_cell_position", current_cell_position, 0, attr);
-    define_native_function("column_arithmetic", column_arithmetic, 2, attr);
-    define_native_function("column_index", column_index, 1, attr);
-    define_native_function("get_column_bound", get_column_bound, 1, attr);
-    define_native_accessor("name", get_name, nullptr, attr);
+    define_native_function(realm, "get_real_cell_contents", get_real_cell_contents, 1, attr);
+    define_native_function(realm, "set_real_cell_contents", set_real_cell_contents, 2, attr);
+    define_native_function(realm, "parse_cell_name", parse_cell_name, 1, attr);
+    define_native_function(realm, "current_cell_position", current_cell_position, 0, attr);
+    define_native_function(realm, "column_arithmetic", column_arithmetic, 2, attr);
+    define_native_function(realm, "column_index", column_index, 1, attr);
+    define_native_function(realm, "get_column_bound", get_column_bound, 1, attr);
+    define_native_accessor(realm, "name", get_name, nullptr, attr);
 }
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
@@ -378,7 +378,7 @@ WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
 void WorkbookObject::initialize(JS::Realm& realm)
 {
     Object::initialize(realm);
-    define_native_function("sheet", sheet, 1, JS::default_attributes);
+    define_native_function(realm, "sheet", sheet, 1, JS::default_attributes);
 }
 
 void WorkbookObject::visit_edges(Visitor& visitor)
