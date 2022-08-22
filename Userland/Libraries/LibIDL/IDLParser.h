@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "IDLTypes.h"
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <LibIDL/Types.h>
 
 namespace IDL {
 

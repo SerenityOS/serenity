@@ -7,12 +7,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "IDLParser.h"
-#include "IDLTypes.h"
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibIDL/IDLParser.h>
+#include <LibIDL/Types.h>
 
 extern Vector<StringView> s_header_search_paths;
 
