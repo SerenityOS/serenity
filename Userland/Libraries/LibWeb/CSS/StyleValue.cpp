@@ -1557,8 +1557,12 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
         return false;
     auto& other = other_.as_linear_gradient();
 
-    if (m_direction != other.m_direction || m_color_stop_list.size() != other.m_color_stop_list.size())
+    if (m_gradient_type != other.m_gradient_type
+        || m_repeating != other.m_repeating
+        || m_direction != other.m_direction
+        || m_color_stop_list.size() != other.m_color_stop_list.size()) {
         return false;
+    }
 
     for (size_t i = 0; i < m_color_stop_list.size(); i++) {
         if (m_color_stop_list[i] != other.m_color_stop_list[i])
