@@ -153,6 +153,21 @@ bool File::exists(StringView filename)
     return !Core::System::stat(filename).is_error();
 }
 
+ErrorOr<NonnullOwnPtr<File>> File::open_file_or_standard_stream(StringView filename, OpenMode mode)
+{
+    if (!filename.is_empty() && filename != "-"sv)
+        return File::open(filename, mode);
+
+    switch (mode) {
+    case OpenMode::Read:
+        return File::adopt_fd(STDIN_FILENO, mode);
+    case OpenMode::Write:
+        return File::adopt_fd(STDOUT_FILENO, mode);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 int File::open_mode_to_options(OpenMode mode)
 {
     int flags = 0;

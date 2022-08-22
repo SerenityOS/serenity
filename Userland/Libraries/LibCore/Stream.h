@@ -185,6 +185,8 @@ public:
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
     static bool exists(StringView filename);
 
+    static ErrorOr<NonnullOwnPtr<File>> open_file_or_standard_stream(StringView filename, OpenMode mode);
+
     File(File&& other) { operator=(move(other)); }
 
     File& operator=(File&& other)
