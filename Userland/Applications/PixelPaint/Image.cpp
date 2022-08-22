@@ -265,6 +265,8 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
     if (!layer_selected)
         select_layer(&layer(0));
 
+    m_size = snapshot.size();
+    did_change_rect();
     did_modify_layer_stack();
     return {};
 }
