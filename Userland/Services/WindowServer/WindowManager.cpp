@@ -1673,7 +1673,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                     maximize_windows(*active_input_window, false);
                     return;
                 }
-                if (active_input_window->is_minimizable())
+                if (active_input_window->is_minimizable() && !active_input_window->is_modal())
                     minimize_windows(*active_input_window, true);
                 return;
             }

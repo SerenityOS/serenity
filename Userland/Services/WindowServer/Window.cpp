@@ -228,7 +228,7 @@ void Window::update_window_menu_items()
         return;
 
     m_window_menu_minimize_item->set_text(m_minimized_state != WindowMinimizedState::None ? "&Unminimize" : "Mi&nimize");
-    m_window_menu_minimize_item->set_enabled(m_minimizable);
+    m_window_menu_minimize_item->set_enabled(m_minimizable && !is_modal());
 
     m_window_menu_maximize_item->set_text(is_maximized() ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);

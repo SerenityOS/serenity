@@ -107,7 +107,7 @@ void WindowFrame::window_was_constructed(Badge<Window>)
         m_buttons.append(move(button));
     }
 
-    if (m_window.is_minimizable()) {
+    if (m_window.is_minimizable() && !m_window.is_modal()) {
         auto button = make<Button>(*this, [this](auto&) {
             m_window.handle_window_menu_action(WindowMenuAction::MinimizeOrUnminimize);
         });
@@ -136,7 +136,7 @@ void WindowFrame::set_button_icons()
         m_close_button->set_icon(m_window.is_modified() ? s_close_modified_icon : s_close_icon);
         m_close_button->set_style(button_style);
     }
-    if (m_window.is_minimizable()) {
+    if (m_window.is_minimizable() && !m_window.is_modal()) {
         m_minimize_button->set_icon(s_minimize_icon);
         m_minimize_button->set_style(button_style);
     }
