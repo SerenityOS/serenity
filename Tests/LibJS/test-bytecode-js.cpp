@@ -20,7 +20,7 @@
                                                                                     \
     auto script = script_or_error.release_value();                                  \
     auto const& program = script->parse_node();                                     \
-    JS::Bytecode::Interpreter bytecode_interpreter(ast_interpreter->global_object(), ast_interpreter->realm());
+    JS::Bytecode::Interpreter bytecode_interpreter(ast_interpreter->realm());
 
 #define EXPECT_NO_EXCEPTION(executable)                                 \
     auto executable = MUST(JS::Bytecode::Generator::generate(program)); \

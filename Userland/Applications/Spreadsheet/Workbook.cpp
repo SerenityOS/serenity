@@ -30,10 +30,10 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     , m_parent_window(parent_window)
 {
     m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->realm(), m_interpreter->realm(), *this);
-    m_interpreter->global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
+    m_interpreter->realm().global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
     m_main_execution_context.current_node = nullptr;
-    m_main_execution_context.this_value = &m_interpreter->global_object();
+    m_main_execution_context.this_value = &m_interpreter->realm().global_object();
     m_main_execution_context.function_name = "(global execution context)"sv;
     m_main_execution_context.lexical_environment = &m_interpreter->realm().global_environment();
     m_main_execution_context.variable_environment = &m_interpreter->realm().global_environment();

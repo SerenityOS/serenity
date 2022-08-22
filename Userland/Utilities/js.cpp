@@ -1170,7 +1170,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 executable->dump();
 
             if (s_run_bytecode) {
-                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm().global_object(), interpreter.realm());
+                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
                 auto result_or_error = bytecode_interpreter.run_and_return_frame(*executable, nullptr);
                 if (result_or_error.value.is_error())
                     result = result_or_error.value.release_error();

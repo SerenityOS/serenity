@@ -390,8 +390,8 @@ void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
         return;
 
     m_interpreter = interpreter;
-    m_console_client = make<WebContentConsoleClient>(interpreter->global_object().console(), interpreter, *this);
-    interpreter->global_object().console().set_client(*m_console_client.ptr());
+    m_console_client = make<WebContentConsoleClient>(interpreter->realm().global_object().console(), interpreter, *this);
+    interpreter->realm().global_object().console().set_client(*m_console_client.ptr());
 }
 
 void ConnectionFromClient::js_console_input(String const& js_source)

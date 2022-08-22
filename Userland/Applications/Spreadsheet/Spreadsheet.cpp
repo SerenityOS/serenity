@@ -43,7 +43,7 @@ Sheet::Sheet(Workbook& workbook)
     , m_interpreter(JS::Interpreter::create<SheetGlobalObject>(m_workbook.vm(), *this))
 {
     JS::DeferGC defer_gc(m_workbook.vm().heap());
-    m_global_object = static_cast<SheetGlobalObject*>(&m_interpreter->global_object());
+    m_global_object = static_cast<SheetGlobalObject*>(&m_interpreter->realm().global_object());
     global_object().define_direct_property("workbook", m_workbook.workbook_object(), JS::default_attributes);
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
