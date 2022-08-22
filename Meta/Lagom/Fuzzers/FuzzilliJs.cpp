@@ -172,7 +172,7 @@ void TestRunnerGlobalObject::initialize_global_object(JS::Realm& realm)
 {
     Base::initialize_global_object(realm);
     define_direct_property("global", this, JS::Attribute::Enumerable);
-    define_native_function("fuzzilli", fuzzilli, 2, JS::default_attributes);
+    define_native_function(realm, "fuzzilli", fuzzilli, 2, JS::default_attributes);
 }
 
 int main(int, char**)

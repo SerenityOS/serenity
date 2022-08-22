@@ -37,10 +37,10 @@ void NumberConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().number_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.isFinite, is_finite, 1, attr);
-    define_native_function(vm.names.isInteger, is_integer, 1, attr);
-    define_native_function(vm.names.isNaN, is_nan, 1, attr);
-    define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
+    define_native_function(realm, vm.names.isFinite, is_finite, 1, attr);
+    define_native_function(realm, vm.names.isInteger, is_integer, 1, attr);
+    define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
+    define_native_function(realm, vm.names.isSafeInteger, is_safe_integer, 1, attr);
     // FIXME: Store these as intrinsics (`parse_int_function()`) instead of getting them from the global object
     define_direct_property(vm.names.parseInt, realm.global_object().get_without_side_effects(vm.names.parseInt), attr);
     define_direct_property(vm.names.parseFloat, realm.global_object().get_without_side_effects(vm.names.parseFloat), attr);

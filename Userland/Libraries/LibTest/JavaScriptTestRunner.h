@@ -206,6 +206,7 @@ inline void TestRunnerGlobalObject::initialize_global_object(JS::Realm& realm)
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
         define_native_function(
+            realm,
             entry.key, [fn = entry.value.function](auto& vm) {
                 return fn(vm);
             },

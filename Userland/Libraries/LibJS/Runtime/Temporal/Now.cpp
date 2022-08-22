@@ -35,15 +35,15 @@ void Now::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Now"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.timeZone, time_zone, 0, attr);
-    define_native_function(vm.names.instant, instant, 0, attr);
-    define_native_function(vm.names.plainDateTime, plain_date_time, 1, attr);
-    define_native_function(vm.names.plainDateTimeISO, plain_date_time_iso, 0, attr);
-    define_native_function(vm.names.zonedDateTime, zoned_date_time, 1, attr);
-    define_native_function(vm.names.zonedDateTimeISO, zoned_date_time_iso, 0, attr);
-    define_native_function(vm.names.plainDate, plain_date, 1, attr);
-    define_native_function(vm.names.plainDateISO, plain_date_iso, 0, attr);
-    define_native_function(vm.names.plainTimeISO, plain_time_iso, 0, attr);
+    define_native_function(realm, vm.names.timeZone, time_zone, 0, attr);
+    define_native_function(realm, vm.names.instant, instant, 0, attr);
+    define_native_function(realm, vm.names.plainDateTime, plain_date_time, 1, attr);
+    define_native_function(realm, vm.names.plainDateTimeISO, plain_date_time_iso, 0, attr);
+    define_native_function(realm, vm.names.zonedDateTime, zoned_date_time, 1, attr);
+    define_native_function(realm, vm.names.zonedDateTimeISO, zoned_date_time_iso, 0, attr);
+    define_native_function(realm, vm.names.plainDate, plain_date, 1, attr);
+    define_native_function(realm, vm.names.plainDateISO, plain_date_iso, 0, attr);
+    define_native_function(realm, vm.names.plainTimeISO, plain_time_iso, 0, attr);
 }
 
 // 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone

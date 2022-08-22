@@ -31,22 +31,22 @@ void RegExpPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.test, test, 1, attr);
-    define_native_function(vm.names.exec, exec, 1, attr);
-    define_native_function(vm.names.compile, compile, 2, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.test, test, 1, attr);
+    define_native_function(realm, vm.names.exec, exec, 1, attr);
+    define_native_function(realm, vm.names.compile, compile, 2, attr);
 
-    define_native_function(*vm.well_known_symbol_match(), symbol_match, 1, attr);
-    define_native_function(*vm.well_known_symbol_match_all(), symbol_match_all, 1, attr);
-    define_native_function(*vm.well_known_symbol_replace(), symbol_replace, 2, attr);
-    define_native_function(*vm.well_known_symbol_search(), symbol_search, 1, attr);
-    define_native_function(*vm.well_known_symbol_split(), symbol_split, 2, attr);
+    define_native_function(realm, *vm.well_known_symbol_match(), symbol_match, 1, attr);
+    define_native_function(realm, *vm.well_known_symbol_match_all(), symbol_match_all, 1, attr);
+    define_native_function(realm, *vm.well_known_symbol_replace(), symbol_replace, 2, attr);
+    define_native_function(realm, *vm.well_known_symbol_search(), symbol_search, 1, attr);
+    define_native_function(realm, *vm.well_known_symbol_split(), symbol_split, 2, attr);
 
-    define_native_accessor(vm.names.flags, flags, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.source, source, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.flags, flags, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.source, source, {}, Attribute::Configurable);
 
 #define __JS_ENUMERATE(flagName, flag_name, flag_char) \
-    define_native_accessor(vm.names.flagName, flag_name, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.flagName, flag_name, {}, Attribute::Configurable);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 }

@@ -26,7 +26,7 @@ void MapConstructor::initialize(Realm& realm)
     // 24.1.2.1 Map.prototype, https://tc39.es/ecma262/#sec-map.prototype
     define_direct_property(vm.names.prototype, realm.global_object().map_prototype(), 0);
 
-    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

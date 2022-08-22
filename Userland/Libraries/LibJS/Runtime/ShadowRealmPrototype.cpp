@@ -22,8 +22,8 @@ void ShadowRealmPrototype::initialize(Realm& realm)
     Object::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.evaluate, evaluate, 1, attr);
-    define_native_function(vm.names.importValue, import_value, 2, attr);
+    define_native_function(realm, vm.names.evaluate, evaluate, 1, attr);
+    define_native_function(realm, vm.names.importValue, import_value, 2, attr);
 
     // 3.4.3 ShadowRealm.prototype [ @@toStringTag ], https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.ShadowRealm.as_string()), Attribute::Configurable);

@@ -36,9 +36,9 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
     Object::initialize(realm);
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("validate", validate, 1, attr);
-    define_native_function("compile", compile, 1, attr);
-    define_native_function("instantiate", instantiate, 1, attr);
+    define_native_function(realm, "validate", validate, 1, attr);
+    define_native_function(realm, "compile", compile, 1, attr);
+    define_native_function(realm, "instantiate", instantiate, 1, attr);
 
     auto& vm = this->vm();
 

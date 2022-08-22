@@ -21,30 +21,30 @@ void DataViewPrototype::initialize(Realm& realm)
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function(vm.names.getBigInt64, get_big_int_64, 1, attr);
-    define_native_function(vm.names.getBigUint64, get_big_uint_64, 1, attr);
-    define_native_function(vm.names.getFloat32, get_float_32, 1, attr);
-    define_native_function(vm.names.getFloat64, get_float_64, 1, attr);
-    define_native_function(vm.names.getInt8, get_int_8, 1, attr);
-    define_native_function(vm.names.getInt16, get_int_16, 1, attr);
-    define_native_function(vm.names.getInt32, get_int_32, 1, attr);
-    define_native_function(vm.names.getUint8, get_uint_8, 1, attr);
-    define_native_function(vm.names.getUint16, get_uint_16, 1, attr);
-    define_native_function(vm.names.getUint32, get_uint_32, 1, attr);
-    define_native_function(vm.names.setBigInt64, set_big_int_64, 2, attr);
-    define_native_function(vm.names.setBigUint64, set_big_uint_64, 2, attr);
-    define_native_function(vm.names.setFloat32, set_float_32, 2, attr);
-    define_native_function(vm.names.setFloat64, set_float_64, 2, attr);
-    define_native_function(vm.names.setInt8, set_int_8, 2, attr);
-    define_native_function(vm.names.setInt16, set_int_16, 2, attr);
-    define_native_function(vm.names.setInt32, set_int_32, 2, attr);
-    define_native_function(vm.names.setUint8, set_uint_8, 2, attr);
-    define_native_function(vm.names.setUint16, set_uint_16, 2, attr);
-    define_native_function(vm.names.setUint32, set_uint_32, 2, attr);
+    define_native_function(realm, vm.names.getBigInt64, get_big_int_64, 1, attr);
+    define_native_function(realm, vm.names.getBigUint64, get_big_uint_64, 1, attr);
+    define_native_function(realm, vm.names.getFloat32, get_float_32, 1, attr);
+    define_native_function(realm, vm.names.getFloat64, get_float_64, 1, attr);
+    define_native_function(realm, vm.names.getInt8, get_int_8, 1, attr);
+    define_native_function(realm, vm.names.getInt16, get_int_16, 1, attr);
+    define_native_function(realm, vm.names.getInt32, get_int_32, 1, attr);
+    define_native_function(realm, vm.names.getUint8, get_uint_8, 1, attr);
+    define_native_function(realm, vm.names.getUint16, get_uint_16, 1, attr);
+    define_native_function(realm, vm.names.getUint32, get_uint_32, 1, attr);
+    define_native_function(realm, vm.names.setBigInt64, set_big_int_64, 2, attr);
+    define_native_function(realm, vm.names.setBigUint64, set_big_uint_64, 2, attr);
+    define_native_function(realm, vm.names.setFloat32, set_float_32, 2, attr);
+    define_native_function(realm, vm.names.setFloat64, set_float_64, 2, attr);
+    define_native_function(realm, vm.names.setInt8, set_int_8, 2, attr);
+    define_native_function(realm, vm.names.setInt16, set_int_16, 2, attr);
+    define_native_function(realm, vm.names.setInt32, set_int_32, 2, attr);
+    define_native_function(realm, vm.names.setUint8, set_uint_8, 2, attr);
+    define_native_function(realm, vm.names.setUint16, set_uint_16, 2, attr);
+    define_native_function(realm, vm.names.setUint32, set_uint_32, 2, attr);
 
-    define_native_accessor(vm.names.buffer, buffer_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.byteOffset, byte_offset_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.buffer, buffer_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.byteOffset, byte_offset_getter, {}, Attribute::Configurable);
 
     // 25.3.4.25 DataView.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-dataview.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.DataView.as_string()), Attribute::Configurable);

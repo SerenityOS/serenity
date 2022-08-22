@@ -29,31 +29,31 @@ void DurationPrototype::initialize(Realm& realm)
     // 7.3.2 Temporal.Duration.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Duration"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.years, years_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.weeks, weeks_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.days, days_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.hours, hours_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.minutes, minutes_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.seconds, seconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.blank, blank_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.years, years_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.months, months_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.weeks, weeks_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.days, days_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.hours, hours_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.minutes, minutes_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.seconds, seconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.sign, sign_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.blank, blank_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.with, with, 1, attr);
-    define_native_function(vm.names.negated, negated, 0, attr);
-    define_native_function(vm.names.abs, abs, 0, attr);
-    define_native_function(vm.names.add, add, 1, attr);
-    define_native_function(vm.names.subtract, subtract, 1, attr);
-    define_native_function(vm.names.round, round, 1, attr);
-    define_native_function(vm.names.total, total, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.with, with, 1, attr);
+    define_native_function(realm, vm.names.negated, negated, 0, attr);
+    define_native_function(realm, vm.names.abs, abs, 0, attr);
+    define_native_function(realm, vm.names.add, add, 1, attr);
+    define_native_function(realm, vm.names.subtract, subtract, 1, attr);
+    define_native_function(realm, vm.names.round, round, 1, attr);
+    define_native_function(realm, vm.names.total, total, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
 }
 
 // 7.3.3 get Temporal.Duration.prototype.years, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years

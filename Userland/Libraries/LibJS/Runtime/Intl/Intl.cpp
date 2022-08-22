@@ -54,8 +54,8 @@ void Intl::initialize(Realm& realm)
     define_direct_property(vm.names.RelativeTimeFormat, realm.global_object().intl_relative_time_format_constructor(), attr);
     define_direct_property(vm.names.Segmenter, realm.global_object().intl_segmenter_constructor(), attr);
 
-    define_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
-    define_native_function(vm.names.supportedValuesOf, supported_values_of, 1, attr);
+    define_native_function(realm, vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
+    define_native_function(realm, vm.names.supportedValuesOf, supported_values_of, 1, attr);
 }
 
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales

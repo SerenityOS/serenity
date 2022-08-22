@@ -122,7 +122,9 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     // FIXME: This should be done with IDL
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     m_worker_scope->define_native_function(
-        "postMessage", [this](auto& vm) {
+        m_worker_scope->shape().realm(),
+        "postMessage",
+        [this](auto& vm) {
             // This is the implementation of the function that the spawned worked calls
 
             // https://html.spec.whatwg.org/multipage/workers.html#dom-dedicatedworkerglobalscope-postmessage

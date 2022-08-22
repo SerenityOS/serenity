@@ -3033,7 +3033,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
         function_generator.set("function.length", String::number(get_shortest_function_length(overload_set.value)));
 
         function_generator.append(R"~~~(
-    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_native_function(realm, "@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -3280,7 +3280,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
         }
 
         attribute_generator.append(R"~~~(
-    define_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+    define_native_accessor(realm, "@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
     }
 
@@ -3313,7 +3313,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
         }
 
         function_generator.append(R"~~~(
-    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_native_function(realm, "@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -3322,7 +3322,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
-    define_native_function("toString", to_string, 0, default_attributes);
+    define_native_function(realm, "toString", to_string, 0, default_attributes);
 )~~~");
     }
 
@@ -3349,10 +3349,10 @@ void @prototype_class@::initialize(JS::Realm& realm)
 
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_native_function(vm.names.entries, entries, 0, default_attributes);
-    define_native_function(vm.names.forEach, for_each, 1, default_attributes);
-    define_native_function(vm.names.keys, keys, 0, default_attributes);
-    define_native_function(vm.names.values, values, 0, default_attributes);
+    define_native_function(realm, vm.names.entries, entries, 0, default_attributes);
+    define_native_function(realm, vm.names.forEach, for_each, 1, default_attributes);
+    define_native_function(realm, vm.names.keys, keys, 0, default_attributes);
+    define_native_function(realm, vm.names.values, values, 0, default_attributes);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
@@ -3809,7 +3809,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
 
-    define_native_function(vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 

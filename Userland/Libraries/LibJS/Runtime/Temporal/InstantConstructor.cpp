@@ -28,12 +28,12 @@ void InstantConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().temporal_instant_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
-    define_native_function(vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
-    define_native_function(vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
-    define_native_function(vm.names.fromEpochMicroseconds, from_epoch_microseconds, 1, attr);
-    define_native_function(vm.names.fromEpochNanoseconds, from_epoch_nanoseconds, 1, attr);
-    define_native_function(vm.names.compare, compare, 2, attr);
+    define_native_function(realm, vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
+    define_native_function(realm, vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
+    define_native_function(realm, vm.names.fromEpochMicroseconds, from_epoch_microseconds, 1, attr);
+    define_native_function(realm, vm.names.fromEpochNanoseconds, from_epoch_nanoseconds, 1, attr);
+    define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

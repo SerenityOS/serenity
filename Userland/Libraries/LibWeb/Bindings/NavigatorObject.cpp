@@ -34,10 +34,10 @@ void NavigatorObject::initialize(JS::Realm& realm)
     define_direct_property("platform", js_string(heap, "SerenityOS"), attr);
     define_direct_property("product", js_string(heap, "Gecko"), attr);
 
-    define_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
-    define_native_accessor("cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_native_accessor(realm, "userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_native_accessor(realm, "cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 
-    define_native_function("javaEnabled", java_enabled, 0, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_native_function(realm, "javaEnabled", java_enabled, 0, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 
     // FIXME: Reflect actual connectivity status.
     define_direct_property("onLine", JS::Value(true), attr);

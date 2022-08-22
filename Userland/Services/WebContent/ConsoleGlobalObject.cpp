@@ -25,7 +25,7 @@ void ConsoleGlobalObject::initialize_global_object(JS::Realm& realm)
     Base::initialize_global_object(realm);
 
     // $0 magic variable
-    define_native_accessor("$0", inspected_node_getter, nullptr, 0);
+    define_native_accessor(realm, "$0", inspected_node_getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)

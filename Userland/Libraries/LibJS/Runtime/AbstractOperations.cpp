@@ -1117,6 +1117,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
             // 2. Let p be MakeArgSetter(name, env).
             // 3. Perform ! map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
+                realm,
                 PropertyKey { index },
                 [&environment, name](VM& vm) -> ThrowCompletionOr<Value> {
                     return MUST(environment.get_binding_value(vm, name, false));

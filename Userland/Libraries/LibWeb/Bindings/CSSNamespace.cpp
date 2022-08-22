@@ -22,8 +22,8 @@ void CSSNamespace::initialize(JS::Realm& realm)
 {
     Object::initialize(realm);
     u8 attr = JS::Attribute::Enumerable;
-    define_native_function("escape", escape, 1, attr);
-    define_native_function("supports", supports, 2, attr);
+    define_native_function(realm, "escape", escape, 1, attr);
+    define_native_function(realm, "supports", supports, 2, attr);
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-css-escape

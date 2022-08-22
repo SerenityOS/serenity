@@ -24,8 +24,8 @@ void ArrayBufferPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.slice, slice, 2, attr);
-    define_native_accessor(vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
+    define_native_function(realm, vm.names.slice, slice, 2, attr);
+    define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);

@@ -93,12 +93,12 @@ void NumberPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Configurable | Attribute::Writable;
-    define_native_function(vm.names.toExponential, to_exponential, 1, attr);
-    define_native_function(vm.names.toFixed, to_fixed, 1, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toPrecision, to_precision, 1, attr);
-    define_native_function(vm.names.toString, to_string, 1, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.toExponential, to_exponential, 1, attr);
+    define_native_function(realm, vm.names.toFixed, to_fixed, 1, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.toPrecision, to_precision, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 1, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
 }
 
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue

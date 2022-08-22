@@ -32,7 +32,7 @@ void DateTimeFormatConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.prototype, realm.global_object().intl_date_time_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+    define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

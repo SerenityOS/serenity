@@ -28,9 +28,9 @@ void PluralRulesPrototype::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.PluralRules"sv), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.select, select, 1, attr);
-    define_native_function(vm.names.selectRange, select_range, 2, attr);
-    define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_native_function(realm, vm.names.select, select, 1, attr);
+    define_native_function(realm, vm.names.selectRange, select_range, 2, attr);
+    define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
 // 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select

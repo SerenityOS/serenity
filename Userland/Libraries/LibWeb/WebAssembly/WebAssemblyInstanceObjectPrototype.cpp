@@ -13,7 +13,7 @@ namespace Web::Bindings {
 void WebAssemblyInstancePrototype::initialize(JS::Realm& realm)
 {
     Object::initialize(realm);
-    define_native_accessor("exports", exports_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_accessor(realm, "exports", exports_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)

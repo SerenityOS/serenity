@@ -22,22 +22,22 @@ void ConsoleObject::initialize(Realm& realm)
     auto& vm = this->vm();
     Object::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
-    define_native_function(vm.names.log, log, 0, attr);
-    define_native_function(vm.names.debug, debug, 0, attr);
-    define_native_function(vm.names.info, info, 0, attr);
-    define_native_function(vm.names.warn, warn, 0, attr);
-    define_native_function(vm.names.error, error, 0, attr);
-    define_native_function(vm.names.trace, trace, 0, attr);
-    define_native_function(vm.names.count, count, 0, attr);
-    define_native_function(vm.names.countReset, count_reset, 0, attr);
-    define_native_function(vm.names.clear, clear, 0, attr);
-    define_native_function(vm.names.assert, assert_, 0, attr);
-    define_native_function(vm.names.group, group, 0, attr);
-    define_native_function(vm.names.groupCollapsed, group_collapsed, 0, attr);
-    define_native_function(vm.names.groupEnd, group_end, 0, attr);
-    define_native_function(vm.names.time, time, 0, attr);
-    define_native_function(vm.names.timeLog, time_log, 0, attr);
-    define_native_function(vm.names.timeEnd, time_end, 0, attr);
+    define_native_function(realm, vm.names.log, log, 0, attr);
+    define_native_function(realm, vm.names.debug, debug, 0, attr);
+    define_native_function(realm, vm.names.info, info, 0, attr);
+    define_native_function(realm, vm.names.warn, warn, 0, attr);
+    define_native_function(realm, vm.names.error, error, 0, attr);
+    define_native_function(realm, vm.names.trace, trace, 0, attr);
+    define_native_function(realm, vm.names.count, count, 0, attr);
+    define_native_function(realm, vm.names.countReset, count_reset, 0, attr);
+    define_native_function(realm, vm.names.clear, clear, 0, attr);
+    define_native_function(realm, vm.names.assert, assert_, 0, attr);
+    define_native_function(realm, vm.names.group, group, 0, attr);
+    define_native_function(realm, vm.names.groupCollapsed, group_collapsed, 0, attr);
+    define_native_function(realm, vm.names.groupEnd, group_end, 0, attr);
+    define_native_function(realm, vm.names.time, time, 0, attr);
+    define_native_function(realm, vm.names.timeLog, time_log, 0, attr);
+    define_native_function(realm, vm.names.timeEnd, time_end, 0, attr);
 }
 
 // 1.1.6. log(...data), https://console.spec.whatwg.org/#log

@@ -215,12 +215,12 @@ void GlobalObject::initialize_global_object(Realm& realm)
 #undef __JS_ENUMERATE
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.gc, gc, 0, attr);
-    define_native_function(vm.names.isNaN, is_nan, 1, attr);
-    define_native_function(vm.names.isFinite, is_finite, 1, attr);
-    define_native_function(vm.names.parseFloat, parse_float, 1, attr);
-    define_native_function(vm.names.parseInt, parse_int, 2, attr);
-    define_native_function(vm.names.eval, eval, 1, attr);
+    define_native_function(realm, vm.names.gc, gc, 0, attr);
+    define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
+    define_native_function(realm, vm.names.isFinite, is_finite, 1, attr);
+    define_native_function(realm, vm.names.parseFloat, parse_float, 1, attr);
+    define_native_function(realm, vm.names.parseInt, parse_int, 2, attr);
+    define_native_function(realm, vm.names.eval, eval, 1, attr);
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(
@@ -236,12 +236,12 @@ void GlobalObject::initialize_global_object(Realm& realm)
     m_function_prototype->define_direct_accessor(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
     m_function_prototype->define_direct_accessor(vm.names.arguments, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
 
-    define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
-    define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
-    define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
-    define_native_function(vm.names.decodeURIComponent, decode_uri_component, 1, attr);
-    define_native_function(vm.names.escape, escape, 1, attr);
-    define_native_function(vm.names.unescape, unescape, 1, attr);
+    define_native_function(realm, vm.names.encodeURI, encode_uri, 1, attr);
+    define_native_function(realm, vm.names.decodeURI, decode_uri, 1, attr);
+    define_native_function(realm, vm.names.encodeURIComponent, encode_uri_component, 1, attr);
+    define_native_function(realm, vm.names.decodeURIComponent, decode_uri_component, 1, attr);
+    define_native_function(realm, vm.names.escape, escape, 1, attr);
+    define_native_function(realm, vm.names.unescape, unescape, 1, attr);
 
     define_direct_property(vm.names.NaN, js_nan(), 0);
     define_direct_property(vm.names.Infinity, js_infinity(), 0);

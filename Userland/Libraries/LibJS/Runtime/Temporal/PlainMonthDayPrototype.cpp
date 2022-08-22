@@ -29,19 +29,19 @@ void PlainMonthDayPrototype::initialize(Realm& realm)
     // 10.3.2 Temporal.PlainMonthDay.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainMonthDay"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.day, day_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.with, with, 1, attr);
-    define_native_function(vm.names.equals, equals, 1, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_native_function(vm.names.toPlainDate, to_plain_date, 1, attr);
-    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
+    define_native_function(realm, vm.names.with, with, 1, attr);
+    define_native_function(realm, vm.names.equals, equals, 1, attr);
+    define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
+    define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+    define_native_function(realm, vm.names.toPlainDate, to_plain_date, 1, attr);
+    define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
 // 10.3.3 get Temporal.PlainMonthDay.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendar
