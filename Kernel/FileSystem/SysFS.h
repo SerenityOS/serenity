@@ -54,6 +54,7 @@ protected:
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime) override;
 
     virtual ErrorOr<void> attach(OpenFileDescription& description) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;

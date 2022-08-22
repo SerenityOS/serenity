@@ -126,6 +126,11 @@ ErrorOr<void> SysFSInode::truncate(u64 size)
     return m_associated_component->truncate(size);
 }
 
+ErrorOr<void> SysFSInode::update_timestamps(Optional<time_t>, Optional<time_t>, Optional<time_t>)
+{
+    return {};
+}
+
 ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
