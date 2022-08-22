@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?kleines=20Filmr=C3=B6llchen?= <filmroellchen@serenityos.org>
+Date: Sun, 21 Aug 2022 17:12:00 +0200
+Subject: [PATCH] Recognize Serenity as a system
+
+---
+ config.sub | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/config.sub b/config.sub
+index 1d8e98b..6ed7f57 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1390,6 +1390,7 @@ case $os in
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+ 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+ 	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
++			| -serenity* \
+ 	      | -midnightbsd*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
