@@ -6,6 +6,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 
 | Port                                                | Name                                                            | Version                  | Website                                                                        |
 |-----------------------------------------------------|-----------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
+| [`aclock`](aclock/)                                 | aclock                                                          | 2.3                      | https://github.com/tenox7/aclock                                               |
 | [`acpica-tools`](acpica-tools/)                     | ACPI Component Architecture Project Userspace Utilities         | 20220331                 | https://acpica.org/downloads                                                   |
 | [`angband`](angband/)                               | Angband                                                         | 4.2.4                    | https://rephial.org                                                            |
 | [`Another-World`](Another-World/)                   | Another World Bytecode Interpreter                              |                          | https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter           |

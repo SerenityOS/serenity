@@ -1537,34 +1537,23 @@ ErrorOr<NonnullLockRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     return fs().get_inode({ fsid(), inode_index });
 }
 
-ErrorOr<void> Ext2FSInode::set_atime(time_t t)
+ErrorOr<void> Ext2FSInode::update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime)
 {
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
-    if (t > INT32_MAX)
+    if (atime.value_or(0) > INT32_MAX)
         return EINVAL;
-    m_raw_inode.i_atime = t;
-    set_metadata_dirty(true);
-    return {};
-}
-
-ErrorOr<void> Ext2FSInode::set_ctime(time_t t)
-{
-    MutexLocker locker(m_inode_lock);
-    if (fs().is_readonly())
-        return EROFS;
-    m_raw_inode.i_ctime = t;
-    set_metadata_dirty(true);
-    return {};
-}
-
-ErrorOr<void> Ext2FSInode::set_mtime(time_t t)
-{
-    MutexLocker locker(m_inode_lock);
-    if (fs().is_readonly())
-        return EROFS;
-    m_raw_inode.i_mtime = t;
+    if (ctime.value_or(0) > INT32_MAX)
+        return EINVAL;
+    if (mtime.value_or(0) > INT32_MAX)
+        return EINVAL;
+    if (atime.has_value())
+        m_raw_inode.i_atime = atime.value();
+    if (ctime.has_value())
+        m_raw_inode.i_ctime = ctime.value();
+    if (mtime.has_value())
+        m_raw_inode.i_mtime = mtime.value();
     set_metadata_dirty(true);
     return {};
 }

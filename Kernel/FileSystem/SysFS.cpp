@@ -121,11 +121,6 @@ ErrorOr<void> SysFSInode::chown(UserID, GroupID)
     return EPERM;
 }
 
-ErrorOr<void> SysFSInode::set_mtime(time_t time)
-{
-    return m_associated_component->set_mtime(time);
-}
-
 ErrorOr<void> SysFSInode::truncate(u64 size)
 {
     return m_associated_component->truncate(size);

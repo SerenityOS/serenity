@@ -27,7 +27,6 @@ public:
     virtual mode_t permissions() const override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
     virtual ErrorOr<void> truncate(u64) override;
-    virtual ErrorOr<void> set_mtime(time_t) override { return {}; }
 
 private:
     PowerStateSwitchNode(FirmwareSysFSDirectory&);

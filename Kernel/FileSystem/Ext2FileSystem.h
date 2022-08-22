@@ -44,9 +44,7 @@ private:
     virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
-    virtual ErrorOr<void> set_atime(time_t) override;
-    virtual ErrorOr<void> set_ctime(time_t) override;
-    virtual ErrorOr<void> set_mtime(time_t) override;
+    virtual ErrorOr<void> update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime) override;
     virtual ErrorOr<void> increment_link_count() override;
     virtual ErrorOr<void> decrement_link_count() override;
     virtual ErrorOr<void> chmod(mode_t) override;

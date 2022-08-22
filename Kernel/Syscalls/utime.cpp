@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$utime(Userspace<char const*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::fattr));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
     utimbuf buf;

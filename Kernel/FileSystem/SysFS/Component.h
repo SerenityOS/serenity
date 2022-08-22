@@ -35,7 +35,6 @@ public:
     virtual mode_t permissions() const;
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
     virtual size_t size() const { return 0; }
-    virtual ErrorOr<void> set_mtime(time_t) { return ENOTIMPL; }
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
     virtual ErrorOr<void> refresh_data(OpenFileDescription&) const { return {}; }
 

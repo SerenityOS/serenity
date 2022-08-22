@@ -206,7 +206,6 @@ option(BUILD_EVERYTHING "Build all optional components" ON)
 
 include(utils)
 include(wasm_spec_tests)
-include(emoji_txt)
 
 serenity_component(
     Tests

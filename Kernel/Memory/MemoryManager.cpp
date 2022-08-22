@@ -8,6 +8,7 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
@@ -140,7 +141,6 @@ UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker mm_lock(s_mm_lock);
     // Disable writing to the .ro_after_init section
     for (auto i = (FlatPtr)&start_of_ro_after_init; i < (FlatPtr)&end_of_ro_after_init; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -152,7 +152,6 @@ UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 void MemoryManager::unmap_text_after_init()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker mm_lock(s_mm_lock);
 
     auto start = page_round_down((FlatPtr)&start_of_unmap_after_init);
     auto end = page_round_up((FlatPtr)&end_of_unmap_after_init).release_value_but_fixme_should_propagate_errors();
@@ -169,7 +168,6 @@ void MemoryManager::unmap_text_after_init()
 
 UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
 {
-    SpinlockLocker mm_lock(s_mm_lock);
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
 
     auto start = page_round_down((FlatPtr)start_of_kernel_ksyms);
@@ -543,7 +541,6 @@ PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -560,7 +557,6 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
 PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -602,7 +598,6 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, IsLastPTERelease is_last_pte_release)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     VERIFY(page_directory.get_lock().is_locked_by_current_processor());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
@@ -886,7 +881,7 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
 
 LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 {
-    VERIFY(s_mm_lock.is_locked());
+    SpinlockLocker mm_locker(s_mm_lock);
     LockRefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
@@ -911,9 +906,9 @@ LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 
 NonnullLockRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
-    SpinlockLocker lock(s_mm_lock);
     auto page = find_free_physical_page(true);
     if (should_zero_fill == ShouldZeroFill::Yes) {
+        InterruptDisabler disabler;
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
@@ -1037,59 +1032,44 @@ void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddres
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
-    auto& mm_data = get_data();
-    auto& pte = boot_pd_kernel_pt1023[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
+    VERIFY_INTERRUPTS_DISABLED();
+
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PD_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
+    size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
+
+    auto& pte = boot_pd_kernel_pt1023[pte_index];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        // Because we must continue to hold the MM lock while we use this
-        // mapping, it is sufficient to only flush on the current CPU. Other
-        // CPUs trying to use this API must wait on the MM lock anyway
-        flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PD));
-    } else {
-        // Even though we don't allow this to be called concurrently, it's
-        // possible that this PD was mapped on a different CPU and we don't
-        // broadcast the flush. If so, we still need to flush the TLB.
-        if (mm_data.m_last_quickmap_pd != pd_paddr)
-            flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PD));
+        flush_tlb_local(vaddr);
     }
-    mm_data.m_last_quickmap_pd = pd_paddr;
-    return (PageDirectoryEntry*)KERNEL_QUICKMAP_PD;
+    return (PageDirectoryEntry*)vaddr.get();
 }
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
-    auto& mm_data = get_data();
-    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[(KERNEL_QUICKMAP_PT - KERNEL_PT1024_BASE) / PAGE_SIZE];
+    VERIFY_INTERRUPTS_DISABLED();
+
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PT_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
+    size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
+
+    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_index];
     if (pte.physical_page_base() != pt_paddr.get()) {
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
-        // Because we must continue to hold the MM lock while we use this
-        // mapping, it is sufficient to only flush on the current CPU. Other
-        // CPUs trying to use this API must wait on the MM lock anyway
-        flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PT));
-    } else {
-        // Even though we don't allow this to be called concurrently, it's
-        // possible that this PT was mapped on a different CPU and we don't
-        // broadcast the flush. If so, we still need to flush the TLB.
-        if (mm_data.m_last_quickmap_pt != pt_paddr)
-            flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PT));
+        flush_tlb_local(vaddr);
     }
-    mm_data.m_last_quickmap_pt = pt_paddr;
-    return (PageTableEntry*)KERNEL_QUICKMAP_PT;
+    return (PageTableEntry*)vaddr.get();
 }
 
 u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
 
@@ -1110,7 +1090,6 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 void MemoryManager::unquickmap_page()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(s_mm_lock.is_locked_by_current_processor());
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
@@ -1174,7 +1153,6 @@ void MemoryManager::dump_kernel_regions()
 void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable)
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
-    SpinlockLocker lock(s_mm_lock);
     auto* pte = ensure_pte(kernel_page_directory(), vaddr);
     VERIFY(pte);
     if (pte->is_writable() == writable)
@@ -1205,7 +1183,6 @@ void CommittedPhysicalPageSet::uncommit_one()
 
 void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buffer[PAGE_SIZE])
 {
-    SpinlockLocker locker(s_mm_lock);
     auto* quickmapped_page = quickmap_page(physical_page);
     memcpy(page_buffer, quickmapped_page, PAGE_SIZE);
     unquickmap_page();

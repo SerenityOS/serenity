@@ -115,7 +115,7 @@ enum class NeedsBigProcessLock {
     S(madvise, NeedsBigProcessLock::Yes)                    \
     S(map_time_page, NeedsBigProcessLock::Yes)              \
     S(mkdir, NeedsBigProcessLock::No)                       \
-    S(mknod, NeedsBigProcessLock::Yes)                      \
+    S(mknod, NeedsBigProcessLock::No)                       \
     S(mmap, NeedsBigProcessLock::Yes)                       \
     S(mount, NeedsBigProcessLock::Yes)                      \
     S(mprotect, NeedsBigProcessLock::Yes)                   \
@@ -187,8 +187,8 @@ enum class NeedsBigProcessLock {
     S(uname, NeedsBigProcessLock::No)                       \
     S(unlink, NeedsBigProcessLock::No)                      \
     S(unveil, NeedsBigProcessLock::No)                      \
-    S(utime, NeedsBigProcessLock::Yes)                      \
-    S(utimensat, NeedsBigProcessLock::Yes)                  \
+    S(utime, NeedsBigProcessLock::No)                       \
+    S(utimensat, NeedsBigProcessLock::No)                   \
     S(waitid, NeedsBigProcessLock::Yes)                     \
     S(write, NeedsBigProcessLock::Yes)                      \
     S(writev, NeedsBigProcessLock::Yes)                     \

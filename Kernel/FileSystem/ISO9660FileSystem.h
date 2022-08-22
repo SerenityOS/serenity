@@ -359,9 +359,7 @@ public:
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
-    virtual ErrorOr<void> set_atime(time_t) override;
-    virtual ErrorOr<void> set_ctime(time_t) override;
-    virtual ErrorOr<void> set_mtime(time_t) override;
+    virtual ErrorOr<void> update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime) override;
 
 private:
     // HACK: The base ISO 9660 standard says the maximum filename length is 37

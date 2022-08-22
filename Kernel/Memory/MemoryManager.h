@@ -91,9 +91,6 @@ struct MemoryManagerData {
 
     Spinlock m_quickmap_in_use { LockRank::None };
     u32 m_quickmap_prev_flags;
-
-    PhysicalAddress m_last_quickmap_pd;
-    PhysicalAddress m_last_quickmap_pt;
 };
 
 // NOLINTNEXTLINE(readability-redundant-declaration) FIXME: Why do we declare this here *and* in Thread.h?
