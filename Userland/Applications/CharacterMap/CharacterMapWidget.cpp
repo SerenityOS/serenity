@@ -94,6 +94,7 @@ CharacterMapWidget::CharacterMapWidget()
             m_find_window->set_icon(GUI::Icon::try_create_default_icon("find"sv).value().bitmap_for_size(16));
             m_find_window->set_title("Find a character");
             m_find_window->resize(300, 400);
+            m_find_window->set_window_mode(GUI::WindowMode::Modeless);
         }
         m_find_window->show();
         m_find_window->move_to_front();
