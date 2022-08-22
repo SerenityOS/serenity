@@ -246,8 +246,6 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.umask; });
     }
 
-    bool in_group(GroupID) const;
-
     // Breakable iteration functions
     template<IteratorFunction<Process&> Callback>
     static void for_each(Callback);

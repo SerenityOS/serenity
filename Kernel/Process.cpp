@@ -84,12 +84,6 @@ UNMAP_AFTER_INIT void Process::initialize()
     create_signal_trampoline();
 }
 
-bool Process::in_group(GroupID gid) const
-{
-    auto credentials = this->credentials();
-    return credentials->gid() == gid || credentials->extra_gids().contains_slow(gid);
-}
-
 void Process::kill_threads_except_self()
 {
     InterruptDisabler disabler;
