@@ -517,6 +517,32 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::GridColumn) {
+        if (value.is_grid_track_placement_shorthand()) {
+            auto const& shorthand = value.as_grid_track_placement_shorthand();
+            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.start());
+            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.end());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::GridColumnStart, value);
+        style.set_property(CSS::PropertyID::GridColumnEnd, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::GridRow) {
+        if (value.is_grid_track_placement_shorthand()) {
+            auto const& shorthand = value.as_grid_track_placement_shorthand();
+            style.set_property(CSS::PropertyID::GridRowStart, shorthand.start());
+            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.end());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::GridRowStart, value);
+        style.set_property(CSS::PropertyID::GridRowEnd, value);
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 

@@ -295,10 +295,38 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
+    case CSS::PropertyID::GridColumn: {
+        auto maybe_grid_column_end = property(CSS::PropertyID::GridColumnEnd);
+        auto maybe_grid_column_start = property(CSS::PropertyID::GridColumnStart);
+        RefPtr<GridTrackPlacementStyleValue> grid_column_start, grid_column_end;
+        if (maybe_grid_column_end.has_value()) {
+            VERIFY(maybe_grid_column_end.value().value->is_grid_track_placement());
+            grid_column_end = maybe_grid_column_end.value().value->as_grid_track_placement();
+        }
+        if (maybe_grid_column_start.has_value()) {
+            VERIFY(maybe_grid_column_start.value().value->is_grid_track_placement());
+            grid_column_start = maybe_grid_column_start.value().value->as_grid_track_placement();
+        }
+        return GridTrackPlacementShorthandStyleValue::create(grid_column_end.release_nonnull(), grid_column_start.release_nonnull());
+    }
     case CSS::PropertyID::GridColumnEnd:
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_end());
     case CSS::PropertyID::GridColumnStart:
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_start());
+    case CSS::PropertyID::GridRow: {
+        auto maybe_grid_row_end = property(CSS::PropertyID::GridRowEnd);
+        auto maybe_grid_row_start = property(CSS::PropertyID::GridRowStart);
+        RefPtr<GridTrackPlacementStyleValue> grid_row_start, grid_row_end;
+        if (maybe_grid_row_end.has_value()) {
+            VERIFY(maybe_grid_row_end.value().value->is_grid_track_placement());
+            grid_row_end = maybe_grid_row_end.value().value->as_grid_track_placement();
+        }
+        if (maybe_grid_row_start.has_value()) {
+            VERIFY(maybe_grid_row_start.value().value->is_grid_track_placement());
+            grid_row_start = maybe_grid_row_start.value().value->as_grid_track_placement();
+        }
+        return GridTrackPlacementShorthandStyleValue::create(grid_row_end.release_nonnull(), grid_row_start.release_nonnull());
+    }
     case CSS::PropertyID::GridRowEnd:
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_end());
     case CSS::PropertyID::GridRowStart:

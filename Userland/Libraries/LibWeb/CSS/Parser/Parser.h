@@ -361,6 +361,7 @@ private:
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_sizes(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<ComponentValue>&);
