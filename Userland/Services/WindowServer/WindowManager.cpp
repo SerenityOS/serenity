@@ -622,30 +622,25 @@ void WindowManager::notify_progress_changed(Window& window)
     tell_wms_window_state_changed(window);
 }
 
-bool WindowManager::pick_new_active_window(Window* previous_active)
+void WindowManager::pick_new_active_window(Window* previous_active)
 {
-    bool new_window_picked = false;
-    Window* first_candidate = nullptr;
-
-    for_each_visible_window_from_front_to_back([&](Window& candidate) {
+    Window* desktop = nullptr;
+    auto result = for_each_visible_window_from_front_to_back([&](Window& candidate) {
+        if (candidate.type() == WindowType::Desktop)
+            desktop = &candidate;
         if (candidate.type() != WindowType::Normal)
             return IterationDecision::Continue;
         if (candidate.is_destroyed())
             return IterationDecision::Continue;
-        if (previous_active != first_candidate)
-            first_candidate = &candidate;
         if ((!previous_active && !candidate.is_capturing_input()) || (previous_active && !candidate.is_capturing_active_input_from(*previous_active))) {
             set_active_window(&candidate);
-            new_window_picked = true;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
-    if (!new_window_picked) {
-        set_active_window(first_candidate);
-        new_window_picked = first_candidate != nullptr;
-    }
-    return new_window_picked;
+
+    if (result != IterationDecision::Break)
+        set_active_window(desktop);
 }
 
 void WindowManager::check_hide_geometry_overlay(Window& window)
@@ -1322,15 +1317,8 @@ void WindowManager::process_mouse_event(MouseEvent& event)
     // 8. Hit test the window stack to see what's under the cursor.
     auto result = current_window_stack().hit_test(event.position());
 
-    if (!result.has_value()) {
-        // No window is under the cursor.
-        if (event.type() == Event::MouseDown) {
-            // Clicked outside of any window -> no active window.
-            // FIXME: Is this actually necessary? The desktop window should catch everything anyway.
-            set_active_window(nullptr);
-        }
+    if (!result.has_value())
         return;
-    }
 
     process_mouse_event_for_window(result.value(), event);
 }
@@ -1780,8 +1768,10 @@ void WindowManager::restore_active_input_window(Window* window)
     if (!window)
         window = active_window();
     // If the current active window is also gone, pick some other window
-    if (!window && pick_new_active_window(nullptr))
+    if (!window) {
+        pick_new_active_window(nullptr);
         return;
+    }
 
     if (window && !window->is_minimized() && window->is_visible())
         set_active_input_window(window);
