@@ -84,10 +84,12 @@ void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String 
     button.on_click = [this, index = m_segments.size()](auto) {
         if (on_segment_click)
             on_segment_click(index);
+        if (on_segment_change && m_selected_segment != index)
+            on_segment_change(index);
     };
     button.on_focus_change = [this, index = m_segments.size()](auto has_focus, auto) {
-        if (has_focus && on_segment_click)
-            on_segment_click(index);
+        if (has_focus && on_segment_change && m_selected_segment != index)
+            on_segment_change(index);
     };
     button.on_drop = [this, index = m_segments.size()](auto& drop_event) {
         if (on_segment_drop)
