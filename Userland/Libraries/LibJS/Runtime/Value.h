@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,8 +48,9 @@ static_assert(POSITIVE_INFINITY_BITS == 0x7FF0000000000000);
 static_assert(NEGATIVE_INFINITY_BITS == 0xFFF0000000000000);
 // However as long as any bit is set in the mantissa with the exponent of all
 // ones this value is a NaN, and it even ignores the sign bit.
-static_assert(isnan(bit_cast<double>(0x7FF0000000000001)));
-static_assert(isnan(bit_cast<double>(0xFFF0000000040000)));
+// (NOTE: we have to use __builtin_isnan here since some isnan implementations are not constexpr)
+static_assert(__builtin_isnan(bit_cast<double>(0x7FF0000000000001)));
+static_assert(__builtin_isnan(bit_cast<double>(0xFFF0000000040000)));
 // This means we can use all of these NaNs to store all other options for Value.
 // To make sure all of these other representations we use 0x7FF8 as the base top
 // 2 bytes which ensures the value is always a NaN.
