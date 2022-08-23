@@ -341,10 +341,9 @@ void AddressSpace::remove_all_regions(Badge<Process>)
     VERIFY(Thread::current() == g_finalizer);
     {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
-        SpinlockLocker mm_locker(s_mm_lock);
         m_region_tree.with([&](auto& region_tree) {
             for (auto& region : region_tree.regions())
-                region.unmap_with_locks_held(ShouldFlushTLB::No, pd_locker, mm_locker);
+                region.unmap_with_locks_held(ShouldFlushTLB::No, pd_locker);
         });
     }
 

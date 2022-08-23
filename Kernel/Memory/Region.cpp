@@ -70,8 +70,7 @@ Region::~Region()
         if (!is_readable() && !is_writable() && !is_executable()) {
             // If the region is "PROT_NONE", we didn't map it in the first place.
         } else {
-            SpinlockLocker mm_locker(s_mm_lock);
-            unmap_with_locks_held(ShouldFlushTLB::Yes, pd_locker, mm_locker);
+            unmap_with_locks_held(ShouldFlushTLB::Yes, pd_locker);
             VERIFY(!m_page_directory);
         }
     }
@@ -268,11 +267,10 @@ void Region::unmap(ShouldFlushTLB should_flush_tlb)
     if (!m_page_directory)
         return;
     SpinlockLocker pd_locker(m_page_directory->get_lock());
-    SpinlockLocker mm_locker(s_mm_lock);
-    unmap_with_locks_held(should_flush_tlb, pd_locker, mm_locker);
+    unmap_with_locks_held(should_flush_tlb, pd_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&)
 {
     if (!m_page_directory)
         return;
