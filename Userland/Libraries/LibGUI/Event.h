@@ -164,29 +164,23 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, StringView title, Gfx::IntRect const& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, StringView title, Gfx::IntRect const& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
-        , m_parent_client_id(parent_client_id)
-        , m_parent_window_id(parent_window_id)
         , m_title(title)
         , m_rect(rect)
         , m_window_type(window_type)
         , m_workspace_row(workspace_row)
         , m_workspace_column(workspace_column)
         , m_active(is_active)
-        , m_modal(is_modal)
         , m_minimized(is_minimized)
         , m_frameless(is_frameless)
         , m_progress(progress)
     {
     }
 
-    int parent_client_id() const { return m_parent_client_id; }
-    int parent_window_id() const { return m_parent_window_id; }
     String const& title() const { return m_title; }
     Gfx::IntRect const& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
-    bool is_modal() const { return m_modal; }
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
@@ -195,15 +189,12 @@ public:
     unsigned workspace_column() const { return m_workspace_column; }
 
 private:
-    int m_parent_client_id;
-    int m_parent_window_id;
     String m_title;
     Gfx::IntRect m_rect;
     WindowType m_window_type;
     unsigned m_workspace_row;
     unsigned m_workspace_column;
     bool m_active;
-    bool m_modal;
     bool m_minimized;
     bool m_frameless;
     Optional<int> m_progress;

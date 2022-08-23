@@ -12,18 +12,6 @@ WindowList& WindowList::the()
     return s_the;
 }
 
-Window* WindowList::find_parent(Window const& window)
-{
-    if (!window.parent_identifier().is_valid())
-        return nullptr;
-    for (auto& it : m_windows) {
-        auto& w = *it.value;
-        if (w.identifier() == window.parent_identifier())
-            return &w;
-    }
-    return nullptr;
-}
-
 Window* WindowList::window(WindowIdentifier const& identifier)
 {
     auto it = m_windows.find(identifier);

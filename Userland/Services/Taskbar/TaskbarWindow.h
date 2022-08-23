@@ -37,7 +37,6 @@ private:
     void add_window_button(::Window&, WindowIdentifier const&);
     void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
-    ::Window* find_window_owner(::Window&) const;
 
     virtual void event(Core::Event&) override;
     virtual void wm_event(GUI::WMEvent&) override;

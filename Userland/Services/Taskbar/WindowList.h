@@ -27,9 +27,6 @@ public:
 
     WindowIdentifier const& identifier() const { return m_identifier; }
 
-    void set_parent_identifier(WindowIdentifier const& parent_identifier) { m_parent_identifier = parent_identifier; }
-    WindowIdentifier const& parent_identifier() const { return m_parent_identifier; }
-
     String title() const { return m_title; }
     void set_title(String const& title) { m_title = title; }
 
@@ -44,9 +41,6 @@ public:
 
     void set_minimized(bool minimized) { m_minimized = minimized; }
     bool is_minimized() const { return m_minimized; }
-
-    void set_modal(bool modal) { m_modal = modal; }
-    bool is_modal() const { return m_modal; }
 
     void set_workspace(unsigned row, unsigned column)
     {
@@ -71,7 +65,6 @@ public:
 
 private:
     WindowIdentifier m_identifier;
-    WindowIdentifier m_parent_identifier;
     String m_title;
     Gfx::IntRect m_rect;
     RefPtr<GUI::Button> m_button;
@@ -80,7 +73,6 @@ private:
     unsigned m_workspace_column { 0 };
     bool m_active { false };
     bool m_minimized { false };
-    bool m_modal { false };
     Optional<int> m_progress;
 };
 
@@ -95,7 +87,6 @@ public:
             callback(*it.value);
     }
 
-    Window* find_parent(Window const&);
     Window* window(WindowIdentifier const&);
     Window& ensure_window(WindowIdentifier const&);
     void remove_window(WindowIdentifier const&);

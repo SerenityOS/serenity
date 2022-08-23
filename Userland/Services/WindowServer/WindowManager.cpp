@@ -423,9 +423,22 @@ void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& w
         return;
     if (window.is_internal())
         return;
-    auto* parent = window.parent_window();
-    auto& window_stack = is_stationary_window_type(window.type()) ? current_window_stack() : window.window_stack();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
+    if (window.is_capturing_input())
+        return;
+    if (window.blocking_modal_window())
+        return;
+
+    Window* modeless = window.modeless_ancestor();
+    if (!modeless)
+        return;
+    auto is_active = for_each_window_in_modal_chain(*modeless, [&](auto& w) {
+        if (w.is_active())
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+
+    auto& window_stack = is_stationary_window_type(modeless->type()) ? current_window_stack() : modeless->window_stack();
+    conn.async_window_state_changed(conn.window_id(), modeless->client_id(), modeless->window_id(), window_stack.row(), window_stack.column(), is_active, modeless->is_minimized(), modeless->is_frameless(), (i32)modeless->type(), modeless->computed_title(), modeless->rect(), modeless->progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMConnectionFromClient& conn, Window& window)
