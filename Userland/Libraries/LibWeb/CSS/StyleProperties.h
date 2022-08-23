@@ -83,6 +83,10 @@ public:
     Optional<CSS::FontVariant> font_variant() const;
     Vector<CSS::GridTrackSize> grid_template_columns() const;
     Vector<CSS::GridTrackSize> grid_template_rows() const;
+    CSS::GridTrackPlacement grid_column_end() const;
+    CSS::GridTrackPlacement grid_column_start() const;
+    CSS::GridTrackPlacement grid_row_end() const;
+    CSS::GridTrackPlacement grid_row_start() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;

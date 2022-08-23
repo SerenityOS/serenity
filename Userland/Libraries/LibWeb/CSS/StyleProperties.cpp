@@ -667,4 +667,28 @@ Vector<CSS::GridTrackSize> StyleProperties::grid_template_rows() const
     return value->as_grid_track_size().grid_track_size();
 }
 
+CSS::GridTrackPlacement StyleProperties::grid_column_end() const
+{
+    auto value = property(CSS::PropertyID::GridColumnEnd);
+    return value->as_grid_track_placement().grid_track_placement();
+}
+
+CSS::GridTrackPlacement StyleProperties::grid_column_start() const
+{
+    auto value = property(CSS::PropertyID::GridColumnStart);
+    return value->as_grid_track_placement().grid_track_placement();
+}
+
+CSS::GridTrackPlacement StyleProperties::grid_row_end() const
+{
+    auto value = property(CSS::PropertyID::GridRowEnd);
+    return value->as_grid_track_placement().grid_track_placement();
+}
+
+CSS::GridTrackPlacement StyleProperties::grid_row_start() const
+{
+    auto value = property(CSS::PropertyID::GridRowStart);
+    return value->as_grid_track_placement().grid_track_placement();
+}
+
 }

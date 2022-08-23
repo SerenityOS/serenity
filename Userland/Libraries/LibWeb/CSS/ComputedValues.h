@@ -62,6 +62,10 @@ public:
     static CSS::Length max_height() { return CSS::Length::make_auto(); }
     static Vector<CSS::GridTrackSize> grid_template_columns() { return Vector<CSS::GridTrackSize> {}; }
     static Vector<CSS::GridTrackSize> grid_template_rows() { return Vector<CSS::GridTrackSize> {}; }
+    static CSS::GridTrackPlacement grid_column_end() { return CSS::GridTrackPlacement::make_auto(); }
+    static CSS::GridTrackPlacement grid_column_start() { return CSS::GridTrackPlacement::make_auto(); }
+    static CSS::GridTrackPlacement grid_row_end() { return CSS::GridTrackPlacement::make_auto(); }
+    static CSS::GridTrackPlacement grid_row_start() { return CSS::GridTrackPlacement::make_auto(); }
 };
 
 struct BackgroundLayerData {
@@ -174,6 +178,10 @@ public:
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
     Vector<CSS::GridTrackSize> const& grid_template_columns() const { return m_noninherited.grid_template_columns; }
     Vector<CSS::GridTrackSize> const& grid_template_rows() const { return m_noninherited.grid_template_rows; }
+    CSS::GridTrackPlacement const& grid_column_end() const { return m_noninherited.grid_column_end; }
+    CSS::GridTrackPlacement const& grid_column_start() const { return m_noninherited.grid_column_start; }
+    CSS::GridTrackPlacement const& grid_row_end() const { return m_noninherited.grid_row_end; }
+    CSS::GridTrackPlacement const& grid_row_start() const { return m_noninherited.grid_row_start; }
 
     CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -290,6 +298,10 @@ protected:
         Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align { InitialValues::vertical_align() };
         Vector<CSS::GridTrackSize> grid_template_columns;
         Vector<CSS::GridTrackSize> grid_template_rows;
+        CSS::GridTrackPlacement grid_column_end { InitialValues::grid_column_end() };
+        CSS::GridTrackPlacement grid_column_start { InitialValues::grid_column_start() };
+        CSS::GridTrackPlacement grid_row_end { InitialValues::grid_row_end() };
+        CSS::GridTrackPlacement grid_row_start { InitialValues::grid_row_start() };
     } m_noninherited;
 };
 
@@ -362,6 +374,10 @@ public:
     void set_visibility(CSS::Visibility value) { m_inherited.visibility = value; }
     void set_grid_template_columns(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_columns = value; }
     void set_grid_template_rows(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_rows = value; }
+    void set_grid_column_end(CSS::GridTrackPlacement value) { m_noninherited.grid_column_end = value; }
+    void set_grid_column_start(CSS::GridTrackPlacement value) { m_noninherited.grid_column_start = value; }
+    void set_grid_row_end(CSS::GridTrackPlacement value) { m_noninherited.grid_row_end = value; }
+    void set_grid_row_start(CSS::GridTrackPlacement value) { m_noninherited.grid_row_start = value; }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
