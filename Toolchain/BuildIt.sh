@@ -71,8 +71,8 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-BINUTILS_VERSION="2.38"
-BINUTILS_MD5SUM="f430dff91bdc8772fcef06ffdc0656ab"
+BINUTILS_VERSION="2.39"
+BINUTILS_MD5SUM="ab6825df57514ec172331e988f55fc10"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
@@ -197,7 +197,7 @@ pushd "$DIR/Tarballs"
     md5=""
     if [ -e "$BINUTILS_PKG" ]; then
         md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-        echo "bu md5='$md5'"
+        echo "binutils md5='$md5'"
     fi
     if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
         rm -f $BINUTILS_PKG
