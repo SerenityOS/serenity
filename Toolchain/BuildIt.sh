@@ -77,8 +77,8 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
-GDB_VERSION="11.2"
-GDB_MD5SUM="b5674bef1fbd6beead889f80afa6f269"
+GDB_VERSION="12.1"
+GDB_MD5SUM="0c7339e33fa347ce4d7df222d8ce86af"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.gz"
 GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
@@ -184,7 +184,7 @@ pushd "$DIR/Tarballs"
         md5=""
         if [ -e "$GDB_PKG" ]; then
             md5="$($MD5SUM $GDB_PKG | cut -f1 -d' ')"
-            echo "bu md5='$md5'"
+            echo "gdb md5='$md5'"
         fi
         if [ "$md5" != ${GDB_MD5SUM} ] ; then
             rm -f $GDB_PKG
