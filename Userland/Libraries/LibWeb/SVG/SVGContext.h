@@ -35,7 +35,7 @@ public:
 
 private:
     struct State {
-        Gfx::Color fill_color { Gfx::Color::Black };
+        Gfx::Color fill_color { Gfx::Color::Transparent };
         Gfx::Color stroke_color { Gfx::Color::Transparent };
         float stroke_width { 1.0 };
     };
