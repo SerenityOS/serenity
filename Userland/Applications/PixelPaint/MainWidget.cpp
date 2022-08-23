@@ -896,7 +896,7 @@ void MainWidget::create_default_image()
 
     auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*bg_layer);
-    bg_layer->content_bitmap().fill(Color::White);
+    bg_layer->content_bitmap().fill(Color::Transparent);
 
     m_layer_list_widget->set_image(image);
 
