@@ -21,6 +21,7 @@
 namespace Kernel {
 
 READONLY_AFTER_INIT Thread* g_finalizer;
+RecursiveSpinlock g_scheduler_lock { LockRank::None };
 
 }
 
@@ -28,6 +29,21 @@ READONLY_AFTER_INIT Thread* g_finalizer;
 namespace Kernel {
 
 void get_fast_random_bytes(Bytes)
+{
+    VERIFY_NOT_REACHED();
+}
+
+}
+
+// Mutex
+namespace Kernel {
+
+void Mutex::lock(Mode, [[maybe_unused]] LockLocation const& location)
+{
+    VERIFY_NOT_REACHED();
+}
+
+void Mutex::unlock()
 {
     VERIFY_NOT_REACHED();
 }
