@@ -295,6 +295,14 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
+    case CSS::PropertyID::GridColumnEnd:
+        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_end());
+    case CSS::PropertyID::GridColumnStart:
+        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_start());
+    case CSS::PropertyID::GridRowEnd:
+        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_end());
+    case CSS::PropertyID::GridRowStart:
+        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_start());
     case CSS::PropertyID::GridTemplateColumns:
         return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_columns());
     case CSS::PropertyID::GridTemplateRows:

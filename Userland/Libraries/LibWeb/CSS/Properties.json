@@ -694,6 +694,46 @@
       "normal"
     ]
   },
+  "grid-column-end": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ]
+  },
+  "grid-column-start": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ]
+  },
+  "grid-row-end": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ]
+  },
+  "grid-row-start": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "string"
+    ]
+  },
   "grid-template-columns": {
     "inherited": false,
     "initial": "auto",

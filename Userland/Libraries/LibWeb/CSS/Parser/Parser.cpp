@@ -5325,6 +5325,33 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
     return GridTrackSizeStyleValue::create(params);
 }
 
+RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    auto current_token = tokens.next_token().token();
+
+    if (!tokens.has_next_token()) {
+        if (current_token.to_string() == "auto"sv)
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement());
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
+        return {};
+    }
+
+    auto first_grid_track_placement = CSS::GridTrackPlacement();
+    if (current_token.to_string() == "span"sv) {
+        first_grid_track_placement.set_has_span(true);
+        tokens.skip_whitespace();
+        current_token = tokens.next_token().token();
+    }
+    if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
+        first_grid_track_placement.set_position(static_cast<int>(current_token.number_value()));
+
+    if (!tokens.has_next_token())
+        return GridTrackPlacementStyleValue::create(first_grid_track_placement);
+    return {};
+}
+
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
@@ -5453,6 +5480,22 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::FontFamily:
         if (auto parsed_value = parse_font_family_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridColumnEnd:
+        if (auto parsed_value = parse_grid_track_placement(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridColumnStart:
+        if (auto parsed_value = parse_grid_track_placement(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridRowEnd:
+        if (auto parsed_value = parse_grid_track_placement(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridRowStart:
+        if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
