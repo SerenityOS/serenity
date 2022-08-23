@@ -530,6 +530,8 @@ CSS::Display StyleProperties::display() const
         return CSS::Display::from_short(CSS::Display::Short::Flex);
     case CSS::ValueID::InlineFlex:
         return CSS::Display::from_short(CSS::Display::Short::InlineFlex);
+    case CSS::ValueID::Grid:
+        return CSS::Display::from_short(CSS::Display::Short::Grid);
     default:
         return CSS::Display::from_short(CSS::Display::Short::Block);
     }
