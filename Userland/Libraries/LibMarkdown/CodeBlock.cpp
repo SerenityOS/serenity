@@ -50,15 +50,16 @@ String CodeBlock::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
-    for (auto line : m_code.split('\n')) {
+    for (auto const& line : m_code.split('\n')) {
         // Do not indent too much if we are in the synopsis
         if (!(m_current_section && m_current_section->render_for_terminal().contains("SYNOPSIS"sv)))
             builder.append("  "sv);
 
         builder.append("  "sv);
         builder.append(line);
-        builder.append("\x1b[0m\n"sv);
+        builder.append("\n"sv);
     }
+    builder.append("\n"sv);
 
     return builder.build();
 }
