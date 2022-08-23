@@ -50,6 +50,14 @@ void Mutex::unlock()
 
 }
 
+// LockRank
+namespace Kernel {
+
+void track_lock_acquire(LockRank) { }
+void track_lock_release(LockRank) { }
+
+}
+
 // Inode
 namespace Kernel {
 
