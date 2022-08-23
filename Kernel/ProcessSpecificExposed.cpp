@@ -267,47 +267,45 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    TRY(address_space().with([&](auto& space) {
-        return space->region_tree().with([&](auto& region_tree) -> ErrorOr<void> {
-            for (auto const& region : region_tree.regions()) {
-                auto current_process_credentials = Process::current().credentials();
-                if (!region.is_user() && !current_process_credentials->is_superuser())
-                    continue;
-                auto region_object = TRY(array.add_object());
-                TRY(region_object.add("readable"sv, region.is_readable()));
-                TRY(region_object.add("writable"sv, region.is_writable()));
-                TRY(region_object.add("executable"sv, region.is_executable()));
-                TRY(region_object.add("stack"sv, region.is_stack()));
-                TRY(region_object.add("shared"sv, region.is_shared()));
-                TRY(region_object.add("syscall"sv, region.is_syscall_region()));
-                TRY(region_object.add("purgeable"sv, region.vmobject().is_anonymous()));
-                if (region.vmobject().is_anonymous()) {
-                    TRY(region_object.add("volatile"sv, static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
-                }
-                TRY(region_object.add("cacheable"sv, region.is_cacheable()));
-                TRY(region_object.add("address"sv, region.vaddr().get()));
-                TRY(region_object.add("size"sv, region.size()));
-                TRY(region_object.add("amount_resident"sv, region.amount_resident()));
-                TRY(region_object.add("amount_dirty"sv, region.amount_dirty()));
-                TRY(region_object.add("cow_pages"sv, region.cow_pages()));
-                TRY(region_object.add("name"sv, region.name()));
-                TRY(region_object.add("vmobject"sv, region.vmobject().class_name()));
-
-                StringBuilder pagemap_builder;
-                for (size_t i = 0; i < region.page_count(); ++i) {
-                    auto page = region.physical_page(i);
-                    if (!page)
-                        pagemap_builder.append('N');
-                    else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
-                        pagemap_builder.append('Z');
-                    else
-                        pagemap_builder.append('P');
-                }
-                TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
-                TRY(region_object.finish());
+    TRY(address_space().with([&](auto& space) -> ErrorOr<void> {
+        for (auto const& region : space->region_tree().regions()) {
+            auto current_process_credentials = Process::current().credentials();
+            if (!region.is_user() && !current_process_credentials->is_superuser())
+                continue;
+            auto region_object = TRY(array.add_object());
+            TRY(region_object.add("readable"sv, region.is_readable()));
+            TRY(region_object.add("writable"sv, region.is_writable()));
+            TRY(region_object.add("executable"sv, region.is_executable()));
+            TRY(region_object.add("stack"sv, region.is_stack()));
+            TRY(region_object.add("shared"sv, region.is_shared()));
+            TRY(region_object.add("syscall"sv, region.is_syscall_region()));
+            TRY(region_object.add("purgeable"sv, region.vmobject().is_anonymous()));
+            if (region.vmobject().is_anonymous()) {
+                TRY(region_object.add("volatile"sv, static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
             }
-            return {};
-        });
+            TRY(region_object.add("cacheable"sv, region.is_cacheable()));
+            TRY(region_object.add("address"sv, region.vaddr().get()));
+            TRY(region_object.add("size"sv, region.size()));
+            TRY(region_object.add("amount_resident"sv, region.amount_resident()));
+            TRY(region_object.add("amount_dirty"sv, region.amount_dirty()));
+            TRY(region_object.add("cow_pages"sv, region.cow_pages()));
+            TRY(region_object.add("name"sv, region.name()));
+            TRY(region_object.add("vmobject"sv, region.vmobject().class_name()));
+
+            StringBuilder pagemap_builder;
+            for (size_t i = 0; i < region.page_count(); ++i) {
+                auto page = region.physical_page(i);
+                if (!page)
+                    pagemap_builder.append('N');
+                else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
+                    pagemap_builder.append('Z');
+                else
+                    pagemap_builder.append('P');
+            }
+            TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
+            TRY(region_object.finish());
+        }
+        return {};
     }));
     TRY(array.finish());
     return {};

@@ -27,8 +27,8 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     PageDirectory const& page_directory() const { return *m_page_directory; }
 
-    SpinlockProtected<RegionTree>& region_tree() { return m_region_tree; }
-    SpinlockProtected<RegionTree> const& region_tree() const { return m_region_tree; }
+    RegionTree& region_tree() { return m_region_tree; }
+    RegionTree const& region_tree() const { return m_region_tree; }
 
     void dump_regions();
 
@@ -66,11 +66,7 @@ private:
 
     LockRefPtr<PageDirectory> m_page_directory;
 
-    // NOTE: The total range is also in the RegionTree, but since it never changes,
-    //       it's nice to have it in a place where we can access it without locking.
-    VirtualRange m_total_range;
-
-    SpinlockProtected<RegionTree> m_region_tree;
+    RegionTree m_region_tree;
 
     bool m_enforces_syscall_regions { false };
 };
