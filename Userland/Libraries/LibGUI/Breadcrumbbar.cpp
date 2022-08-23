@@ -136,6 +136,8 @@ Optional<size_t> Breadcrumbbar::find_segment_with_data(String const& data)
 
 void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 {
+    if (m_selected_segment == index)
+        return;
     m_selected_segment = index;
 
     if (!index.has_value()) {
