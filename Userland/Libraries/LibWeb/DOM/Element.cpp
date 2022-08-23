@@ -287,7 +287,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
         return adopt_ref(*new Layout::InlineNode(document, element, move(style)));
     }
 
-    if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())
+    if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside() || display.is_grid_inside())
         return adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
 
     TODO();

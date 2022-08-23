@@ -266,6 +266,7 @@ set(SOURCES
     Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
     Layout/FrameBox.cpp
+    Layout/GridFormattingContext.cpp
     Layout/ImageBox.cpp
     Layout/InitialContainingBlock.cpp
     Layout/InlineFormattingContext.cpp
