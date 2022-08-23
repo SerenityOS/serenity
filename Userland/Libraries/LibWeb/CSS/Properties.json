@@ -694,6 +694,32 @@
       "normal"
     ]
   },
+  "grid-template-columns": {
+    "inherited": false,
+    "initial": "auto",
+    "max-values": 4,
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ]
+  },
+  "grid-template-rows": {
+    "inherited": false,
+    "initial": "auto",
+    "max-values": 4,
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ]
+  },
   "height": {
     "inherited": false,
     "initial": "auto",
