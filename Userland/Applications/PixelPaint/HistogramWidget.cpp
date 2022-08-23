@@ -89,10 +89,10 @@ ErrorOr<void> HistogramWidget::rebuild_histogram_data()
     m_widget_height = height();
 
     for (int i = 0; i < 256; i++) {
-        m_data.red[i] = (static_cast<float>(m_data.red[i]) / max_color_frequency) * m_widget_height;
-        m_data.green[i] = (static_cast<float>(m_data.green[i]) / max_color_frequency) * m_widget_height;
-        m_data.blue[i] = (static_cast<float>(m_data.blue[i]) / max_color_frequency) * m_widget_height;
-        m_data.brightness[i] = (static_cast<float>(m_data.brightness[i]) / max_brightness_frequency) * m_widget_height;
+        m_data.red[i] = m_data.red[i] != 0 ? (static_cast<float>(m_data.red[i]) / max_color_frequency) * m_widget_height : 0;
+        m_data.green[i] = m_data.green[i] != 0 ? (static_cast<float>(m_data.green[i]) / max_color_frequency) * m_widget_height : 0;
+        m_data.blue[i] = m_data.blue[i] != 0 ? (static_cast<float>(m_data.blue[i]) / max_color_frequency) * m_widget_height : 0;
+        m_data.brightness[i] = m_data.brightness[i] != 0 ? (static_cast<float>(m_data.brightness[i]) / max_brightness_frequency) * m_widget_height : 0;
     }
 
     update();
