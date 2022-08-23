@@ -6,6 +6,7 @@ parameters:
   build_directory: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
   serenity_ccache_path: ''
+  serenity_ccache_size: '5G'
   toolchain_ccache_path: ''
   toolchain_ccache_size: $(CCACHE_MAXSIZE)
   with_remote_data_caches: true
@@ -55,7 +56,7 @@ steps:
       displayName: 'Serenity Compiler Cache'
 
     - script: |
-        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M 5G
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M ${{ parameters.serenity_ccache_size }}
         CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
       displayName: 'Configure Serenity ccache'
 
