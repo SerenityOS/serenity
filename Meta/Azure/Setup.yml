@@ -32,8 +32,9 @@ steps:
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'macOS') }}:
+    # macOS ships an ancient Bash 3.x by default
     - script: |
-        brew install ninja wabt ccache unzip
+        brew install bash ninja wabt ccache unzip
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Android') }}:
