@@ -450,7 +450,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_zoom_out_action);
     m_view_menu->add_action(*m_reset_zoom_action);
     m_view_menu->add_action(GUI::Action::create(
-        "Fit Image To &View", [&](auto&) {
+        "Fit Image To &View", g_icon_bag.fit_image_to_view, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->fit_image_to_view();
@@ -594,7 +594,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, nullptr, [&](auto&) {
+        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             auto active_layer = editor->active_layer();
@@ -691,7 +691,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     };
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
-        "Fl&atten Image", { Mod_Ctrl, Key_F }, [&](auto&) {
+        "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flatten_all_layers();
@@ -784,7 +784,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     }));
 
     m_filter_menu->add_separator();
-    m_filter_menu->add_action(GUI::Action::create("Generic 5x5 &Convolution", [&](auto&) {
+    m_filter_menu->add_action(GUI::Action::create("Generic 5x5 &Convolution", g_icon_bag.generic_5x5_convolution, [&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
         if (auto* layer = editor->active_layer()) {

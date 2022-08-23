@@ -22,6 +22,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.default_colors = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/default-colors.png"sv));
     icon_bag.load_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/load-color-palette.png"sv));
     icon_bag.save_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/save-color-palette.png"sv));
+    icon_bag.fit_image_to_view = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/fit-image-to-view.png"sv));
     icon_bag.add_guide = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/add-guide.png"sv));
     icon_bag.clear_guides = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/clear-guides.png"sv));
     icon_bag.edit_flip_vertical = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv));
@@ -36,11 +37,14 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.active_layer_up = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/active-layer-up.png"sv));
     icon_bag.active_layer_down = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/active-layer-down.png"sv));
     icon_bag.delete_layer = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv));
+    icon_bag.flatten_image = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/flatten-image.png"sv));
     icon_bag.merge_visible = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-visible.png"sv));
     icon_bag.merge_active_layer_up = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-up.png"sv));
     icon_bag.merge_active_layer_down = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/merge-active-layer-down.png"sv));
     icon_bag.filter = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png"sv));
+    icon_bag.generic_5x5_convolution = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/generic-5x5-convolution.png"sv));
     icon_bag.levels = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/levels.png"sv));
+    icon_bag.add_mask = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/add-mask.png"sv));
 
     return icon_bag;
 }
