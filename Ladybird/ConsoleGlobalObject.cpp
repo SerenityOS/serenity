@@ -21,12 +21,12 @@ ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::Bindings::Window
 {
 }
 
-void ConsoleGlobalObject::initialize_global_object()
+void ConsoleGlobalObject::initialize_global_object(JS::Realm& realm)
 {
-    Base::initialize_global_object();
+    Base::initialize_global_object(realm);
 
     // $0 magic variable
-    define_native_accessor("$0", inspected_node_getter, nullptr, 0);
+    define_native_accessor(realm, "$0", inspected_node_getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)
@@ -98,10 +98,11 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> ConsoleGlobalObject::internal
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto& realm = *vm.current_realm();
+    auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<ConsoleGlobalObject>(this_object))
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
 
     auto console_global_object = static_cast<ConsoleGlobalObject*>(this_object);
     auto& window = console_global_object->m_window_object->impl();
@@ -109,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
     if (!inspected_node)
         return JS::js_undefined();
 
-    return Web::Bindings::wrap(global_object, *inspected_node);
+    return Web::Bindings::wrap(realm, *inspected_node);
 }
 
 }
