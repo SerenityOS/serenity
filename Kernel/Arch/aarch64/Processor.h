@@ -136,12 +136,22 @@ public:
         Aarch64::DAIF::set_I();
     }
 
-    ALWAYS_INLINE static void enter_critical() { VERIFY_NOT_REACHED(); }
-    ALWAYS_INLINE static void leave_critical() { VERIFY_NOT_REACHED(); }
+    // FIXME: Share the critical functions with x86/Processor.h
+    ALWAYS_INLINE static void enter_critical()
+    {
+        auto current_processor = current();
+        current_processor.m_in_critical = current_processor.in_critical() + 1;
+    }
+
+    ALWAYS_INLINE static void leave_critical()
+    {
+        auto current_processor = current();
+        current_processor.m_in_critical = current_processor.in_critical() - 1;
+    }
+
     ALWAYS_INLINE static u32 in_critical()
     {
-        VERIFY_NOT_REACHED();
-        return 0;
+        return current().m_in_critical;
     }
 
     // FIXME: Actually return the idle thread once aarch64 supports threading.
@@ -161,6 +171,9 @@ public:
     }
 
     [[noreturn]] static void halt();
+
+private:
+    u32 m_in_critical { 0 };
 };
 
 }
