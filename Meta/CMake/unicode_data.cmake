@@ -66,6 +66,7 @@ set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/${SENTENCE_BREAK_PROP_SOURCE}")
 string(REGEX REPLACE "([0-9]+\\.[0-9]+)\\.[0-9]+" "\\1" EMOJI_VERSION "${UCD_VERSION}")
 set(EMOJI_TEST_URL "https://unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test.txt")
 set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
+set(EMOJI_GENERATOR_PATH "${SerenityOS_SOURCE_DIR}/Meta/generate-emoji-txt.sh")
 set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
 set(EMOJI_INSTALL_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji.txt")
 
@@ -236,12 +237,12 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT "${EMOJI_INSTALL_PATH}"
-        COMMAND "${SerenityOS_SOURCE_DIR}/Meta/generate-emoji-txt.sh" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"
+        COMMAND "${EMOJI_GENERATOR_PATH}" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"
         # This will make this command only run when the modified time of the directory changes,
         # which only happens if files within it are added or deleted, but not when a file is modified.
         # This is fine for this use-case, because the contents of a file changing should not affect
         # the generated emoji.txt file.
-        DEPENDS "${EMOJI_RES_PATH}" "${EMOJI_TEST_PATH}"
+        DEPENDS "${EMOJI_GENERATOR_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_TEST_PATH}"
         USES_TERMINAL
     )
     add_custom_target(generate_emoji_txt ALL DEPENDS "${EMOJI_INSTALL_PATH}")
