@@ -235,17 +235,19 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         arguments -d "${CLDR_DATES_PATH}"
     )
 
-    add_custom_command(
-        OUTPUT "${EMOJI_INSTALL_PATH}"
-        COMMAND "${EMOJI_GENERATOR_PATH}" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"
-        # This will make this command only run when the modified time of the directory changes,
-        # which only happens if files within it are added or deleted, but not when a file is modified.
-        # This is fine for this use-case, because the contents of a file changing should not affect
-        # the generated emoji.txt file.
-        DEPENDS "${EMOJI_GENERATOR_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_TEST_PATH}"
-        USES_TERMINAL
-    )
-    add_custom_target(generate_emoji_txt ALL DEPENDS "${EMOJI_INSTALL_PATH}")
+    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
+        add_custom_command(
+            OUTPUT "${EMOJI_INSTALL_PATH}"
+            COMMAND "${EMOJI_GENERATOR_PATH}" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"
+            # This will make this command only run when the modified time of the directory changes,
+            # which only happens if files within it are added or deleted, but not when a file is modified.
+            # This is fine for this use-case, because the contents of a file changing should not affect
+            # the generated emoji.txt file.
+            DEPENDS "${EMOJI_GENERATOR_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_TEST_PATH}"
+            USES_TERMINAL
+        )
+        add_custom_target(generate_emoji_txt ALL DEPENDS "${EMOJI_INSTALL_PATH}")
+    endif()
 
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
