@@ -40,7 +40,7 @@ public:
     static void yield();
     static void context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
-    static void leave_on_first_switch(u32 flags);
+    static void leave_on_first_switch(InterruptsState);
     static void prepare_after_exec();
     static void prepare_for_idle_loop();
     static Process* colonel();

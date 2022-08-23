@@ -8,35 +8,31 @@
 
 namespace Kernel {
 
-u32 Spinlock::lock()
+InterruptsState Spinlock::lock()
 {
-    u32 prev_flags = cpu_flags();
+    InterruptsState previous_interrupts_state = processor_interrupts_state();
     Processor::enter_critical();
-    cli();
+    Processor::disable_interrupts();
     while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
         Processor::wait_check();
     track_lock_acquire(m_rank);
-    return prev_flags;
+    return previous_interrupts_state;
 }
 
-void Spinlock::unlock(u32 prev_flags)
+void Spinlock::unlock(InterruptsState previous_interrupts_state)
 {
     VERIFY(is_locked());
     track_lock_release(m_rank);
     m_lock.store(0, AK::memory_order_release);
 
     Processor::leave_critical();
-
-    if ((prev_flags & 0x200) != 0)
-        sti();
-    else
-        cli();
+    restore_processor_interrupts_state(previous_interrupts_state);
 }
 
-u32 RecursiveSpinlock::lock()
+InterruptsState RecursiveSpinlock::lock()
 {
-    u32 prev_flags = cpu_flags();
-    cli();
+    InterruptsState previous_interrupts_state = processor_interrupts_state();
+    Processor::disable_interrupts();
     Processor::enter_critical();
     auto& proc = Processor::current();
     FlatPtr cpu = FlatPtr(&proc);
@@ -50,10 +46,10 @@ u32 RecursiveSpinlock::lock()
     if (m_recursions == 0)
         track_lock_acquire(m_rank);
     m_recursions++;
-    return prev_flags;
+    return previous_interrupts_state;
 }
 
-void RecursiveSpinlock::unlock(u32 prev_flags)
+void RecursiveSpinlock::unlock(InterruptsState previous_interrupts_state)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(m_recursions > 0);
@@ -64,11 +60,7 @@ void RecursiveSpinlock::unlock(u32 prev_flags)
     }
 
     Processor::leave_critical();
-
-    if ((prev_flags & 0x200) != 0)
-        sti();
-    else
-        cli();
+    restore_processor_interrupts_state(previous_interrupts_state);
 }
 
 }
