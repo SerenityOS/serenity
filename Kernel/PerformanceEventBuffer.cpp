@@ -354,12 +354,13 @@ ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, Proces
     });
     TRY(result);
 
-    for (auto const& region : process.address_space().regions()) {
-        TRY(append_with_ip_and_bp(process.pid(), 0,
-            0, 0, PERF_EVENT_MMAP, 0, region.range().base().get(), region.range().size(), region.name()));
-    }
-
-    return {};
+    return process.address_space().region_tree().with([&](auto& region_tree) -> ErrorOr<void> {
+        for (auto const& region : region_tree.regions()) {
+            TRY(append_with_ip_and_bp(process.pid(), 0,
+                0, 0, PERF_EVENT_MMAP, 0, region.range().base().get(), region.range().size(), region.name()));
+        }
+        return {};
+    });
 }
 
 ErrorOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)

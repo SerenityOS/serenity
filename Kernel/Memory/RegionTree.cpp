@@ -151,7 +151,6 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_randomized(size_t size, size_t 
 
 ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment)
 {
-    SpinlockLocker locker(m_lock);
     auto range = TRY(randomize_virtual_address == RandomizeVirtualAddress::Yes ? allocate_range_randomized(size, alignment) : allocate_range_anywhere(size, alignment));
     region.m_range = range;
     m_regions.insert(region.vaddr().get(), region);
@@ -160,7 +159,6 @@ ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress
 
 ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const& range)
 {
-    SpinlockLocker locker(m_lock);
     auto allocated_range = TRY(allocate_range_specific(range.base(), range.size()));
     region.m_range = allocated_range;
     m_regions.insert(region.vaddr().get(), region);
@@ -169,13 +167,11 @@ ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const&
 
 bool RegionTree::remove(Region& region)
 {
-    SpinlockLocker locker(m_lock);
     return m_regions.remove(region.range().base().get());
 }
 
 Region* RegionTree::find_region_containing(VirtualAddress address)
 {
-    SpinlockLocker locker(m_lock);
     auto* region = m_regions.find_largest_not_above(address.get());
     if (!region || !region->contains(address))
         return nullptr;
@@ -184,7 +180,6 @@ Region* RegionTree::find_region_containing(VirtualAddress address)
 
 Region* RegionTree::find_region_containing(VirtualRange range)
 {
-    SpinlockLocker lock(m_lock);
     auto* region = m_regions.find_largest_not_above(range.base().get());
     if (!region || !region->contains(range))
         return nullptr;

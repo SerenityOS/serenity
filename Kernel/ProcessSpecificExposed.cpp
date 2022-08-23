@@ -267,9 +267,8 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    {
-        SpinlockLocker lock(address_space().get_lock());
-        for (auto const& region : address_space().regions()) {
+    TRY(address_space().region_tree().with([&](auto& region_tree) -> ErrorOr<void> {
+        for (auto const& region : region_tree.regions()) {
             auto current_process_credentials = Process::current().credentials();
             if (!region.is_user() && !current_process_credentials->is_superuser())
                 continue;
@@ -306,7 +305,8 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
             TRY(region_object.finish());
         }
-    }
+        return {};
+    }));
     TRY(array.finish());
     return {};
 }

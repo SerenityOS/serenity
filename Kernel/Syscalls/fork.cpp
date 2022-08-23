@@ -124,17 +124,21 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #endif
 
     {
-        SpinlockLocker lock(address_space().get_lock());
-        for (auto& region : address_space().regions()) {
-            dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
-            auto region_clone = TRY(region.try_clone());
-            TRY(region_clone->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
-            TRY(child->address_space().region_tree().place_specifically(*region_clone, region.range()));
-            auto* child_region = region_clone.leak_ptr();
+        TRY(address_space().region_tree().with([&](auto& parent_region_tree) -> ErrorOr<void> {
+            return child->address_space().region_tree().with([&](auto& child_region_tree) -> ErrorOr<void> {
+                for (auto& region : parent_region_tree.regions()) {
+                    dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
+                    auto region_clone = TRY(region.try_clone());
+                    TRY(region_clone->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
+                    TRY(child_region_tree.place_specifically(*region_clone, region.range()));
+                    auto* child_region = region_clone.leak_ptr();
 
-            if (&region == m_master_tls_region.unsafe_ptr())
-                child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
-        }
+                    if (&region == m_master_tls_region.unsafe_ptr())
+                        child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
+                }
+                return {};
+            });
+        }));
     }
 
     thread_finalizer_guard.disarm();
@@ -151,5 +155,4 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     return child_pid;
 }
-
 }

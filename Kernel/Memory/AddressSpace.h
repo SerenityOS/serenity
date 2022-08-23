@@ -10,6 +10,7 @@
 #include <AK/RedBlackTree.h>
 #include <AK/Vector.h>
 #include <Kernel/Library/LockWeakPtr.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/Region.h>
@@ -26,8 +27,8 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     PageDirectory const& page_directory() const { return *m_page_directory; }
 
-    auto& regions() { return m_region_tree.regions(); }
-    auto const& regions() const { return m_region_tree.regions(); }
+    SpinlockProtected<RegionTree>& region_tree() { return m_region_tree; }
+    SpinlockProtected<RegionTree> const& region_tree() const { return m_region_tree; }
 
     void dump_regions();
 
@@ -62,8 +63,6 @@ public:
     size_t amount_purgeable_volatile() const;
     size_t amount_purgeable_nonvolatile() const;
 
-    auto& region_tree() { return m_region_tree; }
-
 private:
     AddressSpace(NonnullLockRefPtr<PageDirectory>, VirtualRange total_range);
 
@@ -71,7 +70,11 @@ private:
 
     LockRefPtr<PageDirectory> m_page_directory;
 
-    RegionTree m_region_tree;
+    // NOTE: The total range is also in the RegionTree, but since it never changes,
+    //       it's nice to have it in a place where we can access it without locking.
+    VirtualRange m_total_range;
+
+    SpinlockProtected<RegionTree> m_region_tree;
 
     bool m_enforces_syscall_regions { false };
 };
