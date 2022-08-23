@@ -13,6 +13,7 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UserOrKernelBuffer.h>
@@ -44,6 +45,16 @@ void Mutex::lock(Mode, [[maybe_unused]] LockLocation const& location)
 }
 
 void Mutex::unlock()
+{
+    VERIFY_NOT_REACHED();
+}
+
+}
+
+// Process
+namespace Kernel {
+
+SpinlockProtected<Process::List>& Process::all_instances()
 {
     VERIFY_NOT_REACHED();
 }
