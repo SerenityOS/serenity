@@ -47,9 +47,6 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>("Wasm Memory allocation failed");
 
-    if (!WebAssemblyObject::s_abstract_machine.store().get(*address)->grow(initial))
-        return vm.throw_completion<JS::TypeError>(String::formatted("Wasm Memory grow failed: {}", initial));
-
     return vm.heap().allocate<WebAssemblyMemoryObject>(realm, realm, *address);
 }
 
