@@ -9,6 +9,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FlexFormattingContext.h>
 #include <LibWeb/Layout/FormattingContext.h>
+#include <LibWeb/Layout/GridFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
@@ -74,12 +75,16 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
             if (!display.is_flex_inside())
                 return true;
         }
+        if (parent_display.is_grid_inside()) {
+            if (!display.is_grid_inside()) {
+                return true;
+            }
+        }
     }
 
     // FIXME: table-caption
     // FIXME: anonymous table cells
     // FIXME: Elements with contain: layout, content, or paint.
-    // FIXME: grid
     // FIXME: multicol
     // FIXME: column-span: all
     return false;
@@ -119,6 +124,10 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
 
     if (child_display.is_table_inside())
         return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
+
+    if (child_display.is_grid_inside()) {
+        return make<GridFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
+    }
 
     VERIFY(is_block_formatting_context());
     VERIFY(!child_box.children_are_inline());
