@@ -2,7 +2,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(TZDB_PATH "${CMAKE_BINARY_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
 
-set(TZDB_VERSION 2022b)
+set(TZDB_VERSION 2022c)
 set(TZDB_VERSION_FILE "${TZDB_PATH}/version.txt")
 
 set(TZDB_ZIP_URL "https://data.iana.org/time-zones/releases/tzdata${TZDB_VERSION}.tar.gz")
