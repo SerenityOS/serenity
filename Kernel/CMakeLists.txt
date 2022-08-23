@@ -329,6 +329,8 @@ set(KERNEL_SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        Arch/Processor.cpp
+
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Spinlock.cpp
@@ -442,6 +444,8 @@ else()
     set(SOURCES
         ${AK_SOURCES}
         ${RPI_SOURCES}
+
+        Arch/Processor.cpp
 
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
