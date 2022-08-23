@@ -530,6 +530,26 @@ void Image::crop(Gfx::IntRect const& cropped_rect)
     did_change_rect(cropped_rect);
 }
 
+Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
+{
+    if (m_layers.is_empty())
+        return {};
+
+    Optional<Gfx::IntRect> bounding_rect;
+    for (auto& layer : m_layers) {
+        auto layer_content_rect_in_layer_coordinates = layer.nonempty_content_bounding_rect();
+        if (!layer_content_rect_in_layer_coordinates.has_value())
+            continue;
+        auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates.value().translated(layer.location());
+        if (!bounding_rect.has_value())
+            bounding_rect = layer_content_rect_in_image_coordinates;
+        else
+            bounding_rect = bounding_rect->united(layer_content_rect_in_image_coordinates);
+    }
+
+    return bounding_rect;
+}
+
 void Image::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
     float scale_x = 1.0f;

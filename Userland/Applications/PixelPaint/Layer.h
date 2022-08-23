@@ -61,6 +61,8 @@ public:
     void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
     void resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode);
 
+    Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
+
     ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
     void did_modify_bitmap(Gfx::IntRect const& = {});

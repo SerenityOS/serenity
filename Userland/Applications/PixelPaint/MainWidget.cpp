@@ -560,6 +560,19 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Image to Selection"sv);
         }));
 
+    m_image_menu->add_action(GUI::Action::create(
+        "&Crop Image to Content", g_icon_bag.crop, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+
+            auto content_bounding_rect = editor->image().nonempty_content_bounding_rect();
+            if (!content_bounding_rect.has_value())
+                return;
+
+            editor->image().crop(content_bounding_rect.value());
+            editor->did_complete_action("Crop Image to Content"sv);
+        }));
+
     m_layer_menu = window.add_menu("&Layer");
     m_layer_menu->add_action(GUI::Action::create(
         "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, g_icon_bag.new_layer, [&](auto&) {

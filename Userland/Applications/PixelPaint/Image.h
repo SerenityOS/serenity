@@ -99,6 +99,8 @@ public:
     void crop(Gfx::IntRect const& rect);
     void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
 
+    Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
+
     Color color_at(Gfx::IntPoint const& point) const;
 
 private:
