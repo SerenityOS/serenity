@@ -81,6 +81,8 @@ public:
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
     Optional<CSS::FontVariant> font_variant() const;
+    Vector<CSS::GridTrackSize> grid_template_columns() const;
+    Vector<CSS::GridTrackSize> grid_template_rows() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;

@@ -359,6 +359,7 @@ private:
     RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_track_sizes(Vector<ComponentValue> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<ComponentValue>&);

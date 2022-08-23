@@ -525,6 +525,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 
     computed_values.set_content(computed_style.content());
+    computed_values.set_grid_template_columns(computed_style.grid_template_columns());
+    computed_values.set_grid_template_rows(computed_style.grid_template_rows());
 
     if (auto fill = computed_style.property(CSS::PropertyID::Fill); fill->has_color())
         computed_values.set_fill(fill->to_color(*this));

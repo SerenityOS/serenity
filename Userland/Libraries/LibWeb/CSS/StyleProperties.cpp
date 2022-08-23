@@ -655,4 +655,16 @@ Optional<CSS::FontVariant> StyleProperties::font_variant() const
     return value_id_to_font_variant(value->to_identifier());
 }
 
+Vector<CSS::GridTrackSize> StyleProperties::grid_template_columns() const
+{
+    auto value = property(CSS::PropertyID::GridTemplateColumns);
+    return value->as_grid_track_size().grid_track_size();
+}
+
+Vector<CSS::GridTrackSize> StyleProperties::grid_template_rows() const
+{
+    auto value = property(CSS::PropertyID::GridTemplateRows);
+    return value->as_grid_track_size().grid_track_size();
+}
+
 }

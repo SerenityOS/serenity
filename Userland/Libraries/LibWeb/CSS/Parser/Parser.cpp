@@ -5301,6 +5301,30 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
     return parsed_value.release_value();
 }
 
+RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
+{
+    Vector<CSS::GridTrackSize> params;
+    for (auto& component_value : component_values) {
+        // FIXME: Incomplete as a GridTrackSize can be a function like minmax(min, max), etc.
+        if (component_value.is_function())
+            return {};
+        if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv)) {
+            params.append(Length::make_auto());
+            continue;
+        }
+        auto dimension = parse_dimension(component_value);
+        if (!dimension.has_value())
+            return {};
+        if (dimension->is_length())
+            params.append(dimension->length());
+        if (dimension->is_percentage())
+            params.append(dimension->percentage());
+    }
+    if (params.size() == 0)
+        return {};
+    return GridTrackSizeStyleValue::create(params);
+}
+
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
@@ -5429,6 +5453,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::FontFamily:
         if (auto parsed_value = parse_font_family_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridTemplateColumns:
+        if (auto parsed_value = parse_grid_track_sizes(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridTemplateRows:
+        if (auto parsed_value = parse_grid_track_sizes(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
