@@ -104,7 +104,7 @@ String UnsignedBigInteger::to_base(u16 N) const
 
 u64 UnsignedBigInteger::to_u64() const
 {
-    VERIFY(sizeof(Word) == 4);
+    static_assert(sizeof(Word) == 4);
     if (!length())
         return 0;
     u64 value = m_words[0];
