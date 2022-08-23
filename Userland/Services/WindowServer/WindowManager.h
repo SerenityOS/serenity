@@ -371,7 +371,7 @@ private:
     void tell_wm_about_window_icon(WMConnectionFromClient& conn, Window&);
     void tell_wm_about_window_rect(WMConnectionFromClient& conn, Window&);
     void tell_wm_about_current_window_stack(WMConnectionFromClient&);
-    bool pick_new_active_window(Window*);
+    void pick_new_active_window(Window*);
 
     bool sync_config_to_disk();
 
