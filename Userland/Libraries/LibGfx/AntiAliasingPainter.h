@@ -7,6 +7,8 @@
 #pragma once
 
 #include <LibGfx/Painter.h>
+#include <LibGfx/Path.h>
+#include <LibGfx/Quad.h>
 
 namespace Gfx {
 
@@ -81,9 +83,13 @@ private:
     };
     template<AntiAliasPolicy policy>
     void draw_anti_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness, Painter::LineStyle style, Color alternate_color);
+    void stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color, float thickness);
+    FloatQuad build_rotated_rectangle(FloatPoint const& direction, float width);
 
     Painter& m_underlying_painter;
     AffineTransform m_transform;
+    Path m_intersection_edge_path;
+    Path m_rotated_rectangle_path;
 };
 
 }
