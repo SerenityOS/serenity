@@ -1809,11 +1809,15 @@ Window* WindowManager::set_active_input_window(Window* window)
 void WindowManager::notify_new_active_input_window(Window& new_input_window)
 {
     Core::EventLoop::current().post_event(new_input_window, make<Event>(Event::WindowInputEntered));
+    if (new_input_window.is_capturing_input() && !new_input_window.is_frameless())
+        new_input_window.invalidate(true, true);
 }
 
 void WindowManager::notify_previous_active_input_window(Window& previous_input_window)
 {
     Core::EventLoop::current().post_event(previous_input_window, make<Event>(Event::WindowInputLeft));
+    if (previous_input_window.is_capturing_input() && !previous_input_window.is_frameless())
+        previous_input_window.invalidate(true, true);
 }
 
 void WindowManager::set_active_window(Window* new_active_window, bool make_input)
