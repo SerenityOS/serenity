@@ -197,31 +197,34 @@ ErrorOr<void> Process::peek_user_data(Span<u8> destination, Userspace<u8 const*>
 ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
 {
     Memory::VirtualRange range = { address.vaddr(), sizeof(FlatPtr) };
-    auto* region = address_space().find_region_containing(range);
-    if (!region)
-        return EFAULT;
-    ScopedAddressSpaceSwitcher switcher(*this);
-    if (region->is_shared()) {
-        // If the region is shared, we change its vmobject to a PrivateInodeVMObject
-        // to prevent the write operation from changing any shared inode data
-        VERIFY(region->vmobject().is_shared_inode());
-        auto vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(static_cast<Memory::SharedInodeVMObject&>(region->vmobject()).inode()));
-        region->set_vmobject(move(vmobject));
-        region->set_shared(false);
-    }
-    bool const was_writable = region->is_writable();
-    if (!was_writable) {
-        region->set_writable(true);
-        region->remap();
-    }
-    ScopeGuard rollback([&]() {
+
+    return address_space().with([&](auto& space) -> ErrorOr<void> {
+        auto* region = space->find_region_containing(range);
+        if (!region)
+            return EFAULT;
+        ScopedAddressSpaceSwitcher switcher(*this);
+        if (region->is_shared()) {
+            // If the region is shared, we change its vmobject to a PrivateInodeVMObject
+            // to prevent the write operation from changing any shared inode data
+            VERIFY(region->vmobject().is_shared_inode());
+            auto vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(static_cast<Memory::SharedInodeVMObject&>(region->vmobject()).inode()));
+            region->set_vmobject(move(vmobject));
+            region->set_shared(false);
+        }
+        bool const was_writable = region->is_writable();
         if (!was_writable) {
-            region->set_writable(false);
+            region->set_writable(true);
             region->remap();
         }
-    });
+        ScopeGuard rollback([&]() {
+            if (!was_writable) {
+                region->set_writable(false);
+                region->remap();
+            }
+        });
 
-    return copy_to_user(address, &data);
+        return copy_to_user(address, &data);
+    });
 }
 
 ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)

@@ -334,8 +334,6 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
 
 ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, ProcessEventType event_type)
 {
-    SpinlockLocker locker(process.address_space().get_lock());
-
     OwnPtr<KString> executable;
     if (process.executable())
         executable = TRY(process.executable()->try_serialize_absolute_path());
@@ -354,12 +352,14 @@ ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, Proces
     });
     TRY(result);
 
-    return process.address_space().region_tree().with([&](auto& region_tree) -> ErrorOr<void> {
-        for (auto const& region : region_tree.regions()) {
-            TRY(append_with_ip_and_bp(process.pid(), 0,
-                0, 0, PERF_EVENT_MMAP, 0, region.range().base().get(), region.range().size(), region.name()));
-        }
-        return {};
+    return process.address_space().with([&](auto& space) {
+        return space->region_tree().with([&](auto& region_tree) -> ErrorOr<void> {
+            for (auto const& region : region_tree.regions()) {
+                TRY(append_with_ip_and_bp(process.pid(), 0,
+                    0, 0, PERF_EVENT_MMAP, 0, region.range().base().get(), region.range().size(), region.name()));
+            }
+            return {};
+        });
     });
 }
 

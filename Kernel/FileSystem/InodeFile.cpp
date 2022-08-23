@@ -85,7 +85,7 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> InodeFile::mmap(Process&, Memory::AddressSpace& address_space, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     LockRefPtr<Memory::InodeVMObject> vmobject;
@@ -94,7 +94,7 @@ ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& 
     else
         vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
     auto path = TRY(description.pseudo_path());
-    return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
+    return address_space.allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
 }
 
 ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const&) const

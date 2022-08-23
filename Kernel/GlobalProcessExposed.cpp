@@ -540,13 +540,33 @@ private:
             TRY(process_object.add("nfds"sv, process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
             TRY(process_object.add("name"sv, process.name()));
             TRY(process_object.add("executable"sv, process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
-            TRY(process_object.add("amount_virtual"sv, process.address_space().amount_virtual()));
-            TRY(process_object.add("amount_resident"sv, process.address_space().amount_resident()));
-            TRY(process_object.add("amount_dirty_private"sv, process.address_space().amount_dirty_private()));
-            TRY(process_object.add("amount_clean_inode"sv, TRY(process.address_space().amount_clean_inode())));
-            TRY(process_object.add("amount_shared"sv, process.address_space().amount_shared()));
-            TRY(process_object.add("amount_purgeable_volatile"sv, process.address_space().amount_purgeable_volatile()));
-            TRY(process_object.add("amount_purgeable_nonvolatile"sv, process.address_space().amount_purgeable_nonvolatile()));
+
+            size_t amount_virtual = 0;
+            size_t amount_resident = 0;
+            size_t amount_dirty_private = 0;
+            size_t amount_clean_inode = 0;
+            size_t amount_shared = 0;
+            size_t amount_purgeable_volatile = 0;
+            size_t amount_purgeable_nonvolatile = 0;
+
+            TRY(process.address_space().with([&](auto& space) -> ErrorOr<void> {
+                amount_virtual = space->amount_virtual();
+                amount_resident = space->amount_resident();
+                amount_dirty_private = space->amount_dirty_private();
+                amount_clean_inode = TRY(space->amount_clean_inode());
+                amount_shared = space->amount_shared();
+                amount_purgeable_volatile = space->amount_purgeable_volatile();
+                amount_purgeable_nonvolatile = space->amount_purgeable_nonvolatile();
+                return {};
+            }));
+
+            TRY(process_object.add("amount_virtual"sv, amount_virtual));
+            TRY(process_object.add("amount_resident"sv, amount_resident));
+            TRY(process_object.add("amount_dirty_private"sv, amount_dirty_private));
+            TRY(process_object.add("amount_clean_inode"sv, amount_clean_inode));
+            TRY(process_object.add("amount_shared"sv, amount_shared));
+            TRY(process_object.add("amount_purgeable_volatile"sv, amount_purgeable_volatile));
+            TRY(process_object.add("amount_purgeable_nonvolatile"sv, amount_purgeable_nonvolatile));
             TRY(process_object.add("dumpable"sv, process.is_dumpable()));
             TRY(process_object.add("kernel"sv, process.is_kernel_process()));
             auto thread_array = TRY(process_object.add_array("threads"sv));

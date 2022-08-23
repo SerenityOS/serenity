@@ -22,7 +22,7 @@ public:
     static void free_process();
 
     // ^File
-    ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    ErrorOr<Memory::Region*> mmap(Process&, Memory::AddressSpace&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
     ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
 
 protected:

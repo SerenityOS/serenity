@@ -65,7 +65,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     });
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
-    child->address_space().set_enforces_syscall_regions(address_space().enforces_syscall_regions());
 
     // A child created via fork(2) inherits a copy of its parent's signal mask
     child_first_thread->update_signal_mask(Thread::current()->signal_mask());
@@ -123,23 +122,26 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #    error Unknown architecture
 #endif
 
-    {
-        TRY(address_space().region_tree().with([&](auto& parent_region_tree) -> ErrorOr<void> {
-            return child->address_space().region_tree().with([&](auto& child_region_tree) -> ErrorOr<void> {
-                for (auto& region : parent_region_tree.regions()) {
-                    dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
-                    auto region_clone = TRY(region.try_clone());
-                    TRY(region_clone->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No));
-                    TRY(child_region_tree.place_specifically(*region_clone, region.range()));
-                    auto* child_region = region_clone.leak_ptr();
+    TRY(address_space().with([&](auto& parent_space) {
+        return child->address_space().with([&](auto& child_space) {
+            child_space->set_enforces_syscall_regions(parent_space->enforces_syscall_regions());
+            return parent_space->region_tree().with([&](auto& parent_region_tree) -> ErrorOr<void> {
+                return child_space->region_tree().with([&](auto& child_region_tree) -> ErrorOr<void> {
+                    for (auto& region : parent_region_tree.regions()) {
+                        dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
+                        auto region_clone = TRY(region.try_clone());
+                        TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
+                        TRY(child_region_tree.place_specifically(*region_clone, region.range()));
+                        auto* child_region = region_clone.leak_ptr();
 
-                    if (&region == m_master_tls_region.unsafe_ptr())
-                        child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
-                }
-                return {};
+                        if (&region == m_master_tls_region.unsafe_ptr())
+                            child->m_master_tls_region = TRY(child_region->try_make_weak_ptr());
+                    }
+                    return {};
+                });
             });
-        }));
-    }
+        });
+    }));
 
     thread_finalizer_guard.disarm();
 

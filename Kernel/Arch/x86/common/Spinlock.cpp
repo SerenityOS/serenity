@@ -55,6 +55,7 @@ u32 RecursiveSpinlock::lock()
 
 void RecursiveSpinlock::unlock(u32 prev_flags)
 {
+    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(m_recursions > 0);
     VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
     if (--m_recursions == 0) {

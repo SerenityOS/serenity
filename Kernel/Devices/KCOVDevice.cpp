@@ -116,7 +116,7 @@ ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspac
     }
 }
 
-ErrorOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> KCOVDevice::mmap(Process& process, Memory::AddressSpace& address_space, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto pid = process.pid();
     auto maybe_kcov_instance = proc_instance->get(pid);
@@ -126,8 +126,7 @@ ErrorOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescription&
     if (!kcov_instance->vmobject())
         return ENOBUFS; // mmaped, before KCOV_SETBUFSIZE
 
-    return process.address_space().allocate_region_with_vmobject(
-        range, *kcov_instance->vmobject(), offset, {}, prot, shared);
+    return address_space.allocate_region_with_vmobject(range, *kcov_instance->vmobject(), offset, {}, prot, shared);
 }
 
 }

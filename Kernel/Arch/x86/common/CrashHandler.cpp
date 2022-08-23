@@ -35,7 +35,7 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
     dump_registers(regs);
 
     if (crashed_in_kernel) {
-        process.address_space().dump_regions();
+        process.address_space().with([&](auto& space) { space->dump_regions(); });
         PANIC("Crash in ring 0");
     }
 

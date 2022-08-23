@@ -204,7 +204,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         PANIC("Syscall from process with IOPL != 0");
     }
 
-    Memory::MemoryManager::validate_syscall_preconditions(process.address_space(), regs);
+    Memory::MemoryManager::validate_syscall_preconditions(process, regs);
 
     FlatPtr function;
     FlatPtr arg1;

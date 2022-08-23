@@ -105,7 +105,7 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
 #    error Unknown architecture
 #endif
 
-    m_regs.cr3 = m_process->address_space().page_directory().cr3();
+    m_regs.cr3 = m_process->address_space().with([](auto& space) { return space->page_directory().cr3(); });
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
@@ -471,8 +471,10 @@ void Thread::exit(void* exit_value)
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
     if (m_thread_specific_range.has_value()) {
-        auto* region = process().address_space().find_region_from_range(m_thread_specific_range.value());
-        process().address_space().deallocate_region(*region);
+        process().address_space().with([&](auto& space) {
+            auto* region = space->find_region_from_range(m_thread_specific_range.value());
+            space->deallocate_region(*region);
+        });
     }
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     KCOVDevice::free_thread();
@@ -1352,15 +1354,18 @@ static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& proces
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
             TRY(builder.try_append("0xdeadc0de\n"sv));
         } else {
-            if (auto* region = process.address_space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
-                size_t offset = symbol.address - region->vaddr().get();
-                if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
-                    TRY(builder.try_appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset));
-                else
-                    TRY(builder.try_appendff("{:p}  {:p} + {:#x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset));
-            } else {
-                TRY(builder.try_appendff("{:p}\n", symbol.address));
-            }
+            TRY(process.address_space().with([&](auto& space) -> ErrorOr<void> {
+                if (auto* region = space->find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
+                    size_t offset = symbol.address - region->vaddr().get();
+                    if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
+                        TRY(builder.try_appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset));
+                    else
+                        TRY(builder.try_appendff("{:p}  {:p} + {:#x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset));
+                } else {
+                    TRY(builder.try_appendff("{:p}\n", symbol.address));
+                }
+                return {};
+            }));
         }
         return true;
     }
@@ -1412,20 +1417,22 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return {};
 
-    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
+    return process().address_space().with([&](auto& space) -> ErrorOr<void> {
+        auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific"sv, PROT_READ | PROT_WRITE));
 
-    m_thread_specific_range = region->range();
+        m_thread_specific_range = region->range();
 
-    SmapDisabler disabler;
-    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
-    auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
-    m_thread_specific_data = VirtualAddress(thread_specific_data);
-    thread_specific_data->self = thread_specific_data;
+        SmapDisabler disabler;
+        auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
+        auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
+        m_thread_specific_data = VirtualAddress(thread_specific_data);
+        thread_specific_data->self = thread_specific_data;
 
-    if (process().m_master_tls_size != 0)
-        memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
+        if (process().m_master_tls_size != 0)
+            memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
 
-    return {};
+        return {};
+    });
 }
 
 LockRefPtr<Thread> Thread::from_tid(ThreadID tid)

@@ -374,9 +374,9 @@ InodeMetadata OpenFileDescription::metadata() const
     return {};
 }
 
-ErrorOr<Memory::Region*> OpenFileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> OpenFileDescription::mmap(Process& process, Memory::AddressSpace& address_space, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
-    return m_file->mmap(process, *this, range, offset, prot, shared);
+    return m_file->mmap(process, address_space, *this, range, offset, prot, shared);
 }
 
 ErrorOr<void> OpenFileDescription::truncate(u64 length)

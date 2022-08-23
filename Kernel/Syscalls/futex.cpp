@@ -18,7 +18,7 @@ static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullLockRefPtr<Fut
 void Process::clear_futex_queues_on_exec()
 {
     s_global_futex_queues->with([this](auto& queues) {
-        auto const* address_space = &this->address_space();
+        auto const* address_space = this->address_space().with([](auto& space) { return space.ptr(); });
         queues.remove_all_matching([address_space](auto& futex_key, auto& futex_queue) {
             if ((futex_key.raw.offset & futex_key_private_flag) == 0)
                 return false;
@@ -45,45 +45,47 @@ ErrorOr<GlobalFutexKey> Process::get_futex_key(FlatPtr user_address, bool shared
     if (!shared) { // If this is thread-shared, we can skip searching the matching region
         return GlobalFutexKey {
             .private_ = {
-                .address_space = &address_space(),
+                .address_space = this->address_space().with([](auto& space) { return space.ptr(); }),
                 .user_address = user_address | futex_key_private_flag,
             }
         };
     }
 
-    auto* matching_region = address_space().find_region_containing(range);
-    if (!matching_region)
-        return EFAULT;
+    return address_space().with([&](auto& space) -> ErrorOr<GlobalFutexKey> {
+        auto* matching_region = space->find_region_containing(range);
+        if (!matching_region)
+            return EFAULT;
 
-    // The user wants to share this futex, but if the address doesn't point to a shared resource, there's not
-    // much sharing to be done, so let's mark this as private
-    if (!matching_region->is_shared()) {
+        // The user wants to share this futex, but if the address doesn't point to a shared resource, there's not
+        // much sharing to be done, so let's mark this as private
+        if (!matching_region->is_shared()) {
+            return GlobalFutexKey {
+                .private_ = {
+                    .address_space = space.ptr(),
+                    .user_address = user_address | futex_key_private_flag,
+                }
+            };
+        }
+
+        // This address is backed by a shared VMObject, if it's an AnonymousVMObject, it can be shared between processes
+        // via forking, and shared regions that are cloned during a fork retain their original AnonymousVMObject.
+        // On the other hand, if it's a SharedInodeVMObject, it can be shared by two processes mapping the same file as
+        // MAP_SHARED, but since they are deduplicated based on the inode, in all cases the VMObject pointer should be
+        // a unique global identifier.
+        // NOTE: This assumes that a program will not unmap the only region keeping the vmobject alive while waiting on it,
+        // if it does, it will get stuck waiting forever until interrupted by a signal, but since that use case is defined as
+        // a programmer error, we are fine with it.
+
+        auto const& vmobject = matching_region->vmobject();
+        if (vmobject.is_inode())
+            VERIFY(vmobject.is_shared_inode());
+
         return GlobalFutexKey {
-            .private_ = {
-                .address_space = &address_space(),
-                .user_address = user_address | futex_key_private_flag,
-            }
+            .shared = {
+                .vmobject = &vmobject,
+                .offset = matching_region->offset_in_vmobject_from_vaddr(range.base()) }
         };
-    }
-
-    // This address is backed by a shared VMObject, if it's an AnonymousVMObject, it can be shared between processes
-    // via forking, and shared regions that are cloned during a fork retain their original AnonymousVMObject.
-    // On the other hand, if it's a SharedInodeVMObject, it can be shared by two processes mapping the same file as
-    // MAP_SHARED, but since they are deduplicated based on the inode, in all cases the VMObject pointer should be
-    // a unique global identifier.
-    // NOTE: This assumes that a program will not unmap the only region keeping the vmobject alive while waiting on it,
-    // if it does, it will get stuck waiting forever until interrupted by a signal, but since that use case is defined as
-    // a programmer error, we are fine with it.
-
-    auto const& vmobject = matching_region->vmobject();
-    if (vmobject.is_inode())
-        VERIFY(vmobject.is_shared_inode());
-
-    return GlobalFutexKey {
-        .shared = {
-            .vmobject = &vmobject,
-            .offset = matching_region->offset_in_vmobject_from_vaddr(range.base()) }
-    };
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> user_params)

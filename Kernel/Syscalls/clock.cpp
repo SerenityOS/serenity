@@ -17,8 +17,10 @@ ErrorOr<FlatPtr> Process::sys$map_time_page()
 
     auto& vmobject = TimeManagement::the().time_page_vmobject();
 
-    auto* region = TRY(address_space().allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, vmobject, 0, "Kernel time page"sv, PROT_READ, true));
-    return region->vaddr().get();
+    return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
+        auto* region = TRY(space->allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, vmobject, 0, "Kernel time page"sv, PROT_READ, true));
+        return region->vaddr().get();
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)

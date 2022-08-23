@@ -45,9 +45,6 @@ public:
 
     void delete_all_regions_assuming_they_are_unmapped();
 
-    // FIXME: Access the region tree through a SpinlockProtected or similar.
-    RecursiveSpinlock& get_lock() const { return m_lock; }
-
     bool remove(Region&);
 
     Region* find_region_containing(VirtualAddress);
@@ -57,9 +54,6 @@ private:
     ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);
     ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PAGE_SIZE);
-
-    // FIXME: We need a Region rank, but we don't know where to put it.
-    RecursiveSpinlock mutable m_lock { LockRank::None };
 
     IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
     VirtualRange const m_total_range;

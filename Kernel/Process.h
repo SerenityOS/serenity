@@ -558,8 +558,8 @@ public:
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
 
-    Memory::AddressSpace& address_space() { return *m_space; }
-    Memory::AddressSpace const& address_space() const { return *m_space; }
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>>& address_space() { return m_space; }
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>> const& address_space() const { return m_space; }
 
     VirtualAddress signal_trampoline() const
     {
@@ -656,7 +656,7 @@ private:
 
     NonnullOwnPtr<KString> m_name;
 
-    OwnPtr<Memory::AddressSpace> m_space;
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>> m_space;
 
     LockRefPtr<ProcessGroup> m_pg;
 

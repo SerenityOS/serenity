@@ -53,8 +53,6 @@ public:
 
     void remove_all_regions(Badge<Process>);
 
-    RecursiveSpinlock& get_lock() const { return m_lock; }
-
     ErrorOr<size_t> amount_clean_inode() const;
     size_t amount_dirty_private() const;
     size_t amount_virtual() const;
@@ -65,8 +63,6 @@ public:
 
 private:
     AddressSpace(NonnullLockRefPtr<PageDirectory>, VirtualRange total_range);
-
-    mutable RecursiveSpinlock m_lock { LockRank::None };
 
     LockRefPtr<PageDirectory> m_page_directory;
 

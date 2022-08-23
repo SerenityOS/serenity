@@ -646,40 +646,32 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress address)
     return MM.m_region_tree.with([&](auto& region_tree) { return region_tree.find_region_containing(address); });
 }
 
-Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
+Region* MemoryManager::find_user_region_from_vaddr(AddressSpace& space, VirtualAddress vaddr)
 {
-    VERIFY(space.get_lock().is_locked_by_current_processor());
     return space.find_region_containing({ vaddr, 1 });
 }
 
-Region* MemoryManager::find_user_region_from_vaddr(AddressSpace& space, VirtualAddress vaddr)
+void MemoryManager::validate_syscall_preconditions(Process& process, RegisterState const& regs)
 {
-    SpinlockLocker lock(space.get_lock());
-    return find_user_region_from_vaddr_no_lock(space, vaddr);
-}
+    bool should_crash = false;
+    char const* crash_description = nullptr;
+    int crash_signal = 0;
 
-void MemoryManager::validate_syscall_preconditions(AddressSpace& space, RegisterState const& regs)
-{
-    // We take the space lock once here and then use the no_lock variants
-    // to avoid excessive spinlock recursion in this extremely common path.
-    SpinlockLocker lock(space.get_lock());
-
-    auto unlock_and_handle_crash = [&lock, &regs](char const* description, int signal) {
-        lock.unlock();
-        handle_crash(regs, description, signal);
+    auto unlock_and_handle_crash = [&](char const* description, int signal) {
+        should_crash = true;
+        crash_description = description;
+        crash_signal = signal;
     };
 
-    {
+    process.address_space().with([&](auto& space) -> void {
         VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
-        if (!MM.validate_user_stack_no_lock(space, userspace_sp)) {
+        if (!MM.validate_user_stack(*space, userspace_sp)) {
             dbgln("Invalid stack pointer: {}", userspace_sp);
             return unlock_and_handle_crash("Bad stack on syscall entry", SIGSEGV);
         }
-    }
 
-    {
         VirtualAddress ip = VirtualAddress { regs.ip() };
-        auto* calling_region = MM.find_user_region_from_vaddr_no_lock(space, ip);
+        auto* calling_region = MM.find_user_region_from_vaddr(*space, ip);
         if (!calling_region) {
             dbgln("Syscall from {:p} which has no associated region", ip);
             return unlock_and_handle_crash("Syscall from unknown region", SIGSEGV);
@@ -690,10 +682,14 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
             return unlock_and_handle_crash("Syscall from writable memory", SIGSEGV);
         }
 
-        if (space.enforces_syscall_regions() && !calling_region->is_syscall_region()) {
+        if (space->enforces_syscall_regions() && !calling_region->is_syscall_region()) {
             dbgln("Syscall from non-syscall region");
             return unlock_and_handle_crash("Syscall from non-syscall region", SIGSEGV);
         }
+    });
+
+    if (should_crash) {
+        handle_crash(regs, crash_description, crash_signal);
     }
 }
 
@@ -830,12 +826,20 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
         dbgln("MM: Unable to commit {} pages, have only {}", page_count, m_system_memory_info.physical_pages_uncommitted);
 
         Process::for_each([&](Process const& process) {
+            size_t amount_resident = 0;
+            size_t amount_shared = 0;
+            size_t amount_virtual = 0;
+            process.address_space().with([&](auto& space) {
+                amount_resident = space->amount_resident();
+                amount_shared = space->amount_shared();
+                amount_virtual = space->amount_virtual();
+            });
             dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
                 process.name(),
                 process.pid(),
-                process.address_space().amount_resident() / PAGE_SIZE,
-                process.address_space().amount_shared() / PAGE_SIZE,
-                process.address_space().amount_virtual() / PAGE_SIZE);
+                amount_resident / PAGE_SIZE,
+                amount_shared / PAGE_SIZE,
+                amount_virtual / PAGE_SIZE);
             return IterationDecision::Continue;
         });
 
@@ -1007,7 +1011,9 @@ ErrorOr<NonnullLockRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguou
 
 void MemoryManager::enter_process_address_space(Process& process)
 {
-    enter_address_space(process.address_space());
+    process.address_space().with([](auto& space) {
+        enter_address_space(*space);
+    });
 }
 
 void MemoryManager::enter_address_space(AddressSpace& space)
@@ -1100,21 +1106,13 @@ void MemoryManager::unquickmap_page()
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
-bool MemoryManager::validate_user_stack_no_lock(AddressSpace& space, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vaddr) const
 {
-    VERIFY(space.get_lock().is_locked_by_current_processor());
-
     if (!is_user_address(vaddr))
         return false;
 
-    auto* region = find_user_region_from_vaddr_no_lock(space, vaddr);
+    auto* region = find_user_region_from_vaddr(space, vaddr);
     return region && region->is_user() && region->is_stack();
-}
-
-bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vaddr) const
-{
-    SpinlockLocker lock(space.get_lock());
-    return validate_user_stack_no_lock(space, vaddr);
 }
 
 void MemoryManager::unregister_kernel_region(Region& region)

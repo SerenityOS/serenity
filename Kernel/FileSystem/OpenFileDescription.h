@@ -92,7 +92,7 @@ public:
     RefPtr<Custody> custody();
     RefPtr<Custody const> custody() const;
 
-    ErrorOr<Memory::Region*> mmap(Process&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
+    ErrorOr<Memory::Region*> mmap(Process&, Memory::AddressSpace&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
 
     bool is_blocking() const;
     void set_blocking(bool b);

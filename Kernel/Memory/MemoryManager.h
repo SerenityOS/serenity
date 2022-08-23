@@ -159,7 +159,6 @@ public:
     static void enter_process_address_space(Process&);
     static void enter_address_space(AddressSpace&);
 
-    bool validate_user_stack_no_lock(AddressSpace&, VirtualAddress) const;
     bool validate_user_stack(AddressSpace&, VirtualAddress) const;
 
     enum class ShouldZeroFill {
@@ -222,8 +221,7 @@ public:
     }
 
     static Region* find_user_region_from_vaddr(AddressSpace&, VirtualAddress);
-    static Region* find_user_region_from_vaddr_no_lock(AddressSpace&, VirtualAddress);
-    static void validate_syscall_preconditions(AddressSpace&, RegisterState const&);
+    static void validate_syscall_preconditions(Process&, RegisterState const&);
 
     void dump_kernel_regions();
 

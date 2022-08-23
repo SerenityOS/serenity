@@ -20,7 +20,7 @@ public:
 
     virtual ~AnonymousFile() override;
 
-    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<Memory::Region*> mmap(Process&, Memory::AddressSpace&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"sv; }

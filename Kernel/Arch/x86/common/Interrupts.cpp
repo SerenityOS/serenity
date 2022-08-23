@@ -303,9 +303,15 @@ void page_fault_handler(TrapFrame* trap)
     };
 
     VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
-    if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process().address_space(), userspace_sp)) {
-        dbgln("Invalid stack pointer: {}", userspace_sp);
-        return handle_crash(regs, "Bad stack on page fault", SIGSEGV);
+
+    if (!faulted_in_kernel) {
+        bool has_valid_stack_pointer = current_thread->process().address_space().with([&](auto& space) {
+            return MM.validate_user_stack(*space, userspace_sp);
+        });
+        if (!has_valid_stack_pointer) {
+            dbgln("Invalid stack pointer: {}", userspace_sp);
+            return handle_crash(regs, "Bad stack on page fault", SIGSEGV);
+        }
     }
 
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
