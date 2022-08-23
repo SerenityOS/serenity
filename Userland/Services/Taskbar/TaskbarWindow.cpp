@@ -153,18 +153,11 @@ void TaskbarWindow::add_window_button(::Window& window, WindowIdentifier const& 
         return;
     window.set_button(create_button(identifier));
     auto* button = window.button();
-    button->on_click = [window = &window, identifier, button](auto) {
-        // We need to look at the button's checked state here to figure
-        // out if the application is active or not. That's because this
-        // button's window may not actually be active when a modal window
-        // is displayed, in which case window->is_active() would return
-        // false because window is the modal window's owner (which is not
-        // active)
-        if (window->is_minimized() || !button->is_checked()) {
+    button->on_click = [window = &window, identifier](auto) {
+        if (window->is_minimized() || !window->is_active())
             GUI::ConnectionToWindowManagerServer::the().async_set_active_window(identifier.client_id(), identifier.window_id());
-        } else {
+        else
             GUI::ConnectionToWindowManagerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
-        }
     };
 }
 
@@ -188,22 +181,6 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
-}
-
-::Window* TaskbarWindow::find_window_owner(::Window& window) const
-{
-    if (!window.is_modal())
-        return &window;
-
-    ::Window* parent = nullptr;
-    auto* current_window = &window;
-    while (current_window) {
-        parent = WindowList::the().find_parent(*current_window);
-        if (!parent || !parent->is_modal())
-            break;
-        current_window = parent;
-    }
-    return parent;
 }
 
 void TaskbarWindow::event(Core::Event& event)
@@ -300,28 +277,14 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             break;
         }
         auto& window = WindowList::the().ensure_window(identifier);
-        window.set_parent_identifier({ changed_event.parent_client_id(), changed_event.parent_window_id() });
-        if (!window.is_modal())
-            add_window_button(window, identifier);
-        else
-            remove_window_button(window, false);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
-        window.set_modal(changed_event.is_modal());
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
         window.set_progress(changed_event.progress());
         window.set_workspace(changed_event.workspace_row(), changed_event.workspace_column());
-
-        auto* window_owner = find_window_owner(window);
-        if (window_owner == &window) {
-            update_window_button(window, window.is_active());
-        } else if (window_owner) {
-            // check the window owner's button if the modal's window button
-            // would have been checked
-            VERIFY(window.is_modal());
-            update_window_button(*window_owner, window.is_active());
-        }
+        add_window_button(window, identifier);
+        update_window_button(window, window.is_active());
         break;
     }
     case GUI::Event::WM_AppletAreaSizeChanged: {
