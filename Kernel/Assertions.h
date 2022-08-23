@@ -27,10 +27,5 @@ extern "C" {
 
 #define TODO() __assertion_failed("TODO", __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
-#if ARCH(I386) || ARCH(X86_64)
-#    define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
-#    define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
-#else
-#    define VERIFY_INTERRUPTS_DISABLED() TODO()
-#    define VERIFY_INTERRUPTS_ENABLED() TODO()
-#endif
+#define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(Processor::are_interrupts_enabled()))
+#define VERIFY_INTERRUPTS_ENABLED() VERIFY(Processor::are_interrupts_enabled())
