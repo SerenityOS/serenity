@@ -42,7 +42,7 @@ ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKerne
     return length;
 }
 
-ErrorOr<Memory::Region*> MemoryDevice::mmap(Process&, Memory::AddressSpace& address_space, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> MemoryDevice::vmobject_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool)
 {
     auto viewed_address = PhysicalAddress(offset);
 
@@ -61,15 +61,8 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process&, Memory::AddressSpace& addr
         return EINVAL;
     }
 
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size()));
-
-    return address_space.allocate_region_with_vmobject(
-        range,
-        move(vmobject),
-        0,
-        "Mapped Physical Memory"sv,
-        prot,
-        shared);
+    offset = 0;
+    return TRY(Memory::AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size()));
 }
 
 }

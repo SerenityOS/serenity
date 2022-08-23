@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,12 +17,12 @@ AnonymousFile::AnonymousFile(NonnullLockRefPtr<Memory::AnonymousVMObject> vmobje
 
 AnonymousFile::~AnonymousFile() = default;
 
-ErrorOr<Memory::Region*> AnonymousFile::mmap(Process&, Memory::AddressSpace& address_space, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> AnonymousFile::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
 {
     if (offset != 0)
         return EINVAL;
 
-    return address_space.allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
+    return m_vmobject;
 }
 
 ErrorOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(OpenFileDescription const&) const

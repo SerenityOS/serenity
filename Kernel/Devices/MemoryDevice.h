@@ -19,7 +19,7 @@ public:
     static NonnullLockRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
-    virtual ErrorOr<Memory::Region*> mmap(Process&, Memory::AddressSpace&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
 
 private:
     MemoryDevice();

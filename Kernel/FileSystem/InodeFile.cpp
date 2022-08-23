@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,16 +85,11 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<Memory::Region*> InodeFile::mmap(Process&, Memory::AddressSpace& address_space, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> InodeFile::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64&, bool shared)
 {
-    // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    LockRefPtr<Memory::InodeVMObject> vmobject;
     if (shared)
-        vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
-    else
-        vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
-    auto path = TRY(description.pseudo_path());
-    return address_space.allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
+        return TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
+    return TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
 }
 
 ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const&) const

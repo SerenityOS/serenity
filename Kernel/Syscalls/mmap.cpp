@@ -190,10 +190,17 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
     if (map_stack && (!map_private || !map_anonymous))
         return EINVAL;
 
+    Memory::VirtualRange requested_range { VirtualAddress { addr }, rounded_size };
+    if (addr && !(map_fixed || map_fixed_noreplace)) {
+        // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
+        requested_range = { {}, rounded_size };
+    }
+
     Memory::Region* region = nullptr;
 
     LockRefPtr<OpenFileDescription> description;
-    LockRefPtr<Memory::AnonymousVMObject> vmobject;
+    LockRefPtr<Memory::VMObject> vmobject;
+    u64 used_offset = 0;
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
@@ -206,6 +213,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
     } else {
         if (offset < 0)
             return EINVAL;
+        used_offset = static_cast<u64>(offset);
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return EINVAL;
         description = TRY(open_file_description(fd));
@@ -220,6 +228,8 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         }
         if (description->inode())
             TRY(validate_inode_mmap_prot(prot, *description->inode(), map_shared));
+
+        vmobject = TRY(description->vmobject_for_mmap(*this, requested_range, used_offset, map_shared));
     }
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
@@ -227,17 +237,16 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         if (map_fixed)
             TRY(space->unmap_mmap_range(VirtualAddress(addr), size));
 
-        Memory::VirtualRange requested_range { VirtualAddress { addr }, rounded_size };
-        if (addr && !(map_fixed || map_fixed_noreplace)) {
-            // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-            requested_range = { {}, rounded_size };
-        }
-
-        if (map_anonymous) {
-            region = TRY(space->allocate_region_with_vmobject(map_randomized ? Memory::RandomizeVirtualAddress::Yes : Memory::RandomizeVirtualAddress::No, requested_range.base(), requested_range.size(), alignment, vmobject.release_nonnull(), 0, {}, prot, map_shared));
-        } else {
-            region = TRY(description->mmap(*this, *space, requested_range, static_cast<u64>(offset), prot, map_shared));
-        }
+        region = TRY(space->allocate_region_with_vmobject(
+            map_randomized ? Memory::RandomizeVirtualAddress::Yes : Memory::RandomizeVirtualAddress::No,
+            requested_range.base(),
+            requested_range.size(),
+            alignment,
+            vmobject.release_nonnull(),
+            used_offset,
+            {},
+            prot,
+            map_shared));
 
         if (!region)
             return ENOMEM;

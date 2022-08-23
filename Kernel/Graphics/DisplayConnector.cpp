@@ -32,19 +32,13 @@ DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable
 {
 }
 
-ErrorOr<Memory::Region*> DisplayConnector::mmap(Process&, Memory::AddressSpace& address_space, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> DisplayConnector::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
 {
     VERIFY(m_shared_framebuffer_vmobject);
     if (offset != 0)
         return Error::from_errno(ENOTSUP);
 
-    return address_space.allocate_region_with_vmobject(
-        range,
-        *m_shared_framebuffer_vmobject,
-        0,
-        "Mapped Framebuffer"sv,
-        prot,
-        shared);
+    return *m_shared_framebuffer_vmobject;
 }
 
 ErrorOr<size_t> DisplayConnector::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)

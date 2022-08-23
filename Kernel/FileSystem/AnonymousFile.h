@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +20,7 @@ public:
 
     virtual ~AnonymousFile() override;
 
-    virtual ErrorOr<Memory::Region*> mmap(Process&, Memory::AddressSpace&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"sv; }

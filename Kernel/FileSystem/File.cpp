@@ -35,7 +35,7 @@ ErrorOr<void> File::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
     return ENOTTY;
 }
 
-ErrorOr<Memory::Region*> File::mmap(Process&, Memory::AddressSpace&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> File::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64&, bool)
 {
     return ENODEV;
 }
