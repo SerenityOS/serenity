@@ -19,7 +19,7 @@ namespace SoftGPU {
 
 class Image final : public GPU::Image {
 public:
-    Image(void* const ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers);
+    Image(void const* ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers);
 
     unsigned level_width(unsigned level) const { return m_mipmap_buffers[level]->width(); }
     unsigned level_height(unsigned level) const { return m_mipmap_buffers[level]->height(); }
