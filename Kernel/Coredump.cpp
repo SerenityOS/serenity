@@ -220,6 +220,8 @@ ErrorOr<void> Coredump::write_regions()
         if (region.access() == Memory::Region::Access::None)
             continue;
 
+        auto buffer = TRY(KBuffer::try_create_with_size("Coredump Region Copy Buffer"sv, region.page_count() * PAGE_SIZE));
+
         TRY(m_process->address_space().with([&](auto& space) -> ErrorOr<void> {
             auto* real_region = space->region_tree().regions().find(region.vaddr().get());
 
@@ -244,11 +246,13 @@ ErrorOr<void> Coredump::write_regions()
                     // If the current page is not backed by a physical page, we zero it in the coredump file.
                     return UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
                 }();
-                TRY(m_description->write(src_buffer.value(), PAGE_SIZE));
+                TRY(src_buffer.value().read(buffer->bytes().slice(i * PAGE_SIZE, PAGE_SIZE)));
             }
 
             return {};
         }));
+
+        TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(buffer->data()), buffer->size()));
     }
 
     return {};
