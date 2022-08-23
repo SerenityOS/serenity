@@ -37,7 +37,15 @@ public:
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
-    void set(StringView key, String value) { m_mapping.set(key, move(value)); }
+    void set(StringView key, String value)
+    {
+        if (key.contains(m_opening) || key.contains(m_closing)) {
+            warnln("SourceGenerator keys cannot contain the opening/closing delimiters `{}` and `{}`. (Keys are only wrapped in these when using them, not when setting them.)", m_opening, m_closing);
+            VERIFY_NOT_REACHED();
+        }
+        m_mapping.set(key, move(value));
+    }
+
     String get(StringView key) const
     {
         auto result = m_mapping.get(key);
