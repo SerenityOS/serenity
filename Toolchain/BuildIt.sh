@@ -85,8 +85,8 @@ GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
-GCC_VERSION="12.1.0"
-GCC_MD5SUM="7854cdccc3a7988aa37fb0d0038b8096"
+GCC_VERSION="12.2.0"
+GCC_MD5SUM="d7644b494246450468464ffc2c2b19c3"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
@@ -209,7 +209,7 @@ pushd "$DIR/Tarballs"
     md5=""
     if [ -e "$GCC_PKG" ]; then
         md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
-        echo "gc md5='$md5'"
+        echo "gcc md5='$md5'"
     fi
     if [ "$md5" != ${GCC_MD5SUM} ] ; then
         rm -f $GCC_PKG
