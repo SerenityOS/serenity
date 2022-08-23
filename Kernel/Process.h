@@ -570,7 +570,7 @@ public:
     ErrorOr<void> require_no_promises() const;
 
     ErrorOr<void> validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr) const;
-    ErrorOr<void> validate_inode_mmap_prot(int prot, Inode const& inode, bool map_shared) const;
+    ErrorOr<void> validate_inode_mmap_prot(int prot, bool description_readable, bool description_writable, bool map_shared) const;
 
 private:
     friend class MemoryManager;

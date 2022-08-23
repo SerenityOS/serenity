@@ -103,25 +103,18 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
     return {};
 }
 
-ErrorOr<void> Process::validate_inode_mmap_prot(int prot, Inode const& inode, bool map_shared) const
+ErrorOr<void> Process::validate_inode_mmap_prot(int prot, bool readable_description, bool description_writable, bool map_shared) const
 {
     auto credentials = this->credentials();
-    auto metadata = inode.metadata();
-    if ((prot & PROT_READ) && !metadata.may_read(credentials))
+    if ((prot & PROT_READ) && !readable_description)
         return EACCES;
 
     if (map_shared) {
         // FIXME: What about readonly filesystem mounts? We cannot make a
         // decision here without knowing the mount flags, so we would need to
         // keep a Custody or something from mmap time.
-        if ((prot & PROT_WRITE) && !metadata.may_write(credentials))
+        if ((prot & PROT_WRITE) && !description_writable)
             return EACCES;
-        if (auto shared_vmobject = inode.shared_vmobject()) {
-            if ((prot & PROT_EXEC) && shared_vmobject->writable_mappings())
-                return EACCES;
-            if ((prot & PROT_WRITE) && shared_vmobject->executable_mappings())
-                return EACCES;
-        }
     }
     return {};
 }
@@ -227,7 +220,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
                 return EACCES;
         }
         if (description->inode())
-            TRY(validate_inode_mmap_prot(prot, *description->inode(), map_shared));
+            TRY(validate_inode_mmap_prot(prot, description->is_readable(), description->is_writable(), map_shared));
 
         vmobject = TRY(description->vmobject_for_mmap(*this, requested_range, used_offset, map_shared));
     }
@@ -251,7 +244,11 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
         if (!region)
             return ENOMEM;
 
-        region->set_mmap(true);
+        if (description)
+            region->set_mmap(true, description->is_readable(), description->is_writable());
+        else
+            region->set_mmap(true, false, false);
+
         if (map_shared)
             region->set_shared(true);
         if (map_stack)
@@ -289,7 +286,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             if (whole_region->access() == Memory::prot_to_region_access_flags(prot))
                 return 0;
             if (whole_region->vmobject().is_inode())
-                TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(whole_region->vmobject()).inode(), whole_region->is_shared()));
+                TRY(validate_inode_mmap_prot(prot, whole_region->mmapped_from_readable(), whole_region->mmapped_from_writable(), whole_region->is_shared()));
             whole_region->set_readable(prot & PROT_READ);
             whole_region->set_writable(prot & PROT_WRITE);
             whole_region->set_executable(prot & PROT_EXEC);
@@ -306,7 +303,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             if (old_region->access() == Memory::prot_to_region_access_flags(prot))
                 return 0;
             if (old_region->vmobject().is_inode())
-                TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(old_region->vmobject()).inode(), old_region->is_shared()));
+                TRY(validate_inode_mmap_prot(prot, old_region->mmapped_from_readable(), old_region->mmapped_from_writable(), old_region->is_shared()));
 
             // Remove the old region from our regions tree, since were going to add another region
             // with the exact same start address.
@@ -339,7 +336,8 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
                     return EPERM;
                 TRY(validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region));
                 if (region->vmobject().is_inode())
-                    TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared()));
+                    TRY(validate_inode_mmap_prot(prot, region->mmapped_from_readable(), region->mmapped_from_writable(), region->is_shared()));
+
                 full_size_found += region->range().intersect(range_to_mprotect).size();
             }
 
@@ -490,11 +488,14 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
             auto new_vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode));
             auto old_name = old_region->take_name();
 
+            bool old_region_was_mmapped_from_readable = old_region->mmapped_from_readable();
+            bool old_region_was_mmapped_from_writable = old_region->mmapped_from_writable();
+
             old_region->unmap();
             space->deallocate_region(*old_region);
 
             auto* new_region = TRY(space->allocate_region_with_vmobject(range, move(new_vmobject), old_offset, old_name->view(), old_prot, false));
-            new_region->set_mmap(true);
+            new_region->set_mmap(true, old_region_was_mmapped_from_readable, old_region_was_mmapped_from_writable);
             return new_region->vaddr().get();
         }
 

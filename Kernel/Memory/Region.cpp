@@ -106,7 +106,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
 
         auto region = TRY(Region::try_create_user_accessible(
             m_range, vmobject(), m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
-        region->set_mmap(m_mmap);
+        region->set_mmap(m_mmap, m_mmapped_from_readable, m_mmapped_from_writable);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
         return region;
@@ -133,7 +133,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
         clone_region->set_stack(true);
     }
     clone_region->set_syscall_region(is_syscall_region());
-    clone_region->set_mmap(m_mmap);
+    clone_region->set_mmap(m_mmap, m_mmapped_from_readable, m_mmapped_from_writable);
     return clone_region;
 }
 

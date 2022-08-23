@@ -142,7 +142,7 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
     auto new_region = TRY(Region::create_unplaced(
         source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
     new_region->set_syscall_region(source_region.is_syscall_region());
-    new_region->set_mmap(source_region.is_mmap());
+    new_region->set_mmap(source_region.is_mmap(), source_region.mmapped_from_readable(), source_region.mmapped_from_writable());
     new_region->set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
     for (size_t i = 0; i < new_region->page_count(); ++i) {

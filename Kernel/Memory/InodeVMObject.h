@@ -26,7 +26,6 @@ public:
     int try_release_clean_pages(int page_amount);
 
     u32 writable_mappings() const;
-    u32 executable_mappings() const;
 
 protected:
     explicit InodeVMObject(Inode&, FixedArray<LockRefPtr<PhysicalPage>>&&, Bitmap dirty_pages);

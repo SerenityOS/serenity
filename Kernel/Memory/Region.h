@@ -89,7 +89,13 @@ public:
     void set_stack(bool stack) { m_stack = stack; }
 
     [[nodiscard]] bool is_mmap() const { return m_mmap; }
-    void set_mmap(bool mmap) { m_mmap = mmap; }
+
+    void set_mmap(bool mmap, bool description_was_readable, bool description_was_writable)
+    {
+        m_mmap = mmap;
+        m_mmapped_from_readable = description_was_readable;
+        m_mmapped_from_writable = description_was_writable;
+    }
 
     [[nodiscard]] bool is_write_combine() const { return m_write_combine; }
     ErrorOr<void> set_write_combine(bool);
@@ -194,6 +200,9 @@ public:
     [[nodiscard]] bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
+    [[nodiscard]] bool mmapped_from_readable() const { return m_mmapped_from_readable; }
+    [[nodiscard]] bool mmapped_from_writable() const { return m_mmapped_from_writable; }
+
 private:
     Region();
     Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
@@ -228,6 +237,8 @@ private:
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
     bool m_write_combine : 1 { false };
+    bool m_mmapped_from_readable : 1 { false };
+    bool m_mmapped_from_writable : 1 { false };
 
     IntrusiveRedBlackTreeNode<FlatPtr, Region, RawPtr<Region>> m_tree_node;
     IntrusiveListNode<Region> m_vmobject_list_node;
