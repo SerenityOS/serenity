@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2022, Ben Maxwell <macdue@dueutil.tech>
+ * Copyright (c) 2022, Torsten Engelmann <engelTorsten@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@
 #include <AK/Function.h>
 #include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
-#include <LibGfx/Path.h>
+#include <LibGfx/Line.h>
 
 namespace Gfx {
 
@@ -27,12 +28,55 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, 
 
     auto corrected_thickness = thickness > 1 ? thickness - 1 : thickness;
     auto size = IntSize(corrected_thickness, corrected_thickness);
-    auto plot = [&](int x, int y, float c) {
-        m_underlying_painter.fill_rect(IntRect::centered_on({ x, y }, size), color.with_alpha(color.alpha() * c));
-    };
+    auto mapped_from = m_transform.map(actual_from);
+    auto mapped_to = m_transform.map(actual_to);
+    auto draw_direction = mapped_from - mapped_to;
+    auto is_straight_line = draw_direction.x() == 0 || draw_direction.y() == 0;
+    auto rotated_rectangle_reference_coords = FloatQuad({ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 });
+    float drawing_edge_offset = fabs((corrected_thickness / 2) - fmodf(corrected_thickness, 2.0f));
 
     auto integer_part = [](float x) { return floorf(x); };
     auto round = [&](float x) { return integer_part(x + 0.5f); };
+
+    if (is_straight_line) {
+        // draw top to bottom line in one call
+        if (draw_direction.x() == 0)
+            m_underlying_painter.fill_rect(
+                { mapped_from.x() - drawing_edge_offset,
+                    round(min(mapped_from.y(), mapped_to.y())),
+                    thickness,
+                    round(fabsf(draw_direction.y())) },
+                color);
+        // draw left to right line in one call
+        if (draw_direction.y() == 0) {
+            m_underlying_painter.fill_rect(
+                { round(min(mapped_from.x(), mapped_to.x())),
+                    mapped_from.y() - drawing_edge_offset,
+                    round(fabsf(draw_direction.x())),
+                    thickness },
+                color);
+        }
+        return;
+    }
+
+    rotated_rectangle_reference_coords = build_rotated_rectangle(draw_direction, corrected_thickness);
+
+    auto plot = [&](int x, int y, float c) {
+        // ignore rotation if rectangle is fairly small to reduce overhead
+        if (is_straight_line || corrected_thickness < 4) {
+            m_underlying_painter.fill_rect(IntRect::centered_on({ x, y }, size), color.with_alpha(color.alpha() * c));
+        } else if (min(AK::abs(mapped_from.distance_from({ x, y })), AK::abs(mapped_to.distance_from({ x, y }))) >= drawing_edge_offset || AK::abs(mapped_from.distance_from(mapped_to)) < drawing_edge_offset) {
+            // don't draw if we are close to the edge but draw if the whole line is shorter than allowed edge distance
+            m_rotated_rectangle_path.clear();
+            m_rotated_rectangle_path.move_to({ x + rotated_rectangle_reference_coords.p1().x(), y + rotated_rectangle_reference_coords.p1().y() });
+            m_rotated_rectangle_path.line_to({ x + rotated_rectangle_reference_coords.p2().x(), y + rotated_rectangle_reference_coords.p2().y() });
+            m_rotated_rectangle_path.line_to({ x + rotated_rectangle_reference_coords.p3().x(), y + rotated_rectangle_reference_coords.p3().y() });
+            m_rotated_rectangle_path.line_to({ x + rotated_rectangle_reference_coords.p4().x(), y + rotated_rectangle_reference_coords.p4().y() });
+
+            m_rotated_rectangle_path.close();
+            m_underlying_painter.fill_path(m_rotated_rectangle_path, color.with_alpha(color.alpha() * c));
+        }
+    };
     auto fractional_part = [&](float x) { return x - floorf(x); };
     auto one_minus_fractional_part = [&](float x) { return 1.0f - fractional_part(x); };
 
@@ -115,8 +159,6 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, 
         }
     };
 
-    auto mapped_from = m_transform.map(actual_from);
-    auto mapped_to = m_transform.map(actual_to);
     draw_line(mapped_from.x(), mapped_from.y(), mapped_to.x(), mapped_to.y());
 }
 
@@ -182,6 +224,9 @@ void AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRul
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
     FloatPoint cursor;
+    bool previous_was_line = false;
+    FloatLine last_line;
+    Optional<FloatLine> first_line;
 
     for (auto& segment : path.segments()) {
         switch (segment.type()) {
@@ -191,7 +236,16 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
             cursor = segment.point();
             break;
         case Segment::Type::LineTo:
+            if (!first_line.has_value())
+                first_line = FloatLine(cursor, segment.point());
+
             draw_line(cursor, segment.point(), color, thickness);
+            if (previous_was_line) {
+                stroke_segment_intersection(cursor, segment.point(), last_line, color, thickness);
+            }
+
+            last_line.set_a(cursor);
+            last_line.set_b(segment.point());
             cursor = segment.point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
@@ -214,7 +268,13 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
             cursor = segment.point();
             break;
         }
+
+        previous_was_line = segment.type() == Segment::Type::LineTo;
     }
+
+    // check if the figure was started and closed as line at the same position
+    if (previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor && (path.segments().first().type() == Segment::Type::LineTo || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo)))
+        stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
 }
 
 void AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
@@ -632,6 +692,115 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
         fill_corner(bottom_left_corner, bounding_rect.bottom_left(), bottom_left);
     if (bottom_right)
         fill_corner(bottom_right_corner, bounding_rect.bottom_right(), bottom_right);
+}
+
+void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color color, float thickness)
+{
+    // starting point of the current line is where the last line ended... this is an intersection
+    auto mapped_intersection = m_transform.map(current_line_a);
+    auto mapped_current_line_b = m_transform.map(current_line_b);
+    auto mapped_previous_line_b = m_transform.map(previous_line.a());
+
+    // if both are straight lines we can simply draw a rectangle at the intersection
+    if ((current_line_a.x() == current_line_b.x() || current_line_a.y() == current_line_b.y()) && (previous_line.a().x() == previous_line.b().x() || previous_line.a().y() == previous_line.b().y())) {
+
+        // adjust coordinates to handle rounding offsets
+        auto intersection_rect = IntSize(thickness, thickness);
+        float drawing_edge_offset = fmodf(thickness, 2.0f) < 0.5f && thickness > 3 ? 1 : 0;
+        auto integer_part = [](float x) { return floorf(x); };
+        auto round = [&](float x) { return integer_part(x + 0.5f); };
+
+        if (thickness == 1)
+            drawing_edge_offset = -1;
+        if (current_line_a.x() == current_line_b.x() && previous_line.a().x() == previous_line.b().x()) {
+            intersection_rect.set_height(1);
+        }
+        if (current_line_a.y() == current_line_b.y() && previous_line.a().y() == previous_line.b().y()) {
+            intersection_rect.set_width(1);
+            drawing_edge_offset = thickness == 1 ? -1 : 0;
+            mapped_intersection.set_x(mapped_intersection.x() - 1 + (thickness == 1 ? 1 : 0));
+            mapped_intersection.set_y(mapped_intersection.y() + (thickness > 3 && fmodf(thickness, 2.0f) < 0.5f ? 1 : 0));
+        }
+
+        m_underlying_painter.fill_rect(IntRect::centered_on({ round(mapped_intersection.x()) + drawing_edge_offset, round(mapped_intersection.y()) + drawing_edge_offset }, intersection_rect), color);
+        return;
+    }
+
+    float scale_to_move_current = (thickness / 2) / mapped_intersection.distance_from(mapped_current_line_b);
+    float scale_to_move_previous = (thickness / 2) / mapped_intersection.distance_from(mapped_previous_line_b);
+
+    // move the point on the line by half of the thickness
+    double offset_current_edge_x = scale_to_move_current * (mapped_current_line_b.x() - mapped_intersection.x());
+    double offset_current_edge_y = scale_to_move_current * (mapped_current_line_b.y() - mapped_intersection.y());
+    double offset_prev_edge_x = scale_to_move_previous * (mapped_previous_line_b.x() - mapped_intersection.x());
+    double offset_prev_edge_y = scale_to_move_previous * (mapped_previous_line_b.y() - mapped_intersection.y());
+
+    // rotate the point by 90 and 270 degrees to get the points for both edges
+    double rad_90deg = 0.5 * M_PI;
+    FloatPoint current_rotated_90deg = { (offset_current_edge_x * cos(rad_90deg) - offset_current_edge_y * sin(rad_90deg)), (offset_current_edge_x * sin(rad_90deg) + offset_current_edge_y * cos(rad_90deg)) };
+    FloatPoint current_rotated_270deg = mapped_intersection - current_rotated_90deg;
+    FloatPoint previous_rotated_90deg = { (offset_prev_edge_x * cos(rad_90deg) - offset_prev_edge_y * sin(rad_90deg)), (offset_prev_edge_x * sin(rad_90deg) + offset_prev_edge_y * cos(rad_90deg)) };
+    FloatPoint previous_rotated_270deg = mapped_intersection - previous_rotated_90deg;
+
+    // translate coordinates to the intersection point
+    current_rotated_90deg += mapped_intersection;
+    previous_rotated_90deg += mapped_intersection;
+
+    FloatLine outer_line_current_90 = FloatLine({ current_rotated_90deg, mapped_current_line_b - static_cast<FloatPoint>(mapped_intersection - current_rotated_90deg) });
+    FloatLine outer_line_current_270 = FloatLine({ current_rotated_270deg, mapped_current_line_b - static_cast<FloatPoint>(mapped_intersection - current_rotated_270deg) });
+    FloatLine outer_line_prev_270 = FloatLine({ previous_rotated_270deg, mapped_previous_line_b - static_cast<FloatPoint>(mapped_intersection - previous_rotated_270deg) });
+    FloatLine outer_line_prev_90 = FloatLine({ previous_rotated_90deg, mapped_previous_line_b - static_cast<FloatPoint>(mapped_intersection - previous_rotated_90deg) });
+
+    Optional<FloatPoint> edge_spike_90 = outer_line_current_90.intersected(outer_line_prev_270);
+    Optional<FloatPoint> edge_spike_270;
+
+    if (edge_spike_90.has_value()) {
+        edge_spike_270 = mapped_intersection + (mapped_intersection - edge_spike_90.value());
+    } else {
+        edge_spike_270 = outer_line_current_270.intersected(outer_line_prev_90);
+        if (edge_spike_270.has_value()) {
+            edge_spike_90 = mapped_intersection + (mapped_intersection - edge_spike_270.value());
+        }
+    }
+
+    m_intersection_edge_path.clear();
+    m_intersection_edge_path.move_to(current_rotated_90deg);
+    if (edge_spike_90.has_value())
+        m_intersection_edge_path.line_to(edge_spike_90.value());
+    m_intersection_edge_path.line_to(previous_rotated_270deg);
+
+    m_intersection_edge_path.line_to(current_rotated_270deg);
+    if (edge_spike_270.has_value())
+        m_intersection_edge_path.line_to(edge_spike_270.value());
+    m_intersection_edge_path.line_to(previous_rotated_90deg);
+    m_intersection_edge_path.close();
+
+    m_underlying_painter.fill_path(m_intersection_edge_path, color);
+}
+
+// rotates a rectangle around 0,0
+FloatQuad AntiAliasingPainter::build_rotated_rectangle(FloatPoint const& direction, float width)
+{
+    double half_size = width / 2;
+    double radian = atan2(direction.y(), direction.x());
+    if (radian < 0) {
+        radian += (2 * M_PI);
+    }
+    // rotated by: (xcosθ−ysinθ ,xsinθ+ycosθ)
+    // p1     p2
+    //
+    //   x,y
+    //
+    // p4     p3
+    double cos_radian = cos(radian);
+    double sin_radian = sin(radian);
+
+    // FIXME: Performing the rotation with AffineTransform::rotate_quad seems to generate more glitches at the edges than rotating manually
+    return FloatQuad(
+        { ((-half_size * cos_radian) - (-half_size * sin_radian)), ((-half_size * sin_radian) + (-half_size * cos_radian)) },
+        { ((half_size * cos_radian) - (-half_size * sin_radian)), ((half_size * sin_radian) + (-half_size * cos_radian)) },
+        { ((half_size * cos_radian)) - (half_size * sin_radian), ((half_size * sin_radian) + (half_size * cos_radian)) },
+        { ((-half_size * cos_radian) - (half_size * sin_radian)), ((-half_size * sin_radian) + (half_size * cos_radian)) });
 }
 
 }
