@@ -327,13 +327,13 @@ void Scheduler::enter_current(Thread& prev_thread)
     }
 }
 
-void Scheduler::leave_on_first_switch(u32 flags)
+void Scheduler::leave_on_first_switch(InterruptsState previous_interrupts_state)
 {
     // This is called when a thread is switched into for the first time.
     // At this point, enter_current has already be called, but because
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
-    g_scheduler_lock.unlock(flags);
+    g_scheduler_lock.unlock(previous_interrupts_state);
 
     VERIFY(Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(false);

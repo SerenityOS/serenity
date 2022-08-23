@@ -557,7 +557,7 @@ public:
         void begin_requeue()
         {
             // We need to hold the lock until we moved it over
-            m_relock_flags = m_lock.lock();
+            m_previous_interrupts_state = m_lock.lock();
         }
         void finish_requeue(FutexQueue&);
 
@@ -567,7 +567,7 @@ public:
     protected:
         FutexQueue& m_futex_queue;
         u32 m_bitset { 0 };
-        u32 m_relock_flags { 0 };
+        InterruptsState m_previous_interrupts_state { InterruptsState::Disabled };
         bool m_did_unblock { false };
     };
 

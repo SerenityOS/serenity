@@ -21,8 +21,8 @@ public:
     {
     }
 
-    u32 lock();
-    void unlock(u32 prev_flags);
+    InterruptsState lock();
+    void unlock(InterruptsState);
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
@@ -53,8 +53,8 @@ public:
     {
     }
 
-    u32 lock();
-    void unlock(u32 prev_flags);
+    InterruptsState lock();
+    void unlock(InterruptsState);
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {

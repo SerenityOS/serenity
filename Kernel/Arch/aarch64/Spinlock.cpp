@@ -11,21 +11,21 @@
 
 namespace Kernel {
 
-u32 Spinlock::lock()
+InterruptsState Spinlock::lock()
 {
-    return 0;
+    return InterruptsState::Disabled;
 }
 
-void Spinlock::unlock(u32)
+void Spinlock::unlock(InterruptsState)
 {
 }
 
-u32 RecursiveSpinlock::lock()
+InterruptsState RecursiveSpinlock::lock()
 {
-    return 0;
+    return InterruptsState::Disabled;
 }
 
-void RecursiveSpinlock::unlock(u32)
+void RecursiveSpinlock::unlock(InterruptsState)
 {
 }
 

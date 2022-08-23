@@ -25,24 +25,24 @@ public:
         : m_lock(&lock)
     {
         VERIFY(m_lock);
-        m_prev_flags = m_lock->lock();
+        m_previous_interrupts_state = m_lock->lock();
         m_have_lock = true;
     }
 
     SpinlockLocker(SpinlockLocker&& from)
         : m_lock(from.m_lock)
-        , m_prev_flags(from.m_prev_flags)
+        , m_previous_interrupts_state(from.m_previous_interrupts_state)
         , m_have_lock(from.m_have_lock)
     {
         from.m_lock = nullptr;
-        from.m_prev_flags = 0;
+        from.m_previous_interrupts_state = InterruptsState::Disabled;
         from.m_have_lock = false;
     }
 
     ~SpinlockLocker()
     {
         if (m_lock && m_have_lock) {
-            m_lock->unlock(m_prev_flags);
+            m_lock->unlock(m_previous_interrupts_state);
         }
     }
 
@@ -50,7 +50,7 @@ public:
     {
         VERIFY(m_lock);
         VERIFY(!m_have_lock);
-        m_prev_flags = m_lock->lock();
+        m_previous_interrupts_state = m_lock->lock();
         m_have_lock = true;
     }
 
@@ -58,8 +58,8 @@ public:
     {
         VERIFY(m_lock);
         VERIFY(m_have_lock);
-        m_lock->unlock(m_prev_flags);
-        m_prev_flags = 0;
+        m_lock->unlock(m_previous_interrupts_state);
+        m_previous_interrupts_state = InterruptsState::Disabled;
         m_have_lock = false;
     }
 
@@ -70,7 +70,7 @@ public:
 
 private:
     LockType* m_lock { nullptr };
-    u32 m_prev_flags { 0 };
+    InterruptsState m_previous_interrupts_state { InterruptsState::Disabled };
     bool m_have_lock { false };
 };
 

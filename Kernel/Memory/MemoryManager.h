@@ -90,7 +90,7 @@ struct MemoryManagerData {
     static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::MemoryManager; }
 
     Spinlock m_quickmap_in_use { LockRank::None };
-    u32 m_quickmap_prev_flags;
+    InterruptsState m_quickmap_previous_interrupts_state;
 };
 
 // This class represents a set of committed physical pages.
