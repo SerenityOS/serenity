@@ -104,7 +104,6 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
     // Note: Background layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : background_layers->in_reverse()) {
-        // TODO: Gradients!
         if (!layer_is_paintable(layer))
             continue;
         Gfx::PainterStateSaver state { painter };
@@ -136,7 +135,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             break;
         }
 
-        // FIXME: Implement proper derault sizing algorithm: https://drafts.csswg.org/css-images/#default-sizing
+        // FIXME: Implement proper default sizing algorithm: https://drafts.csswg.org/css-images/#default-sizing
         auto natural_image_width = image.natural_width().value_or(background_positioning_area.width());
         auto natural_image_height = image.natural_height().value_or(background_positioning_area.height());
 
