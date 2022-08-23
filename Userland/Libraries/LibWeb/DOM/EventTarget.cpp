@@ -506,8 +506,6 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, Optional<Bi
 // https://html.spec.whatwg.org/multipage/webappapis.html#activate-an-event-handler
 void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler)
 {
-    auto& realm = *Bindings::main_thread_vm().current_realm();
-
     // 1. Let handlerMap be eventTarget's event handler map.
     // 2. Let eventHandler be handlerMap[name].
     // NOTE: These are achieved by using the passed in event handler.
@@ -515,6 +513,22 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     // 3. If eventHandler's listener is not null, then return.
     if (event_handler.listener)
         return;
+
+    JS::Realm* realm = nullptr;
+    // See step 3.1. in get_current_value_of_event_handler(), which explains these assumptions.
+    if (event_handler.value.has<Bindings::CallbackType>()) {
+        realm = &event_handler.value.get<Bindings::CallbackType>().callback_context.realm();
+    } else if (is<Element>(this)) {
+        realm = &verify_cast<Element>(*this).document().realm();
+    } else {
+        auto& window = verify_cast<HTML::Window>(*this);
+        // If an element attribute is set on a <body> element before any script is run, Window::wrapper() will be null.
+        // Force creation of the global object via the Document::interpreter() lazy initialization mechanism.
+        if (window.wrapper() == nullptr)
+            window.associated_document().interpreter();
+        realm = &window.wrapper()->shape().realm();
+    }
+    VERIFY(realm);
 
     // 4. Let callback be the result of creating a Web IDL EventListener instance representing a reference to a function of one argument that executes the steps of the event handler processing algorithm, given eventTarget, name, and its argument.
     //    The EventListener's callback context can be arbitrary; it does not impact the steps of the event handler processing algorithm. [DOM]
@@ -524,22 +538,24 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     //          document.body.remove();
     //          location.reload();
     //       The body element is no longer in the DOM and there is no variable holding onto it. However, the onunload handler is still called, meaning the callback keeps the body element alive.
-    auto callback_function = JS::NativeFunction::create(realm, "", [event_target = NonnullRefPtr(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
-        // The event dispatcher should only call this with one argument.
-        VERIFY(vm.argument_count() == 1);
+    auto callback_function = JS::NativeFunction::create(
+        *realm, [event_target = NonnullRefPtr(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
+            // The event dispatcher should only call this with one argument.
+            VERIFY(vm.argument_count() == 1);
 
-        // The argument must be an object and it must be an EventWrapper.
-        auto event_wrapper_argument = vm.argument(0);
-        VERIFY(event_wrapper_argument.is_object());
-        auto& event_wrapper = verify_cast<Bindings::EventWrapper>(event_wrapper_argument.as_object());
-        auto& event = event_wrapper.impl();
+            // The argument must be an object and it must be an EventWrapper.
+            auto event_wrapper_argument = vm.argument(0);
+            VERIFY(event_wrapper_argument.is_object());
+            auto& event_wrapper = verify_cast<Bindings::EventWrapper>(event_wrapper_argument.as_object());
+            auto& event = event_wrapper.impl();
 
-        TRY(event_target->process_event_handler_for_event(name, event));
-        return JS::js_undefined();
-    });
+            TRY(event_target->process_event_handler_for_event(name, event));
+            return JS::js_undefined();
+        },
+        0, "", realm);
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    Bindings::CallbackType callback { JS::make_handle(static_cast<JS::Object*>(callback_function)), verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()) };
+    Bindings::CallbackType callback { JS::make_handle(static_cast<JS::Object*>(callback_function)), verify_cast<HTML::EnvironmentSettingsObject>(*realm->host_defined()) };
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto listener = adopt_ref(*new DOMEventListener);
