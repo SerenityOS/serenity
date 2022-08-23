@@ -122,7 +122,7 @@ static constexpr void pack_color(FloatVector4 const& color, void* ptr, GPU::Imag
     }
 }
 
-Image::Image(void* const ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
+Image::Image(void const* ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
     : GPU::Image(ownership_token)
     , m_num_layers(layers)
     , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
