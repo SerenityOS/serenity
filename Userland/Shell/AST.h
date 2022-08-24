@@ -306,10 +306,6 @@ public:
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
     ListValue(Vector<String> values);
-    ListValue(Vector<NonnullRefPtr<Value>> values)
-        : m_contained_values(move(static_cast<NonnullRefPtrVector<Value>&>(values)))
-    {
-    }
     ListValue(NonnullRefPtrVector<Value> values)
         : m_contained_values(move(values))
     {
