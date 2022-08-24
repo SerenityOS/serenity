@@ -26,11 +26,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int grid_rows = -1;
     int grid_columns = -1;
 
+    bool hide_window_frame = false;
+
     Core::ArgsParser args_parser;
     args_parser.add_option(num_eyes, "Number of eyes", "num-eyes", 'n', "number");
     args_parser.add_option(max_in_row, "Maximum number of eyes in a row", "max-in-row", 'm', "number");
     args_parser.add_option(grid_rows, "Number of rows in grid (incompatible with --number)", "grid-rows", 'r', "number");
     args_parser.add_option(grid_columns, "Number of columns in grid (incompatible with --number)", "grid-cols", 'c', "number");
+    args_parser.add_option(hide_window_frame, "Hide window frame", "hide-window", 'h');
     args_parser.parse(arguments);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
@@ -66,9 +69,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
-    (void)TRY(window->try_set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
+    bool window_frame_enabled = true;
+    auto set_window_frame_enabled = [&](bool enable) {
+        if (enable == window_frame_enabled)
+            return;
+        window_frame_enabled = enable;
+        window->set_frameless(!window_frame_enabled);
+        window->set_alpha_hit_threshold(window_frame_enabled ? 0 : 1);
+    };
+
+    auto show_window_frame_action = GUI::Action::create_checkable("Show Window &Frame", [&](auto& action) {
+        set_window_frame_enabled(action.is_checked());
+    });
+    set_window_frame_enabled(!hide_window_frame);
+    show_window_frame_action->set_checked(window_frame_enabled);
 
     auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(move(show_window_frame_action)));
+    TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
@@ -76,6 +94,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Eyes.md"), "/bin/Help");
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window)));
+
+    auto eyes_widget = TRY(window->try_set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
+    eyes_widget->on_context_menu_request = [&](auto& event) {
+        file_menu->popup(event.screen_position());
+    };
 
     window->show();
 

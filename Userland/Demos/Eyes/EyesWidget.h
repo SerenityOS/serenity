@@ -18,6 +18,15 @@ class EyesWidget final : public GUI::Widget
 public:
     virtual ~EyesWidget() override = default;
 
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
+
+protected:
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
+    {
+        if (on_context_menu_request)
+            on_context_menu_request(event);
+    }
+
 private:
     EyesWidget(int num_eyes, int full_rows, int extra)
         : m_full_rows(full_rows)
