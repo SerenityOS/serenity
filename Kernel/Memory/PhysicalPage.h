@@ -27,7 +27,7 @@ public:
 
     void ref()
     {
-        m_ref_count.fetch_add(1, AK::memory_order_acq_rel);
+        m_ref_count.fetch_add(1, AK::memory_order_relaxed);
     }
 
     void unref()
