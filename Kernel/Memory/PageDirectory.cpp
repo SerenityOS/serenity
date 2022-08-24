@@ -115,7 +115,6 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 PageDirectory::~PageDirectory()
 {
     if (is_cr3_initialized()) {
-        SpinlockLocker lock(s_mm_lock);
         deregister_page_directory(this);
     }
 }
