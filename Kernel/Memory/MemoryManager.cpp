@@ -1126,7 +1126,6 @@ void MemoryManager::dump_kernel_regions()
 #endif
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
-    SpinlockLocker lock(s_mm_lock);
     m_region_tree.with([&](auto& region_tree) {
         for (auto& region : region_tree.regions()) {
             dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
