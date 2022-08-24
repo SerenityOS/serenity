@@ -57,6 +57,7 @@ class FontStyleValue;
 class Frequency;
 class FrequencyPercentage;
 class FrequencyStyleValue;
+class GridTrackPlacement;
 class GridTrackSize;
 class IdentifierStyleValue;
 class ImageStyleValue;
