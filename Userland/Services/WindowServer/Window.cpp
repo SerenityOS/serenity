@@ -989,6 +989,17 @@ void Window::set_parent_window(Window& parent_window)
         parent_window.add_child_window(*this);
 }
 
+Window* Window::modeless_ancestor()
+{
+    if (!is_modal())
+        return this;
+    for (auto parent = m_parent_window; parent; parent = parent->parent_window()) {
+        if (!parent->is_modal())
+            return parent;
+    }
+    return nullptr;
+}
+
 bool Window::is_accessory() const
 {
     if (!m_accessory)

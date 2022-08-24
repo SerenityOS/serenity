@@ -184,6 +184,7 @@ public:
 
     bool is_modal() const;
     bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
+    Window* modeless_ancestor();
 
     Gfx::IntRect rect() const { return m_rect; }
     void set_rect(Gfx::IntRect const&);
