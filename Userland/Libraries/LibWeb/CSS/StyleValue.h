@@ -133,6 +133,7 @@ public:
         Font,
         Frequency,
         GridTrackPlacement,
+        GridTrackPlacementShorthand,
         GridTrackSize,
         Identifier,
         Image,
@@ -176,6 +177,7 @@ public:
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
+    bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
     bool is_grid_track_size() const { return type() == Type::GridTrackSize; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
@@ -216,6 +218,7 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
     GridTrackSizeStyleValue const& as_grid_track_size() const;
     IdentifierStyleValue const& as_identifier() const;
@@ -255,6 +258,7 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
     GridTrackSizeStyleValue& as_grid_track_size() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
@@ -924,6 +928,36 @@ private:
     }
 
     CSS::GridTrackPlacement m_grid_track_placement;
+};
+
+class GridTrackPlacementShorthandStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
+    {
+        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(start, end));
+    }
+    static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start)
+    {
+        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(GridTrackPlacementStyleValue::create(start), GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto())));
+    }
+    virtual ~GridTrackPlacementShorthandStyleValue() override = default;
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> start() const { return m_start; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> end() const { return m_end; }
+
+    virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    GridTrackPlacementShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
+        : StyleValue(Type::GridTrackPlacementShorthand)
+        , m_start(start)
+        , m_end(end)
+    {
+    }
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_start;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_end;
 };
 
 class GridTrackSizeStyleValue final : public StyleValue {

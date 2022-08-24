@@ -120,6 +120,12 @@ FrequencyStyleValue const& StyleValue::as_frequency() const
     return static_cast<FrequencyStyleValue const&>(*this);
 }
 
+GridTrackPlacementShorthandStyleValue const& StyleValue::as_grid_track_placement_shorthand() const
+{
+    VERIFY(is_grid_track_placement_shorthand());
+    return static_cast<GridTrackPlacementShorthandStyleValue const&>(*this);
+}
+
 GridTrackPlacementStyleValue const& StyleValue::as_grid_track_placement() const
 {
     VERIFY(is_grid_track_placement());
@@ -1208,6 +1214,22 @@ bool FrequencyStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     return m_frequency == other.as_frequency().m_frequency;
+}
+
+String GridTrackPlacementShorthandStyleValue::to_string() const
+{
+    if (m_end->grid_track_placement().position() == 0)
+        return String::formatted("{}", m_start->grid_track_placement().to_string());
+    return String::formatted("{} / {}", m_start->grid_track_placement().to_string(), m_end->grid_track_placement().to_string());
+}
+
+bool GridTrackPlacementShorthandStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_grid_track_placement_shorthand();
+    return m_start->equals(typed_other.m_start)
+        && m_end->equals(typed_other.m_end);
 }
 
 String GridTrackPlacementStyleValue::to_string() const
