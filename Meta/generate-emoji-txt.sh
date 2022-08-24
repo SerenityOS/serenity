@@ -15,14 +15,16 @@ OUTPUT_PATH="$3"
 :>| "$OUTPUT_PATH"
 
 first_heading=true
+printed_group_header=false
+printed_subgroup_header=false
 while IFS= read -r line
 do
-    if [[ $line == \#\ subgroup:\ * || $line == \#\ group:\ * ]]; then
-        if [ $first_heading = false ]; then
-            echo "" >> "$OUTPUT_PATH"
-        fi
-        echo "$line" >> "$OUTPUT_PATH"
-        first_heading=false
+    if [[ $line == \#\ group:\ * ]]; then
+        current_group="$line"
+        printed_group_header=false
+    elif [[ $line == \#\ subgroup:\ * ]]; then
+        current_subgroup="$line"
+        printed_subgroup_header=false
     elif [[ ${#line} -ne 0 && $line != \#* ]]; then
         codepoints_string=${line%%;*}
         IFS=" " read -r -a codepoints <<< "$codepoints_string"
@@ -45,6 +47,20 @@ do
         lookup_filename="${lookup_filename_parts[*]}.png"
 
         if [ -f "$EMOJI_DIR/$lookup_filename" ]; then
+            if [ $printed_group_header = false ]; then
+                if [ $first_heading = false ]; then
+                    echo "" >> "$OUTPUT_PATH"
+                fi
+                echo "$current_group" >> "$OUTPUT_PATH"
+                first_heading=false
+                printed_group_header=true
+            fi
+            if [ $printed_subgroup_header = false ]; then
+                echo "" >> "$OUTPUT_PATH"
+                echo "$current_subgroup" >> "$OUTPUT_PATH"
+                printed_subgroup_header=true
+            fi
+
             emoji_and_name=${line#*# }
             emoji=${emoji_and_name%% E*}
             name_with_version=${emoji_and_name#* }
