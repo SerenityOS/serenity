@@ -319,7 +319,7 @@ void init_stage2(void*)
 
     VirtualFileSystem::initialize();
 
-    if (!get_serial_debug())
+    if (!is_serial_debug_enabled())
         (void)SerialDevice::must_create(0).leak_ref();
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
@@ -409,7 +409,7 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
     if (StringView { kernel_cmdline, strlen(kernel_cmdline) }.contains("serial_debug"sv)) {
-        set_serial_debug(true);
+        set_serial_debug_enabled(true);
     }
 }
 

@@ -23,19 +23,19 @@ namespace Kernel {
 extern Atomic<Graphics::Console*> g_boot_console;
 }
 
-static bool serial_debug;
+static bool s_serial_debug_enabled;
 // A recursive spinlock allows us to keep writing in the case where a
 // page fault happens in the middle of a dbgln(), etc
 static RecursiveSpinlock s_log_lock { LockRank::None };
 
-void set_serial_debug(bool on_or_off)
+void set_serial_debug_enabled(bool desired_state)
 {
-    serial_debug = on_or_off;
+    s_serial_debug_enabled = desired_state;
 }
 
-int get_serial_debug()
+bool is_serial_debug_enabled()
 {
-    return serial_debug;
+    return s_serial_debug_enabled;
 }
 
 static void serial_putch(char ch)
@@ -71,7 +71,7 @@ static void serial_putch(char ch)
 
 static void critical_console_out(char ch)
 {
-    if (serial_debug)
+    if (s_serial_debug_enabled)
         serial_putch(ch);
     // No need to output things to the real ConsoleDevice as no one is likely
     // to read it (because we are in a fatal situation, so only print things and halt)
@@ -87,7 +87,7 @@ static void critical_console_out(char ch)
 
 static void console_out(char ch)
 {
-    if (serial_debug)
+    if (s_serial_debug_enabled)
         serial_putch(ch);
 
     // It would be bad to reach the assert in ConsoleDevice()::the() and do a stack overflow
@@ -151,7 +151,7 @@ int snprintf(char* buffer, size_t size, char const* fmt, ...)
 
 static inline void internal_dbgputch(char ch)
 {
-    if (serial_debug)
+    if (s_serial_debug_enabled)
         serial_putch(ch);
     IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 }
