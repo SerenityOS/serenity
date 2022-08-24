@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Frequency.h>
+#include <LibWeb/CSS/GridTrackSize.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
@@ -130,6 +131,7 @@ public:
         FlexFlow,
         Font,
         Frequency,
+        GridTrackSize,
         Identifier,
         Image,
         Inherit,
@@ -171,6 +173,7 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
+    bool is_grid_track_size() const { return type() == Type::GridTrackSize; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
@@ -210,6 +213,7 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridTrackSizeStyleValue const& as_grid_track_size() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
@@ -247,6 +251,7 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridTrackSizeStyleValue& as_grid_track_size() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
@@ -895,6 +900,25 @@ private:
     }
 
     Frequency m_frequency;
+};
+
+class GridTrackSizeStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridTrackSizeStyleValue> create(Vector<CSS::GridTrackSize> grid_track_size);
+    virtual ~GridTrackSizeStyleValue() override = default;
+
+    Vector<CSS::GridTrackSize> grid_track_size() const { return m_grid_track; }
+    virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    explicit GridTrackSizeStyleValue(Vector<CSS::GridTrackSize> grid_track_size)
+        : StyleValue(Type::GridTrackSize)
+        , m_grid_track(grid_track_size)
+    {
+    }
+
+    Vector<CSS::GridTrackSize> m_grid_track;
 };
 
 class IdentifierStyleValue final : public StyleValue {
