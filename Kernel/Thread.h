@@ -35,10 +35,6 @@ namespace Kernel {
 
 class Timer;
 
-namespace Memory {
-extern RecursiveSpinlock s_mm_lock;
-}
-
 enum class DispatchSignalResult {
     Deferred = 0,
     Yield,
