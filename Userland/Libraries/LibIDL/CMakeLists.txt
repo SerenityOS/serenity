@@ -1,5 +1,6 @@
 set(SOURCES
     IDLParser.cpp
+    Types.cpp
 )
 
 serenity_lib(LibIDL idl)

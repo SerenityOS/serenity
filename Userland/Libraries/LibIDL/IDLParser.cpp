@@ -403,7 +403,7 @@ void Parser::parse_getter(HashMap<String, String>& extended_attributes, Interfac
 
     auto& identifier = function.parameters.first();
 
-    if (identifier.type->nullable)
+    if (identifier.type->is_nullable())
         report_parsing_error("identifier's type must not be nullable."sv, filename, input, lexer.tell());
 
     if (identifier.optional)
@@ -411,18 +411,18 @@ void Parser::parse_getter(HashMap<String, String>& extended_attributes, Interfac
 
     // FIXME: Disallow variadic functions once they're supported.
 
-    if (identifier.type->name == "DOMString") {
+    if (identifier.type->name() == "DOMString") {
         if (interface.named_property_getter.has_value())
             report_parsing_error("An interface can only have one named property getter."sv, filename, input, lexer.tell());
 
         interface.named_property_getter = move(function);
-    } else if (identifier.type->name == "unsigned long") {
+    } else if (identifier.type->name() == "unsigned long") {
         if (interface.indexed_property_getter.has_value())
             report_parsing_error("An interface can only have one indexed property getter."sv, filename, input, lexer.tell());
 
         interface.indexed_property_getter = move(function);
     } else {
-        report_parsing_error(String::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
+        report_parsing_error(String::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
@@ -437,7 +437,7 @@ void Parser::parse_setter(HashMap<String, String>& extended_attributes, Interfac
 
     auto& identifier = function.parameters.first();
 
-    if (identifier.type->nullable)
+    if (identifier.type->is_nullable())
         report_parsing_error("identifier's type must not be nullable."sv, filename, input, lexer.tell());
 
     if (identifier.optional)
@@ -445,7 +445,7 @@ void Parser::parse_setter(HashMap<String, String>& extended_attributes, Interfac
 
     // FIXME: Disallow variadic functions once they're supported.
 
-    if (identifier.type->name == "DOMString") {
+    if (identifier.type->name() == "DOMString") {
         if (interface.named_property_setter.has_value())
             report_parsing_error("An interface can only have one named property setter."sv, filename, input, lexer.tell());
 
@@ -453,7 +453,7 @@ void Parser::parse_setter(HashMap<String, String>& extended_attributes, Interfac
             report_parsing_error("A named property setter must be accompanied by a named property getter."sv, filename, input, lexer.tell());
 
         interface.named_property_setter = move(function);
-    } else if (identifier.type->name == "unsigned long") {
+    } else if (identifier.type->name() == "unsigned long") {
         if (interface.indexed_property_setter.has_value())
             report_parsing_error("An interface can only have one indexed property setter."sv, filename, input, lexer.tell());
 
@@ -462,7 +462,7 @@ void Parser::parse_setter(HashMap<String, String>& extended_attributes, Interfac
 
         interface.indexed_property_setter = move(function);
     } else {
-        report_parsing_error(String::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name), filename, input, lexer.tell());
+        report_parsing_error(String::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
@@ -477,7 +477,7 @@ void Parser::parse_deleter(HashMap<String, String>& extended_attributes, Interfa
 
     auto& identifier = function.parameters.first();
 
-    if (identifier.type->nullable)
+    if (identifier.type->is_nullable())
         report_parsing_error("identifier's type must not be nullable."sv, filename, input, lexer.tell());
 
     if (identifier.optional)
@@ -485,7 +485,7 @@ void Parser::parse_deleter(HashMap<String, String>& extended_attributes, Interfa
 
     // FIXME: Disallow variadic functions once they're supported.
 
-    if (identifier.type->name == "DOMString") {
+    if (identifier.type->name() == "DOMString") {
         if (interface.named_property_deleter.has_value())
             report_parsing_error("An interface can only have one named property deleter."sv, filename, input, lexer.tell());
 
@@ -494,7 +494,7 @@ void Parser::parse_deleter(HashMap<String, String>& extended_attributes, Interfa
 
         interface.named_property_deleter = move(function);
     } else {
-        report_parsing_error(String::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name), filename, input, lexer.tell());
+        report_parsing_error(String::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
 }
 
@@ -809,18 +809,18 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
 {
     if (is<ParameterizedType>(*type)) {
         auto parameterized_type = static_ptr_cast<ParameterizedType>(type);
-        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type->parameters);
+        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type->parameters());
         for (auto& parameter : parameters)
             resolve_typedef(interface, parameter);
         return;
     }
 
-    auto it = interface.typedefs.find(type->name);
+    auto it = interface.typedefs.find(type->name());
     if (it == interface.typedefs.end())
         return;
-    bool is_nullable = type->nullable;
+    bool nullable = type->is_nullable();
     type = it->value.type;
-    type->nullable = is_nullable;
+    type->set_nullable(nullable);
     if (!extended_attributes)
         return;
     for (auto& attribute : it->value.extended_attributes)
