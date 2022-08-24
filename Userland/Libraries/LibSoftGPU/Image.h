@@ -19,45 +19,47 @@ namespace SoftGPU {
 
 class Image final : public GPU::Image {
 public:
-    Image(void const* ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers);
+    Image(void const* ownership_token, u32 width, u32 height, u32 depth, u32 max_levels, u32 layers);
 
-    unsigned level_width(unsigned level) const { return m_mipmap_buffers[level]->width(); }
-    unsigned level_height(unsigned level) const { return m_mipmap_buffers[level]->height(); }
-    unsigned level_depth(unsigned level) const { return m_mipmap_buffers[level]->depth(); }
-    unsigned num_levels() const { return m_num_levels; }
-    unsigned num_layers() const { return m_num_layers; }
+    u32 level_width(u32 level) const { return m_mipmap_buffers[level]->width(); }
+    u32 level_height(u32 level) const { return m_mipmap_buffers[level]->height(); }
+    u32 level_depth(u32 level) const { return m_mipmap_buffers[level]->depth(); }
+    u32 num_levels() const { return m_num_levels; }
+    u32 num_layers() const { return m_num_layers; }
     bool width_is_power_of_two() const { return m_width_is_power_of_two; }
     bool height_is_power_of_two() const { return m_height_is_power_of_two; }
     bool depth_is_power_of_two() const { return m_depth_is_power_of_two; }
 
-    FloatVector4 texel(unsigned layer, unsigned level, int x, int y, int z) const
+    FloatVector4 texel(u32 layer, u32 level, int x, int y, int z) const
     {
         return *texel_pointer(layer, level, x, y, z);
     }
 
-    void set_texel(unsigned layer, unsigned level, int x, int y, int z, FloatVector4 const& color)
+    void set_texel(u32 layer, u32 level, int x, int y, int z, FloatVector4 const& color)
     {
         *texel_pointer(layer, level, x, y, z) = color;
     }
 
-    virtual void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout) override;
-    virtual void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const override;
-    virtual void copy_texels(GPU::Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset) override;
+    virtual void write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* data, GPU::ImageDataLayout const&) override;
+    virtual void read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* data, GPU::ImageDataLayout const&) const override;
+    virtual void copy_texels(GPU::Image const& source, u32 source_layer, u32 source_level, Vector3<u32> const& source_offset, Vector3<u32> const& size, u32 destination_layer, u32 destination_level, Vector3<u32> const& destination_offset) override;
 
 private:
-    FloatVector4 const* texel_pointer(unsigned layer, unsigned level, int x, int y, int z) const
+    GPU::ImageDataLayout image_data_layout(u32 level, Vector3<i32> offset) const;
+
+    FloatVector4 const* texel_pointer(u32 layer, u32 level, int x, int y, int z) const
     {
         return m_mipmap_buffers[layer * m_num_layers + level]->buffer_pointer(x, y, z);
     }
 
-    FloatVector4* texel_pointer(unsigned layer, unsigned level, int x, int y, int z)
+    FloatVector4* texel_pointer(u32 layer, u32 level, int x, int y, int z)
     {
         return m_mipmap_buffers[layer * m_num_layers + level]->buffer_pointer(x, y, z);
     }
 
 private:
-    unsigned m_num_levels { 0 };
-    unsigned m_num_layers { 0 };
+    u32 m_num_levels { 0 };
+    u32 m_num_layers { 0 };
 
     FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>> m_mipmap_buffers;
 

@@ -83,6 +83,11 @@ enum Face {
     Back = 1,
 };
 
+enum class PackingType {
+    Pack,
+    Unpack,
+};
+
 class GLContext final {
 public:
     GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device>, Gfx::Bitmap&);
@@ -235,6 +240,7 @@ private:
     }
 
     Optional<ContextParameter> get_context_parameter(GLenum pname);
+    GPU::PackingSpecification get_packing_specification(PackingType);
 
     template<typename T>
     void get_floating_point(GLenum pname, T* params);

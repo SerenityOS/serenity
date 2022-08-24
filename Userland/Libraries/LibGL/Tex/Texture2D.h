@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,13 +11,11 @@
 #include "Texture.h"
 
 #include <AK/Array.h>
-#include <AK/RefCounted.h>
-#include <AK/Vector.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/Tex/MipMap.h>
 #include <LibGL/Tex/Sampler2D.h>
-#include <LibGfx/Vector2.h>
-#include <LibGfx/Vector4.h>
+#include <LibGPU/ImageDataLayout.h>
+#include <LibGfx/Vector3.h>
 
 namespace GL {
 
@@ -28,8 +27,8 @@ public:
 
     virtual bool is_texture_2d() const override { return true; }
 
-    void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels, GLsizei pixels_per_row, u8 byte_alignment);
-    void replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels, GLsizei pixels_per_row, u8 byte_alignment);
+    void upload_texture_data(GLuint lod, GLenum internal_format, GPU::ImageDataLayout input_layout, GLvoid const* pixels);
+    void replace_sub_texture_data(GLuint lod, GPU::ImageDataLayout input_layout, Vector3<i32> const& output_offset, GLvoid const* pixels);
 
     MipMap const& mipmap(unsigned lod) const
     {

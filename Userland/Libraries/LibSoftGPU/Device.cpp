@@ -18,6 +18,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/PixelConverter.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
 #include <math.h>
@@ -66,7 +67,7 @@ constexpr static auto interpolate(T const& v0, T const& v1, T const& v2, Vector3
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
-static GPU::ColorType to_bgra32(FloatVector4 const& color)
+static GPU::ColorType to_argb32(FloatVector4 const& color)
 {
     auto clamped = color.clamped(0.0f, 1.0f);
     auto r = static_cast<u8>(clamped.x() * 255);
@@ -76,9 +77,9 @@ static GPU::ColorType to_bgra32(FloatVector4 const& color)
     return a << 24 | r << 16 | g << 8 | b;
 }
 
-ALWAYS_INLINE static u32x4 to_bgra32(Vector4<f32x4> const& v)
+ALWAYS_INLINE static u32x4 to_argb32(Vector4<f32x4> const& color)
 {
-    auto clamped = v.clamped(expand4(0.0f), expand4(1.0f));
+    auto clamped = color.clamped(expand4(0.0f), expand4(1.0f));
     auto r = to_u32x4(clamped.x() * 255);
     auto g = to_u32x4(clamped.y() * 255);
     auto b = to_u32x4(clamped.z() * 255);
@@ -481,9 +482,9 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
             }
 
             if (m_options.color_mask == 0xffffffff)
-                store4_masked(to_bgra32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+                store4_masked(to_argb32(quad.out_color), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
             else
-                store4_masked((to_bgra32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
+                store4_masked((to_argb32(quad.out_color) & m_options.color_mask) | (dst_u32 & ~m_options.color_mask), color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
         }
     }
 }
@@ -1315,7 +1316,7 @@ void Device::resize(Gfx::IntSize const& size)
 
 void Device::clear_color(FloatVector4 const& color)
 {
-    auto const fill_color = to_bgra32(color);
+    auto const fill_color = to_argb32(color);
 
     auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
@@ -1342,35 +1343,116 @@ void Device::clear_stencil(GPU::StencilType value)
     m_frame_buffer->stencil_buffer()->fill(value, clear_rect);
 }
 
-void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
+GPU::ImageDataLayout Device::color_buffer_data_layout(Vector2<u32> size, Vector2<i32> offset)
 {
-    if (!m_raster_position.valid)
-        return;
-
-    INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
-    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
-
-    auto const blit_rect = get_rasterization_rect_of_size({ source.width(), source.height() });
-    m_frame_buffer->color_buffer()->blit_from_bitmap(source, blit_rect);
+    return {
+        .pixel_type = {
+            .format = GPU::PixelFormat::BGRA,
+            .bits = GPU::PixelComponentBits::B8_8_8_8,
+            .data_type = GPU::PixelDataType::UnsignedInt,
+            .components_order = GPU::ComponentsOrder::Reversed,
+        },
+        .dimensions = {
+            .width = static_cast<u32>(m_frame_buffer->rect().width()),
+            .height = static_cast<u32>(m_frame_buffer->rect().height()),
+            .depth = 1,
+        },
+        .selection = {
+            .offset_x = offset.x(),
+            .offset_y = offset.y(),
+            .offset_z = 0,
+            .width = size.x(),
+            .height = size.y(),
+            .depth = 1,
+        },
+    };
 }
 
-void Device::blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const& depth_values, int width, int height)
+GPU::ImageDataLayout Device::depth_buffer_data_layout(Vector2<u32> size, Vector2<i32> offset)
+{
+    return {
+        .pixel_type = {
+            .format = GPU::PixelFormat::DepthComponent,
+            .bits = GPU::PixelComponentBits::AllBits,
+            .data_type = GPU::PixelDataType::Float,
+        },
+        .dimensions = {
+            .width = static_cast<u32>(m_frame_buffer->rect().width()),
+            .height = static_cast<u32>(m_frame_buffer->rect().height()),
+            .depth = 1,
+        },
+        .selection = {
+            .offset_x = offset.x(),
+            .offset_y = offset.y(),
+            .offset_z = 0,
+            .width = size.x(),
+            .height = size.y(),
+            .depth = 1,
+        },
+    };
+}
+
+void Device::blit_from_color_buffer(void* output_data, Vector2<i32> input_offset, GPU::ImageDataLayout const& output_layout)
+{
+    auto const& output_selection = output_layout.selection;
+    auto input_layout = color_buffer_data_layout({ output_selection.width, output_selection.height }, input_offset);
+
+    PixelConverter converter { input_layout, output_layout };
+    auto const* input_data = m_frame_buffer->color_buffer()->scanline(0);
+    auto conversion_result = converter.convert(input_data, output_data);
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
+}
+
+void Device::blit_from_depth_buffer(void* output_data, Vector2<i32> input_offset, GPU::ImageDataLayout const& output_layout)
+{
+    auto const& output_selection = output_layout.selection;
+    auto input_layout = depth_buffer_data_layout({ output_selection.width, output_selection.height }, input_offset);
+
+    PixelConverter converter { input_layout, output_layout };
+    auto const* input_data = m_frame_buffer->depth_buffer()->scanline(0);
+    auto conversion_result = converter.convert(input_data, output_data);
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
+}
+
+void Device::blit_to_color_buffer_at_raster_position(void const* input_data, GPU::ImageDataLayout const& input_layout)
 {
     if (!m_raster_position.valid)
         return;
 
-    auto const raster_rect = get_rasterization_rect_of_size({ width, height });
-    auto const y1 = raster_rect.y();
-    auto const y2 = y1 + height;
-    auto const x1 = raster_rect.x();
-    auto const x2 = x1 + width;
+    auto input_selection = input_layout.selection;
+    INCREASE_STATISTICS_COUNTER(g_num_pixels, input_selection.width * input_selection.height);
+    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, input_selection.width * input_selection.height);
 
-    auto index = 0;
-    for (auto y = y1; y < y2; ++y) {
-        auto depth_line = m_frame_buffer->depth_buffer()->scanline(y);
-        for (auto x = x1; x < x2; ++x)
-            depth_line[x] = depth_values[index++];
-    }
+    auto const rasterization_rect = get_rasterization_rect_of_size({ input_selection.width, input_selection.height });
+    auto output_layout = color_buffer_data_layout(
+        { static_cast<u32>(rasterization_rect.width()), static_cast<u32>(rasterization_rect.height()) },
+        { rasterization_rect.x(), rasterization_rect.y() });
+
+    PixelConverter converter { input_layout, output_layout };
+    auto* output_data = m_frame_buffer->color_buffer()->scanline(0);
+    auto conversion_result = converter.convert(input_data, output_data);
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
+}
+
+void Device::blit_to_depth_buffer_at_raster_position(void const* input_data, GPU::ImageDataLayout const& input_layout)
+{
+    if (!m_raster_position.valid)
+        return;
+
+    auto input_selection = input_layout.selection;
+    auto const rasterization_rect = get_rasterization_rect_of_size({ input_selection.width, input_selection.height });
+    auto output_layout = depth_buffer_data_layout(
+        { static_cast<u32>(rasterization_rect.width()), static_cast<u32>(rasterization_rect.height()) },
+        { rasterization_rect.x(), rasterization_rect.y() });
+
+    PixelConverter converter { input_layout, output_layout };
+    auto* output_data = m_frame_buffer->depth_buffer()->scanline(0);
+    auto conversion_result = converter.convert(input_data, output_data);
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
 void Device::blit_color_buffer_to(Gfx::Bitmap& target)
@@ -1451,25 +1533,12 @@ void Device::set_light_model_params(GPU::LightModelParameters const& lighting_mo
     m_lighting_model = lighting_model;
 }
 
-GPU::ColorType Device::get_color_buffer_pixel(int x, int y)
+NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelType const& pixel_type, u32 width, u32 height, u32 depth, u32 levels, u32 layers)
 {
-    // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (!m_frame_buffer->rect().contains(x, y))
-        return 0;
-    return m_frame_buffer->color_buffer()->scanline(y)[x];
-}
-
-GPU::DepthType Device::get_depthbuffer_value(int x, int y)
-{
-    // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
-    if (!m_frame_buffer->rect().contains(x, y))
-        return 1.0f;
-    return m_frame_buffer->depth_buffer()->scanline(y)[x];
-}
-
-NonnullRefPtr<GPU::Image> Device::create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
-{
-    VERIFY(format == GPU::ImageFormat::BGRA8888);
+    VERIFY(pixel_type.format == GPU::PixelFormat::RGBA
+        && pixel_type.bits == GPU::PixelComponentBits::AllBits
+        && pixel_type.data_type == GPU::PixelDataType::Float
+        && pixel_type.components_order == GPU::ComponentsOrder::Normal);
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);

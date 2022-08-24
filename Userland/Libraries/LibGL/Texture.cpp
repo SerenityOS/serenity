@@ -8,6 +8,8 @@
 
 #include <AK/Debug.h>
 #include <LibGL/GLContext.h>
+#include <LibGL/Image.h>
+#include <LibGPU/ImageDataLayout.h>
 
 namespace GL {
 
@@ -306,26 +308,20 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
     m_texcoord_generation_dirty = true;
 }
 
+// FIXME: talk to GPU::Device to determine supported GPU::PixelTypes
+constexpr GPU::PixelType texture_fixed_pixel_type = {
+    .format = GPU::PixelFormat::RGBA,
+    .bits = GPU::PixelComponentBits::AllBits,
+    .data_type = GPU::PixelDataType::Float,
+};
+
 void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // We only support GL_TEXTURE_2D for now
-    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+    auto pixel_type_or_error = get_validated_pixel_type(target, internal_format, format, type);
+    RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
-    // Internal format can also be a number between 1 and 4. Symbolic formats were only added with EXT_texture, promoted to core in OpenGL 1.1
-    if (internal_format == 1)
-        internal_format = GL_ALPHA;
-    else if (internal_format == 2)
-        internal_format = GL_LUMINANCE_ALPHA;
-    else if (internal_format == 3)
-        internal_format = GL_RGB;
-    else if (internal_format == 4)
-        internal_format = GL_RGBA;
-
-    // We only support symbolic constants for now
-    RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA || internal_format == GL_LUMINANCE8 || internal_format == GL_LUMINANCE8_ALPHA8), GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
@@ -345,11 +341,26 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        texture_2d->set_device_image(m_rasterizer->create_image(GPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer->create_image(texture_fixed_pixel_type, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
-    texture_2d->upload_texture_data(level, internal_format, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
+    GPU::ImageDataLayout input_layout = {
+        .pixel_type = pixel_type_or_error.release_value(),
+        .packing = get_packing_specification(PackingType::Unpack),
+        .dimensions = {
+            .width = static_cast<u32>(width),
+            .height = static_cast<u32>(height),
+            .depth = 1,
+        },
+        .selection = {
+            .width = static_cast<u32>(width),
+            .height = static_cast<u32>(height),
+            .depth = 1,
+        },
+    };
+
+    texture_2d->upload_texture_data(level, internal_format, input_layout, data);
 }
 
 void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
@@ -454,12 +465,7 @@ void GLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, G
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // We only support GL_TEXTURE_2D for now
-    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
-
     // We only support symbolic constants for now
-    RETURN_WITH_ERROR_IF(!(format == GL_RGBA || format == GL_RGB), GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
 
@@ -467,9 +473,27 @@ void GLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, G
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
     RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
 
+    auto pixel_type_or_error = get_validated_pixel_type(target, texture_2d->internal_format(), format, type);
+    RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
+
     RETURN_WITH_ERROR_IF(xoffset < 0 || yoffset < 0 || xoffset + width > texture_2d->width_at_lod(level) || yoffset + height > texture_2d->height_at_lod(level), GL_INVALID_VALUE);
 
-    texture_2d->replace_sub_texture_data(level, xoffset, yoffset, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
+    GPU::ImageDataLayout input_layout = {
+        .pixel_type = pixel_type_or_error.release_value(),
+        .packing = get_packing_specification(PackingType::Unpack),
+        .dimensions = {
+            .width = static_cast<u32>(width),
+            .height = static_cast<u32>(height),
+            .depth = 1,
+        },
+        .selection = {
+            .width = static_cast<u32>(width),
+            .height = static_cast<u32>(height),
+            .depth = 1,
+        },
+    };
+
+    texture_2d->replace_sub_texture_data(level, input_layout, { xoffset, yoffset, 0 }, data);
 }
 
 void GLContext::sync_device_sampler_config()

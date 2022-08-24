@@ -33,20 +33,6 @@ public:
     ALWAYS_INLINE T* scanline(int y) { return m_buffer->buffer_pointer(0, y, 0); }
     ALWAYS_INLINE T const* scanline(int y) const { return m_buffer->buffer_pointer(0, y, 0); }
 
-    void blit_from_bitmap(Gfx::Bitmap const& bitmap, Gfx::IntRect const& target) requires IsSame<T, u32>
-    {
-        VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888 || bitmap.format() == Gfx::BitmapFormat::BGRx8888);
-        int source_y = 0;
-        for (int y = target.top(); y <= target.bottom(); ++y) {
-            auto* buffer_scanline = scanline(y);
-            auto const* bitmap_scanline = bitmap.scanline(source_y++);
-
-            int source_x = 0;
-            for (int x = target.left(); x <= target.right(); ++x)
-                buffer_scanline[x] = bitmap_scanline[source_x++];
-        }
-    }
-
     void blit_flipped_to_bitmap(Gfx::Bitmap& bitmap, Gfx::IntRect const& target) const requires IsSame<T, u32>
     {
         VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888 || bitmap.format() == Gfx::BitmapFormat::BGRx8888);

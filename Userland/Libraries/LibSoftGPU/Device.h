@@ -52,17 +52,17 @@ public:
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
     virtual void clear_stencil(GPU::StencilType) override;
+    virtual void blit_from_color_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) override;
+    virtual void blit_from_depth_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) override;
     virtual void blit_color_buffer_to(Gfx::Bitmap& target) override;
-    virtual void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&) override;
-    virtual void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int) override;
+    virtual void blit_to_color_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) override;
+    virtual void blit_to_depth_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) override;
     virtual void set_options(GPU::RasterizerOptions const&) override;
     virtual void set_light_model_params(GPU::LightModelParameters const&) override;
     virtual GPU::RasterizerOptions options() const override { return m_options; }
     virtual GPU::LightModelParameters light_model() const override { return m_lighting_model; }
-    virtual GPU::ColorType get_color_buffer_pixel(int x, int y) override;
-    virtual GPU::DepthType get_depthbuffer_value(int x, int y) override;
 
-    virtual NonnullRefPtr<GPU::Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers) override;
+    virtual NonnullRefPtr<GPU::Image> create_image(GPU::PixelType const&, u32 width, u32 height, u32 depth, u32 levels, u32 layers) override;
 
     virtual void set_sampler_config(unsigned, GPU::SamplerConfig const&) override;
     virtual void set_light_state(unsigned, GPU::Light const&) override;
@@ -78,6 +78,9 @@ private:
     void calculate_vertex_lighting(GPU::Vertex& vertex) const;
     void draw_statistics_overlay(Gfx::Bitmap&);
     Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size) const;
+
+    GPU::ImageDataLayout color_buffer_data_layout(Vector2<u32> size, Vector2<i32> offset);
+    GPU::ImageDataLayout depth_buffer_data_layout(Vector2<u32> size, Vector2<i32> offset);
 
     template<typename CB1, typename CB2, typename CB3>
     void rasterize(Gfx::IntRect& render_bounds, CB1 set_coverage_mask, CB2 set_quad_depth, CB3 set_quad_attributes);
