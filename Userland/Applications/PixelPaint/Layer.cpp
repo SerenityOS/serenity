@@ -281,26 +281,10 @@ Optional<Gfx::IntRect> Layer::nonempty_content_bounding_rect() const
             auto color = m_content_bitmap->get_pixel(x, y);
             if (color.alpha() == 0)
                 continue;
-
-            if (!min_content_x.has_value())
-                min_content_x = x;
-            else
-                min_content_x = min(*min_content_x, x);
-
-            if (!min_content_y.has_value())
-                min_content_y = y;
-            else
-                min_content_y = min(*min_content_y, y);
-
-            if (!max_content_x.has_value())
-                max_content_x = x;
-            else
-                max_content_x = max(*max_content_x, x);
-
-            if (!max_content_y.has_value())
-                max_content_y = y;
-            else
-                max_content_y = max(*max_content_y, y);
+            min_content_x = min(min_content_x.value_or(x), x);
+            min_content_y = min(min_content_y.value_or(y), y);
+            max_content_x = max(max_content_x.value_or(x), x);
+            max_content_y = max(max_content_y.value_or(y), y);
         }
     }
 

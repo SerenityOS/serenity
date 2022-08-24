@@ -540,7 +540,7 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
         auto layer_content_rect_in_layer_coordinates = layer.nonempty_content_bounding_rect();
         if (!layer_content_rect_in_layer_coordinates.has_value())
             continue;
-        auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates.value().translated(layer.location());
+        auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates->translated(layer.location());
         if (!bounding_rect.has_value())
             bounding_rect = layer_content_rect_in_image_coordinates;
         else
