@@ -584,4 +584,28 @@ GLboolean GLContext::gl_is_enabled(GLenum capability)
     return parameter.value.boolean_value;
 }
 
+GPU::PackingSpecification GLContext::get_packing_specification(PackingType packing_type)
+{
+    // Make use of the fact that the GL_PACK_* and GL_UNPACK_* enum constants are in the exact same order
+    auto const offset = (packing_type == PackingType::Unpack) ? 0 : (GL_PACK_SWAP_BYTES - GL_UNPACK_SWAP_BYTES);
+    auto get_packing_value = [&](GLenum packing_parameter) -> GLint {
+        GLint value;
+        gl_get_integerv(packing_parameter + offset, &value);
+        return value;
+    };
+
+    // FIXME: add support for GL_UNPACK_SKIP_PIXELS, GL_UNPACK_SKIP_ROWS and GL_UNPACK_LSB_FIRST
+    GLint byte_alignment { get_packing_value(GL_UNPACK_ALIGNMENT) };
+    GLint swap_bytes { get_packing_value(GL_UNPACK_SWAP_BYTES) };
+    GLint depth_stride { get_packing_value(GL_UNPACK_IMAGE_HEIGHT) };
+    GLint row_stride { get_packing_value(GL_UNPACK_ROW_LENGTH) };
+
+    return {
+        .depth_stride = static_cast<u32>(depth_stride),
+        .row_stride = static_cast<u32>(row_stride),
+        .byte_alignment = static_cast<u8>(byte_alignment),
+        .component_bytes_order = swap_bytes == GL_TRUE ? GPU::ComponentBytesOrder::Reversed : GPU::ComponentBytesOrder::Normal,
+    };
+}
+
 }

@@ -6,123 +6,11 @@
  */
 
 #include <LibSoftGPU/Image.h>
+#include <LibSoftGPU/PixelConverter.h>
 
 namespace SoftGPU {
 
-static constexpr FloatVector4 unpack_color(void const* ptr, GPU::ImageFormat format)
-{
-    constexpr auto one_over_255 = 1.0f / 255;
-    switch (format) {
-    case GPU::ImageFormat::RGB888: {
-        auto rgb = reinterpret_cast<u8 const*>(ptr);
-        return {
-            rgb[0] * one_over_255,
-            rgb[1] * one_over_255,
-            rgb[2] * one_over_255,
-            1.0f,
-        };
-    }
-    case GPU::ImageFormat::BGR888: {
-        auto bgr = reinterpret_cast<u8 const*>(ptr);
-        return {
-            bgr[2] * one_over_255,
-            bgr[1] * one_over_255,
-            bgr[0] * one_over_255,
-            1.0f,
-        };
-    }
-    case GPU::ImageFormat::RGBA8888: {
-        auto rgba = *reinterpret_cast<u32 const*>(ptr);
-        return {
-            (rgba & 0xff) * one_over_255,
-            ((rgba >> 8) & 0xff) * one_over_255,
-            ((rgba >> 16) & 0xff) * one_over_255,
-            ((rgba >> 24) & 0xff) * one_over_255,
-        };
-    }
-    case GPU::ImageFormat::BGRA8888: {
-        auto bgra = *reinterpret_cast<u32 const*>(ptr);
-        return {
-            ((bgra >> 16) & 0xff) * one_over_255,
-            ((bgra >> 8) & 0xff) * one_over_255,
-            (bgra & 0xff) * one_over_255,
-            ((bgra >> 24) & 0xff) * one_over_255,
-        };
-    }
-    case GPU::ImageFormat::RGB565: {
-        auto rgb = *reinterpret_cast<u16 const*>(ptr);
-        return {
-            ((rgb >> 11) & 0x1f) / 31.f,
-            ((rgb >> 5) & 0x3f) / 63.f,
-            (rgb & 0x1f) / 31.f,
-            1.0f
-        };
-    }
-    case GPU::ImageFormat::L8: {
-        auto luminance = *reinterpret_cast<u8 const*>(ptr);
-        auto clamped_luminance = luminance * one_over_255;
-        return {
-            clamped_luminance,
-            clamped_luminance,
-            clamped_luminance,
-            1.0f,
-        };
-    }
-    case GPU::ImageFormat::L8A8: {
-        auto luminance_and_alpha = reinterpret_cast<u8 const*>(ptr);
-        auto clamped_luminance = luminance_and_alpha[0] * one_over_255;
-        return {
-            clamped_luminance,
-            clamped_luminance,
-            clamped_luminance,
-            luminance_and_alpha[1] * one_over_255,
-        };
-    }
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-static constexpr void pack_color(FloatVector4 const& color, void* ptr, GPU::ImageFormat format)
-{
-    auto r = static_cast<u8>(clamp(color.x(), 0.0f, 1.0f) * 255);
-    auto g = static_cast<u8>(clamp(color.y(), 0.0f, 1.0f) * 255);
-    auto b = static_cast<u8>(clamp(color.z(), 0.0f, 1.0f) * 255);
-    auto a = static_cast<u8>(clamp(color.w(), 0.0f, 1.0f) * 255);
-
-    switch (format) {
-    case GPU::ImageFormat::RGB888:
-        reinterpret_cast<u8*>(ptr)[0] = r;
-        reinterpret_cast<u8*>(ptr)[1] = g;
-        reinterpret_cast<u8*>(ptr)[2] = b;
-        return;
-    case GPU::ImageFormat::BGR888:
-        reinterpret_cast<u8*>(ptr)[2] = b;
-        reinterpret_cast<u8*>(ptr)[1] = g;
-        reinterpret_cast<u8*>(ptr)[0] = r;
-        return;
-    case GPU::ImageFormat::RGBA8888:
-        *reinterpret_cast<u32*>(ptr) = r | (g << 8) | (b << 16) | (a << 24);
-        return;
-    case GPU::ImageFormat::BGRA8888:
-        *reinterpret_cast<u32*>(ptr) = b | (g << 8) | (r << 16) | (a << 24);
-        return;
-    case GPU::ImageFormat::RGB565:
-        *reinterpret_cast<u16*>(ptr) = (r & 0x1f) | ((g & 0x3f) << 5) | ((b & 0x1f) << 11);
-        return;
-    case GPU::ImageFormat::L8:
-        *reinterpret_cast<u8*>(ptr) = r;
-        return;
-    case GPU::ImageFormat::L8A8:
-        reinterpret_cast<u8*>(ptr)[0] = r;
-        reinterpret_cast<u8*>(ptr)[1] = a;
-        return;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-Image::Image(void const* ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
+Image::Image(void const* ownership_token, u32 width, u32 height, u32 depth, u32 max_levels, u32 layers)
     : GPU::Image(ownership_token)
     , m_num_layers(layers)
     , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
@@ -137,9 +25,9 @@ Image::Image(void const* ownership_token, unsigned width, unsigned height, unsig
     m_height_is_power_of_two = is_power_of_two(height);
     m_depth_is_power_of_two = is_power_of_two(depth);
 
-    unsigned level;
+    u32 level;
     for (level = 0; level < max_levels; ++level) {
-        for (unsigned layer = 0; layer < layers; ++layer)
+        for (u32 layer = 0; layer < layers; ++layer)
             m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width, height, depth));
 
         if (width <= 1 && height <= 1 && depth <= 1)
@@ -153,45 +41,62 @@ Image::Image(void const* ownership_token, unsigned width, unsigned height, unsig
     m_num_levels = level + 1;
 }
 
-void Image::write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout)
+GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) const
+{
+    auto const width = level_width(level);
+    auto const height = level_height(level);
+    auto const depth = level_depth(level);
+
+    // FIXME: we are directly writing to FloatVector4s. We should probably find a better way to do this
+    return {
+        .pixel_type = {
+            .format = GPU::PixelFormat::RGBA,
+            .bits = GPU::PixelComponentBits::AllBits,
+            .data_type = GPU::PixelDataType::Float,
+        },
+        .dimensions = {
+            .width = width,
+            .height = height,
+            .depth = depth,
+        },
+        .selection = {
+            .offset_x = offset.x(),
+            .offset_y = offset.y(),
+            .offset_z = offset.z(),
+            .width = width - offset.x(),
+            .height = height - offset.y(),
+            .depth = depth - offset.z(),
+        },
+    };
+}
+
+void Image::write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* data, GPU::ImageDataLayout const& input_layout)
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
-    VERIFY(offset.x() + size.x() <= level_width(level));
-    VERIFY(offset.y() + size.y() <= level_height(level));
-    VERIFY(offset.z() + size.z() <= level_depth(level));
 
-    for (unsigned z = 0; z < size.z(); ++z) {
-        for (unsigned y = 0; y < size.y(); ++y) {
-            for (unsigned x = 0; x < size.x(); ++x) {
-                auto ptr = reinterpret_cast<u8 const*>(data) + layout.depth_stride * z + layout.row_stride * y + layout.column_stride * x;
-                auto color = unpack_color(ptr, layout.format);
-                set_texel(layer, level, offset.x() + x, offset.y() + y, offset.z() + z, color);
-            }
-        }
-    }
+    auto output_layout = image_data_layout(level, output_offset);
+
+    PixelConverter converter { input_layout, output_layout };
+    auto conversion_result = converter.convert(data, texel_pointer(layer, level, 0, 0, 0));
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
-void Image::read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const
+void Image::read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* data, GPU::ImageDataLayout const& output_layout) const
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
-    VERIFY(offset.x() + size.x() <= level_width(level));
-    VERIFY(offset.y() + size.y() <= level_height(level));
-    VERIFY(offset.z() + size.z() <= level_depth(level));
 
-    for (unsigned z = 0; z < size.z(); ++z) {
-        for (unsigned y = 0; y < size.y(); ++y) {
-            for (unsigned x = 0; x < size.x(); ++x) {
-                auto color = texel(layer, level, offset.x() + x, offset.y() + y, offset.z() + z);
-                auto ptr = reinterpret_cast<u8*>(data) + layout.depth_stride * z + layout.row_stride * y + layout.column_stride * x;
-                pack_color(color, ptr, layout.format);
-            }
-        }
-    }
+    auto input_layout = image_data_layout(level, input_offset);
+
+    PixelConverter converter { input_layout, output_layout };
+    auto conversion_result = converter.convert(texel_pointer(layer, level, 0, 0, 0), data);
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
-void Image::copy_texels(GPU::Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset)
+void Image::copy_texels(GPU::Image const& source, u32 source_layer, u32 source_level, Vector3<u32> const& source_offset, Vector3<u32> const& size, u32 destination_layer, u32 destination_level, Vector3<u32> const& destination_offset)
 {
     VERIFY(source.has_same_ownership_token(*this));
 
@@ -208,9 +113,9 @@ void Image::copy_texels(GPU::Image const& source, unsigned source_layer, unsigne
     VERIFY(destination_offset.y() + size.y() <= level_height(destination_level));
     VERIFY(destination_offset.z() + size.z() <= level_depth(destination_level));
 
-    for (unsigned z = 0; z < size.z(); ++z) {
-        for (unsigned y = 0; y < size.y(); ++y) {
-            for (unsigned x = 0; x < size.x(); ++x) {
+    for (u32 z = 0; z < size.z(); ++z) {
+        for (u32 y = 0; y < size.y(); ++y) {
+            for (u32 x = 0; x < size.x(); ++x) {
                 auto color = src_image.texel(source_layer, source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
                 set_texel(destination_layer, destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
             }

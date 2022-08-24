@@ -2,6 +2,7 @@ set(SOURCES
     Clipper.cpp
     Device.cpp
     Image.cpp
+    PixelConverter.cpp
     Sampler.cpp
 )
 

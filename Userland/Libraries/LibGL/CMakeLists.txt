@@ -3,6 +3,7 @@ set(SOURCES
     ContextParameter.cpp
     GLAPI.cpp
     GLContext.cpp
+    Image.cpp
     Lighting.cpp
     List.cpp
     Matrix.cpp
