@@ -1018,9 +1018,6 @@ void MemoryManager::enter_address_space(AddressSpace& space)
 {
     auto* current_thread = Thread::current();
     VERIFY(current_thread != nullptr);
-    SpinlockLocker lock(s_mm_lock);
-
-    current_thread->regs().cr3 = space.page_directory().cr3();
     activate_page_directory(space.page_directory(), current_thread);
 }
 
