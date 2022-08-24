@@ -115,8 +115,95 @@ u64 UnsignedBigInteger::to_u64() const
 
 double UnsignedBigInteger::to_double() const
 {
-    // FIXME: I am naive
-    return static_cast<double>(to_u64());
+    // NOTE: This function rounds toward zero!
+    // FIXME: Which is not exactly what we should do for JS when converting to number:
+    //        See: https://tc39.es/ecma262/#sec-number-constructor-number-value
+    //        Which has step 1.b If Type(prim) is BigInt, let n be 𝔽(ℝ(prim)).
+    //        Which then references: https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type
+    //        Which is equivalent to (This procedure corresponds exactly to the behaviour of the IEEE 754-2019 roundTiesToEven mode.)
+
+    auto highest_bit = one_based_index_of_highest_set_bit();
+    if (highest_bit == 0)
+        return 0;
+    --highest_bit;
+
+    // Simple case if less than 2^53 since those number are all exactly representable in doubles
+    if (highest_bit < 53)
+        return static_cast<double>(to_u64());
+
+    constexpr u64 mantissa_size = 52;
+    constexpr u64 exponent_size = 11;
+    constexpr auto exponent_bias = (1 << (exponent_size - 1)) - 1;
+
+    // If it uses too many bit to represent in a double return infinity
+    if (highest_bit > exponent_bias)
+        return __builtin_huge_val();
+
+    // Otherwise we have to take the top 53 bits, use those as the mantissa,
+    // and the amount of bits as the exponent. Note that the mantissa has an implicit top bit of 1
+    // so we have to ignore the very top bit.
+
+    // Since we extract at most 53 bits it will take at most 3 words
+    static_assert(BITS_IN_WORD * 3 >= (mantissa_size + 1));
+    constexpr auto bits_in_u64 = 64;
+    static_assert(bits_in_u64 > mantissa_size + 1);
+
+    auto bits_to_read = min(mantissa_size + 1, highest_bit);
+
+    auto last_word_index = trimmed_length();
+    VERIFY(last_word_index > 0);
+
+    // Note that highest bit is 0-indexed at this point.
+    auto highest_bit_index_in_top_word = highest_bit % BITS_IN_WORD;
+
+    // Shift initial word until highest bit is just beyond top of u64.
+    u64 mantissa = static_cast<u64>(m_words[last_word_index - 1]) << (bits_in_u64 - highest_bit_index_in_top_word);
+
+    auto bits_written = highest_bit_index_in_top_word;
+
+    --last_word_index;
+
+    if (bits_written < bits_to_read && last_word_index > 0) {
+        // Second word can always just cleanly be shifted upto the final bit of the first word
+        // since the first has at most BIT_IN_WORD - 1, 31
+        u64 next_word = m_words[last_word_index - 1];
+        VERIFY((mantissa & (next_word << (bits_in_u64 - bits_written - BITS_IN_WORD))) == 0);
+        mantissa |= next_word << (bits_in_u64 - bits_written - BITS_IN_WORD);
+        bits_written += BITS_IN_WORD;
+        --last_word_index;
+
+        if (bits_written < bits_to_read && last_word_index > 0) {
+            // The final word has to be shifted down first to discard any excess bits.
+            u64 final_word = m_words[last_word_index - 1];
+
+            auto bits_to_write = bits_to_read - bits_written;
+
+            final_word >>= (BITS_IN_WORD - bits_to_write);
+
+            // Then move the bits right up to the lowest bits of the second word
+            VERIFY((mantissa & (final_word << (bits_in_u64 - bits_written - bits_to_write))) == 0);
+            mantissa |= final_word << (bits_in_u64 - bits_written - BITS_IN_WORD);
+        }
+    }
+
+    // Now the mantissa should be complete so shift it down
+    mantissa >>= bits_in_u64 - mantissa_size;
+
+    union FloatExtractor {
+        struct {
+            unsigned long long mantissa : mantissa_size;
+            unsigned exponent : exponent_size;
+            unsigned sign : 1;
+        };
+        double double_value = 0;
+    } extractor;
+
+    extractor.exponent = highest_bit + exponent_bias;
+
+    VERIFY((mantissa & 0xfff0000000000000) == 0);
+    extractor.mantissa = mantissa;
+
+    return extractor.double_value;
 }
 
 void UnsignedBigInteger::set_to_0()

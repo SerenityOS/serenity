@@ -659,94 +659,175 @@ TEST_CASE(test_negative_zero_is_not_allowed)
     EXPECT(!zero.is_negative());
 }
 
-TEST_CASE(double_comparisons)
-{
+TEST_CASE(double_comparisons) {
 #define EXPECT_LESS_THAN(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleGreaterThanBigInt)
 #define EXPECT_GREATER_THAN(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleLessThanBigInt)
 #define EXPECT_EQUAL_TO(bigint, double_value) EXPECT_EQ(bigint.compare_to_double(double_value), Crypto::SignedBigInteger::CompareResult::DoubleEqualsBigInt)
-    {
-        Crypto::SignedBigInteger zero { 0 };
-        EXPECT_EQUAL_TO(zero, 0.0);
-        EXPECT_EQUAL_TO(zero, -0.0);
-    }
+    { Crypto::SignedBigInteger zero { 0 };
+EXPECT_EQUAL_TO(zero, 0.0);
+EXPECT_EQUAL_TO(zero, -0.0);
+}
 
-    {
-        Crypto::SignedBigInteger one { 1 };
-        EXPECT_EQUAL_TO(one, 1.0);
-        EXPECT_GREATER_THAN(one, -1.0);
-        EXPECT_GREATER_THAN(one, 0.5);
-        EXPECT_GREATER_THAN(one, -0.5);
-        EXPECT_LESS_THAN(one, 1.000001);
+{
+    Crypto::SignedBigInteger one { 1 };
+    EXPECT_EQUAL_TO(one, 1.0);
+    EXPECT_GREATER_THAN(one, -1.0);
+    EXPECT_GREATER_THAN(one, 0.5);
+    EXPECT_GREATER_THAN(one, -0.5);
+    EXPECT_LESS_THAN(one, 1.000001);
 
-        one.negate();
-        auto const& negative_one = one;
-        EXPECT_EQUAL_TO(negative_one, -1.0);
-        EXPECT_LESS_THAN(negative_one, 1.0);
-        EXPECT_LESS_THAN(one, 0.5);
-        EXPECT_LESS_THAN(one, -0.5);
-        EXPECT_GREATER_THAN(one, -1.5);
-        EXPECT_LESS_THAN(one, 1.000001);
-        EXPECT_GREATER_THAN(one, -1.000001);
-    }
+    one.negate();
+    auto const& negative_one = one;
+    EXPECT_EQUAL_TO(negative_one, -1.0);
+    EXPECT_LESS_THAN(negative_one, 1.0);
+    EXPECT_LESS_THAN(one, 0.5);
+    EXPECT_LESS_THAN(one, -0.5);
+    EXPECT_GREATER_THAN(one, -1.5);
+    EXPECT_LESS_THAN(one, 1.000001);
+    EXPECT_GREATER_THAN(one, -1.000001);
+}
 
-    {
-        double double_max_value = NumericLimits<double>::max();
-        double double_below_max_value = nextafter(double_max_value, 0.0);
-        VERIFY(double_below_max_value < double_max_value);
-        VERIFY(double_below_max_value < (double_max_value - 1.0));
-        auto max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
-        auto max_value_plus_one = max_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
-        auto max_value_minus_one = max_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
+{
+    double double_max_value = NumericLimits<double>::max();
+    double double_below_max_value = nextafter(double_max_value, 0.0);
+    VERIFY(double_below_max_value < double_max_value);
+    VERIFY(double_below_max_value < (double_max_value - 1.0));
+    auto max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto max_value_plus_one = max_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
+    auto max_value_minus_one = max_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
 
-        auto below_max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto below_max_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
 
-        EXPECT_EQUAL_TO(max_value_in_bigint, double_max_value);
-        EXPECT_LESS_THAN(max_value_minus_one, double_max_value);
-        EXPECT_GREATER_THAN(max_value_plus_one, double_max_value);
-        EXPECT_LESS_THAN(below_max_value_in_bigint, double_max_value);
+    EXPECT_EQUAL_TO(max_value_in_bigint, double_max_value);
+    EXPECT_LESS_THAN(max_value_minus_one, double_max_value);
+    EXPECT_GREATER_THAN(max_value_plus_one, double_max_value);
+    EXPECT_LESS_THAN(below_max_value_in_bigint, double_max_value);
 
-        EXPECT_GREATER_THAN(max_value_in_bigint, double_below_max_value);
-        EXPECT_GREATER_THAN(max_value_minus_one, double_below_max_value);
-        EXPECT_GREATER_THAN(max_value_plus_one, double_below_max_value);
-        EXPECT_EQUAL_TO(below_max_value_in_bigint, double_below_max_value);
-    }
+    EXPECT_GREATER_THAN(max_value_in_bigint, double_below_max_value);
+    EXPECT_GREATER_THAN(max_value_minus_one, double_below_max_value);
+    EXPECT_GREATER_THAN(max_value_plus_one, double_below_max_value);
+    EXPECT_EQUAL_TO(below_max_value_in_bigint, double_below_max_value);
+}
 
-    {
-        double double_min_value = NumericLimits<double>::lowest();
-        double double_above_min_value = nextafter(double_min_value, 0.0);
-        VERIFY(double_above_min_value > double_min_value);
-        VERIFY(double_above_min_value > (double_min_value + 1.0));
-        auto min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
-        auto min_value_plus_one = min_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
-        auto min_value_minus_one = min_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
+{
+    double double_min_value = NumericLimits<double>::lowest();
+    double double_above_min_value = nextafter(double_min_value, 0.0);
+    VERIFY(double_above_min_value > double_min_value);
+    VERIFY(double_above_min_value > (double_min_value + 1.0));
+    auto min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto min_value_plus_one = min_value_in_bigint.plus(Crypto::SignedBigInteger { 1 });
+    auto min_value_minus_one = min_value_in_bigint.minus(Crypto::SignedBigInteger { 1 });
 
-        auto above_min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
+    auto above_min_value_in_bigint = Crypto::SignedBigInteger::from_base(16, "-fffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv);
 
-        EXPECT_EQUAL_TO(min_value_in_bigint, double_min_value);
-        EXPECT_LESS_THAN(min_value_minus_one, double_min_value);
-        EXPECT_GREATER_THAN(min_value_plus_one, double_min_value);
-        EXPECT_GREATER_THAN(above_min_value_in_bigint, double_min_value);
+    EXPECT_EQUAL_TO(min_value_in_bigint, double_min_value);
+    EXPECT_LESS_THAN(min_value_minus_one, double_min_value);
+    EXPECT_GREATER_THAN(min_value_plus_one, double_min_value);
+    EXPECT_GREATER_THAN(above_min_value_in_bigint, double_min_value);
 
-        EXPECT_LESS_THAN(min_value_in_bigint, double_above_min_value);
-        EXPECT_LESS_THAN(min_value_minus_one, double_above_min_value);
-        EXPECT_LESS_THAN(min_value_plus_one, double_above_min_value);
-        EXPECT_EQUAL_TO(above_min_value_in_bigint, double_above_min_value);
-    }
+    EXPECT_LESS_THAN(min_value_in_bigint, double_above_min_value);
+    EXPECT_LESS_THAN(min_value_minus_one, double_above_min_value);
+    EXPECT_LESS_THAN(min_value_plus_one, double_above_min_value);
+    EXPECT_EQUAL_TO(above_min_value_in_bigint, double_above_min_value);
+}
 
-    {
-        double just_above_255 = bit_cast<double>(0x406fe00000000001ULL);
-        double just_below_255 = bit_cast<double>(0x406fdfffffffffffULL);
-        double double_255 = 255.0;
-        Crypto::SignedBigInteger bigint_255 { 255 };
+{
+    double just_above_255 = bit_cast<double>(0x406fe00000000001ULL);
+    double just_below_255 = bit_cast<double>(0x406fdfffffffffffULL);
+    double double_255 = 255.0;
+    Crypto::SignedBigInteger bigint_255 { 255 };
 
-        EXPECT_EQUAL_TO(bigint_255, double_255);
-        EXPECT_GREATER_THAN(bigint_255, just_below_255);
-        EXPECT_LESS_THAN(bigint_255, just_above_255);
-    }
+    EXPECT_EQUAL_TO(bigint_255, double_255);
+    EXPECT_GREATER_THAN(bigint_255, just_below_255);
+    EXPECT_LESS_THAN(bigint_255, just_above_255);
+}
 
 #undef EXPECT_LESS_THAN
 #undef EXPECT_GREATER_THAN
 #undef EXPECT_EQUAL_TO
+}
+
+TEST_CASE(to_double)
+{
+#define EXPECT_TO_EQUAL_DOUBLE(bigint, double_value) \
+    EXPECT_EQ((bigint).to_double(), double_value)
+
+    EXPECT_TO_EQUAL_DOUBLE(Crypto::UnsignedBigInteger(0), 0.0);
+    // Make sure we don't get negative zero!
+    EXPECT_EQ(signbit(Crypto::UnsignedBigInteger(0).to_double()), 0);
+    {
+        Crypto::SignedBigInteger zero { 0 };
+
+        EXPECT(!zero.is_negative());
+        EXPECT_TO_EQUAL_DOUBLE(zero, 0.0);
+        EXPECT_EQ(signbit(zero.to_double()), 0);
+
+        zero.negate();
+
+        EXPECT(!zero.is_negative());
+        EXPECT_TO_EQUAL_DOUBLE(zero, 0.0);
+        EXPECT_EQ(signbit(zero.to_double()), 0);
+    }
+
+    EXPECT_TO_EQUAL_DOUBLE(Crypto::UnsignedBigInteger(9682), 9682.0);
+    EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger(-9660), -9660.0);
+
+    double double_max_value = NumericLimits<double>::max();
+    double infinity = INFINITY;
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv),
+        double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        infinity);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::SignedBigInteger::from_base(16, "-fffffffffffff800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        -double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::SignedBigInteger::from_base(16, "-ffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        -double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::SignedBigInteger::from_base(16, "-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"sv),
+        -double_max_value);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::SignedBigInteger::from_base(16, "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"sv),
+        -infinity);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "ffffffffffffffff"sv),
+        18446744073709549568.0);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff800"sv),
+        18446744073709549568.0);
+
+    EXPECT_TO_EQUAL_DOUBLE(
+        Crypto::UnsignedBigInteger::from_base(16, "fffffffffffff8ff"sv),
+        18446744073709549568.0);
+
+    EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger::from_base(10, "1234567890123456789"sv),
+        1234567890123456800.0);
+
+    EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger::from_base(10, "2345678901234567890"sv),
+        2345678901234567680.0);
+
+    EXPECT_EQ(1234567890123456800.0, 1234567890123456768.0);
+
+#undef EXPECT_TO_EQUAL_DOUBLE
 }
 
 namespace AK {

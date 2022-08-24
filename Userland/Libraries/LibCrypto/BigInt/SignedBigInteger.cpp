@@ -70,6 +70,8 @@ double SignedBigInteger::to_double() const
     double unsigned_value = m_unsigned_data.to_double();
     if (!m_sign)
         return unsigned_value;
+
+    VERIFY(!is_zero());
     return -unsigned_value;
 }
 
