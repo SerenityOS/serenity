@@ -41,6 +41,9 @@ TEST_CASE(test_efault)
     int fd = open("/dev/zero", O_RDONLY);
     int rc = -1;
 
+    // Make an inaccessible hole before the next mapping.
+    (void)mmap(nullptr, 4096, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+
     // Test a one-page mapping (4KB)
     u8* one_page = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     VERIFY(one_page);
