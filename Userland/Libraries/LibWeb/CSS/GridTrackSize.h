@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2022, Martin Falisse <mfalisse@outlook.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Percentage.h>
+
+namespace Web::CSS {
+
+class GridTrackSize {
+public:
+    enum class Type {
+        Length,
+        Percentage,
+        FlexibleLength,
+        // TODO: MinMax
+        // TODO: Repeat
+        // TODO: Max-Content
+    };
+
+    GridTrackSize(Length);
+    GridTrackSize(Percentage);
+    GridTrackSize(int);
+
+    Type type() const { return m_type; }
+
+    bool is_length() const { return m_type == Type::Length; }
+    bool is_percentage() const { return m_type == Type::Percentage; }
+    bool is_flexible_length() const { return m_type == Type::FlexibleLength; }
+
+    Length length() const { return m_length; }
+    Percentage percentage() const { return m_percentage; }
+    int flexible_length() const { return m_flexible_length; }
+
+    String to_string() const;
+    bool operator==(GridTrackSize const& other) const
+    {
+        return m_type == other.type()
+            && m_length == other.length()
+            && m_percentage == other.percentage()
+            && m_flexible_length == other.flexible_length();
+    }
+
+private:
+    Type m_type;
+    Length m_length { Length::make_px(0) };
+    Percentage m_percentage { Percentage(0) };
+    int m_flexible_length { 0 };
+};
+
+}

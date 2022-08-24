@@ -40,6 +40,7 @@ set(SOURCES
     CSS/Display.cpp
     CSS/FontFace.cpp
     CSS/Frequency.cpp
+    CSS/GridTrackSize.cpp
     CSS/Length.cpp
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
