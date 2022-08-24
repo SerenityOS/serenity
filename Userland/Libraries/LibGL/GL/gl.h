@@ -140,6 +140,7 @@ extern "C" {
 #define GL_MAP2_VERTEX_3 0x0DB7
 #define GL_MAP2_VERTEX_4 0x0DB8
 #define GL_NORMAL_ARRAY 0x8075
+#define GL_NORMAL_ARRAY_TYPE 0x807E
 
 // Blend factors
 #define GL_ZERO 0

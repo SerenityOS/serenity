@@ -66,6 +66,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = TEXTURE_MATRIX_STACK_LIMIT } };
     case GL_MAX_TEXTURE_UNITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_texture_units.size()) } };
+    case GL_NORMAL_ARRAY_TYPE:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = GL_FLOAT } };
     case GL_NORMALIZE:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_normalize } };
     case GL_PACK_ALIGNMENT:
