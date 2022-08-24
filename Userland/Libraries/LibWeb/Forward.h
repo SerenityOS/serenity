@@ -58,6 +58,7 @@ class Frequency;
 class FrequencyPercentage;
 class FrequencyStyleValue;
 class GridTrackPlacement;
+class GridTrackPlacementStyleValue;
 class GridTrackSize;
 class GridTrackSizeStyleValue;
 class IdentifierStyleValue;

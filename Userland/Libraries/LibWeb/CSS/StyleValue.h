@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Frequency.h>
+#include <LibWeb/CSS/GridTrackPlacement.h>
 #include <LibWeb/CSS/GridTrackSize.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
@@ -131,6 +132,7 @@ public:
         FlexFlow,
         Font,
         Frequency,
+        GridTrackPlacement,
         GridTrackSize,
         Identifier,
         Image,
@@ -173,6 +175,7 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
+    bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_size() const { return type() == Type::GridTrackSize; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
@@ -213,6 +216,7 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridTrackPlacementStyleValue const& as_grid_track_placement() const;
     GridTrackSizeStyleValue const& as_grid_track_size() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
@@ -251,6 +255,7 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
     GridTrackSizeStyleValue& as_grid_track_size() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
@@ -900,6 +905,25 @@ private:
     }
 
     Frequency m_frequency;
+};
+
+class GridTrackPlacementStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);
+    virtual ~GridTrackPlacementStyleValue() override = default;
+
+    CSS::GridTrackPlacement const& grid_track_placement() const { return m_grid_track_placement; }
+    virtual String to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    explicit GridTrackPlacementStyleValue(CSS::GridTrackPlacement grid_track_placement)
+        : StyleValue(Type::GridTrackPlacement)
+        , m_grid_track_placement(grid_track_placement)
+    {
+    }
+
+    CSS::GridTrackPlacement m_grid_track_placement;
 };
 
 class GridTrackSizeStyleValue final : public StyleValue {

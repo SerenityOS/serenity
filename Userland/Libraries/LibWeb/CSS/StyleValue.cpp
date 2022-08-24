@@ -120,6 +120,12 @@ FrequencyStyleValue const& StyleValue::as_frequency() const
     return static_cast<FrequencyStyleValue const&>(*this);
 }
 
+GridTrackPlacementStyleValue const& StyleValue::as_grid_track_placement() const
+{
+    VERIFY(is_grid_track_placement());
+    return static_cast<GridTrackPlacementStyleValue const&>(*this);
+}
+
 IdentifierStyleValue const& StyleValue::as_identifier() const
 {
     VERIFY(is_identifier());
@@ -1204,6 +1210,19 @@ bool FrequencyStyleValue::equals(StyleValue const& other) const
     return m_frequency == other.as_frequency().m_frequency;
 }
 
+String GridTrackPlacementStyleValue::to_string() const
+{
+    return m_grid_track_placement.to_string();
+}
+
+bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_grid_track_placement();
+    return m_grid_track_placement == typed_other.grid_track_placement();
+}
+
 String GridTrackSizeStyleValue::to_string() const
 {
     StringBuilder builder;
@@ -1929,6 +1948,11 @@ NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
     }
 
     return adopt_ref(*new ColorStyleValue(color));
+}
+
+NonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
+{
+    return adopt_ref(*new GridTrackPlacementStyleValue(grid_track_placement));
 }
 
 NonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(Vector<CSS::GridTrackSize> grid_track_size)
