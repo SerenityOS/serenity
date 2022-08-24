@@ -23,12 +23,12 @@ ErrorOr<NonnullLockRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
     return adopt_nonnull_lock_ref_or_enomem<VMObject>(new (nothrow) PrivateInodeVMObject(*this, move(new_physical_pages), move(dirty_pages)));
 }
 
-PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(inode, move(new_physical_pages), move(dirty_pages))
 {
 }
 
-PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
+PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, Bitmap dirty_pages)
     : InodeVMObject(other, move(new_physical_pages), move(dirty_pages))
 {
 }

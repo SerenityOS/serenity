@@ -145,8 +145,8 @@ protected:
 
     OwnPtr<Memory::Region> m_prdt_region;
     OwnPtr<Memory::Region> m_dma_buffer_region;
-    LockRefPtr<Memory::PhysicalPage> m_prdt_page;
-    LockRefPtr<Memory::PhysicalPage> m_dma_buffer_page;
+    RefPtr<Memory::PhysicalPage> m_prdt_page;
+    RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
 
     const u8 m_port_index;
     NonnullLockRefPtrVector<ATADevice> m_ata_devices;

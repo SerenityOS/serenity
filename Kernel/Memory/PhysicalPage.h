@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <Kernel/Library/NonnullLockRefPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
@@ -36,7 +36,7 @@ public:
             free_this();
     }
 
-    static NonnullLockRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
+    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
 
     u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
 

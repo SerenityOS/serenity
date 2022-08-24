@@ -8,7 +8,7 @@
 
 namespace Kernel::Memory {
 
-LockRefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullLockRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size)
+LockRefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size)
 {
     auto maybe_vm_object = AnonymousVMObject::try_create_with_physical_pages(allocated_pages);
     if (maybe_vm_object.is_error()) {

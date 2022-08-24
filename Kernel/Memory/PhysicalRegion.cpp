@@ -5,9 +5,8 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Assertions.h>
-#include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/PhysicalZone.h>
@@ -76,7 +75,7 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned pa
     return try_create(taken_lower, taken_upper);
 }
 
-NonnullLockRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
     auto rounded_page_count = next_power_of_two(count);
     auto order = count_trailing_zeroes(rounded_page_count);
@@ -96,7 +95,7 @@ NonnullLockRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages
     if (!page_base.has_value())
         return {};
 
-    NonnullLockRefPtrVector<PhysicalPage> physical_pages;
+    NonnullRefPtrVector<PhysicalPage> physical_pages;
     physical_pages.ensure_capacity(count);
 
     for (size_t i = 0; i < count; ++i)
@@ -104,7 +103,7 @@ NonnullLockRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages
     return physical_pages;
 }
 
-LockRefPtr<PhysicalPage> PhysicalRegion::take_free_page()
+RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 {
     if (m_usable_zones.is_empty())
         return nullptr;

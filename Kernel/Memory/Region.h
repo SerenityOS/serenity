@@ -158,8 +158,8 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    LockRefPtr<PhysicalPage> physical_page(size_t index) const;
-    LockRefPtr<PhysicalPage>& physical_page_slot(size_t index);
+    RefPtr<PhysicalPage> physical_page(size_t index) const;
+    RefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
     [[nodiscard]] size_t offset_in_vmobject() const
     {
@@ -208,7 +208,7 @@ private:
     Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
     Region(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullLockRefPtr<PhysicalPage>);
+    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalPage>);
 
     void set_access_bit(Access access, bool b)
     {
@@ -223,7 +223,7 @@ private:
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalPage& page_in_slot_at_time_of_fault);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, LockRefPtr<PhysicalPage>);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage>);
 
     LockRefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;

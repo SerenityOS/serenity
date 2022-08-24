@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/InterruptDisabler.h>
@@ -746,7 +747,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, LockRefPtr<Memory::PhysicalPage>& dma_buffer_page)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
     dma_buffer_page = TRY(allocate_physical_page());
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
@@ -755,12 +756,12 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
 {
-    LockRefPtr<Memory::PhysicalPage> dma_buffer_page;
+    RefPtr<Memory::PhysicalPage> dma_buffer_page;
 
     return allocate_dma_buffer_page(name, access, dma_buffer_page);
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullLockRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
 {
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
@@ -771,7 +772,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
 {
     VERIFY(!(size % PAGE_SIZE));
-    NonnullLockRefPtrVector<Memory::PhysicalPage> dma_buffer_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> dma_buffer_pages;
 
     return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
 }
@@ -881,10 +882,10 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
     PANIC("MM: deallocate_physical_page couldn't figure out region for page @ {}", paddr);
 }
 
-LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
+RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
 {
     SpinlockLocker mm_locker(s_mm_lock);
-    LockRefPtr<PhysicalPage> page;
+    RefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
         VERIFY(m_system_memory_info.physical_pages_committed > 0);
@@ -906,7 +907,7 @@ LockRefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
     return page;
 }
 
-NonnullLockRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
+NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
     auto page = find_free_physical_page(true);
     if (should_zero_fill == ShouldZeroFill::Yes) {
@@ -918,7 +919,7 @@ NonnullLockRefPtr<PhysicalPage> MemoryManager::allocate_committed_physical_page(
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullLockRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     SpinlockLocker lock(s_mm_lock);
     auto page = find_free_physical_page(false);
@@ -974,7 +975,7 @@ ErrorOr<NonnullLockRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(S
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullLockRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
+ErrorOr<NonnullRefPtrVector<PhysicalPage>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker mm_lock(s_mm_lock);
@@ -1160,7 +1161,7 @@ CommittedPhysicalPageSet::~CommittedPhysicalPageSet()
         MM.uncommit_physical_pages({}, m_page_count);
 }
 
-NonnullLockRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
+NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
 {
     VERIFY(m_page_count > 0);
     --m_page_count;

@@ -19,7 +19,7 @@ namespace Kernel::Memory {
 
 class ScatterGatherList final : public AtomicRefCounted<ScatterGatherList> {
 public:
-    static LockRefPtr<ScatterGatherList> try_create(AsyncBlockDeviceRequest&, Span<NonnullLockRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size);
+    static LockRefPtr<ScatterGatherList> try_create(AsyncBlockDeviceRequest&, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size);
     VMObject const& vmobject() const { return m_vm_object; }
     VirtualAddress dma_region() const { return m_dma_region->vaddr(); }
     size_t scatters_count() const { return m_vm_object->physical_pages().size(); }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -29,7 +30,7 @@ struct DoorbellRegister {
 class AsyncBlockDeviceRequest;
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullLockRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullLockRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
+    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
     bool is_admin_queue() { return m_admin_queue; };
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);
@@ -43,7 +44,7 @@ protected:
     {
         m_db_regs->sq_tail = m_sq_tail;
     }
-    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullLockRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullLockRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
+    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
 
 private:
     bool cqe_available();
@@ -70,12 +71,12 @@ private:
     u32 m_qdepth {};
     Spinlock m_sq_lock { LockRank::Interrupts };
     OwnPtr<Memory::Region> m_cq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> m_cq_dma_page;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_cq_dma_page;
     Span<NVMeSubmission> m_sqe_array;
     OwnPtr<Memory::Region> m_sq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> m_sq_dma_page;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_sq_dma_page;
     Span<NVMeCompletion> m_cqe_array;
     Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
-    NonnullLockRefPtr<Memory::PhysicalPage> m_rw_dma_page;
+    NonnullRefPtr<Memory::PhysicalPage> m_rw_dma_page;
 };
 }

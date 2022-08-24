@@ -202,7 +202,7 @@ ErrorOr<void> Region::set_should_cow(size_t page_index, bool cow)
     return {};
 }
 
-bool Region::map_individual_page_impl(size_t page_index, LockRefPtr<PhysicalPage> page)
+bool Region::map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage> page)
 {
     VERIFY(m_page_directory->get_lock().is_locked_by_current_processor());
 
@@ -240,7 +240,7 @@ bool Region::map_individual_page_impl(size_t page_index, LockRefPtr<PhysicalPage
 
 bool Region::map_individual_page_impl(size_t page_index)
 {
-    LockRefPtr<PhysicalPage> page;
+    RefPtr<PhysicalPage> page;
     {
         SpinlockLocker vmobject_locker(vmobject().m_lock);
         page = physical_page(page_index);
@@ -249,7 +249,7 @@ bool Region::map_individual_page_impl(size_t page_index)
     return map_individual_page_impl(page_index, page);
 }
 
-bool Region::remap_vmobject_page(size_t page_index, NonnullLockRefPtr<PhysicalPage> physical_page)
+bool Region::remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalPage> physical_page)
 {
     SpinlockLocker page_lock(m_page_directory->get_lock());
 
@@ -408,7 +408,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
     if (current_thread != nullptr)
         current_thread->did_zero_fault();
 
-    LockRefPtr<PhysicalPage> new_physical_page;
+    RefPtr<PhysicalPage> new_physical_page;
 
     if (page_in_slot_at_time_of_fault.is_lazy_committed_page()) {
         VERIFY(m_vmobject->is_anonymous());
@@ -543,14 +543,14 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     return PageFaultResponse::Continue;
 }
 
-LockRefPtr<PhysicalPage> Region::physical_page(size_t index) const
+RefPtr<PhysicalPage> Region::physical_page(size_t index) const
 {
     SpinlockLocker vmobject_locker(vmobject().m_lock);
     VERIFY(index < page_count());
     return vmobject().physical_pages()[first_page_index() + index];
 }
 
-LockRefPtr<PhysicalPage>& Region::physical_page_slot(size_t index)
+RefPtr<PhysicalPage>& Region::physical_page_slot(size_t index)
 {
     VERIFY(vmobject().m_lock.is_locked_by_current_processor());
     VERIFY(index < page_count());

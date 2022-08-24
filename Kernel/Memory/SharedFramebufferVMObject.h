@@ -22,15 +22,15 @@ public:
         static ErrorOr<NonnullLockRefPtr<FakeWritesFramebufferVMObject>> try_create(Badge<SharedFramebufferVMObject>, SharedFramebufferVMObject const& parent_object);
 
     private:
-        FakeWritesFramebufferVMObject(SharedFramebufferVMObject const& parent_object, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages)
+        FakeWritesFramebufferVMObject(SharedFramebufferVMObject const& parent_object, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
             : VMObject(move(new_physical_pages))
             , m_parent_object(parent_object)
         {
         }
         virtual StringView class_name() const override { return "FakeWritesFramebufferVMObject"sv; }
         virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return Error::from_errno(ENOTIMPL); }
-        virtual Span<LockRefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
-        virtual Span<LockRefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
+        virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
+        virtual Span<RefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
         NonnullLockRefPtr<SharedFramebufferVMObject> m_parent_object;
     };
 
@@ -39,15 +39,15 @@ public:
         static ErrorOr<NonnullLockRefPtr<RealWritesFramebufferVMObject>> try_create(Badge<SharedFramebufferVMObject>, SharedFramebufferVMObject const& parent_object);
 
     private:
-        RealWritesFramebufferVMObject(SharedFramebufferVMObject const& parent_object, FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages)
+        RealWritesFramebufferVMObject(SharedFramebufferVMObject const& parent_object, FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
             : VMObject(move(new_physical_pages))
             , m_parent_object(parent_object)
         {
         }
         virtual StringView class_name() const override { return "RealWritesFramebufferVMObject"sv; }
         virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return Error::from_errno(ENOTIMPL); }
-        virtual Span<LockRefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->real_framebuffer_physical_pages(); }
-        virtual Span<LockRefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->real_framebuffer_physical_pages(); }
+        virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->real_framebuffer_physical_pages(); }
+        virtual Span<RefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->real_framebuffer_physical_pages(); }
         NonnullLockRefPtr<SharedFramebufferVMObject> m_parent_object;
     };
 
@@ -60,14 +60,14 @@ public:
     void switch_to_fake_sink_framebuffer_writes(Badge<Kernel::DisplayConnector>);
     void switch_to_real_framebuffer_writes(Badge<Kernel::DisplayConnector>);
 
-    virtual Span<LockRefPtr<PhysicalPage> const> physical_pages() const override;
-    virtual Span<LockRefPtr<PhysicalPage>> physical_pages() override;
+    virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override;
+    virtual Span<RefPtr<PhysicalPage>> physical_pages() override;
 
-    Span<LockRefPtr<PhysicalPage>> fake_sink_framebuffer_physical_pages();
-    Span<LockRefPtr<PhysicalPage> const> fake_sink_framebuffer_physical_pages() const;
+    Span<RefPtr<PhysicalPage>> fake_sink_framebuffer_physical_pages();
+    Span<RefPtr<PhysicalPage> const> fake_sink_framebuffer_physical_pages() const;
 
-    Span<LockRefPtr<PhysicalPage>> real_framebuffer_physical_pages();
-    Span<LockRefPtr<PhysicalPage> const> real_framebuffer_physical_pages() const;
+    Span<RefPtr<PhysicalPage>> real_framebuffer_physical_pages();
+    Span<RefPtr<PhysicalPage> const> real_framebuffer_physical_pages() const;
 
     FakeWritesFramebufferVMObject const& fake_writes_framebuffer_vmobject() const { return *m_fake_writes_framebuffer_vmobject; }
     FakeWritesFramebufferVMObject& fake_writes_framebuffer_vmobject() { return *m_fake_writes_framebuffer_vmobject; }
@@ -76,7 +76,7 @@ public:
     RealWritesFramebufferVMObject& real_writes_framebuffer_vmobject() { return *m_real_writes_framebuffer_vmobject; }
 
 private:
-    SharedFramebufferVMObject(FixedArray<LockRefPtr<PhysicalPage>>&& new_physical_pages, CommittedPhysicalPageSet, AnonymousVMObject& real_framebuffer_vmobject);
+    SharedFramebufferVMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages, CommittedPhysicalPageSet, AnonymousVMObject& real_framebuffer_vmobject);
 
     virtual StringView class_name() const override { return "SharedFramebufferVMObject"sv; }
 

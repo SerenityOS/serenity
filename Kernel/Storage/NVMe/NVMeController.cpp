@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 {
 
-    LockRefPtr<Memory::PhysicalPage> prp_dma_buffer;
+    RefPtr<Memory::PhysicalPage> prp_dma_buffer;
     OwnPtr<Memory::Region> prp_dma_region;
     auto namespace_data_struct = TRY(ByteBuffer::create_zeroed(NVMe_IDENTIFY_SIZE));
     u32 active_namespace_list[NVMe_IDENTIFY_SIZE / sizeof(u32)];
@@ -259,9 +259,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(qdepth), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
     if (!reset_controller()) {
@@ -300,9 +300,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<u8> irq)
 {
     OwnPtr<Memory::Region> cq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(IO_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
 

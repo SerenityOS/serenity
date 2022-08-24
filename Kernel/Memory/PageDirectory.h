@@ -10,8 +10,8 @@
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveRedBlackTree.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalPage.h>
 
@@ -64,13 +64,13 @@ private:
 
     AddressSpace* m_space { nullptr };
 #if ARCH(X86_64)
-    LockRefPtr<PhysicalPage> m_pml4t;
+    RefPtr<PhysicalPage> m_pml4t;
 #endif
-    LockRefPtr<PhysicalPage> m_directory_table;
+    RefPtr<PhysicalPage> m_directory_table;
 #if ARCH(X86_64)
-    LockRefPtr<PhysicalPage> m_directory_pages[512];
+    RefPtr<PhysicalPage> m_directory_pages[512];
 #else
-    LockRefPtr<PhysicalPage> m_directory_pages[4];
+    RefPtr<PhysicalPage> m_directory_pages[4];
 #endif
     RecursiveSpinlock m_lock { LockRank::None };
 };

@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
@@ -56,7 +57,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    AHCIPort(AHCIController const&, NonnullLockRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
+    AHCIPort(AHCIController const&, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
@@ -111,11 +112,11 @@ private:
 
     mutable bool m_wait_for_completion { false };
 
-    NonnullLockRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
-    NonnullLockRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
-    LockRefPtr<Memory::PhysicalPage> m_command_list_page;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
+    RefPtr<Memory::PhysicalPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
-    LockRefPtr<Memory::PhysicalPage> m_fis_receive_page;
+    RefPtr<Memory::PhysicalPage> m_fis_receive_page;
     LockRefPtr<ATADevice> m_connected_device;
 
     u32 m_port_index;
@@ -125,7 +126,7 @@ private:
     // it's probably better to just "cache" this here instead.
     AHCI::HBADefinedCapabilities const m_hba_capabilities;
 
-    NonnullLockRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
+    NonnullRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
 
     volatile AHCI::PortRegisters& m_port_registers;
     LockWeakPtr<AHCIController> m_parent_controller;

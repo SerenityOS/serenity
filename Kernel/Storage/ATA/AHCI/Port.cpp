@@ -54,7 +54,7 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
     return {};
 }
 
-UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, NonnullLockRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
     , m_hba_capabilities(hba_capabilities)
     , m_identify_buffer_page(move(identify_buffer_page))
@@ -496,7 +496,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
     VERIFY(m_lock.is_locked());
     VERIFY(request.block_count() > 0);
 
-    NonnullLockRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
+    NonnullRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
     for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
         allocated_dma_regions.append(m_dma_buffers.at(index));
     }
