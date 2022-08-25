@@ -105,9 +105,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
 
     switch (cmd) {
     case FUTEX_WAIT:
-    case FUTEX_WAIT_BITSET:
-    case FUTEX_REQUEUE:
-    case FUTEX_CMP_REQUEUE: {
+    case FUTEX_WAIT_BITSET: {
         if (params.timeout) {
             auto timeout_time = TRY(copy_time_from_user(params.timeout));
             bool is_absolute = cmd != FUTEX_WAIT;
@@ -227,7 +225,11 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<Syscall::SC_futex_params const*> u
                 // NOTE: futex_queue's lock is being held while this callback is called
                 // The reason we're doing this in a callback is that we don't want to always
                 // create a target queue, only if we actually have anything to move to it!
-                target_futex_queue = TRY(find_futex_queue(futex_key2, true));
+
+                // we don't actually care if it created or not - but find_futex_queue asserts
+                // if you don't give it the pointer to a bool to fill in
+                bool didCreate = false;
+                target_futex_queue = TRY(find_futex_queue(futex_key2, true, &didCreate));
                 return target_futex_queue.ptr();
             },
             params.val2, is_empty, is_target_empty));

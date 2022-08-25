@@ -42,7 +42,9 @@ int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struc
 {
     int rc;
     switch (futex_op & FUTEX_CMD_MASK) {
-    case FUTEX_WAKE_OP: {
+    case FUTEX_WAKE_OP:
+    case FUTEX_REQUEUE:
+    case FUTEX_CMP_REQUEUE: {
         // These interpret timeout as a u32 value for val2
         Syscall::SC_futex_params params {
             .userspace_address = userspace_address,
