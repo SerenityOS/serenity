@@ -16,9 +16,11 @@ struct SignedDivisionResult;
 
 class SignedBigInteger {
 public:
-    SignedBigInteger(i32 x)
-        : m_sign(x < 0)
-        , m_unsigned_data(abs(x))
+    template<typename T>
+    requires(IsSigned<T> && sizeof(T) <= sizeof(i32))
+        SignedBigInteger(T value)
+        : m_sign(value < 0)
+        , m_unsigned_data(abs(static_cast<i32>(value)))
     {
     }
 
