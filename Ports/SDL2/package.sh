@@ -4,7 +4,13 @@ version='2.24.0'
 useconfigure='true'
 auth_type='sha256'
 files="https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz SDL2-${version}.tar.gz 91e4c34b1768f92d399b078e171448c6af18cafda743987ed2064a28954d6d97"
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DPULSEAUDIO=OFF" "-DJACK=OFF" "-DEXTRA_LDFLAGS=-laudio;-liconv;-ldl")
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    "-DPULSEAUDIO=OFF"
+    "-DJACK=OFF"
+    "-DSDL_LIBSAMPLERATE=OFF" # Disabled to prevent potential collision with host libsamplerate
+    "-DEXTRA_LDFLAGS=-laudio;-liconv;-ldl"
+)
 depends=("libiconv")
 
 configure() {
