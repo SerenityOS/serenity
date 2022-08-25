@@ -15,7 +15,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
 {
     switch (name) {
     case GL_ALPHA_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(u8) * 8 } };
     case GL_ALPHA_TEST:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_alpha_test_enabled } };
     case GL_BLEND:
@@ -25,7 +25,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_BLEND_SRC_ALPHA:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_source_factor) } };
     case GL_BLUE_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(u8) * 8 } };
     case GL_COLOR_MATERIAL:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_color_material_enabled } };
     case GL_COLOR_MATERIAL_FACE:
@@ -47,7 +47,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = fog_enabled } };
     }
     case GL_GREEN_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(u8) * 8 } };
     case GL_LIGHTING:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_lighting_enabled } };
     case GL_LINE_SMOOTH:
@@ -91,7 +91,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_POLYGON_OFFSET_FILL:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_depth_offset_enabled } };
     case GL_RED_BITS:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(u8) * 8 } };
     case GL_SCISSOR_BOX: {
         auto scissor_box = m_rasterizer->options().scissor_box;
         return ContextParameter {
