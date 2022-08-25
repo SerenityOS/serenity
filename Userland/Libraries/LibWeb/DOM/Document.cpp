@@ -216,7 +216,7 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
     // 8. Let document be a new Document,
     //    whose type is type,
     //    content type is contentType,
-    //    FIXME: origin is navigationParams's origin,
+    //    origin is navigationParams's origin,
     //    FIXME: policy container is navigationParams's policy container,
     //    FIXME: permissions policy is permissionsPolicy,
     //    FIXME: active sandboxing flag set is navigationParams's final sandboxing flag set,
@@ -226,6 +226,7 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
     auto document = Document::create();
     document->m_type = type;
     document->m_content_type = content_type;
+    document->set_origin(navigation_params.origin);
 
     document->m_window = window;
     window->set_associated_document(*document);
