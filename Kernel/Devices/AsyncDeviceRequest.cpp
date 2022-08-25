@@ -41,6 +41,8 @@ AsyncDeviceRequest::~AsyncDeviceRequest()
 
 void AsyncDeviceRequest::request_finished()
 {
+    SpinlockLocker locker(m_wait_lock);
+
     if (m_parent_request)
         m_parent_request->sub_request_finished(*this);
 
@@ -54,9 +56,13 @@ void AsyncDeviceRequest::request_finished()
 auto AsyncDeviceRequest::wait(Time* timeout) -> RequestWaitResult
 {
     VERIFY(!m_parent_request);
-    auto request_result = get_request_result();
-    if (is_completed_result(request_result))
-        return { request_result, Thread::BlockResult::NotBlocked };
+    {
+        SpinlockLocker locker(m_wait_lock);
+        auto request_result = get_request_result();
+        if (is_completed_result(request_result))
+            return { request_result, Thread::BlockResult::NotBlocked };
+        // FIXME: request_finished() can still slip in between this scope and wait_on().
+    }
     auto wait_result = m_queue.wait_on(Thread::BlockTimeout(false, timeout), name());
     return { get_request_result(), wait_result };
 }

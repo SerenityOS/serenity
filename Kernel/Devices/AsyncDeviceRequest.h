@@ -152,6 +152,7 @@ private:
     NonnullLockRefPtr<Process> m_process;
     void* m_private { nullptr };
     mutable Spinlock m_lock { LockRank::None };
+    mutable Spinlock m_wait_lock { LockRank::None };
 };
 
 }
