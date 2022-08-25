@@ -152,7 +152,8 @@ private:
     enum VimMode {
         Normal,
         Insert,
-        Visual
+        Visual,
+        VisualLine
     };
 
     enum YankType {
@@ -185,6 +186,7 @@ private:
     void switch_to_normal_mode();
     void switch_to_insert_mode();
     void switch_to_visual_mode();
+    void switch_to_visual_line_mode();
     void move_half_page_up();
     void move_half_page_down();
     void move_to_previous_empty_lines_block();
@@ -193,6 +195,7 @@ private:
     bool on_key_in_insert_mode(KeyEvent const& event);
     bool on_key_in_normal_mode(KeyEvent const& event);
     bool on_key_in_visual_mode(KeyEvent const& event);
+    bool on_key_in_visual_line_mode(KeyEvent const& event);
 
     void casefold_selection(Casing);
 
