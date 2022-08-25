@@ -109,15 +109,10 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     auto page_object = TRY(get_or_load_value(page_object_index));
     auto raw_page_object = TRY(resolve_to<DictObject>(page_object));
 
-    if (!raw_page_object->contains(CommonNames::Resources)) {
-        // This page inherits its resource dictionary
-        TODO();
-    }
-
-    auto resources = TRY(raw_page_object->get_dict(this, CommonNames::Resources));
+    auto resources = TRY(get_inheritable_object(CommonNames::Resources, raw_page_object))->cast<DictObject>();
     auto contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
 
-    auto media_box_array = TRY(raw_page_object->get_array(this, CommonNames::MediaBox));
+    auto media_box_array = TRY(get_inheritable_object(CommonNames::MediaBox, raw_page_object))->cast<ArrayObject>();
     auto media_box = Rectangle {
         media_box_array->at(0).to_float(),
         media_box_array->at(1).to_float(),
@@ -260,6 +255,15 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     }
 
     return Destination { type, page_ref, parameters };
+}
+
+PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject> object)
+{
+    if (!object->contains(name)) {
+        auto parent = TRY(object->get_dict(this, CommonNames::Parent));
+        return get_inheritable_object(name, parent);
+    }
+    return object->get_object(this, name);
 }
 
 PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
