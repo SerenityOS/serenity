@@ -261,7 +261,7 @@ GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(GUI::MouseEvent co
     auto image_position = frame_to_content_position(event.position());
     return {
         static_cast<GUI::Event::Type>(event.type()),
-        Gfx::IntPoint(image_position.x(), image_position.y()),
+        image_position.to_rounded<int>(),
         event.buttons(),
         event.button(),
         event.modifiers(),
@@ -278,7 +278,7 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(GUI::MouseEvent const& eve
     image_position.translate_by(-layer.location().x(), -layer.location().y());
     return {
         static_cast<GUI::Event::Type>(event.type()),
-        Gfx::IntPoint(image_position.x(), image_position.y()),
+        image_position.to_rounded<int>(),
         event.buttons(),
         event.button(),
         event.modifiers(),
