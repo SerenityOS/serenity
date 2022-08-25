@@ -378,7 +378,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
         adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
 
         // b. Set timeDifference to ! BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
-        time_difference = MUST(balance_duration(vm, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
+        time_difference = MUST(balance_duration(vm, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { time_difference.nanoseconds }, largest_unit));
     }
 
     // 8. Let date1 be ! CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
@@ -397,7 +397,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
     auto* date_difference = TRY(calendar_date_until(vm, calendar, date1, date2, *until_options));
 
     // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
-    auto balance_result = TRY(balance_duration(vm, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
+    auto balance_result = TRY(balance_duration(vm, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { time_difference.nanoseconds }, largest_unit));
 
     // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
     return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);

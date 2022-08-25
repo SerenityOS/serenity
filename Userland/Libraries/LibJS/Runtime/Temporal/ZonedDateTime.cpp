@@ -459,7 +459,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
         // a. Return the Record { [[Days]]: RoundTowardsZero(nanoseconds / dayLengthNs), [[Nanoseconds]]: (abs(nanoseconds) modulo dayLengthNs) × sign, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult {
             .days = nanoseconds.divided_by(day_length_ns).quotient.to_double(),
-            .nanoseconds = Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { (i32)sign }),
+            .nanoseconds = Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { sign }),
             .day_length = day_length_ns.to_double()
         };
     }
@@ -524,7 +524,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
         day_length_ns = one_day_farther_ns.minus(intermediate_ns);
 
         // c. If (nanoseconds - dayLengthNs) × sign ≥ 0, then
-        if (nanoseconds.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { (i32)sign }) >= "0"_sbigint) {
+        if (nanoseconds.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { sign }) >= "0"_sbigint) {
             // i. Set nanoseconds to nanoseconds - dayLengthNs.
             nanoseconds = nanoseconds.minus(day_length_ns);
 
