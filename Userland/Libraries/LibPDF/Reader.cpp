@@ -24,7 +24,7 @@ bool Reader::matches_number() const
     if (done())
         return false;
     auto ch = peek();
-    return isdigit(ch) || ch == '-' || ch == '+';
+    return isdigit(ch) || ch == '-' || ch == '+' || ch == '.';
 }
 
 bool Reader::matches_delimiter() const
