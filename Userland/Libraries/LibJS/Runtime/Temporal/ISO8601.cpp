@@ -999,8 +999,7 @@ bool ISO8601Parser::parse_calendar_time()
 {
     // CalendarTime :
     //     TimeDesignator TimeSpec TimeZone[opt] Calendar[opt]
-    //     TimeSpec TimeZone[opt] Calendar
-    //     TimeSpecWithOptionalTimeZoneNotAmbiguous
+    //     TimeSpecWithOptionalTimeZoneNotAmbiguous Calendar[opt]
     {
         StateTransaction transaction { *this };
         if (parse_time_designator() && parse_time_spec()) {
@@ -1010,17 +1009,12 @@ bool ISO8601Parser::parse_calendar_time()
             return true;
         }
     }
-    {
-        StateTransaction transaction { *this };
-        if (parse_time_spec()) {
-            (void)parse_time_zone();
-            if (parse_calendar()) {
-                transaction.commit();
-                return true;
-            }
-        }
-    }
-    return parse_time_spec_with_optional_time_zone_not_ambiguous();
+    StateTransaction transaction { *this };
+    if (!parse_time_spec_with_optional_time_zone_not_ambiguous())
+        return false;
+    (void)parse_calendar();
+    transaction.commit();
+    return true;
 }
 
 // https://tc39.es/proposal-temporal/#prod-CalendarDateTime
