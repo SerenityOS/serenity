@@ -261,10 +261,6 @@ void Scheduler::yield()
 
 void Scheduler::context_switch(Thread* thread)
 {
-    if (Memory::s_mm_lock.is_locked_by_current_processor()) {
-        PANIC("In context switch while holding Memory::s_mm_lock");
-    }
-
     thread->did_schedule();
 
     auto* from_thread = Thread::current();

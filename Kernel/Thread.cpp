@@ -144,7 +144,6 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
-    VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
     SpinlockLocker scheduler_lock(g_scheduler_lock);
 
@@ -259,7 +258,6 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
-    VERIFY(!Memory::s_mm_lock.is_locked_by_current_processor());
 
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker block_lock(m_block_lock);

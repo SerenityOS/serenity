@@ -93,9 +93,6 @@ struct MemoryManagerData {
     u32 m_quickmap_prev_flags;
 };
 
-// NOLINTNEXTLINE(readability-redundant-declaration) FIXME: Why do we declare this here *and* in Thread.h?
-extern RecursiveSpinlock s_mm_lock;
-
 // This class represents a set of committed physical pages.
 // When you ask MemoryManager to commit pages for you, you get one of these in return.
 // You can allocate pages from it via `take_one()`
@@ -192,12 +189,7 @@ public:
         PhysicalSize physical_pages_uncommitted { 0 };
     };
 
-    SystemMemoryInfo get_system_memory_info()
-    {
-        SpinlockLocker lock(s_mm_lock);
-        verify_system_memory_info_consistency();
-        return m_system_memory_info;
-    }
+    SystemMemoryInfo get_system_memory_info();
 
     template<IteratorFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
@@ -230,7 +222,14 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
-    Vector<UsedMemoryRange> const& used_memory_ranges() { return m_used_memory_ranges; }
+    template<typename Callback>
+    void for_each_used_memory_range(Callback callback)
+    {
+        m_global_data.template with([&](auto& global_data) {
+            for (auto& range : global_data.used_memory_ranges)
+                callback(range);
+        });
+    }
     bool is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress, size_t read_length) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
@@ -278,29 +277,34 @@ private:
     };
     void release_pte(PageDirectory&, VirtualAddress, IsLastPTERelease);
 
-    ALWAYS_INLINE void verify_system_memory_info_consistency() const
-    {
-        auto physical_pages_unused = m_system_memory_info.physical_pages_committed + m_system_memory_info.physical_pages_uncommitted;
-        VERIFY(m_system_memory_info.physical_pages == (m_system_memory_info.physical_pages_used + physical_pages_unused));
-    }
-
+    // NOTE: These are outside of GlobalData as they are only assigned on startup,
+    //       and then never change. Atomic ref-counting covers that case without
+    //       the need for additional synchronization.
     LockRefPtr<PageDirectory> m_kernel_page_directory;
-
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
 
-    SystemMemoryInfo m_system_memory_info;
-
-    NonnullOwnPtrVector<PhysicalRegion> m_physical_regions;
-    OwnPtr<PhysicalRegion> m_physical_pages_region;
+    // NOTE: These are outside of GlobalData as they are initialized on startup,
+    //       and then never change.
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    SpinlockProtected<RegionTree> m_region_tree;
+    struct GlobalData {
+        GlobalData();
 
-    Vector<UsedMemoryRange> m_used_memory_ranges;
-    Vector<PhysicalMemoryRange> m_physical_memory_ranges;
-    Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
+        SystemMemoryInfo system_memory_info;
+
+        NonnullOwnPtrVector<PhysicalRegion> physical_regions;
+        OwnPtr<PhysicalRegion> physical_pages_region;
+
+        RegionTree region_tree;
+
+        Vector<UsedMemoryRange> used_memory_ranges;
+        Vector<PhysicalMemoryRange> physical_memory_ranges;
+        Vector<ContiguousReservedMemoryRange> reserved_memory_ranges;
+    };
+
+    SpinlockProtected<GlobalData> m_global_data;
 };
 
 inline bool is_user_address(VirtualAddress vaddr)
