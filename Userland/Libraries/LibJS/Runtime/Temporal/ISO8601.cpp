@@ -1592,13 +1592,14 @@ bool ISO8601Parser::parse_duration()
 bool ISO8601Parser::parse_temporal_instant_string()
 {
     // TemporalInstantString :
-    //     Date TimeSpecSeparator[opt] TimeZoneOffsetRequired
+    //     Date TimeSpecSeparator[opt] TimeZoneOffsetRequired Calendar[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
     (void)parse_time_spec_separator();
     if (!parse_time_zone_offset_required())
         return false;
+    (void)parse_calendar();
     transaction.commit();
     return true;
 }
