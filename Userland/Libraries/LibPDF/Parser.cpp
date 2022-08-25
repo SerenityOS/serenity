@@ -496,6 +496,8 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
         return isalpha(ch) || ch == '*' || ch == '\'';
     };
 
+    m_reader.consume_whitespace();
+
     while (!m_reader.done()) {
         auto ch = m_reader.peek();
         if (is_operator_char(ch)) {
