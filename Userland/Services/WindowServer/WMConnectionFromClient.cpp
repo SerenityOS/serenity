@@ -63,7 +63,7 @@ void WMConnectionFromClient::set_active_window(i32 client_id, i32 window_id)
         return;
     }
     auto& window = *(*it).value;
-    WindowManager::the().restore_modal_chain(window);
+    WindowManager::the().move_to_front_and_make_active(window);
 }
 
 void WMConnectionFromClient::popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint const& screen_position)

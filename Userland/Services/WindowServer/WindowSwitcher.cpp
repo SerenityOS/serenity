@@ -90,7 +90,7 @@ void WindowSwitcher::on_key_event(KeyEvent const& event)
     if (event.type() == Event::KeyUp) {
         if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_Super : Key_Alt)) {
             if (auto* window = selected_window()) {
-                WindowManager::the().restore_modal_chain(*window);
+                WindowManager::the().move_to_front_and_make_active(*window);
             }
             WindowManager::the().set_highlight_window(nullptr);
             hide();
