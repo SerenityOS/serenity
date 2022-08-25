@@ -51,6 +51,11 @@ JS::VM& main_thread_vm()
     static RefPtr<JS::VM> vm;
     if (!vm) {
         vm = JS::VM::create(make<WebEngineCustomData>());
+
+        // NOTE: We intentionally leak the main thread JavaScript VM.
+        //       This avoids doing an exhaustive garbage collection on process exit.
+        vm->ref();
+
         static_cast<WebEngineCustomData*>(vm->custom_data())->event_loop.set_vm(*vm);
 
         // FIXME: Implement 8.1.5.1 HostEnsureCanCompileStrings(callerRealm, calleeRealm), https://html.spec.whatwg.org/multipage/webappapis.html#hostensurecancompilestrings(callerrealm,-calleerealm)
