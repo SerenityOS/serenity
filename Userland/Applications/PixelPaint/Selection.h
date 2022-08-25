@@ -13,7 +13,15 @@
 
 namespace PixelPaint {
 
-class ImageEditor;
+class Image;
+
+class SelectionClient {
+public:
+    virtual void selection_did_change() = 0;
+
+protected:
+    virtual ~SelectionClient() = default;
+};
 
 // Coordinates are image-relative.
 class Selection {
@@ -26,7 +34,7 @@ public:
         __Count,
     };
 
-    explicit Selection(ImageEditor&);
+    explicit Selection(Image&);
 
     bool is_empty() const { return m_mask.is_null(); }
     void clear();
@@ -47,9 +55,15 @@ public:
 
     bool in_interactive_selection() { return m_in_interactive_selection; }
 
+    void add_client(SelectionClient&);
+    void remove_client(SelectionClient&);
+
 private:
-    ImageEditor& m_editor;
+    Image& m_image;
     Mask m_mask;
+
+    HashTable<SelectionClient*> m_clients;
+
     bool m_in_interactive_selection { false };
 };
 

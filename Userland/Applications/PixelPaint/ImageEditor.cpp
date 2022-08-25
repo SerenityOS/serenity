@@ -30,11 +30,11 @@ constexpr int marching_ant_length = 4;
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
     , m_title("Untitled")
-    , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     m_undo_stack.push(make<ImageUndoCommand>(*m_image, String()));
     m_image->add_client(*this);
+    m_image->selection().add_client(*this);
     set_original_rect(m_image->rect());
     set_scale_bounds(0.1f, 100.0f);
 
@@ -47,7 +47,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     m_marching_ants_timer = Core::Timer::create_repeating(80, [this] {
         ++m_marching_ants_offset;
         m_marching_ants_offset %= (marching_ant_length * 2);
-        if (!m_selection.is_empty() || m_selection.in_interactive_selection())
+        if (!m_image->selection().is_empty() || m_image->selection().in_interactive_selection())
             update();
     });
     m_marching_ants_timer->start();
@@ -55,6 +55,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
 
 ImageEditor::~ImageEditor()
 {
+    m_image->selection().remove_client(*this);
     m_image->remove_client(*this);
 }
 
@@ -372,8 +373,8 @@ void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Delete && !selection().is_empty() && active_layer()) {
-        active_layer()->erase_selection(selection());
+    if (event.key() == Key_Delete && !m_image->selection().is_empty() && active_layer()) {
+        active_layer()->erase_selection(m_image->selection());
         return;
     }
 
@@ -662,10 +663,10 @@ void ImageEditor::set_loaded_from_image(bool loaded_from_image)
 
 void ImageEditor::paint_selection(Gfx::Painter& painter)
 {
-    if (m_selection.is_empty())
+    if (m_image->selection().is_empty())
         return;
 
-    draw_marching_ants(painter, m_selection.mask());
+    draw_marching_ants(painter, m_image->selection().mask());
 }
 
 void ImageEditor::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& rect) const
@@ -749,6 +750,11 @@ void ImageEditor::draw_marching_ants_pixel(Gfx::Painter& painter, int x, int y) 
     } else {
         painter.set_pixel(x, y, Color::White);
     }
+}
+
+void ImageEditor::selection_did_change()
+{
+    update();
 }
 
 }

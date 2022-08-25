@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Selection.h"
 #include <AK/HashTable.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -54,6 +55,9 @@ public:
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_compose_bitmap(Gfx::BitmapFormat format) const;
     RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
+
+    Selection& selection() { return m_selection; }
+    Selection const& selection() const { return m_selection; }
 
     size_t layer_count() const { return m_layers.size(); }
     Layer const& layer(size_t index) const { return m_layers.at(index); }
@@ -114,6 +118,8 @@ private:
     NonnullRefPtrVector<Layer> m_layers;
 
     HashTable<ImageClient*> m_clients;
+
+    Selection m_selection;
 };
 
 class ImageUndoCommand : public GUI::Command {

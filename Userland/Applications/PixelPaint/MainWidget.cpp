@@ -267,13 +267,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             dbgln("Cannot cut with no active layer selected");
             return;
         }
-        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->selection());
+        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->image().selection());
         if (!bitmap) {
             dbgln("try_copy_bitmap() from Layer failed");
             return;
         }
         GUI::Clipboard::the().set_bitmap(*bitmap);
-        editor->active_layer()->erase_selection(editor->selection());
+        editor->active_layer()->erase_selection(editor->image().selection());
     });
 
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
@@ -284,7 +284,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             dbgln("Cannot copy with no active layer selected");
             return;
         }
-        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->selection());
+        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->image().selection());
         if (!bitmap) {
             dbgln("try_copy_bitmap() from Layer failed");
             return;
@@ -297,7 +297,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
 
-            auto bitmap = editor->image().try_copy_bitmap(editor->selection());
+            auto bitmap = editor->image().try_copy_bitmap(editor->image().selection());
             if (!bitmap) {
                 dbgln("try_copy_bitmap() from Image failed");
                 return;
@@ -319,7 +319,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
-        editor->selection().clear();
+        editor->image().selection().clear();
     });
     GUI::Clipboard::the().on_change = [&](auto& mime_type) {
         m_paste_action->set_enabled(mime_type == "image/x-serenityos");
@@ -351,13 +351,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         VERIFY(editor);
         if (!editor->active_layer())
             return;
-        editor->selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
+        editor->image().selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
     }));
     m_edit_menu->add_action(GUI::Action::create(
         "Clear &Selection", g_icon_bag.clear_selection, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->selection().clear();
+            editor->image().selection().clear();
         }));
 
     m_edit_menu->add_separator();
@@ -552,11 +552,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             // FIXME: disable this action if there is no selection
-            if (editor->selection().is_empty())
+            if (editor->image().selection().is_empty())
                 return;
-            auto crop_rect = editor->image().rect().intersected(editor->selection().bounding_rect());
+            auto crop_rect = editor->image().rect().intersected(editor->image().selection().bounding_rect());
             editor->image().crop(crop_rect);
-            editor->selection().clear();
+            editor->image().selection().clear();
             editor->did_complete_action("Crop Image to Selection"sv);
         }));
 

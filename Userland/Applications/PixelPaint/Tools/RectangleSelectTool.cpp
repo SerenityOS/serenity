@@ -26,7 +26,7 @@ void RectangleSelectTool::on_mousedown(Layer*, MouseEvent& event)
         return;
 
     m_selecting = true;
-    m_editor->selection().begin_interactive_selection();
+    m_editor->image().selection().begin_interactive_selection();
 
     m_selection_start = image_event.position();
     m_selection_end = image_event.position();
@@ -58,7 +58,7 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
         return;
 
     m_selecting = false;
-    m_editor->selection().end_interactive_selection();
+    m_editor->image().selection().end_interactive_selection();
 
     m_editor->update();
 
@@ -98,7 +98,7 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
         }
     }
 
-    m_editor->selection().merge(mask, m_merge_mode);
+    m_editor->image().selection().merge(mask, m_merge_mode);
 }
 
 void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
@@ -113,7 +113,7 @@ void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
         if (m_selecting)
             m_selecting = false;
         else
-            m_editor->selection().clear();
+            m_editor->image().selection().clear();
     }
 }
 

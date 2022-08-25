@@ -24,7 +24,8 @@ class Tool;
 
 class ImageEditor final
     : public GUI::AbstractZoomPanWidget
-    , public ImageClient {
+    , public ImageClient
+    , public SelectionClient {
     C_OBJECT(ImageEditor);
 
 public:
@@ -70,9 +71,6 @@ public:
 
     Color secondary_color() const { return m_secondary_color; }
     void set_secondary_color(Color);
-
-    Selection& selection() { return m_selection; }
-    Selection const& selection() const { return m_selection; }
 
     Color color_for(GUI::MouseEvent const&) const;
     Color color_for(GUI::MouseButton) const;
@@ -134,6 +132,8 @@ private:
     virtual void image_did_change_rect(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;
 
+    virtual void selection_did_change() override;
+
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
@@ -172,8 +172,6 @@ private:
     float m_pixel_grid_threshold { 15.0f };
 
     Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_active_cursor { Gfx::StandardCursor::None };
-
-    Selection m_selection;
 
     bool m_loaded_from_image { true };
 

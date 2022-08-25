@@ -37,6 +37,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& si
 
 Image::Image(Gfx::IntSize const& size)
     : m_size(size)
+    , m_selection(*this)
 {
 }
 

@@ -10,15 +10,16 @@
 
 namespace PixelPaint {
 
-Selection::Selection(ImageEditor& editor)
-    : m_editor(editor)
+Selection::Selection(Image& image)
+    : m_image(image)
 {
 }
 
 void Selection::clear()
 {
     m_mask = {};
-    m_editor.update();
+    for (auto* client : m_clients)
+        client->selection_did_change();
 }
 
 void Selection::merge(Mask const& mask, MergeMode mode)
@@ -39,6 +40,18 @@ void Selection::merge(Mask const& mask, MergeMode mode)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+void Selection::add_client(SelectionClient& client)
+{
+    VERIFY(!m_clients.contains(&client));
+    m_clients.set(&client);
+}
+
+void Selection::remove_client(SelectionClient& client)
+{
+    VERIFY(m_clients.contains(&client));
+    m_clients.remove(&client);
 }
 
 }
