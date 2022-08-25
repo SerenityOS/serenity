@@ -564,6 +564,17 @@ void dump_thread_list(bool with_stack_traces)
                 thread.times_scheduled());
             break;
         }
+        if (thread.state() == Thread::State::Blocked && thread.blocking_mutex()) {
+            dmesgln("    Blocking on Mutex {:#x} ({})", thread.blocking_mutex(), thread.blocking_mutex()->name());
+        }
+        if (thread.state() == Thread::State::Blocked && thread.blocker()) {
+            dmesgln("    Blocking on Blocker {:#x}", thread.blocker());
+        }
+#if LOCK_DEBUG
+        thread.for_each_held_lock([](auto const& entry) {
+            dmesgln("    Holding lock {:#x} ({}) at {}", entry.lock, entry.lock->name(), entry.lock_location);
+        });
+#endif
         if (with_stack_traces) {
             auto trace_or_error = thread.backtrace();
             if (!trace_or_error.is_error()) {
