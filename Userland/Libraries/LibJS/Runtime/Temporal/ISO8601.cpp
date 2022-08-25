@@ -922,7 +922,7 @@ bool ISO8601Parser::parse_time_zone_iana_name()
 {
     // TimeZoneIANAName :
     //     Etc/GMT ASCIISign UnpaddedHour
-    //     TimeZoneIANANameTail but not Etc/GMT ASCIISign UnpaddedHour
+    //     TimeZoneIANANameTail
     //     TimeZoneIANALegacyName
     // NOTE: Reverse order here because `TimeZoneIANANameTail` can be a subset of `TimeZoneIANALegacyName`,
     // so we'd not attempt to parse that but may not exhaust the input string.
