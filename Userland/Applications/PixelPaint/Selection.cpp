@@ -54,4 +54,9 @@ void Selection::remove_client(SelectionClient& client)
     m_clients.remove(&client);
 }
 
+void Selection::set_mask(Mask mask)
+{
+    m_mask = move(mask);
+}
+
 }

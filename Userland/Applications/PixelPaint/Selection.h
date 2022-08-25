@@ -49,6 +49,7 @@ public:
     [[nodiscard]] u8 get_selection_alpha(Gfx::IntPoint const& point) const { return get_selection_alpha(point.x(), point.y()); }
 
     Mask const& mask() const { return m_mask; }
+    void set_mask(Mask);
 
     void begin_interactive_selection() { m_in_interactive_selection = true; }
     void end_interactive_selection() { m_in_interactive_selection = false; }

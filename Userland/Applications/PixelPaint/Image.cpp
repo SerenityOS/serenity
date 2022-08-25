@@ -245,6 +245,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
         auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
         snapshot->add_layer(move(layer_snapshot));
     }
+    snapshot->m_selection.set_mask(m_selection.mask());
     return snapshot;
 }
 
@@ -267,6 +268,9 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
         select_layer(&layer(0));
 
     m_size = snapshot.size();
+
+    m_selection.set_mask(snapshot.m_selection.mask());
+
     did_change_rect();
     did_modify_layer_stack();
     return {};

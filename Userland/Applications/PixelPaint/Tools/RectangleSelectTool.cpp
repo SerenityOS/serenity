@@ -99,6 +99,8 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
     }
 
     m_editor->image().selection().merge(mask, m_merge_mode);
+
+    m_editor->did_complete_action(tool_name());
 }
 
 void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
