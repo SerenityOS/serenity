@@ -359,3 +359,34 @@ TYPED_ARRAYS.forEach(T => {
         expectValueNotSet("1e-10");
     });
 });
+
+test("source is the same value as the receiver", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let target = new T([1, 2]);
+        target[0] = 3;
+
+        expect(target[0]).toBe(3);
+    });
+});
+
+test("source is not the same value as the receiver", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let target = new T([1, 2]);
+        let receiver = Object.create(target);
+        receiver[0] = 3;
+
+        expect(target[0]).toBe(1);
+        expect(receiver[0]).toBe(3);
+    });
+});
+
+test("source is not the same value as the receiver, and the index is invalid", () => {
+    TYPED_ARRAYS.forEach(T => {
+        let target = new T([1, 2]);
+        let receiver = Object.create(target);
+        receiver[2] = 3;
+
+        expect(target[2]).toBeUndefined();
+        expect(receiver[2]).toBeUndefined();
+    });
+});
