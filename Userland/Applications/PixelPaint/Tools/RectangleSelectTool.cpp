@@ -136,7 +136,7 @@ void RectangleSelectTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
     auto rect_in_editor = m_editor->content_to_frame_rect(rect_in_image);
 
-    m_editor->selection().draw_marching_ants(painter, rect_in_editor.to_type<int>());
+    m_editor->draw_marching_ants(painter, rect_in_editor.to_rounded<int>());
 }
 
 GUI::Widget* RectangleSelectTool::get_properties_widget()

@@ -113,6 +113,9 @@ public:
 
     bool is_modified();
 
+    void draw_marching_ants(Gfx::Painter&, Gfx::IntRect const&) const;
+    void draw_marching_ants(Gfx::Painter&, Mask const&) const;
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -139,6 +142,8 @@ private:
     int calculate_ruler_step_size() const;
     Gfx::IntRect mouse_indicator_rect_x() const;
     Gfx::IntRect mouse_indicator_rect_y() const;
+
+    void paint_selection(Gfx::Painter&);
 
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
@@ -171,6 +176,11 @@ private:
     Selection m_selection;
 
     bool m_loaded_from_image { true };
+
+    RefPtr<Core::Timer> m_marching_ants_timer;
+    int m_marching_ants_offset { 0 };
+
+    void draw_marching_ants_pixel(Gfx::Painter&, int x, int y) const;
 };
 
 }
