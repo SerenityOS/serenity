@@ -150,6 +150,8 @@ private:
 
     PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>);
 
+    PDFErrorOr<NonnullRefPtr<Object>> get_inheritable_object(FlyString const& name, NonnullRefPtr<DictObject>);
+
     NonnullRefPtr<DocumentParser> m_parser;
     RefPtr<DictObject> m_catalog;
     RefPtr<DictObject> m_trailer;
