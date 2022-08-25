@@ -528,7 +528,14 @@ void Image::rotate(Gfx::RotationDirection direction)
 void Image::crop(Gfx::IntRect const& cropped_rect)
 {
     for (auto& layer : m_layers) {
-        layer.crop(cropped_rect);
+        auto layer_location = layer.location();
+        auto layer_local_crop_rect = layer.relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
+        layer.crop(layer_local_crop_rect);
+
+        auto new_layer_x = max(0, layer_location.x() - cropped_rect.x());
+        auto new_layer_y = max(0, layer_location.y() - cropped_rect.y());
+
+        layer.set_location({ new_layer_x, new_layer_y });
     }
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
