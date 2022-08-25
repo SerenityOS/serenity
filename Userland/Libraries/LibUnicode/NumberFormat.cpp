@@ -50,6 +50,7 @@ String replace_digits_for_number_system(StringView system, StringView number)
     return builder.build();
 }
 
+#if ENABLE_UNICODE_DATA
 static u32 last_code_point(StringView string)
 {
     Utf8View utf8_string { string };
@@ -60,6 +61,7 @@ static u32 last_code_point(StringView string)
 
     return code_point;
 }
+#endif
 
 // https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
 Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView currency_display, [[maybe_unused]] StringView base_pattern)
@@ -106,7 +108,7 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
 }
 
 // https://unicode.org/reports/tr35/tr35-numbers.html#83-range-pattern-processing
-Optional<String> augment_range_pattern(StringView range_separator, StringView lower, StringView upper)
+Optional<String> augment_range_pattern([[maybe_unused]] StringView range_separator, [[maybe_unused]] StringView lower, [[maybe_unused]] StringView upper)
 {
 #if ENABLE_UNICODE_DATA
     auto range_pattern_with_spacing = [&]() {
