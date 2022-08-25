@@ -331,11 +331,18 @@ public:
             auto numeric_index = canonical_numeric_index_string(property_key, CanonicalIndexMode::DetectNumericRoundtrip);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
-                // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
-                TRY(integer_indexed_element_set<T>(*this, numeric_index, value));
+                // i. If SameValue(O, Receiver) is true, then
+                if (same_value(this, receiver)) {
+                    // 1. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
+                    TRY(integer_indexed_element_set<T>(*this, numeric_index, value));
 
-                // ii. Return true.
-                return true;
+                    // 2. Return true.
+                    return true;
+                }
+
+                // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
+                if (!is_valid_integer_index(*this, numeric_index))
+                    return true;
             }
         }
 
