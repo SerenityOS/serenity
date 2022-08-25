@@ -60,16 +60,23 @@ void NumberConstructor::initialize(Realm& realm)
 static ThrowCompletionOr<Value> get_value_from_constructor_argument(VM& vm)
 {
     Value number;
+    // 1. If value is present, then
     if (vm.argument_count() > 0) {
+        // a. Let prim be ? ToNumeric(value).
         auto primitive = TRY(vm.argument(0).to_numeric(vm));
+
+        // b. If Type(prim) is BigInt, let n be 𝔽(ℝ(prim)).
         if (primitive.is_bigint()) {
-            // FIXME: How should huge values be handled here?
-            auto& big_integer = primitive.as_bigint().big_integer();
-            number = Value(static_cast<double>(big_integer.unsigned_value().to_u64()) * (big_integer.is_negative() ? -1.0 : 1.0));
-        } else {
+            number = Value(primitive.as_bigint().big_integer().to_double(Crypto::UnsignedBigInteger::RoundingMode::ECMAScriptNumberValueFor));
+        }
+        // c. Otherwise, let n be prim.
+        else {
             number = primitive;
         }
-    } else {
+    }
+    // 2. Else,
+    else {
+        // a. Let n be +0𝔽.
         number = Value(0);
     }
     return number;
@@ -78,6 +85,8 @@ static ThrowCompletionOr<Value> get_value_from_constructor_argument(VM& vm)
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 ThrowCompletionOr<Value> NumberConstructor::call()
 {
+    // NOTE: get_value_from_constructor_argument performs steps 1 and 2 and returns n.
+    // 3. If NewTarget is undefined, return n.
     return get_value_from_constructor_argument(vm());
 }
 
@@ -85,8 +94,12 @@ ThrowCompletionOr<Value> NumberConstructor::call()
 ThrowCompletionOr<Object*> NumberConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-
+    // NOTE: get_value_from_constructor_argument performs steps 1 and 2 and returns n.
     auto number = TRY(get_value_from_constructor_argument(vm));
+
+    // 4. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%", « [[NumberData]] »).
+    // 5. Set O.[[NumberData]] to n.
+    // 6. Return O.
     return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &GlobalObject::number_prototype, number.as_double()));
 }
 
