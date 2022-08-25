@@ -164,7 +164,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, StringView title, Gfx::IntRect const& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, StringView title, Gfx::IntRect const& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, bool is_blocked, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
@@ -172,6 +172,7 @@ public:
         , m_workspace_row(workspace_row)
         , m_workspace_column(workspace_column)
         , m_active(is_active)
+        , m_blocked(is_blocked)
         , m_minimized(is_minimized)
         , m_frameless(is_frameless)
         , m_progress(progress)
@@ -181,6 +182,7 @@ public:
     String const& title() const { return m_title; }
     Gfx::IntRect const& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
+    bool is_blocked() const { return m_blocked; }
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
@@ -195,6 +197,7 @@ private:
     unsigned m_workspace_row;
     unsigned m_workspace_column;
     bool m_active;
+    bool m_blocked;
     bool m_minimized;
     bool m_frameless;
     Optional<int> m_progress;

@@ -39,6 +39,9 @@ public:
     void set_active(bool active) { m_active = active; }
     bool is_active() const { return m_active; }
 
+    void set_blocked(bool blocked) { m_blocked = blocked; }
+    bool is_blocked() const { return m_blocked; }
+
     void set_minimized(bool minimized) { m_minimized = minimized; }
     bool is_minimized() const { return m_minimized; }
 
@@ -72,6 +75,7 @@ private:
     unsigned m_workspace_row { 0 };
     unsigned m_workspace_column { 0 };
     bool m_active { false };
+    bool m_blocked { false };
     bool m_minimized { false };
     Optional<int> m_progress;
 };

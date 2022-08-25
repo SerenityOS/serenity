@@ -156,7 +156,7 @@ void TaskbarWindow::add_window_button(::Window& window, WindowIdentifier const& 
     button->on_click = [window = &window, identifier](auto) {
         if (window->is_minimized() || !window->is_active())
             GUI::ConnectionToWindowManagerServer::the().async_set_active_window(identifier.client_id(), identifier.window_id());
-        else
+        else if (!window->is_blocked())
             GUI::ConnectionToWindowManagerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
     };
 }
@@ -263,12 +263,13 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GUI::WMWindowStateChangedEvent&>(event);
         if constexpr (EVENT_DEBUG) {
-            dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_minimized={}",
+            dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_blocked={}, is_minimized={}",
                 changed_event.client_id(),
                 changed_event.window_id(),
                 changed_event.title(),
                 changed_event.rect(),
                 changed_event.is_active(),
+                changed_event.is_blocked(),
                 changed_event.is_minimized());
         }
         if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
@@ -280,6 +281,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
         window.set_active(changed_event.is_active());
+        window.set_blocked(changed_event.is_blocked());
         window.set_minimized(changed_event.is_minimized());
         window.set_progress(changed_event.progress());
         window.set_workspace(changed_event.workspace_row(), changed_event.workspace_column());
