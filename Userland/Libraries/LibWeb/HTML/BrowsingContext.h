@@ -157,4 +157,6 @@ private:
     String m_name;
 };
 
+HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin);
+
 }

@@ -367,15 +367,22 @@ void FrameLoader::resource_did_load()
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding unknown", resource()->mime_type());
     }
 
+    auto final_sandboxing_flag_set = HTML::SandboxingFlagSet {};
+
+    // (Part of https://html.spec.whatwg.org/#navigating-across-documents)
+    // 3. Let responseOrigin be the result of determining the origin given browsingContext, resource's url, finalSandboxFlags, and incumbentNavigationOrigin.
+    // FIXME: Pass incumbentNavigationOrigin
+    auto response_origin = HTML::determine_the_origin(browsing_context(), url, final_sandboxing_flag_set, {});
+
     auto response = make<Fetch::Infrastructure::Response>();
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
         .request = nullptr,
         .response = move(response),
-        .origin = HTML::Origin {},
+        .origin = move(response_origin),
         .policy_container = HTML::PolicyContainer {},
-        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
+        .final_sandboxing_flag_set = move(final_sandboxing_flag_set),
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
         .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
         .reserved_environment = {},

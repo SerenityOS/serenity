@@ -59,7 +59,7 @@ static HTML::Origin url_origin(AK::URL const& url)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#determining-the-origin
-static HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
+HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
 {
     // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
     if (sandbox_flags.flags & SandboxingFlagSet::SandboxedOrigin) {
