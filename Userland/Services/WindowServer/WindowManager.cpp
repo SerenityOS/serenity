@@ -342,7 +342,8 @@ void WindowManager::add_window(Window& window)
 
 void WindowManager::move_to_front_and_make_active(Window& window)
 {
-    if (auto* blocker = window.blocking_modal_window()) {
+    auto* blocker = window.blocking_modal_window();
+    if (blocker && !window.is_capturing_input()) {
         blocker->window_stack().move_to_front(*blocker);
         set_active_window(blocker, true);
     } else {
@@ -1221,7 +1222,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
 
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
-    if (!blocking_modal_window && window.is_movable()) {
+    if ((!blocking_modal_window || window.is_capturing_input()) && window.is_movable()) {
         if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Primary) {
             start_window_move(window, event);
             return;
@@ -1239,7 +1240,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
             set_active_window(&window);
     }
 
-    if (blocking_modal_window) {
+    if (blocking_modal_window && !window.is_capturing_input()) {
         if (event.type() == Event::Type::MouseDown) {
             // We're clicking on something that's blocked by a modal window.
             // Flash the modal window to let the user know about it.
@@ -1826,10 +1827,11 @@ void WindowManager::notify_previous_active_input_window(Window& previous_input_w
 void WindowManager::set_active_window(Window* new_active_window, bool make_input)
 {
     if (new_active_window) {
-        if (auto* modal_window = new_active_window->blocking_modal_window()) {
-            VERIFY(modal_window->is_modal());
-            VERIFY(modal_window != new_active_window);
-            new_active_window = modal_window;
+        auto* blocker = new_active_window->blocking_modal_window();
+        if (blocker && !new_active_window->is_capturing_input()) {
+            VERIFY(blocker->is_modal());
+            VERIFY(blocker != new_active_window);
+            new_active_window = blocker;
             make_input = true;
         }
 

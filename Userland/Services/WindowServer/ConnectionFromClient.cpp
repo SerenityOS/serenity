@@ -576,7 +576,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
             did_misbehave("CreateWindow with bad parent_window_id");
             return;
         }
-        if (parent_window->is_blocking() || (parent_window->is_capturing_input() && mode == (i32)WindowMode::CaptureInput)) {
+        if ((parent_window->is_blocking() && mode != (i32)WindowMode::CaptureInput) || parent_window->is_capturing_input()) {
             did_misbehave("CreateWindow with forbidden parent mode");
             return;
         }
