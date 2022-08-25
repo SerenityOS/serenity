@@ -323,6 +323,25 @@ bool ISO8601Parser::parse_date_month()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-DateMonthWithThirtyOneDays
+bool ISO8601Parser::parse_date_month_with_thirty_days()
+{
+    // DateMonthWithThirtyOneDays : one of
+    //     01 03 05 07 08 10 12
+    StateTransaction transaction { *this };
+    auto success = m_state.lexer.consume_specific("01"sv)
+        || m_state.lexer.consume_specific("03"sv)
+        || m_state.lexer.consume_specific("05"sv)
+        || m_state.lexer.consume_specific("07"sv)
+        || m_state.lexer.consume_specific("08"sv)
+        || m_state.lexer.consume_specific("10"sv)
+        || m_state.lexer.consume_specific("12"sv);
+    if (!success)
+        return false;
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-DateDay
 bool ISO8601Parser::parse_date_day()
 {
@@ -379,6 +398,41 @@ bool ISO8601Parser::parse_date_spec_month_day()
     m_state.lexer.consume_specific('-');
     if (!parse_date_day())
         return false;
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-ValidMonthDay
+bool ISO8601Parser::parse_valid_month_day()
+{
+    // ValidMonthDay :
+    //     DateMonth -[opt] 0 NonZeroDigit
+    //     DateMonth -[opt] 1 DecimalDigit
+    //     DateMonth -[opt] 2 DecimalDigit
+    //     DateMonth -[opt] 30 but not one of 0230 or 02-30
+    //     DateMonthWithThirtyOneDays -[opt] 31
+    StateTransaction transaction { *this };
+    if (parse_date_month()) {
+        m_state.lexer.consume_specific('-');
+        if (m_state.lexer.consume_specific('0')) {
+            if (!parse_non_zero_digit())
+                return false;
+        } else if (m_state.lexer.consume_specific('1') || m_state.lexer.consume_specific('2')) {
+            if (!parse_decimal_digit())
+                return false;
+        } else if (m_state.lexer.consume_specific("30"sv)) {
+            if (transaction.parsed_string_view().is_one_of("0230"sv, "02-30"sv))
+                return false;
+        } else {
+            return false;
+        }
+    } else if (parse_date_month_with_thirty_days()) {
+        m_state.lexer.consume_specific('-');
+        if (!m_state.lexer.consume_specific("31"sv))
+            return false;
+    } else {
+        return false;
+    }
     transaction.commit();
     return true;
 }
@@ -1134,77 +1188,18 @@ bool ISO8601Parser::parse_time_hour_minute_basic_format_not_ambiguous_with_month
 bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
 {
     // TimeSpecWithOptionalTimeZoneNotAmbiguous :
-    //     TimeHour TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth[opt] TimeZoneBracketedAnnotation[opt]
-    //     TimeHourNotValidMonth TimeZone
-    //     TimeHour : TimeMinute TimeZone[opt]
-    //     TimeHourMinuteBasicFormatNotAmbiguousWithMonthDay TimeZoneBracketedAnnotation[opt]
-    //     TimeHour TimeMinute TimeZoneNumericUTCOffsetNotAmbiguousWithMonth TimeZoneBracketedAnnotation[opt]
-    //     TimeHour : TimeMinute : TimeSecond TimeFraction[opt] TimeZone[opt]
-    //     TimeHour TimeMinute TimeSecondNotValidMonth TimeZone[opt]
-    //     TimeHour TimeMinute TimeSecond TimeFraction TimeZone[opt]
-    // NOTE: Reverse order here because `TimeHour TimeZoneNumericUTCOffsetNotAmbiguousWithDayOfMonth[opt] TimeZoneBracketedAnnotation[opt]` can
-    // be a subset of `TimeHourNotValidMonth TimeZone`, so we'd not attempt to parse that but may not exhaust the input string.
+    //     TimeSpec TimeZone[opt] but not one of ValidMonthDay or DateSpecYearMonth
     {
         StateTransaction transaction { *this };
-        if (parse_time_hour_not_valid_month() && parse_time_zone()) {
-            transaction.commit();
-            return true;
-        }
+        if (parse_valid_month_day() || parse_date_spec_year_month())
+            return false;
     }
-    {
-        StateTransaction transaction { *this };
-        if (parse_time_hour()) {
-            if (m_state.lexer.consume_specific(':')) {
-                if (parse_time_minute()) {
-                    if (m_state.lexer.consume_specific(':')) {
-                        if (parse_time_second()) {
-                            (void)parse_time_fraction();
-                            (void)parse_time_zone();
-                            transaction.commit();
-                            return true;
-                        }
-                    } else {
-                        (void)parse_time_zone();
-                        transaction.commit();
-                        return true;
-                    }
-                }
-            } else if (parse_time_minute()) {
-                if (parse_time_zone_numeric_utc_offset_not_ambiguous_with_month()) {
-                    (void)parse_time_zone_bracketed_annotation();
-                    transaction.commit();
-                    return true;
-                }
-                {
-                    StateTransaction sub_transaction { *this };
-                    if (parse_time_second() && parse_time_fraction()) {
-                        (void)parse_time_zone();
-                        transaction.commit();
-                        return true;
-                    }
-                }
-                if (parse_time_second_not_valid_month()) {
-                    (void)parse_time_zone();
-                    transaction.commit();
-                    return true;
-                }
-            } else {
-                (void)parse_time_zone_numeric_utc_offset_not_ambiguous_with_day_of_month();
-                (void)parse_time_zone_bracketed_annotation();
-                transaction.commit();
-                return true;
-            }
-        }
-    }
-    {
-        StateTransaction transaction { *this };
-        if (parse_time_hour_minute_basic_format_not_ambiguous_with_month_day()) {
-            (void)parse_time_zone_bracketed_annotation();
-            transaction.commit();
-            return true;
-        }
-    }
-    return false;
+    StateTransaction transaction { *this };
+    if (!parse_time_spec())
+        return false;
+    (void)parse_time_zone();
+    transaction.commit();
+    return true;
 }
 
 // https://tc39.es/proposal-temporal/#prod-TimeSpecSeparator
