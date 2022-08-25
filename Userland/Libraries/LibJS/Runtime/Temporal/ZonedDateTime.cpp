@@ -61,8 +61,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
         // b. Set epochNanoseconds to epochNanoseconds - ℤ(offsetNanoseconds).
-        // FIXME: Narrowing conversion from 'double' to 'i64'
-        auto offset_nanoseconds_bigint = Crypto::SignedBigInteger::create_from((i64)offset_nanoseconds);
+        auto offset_nanoseconds_bigint = Crypto::SignedBigInteger { offset_nanoseconds };
         epoch_nanoseconds = js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
 
         // c. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.

@@ -182,9 +182,9 @@ i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, Strin
     // get_time_zone_offset(). We can safely assume that the TZDB has no useful information that far
     // into the past and future anyway, so clamp it to the i64 range.
     Time time;
-    if (seconds < Crypto::SignedBigInteger::create_from(NumericLimits<i64>::min()))
+    if (seconds < Crypto::SignedBigInteger { NumericLimits<i64>::min() })
         time = Time::min();
-    else if (seconds > Crypto::SignedBigInteger::create_from(NumericLimits<i64>::max()))
+    else if (seconds > Crypto::SignedBigInteger { NumericLimits<i64>::max() })
         time = Time::max();
     else
         time = Time::from_seconds(*seconds.to_base(10).to_int<i64>());

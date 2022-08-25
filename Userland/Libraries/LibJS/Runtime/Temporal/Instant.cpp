@@ -122,7 +122,7 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, String const& iso_stri
     auto offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, *offset_string));
 
     // 7. Let result be utc - ℤ(offsetNanoseconds).
-    auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
+    auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger { offset_nanoseconds }));
 
     // 8. If ! IsValidEpochNanoseconds(result) is false, then
     if (!is_valid_epoch_nanoseconds(*result_ns)) {
@@ -155,15 +155,14 @@ ThrowCompletionOr<BigInt*> add_instant(VM& vm, BigInt const& epoch_nanoseconds, 
     VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
 
     // 1. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
-    // FIXME: Pretty sure i64's are not sufficient for the extreme cases.
     auto* result = js_bigint(vm,
         epoch_nanoseconds.big_integer()
-            .plus(Crypto::SignedBigInteger::create_from((i64)nanoseconds))
-            .plus(Crypto::SignedBigInteger::create_from((i64)microseconds).multiplied_by(Crypto::SignedBigInteger { 1'000 }))
-            .plus(Crypto::SignedBigInteger::create_from((i64)milliseconds).multiplied_by(Crypto::SignedBigInteger { 1'000'000 }))
-            .plus(Crypto::SignedBigInteger::create_from((i64)seconds).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
-            .plus(Crypto::SignedBigInteger::create_from((i64)minutes).multiplied_by(Crypto::SignedBigInteger { 60 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
-            .plus(Crypto::SignedBigInteger::create_from((i64)hours).multiplied_by(Crypto::SignedBigInteger { 3600 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 })));
+            .plus(Crypto::SignedBigInteger { nanoseconds })
+            .plus(Crypto::SignedBigInteger { microseconds }.multiplied_by(Crypto::SignedBigInteger { 1'000 }))
+            .plus(Crypto::SignedBigInteger { milliseconds }.multiplied_by(Crypto::SignedBigInteger { 1'000'000 }))
+            .plus(Crypto::SignedBigInteger { seconds }.multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
+            .plus(Crypto::SignedBigInteger { minutes }.multiplied_by(Crypto::SignedBigInteger { 60 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
+            .plus(Crypto::SignedBigInteger { hours }.multiplied_by(Crypto::SignedBigInteger { 3600 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 })));
 
     // 2. If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*result))

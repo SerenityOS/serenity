@@ -145,8 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
         auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
         // b. Let possibleEpochNanoseconds be « epochNanoseconds - ℤ(timeZone.[[OffsetNanoseconds]]) ».
-        // FIXME: Narrowing conversion from 'double' to 'i64'
-        possible_epoch_nanoseconds.append(js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds()))));
+        possible_epoch_nanoseconds.append(js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger { *time_zone->offset_nanoseconds() })));
     }
     // 5. Else,
     else {

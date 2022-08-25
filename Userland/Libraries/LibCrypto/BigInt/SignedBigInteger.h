@@ -45,6 +45,12 @@ public:
 
     explicit SignedBigInteger(double value);
 
+    explicit SignedBigInteger(i64 value)
+        : m_sign(value < 0)
+        , m_unsigned_data(value < 0 ? static_cast<u64>(-(value + 1)) + 1 : static_cast<u64>(value))
+    {
+    }
+
     [[nodiscard]] static SignedBigInteger create_invalid()
     {
         return { UnsignedBigInteger::create_invalid(), false };
@@ -52,19 +58,6 @@ public:
 
     [[nodiscard]] static SignedBigInteger import_data(StringView data) { return import_data((u8 const*)data.characters_without_null_termination(), data.length()); }
     [[nodiscard]] static SignedBigInteger import_data(u8 const* ptr, size_t length);
-
-    [[nodiscard]] static SignedBigInteger create_from(i64 value)
-    {
-        auto sign = false;
-        u64 unsigned_value;
-        if (value < 0) {
-            unsigned_value = static_cast<u64>(-(value + 1)) + 1;
-            sign = true;
-        } else {
-            unsigned_value = value;
-        }
-        return SignedBigInteger { UnsignedBigInteger::create_from(unsigned_value), sign };
-    }
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 

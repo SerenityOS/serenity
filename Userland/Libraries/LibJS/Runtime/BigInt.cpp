@@ -37,7 +37,7 @@ ThrowCompletionOr<BigInt*> number_to_bigint(VM& vm, Value number)
         return vm.throw_completion<RangeError>(ErrorType::BigIntFromNonIntegral);
 
     // 2. Return the BigInt value that represents ℝ(number).
-    return js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)number.as_double()));
+    return js_bigint(vm, Crypto::SignedBigInteger { number.as_double() });
 }
 
 }

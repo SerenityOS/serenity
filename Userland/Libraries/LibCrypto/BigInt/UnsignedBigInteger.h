@@ -41,6 +41,14 @@ public:
 
     explicit UnsignedBigInteger(double value);
 
+    explicit UnsignedBigInteger(u64 value)
+    {
+        static_assert(sizeof(u64) == sizeof(Word) * 2);
+        m_words.resize_and_keep_capacity(2);
+        m_words[0] = static_cast<Word>(value & 0xFFFFFFFF);
+        m_words[1] = static_cast<Word>((value >> 32) & 0xFFFFFFFF);
+    }
+
     UnsignedBigInteger() = default;
 
     [[nodiscard]] static UnsignedBigInteger create_invalid();
@@ -49,16 +57,6 @@ public:
     [[nodiscard]] static UnsignedBigInteger import_data(u8 const* ptr, size_t length)
     {
         return UnsignedBigInteger(ptr, length);
-    }
-
-    [[nodiscard]] static UnsignedBigInteger create_from(u64 value)
-    {
-        VERIFY(sizeof(Word) == 4);
-        UnsignedBigInteger integer;
-        integer.m_words.resize(2);
-        integer.m_words[0] = static_cast<Word>(value & 0xFFFFFFFF);
-        integer.m_words[1] = static_cast<Word>((value >> 32) & 0xFFFFFFFF);
-        return integer;
     }
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;

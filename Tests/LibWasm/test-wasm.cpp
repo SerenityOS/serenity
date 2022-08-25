@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                 return m_machine.store().get(*v)->value().value().visit(
                     [&](auto const& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
                     [&](i32 value) { return JS::Value(static_cast<double>(value)); },
-                    [&](i64 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value)); },
+                    [&](i64 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger { value }); },
                     [&](Wasm::Reference const& reference) -> JS::Value {
                         return reference.ref().visit(
                             [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     result.values().first().value().visit(
         [&](auto const& value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](i32 value) { return_value = JS::Value(static_cast<double>(value)); },
-        [&](i64 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value))); },
+        [&](i64 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger { value })); },
         [&](Wasm::Reference const& reference) {
             reference.ref().visit(
                 [&](const Wasm::Reference::Null&) { return_value = JS::js_null(); },
