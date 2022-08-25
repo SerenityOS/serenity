@@ -26,6 +26,10 @@ public:
     u32 char_code_to_code_point(u16 char_code) const override;
     float get_char_width(u16 char_code, float font_size) const override;
 
+    void draw_glyph(Gfx::Painter&, Gfx::IntPoint const&, float, u32, Color) override {};
+
+    Type type() const override { return PDFFont::Type::Type0; }
+
 private:
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;

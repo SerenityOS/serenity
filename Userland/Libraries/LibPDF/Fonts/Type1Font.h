@@ -19,6 +19,7 @@ public:
         NonnullRefPtr<Encoding> encoding;
         HashMap<u16, u16> widths;
         u16 missing_width;
+        bool is_standard_font;
     };
 
     static PDFErrorOr<Data> parse_data(Document*, NonnullRefPtr<DictObject> font_dict);
@@ -30,6 +31,10 @@ public:
 
     u32 char_code_to_code_point(u16 char_code) const override;
     float get_char_width(u16 char_code, float font_size) const override;
+
+    void draw_glyph(Gfx::Painter&, Gfx::IntPoint const&, float, u32, Color) override {};
+
+    Type type() const override { return PDFFont::Type::Type1; }
 
 private:
     Data m_data;
