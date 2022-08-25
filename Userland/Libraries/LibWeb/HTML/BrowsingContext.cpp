@@ -52,7 +52,8 @@ static HTML::Origin url_origin(AK::URL const& url)
 
     if (url.scheme() == "file"sv) {
         // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
-        return HTML::Origin {};
+        // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
+        return HTML::Origin(url.protocol(), String(), 0);
     }
 
     return HTML::Origin {};
