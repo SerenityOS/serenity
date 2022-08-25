@@ -328,21 +328,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
     auto* temporal_date = TRY(to_temporal_date(vm, vm.argument(0)));
 
-    // 5. Let epochDays be MakeDay(𝔽(temporalDate.[[ISOYear]]), 𝔽(temporalDate.[[ISOMonth]] - 1), 𝔽(temporalDate.[[ISODay]])).
-    auto epoch_days = make_day(temporal_date->iso_year(), temporal_date->iso_month() - 1, temporal_date->iso_day());
-
-    // 6. Assert: epochDays is finite.
-    VERIFY(isfinite(epoch_days));
-
-    // 7. Let dayOfWeek be WeekDay(MakeDate(epochDays, +0𝔽)).
-    auto day_of_week = week_day(make_date(epoch_days, 0));
-
-    // 8. If dayOfWeek = +0𝔽, return 7𝔽.
-    if (day_of_week == 0)
-        return Value(7);
-
-    // 9. Return dayOfWeek.
-    return Value(day_of_week);
+    // 5. Return 𝔽(ToISODayOfWeek(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
+    return Value(to_iso_day_of_week(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
 }
 
 // 12.4.14 Temporal.Calendar.prototype.dayOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofyear
@@ -359,14 +346,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
     auto* temporal_date = TRY(to_temporal_date(vm, vm.argument(0)));
 
-    // 5. Let epochDays be MakeDay(𝔽(temporalDate.[[ISOYear]]), 𝔽(temporalDate.[[ISOMonth]] - 1), 𝔽(temporalDate.[[ISODay]])).
-    auto epoch_days = make_day(temporal_date->iso_year(), temporal_date->iso_month() - 1, temporal_date->iso_day());
-
-    // 6. Assert: epochDays is finite.
-    VERIFY(isfinite(epoch_days));
-
-    // 7. Return DayWithinYear(MakeDate(epochDays, +0𝔽)) + 1𝔽.
-    return Value(day_within_year(make_date(epoch_days, 0)) + 1);
+    // 5. Return 𝔽(ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
+    return Value(to_iso_day_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
 }
 
 // 12.4.15 Temporal.Calendar.prototype.weekOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.weekofyear
@@ -383,7 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
     auto* temporal_date = TRY(to_temporal_date(vm, vm.argument(0)));
 
-    // 5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
+    // 5. Return 𝔽(ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
     return Value(to_iso_week_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
 }
 
