@@ -1171,37 +1171,17 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     // 3. Assert: parseResult is a Parse Node.
     // NOTE: All of this is done by receiving an already parsed ISO string (ParseResult).
 
-    // 4. Let each of year, month, day, fSeconds, and calendar be the source text matched by the respective DateYear, DateMonth, DateDay, TimeFraction, and CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    // 4. Let each of year, month, day, hour, minute, second, fSeconds, and calendar be the source text matched by the respective DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, TimeFraction, and CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto year = parse_result.date_year;
     auto month = parse_result.date_month;
     auto day = parse_result.date_day;
+    auto hour = parse_result.time_hour;
+    auto minute = parse_result.time_minute;
+    auto second = parse_result.time_second;
     auto f_seconds = parse_result.time_fraction;
     auto calendar = parse_result.calendar_name;
 
-    // 5. Let hour be the source text matched by the TimeHour, TimeHourNotValidMonth, TimeHourNotThirtyOneDayMonth, or TimeHourTwoOnly Parse Node contained within parseResult, or an empty sequence of code points if none of those are present.
-    auto hour = parse_result.time_hour;
-    if (!hour.has_value())
-        hour = parse_result.time_hour_not_valid_month;
-    if (!hour.has_value())
-        hour = parse_result.time_hour_not_thirty_one_day_month;
-    if (!hour.has_value())
-        hour = parse_result.time_hour_two_only;
-
-    // 6. Let minute be the source text matched by the TimeMinute, TimeMinuteNotValidDay, TimeMinuteThirtyOnly, or TimeMinuteThirtyOneOnly Parse Node contained within parseResult, or an empty sequence of code points if none of those are present.
-    auto minute = parse_result.time_minute;
-    if (!minute.has_value())
-        minute = parse_result.time_minute_not_valid_day;
-    if (!minute.has_value())
-        minute = parse_result.time_minute_thirty_only;
-    if (!minute.has_value())
-        minute = parse_result.time_minute_thirty_one_only;
-
-    // 7. Let second be the source text matched by the TimeSecond or TimeSecondNotValidMonth Parse Node contained within parseResult, or an empty sequence of code points if neither of those are present.
-    auto second = parse_result.time_second;
-    if (!second.has_value())
-        second = parse_result.time_second_not_valid_month;
-
-    // 8. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
+    // 5. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
     Optional<String> normalized_year;
     if (year.has_value()) {
         normalized_year = year->starts_with("\xE2\x88\x92"sv)
@@ -1209,31 +1189,31 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
             : String { *year };
     }
 
-    // 9. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
+    // 6. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
     auto year_mv = *normalized_year.value_or("0"sv).to_int<i32>();
 
-    // 10. If month is empty, then
+    // 7. If month is empty, then
     //    a. Let monthMV be 1.
-    // 11. Else,
+    // 8. Else,
     //    a. Let monthMV be ! ToIntegerOrInfinity(CodePointsToString(month)).
     auto month_mv = *month.value_or("1"sv).to_uint<u8>();
 
-    // 12. If day is empty, then
+    // 9. If day is empty, then
     //    a. Let dayMV be 1.
-    // 13. Else,
+    // 10. Else,
     //    a. Let dayMV be ! ToIntegerOrInfinity(CodePointsToString(day)).
     auto day_mv = *day.value_or("1"sv).to_uint<u8>();
 
-    // 14. Let hourMV be ! ToIntegerOrInfinity(CodePointsToString(hour)).
+    // 11. Let hourMV be ! ToIntegerOrInfinity(CodePointsToString(hour)).
     auto hour_mv = *hour.value_or("0"sv).to_uint<u8>();
 
-    // 15. Let minuteMV be ! ToIntegerOrInfinity(CodePointsToString(minute)).
+    // 12. Let minuteMV be ! ToIntegerOrInfinity(CodePointsToString(minute)).
     auto minute_mv = *minute.value_or("0"sv).to_uint<u8>();
 
-    // 16. Let secondMV be ! ToIntegerOrInfinity(CodePointsToString(second)).
+    // 13. Let secondMV be ! ToIntegerOrInfinity(CodePointsToString(second)).
     auto second_mv = *second.value_or("0"sv).to_uint<u8>();
 
-    // 17. If secondMV is 60, then
+    // 14. If secondMV is 60, then
     if (second_mv == 60) {
         // a. Set secondMV to 59.
         second_mv = 59;
@@ -1243,7 +1223,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     u16 microsecond_mv;
     u16 nanosecond_mv;
 
-    // 18. If fSeconds is not empty, then
+    // 15. If fSeconds is not empty, then
     if (f_seconds.has_value()) {
         // a. Let fSecondsDigits be the substring of CodePointsToString(fSeconds) from 1.
         auto f_seconds_digits = f_seconds->substring_view(1);
@@ -1269,7 +1249,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         // h. Let nanosecondMV be ! ToIntegerOrInfinity(nanosecond).
         nanosecond_mv = *nanosecond.to_uint<u16>();
     }
-    // 19. Else,
+    // 16. Else,
     else {
         // a. Let millisecondMV be 0.
         millisecond_mv = 0;
@@ -1281,29 +1261,29 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         nanosecond_mv = 0;
     }
 
-    // 20. If IsValidISODate(yearMV, monthMV, dayMV) is false, throw a RangeError exception.
+    // 17. If IsValidISODate(yearMV, monthMV, dayMV) is false, throw a RangeError exception.
     if (!is_valid_iso_date(year_mv, month_mv, day_mv))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidISODate);
 
-    // 21. If IsValidTime(hourMV, minuteMV, secondMV, millisecondMV, microsecondMV, nanosecondMV) is false, throw a RangeError exception.
+    // 18. If IsValidTime(hourMV, minuteMV, secondMV, millisecondMV, microsecondMV, nanosecondMV) is false, throw a RangeError exception.
     if (!is_valid_time(hour_mv, minute_mv, second_mv, millisecond_mv, microsecond_mv, nanosecond_mv))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTime);
 
     Optional<String> calendar_val;
 
-    // 22. If calendar is empty, then
+    // 19. If calendar is empty, then
     if (!calendar.has_value()) {
         // a. Let calendarVal be undefined.
         calendar_val = {};
     }
-    // 23. Else,
+    // 20. Else,
     else {
         // a. Let calendarVal be CodePointsToString(calendar).
         // NOTE: This turns the StringView into a String.
         calendar_val = *calendar;
     }
 
-    // 24. Return the Record { [[Year]]: yearMV, [[Month]]: monthMV, [[Day]]: dayMV, [[Hour]]: hourMV, [[Minute]]: minuteMV, [[Second]]: secondMV, [[Millisecond]]: millisecondMV, [[Microsecond]]: microsecondMV, [[Nanosecond]]: nanosecondMV, [[Calendar]]: calendarVal, }.
+    // 21. Return the Record { [[Year]]: yearMV, [[Month]]: monthMV, [[Day]]: dayMV, [[Hour]]: hourMV, [[Minute]]: minuteMV, [[Second]]: secondMV, [[Millisecond]]: millisecondMV, [[Microsecond]]: microsecondMV, [[Nanosecond]]: nanosecondMV, [[Calendar]]: calendarVal, }.
     return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .calendar = move(calendar_val) };
 }
 
