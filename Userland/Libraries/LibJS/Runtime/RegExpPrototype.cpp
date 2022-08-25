@@ -485,7 +485,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 }
 
 // 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%2540%2540match
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
     auto& realm = *vm.current_realm();
@@ -589,7 +589,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     // 10. Else, let global be false.
     bool global = flags.contains('g');
 
-    // 11. If flags contains "u", let fullUnicode be true.
+    // 11. If flags contains "u" or flags contains "v", let fullUnicode be true.
     // 12. Else, let fullUnicode be false.
     bool full_unicode = flags.contains('u') || flags.contains('v');
 
@@ -608,7 +608,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 }
 
 // 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-@@replace
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40replace
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 {
     auto string_value = vm.argument(0);
@@ -867,6 +867,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 }
 
 // 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
+// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
     auto& realm = *vm.current_realm();
@@ -885,7 +886,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
     auto flags = TRY(flags_value.to_string(vm));
 
-    // 6. If flags contains "u", let unicodeMatching be true.
+    // 6. If flags contains "u" or flags contains "v", let unicodeMatching be true.
     // 7. Else, let unicodeMatching be false.
     bool unicode_matching = flags.contains('u') || flags.contains('v');
 
