@@ -11,6 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
+#include <math.h>
 
 namespace Crypto {
 
@@ -31,6 +32,81 @@ UnsignedBigInteger::UnsignedBigInteger(u8 const* ptr, size_t length)
         }
         m_words[out++] = word;
     }
+}
+
+static constexpr u64 mantissa_size = 52;
+static constexpr u64 exponent_size = 11;
+static constexpr auto exponent_bias = (1 << (exponent_size - 1)) - 1;
+
+union DoubleExtractor {
+    struct {
+        unsigned long long mantissa : mantissa_size;
+        unsigned exponent : exponent_size;
+        unsigned sign : 1;
+    };
+    double double_value = 0;
+};
+
+UnsignedBigInteger::UnsignedBigInteger(double value)
+{
+    // Because this is currently only used for LibJS we VERIFY some preconditions
+    // also these values don't have a clear BigInteger representation.
+    VERIFY(!isnan(value));
+    VERIFY(!isinf(value));
+    VERIFY(trunc(value) == value);
+    VERIFY(value >= 0.0);
+
+    if (value <= NumericLimits<u32>::max()) {
+        m_words.append(static_cast<u32>(value));
+        return;
+    }
+
+    DoubleExtractor extractor;
+    extractor.double_value = value;
+    VERIFY(!extractor.sign);
+
+    i32 real_exponent = extractor.exponent - exponent_bias;
+    VERIFY(real_exponent > 0);
+
+    // Ensure we have enough space, we will need 2^exponent bits, so round up in words
+    auto word_index = (real_exponent + BITS_IN_WORD) / BITS_IN_WORD;
+    m_words.resize_and_keep_capacity(word_index);
+
+    // Now we just need to put the mantissa with explicit 1 bit at the top at the proper location
+    u64 raw_mantissa = extractor.mantissa | (1ull << mantissa_size);
+    VERIFY((raw_mantissa & 0xfff0000000000000) == 0x0010000000000000);
+    // Shift it so the bits we need are at the top
+    raw_mantissa <<= 64 - mantissa_size - 1;
+
+    // The initial bit needs to be exactly aligned with exponent, this is 1-indexed
+    auto top_word_bit_offset = real_exponent % BITS_IN_WORD + 1;
+
+    auto top_word_bits_from_mantissa = raw_mantissa >> (64 - top_word_bit_offset);
+    VERIFY(top_word_bits_from_mantissa <= NumericLimits<Word>::max());
+    m_words[word_index - 1] = top_word_bits_from_mantissa;
+
+    --word_index;
+    // Shift used bits away
+    raw_mantissa <<= top_word_bit_offset;
+    i32 bits_in_mantissa = mantissa_size + 1 - top_word_bit_offset;
+    // Now just put everything at the top of the next words
+
+    constexpr auto to_word_shift = 64 - BITS_IN_WORD;
+
+    while (word_index > 0 && bits_in_mantissa > 0) {
+        VERIFY((raw_mantissa >> to_word_shift) <= NumericLimits<Word>::max());
+        m_words[word_index - 1] = raw_mantissa >> to_word_shift;
+        raw_mantissa <<= to_word_shift;
+
+        bits_in_mantissa -= BITS_IN_WORD;
+        --word_index;
+    }
+
+    VERIFY(m_words.size() > word_index);
+    VERIFY((m_words.size() - word_index) <= 3);
+
+    // No bits left, otherwise we would have to round
+    VERIFY(raw_mantissa == 0);
 }
 
 UnsignedBigInteger UnsignedBigInteger::create_invalid()
@@ -265,14 +341,7 @@ double UnsignedBigInteger::to_double(UnsignedBigInteger::RoundingMode rounding_m
         VERIFY(rounding_mode == RoundingMode::RoundTowardZero);
     }
 
-    union FloatExtractor {
-        struct {
-            unsigned long long mantissa : mantissa_size;
-            unsigned exponent : exponent_size;
-            unsigned sign : 1;
-        };
-        double double_value = 0;
-    } extractor;
+    DoubleExtractor extractor;
 
     extractor.exponent = highest_bit + exponent_bias;
 
