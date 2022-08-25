@@ -23,6 +23,22 @@ describe("correct behavior", () => {
             Temporal.Instant.from("1975-02-02T14:25:36.123456789Z[Custom/TimeZone]")
                 .epochNanoseconds
         ).toBe(160583136123456789n);
+
+        // Accepts but ignores the calendar.
+        let result = null;
+        expect(() => {
+            result = Temporal.Instant.from("1970-01-01T00:00Z[u-ca=UTC]");
+        }).not.toThrow();
+        expect(result).toBeInstanceOf(Temporal.Instant);
+        expect(result.epochNanoseconds).toBe(0n);
+
+        // Does not validate calendar name, it only checks that the calendar name matches the grammar.
+        result = null;
+        expect(() => {
+            result = Temporal.Instant.from("1970-01-01T00:00Z[u-ca=aAaAaAaA-bBbBbBb]");
+        }).not.toThrow();
+        expect(result).toBeInstanceOf(Temporal.Instant);
+        expect(result.epochNanoseconds).toBe(0n);
     });
 });
 
@@ -46,6 +62,15 @@ describe("errors", () => {
         }).toThrowWithMessage(
             RangeError,
             "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17"
+        );
+    });
+
+    test("calendar annotation must match calendar grammar even though it's ignored", () => {
+        expect(() => {
+            Temporal.Instant.from("1970-01-01T00:00Z[u-ca=SerenityOS]");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid instant string '1970-01-01T00:00Z[u-ca=SerenityOS]'"
         );
     });
 });
