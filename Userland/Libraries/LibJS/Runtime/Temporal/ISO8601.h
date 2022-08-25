@@ -104,9 +104,11 @@ public:
     [[nodiscard]] bool parse_utc_designator();
     [[nodiscard]] bool parse_date_year();
     [[nodiscard]] bool parse_date_month();
+    [[nodiscard]] bool parse_date_month_with_thirty_days();
     [[nodiscard]] bool parse_date_day();
     [[nodiscard]] bool parse_date_spec_year_month();
     [[nodiscard]] bool parse_date_spec_month_day();
+    [[nodiscard]] bool parse_valid_month_day();
     [[nodiscard]] bool parse_date();
     [[nodiscard]] bool parse_time_hour();
     [[nodiscard]] bool parse_time_minute();
