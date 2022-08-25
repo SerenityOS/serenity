@@ -24,7 +24,13 @@ public:
     using Word = u32;
     static constexpr size_t BITS_IN_WORD = 32;
 
-    UnsignedBigInteger(Word x) { m_words.append(x); }
+    // This constructor accepts any unsigned with size up to Word.
+    template<typename T>
+    requires(IsIntegral<T> && sizeof(T) <= sizeof(Word))
+        UnsignedBigInteger(T value)
+    {
+        m_words.append(static_cast<Word>(value));
+    }
 
     explicit UnsignedBigInteger(Vector<Word, STARTING_WORD_SIZE>&& words)
         : m_words(move(words))

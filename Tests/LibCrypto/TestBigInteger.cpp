@@ -73,7 +73,7 @@ TEST_CASE(test_unsigned_bigint_basic_add_to_accumulator)
 
 TEST_CASE(test_unsigned_bigint_basic_add_to_empty_accumulator)
 {
-    Crypto::UnsignedBigInteger num1({});
+    Crypto::UnsignedBigInteger num1 {};
     Crypto::UnsignedBigInteger num2(10);
     Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
     EXPECT_EQ(num1.words(), Vector<u32> { 10 });
