@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -67,7 +68,7 @@ public:
     [[nodiscard]] String to_base(u16 N) const;
 
     [[nodiscard]] u64 to_u64() const;
-    [[nodiscard]] double to_double() const;
+    [[nodiscard]] double to_double(UnsignedBigInteger::RoundingMode rounding_mode = UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa) const;
 
     [[nodiscard]] UnsignedBigInteger const& unsigned_value() const { return m_unsigned_data; }
     [[nodiscard]] Vector<u32, STARTING_WORD_SIZE> const words() const { return m_unsigned_data.words(); }
