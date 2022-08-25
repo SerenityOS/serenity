@@ -68,7 +68,7 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
     if (descriptor->contains(CommonNames::MissingWidth))
         missing_width = descriptor->get_value(CommonNames::MissingWidth).to_int();
 
-    return Type1Font::Data { to_unicode, encoding.release_nonnull(), move(widths), missing_width };
+    return Type1Font::Data { to_unicode, encoding.release_nonnull(), move(widths), missing_width, false };
 }
 
 PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, NonnullRefPtr<DictObject> dict)
@@ -80,6 +80,7 @@ PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, Nonnu
 Type1Font::Type1Font(Data data)
     : m_data(move(data))
 {
+    m_is_standard_font = data.is_standard_font;
 }
 
 u32 Type1Font::char_code_to_code_point(u16 char_code) const
