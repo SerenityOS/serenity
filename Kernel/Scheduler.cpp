@@ -544,23 +544,26 @@ void dump_thread_list(bool with_stack_traces)
     };
 
     Thread::for_each([&](Thread& thread) {
+        auto color = thread.process().is_kernel_process() ? "\x1b[34;1m"sv : "\x1b[33;1m"sv;
         switch (thread.state()) {
         case Thread::State::Dying:
-            dmesgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
-                thread.state_string(),
+            dmesgln("  {}{:30}\x1b[0m @ {:04x}:{:08x} is {:14} (Finalizable: {}, nsched: {})",
+                color,
                 thread,
                 get_cs(thread),
                 get_eip(thread),
+                thread.state_string(),
                 thread.is_finalizable(),
                 thread.times_scheduled());
             break;
         default:
-            dmesgln("  {:14} Pr:{:2} {:30} @ {:04x}:{:08x} (nsched: {})",
-                thread.state_string(),
-                thread.priority(),
+            dmesgln("  {}{:30}\x1b[0m @ {:04x}:{:08x} is {:14} (Pr:{:2}, nsched: {})",
+                color,
                 thread,
                 get_cs(thread),
                 get_eip(thread),
+                thread.state_string(),
+                thread.priority(),
                 thread.times_scheduled());
             break;
         }
