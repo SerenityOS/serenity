@@ -432,6 +432,7 @@ void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& w
     Window* modeless = window.modeless_ancestor();
     if (!modeless)
         return;
+    bool is_blocked = modeless->blocking_modal_window();
     auto is_active = for_each_window_in_modal_chain(*modeless, [&](auto& w) {
         if (w.is_active())
             return IterationDecision::Break;
@@ -439,7 +440,7 @@ void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& w
     });
 
     auto& window_stack = is_stationary_window_type(modeless->type()) ? current_window_stack() : modeless->window_stack();
-    conn.async_window_state_changed(conn.window_id(), modeless->client_id(), modeless->window_id(), window_stack.row(), window_stack.column(), is_active, modeless->is_minimized(), modeless->is_frameless(), (i32)modeless->type(), modeless->computed_title(), modeless->rect(), modeless->progress());
+    conn.async_window_state_changed(conn.window_id(), modeless->client_id(), modeless->window_id(), window_stack.row(), window_stack.column(), is_active, is_blocked, modeless->is_minimized(), modeless->is_frameless(), (i32)modeless->type(), modeless->computed_title(), modeless->rect(), modeless->progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMConnectionFromClient& conn, Window& window)

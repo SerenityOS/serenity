@@ -3,7 +3,7 @@
 endpoint WindowManagerClient
 {
     window_removed(i32 wm_id, i32 client_id, i32 window_id) =|
-    window_state_changed(i32 wm_id, i32 client_id, i32 window_id, u32 workspace_row, u32 workspace_column, bool is_active, bool is_minimized, bool is_frameless, i32 window_type, [UTF8] String title, Gfx::IntRect rect, Optional<i32> progress) =|
+    window_state_changed(i32 wm_id, i32 client_id, i32 window_id, u32 workspace_row, u32 workspace_column, bool is_active, bool is_blocking, bool is_minimized, bool is_frameless, i32 window_type, [UTF8] String title, Gfx::IntRect rect, Optional<i32> progress) =|
     window_icon_bitmap_changed(i32 wm_id, i32 client_id, i32 window_id, Gfx::ShareableBitmap bitmap) =|
     window_rect_changed(i32 wm_id, i32 client_id, i32 window_id, Gfx::IntRect rect) =|
     applet_area_size_changed(i32 wm_id, Gfx::IntSize size) =|
