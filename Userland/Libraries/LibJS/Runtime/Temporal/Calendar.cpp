@@ -607,35 +607,78 @@ u8 iso_days_in_month(i32 year, u8 month)
 // 12.2.31 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
 u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 {
-    // 1. Assert: year is an integer.
-    // 2. Assert: month is an integer.
-    // 3. Assert: day is an integer.
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
 
-    // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's week number according to ISO-8601 as an integer.
-    auto t = make_date(make_day(year, month - 1, day), 0);
-    auto day_of_year = day_within_year(t) + 1;
-    auto day_of_week = week_day(t);
-    if (day_of_week == 0)
-        day_of_week = 7;
-    auto week = (day_of_year - day_of_week + 10) / 7;
+    // 2. Let wednesday be 3.
+    constexpr auto wednesday = 3;
 
+    // 3. Let thursday be 4.
+    constexpr auto thursday = 4;
+
+    // 4. Let friday be 5.
+    constexpr auto friday = 5;
+
+    // 5. Let saturday be 6.
+    constexpr auto saturday = 6;
+
+    // 6. Let daysInWeek be 7.
+    constexpr auto days_in_week = 7;
+
+    // 7. Let maxWeekNumber be 53.
+    constexpr auto max_week_number = 53;
+
+    // 8. Let dayOfYear be ToISODayOfYear(year, month, day).
+    auto day_of_year = to_iso_day_of_year(year, month, day);
+
+    // 9. Let dayOfWeek be ToISODayOfWeek(year, month, day).
+    auto day_of_week = to_iso_day_of_week(year, month, day);
+
+    // 10. Let week be floor((dayOfYear + daysInWeek - dayOfWeek + wednesday ) / daysInWeek).
+    auto week = static_cast<i32>(floor(static_cast<double>(day_of_year + days_in_week - day_of_week + wednesday) / days_in_week));
+
+    // 11. If week < 1, then
     if (week < 1) {
-        // NOTE: The resulting week is actually part of the previous year. If that year ends with a
-        // Thursday (i.e. the first day of the given year is a Friday, or day 5), or the previous
-        // year is a leap year and ends with a Friday (i.e. the first day of the given year is a
-        // Saturday, or day 6), it has 53 weeks, and 52 weeks otherwise.
-        auto day_of_jump = week_day(make_date(make_day(year, 0, 1), 0));
-        if (day_of_jump == 5 || (in_leap_year(time_from_year(year - 1)) && day_of_jump == 6))
-            return 53;
-        else
-            return 52;
-    } else if (week == 53) {
-        auto days_in_year = JS::days_in_year(year);
-        if (days_in_year - day_of_year < 4 - day_of_week)
-            return 1;
+        // a. NOTE: This is the last week of the previous year.
+
+        // b. Let dayOfJan1st be ToISODayOfWeek(year, 1, 1).
+        auto day_of_jan_1st = to_iso_day_of_week(year, 1, 1);
+
+        // c. If dayOfJan1st is friday, then
+        if (day_of_jan_1st == friday) {
+            // i. Return maxWeekNumber.
+            return max_week_number;
+        }
+
+        // d. If dayOfJan1st is saturday, and InLeapYear(TimeFromYear(𝔽(year - 1))) is 1𝔽, then
+        if (day_of_jan_1st == saturday && in_leap_year(time_from_year(year - 1))) {
+            // i. Return maxWeekNumber.
+            return max_week_number;
+        }
+
+        // e. Return maxWeekNumber - 1.
+        return max_week_number - 1;
     }
 
+    // 12. If week is maxWeekNumber, then
+    if (week == max_week_number) {
+        // a. Let daysInYear be DaysInYear(𝔽(year)).
+        auto days_in_year = JS::days_in_year(year);
+
+        // b. Let daysLaterInYear be daysInYear - dayOfYear.
+        auto days_later_in_year = days_in_year - day_of_year;
+
+        // c. Let daysAfterThursday be thursday - dayOfWeek.
+        auto days_after_thursday = thursday - day_of_week;
+
+        // d. If daysLaterInYear < daysAfterThursday, then
+        if (days_later_in_year < days_after_thursday) {
+            // i. Return 1.
+            return 1;
+        }
+    }
+
+    // 13. Return week.
     return week;
 }
 
@@ -969,6 +1012,45 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
 
     // 7. Return merged.
     return merged;
+}
+
+// 12.2.42 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
+
+    // 2. Let epochDays be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
+    auto epoch_days = make_day(year, month - 1, day);
+
+    // 3. Assert: epochDays is finite.
+    VERIFY(isfinite(epoch_days));
+
+    // 4. Return ℝ(DayWithinYear(MakeDate(epochDays, +0𝔽))) + 1.
+    return day_within_year(make_date(epoch_days, 0)) + 1;
+}
+
+// 12.2.43 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: IsValidISODate(year, month, day) is true.
+    VERIFY(is_valid_iso_date(year, month, day));
+
+    // 2. Let epochDays be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
+    auto epoch_days = make_day(year, month - 1, day);
+
+    // 3. Assert: epochDays is finite.
+    VERIFY(isfinite(epoch_days));
+
+    // 4. Let dayOfWeek be WeekDay(MakeDate(epochDays, +0𝔽)).
+    auto day_of_week = week_day(make_date(epoch_days, 0));
+
+    // 5. If dayOfWeek = +0𝔽, return 7.
+    if (day_of_week == 0)
+        return 7;
+
+    // 6. Return ℝ(dayOfWeek).
+    return day_of_week;
 }
 
 }

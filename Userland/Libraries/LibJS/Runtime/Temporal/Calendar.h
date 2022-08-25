@@ -75,5 +75,7 @@ u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
 u8 iso_day(Object& temporal_object);
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM&, Object const& fields, Object const& additional_fields);
+u16 to_iso_day_of_year(i32 year, u8 month, u8 day);
+u8 to_iso_day_of_week(i32 year, u8 month, u8 day);
 
 }
