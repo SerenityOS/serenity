@@ -71,7 +71,8 @@ do
             qualification="${qualification%"${qualification##*[![:space:]]}"}"
 
             IFS=" "
-            echo "$emoji - ${codepoints[*]} ${name^^} ($qualification)" >> "$OUTPUT_PATH"
+            uppercased_name="$(echo -n "${name}" | tr '[:lower:]' '[:upper:]')"
+            echo "$emoji - ${codepoints[*]} ${uppercased_name} ($qualification)" >> "$OUTPUT_PATH"
         fi
     fi
 done < "$INPUT_FILE"
