@@ -149,10 +149,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     }
 
     // 9. Let ns1 be ! TotalDurationNanoseconds(days1, one.[[Hours]], one.[[Minutes]], one.[[Seconds]], one.[[Milliseconds]], one.[[Microseconds]], one.[[Nanoseconds]], shift1).
-    auto ns1 = total_duration_nanoseconds(days1, one->hours(), one->minutes(), one->seconds(), one->milliseconds(), one->microseconds(), Crypto::SignedBigInteger::create_from((i64)one->nanoseconds()), shift1);
+    auto ns1 = total_duration_nanoseconds(days1, one->hours(), one->minutes(), one->seconds(), one->milliseconds(), one->microseconds(), Crypto::SignedBigInteger { one->nanoseconds() }, shift1);
 
     // 10. Let ns2 be ! TotalDurationNanoseconds(days2, two.[[Hours]], two.[[Minutes]], two.[[Seconds]], two.[[Milliseconds]], two.[[Microseconds]], two.[[Nanoseconds]], shift2).
-    auto ns2 = total_duration_nanoseconds(days2, two->hours(), two->minutes(), two->seconds(), two->milliseconds(), two->microseconds(), Crypto::SignedBigInteger::create_from((i64)two->nanoseconds()), shift2);
+    auto ns2 = total_duration_nanoseconds(days2, two->hours(), two->minutes(), two->seconds(), two->milliseconds(), two->microseconds(), Crypto::SignedBigInteger { two->nanoseconds() }, shift2);
 
     // 11. If ns1 > ns2, return 1𝔽.
     if (ns1 > ns2)

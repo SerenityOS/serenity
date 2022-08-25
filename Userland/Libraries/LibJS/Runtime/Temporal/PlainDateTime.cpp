@@ -63,7 +63,8 @@ BigInt* get_epoch_from_iso_parts(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8
     VERIFY(isfinite(ms));
 
     // 6. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
-    return js_bigint(vm, Crypto::SignedBigInteger::create_from(static_cast<i64>(ms)).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
+    i32 signed_nanoseconds = nanosecond;
+    return js_bigint(vm, Crypto::SignedBigInteger { ms }.multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger { microsecond * 1000 }).plus(Crypto::SignedBigInteger { signed_nanoseconds }));
 }
 
 // nsMinInstant - nsPerDay
@@ -428,8 +429,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(VM& vm, Differe
     auto round_result = TRY(round_duration(vm, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, settings.rounding_increment, settings.smallest_unit, settings.rounding_mode, relative_to)).duration_record;
 
     // 8. Let result be ? BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], settings.[[LargestUnit]]).
-    // FIXME: Narrowing conversion from 'double' to 'i64'
-    auto result = MUST(balance_duration(vm, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds), settings.largest_unit));
+    auto result = MUST(balance_duration(vm, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, Crypto::SignedBigInteger { round_result.nanoseconds }, settings.largest_unit));
 
     // 9. Return ! CreateTemporalDuration(sign × roundResult.[[Years]], sign × roundResult.[[Months]], sign × roundResult.[[Weeks]], sign × result.[[Days]], sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, sign * round_result.years, sign * round_result.months, sign * round_result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));

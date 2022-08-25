@@ -84,7 +84,7 @@ MathematicalValue MathematicalValue::plus(Checked<i32> addition) const
             return MathematicalValue { value + addition.value() };
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return MathematicalValue { value.plus(Crypto::SignedBigInteger::create_from(addition.value())) };
+            return MathematicalValue { value.plus(Crypto::SignedBigInteger { addition.value() }) };
         },
         [](auto) -> MathematicalValue { VERIFY_NOT_REACHED(); });
 }
@@ -108,7 +108,7 @@ MathematicalValue MathematicalValue::minus(Checked<i32> subtraction) const
             return MathematicalValue { value - subtraction.value() };
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return MathematicalValue { value.minus(Crypto::SignedBigInteger::create_from(subtraction.value())) };
+            return MathematicalValue { value.minus(Crypto::SignedBigInteger { subtraction.value() }) };
         },
         [](auto) -> MathematicalValue { VERIFY_NOT_REACHED(); });
 }
@@ -132,7 +132,7 @@ MathematicalValue MathematicalValue::multiplied_by(Checked<i32> multiplier) cons
             return MathematicalValue { value * multiplier.value() };
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return MathematicalValue { value.multiplied_by(Crypto::SignedBigInteger::create_from(multiplier.value())) };
+            return MathematicalValue { value.multiplied_by(Crypto::SignedBigInteger { multiplier.value() }) };
         },
         [](auto) -> MathematicalValue { VERIFY_NOT_REACHED(); });
 }
@@ -156,7 +156,7 @@ MathematicalValue MathematicalValue::divided_by(Checked<i32> divisor) const
             return MathematicalValue { value / divisor.value() };
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return MathematicalValue { value.divided_by(Crypto::SignedBigInteger::create_from(divisor.value())).quotient };
+            return MathematicalValue { value.divided_by(Crypto::SignedBigInteger { divisor.value() }).quotient };
         },
         [](auto) -> MathematicalValue { VERIFY_NOT_REACHED(); });
 }
@@ -177,8 +177,8 @@ static Crypto::SignedBigInteger bigint_power(Checked<i32> exponent)
 {
     VERIFY(exponent >= 0);
 
-    static auto base = Crypto::SignedBigInteger::create_from(10);
-    auto result = Crypto::SignedBigInteger::create_from(1);
+    static auto base = Crypto::SignedBigInteger { 10 };
+    auto result = Crypto::SignedBigInteger { 1 };
 
     for (i32 i = 0; i < exponent; ++i)
         result = result.multiplied_by(base);
@@ -224,7 +224,7 @@ bool MathematicalValue::modulo_is_zero(Checked<i32> mod) const
             return result.is_equal_to(MathematicalValue { 0.0 });
         },
         [&](Crypto::SignedBigInteger const& value) {
-            return modulo(value, Crypto::SignedBigInteger::create_from(mod.value())).is_zero();
+            return modulo(value, Crypto::SignedBigInteger { mod.value() }).is_zero();
         },
         [](auto) -> bool { VERIFY_NOT_REACHED(); });
 }

@@ -436,8 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     }
 
     // 26. Let result be ? BalanceDuration(balanceResult.[[Days]], adjustResult.[[Hours]], adjustResult.[[Minutes]], adjustResult.[[Seconds]], adjustResult.[[Milliseconds]], adjustResult.[[Microseconds]], adjustResult.[[Nanoseconds]], largestUnit, relativeTo).
-    // FIXME: Narrowing conversion from 'double' to 'i64'
-    auto result = TRY(balance_duration(vm, balance_result.days, adjust_result.hours, adjust_result.minutes, adjust_result.seconds, adjust_result.milliseconds, adjust_result.microseconds, Crypto::SignedBigInteger::create_from(adjust_result.nanoseconds), *largest_unit, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    auto result = TRY(balance_duration(vm, balance_result.days, adjust_result.hours, adjust_result.minutes, adjust_result.seconds, adjust_result.milliseconds, adjust_result.microseconds, Crypto::SignedBigInteger { adjust_result.nanoseconds }, *largest_unit, relative_to.is_object() ? &relative_to.as_object() : nullptr));
 
     // 27. Return ! CreateTemporalDuration(balanceResult.[[Years]], balanceResult.[[Months]], balanceResult.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, balance_result.years, balance_result.months, balance_result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -495,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     }
 
     // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
-    auto balance_result = TRY(balance_duration(vm, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from(duration->nanoseconds()), *unit, intermediate));
+    auto balance_result = TRY(balance_duration(vm, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger { duration->nanoseconds() }, *unit, intermediate));
 
     // 12. Let roundRecord be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
     auto round_record = TRY(round_duration(vm, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, *unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));

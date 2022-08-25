@@ -1082,7 +1082,7 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
     if (increment == 1)
         return x;
 
-    auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
+    auto increment_big_int = Crypto::UnsignedBigInteger { increment };
 
     // 1. Let quotient be x / increment.
     auto division_result = x.divided_by(increment_big_int);
@@ -1137,7 +1137,7 @@ Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::Signed
     if (increment == 1)
         return x;
 
-    auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
+    auto increment_big_int = Crypto::UnsignedBigInteger { increment };
 
     // 1. Let quotient be x / increment.
     auto division_result = x.divided_by(increment_big_int);

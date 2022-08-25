@@ -315,7 +315,7 @@ ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_pla
     }
 
     // 3. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
-    auto balance_result = TRY(balance_duration(vm, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger::create_from((i64)duration->nanoseconds()), "day"sv));
+    auto balance_result = TRY(balance_duration(vm, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), Crypto::SignedBigInteger { duration->nanoseconds() }, "day"sv));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(vm, options_value));
