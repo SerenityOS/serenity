@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -58,7 +59,15 @@ public:
     [[nodiscard]] String to_base(u16 N) const;
 
     [[nodiscard]] u64 to_u64() const;
-    [[nodiscard]] double to_double() const;
+
+    enum class RoundingMode {
+        IEEERoundAndTiesToEvenMantissa,
+        RoundTowardZero,
+        // “the Number value for x”, https://tc39.es/ecma262/#number-value-for
+        ECMAScriptNumberValueFor = IEEERoundAndTiesToEvenMantissa,
+    };
+
+    [[nodiscard]] double to_double(RoundingMode rounding_mode = RoundingMode::IEEERoundAndTiesToEvenMantissa) const;
 
     [[nodiscard]] Vector<Word, STARTING_WORD_SIZE> const& words() const { return m_words; }
 

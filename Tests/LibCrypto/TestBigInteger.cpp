@@ -750,7 +750,7 @@ EXPECT_EQUAL_TO(zero, -0.0);
 TEST_CASE(to_double)
 {
 #define EXPECT_TO_EQUAL_DOUBLE(bigint, double_value) \
-    EXPECT_EQ((bigint).to_double(), double_value)
+    EXPECT_EQ((bigint).to_double(Crypto::UnsignedBigInteger::RoundingMode::RoundTowardZero), double_value)
 
     EXPECT_TO_EQUAL_DOUBLE(Crypto::UnsignedBigInteger(0), 0.0);
     // Make sure we don't get negative zero!
@@ -825,7 +825,41 @@ TEST_CASE(to_double)
     EXPECT_TO_EQUAL_DOUBLE(Crypto::SignedBigInteger::from_base(10, "2345678901234567890"sv),
         2345678901234567680.0);
 
-    EXPECT_EQ(1234567890123456800.0, 1234567890123456768.0);
+    EXPECT_EQ(
+        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        2305843009213693696.0);
+
+    EXPECT_EQ(
+        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff00"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::RoundTowardZero),
+        2305843009213693696.0);
+
+    EXPECT_EQ(
+        Crypto::UnsignedBigInteger::from_base(16, "1fffffffffffff80"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        2305843009213693952.0);
+
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000001"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740992.0);
+
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000002"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740994.0);
+
+    // 2^53 = 20000000000000, +3 Rounds up because of tiesRoundToEven
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000003"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740996.0);
+
+    // +4 is exactly 9007199254740996
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000004"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740996.0);
+
+    // +5 rounds down because of tiesRoundToEven
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000005"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740996.0);
+
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(16, "20000000000006"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        9007199254740998.0);
+
+    EXPECT_EQ(Crypto::UnsignedBigInteger::from_base(10, "98382635059784269824"sv).to_double(Crypto::UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa),
+        bit_cast<double>(0x4415555555555555ULL));
 
 #undef EXPECT_TO_EQUAL_DOUBLE
 }
