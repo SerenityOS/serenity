@@ -632,6 +632,7 @@ struct CharDescriptor {
 
 class Encoding : public RefCounted<Encoding> {
 public:
+    static PDFErrorOr<NonnullRefPtr<Encoding>> create(HashMap<u16, CharDescriptor> descriptors);
     static PDFErrorOr<NonnullRefPtr<Encoding>> from_object(Document*, NonnullRefPtr<Object> const&);
 
     static NonnullRefPtr<Encoding> standard_encoding();
@@ -642,6 +643,7 @@ public:
     static NonnullRefPtr<Encoding> zapf_encoding();
 
     HashMap<u16, CharDescriptor> const& descriptors() const { return m_descriptors; }
+    HashMap<String, u16> const& name_mapping() const { return m_name_mapping; }
 
     CharDescriptor const& get_char_code_descriptor(u16 char_code) const;
 
