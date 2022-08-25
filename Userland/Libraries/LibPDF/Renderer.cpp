@@ -643,25 +643,37 @@ void Renderer::show_text(String const& string)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
+    auto font_type = text_state().font->type();
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
-    auto font_size_int = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
-    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size_int);
-    VERIFY(font);
 
     auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-    // Account for the reversed font baseline
-    glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
+
+    RefPtr<Gfx::Font> font;
+
+    // For types other than Type 1 and the standard 14 fonts, use Liberation Serif for now
+    if (font_type != PDFFont::Type::Type1 || text_state().font->is_standard_font()) {
+        font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
+        VERIFY(font);
+
+        // Account for the reversed font baseline
+        glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
+    }
 
     auto original_position = glyph_position;
 
     for (auto char_code : string.bytes()) {
         auto code_point = text_state().font->char_code_to_code_point(char_code);
         auto char_width = text_state().font->get_char_width(char_code, font_size);
-
-        if (code_point != 0x20)
-            m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
-
         auto glyph_width = char_width * font_size;
+
+        if (code_point != 0x20) {
+            if (font.is_null()) {
+                text_state().font->draw_glyph(m_painter, glyph_position.to_type<int>(), glyph_width, code_point, state().paint_color);
+            } else {
+                m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
+            }
+        }
+
         auto tx = glyph_width;
         tx += text_state().character_spacing;
 

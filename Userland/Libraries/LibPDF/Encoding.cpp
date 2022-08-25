@@ -11,6 +11,17 @@
 
 namespace PDF {
 
+PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::create(HashMap<u16, CharDescriptor> descriptors)
+{
+    auto encoding = adopt_ref(*new Encoding());
+    encoding->m_descriptors = descriptors;
+
+    for (auto& descriptor : descriptors)
+        encoding->m_name_mapping.set(descriptor.value.name, descriptor.value.code_point);
+
+    return encoding;
+}
+
 PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, NonnullRefPtr<Object> const& obj)
 {
     if (obj->is<NameObject>()) {
@@ -37,8 +48,9 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     }
 
     auto encoding = adopt_ref(*new Encoding());
-    for (auto& [code_point, descriptor] : base_encoding->descriptors())
-        encoding->m_descriptors.set(code_point, descriptor);
+
+    encoding->m_descriptors = base_encoding->descriptors();
+    encoding->m_name_mapping = base_encoding->name_mapping();
 
     auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
 
