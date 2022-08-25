@@ -43,6 +43,8 @@ public:
     {
     }
 
+    explicit SignedBigInteger(double value);
+
     [[nodiscard]] static SignedBigInteger create_invalid()
     {
         return { UnsignedBigInteger::create_invalid(), false };

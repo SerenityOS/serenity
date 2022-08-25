@@ -39,6 +39,8 @@ public:
 
     explicit UnsignedBigInteger(u8 const* ptr, size_t length);
 
+    explicit UnsignedBigInteger(double value);
+
     UnsignedBigInteger() = default;
 
     [[nodiscard]] static UnsignedBigInteger create_invalid();

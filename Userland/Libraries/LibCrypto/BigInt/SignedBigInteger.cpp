@@ -11,6 +11,12 @@
 
 namespace Crypto {
 
+SignedBigInteger::SignedBigInteger(double value)
+    : m_sign(value < 0.0)
+    , m_unsigned_data(fabs(value))
+{
+}
+
 SignedBigInteger SignedBigInteger::import_data(u8 const* ptr, size_t length)
 {
     bool sign = *ptr;
