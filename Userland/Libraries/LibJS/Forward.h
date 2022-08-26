@@ -46,14 +46,13 @@
     JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES \
     __JS_ENUMERATE(TypedArray, typed_array, TypedArrayPrototype, TypedArrayConstructor, void)
 
-#define JS_ENUMERATE_NATIVE_ERRORS                                                                                                         \
-    __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                                                  \
-    __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor, void)                                  \
-    __JS_ENUMERATE(InvalidCharacterError, invalid_character_error, InvalidCharacterErrorPrototype, InvalidCharacterErrorConstructor, void) \
-    __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor, void)                                              \
-    __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor, void)                              \
-    __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor, void)                                          \
-    __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor, void)                                                  \
+#define JS_ENUMERATE_NATIVE_ERRORS                                                                            \
+    __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                     \
+    __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor, void)     \
+    __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor, void)                 \
+    __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor, void) \
+    __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor, void)             \
+    __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor, void)                     \
     __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor, void)
 
 #define JS_ENUMERATE_TYPED_ARRAYS                                                                                               \
