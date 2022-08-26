@@ -1399,7 +1399,7 @@ void Device::blit_from_color_buffer(void* output_data, Vector2<i32> input_offset
 
     PixelConverter converter { input_layout, output_layout };
     auto const* input_data = m_frame_buffer->color_buffer()->scanline(0);
-    auto conversion_result = converter.convert(input_data, output_data);
+    auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
@@ -1411,7 +1411,7 @@ void Device::blit_from_depth_buffer(void* output_data, Vector2<i32> input_offset
 
     PixelConverter converter { input_layout, output_layout };
     auto const* input_data = m_frame_buffer->depth_buffer()->scanline(0);
-    auto conversion_result = converter.convert(input_data, output_data);
+    auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
@@ -1432,7 +1432,7 @@ void Device::blit_to_color_buffer_at_raster_position(void const* input_data, GPU
 
     PixelConverter converter { input_layout, output_layout };
     auto* output_data = m_frame_buffer->color_buffer()->scanline(0);
-    auto conversion_result = converter.convert(input_data, output_data);
+    auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
@@ -1450,7 +1450,7 @@ void Device::blit_to_depth_buffer_at_raster_position(void const* input_data, GPU
 
     PixelConverter converter { input_layout, output_layout };
     auto* output_data = m_frame_buffer->depth_buffer()->scanline(0);
-    auto conversion_result = converter.convert(input_data, output_data);
+    auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
@@ -1533,19 +1533,15 @@ void Device::set_light_model_params(GPU::LightModelParameters const& lighting_mo
     m_lighting_model = lighting_model;
 }
 
-NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelType const& pixel_type, u32 width, u32 height, u32 depth, u32 levels, u32 layers)
+NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 levels, u32 layers)
 {
-    VERIFY(pixel_type.format == GPU::PixelFormat::RGBA
-        && pixel_type.bits == GPU::PixelComponentBits::AllBits
-        && pixel_type.data_type == GPU::PixelDataType::Float
-        && pixel_type.components_order == GPU::ComponentsOrder::Normal);
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);
     VERIFY(levels > 0);
     VERIFY(layers > 0);
 
-    return adopt_ref(*new Image(this, width, height, depth, levels, layers));
+    return adopt_ref(*new Image(this, pixel_format, width, height, depth, levels, layers));
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)

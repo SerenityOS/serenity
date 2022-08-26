@@ -21,8 +21,8 @@ public:
 
     virtual ~Image() { }
 
-    virtual void write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* data, ImageDataLayout const&) = 0;
-    virtual void read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* data, ImageDataLayout const&) const = 0;
+    virtual void write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* input_data, ImageDataLayout const&) = 0;
+    virtual void read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* output_data, ImageDataLayout const&) const = 0;
     virtual void copy_texels(Image const& source, u32 source_layer, u32 source_level, Vector3<u32> const& source_offset, Vector3<u32> const& size, u32 destination_layer, u32 destination_level, Vector3<u32> const& destination_offset) = 0;
 
     void const* ownership_token() const { return m_ownership_token; }

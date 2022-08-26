@@ -220,4 +220,71 @@ GPU::PixelType get_format_specification(GLenum format, GLenum type)
     VERIFY_NOT_REACHED();
 }
 
+GPU::PixelFormat pixel_format_for_internal_format(GLenum internal_format)
+{
+    // FIXME: add support for all the SRGB formats
+
+    // Numbers 1-4 are supported deprecated values
+    switch (internal_format) {
+    case 1:
+    case GL_ALPHA:
+    case GL_ALPHA4:
+    case GL_ALPHA8:
+    case GL_ALPHA12:
+    case GL_ALPHA16:
+    case GL_COMPRESSED_ALPHA:
+        return GPU::PixelFormat::Alpha;
+    case GL_DEPTH_COMPONENT:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32:
+        return GPU::PixelFormat::DepthComponent;
+    case GL_INTENSITY:
+    case GL_INTENSITY4:
+    case GL_INTENSITY8:
+    case GL_INTENSITY12:
+    case GL_INTENSITY16:
+    case GL_COMPRESSED_INTENSITY:
+        return GPU::PixelFormat::Intensity;
+    case GL_LUMINANCE:
+    case GL_LUMINANCE4:
+    case GL_LUMINANCE8:
+    case GL_LUMINANCE12:
+    case GL_LUMINANCE16:
+    case GL_COMPRESSED_LUMINANCE:
+        return GPU::PixelFormat::Luminance;
+    case 2:
+    case GL_LUMINANCE_ALPHA:
+    case GL_LUMINANCE4_ALPHA4:
+    case GL_LUMINANCE6_ALPHA2:
+    case GL_LUMINANCE8_ALPHA8:
+    case GL_LUMINANCE12_ALPHA4:
+    case GL_LUMINANCE12_ALPHA12:
+    case GL_LUMINANCE16_ALPHA16:
+        return GPU::PixelFormat::LuminanceAlpha;
+    case 3:
+    case GL_RGB:
+    case GL_R3_G3_B2:
+    case GL_RGB4:
+    case GL_RGB5:
+    case GL_RGB8:
+    case GL_RGB10:
+    case GL_RGB12:
+    case GL_RGB16:
+    case GL_COMPRESSED_RGB:
+        return GPU::PixelFormat::RGB;
+    case 4:
+    case GL_RGBA:
+    case GL_RGBA2:
+    case GL_RGBA4:
+    case GL_RGBA8:
+    case GL_RGB10_A2:
+    case GL_RGBA12:
+    case GL_RGBA16:
+    case GL_COMPRESSED_RGBA:
+        return GPU::PixelFormat::RGBA;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 }
