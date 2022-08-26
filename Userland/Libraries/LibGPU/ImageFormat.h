@@ -21,6 +21,7 @@ enum class PixelFormat {
     ColorIndex,
     DepthComponent,
     Green,
+    Intensity,
     Luminance,
     LuminanceAlpha,
     Red,
@@ -77,6 +78,7 @@ static constexpr int number_of_components(PixelFormat format)
     case PixelFormat::ColorIndex:
     case PixelFormat::DepthComponent:
     case PixelFormat::Green:
+    case PixelFormat::Intensity:
     case PixelFormat::Luminance:
     case PixelFormat::Red:
     case PixelFormat::StencilIndex:
