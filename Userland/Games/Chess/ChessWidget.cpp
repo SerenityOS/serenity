@@ -157,6 +157,14 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             }
         }
 
+        Gfx::IntRect origin_square;
+        if (side() == Chess::Color::White) {
+            origin_square = { m_moving_square.file * tile_width, (7 - m_moving_square.rank) * tile_height, tile_width, tile_height };
+        } else {
+            origin_square = { (7 - m_moving_square.file) * tile_width, m_moving_square.rank * tile_height, tile_width, tile_height };
+        }
+        painter.fill_rect(origin_square, m_move_highlight_color);
+
         auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
         if (bmp.has_value()) {
             auto center = m_drag_point - Gfx::IntPoint(tile_width / 2, tile_height / 2);
