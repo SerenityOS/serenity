@@ -37,6 +37,7 @@ RefPtr<GUI::Window> ConnectionFromClient::create_dummy_child_window(i32 window_s
     auto window = GUI::Window::construct();
     window->set_opacity(0);
     window->set_frameless(true);
+    window->set_window_mode(GUI::WindowMode::Passive);
     auto rect = GUI::ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
     window->set_rect(rect);
     window->show();
