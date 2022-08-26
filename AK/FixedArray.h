@@ -37,12 +37,13 @@ public:
     {
         if (size == 0)
             return FixedArray<T>();
-        T* elements = static_cast<T*>(kmalloc_array(size, sizeof(T)));
-        if (!elements)
+        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(size)));
+        if (!new_storage)
             return Error::from_errno(ENOMEM);
+        new_storage->size = size;
         for (size_t i = 0; i < size; ++i)
-            new (&elements[i]) T();
-        return FixedArray<T>(size, elements);
+            new (&new_storage->elements[i]) T();
+        return FixedArray<T>(new_storage);
     }
 
     static FixedArray<T> must_create_but_fixme_should_propagate_errors(size_t size)
@@ -50,21 +51,10 @@ public:
         return MUST(try_create(size));
     }
 
-    // NOTE:
-    // Even though it may look like there will be a template instantiation of this function for every size,
-    // the compiler will inline this anyway and therefore not generate any duplicate code.
-
     template<size_t N>
     static ErrorOr<FixedArray<T>> try_create(T (&&array)[N])
     {
-        if (N == 0)
-            return FixedArray<T>();
-        T* elements = static_cast<T*>(kmalloc_array(N, sizeof(T)));
-        if (!elements)
-            return Error::from_errno(ENOMEM);
-        for (size_t i = 0; i < N; ++i)
-            new (&elements[i]) T(move(array[i]));
-        return FixedArray<T>(N, elements);
+        return try_create(Span(array, N));
     }
 
     template<typename U>
@@ -72,24 +62,23 @@ public:
     {
         if (span.size() == 0)
             return FixedArray<T>();
-        T* elements = static_cast<T*>(kmalloc_array(span.size(), sizeof(T)));
-        if (!elements)
+        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(span.size())));
+        if (!new_storage)
             return Error::from_errno(ENOMEM);
+        new_storage->size = span.size();
         for (size_t i = 0; i < span.size(); ++i)
-            new (&elements[i]) T(span[i]);
-        return FixedArray<T>(span.size(), elements);
+            new (&new_storage->elements[i]) T(span[i]);
+        return FixedArray<T>(new_storage);
     }
 
     ErrorOr<FixedArray<T>> try_clone() const
     {
-        if (m_size == 0)
-            return FixedArray<T>();
-        T* elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
-        if (!elements)
-            return Error::from_errno(ENOMEM);
-        for (size_t i = 0; i < m_size; ++i)
-            new (&elements[i]) T(m_elements[i]);
-        return FixedArray<T>(m_size, elements);
+        return try_create(span());
+    }
+
+    static size_t storage_allocation_size(size_t size)
+    {
+        return sizeof(Storage) + size * sizeof(T);
     }
 
     // Nobody can ever use these functions, since it would be impossible to make them OOM-safe due to their signatures. We just explicitly delete them.
@@ -97,42 +86,37 @@ public:
     FixedArray<T>& operator=(FixedArray<T> const&) = delete;
 
     FixedArray(FixedArray<T>&& other)
-        : m_size(other.m_size)
-        , m_elements(other.m_elements)
+        : m_storage(exchange(other.m_storage, nullptr))
     {
-        other.m_size = 0;
-        other.m_elements = nullptr;
     }
     // This function would violate the contract, as it would need to deallocate this FixedArray. As it also has no use case, we delete it.
     FixedArray<T>& operator=(FixedArray<T>&&) = delete;
 
     ~FixedArray()
     {
-        if (!m_elements)
+        if (!m_storage)
             return;
-        for (size_t i = 0; i < m_size; ++i)
-            m_elements[i].~T();
-        kfree_sized(m_elements, sizeof(T) * m_size);
-        // NOTE: should prevent use-after-free early
-        m_size = 0;
-        m_elements = nullptr;
+        for (size_t i = 0; i < m_storage->size; ++i)
+            m_storage->elements[i].~T();
+        kfree_sized(m_storage, storage_allocation_size(m_storage->size));
+        m_storage = nullptr;
     }
 
-    size_t size() const { return m_size; }
-    bool is_empty() const { return m_size == 0; }
-    T* data() { return m_elements; }
-    T const* data() const { return m_elements; }
+    size_t size() const { return m_storage ? m_storage->size : 0; }
+    bool is_empty() const { return size() == 0; }
+    T* data() { return m_storage ? m_storage->elements : nullptr; }
+    T const* data() const { return m_storage ? m_storage->elements : nullptr; }
 
     T& at(size_t index)
     {
-        VERIFY(index < m_size);
-        return m_elements[index];
+        VERIFY(index < m_storage->size);
+        return m_storage->elements[index];
     }
 
     T const& at(size_t index) const
     {
-        VERIFY(index < m_size);
-        return m_elements[index];
+        VERIFY(index < m_storage->size);
+        return m_storage->elements[index];
     }
 
     T& operator[](size_t index)
@@ -147,8 +131,10 @@ public:
 
     bool contains_slow(T const& value) const
     {
-        for (size_t i = 0; i < m_size; ++i) {
-            if (m_elements[i] == value)
+        if (!m_storage)
+            return false;
+        for (size_t i = 0; i < m_storage->size; ++i) {
+            if (m_storage->elements[i] == value)
                 return true;
         }
         return false;
@@ -156,14 +142,15 @@ public:
 
     void swap(FixedArray<T>& other)
     {
-        ::swap(m_size, other.m_size);
-        ::swap(m_elements, other.m_elements);
+        ::swap(m_storage, other.m_storage);
     }
 
     void fill_with(T const& value)
     {
-        for (size_t i = 0; i < m_size; ++i)
-            m_elements[i] = value;
+        if (!m_storage)
+            return;
+        for (size_t i = 0; i < m_storage->size; ++i)
+            m_storage->elements[i] = value;
     }
 
     using Iterator = SimpleIterator<FixedArray, T>;
@@ -179,14 +166,17 @@ public:
     Span<T const> span() const { return { data(), size() }; }
 
 private:
-    FixedArray(size_t size, T* elements)
-        : m_size(size)
-        , m_elements(elements)
+    struct Storage {
+        size_t size { 0 };
+        T elements[0];
+    };
+
+    FixedArray(Storage* storage)
+        : m_storage(storage)
     {
     }
 
-    size_t m_size { 0 };
-    T* m_elements { nullptr };
+    Storage* m_storage { nullptr };
 };
 
 }
