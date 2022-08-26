@@ -238,7 +238,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         },
         window());
 
-    m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"sv), window());
+    m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"sv), &parent_window);
 
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);
