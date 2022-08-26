@@ -390,8 +390,11 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
     for (u32 code_point : Utf8View(string)) {
-        if (code_point > 0xff)
-            return vm.throw_completion<JS::InvalidCharacterError>(JS::ErrorType::NotAByteString, "btoa");
+        if (code_point > 0xff) {
+            return Bindings::throw_dom_exception_if_needed(vm, [] {
+                return DOM::InvalidCharacterError::create("Data contains characters outside the range U+0000 and U+00FF");
+            }).release_error();
+        }
         byte_string.append(code_point);
     }
 
