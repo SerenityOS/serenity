@@ -15,7 +15,7 @@
 namespace JS {
 
 AggregateErrorConstructor::AggregateErrorConstructor(Realm& realm)
-    : NativeFunction(static_cast<Object&>(*realm.global_object().error_constructor()))
+    : NativeFunction(static_cast<Object&>(*realm.intrinsics().error_constructor()))
 {
 }
 
@@ -25,7 +25,7 @@ void AggregateErrorConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.5.7.2.1 AggregateError.prototype, https://tc39.es/ecma262/#sec-aggregate-error.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().aggregate_error_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().aggregate_error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
@@ -42,7 +42,7 @@ ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& 
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &GlobalObject::aggregate_error_prototype));
+    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(vm, new_target, &Intrinsics::aggregate_error_prototype));
 
     if (!vm.argument(1).is_undefined()) {
         auto message = TRY(vm.argument(1).to_string(vm));

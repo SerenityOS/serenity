@@ -13,7 +13,7 @@
 namespace JS {
 
 AsyncFunctionConstructor::AsyncFunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.AsyncFunction.as_string(), *realm.global_object().function_constructor())
+    : NativeFunction(vm().names.AsyncFunction.as_string(), *realm.intrinsics().function_constructor())
 {
 }
 
@@ -23,7 +23,7 @@ void AsyncFunctionConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 27.7.2.2 AsyncFunction.prototype, https://tc39.es/ecma262/#sec-async-function-constructor-prototype
-    define_direct_property(vm.names.prototype, realm.global_object().async_function_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().async_function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }

@@ -15,7 +15,7 @@
 namespace JS {
 
 ArrayIteratorPrototype::ArrayIteratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().iterator_prototype())
+    : PrototypeObject(*realm.intrinsics().iterator_prototype())
 {
 }
 

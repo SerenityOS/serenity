@@ -1003,8 +1003,11 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_error(object, seen_objects);
 
         auto prototype_or_error = object.internal_get_prototype_of();
-        if (prototype_or_error.has_value() && prototype_or_error.value() == object.global_object().error_prototype())
-            return print_error(object, seen_objects);
+        if (prototype_or_error.has_value() && prototype_or_error.value() != nullptr) {
+            auto& prototype = *prototype_or_error.value();
+            if (&prototype == prototype.shape().realm().intrinsics().error_prototype())
+                return print_error(object, seen_objects);
+        }
 
         if (is<JS::RegExpObject>(object))
             return print_regexp_object(static_cast<JS::RegExpObject&>(object), seen_objects);
@@ -1272,9 +1275,9 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
         return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file->fd()));
-    auto* object = JS::Object::create(realm, realm.global_object().object_prototype());
+    auto* object = JS::Object::create(realm, realm.intrinsics().object_prototype());
     for (auto const& group : config_file->groups()) {
-        auto* group_object = JS::Object::create(realm, realm.global_object().object_prototype());
+        auto* group_object = JS::Object::create(realm, realm.intrinsics().object_prototype());
         for (auto const& key : config_file->keys(group)) {
             auto entry = config_file->read_entry(group, key);
             group_object->define_direct_property(key, js_string(vm, move(entry)), JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable);

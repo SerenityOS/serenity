@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -92,6 +93,14 @@
     __JS_ENUMERATE(TimeZone, time_zone, TimeZonePrototype, TimeZoneConstructor)                          \
     __JS_ENUMERATE(ZonedDateTime, zoned_date_time, ZonedDateTimePrototype, ZonedDateTimeConstructor)
 
+#define JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS \
+    __JS_ENUMERATE(AtomicsObject, atomics)     \
+    __JS_ENUMERATE(Intl::Intl, intl)           \
+    __JS_ENUMERATE(JSONObject, json)           \
+    __JS_ENUMERATE(MathObject, math)           \
+    __JS_ENUMERATE(ReflectObject, reflect)     \
+    __JS_ENUMERATE(Temporal::Temporal, temporal)
+
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES                         \
     __JS_ENUMERATE(Iterator, iterator)                           \
     __JS_ENUMERATE(ArrayIterator, array_iterator)                \
@@ -161,6 +170,7 @@ class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
+class Intrinsics;
 class Module;
 class NativeFunction;
 class ObjectEnvironment;
@@ -205,6 +215,11 @@ class GeneratorPrototype;
 class TypedArrayConstructor;
 class TypedArrayPrototype;
 
+class AtomicsObject;
+class JSONObject;
+class MathObject;
+class ReflectObject;
+
 // Tag type used to differentiate between u8 as used by Uint8Array and u8 as used by Uint8ClampedArray.
 struct ClampedU8;
 
@@ -217,6 +232,11 @@ JS_ENUMERATE_NATIVE_ERRORS
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
+#define __JS_ENUMERATE(ClassName, snake_name) \
+    class ClassName;                          \
+    JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
+#undef __JS_ENUMERATE
+
 namespace Intl {
 #define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName) \
     class ClassName;                                                          \
@@ -225,6 +245,7 @@ namespace Intl {
 JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
+class Intl;
 class MathematicalValue;
 
 // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
@@ -239,6 +260,7 @@ namespace Temporal {
     class PrototypeName;
 JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
+class Temporal;
 struct DurationRecord;
 struct DateDurationRecord;
 struct TimeDurationRecord;

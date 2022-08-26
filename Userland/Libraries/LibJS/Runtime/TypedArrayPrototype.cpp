@@ -16,7 +16,7 @@
 namespace JS {
 
 TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -65,7 +65,7 @@ void TypedArrayPrototype::initialize(Realm& realm)
     define_native_accessor(realm, *vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
     // 23.2.3.32 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
-    define_direct_property(vm.names.toString, realm.global_object().array_prototype()->get_without_side_effects(vm.names.toString), attr);
+    define_direct_property(vm.names.toString, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.toString), attr);
 
     // 23.2.3.34 %TypedArray%.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
@@ -146,7 +146,7 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, Typ
     auto& realm = *vm.current_realm();
 
     // 1. Let defaultConstructor be the intrinsic object listed in column one of Table 72 for exemplar.[[TypedArrayName]].
-    auto* default_constructor = (realm.global_object().*exemplar.intrinsic_constructor())();
+    auto* default_constructor = (realm.intrinsics().*exemplar.intrinsic_constructor())();
 
     // 2. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
     auto* constructor = TRY(species_constructor(vm, exemplar, *default_constructor));

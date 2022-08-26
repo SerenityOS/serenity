@@ -11,7 +11,7 @@ namespace JS {
 
 NumberObject* NumberObject::create(Realm& realm, double value)
 {
-    return realm.heap().allocate<NumberObject>(realm, value, *realm.global_object().number_prototype());
+    return realm.heap().allocate<NumberObject>(realm, value, *realm.intrinsics().number_prototype());
 }
 
 NumberObject::NumberObject(double value, Object& prototype)

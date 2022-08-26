@@ -336,7 +336,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 VERIFY_NOT_REACHED();
             }
 
-            auto* rest_object = Object::create(realm, realm.global_object().object_prototype());
+            auto* rest_object = Object::create(realm, realm.intrinsics().object_prototype());
             VERIFY(rest_object);
 
             TRY(rest_object->copy_data_properties(vm, object, seen_names));

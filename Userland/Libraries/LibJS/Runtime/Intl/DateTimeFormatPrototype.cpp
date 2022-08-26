@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 11.3 Properties of the Intl.DateTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-datetimeformat-prototype-object
 DateTimeFormatPrototype::DateTimeFormatPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     // 3. If date is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date_value = MUST(call(vm, realm.global_object().date_constructor_now_function(), js_undefined())).as_double();
+        date_value = MUST(call(vm, realm.intrinsics().date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     auto* date_time_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, realm.global_object().object_prototype());
+    auto* options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 5. For each row of Table 5, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

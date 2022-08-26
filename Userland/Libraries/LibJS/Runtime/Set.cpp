@@ -10,12 +10,12 @@ namespace JS {
 
 Set* Set::create(Realm& realm)
 {
-    return realm.heap().allocate<Set>(realm, *realm.global_object().set_prototype());
+    return realm.heap().allocate<Set>(realm, *realm.intrinsics().set_prototype());
 }
 
 Set::Set(Object& prototype)
     : Object(prototype)
-    , m_values(*prototype.global_object().map_prototype())
+    , m_values(*prototype.shape().realm().intrinsics().map_prototype())
 {
 }
 

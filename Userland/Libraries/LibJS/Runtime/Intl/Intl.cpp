@@ -29,7 +29,7 @@ namespace JS::Intl {
 
 // 8 The Intl Object, https://tc39.es/ecma402/#intl-object
 Intl::Intl(Realm& realm)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -43,16 +43,16 @@ void Intl::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.Collator, realm.global_object().intl_collator_constructor(), attr);
-    define_direct_property(vm.names.DateTimeFormat, realm.global_object().intl_date_time_format_constructor(), attr);
-    define_direct_property(vm.names.DisplayNames, realm.global_object().intl_display_names_constructor(), attr);
-    define_direct_property(vm.names.DurationFormat, realm.global_object().intl_duration_format_constructor(), attr);
-    define_direct_property(vm.names.ListFormat, realm.global_object().intl_list_format_constructor(), attr);
-    define_direct_property(vm.names.Locale, realm.global_object().intl_locale_constructor(), attr);
-    define_direct_property(vm.names.NumberFormat, realm.global_object().intl_number_format_constructor(), attr);
-    define_direct_property(vm.names.PluralRules, realm.global_object().intl_plural_rules_constructor(), attr);
-    define_direct_property(vm.names.RelativeTimeFormat, realm.global_object().intl_relative_time_format_constructor(), attr);
-    define_direct_property(vm.names.Segmenter, realm.global_object().intl_segmenter_constructor(), attr);
+    define_direct_property(vm.names.Collator, realm.intrinsics().intl_collator_constructor(), attr);
+    define_direct_property(vm.names.DateTimeFormat, realm.intrinsics().intl_date_time_format_constructor(), attr);
+    define_direct_property(vm.names.DisplayNames, realm.intrinsics().intl_display_names_constructor(), attr);
+    define_direct_property(vm.names.DurationFormat, realm.intrinsics().intl_duration_format_constructor(), attr);
+    define_direct_property(vm.names.ListFormat, realm.intrinsics().intl_list_format_constructor(), attr);
+    define_direct_property(vm.names.Locale, realm.intrinsics().intl_locale_constructor(), attr);
+    define_direct_property(vm.names.NumberFormat, realm.intrinsics().intl_number_format_constructor(), attr);
+    define_direct_property(vm.names.PluralRules, realm.intrinsics().intl_plural_rules_constructor(), attr);
+    define_direct_property(vm.names.RelativeTimeFormat, realm.intrinsics().intl_relative_time_format_constructor(), attr);
+    define_direct_property(vm.names.Segmenter, realm.intrinsics().intl_segmenter_constructor(), attr);
 
     define_native_function(realm, vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
     define_native_function(realm, vm.names.supportedValuesOf, supported_values_of, 1, attr);

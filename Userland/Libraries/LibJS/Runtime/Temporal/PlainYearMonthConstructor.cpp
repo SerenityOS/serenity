@@ -16,7 +16,7 @@ namespace JS::Temporal {
 
 // 9.1 The Temporal.PlainYearMonth Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plainyearmonth-constructor
 PlainYearMonthConstructor::PlainYearMonthConstructor(Realm& realm)
-    : NativeFunction(vm().names.PlainYearMonth.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.PlainYearMonth.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ void PlainYearMonthConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 9.2.1 Temporal.PlainYearMonth.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_plain_year_month_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_plain_year_month_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 

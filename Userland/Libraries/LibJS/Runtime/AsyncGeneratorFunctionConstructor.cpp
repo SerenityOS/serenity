@@ -13,7 +13,7 @@
 namespace JS {
 
 AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.AsyncGeneratorFunction.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.AsyncGeneratorFunction.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -26,7 +26,7 @@ void AsyncGeneratorFunctionConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     // 27.4.2.2 AsyncGeneratorFunction.prototype, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype
-    define_direct_property(vm.names.prototype, realm.global_object().async_generator_function_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().async_generator_function_prototype(), 0);
 }
 
 // 27.4.1.1 AsyncGeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-asyncgeneratorfunction

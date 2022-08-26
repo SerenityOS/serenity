@@ -17,7 +17,7 @@ namespace JS::Temporal {
 
 // 6.1 The Temporal.ZonedDateTime Constructor, https://tc39.es/proposal-temporal/#sec-temporal-zoneddatetime-constructor
 ZonedDateTimeConstructor::ZonedDateTimeConstructor(Realm& realm)
-    : NativeFunction(vm().names.ZonedDateTime.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.ZonedDateTime.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void ZonedDateTimeConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 6.2.1 Temporal.ZonedDateTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_zoned_date_time_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_zoned_date_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);

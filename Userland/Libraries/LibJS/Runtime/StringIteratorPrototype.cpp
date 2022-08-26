@@ -14,7 +14,7 @@
 namespace JS {
 
 StringIteratorPrototype::StringIteratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().iterator_prototype())
+    : PrototypeObject(*realm.intrinsics().iterator_prototype())
 {
 }
 

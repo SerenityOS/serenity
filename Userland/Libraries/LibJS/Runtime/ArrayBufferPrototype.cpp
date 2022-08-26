@@ -15,7 +15,7 @@
 namespace JS {
 
 ArrayBufferPrototype::ArrayBufferPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     // 15. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *realm.global_object().array_buffer_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *realm.intrinsics().array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
     auto* new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));

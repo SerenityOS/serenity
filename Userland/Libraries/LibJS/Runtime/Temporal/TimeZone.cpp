@@ -69,10 +69,10 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& ide
 
     // 1. If newTarget is not present, set newTarget to %Temporal.TimeZone%.
     if (!new_target)
-        new_target = realm.global_object().temporal_time_zone_constructor();
+        new_target = realm.intrinsics().temporal_time_zone_constructor();
 
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
-    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &GlobalObject::temporal_time_zone_prototype));
+    auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &Intrinsics::temporal_time_zone_prototype));
 
     // 3. Let offsetNanosecondsResult be Completion(ParseTimeZoneOffsetString(identifier)).
     auto offset_nanoseconds_result = parse_time_zone_offset_string(vm, identifier);

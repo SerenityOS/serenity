@@ -18,7 +18,7 @@ class WebAssemblyInstancePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyInstancePrototype(JS::Realm& realm)
-        : JS::Object(*realm.global_object().object_prototype())
+        : JS::Object(*realm.intrinsics().object_prototype())
     {
     }
 

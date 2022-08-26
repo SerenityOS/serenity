@@ -11,7 +11,7 @@ namespace JS {
 
 MapIterator* MapIterator::create(Realm& realm, Map& map, Object::PropertyKind iteration_kind)
 {
-    return realm.heap().allocate<MapIterator>(realm, map, iteration_kind, *realm.global_object().map_iterator_prototype());
+    return realm.heap().allocate<MapIterator>(realm, map, iteration_kind, *realm.intrinsics().map_iterator_prototype());
 }
 
 MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype)

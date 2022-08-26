@@ -12,7 +12,7 @@
 namespace JS {
 
 WeakSetPrototype::WeakSetPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 

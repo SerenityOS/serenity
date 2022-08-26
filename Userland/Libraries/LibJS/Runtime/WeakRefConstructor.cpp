@@ -13,7 +13,7 @@
 namespace JS {
 
 WeakRefConstructor::WeakRefConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakRef.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.WeakRef.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -23,7 +23,7 @@ void WeakRefConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 26.1.2.1 WeakRef.prototype, https://tc39.es/ecma262/#sec-weak-ref.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().weak_ref_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().weak_ref_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -45,9 +45,9 @@ ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_tar
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_string_without_side_effects());
 
     if (target.is_object())
-        return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &GlobalObject::weak_ref_prototype, target.as_object()));
+        return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_object()));
     VERIFY(target.is_symbol());
-    return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &GlobalObject::weak_ref_prototype, target.as_symbol()));
+    return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_symbol()));
 }
 
 }

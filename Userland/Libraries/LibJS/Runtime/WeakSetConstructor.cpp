@@ -14,7 +14,7 @@
 namespace JS {
 
 WeakSetConstructor::WeakSetConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakSet.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.WeakSet.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void WeakSetConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 24.4.2.1 WeakSet.prototype, https://tc39.es/ecma262/#sec-weakset.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().weak_set_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().weak_set_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -41,7 +41,7 @@ ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_tar
 {
     auto& vm = this->vm();
 
-    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &GlobalObject::weak_set_prototype));
+    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_set;

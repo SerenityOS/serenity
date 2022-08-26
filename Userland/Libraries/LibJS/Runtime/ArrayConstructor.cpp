@@ -17,7 +17,7 @@
 namespace JS {
 
 ArrayConstructor::ArrayConstructor(Realm& realm)
-    : NativeFunction(vm().names.Array.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Array.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ void ArrayConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 23.1.2.4 Array.prototype, https://tc39.es/ecma262/#sec-array.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().array_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().array_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);
@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    auto* proto = TRY(get_prototype_from_constructor(vm, new_target, &GlobalObject::array_prototype));
+    auto* proto = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::array_prototype));
 
     if (vm.argument_count() == 0)
         return MUST(Array::create(realm, 0, proto));

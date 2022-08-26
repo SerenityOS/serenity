@@ -131,7 +131,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
 
 // 10.1 The Intl.Collator Constructor, https://tc39.es/ecma402/#sec-the-intl-collator-constructor
 CollatorConstructor::CollatorConstructor(Realm& realm)
-    : NativeFunction(vm().names.Collator.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Collator.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -142,7 +142,7 @@ void CollatorConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 10.2.1 Intl.Collator.prototype, https://tc39.es/ecma402/#sec-intl.collator.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_collator_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_collator_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -171,7 +171,7 @@ ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_ta
     //     a. Append [[CaseFirst]] as the last element of internalSlotsList.
 
     // 5. Let collator be ? OrdinaryCreateFromConstructor(newTarget, "%Collator.prototype%", internalSlotsList).
-    auto* collator = TRY(ordinary_create_from_constructor<Collator>(vm, new_target, &GlobalObject::intl_collator_prototype));
+    auto* collator = TRY(ordinary_create_from_constructor<Collator>(vm, new_target, &Intrinsics::intl_collator_prototype));
 
     // 6. Return ? InitializeCollator(collator, locales, options).
     return TRY(initialize_collator(vm, *collator, locales, options));

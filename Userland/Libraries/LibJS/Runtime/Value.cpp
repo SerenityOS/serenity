@@ -450,7 +450,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     case BOOLEAN_TAG:
         return BooleanObject::create(realm, as_bool());
     case STRING_TAG:
-        return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *realm.global_object().string_prototype());
+        return StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), *realm.intrinsics().string_prototype());
     case SYMBOL_TAG:
         return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
     case BIGINT_TAG:

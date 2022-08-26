@@ -25,7 +25,7 @@ static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value 
 }
 
 ProxyConstructor::ProxyConstructor(Realm& realm)
-    : NativeFunction(vm().names.Proxy.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Proxy.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
     auto* revoker = NativeFunction::create(realm, move(revoker_closure), 0, "");
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(realm, realm.global_object().object_prototype());
+    auto* result = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
     MUST(result->create_data_property_or_throw(vm.names.proxy, proxy));

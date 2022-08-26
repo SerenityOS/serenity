@@ -362,7 +362,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
 }
 
 // 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto ), https://tc39.es/ecma262/#sec-getprototypefromconstructor
-ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
+ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject const& constructor, Object* (Intrinsics::*intrinsic_default_prototype)())
 {
     // 1. Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
 
@@ -375,7 +375,7 @@ ThrowCompletionOr<Object*> get_prototype_from_constructor(VM& vm, FunctionObject
         auto* realm = TRY(get_function_realm(vm, constructor));
 
         // b. Set proto to realm's intrinsic object named intrinsicDefaultProto.
-        prototype = (realm->global_object().*intrinsic_default_prototype)();
+        prototype = (realm->intrinsics().*intrinsic_default_prototype)();
     }
 
     // 4. Return proto.
@@ -1029,7 +1029,7 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 
     // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
     object->set_has_parameter_map();
 
     // 4. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
@@ -1048,11 +1048,11 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
     }
 
     // 7. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto* array_prototype_values = realm.global_object().array_prototype_values_function();
+    auto* array_prototype_values = realm.intrinsics().array_prototype_values_function();
     MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
-    auto* throw_type_error = realm.global_object().throw_type_error_function();
+    auto* throw_type_error = realm.intrinsics().throw_type_error_function();
     MUST(object->define_property_or_throw(vm.names.callee, { .get = throw_type_error, .set = throw_type_error, .enumerable = false, .configurable = false }));
 
     // 9. Return obj.
@@ -1131,7 +1131,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     }
 
     // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto* array_prototype_values = realm.global_object().array_prototype_values_function();
+    auto* array_prototype_values = realm.intrinsics().array_prototype_values_function();
     MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 21. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Value]]: func, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).

@@ -14,7 +14,7 @@
 namespace JS {
 
 MapConstructor::MapConstructor(Realm& realm)
-    : NativeFunction(vm().names.Map.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Map.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void MapConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 24.1.2.1 Map.prototype, https://tc39.es/ecma262/#sec-map.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().map_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().map_prototype(), 0);
 
     define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* map = TRY(ordinary_create_from_constructor<Map>(vm, new_target, &GlobalObject::map_prototype));
+    auto* map = TRY(ordinary_create_from_constructor<Map>(vm, new_target, &Intrinsics::map_prototype));
 
     if (vm.argument(0).is_nullish())
         return map;

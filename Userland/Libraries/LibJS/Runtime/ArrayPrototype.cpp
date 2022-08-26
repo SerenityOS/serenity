@@ -29,7 +29,7 @@ namespace JS {
 static HashTable<Object*> s_array_join_seen_objects;
 
 ArrayPrototype::ArrayPrototype(Realm& realm)
-    : Array(*realm.global_object().object_prototype())
+    : Array(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -128,7 +128,7 @@ static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_
         auto* this_realm = vm.current_realm();
         auto* constructor_realm = TRY(get_function_realm(vm, constructor_function));
         if (constructor_realm != this_realm) {
-            if (&constructor_function == constructor_realm->global_object().array_constructor())
+            if (&constructor_function == constructor_realm->intrinsics().array_constructor())
                 constructor = js_undefined();
         }
     }
@@ -1968,7 +1968,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 
     // 3. If IsCallable(func) is false, set func to the intrinsic function %Object.prototype.toString%.
     if (!func.is_function())
-        func = realm.global_object().object_prototype_to_string_function();
+        func = realm.intrinsics().object_prototype_to_string_function();
 
     // 4. Return ? Call(func, array).
     return TRY(call(vm, func.as_function(), array));

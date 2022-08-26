@@ -22,7 +22,7 @@
 namespace JS {
 
 RegExpPrototype::RegExpPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -418,7 +418,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
         /* 2. If R does not have an [[OriginalFlags]] internal slot, then */               \
         if (!is<RegExpObject>(regexp_object)) {                                            \
             /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */        \
-            if (same_value(regexp_object, realm.global_object().regexp_prototype()))       \
+            if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))          \
                 return js_undefined();                                                     \
             /* b. Otherwise, throw a TypeError exception. */                               \
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp"); \
@@ -574,7 +574,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.global_object().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -851,7 +851,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     // 3. If R does not have an [[OriginalSource]] internal slot, then
     if (!is<RegExpObject>(regexp_object)) {
         // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
-        if (same_value(regexp_object, realm.global_object().regexp_prototype()))
+        if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))
             return js_string(vm, "(?:)");
 
         // b. Otherwise, throw a TypeError exception.
@@ -879,7 +879,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.global_object().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));

@@ -17,17 +17,17 @@ ThrowCompletionOr<ArrayBuffer*> ArrayBuffer::create(Realm& realm, size_t byte_le
     if (buffer.is_error())
         return realm.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    return realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.intrinsics().array_buffer_prototype());
 }
 
 ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.intrinsics().array_buffer_prototype());
 }
 
 ArrayBuffer* ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.global_object().array_buffer_prototype());
+    return realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.intrinsics().array_buffer_prototype());
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
@@ -54,7 +54,7 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
-    auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &GlobalObject::array_buffer_prototype, nullptr));
+    auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
     auto block = ByteBuffer::create_zeroed(byte_length);
@@ -101,7 +101,7 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
     VERIFY(!source_buffer.is_detached());
 
     // 2. Let targetBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, srcLength).
-    auto* target_buffer = TRY(allocate_array_buffer(vm, *realm.global_object().array_buffer_constructor(), source_length));
+    auto* target_buffer = TRY(allocate_array_buffer(vm, *realm.intrinsics().array_buffer_constructor(), source_length));
 
     // 3. Let srcBlock be srcBuffer.[[ArrayBufferData]].
     auto& source_block = source_buffer.buffer();

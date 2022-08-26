@@ -12,7 +12,7 @@ namespace JS::Intl {
 
 // 17.3 Properties of the Intl.RelativeTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-relativetimeformat-prototype-object
 RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::resolved_options)
     auto* relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, realm.global_object().object_prototype());
+    auto* options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each row of Table 15, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

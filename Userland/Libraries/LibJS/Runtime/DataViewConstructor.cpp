@@ -14,7 +14,7 @@
 namespace JS {
 
 DataViewConstructor::DataViewConstructor(Realm& realm)
-    : NativeFunction(vm().names.DataView.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.DataView.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void DataViewConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 25.3.3.1 DataView.prototype, https://tc39.es/ecma262/#sec-dataview.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().data_view_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().data_view_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -66,7 +66,7 @@ ThrowCompletionOr<Object*> DataViewConstructor::construct(FunctionObject& new_ta
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, vm.names.DataView);
     }
 
-    auto* data_view = TRY(ordinary_create_from_constructor<DataView>(vm, new_target, &GlobalObject::data_view_prototype, &array_buffer, view_byte_length, offset));
+    auto* data_view = TRY(ordinary_create_from_constructor<DataView>(vm, new_target, &Intrinsics::data_view_prototype, &array_buffer, view_byte_length, offset));
 
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);

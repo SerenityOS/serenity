@@ -26,7 +26,7 @@
 namespace Web::Bindings {
 
 WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 {
     s_abstract_machine.enable_instruction_count_limit();
 }

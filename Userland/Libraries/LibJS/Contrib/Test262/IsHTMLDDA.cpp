@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@ namespace JS::Test262 {
 
 IsHTMLDDA::IsHTMLDDA(Realm& realm)
     // NativeFunction without prototype is currently not possible (only due to the lack of a ctor that supports it)
-    : NativeFunction("IsHTMLDDA", *realm.global_object().function_prototype())
+    : NativeFunction("IsHTMLDDA", *realm.intrinsics().function_prototype())
 {
 }
 

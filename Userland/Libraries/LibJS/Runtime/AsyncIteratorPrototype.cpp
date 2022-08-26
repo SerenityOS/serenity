@@ -9,7 +9,7 @@
 namespace JS {
 
 AsyncIteratorPrototype::AsyncIteratorPrototype(Realm& realm)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 {
 }
 

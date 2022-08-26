@@ -12,7 +12,7 @@
 namespace JS {
 
 RegExpConstructor::RegExpConstructor(Realm& realm)
-    : NativeFunction(vm().names.RegExp.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.RegExp.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -22,7 +22,7 @@ void RegExpConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 22.2.4.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().regexp_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().regexp_prototype(), 0);
 
     define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 

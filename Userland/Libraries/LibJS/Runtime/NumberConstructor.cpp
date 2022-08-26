@@ -24,7 +24,7 @@ constexpr double const MIN_SAFE_INTEGER_VALUE { -(__builtin_exp2(53) - 1) };
 namespace JS {
 
 NumberConstructor::NumberConstructor(Realm& realm)
-    : NativeFunction(vm().names.Number.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Number.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -34,16 +34,17 @@ void NumberConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 21.1.2.15 Number.prototype, https://tc39.es/ecma262/#sec-number.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().number_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().number_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.isFinite, is_finite, 1, attr);
     define_native_function(realm, vm.names.isInteger, is_integer, 1, attr);
     define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
     define_native_function(realm, vm.names.isSafeInteger, is_safe_integer, 1, attr);
-    // FIXME: Store these as intrinsics (`parse_int_function()`) instead of getting them from the global object
-    define_direct_property(vm.names.parseInt, realm.global_object().get_without_side_effects(vm.names.parseInt), attr);
-    define_direct_property(vm.names.parseFloat, realm.global_object().get_without_side_effects(vm.names.parseFloat), attr);
+    // NOTE: These are set from the global object as at this point we don't have them allocated yet;
+    //       The native functions are part of the global object itself.
+    define_direct_property(vm.names.parseInt, js_undefined(), attr);
+    define_direct_property(vm.names.parseFloat, js_undefined(), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
     define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);
@@ -100,7 +101,7 @@ ThrowCompletionOr<Object*> NumberConstructor::construct(FunctionObject& new_targ
     // 4. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%", « [[NumberData]] »).
     // 5. Set O.[[NumberData]] to n.
     // 6. Return O.
-    return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &GlobalObject::number_prototype, number.as_double()));
+    return TRY(ordinary_create_from_constructor<NumberObject>(vm, new_target, &Intrinsics::number_prototype, number.as_double()));
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite

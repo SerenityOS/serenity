@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 15.1 The Intl.NumberFormat Constructor, https://tc39.es/ecma402/#sec-intl-numberformat-constructor
 NumberFormatConstructor::NumberFormatConstructor(Realm& realm)
-    : NativeFunction(vm().names.NumberFormat.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.NumberFormat.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -26,7 +26,7 @@ void NumberFormatConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 15.2.1 Intl.NumberFormat.prototype, https://tc39.es/ecma402/#sec-intl.numberformat.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_number_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_number_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
@@ -50,7 +50,7 @@ ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& ne
     auto options = vm.argument(1);
 
     // 2. Let numberFormat be ? OrdinaryCreateFromConstructor(newTarget, "%NumberFormat.prototype%", « [[InitializedNumberFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[Unit]], [[UnitDisplay]], [[Currency]], [[CurrencyDisplay]], [[CurrencySign]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[Notation]], [[CompactDisplay]], [[UseGrouping]], [[SignDisplay]], [[BoundFormat]] »).
-    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(vm, new_target, &GlobalObject::intl_number_format_prototype));
+    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(vm, new_target, &Intrinsics::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
     TRY(initialize_number_format(vm, *number_format, locales, options));

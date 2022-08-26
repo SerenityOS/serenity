@@ -65,7 +65,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
     auto region = TRY(get_string_option(vm, options, vm.names.region, Unicode::is_unicode_region_subtag));
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
-    auto canonicalized_tag = Intl::canonicalize_unicode_locale_id(*locale_id);
+    auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
     locale_id = Unicode::parse_unicode_locale_id(canonicalized_tag);
@@ -217,7 +217,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 
 // 14.1 The Intl.Locale Constructor, https://tc39.es/ecma402/#sec-intl-locale-constructor
 LocaleConstructor::LocaleConstructor(Realm& realm)
-    : NativeFunction(vm().names.Locale.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Locale.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -228,7 +228,7 @@ void LocaleConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 14.2.1 Intl.Locale.prototype, https://tc39.es/ecma402/#sec-Intl.Locale.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_locale_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_locale_prototype(), 0);
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
@@ -257,7 +257,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     //     a. Append [[Numeric]] as the last element of internalSlotsList.
 
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
-    auto* locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &GlobalObject::intl_locale_prototype));
+    auto* locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &Intrinsics::intl_locale_prototype));
 
     String tag;
 

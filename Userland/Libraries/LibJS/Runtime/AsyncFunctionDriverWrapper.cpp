@@ -19,7 +19,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, Genera
 }
 
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, GeneratorObject* generator_object)
-    : Promise(*realm.global_object().promise_prototype())
+    : Promise(*realm.intrinsics().promise_prototype())
     , m_generator_object(generator_object)
     , m_on_fulfillment(NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm) {
         return react_to_async_task_completion(vm, vm.argument(0), true);

@@ -18,7 +18,7 @@ namespace JS::Temporal {
 
 // 9.3 Properties of the Temporal.PlainYearMonth Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plainyearmonth-prototype-object
 PlainYearMonthPrototype::PlainYearMonthPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -427,7 +427,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
     auto* year_month = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
-    auto* fields = Object::create(realm, realm.global_object().object_prototype());
+    auto* fields = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", yearMonth.[[Calendar]]).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&year_month->calendar())));

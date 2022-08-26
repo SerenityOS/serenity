@@ -249,7 +249,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
 
     // 6. If newTarget is not present, set newTarget to %Temporal.PlainDateTime%.
     if (!new_target)
-        new_target = realm.global_object().temporal_plain_date_time_constructor();
+        new_target = realm.intrinsics().temporal_plain_date_time_constructor();
 
     // 7. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainDateTime.prototype%", « [[InitializedTemporalDateTime]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[ISOHour]], [[ISOMinute]], [[ISOSecond]], [[ISOMillisecond]], [[ISOMicrosecond]], [[ISONanosecond]], [[Calendar]] »).
     // 8. Set object.[[ISOYear]] to isoYear.
@@ -262,7 +262,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
     // 15. Set object.[[ISOMicrosecond]] to microsecond.
     // 16. Set object.[[ISONanosecond]] to nanosecond.
     // 17. Set object.[[Calendar]] to calendar.
-    auto* object = TRY(ordinary_create_from_constructor<PlainDateTime>(vm, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainDateTime>(vm, *new_target, &Intrinsics::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar));
 
     // 18. Return object.
     return object;

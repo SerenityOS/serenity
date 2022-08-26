@@ -17,7 +17,7 @@ CollatorCompareFunction* CollatorCompareFunction::create(Realm& realm, Collator&
 }
 
 CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collator)
-    : NativeFunction(*realm.global_object().function_prototype())
+    : NativeFunction(*realm.intrinsics().function_prototype())
     , m_collator(collator)
 {
 }

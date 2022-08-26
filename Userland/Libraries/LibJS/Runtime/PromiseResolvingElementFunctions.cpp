@@ -57,7 +57,7 @@ void PromiseResolvingElementFunction::visit_edges(Cell::Visitor& visitor)
 
 PromiseAllResolveElementFunction* PromiseAllResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
 PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -89,7 +89,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
 
 PromiseAllSettledResolveElementFunction* PromiseAllSettledResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
 PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -103,7 +103,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
     auto& realm = *vm.current_realm();
 
     // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv)));
@@ -130,7 +130,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
 
 PromiseAllSettledRejectElementFunction* PromiseAllSettledRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
 PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
@@ -144,7 +144,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     auto& realm = *vm.current_realm();
 
     // 9. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv)));
@@ -171,7 +171,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
 
 PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.global_object().function_prototype());
+    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
 PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)

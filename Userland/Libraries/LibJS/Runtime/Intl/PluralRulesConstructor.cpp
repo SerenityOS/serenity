@@ -17,7 +17,7 @@ namespace JS::Intl {
 
 // 16.1 The Intl.PluralRules Constructor, https://tc39.es/ecma402/#sec-intl-pluralrules-constructor
 PluralRulesConstructor::PluralRulesConstructor(Realm& realm)
-    : NativeFunction(vm().names.PluralRules.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.PluralRules.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void PluralRulesConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 16.2.1 Intl.PluralRules.prototype, https://tc39.es/ecma402/#sec-intl.pluralrules.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_plural_rules_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_plural_rules_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> PluralRulesConstructor::construct(FunctionObject& new
     auto options = vm.argument(1);
 
     // 2. Let pluralRules be ? OrdinaryCreateFromConstructor(NewTarget, "%PluralRules.prototype%", « [[InitializedPluralRules]], [[Locale]], [[Type]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]] »).
-    auto* plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(vm, new_target, &GlobalObject::intl_plural_rules_prototype));
+    auto* plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(vm, new_target, &Intrinsics::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
     return TRY(initialize_plural_rules(vm, *plural_rules, locales, options));

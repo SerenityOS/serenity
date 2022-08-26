@@ -37,7 +37,7 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     // NOTE: This is not needed, as we don't suspend anything.
 
     // 2. Let promise be ? PromiseResolve(%Promise%, value).
-    auto* promise_object = TRY(promise_resolve(vm, *realm.global_object().promise_constructor(), value));
+    auto* promise_object = TRY(promise_resolve(vm, *realm.intrinsics().promise_constructor(), value));
 
     Optional<bool> success;
     Value result;

@@ -14,7 +14,7 @@
 namespace JS {
 
 FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
-    : NativeFunction(vm().names.FinalizationRegistry.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.FinalizationRegistry.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void FinalizationRegistryConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 26.2.2.1 FinalizationRegistry.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().finalization_registry_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().finalization_registry_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -56,7 +56,7 @@ ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionOb
     // 7. Set finalizationRegistry.[[Cells]] to a new empty List.
     // NOTE: This is done inside FinalizationRegistry instead of here.
     // 8. Return finalizationRegistry.
-    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(vm, new_target, &GlobalObject::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
+    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(vm, new_target, &Intrinsics::finalization_registry_prototype, *realm(), vm.host_make_job_callback(cleanup_callback.as_function())));
 }
 
 }

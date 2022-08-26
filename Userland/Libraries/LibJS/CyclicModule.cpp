@@ -201,7 +201,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 
     // 6. Let capability be ! NewPromiseCapability(%Promise%).
     // 7. Set module.[[TopLevelCapability]] to capability.
-    m_top_level_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    m_top_level_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 8. Let result be Completion(InnerModuleEvaluation(module, stack, 0)).
     auto result = inner_module_evaluation(vm, stack, 0);
@@ -442,7 +442,7 @@ void CyclicModule::execute_async_module(VM& vm)
     VERIFY(m_has_top_level_await);
 
     // 3. Let capability be ! NewPromiseCapability(%Promise%).
-    auto capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
     auto fulfilled_closure = [&](VM& vm) -> ThrowCompletionOr<Value> {

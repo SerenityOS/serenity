@@ -84,7 +84,7 @@ static size_t compute_fraction_digits(double number, int exponent)
 }
 
 NumberPrototype::NumberPrototype(Realm& realm)
-    : NumberObject(0, *realm.global_object().object_prototype())
+    : NumberObject(0, *realm.intrinsics().object_prototype())
 {
 }
 
@@ -327,7 +327,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
     auto number_value = TRY(this_number_value(vm, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
-    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *realm.global_object().intl_number_format_constructor(), locales, options)));
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), locales, options)));
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     // Note: Our implementation of FormatNumeric does not throw.

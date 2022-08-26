@@ -18,7 +18,7 @@ namespace JS {
 
 Date* Date::create(Realm& realm, double date_value)
 {
-    return realm.heap().allocate<Date>(realm, date_value, *realm.global_object().date_prototype());
+    return realm.heap().allocate<Date>(realm, date_value, *realm.intrinsics().date_prototype());
 }
 
 Date::Date(double date_value, Object& prototype)

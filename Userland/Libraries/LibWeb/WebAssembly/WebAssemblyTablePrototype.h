@@ -20,7 +20,7 @@ class WebAssemblyTablePrototype final : public JS::Object {
 
 public:
     explicit WebAssemblyTablePrototype(JS::Realm& realm)
-        : JS::Object(*realm.global_object().object_prototype())
+        : JS::Object(*realm.intrinsics().object_prototype())
     {
     }
 

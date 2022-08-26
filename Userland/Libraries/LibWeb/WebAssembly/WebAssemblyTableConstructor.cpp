@@ -15,7 +15,7 @@
 namespace Web::Bindings {
 
 WebAssemblyTableConstructor::WebAssemblyTableConstructor(JS::Realm& realm)
-    : NativeFunction(*realm.global_object().function_prototype())
+    : NativeFunction(*realm.intrinsics().function_prototype())
 {
 }
 

@@ -71,7 +71,7 @@ Value from_property_descriptor(VM& vm, Optional<PropertyDescriptor> const& prope
 
     if (!property_descriptor.has_value())
         return js_undefined();
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
     if (property_descriptor->value.has_value())
         MUST(object->create_data_property_or_throw(vm.names.value, *property_descriptor->value));
     if (property_descriptor->writable.has_value())

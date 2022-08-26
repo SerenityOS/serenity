@@ -163,7 +163,7 @@ static double parse_date_string(String const& date_string)
 }
 
 DateConstructor::DateConstructor(Realm& realm)
-    : NativeFunction(vm().names.Date.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Date.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -173,7 +173,7 @@ void DateConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().date_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.now, now, 0, attr);
@@ -286,7 +286,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
     // 6. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Date.prototype%", « [[DateValue]] »).
     // 7. Set O.[[DateValue]] to dv.
     // 8. Return O.
-    return TRY(ordinary_create_from_constructor<Date>(vm, new_target, &GlobalObject::date_prototype, date_value));
+    return TRY(ordinary_create_from_constructor<Date>(vm, new_target, &Intrinsics::date_prototype, date_value));
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now

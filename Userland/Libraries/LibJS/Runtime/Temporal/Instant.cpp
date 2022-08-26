@@ -61,11 +61,11 @@ ThrowCompletionOr<Instant*> create_temporal_instant(VM& vm, BigInt const& epoch_
 
     // 3. If newTarget is not present, set newTarget to %Temporal.Instant%.
     if (!new_target)
-        new_target = realm.global_object().temporal_instant_constructor();
+        new_target = realm.intrinsics().temporal_instant_constructor();
 
     // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Instant.prototype%", « [[InitializedTemporalInstant]], [[Nanoseconds]] »).
     // 5. Set object.[[Nanoseconds]] to epochNanoseconds.
-    auto* object = TRY(ordinary_create_from_constructor<Instant>(vm, *new_target, &GlobalObject::temporal_instant_prototype, epoch_nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Instant>(vm, *new_target, &Intrinsics::temporal_instant_prototype, epoch_nanoseconds));
 
     // 6. Return object.
     return object;
