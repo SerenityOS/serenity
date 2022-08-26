@@ -199,3 +199,32 @@ TEST_CASE(0006_test_rgb565_texture)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0006_test_rgb565_texture"sv);
 }
+
+TEST_CASE(0007_test_rgba_to_rgb_texture)
+{
+    auto context = create_testing_context(64, 64);
+
+    GLuint texture_id;
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    // Write RGBA data with A = 0 to an RGB texture
+    u32 texture_data[] = { 0x00FF0000 };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, texture_data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_TRIANGLES);
+    glTexCoord2i(0, 0);
+    glVertex2i(-1, 1);
+    glTexCoord2i(0, 1);
+    glVertex2i(-1, -1);
+    glTexCoord2i(1, 1);
+    glVertex2i(1, -1);
+    glEnd();
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0007_test_rgba_to_rgb_texture"sv);
+}

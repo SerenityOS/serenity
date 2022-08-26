@@ -359,7 +359,7 @@ static constexpr GPU::ImageSelection restrain_selection_within_dimensions(GPU::I
     return selection;
 }
 
-ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data)
+ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data, Function<void(FloatVector4&)> transform)
 {
     // Verify pixel data specifications
     auto validate_image_data_layout = [](GPU::ImageDataLayout const& specification) -> ErrorOr<void> {
@@ -428,6 +428,8 @@ ErrorOr<void> PixelConverter::convert(void const* input_data, void* output_data)
                 + output_selection.offset_x * output_pixel_size_in_bytes];
             for (u32 input_x = input_selection.offset_x; input_x < input_selection.offset_x + input_selection.width; ++input_x) {
                 auto pixel_components = read_pixel(&input_scanline);
+                if (transform)
+                    transform(pixel_components);
                 write_pixel(&output_scanline, pixel_components);
             }
             ++output_y;

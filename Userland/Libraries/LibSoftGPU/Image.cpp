@@ -10,11 +10,18 @@
 
 namespace SoftGPU {
 
-Image::Image(void const* ownership_token, u32 width, u32 height, u32 depth, u32 max_levels, u32 layers)
+Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels, u32 layers)
     : GPU::Image(ownership_token)
     , m_num_layers(layers)
+    , m_pixel_format(pixel_format)
     , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
 {
+    VERIFY(pixel_format == GPU::PixelFormat::Alpha
+        || pixel_format == GPU::PixelFormat::Intensity
+        || pixel_format == GPU::PixelFormat::Luminance
+        || pixel_format == GPU::PixelFormat::LuminanceAlpha
+        || pixel_format == GPU::PixelFormat::RGB
+        || pixel_format == GPU::PixelFormat::RGBA);
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);
@@ -70,20 +77,30 @@ GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) co
     };
 }
 
-void Image::write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* data, GPU::ImageDataLayout const& input_layout)
+void Image::write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* input_data, GPU::ImageDataLayout const& input_layout)
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
 
     auto output_layout = image_data_layout(level, output_offset);
+    auto texel_data = texel_pointer(layer, level, 0, 0, 0);
 
     PixelConverter converter { input_layout, output_layout };
-    auto conversion_result = converter.convert(data, texel_pointer(layer, level, 0, 0, 0));
+    ErrorOr<void> conversion_result;
+    switch (m_pixel_format) {
+    case GPU::PixelFormat::Luminance:
+    case GPU::PixelFormat::RGB:
+        // Both Luminance and RGB set the alpha to 1, regardless of the source texel
+        conversion_result = converter.convert(input_data, texel_data, [](auto& components) { components[3] = 1.f; });
+        break;
+    default:
+        conversion_result = converter.convert(input_data, texel_data, {});
+    }
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
-void Image::read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* data, GPU::ImageDataLayout const& output_layout) const
+void Image::read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* output_data, GPU::ImageDataLayout const& output_layout) const
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
@@ -91,7 +108,7 @@ void Image::read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, 
     auto input_layout = image_data_layout(level, input_offset);
 
     PixelConverter converter { input_layout, output_layout };
-    auto conversion_result = converter.convert(texel_pointer(layer, level, 0, 0, 0), data);
+    auto conversion_result = converter.convert(texel_pointer(layer, level, 0, 0, 0), output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }

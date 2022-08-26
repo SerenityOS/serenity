@@ -57,7 +57,7 @@ public:
     virtual RasterizerOptions options() const = 0;
     virtual LightModelParameters light_model() const = 0;
 
-    virtual NonnullRefPtr<Image> create_image(PixelType const&, u32 width, u32 height, u32 depth, u32 levels, u32 layers) = 0;
+    virtual NonnullRefPtr<Image> create_image(PixelFormat const&, u32 width, u32 height, u32 depth, u32 levels, u32 layers) = 0;
 
     virtual void set_sampler_config(unsigned, SamplerConfig const&) = 0;
     virtual void set_light_state(unsigned, Light const&) = 0;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Function.h>
 #include <LibGPU/ImageDataLayout.h>
 #include <LibGfx/Vector4.h>
 
@@ -20,7 +21,7 @@ public:
     {
     }
 
-    ErrorOr<void> convert(void const* input_data, void* output_data);
+    ErrorOr<void> convert(void const* input_data, void* output_data, Function<void(FloatVector4&)> transform);
 
 private:
     FloatVector4 read_pixel(u8 const**);

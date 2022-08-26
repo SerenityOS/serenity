@@ -308,13 +308,6 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
     m_texcoord_generation_dirty = true;
 }
 
-// FIXME: talk to GPU::Device to determine supported GPU::PixelTypes
-constexpr GPU::PixelType texture_fixed_pixel_type = {
-    .format = GPU::PixelFormat::RGBA,
-    .bits = GPU::PixelComponentBits::AllBits,
-    .data_type = GPU::PixelDataType::Float,
-};
-
 void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -341,7 +334,8 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        texture_2d->set_device_image(m_rasterizer->create_image(texture_fixed_pixel_type, width, height, 1, 999, 1));
+        auto internal_pixel_format = pixel_format_for_internal_format(internal_format);
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
