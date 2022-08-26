@@ -864,22 +864,6 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (!m_resize_window)
         return false;
 
-    if (event.type() == Event::MouseMove) {
-        int const vertical_maximize_deadzone = 5;
-        auto& cursor_screen = ScreenInput::the().cursor_location_screen();
-        if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
-            auto desktop_rect = this->desktop_rect(cursor_screen);
-            if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
-                dbgln_if(RESIZE_DEBUG, "Should tile as VerticallyMaximized");
-                m_resize_window->set_tiled(WindowTileType::VerticallyMaximized);
-                m_resize_window = nullptr;
-                m_geometry_overlay = nullptr;
-                m_resizing_mouse_button = MouseButton::None;
-                return true;
-            }
-        }
-    }
-
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 
@@ -896,6 +880,23 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
 
     if (event.type() != Event::MouseMove)
         return true;
+
+    auto& cursor_screen = ScreenInput::the().cursor_location_screen();
+    auto& closest_screen = Screen::closest_to_rect(m_resize_window->rect());
+    if (&cursor_screen == &closest_screen) {
+        constexpr auto hot_zone = 10;
+        Gfx::IntRect tiling_rect = desktop_rect(cursor_screen).shrunken({ hot_zone, hot_zone });
+        if ((m_resize_direction == ResizeDirection::Up || m_resize_direction == ResizeDirection::Down)
+            && (event.y() >= tiling_rect.bottom() || event.y() <= tiling_rect.top())) {
+            m_resize_window->set_tiled(WindowTileType::VerticallyMaximized);
+            return true;
+        }
+        if ((m_resize_direction == ResizeDirection::Left || m_resize_direction == ResizeDirection::Right)
+            && (event.x() >= tiling_rect.right() || event.x() <= tiling_rect.left())) {
+            m_resize_window->set_tiled(WindowTileType::HorizontallyMaximized);
+            return true;
+        }
+    }
 
     int diff_x = event.x() - m_resize_origin.x();
     int diff_y = event.y() - m_resize_origin.y();
