@@ -45,6 +45,8 @@ static constexpr FloatVector4 decode_component_order_for_format(FloatVector4 con
         return { components[0], 0.f, 0.f, 0.f };
     case GPU::PixelFormat::Green:
         return { 0.f, components[0], 0.f, 1.f };
+    case GPU::PixelFormat::Intensity:
+        return { components[0], components[0], components[0], components[0] };
     case GPU::PixelFormat::Luminance:
         return { components[0], components[0], components[0], 1.f };
     case GPU::PixelFormat::LuminanceAlpha:
@@ -72,6 +74,7 @@ static constexpr FloatVector4 encode_component_order_for_format(FloatVector4 con
         return { components[2], 0.f, 0.f, 0.f };
     case GPU::PixelFormat::ColorIndex:
     case GPU::PixelFormat::DepthComponent:
+    case GPU::PixelFormat::Intensity:
     case GPU::PixelFormat::Luminance:
     case GPU::PixelFormat::Red:
     case GPU::PixelFormat::RGB:
