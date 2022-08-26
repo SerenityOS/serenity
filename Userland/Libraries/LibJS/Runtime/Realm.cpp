@@ -17,7 +17,18 @@ namespace JS {
 // 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
 Realm* Realm::create(VM& vm)
 {
-    return vm.heap().allocate_without_realm<Realm>();
+    // 1. Let realmRec be a new Realm Record.
+    auto* realm = vm.heap().allocate_without_realm<Realm>();
+
+    // 2. Perform CreateIntrinsics(realmRec).
+    Intrinsics::create(*realm);
+
+    // 3. Set realmRec.[[GlobalObject]] to undefined.
+    // 4. Set realmRec.[[GlobalEnv]] to undefined.
+    // 5. Set realmRec.[[TemplateMap]] to a new empty List.
+
+    // 6. Return realmRec.
+    return realm;
 }
 
 // 9.6 InitializeHostDefinedRealm ( ), https://tc39.es/ecma262/#sec-initializehostdefinedrealm
@@ -107,6 +118,7 @@ void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_va
 
 void Realm::visit_edges(Visitor& visitor)
 {
+    visitor.visit(m_intrinsics);
     visitor.visit(m_global_object);
     visitor.visit(m_global_environment);
 }

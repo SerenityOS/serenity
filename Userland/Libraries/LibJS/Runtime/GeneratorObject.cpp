@@ -22,7 +22,7 @@ ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(Realm& realm, Value 
         // We implement async functions by transforming them to generator function in the bytecode
         // interpreter. However an async function does not have a prototype and should not be
         // changed thus we hardcode the prototype.
-        generating_function_prototype = realm.global_object().generator_prototype();
+        generating_function_prototype = realm.intrinsics().generator_prototype();
     } else {
         generating_function_prototype = TRY(generating_function->get(vm.names.prototype));
     }
@@ -73,7 +73,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, Optional<Value> next
 
     auto previous_generated_value = TRY(generated_value(m_previous_value));
 
-    auto result = Object::create(realm, realm.global_object().object_prototype());
+    auto result = Object::create(realm, realm.intrinsics().object_prototype());
     result->define_direct_property("value", previous_generated_value, default_attributes);
 
     if (m_done) {

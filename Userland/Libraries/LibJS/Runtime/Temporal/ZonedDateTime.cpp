@@ -273,13 +273,13 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt
 
     // 2. If newTarget is not present, set newTarget to %Temporal.ZonedDateTime%.
     if (!new_target)
-        new_target = realm.global_object().temporal_zoned_date_time_constructor();
+        new_target = realm.intrinsics().temporal_zoned_date_time_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.ZonedDateTime.prototype%", « [[InitializedTemporalZonedDateTime]], [[Nanoseconds]], [[TimeZone]], [[Calendar]] »).
     // 4. Set object.[[Nanoseconds]] to epochNanoseconds.
     // 5. Set object.[[TimeZone]] to timeZone.
     // 6. Set object.[[Calendar]] to calendar.
-    auto* object = TRY(ordinary_create_from_constructor<ZonedDateTime>(vm, *new_target, &GlobalObject::temporal_time_zone_prototype, epoch_nanoseconds, time_zone, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<ZonedDateTime>(vm, *new_target, &Intrinsics::temporal_time_zone_prototype, epoch_nanoseconds, time_zone, calendar));
 
     // 7. Return object.
     return object;

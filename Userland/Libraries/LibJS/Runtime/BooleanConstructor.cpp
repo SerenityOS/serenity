@@ -12,7 +12,7 @@
 namespace JS {
 
 BooleanConstructor::BooleanConstructor(Realm& realm)
-    : NativeFunction(vm().names.Boolean.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Boolean.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -22,7 +22,7 @@ void BooleanConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.3.2.1 Boolean.prototype, https://tc39.es/ecma262/#sec-boolean.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().boolean_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().boolean_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -42,7 +42,7 @@ ThrowCompletionOr<Object*> BooleanConstructor::construct(FunctionObject& new_tar
     auto& vm = this->vm();
 
     auto b = vm.argument(0).to_boolean();
-    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &GlobalObject::boolean_prototype, b));
+    return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b));
 }
 
 }

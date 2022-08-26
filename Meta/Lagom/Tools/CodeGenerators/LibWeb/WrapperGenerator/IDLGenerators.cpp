@@ -1572,7 +1572,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto dictionary_generator = scoped_generator.fork();
 
         dictionary_generator.append(R"~~~(
-    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, realm.global_object().object_prototype());
+    auto* dictionary_object@recursion_depth@ = JS::Object::create(realm, realm.intrinsics().object_prototype());
 )~~~");
 
         auto* current_dictionary = &interface.dictionaries.find(type.name)->value;
@@ -2933,7 +2933,7 @@ using namespace Web::WebGL;
 namespace Web::Bindings {
 
 @constructor_class@::@constructor_class@(JS::Realm& realm)
-    : NativeFunction(*realm.global_object().function_prototype())
+    : NativeFunction(*realm.intrinsics().function_prototype())
 {
 }
 
@@ -3220,7 +3220,7 @@ namespace Web::Bindings {
         // https://webidl.spec.whatwg.org/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    : Object(*realm.global_object().error_prototype())
+    : Object(*realm.intrinsics().error_prototype())
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
@@ -3228,7 +3228,7 @@ namespace Web::Bindings {
 )~~~");
     } else {
         generator.append(R"~~~(
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 )~~~");
     }
 
@@ -3324,15 +3324,15 @@ void @prototype_class@::initialize(JS::Realm& realm)
     if (interface.indexed_property_getter.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_iterator(), realm.global_object().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(*vm.well_known_symbol_iterator(), realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
 
         if (interface.value_iterator_type.has_value()) {
             iterator_generator.append(R"~~~(
-    define_direct_property(vm.names.entries, realm.global_object().array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
-    define_direct_property(vm.names.keys, realm.global_object().array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
-    define_direct_property(vm.names.values, realm.global_object().array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
-    define_direct_property(vm.names.forEach, realm.global_object().array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
+    define_direct_property(vm.names.entries, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
+    define_direct_property(vm.names.keys, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
+    define_direct_property(vm.names.values, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
+    define_direct_property(vm.names.forEach, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
 )~~~");
         }
     }
@@ -3789,7 +3789,7 @@ using namespace Web::WebGL;
 namespace Web::Bindings {
 
 @prototype_class@::@prototype_class@(JS::Realm& realm)
-    : Object(*realm.global_object().iterator_prototype())
+    : Object(*realm.intrinsics().iterator_prototype())
 {
 }
 

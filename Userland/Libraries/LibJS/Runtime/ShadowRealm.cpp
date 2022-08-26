@@ -212,7 +212,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_stri
     // 1. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
 
     // 2. Let innerCapability be ! NewPromiseCapability(%Promise%).
-    auto inner_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto inner_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 3. Let runningContext be the running execution context.
     // 4. If runningContext is not already suspended, suspend runningContext.
@@ -267,7 +267,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, String specifier_stri
     auto* on_fulfilled = NativeFunction::create(realm, move(steps), 1, "", &caller_realm);
 
     // 12. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).

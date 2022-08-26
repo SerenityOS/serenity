@@ -334,7 +334,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, doub
 
     // 2. If newTarget is not present, set newTarget to %Temporal.Duration%.
     if (!new_target)
-        new_target = realm.global_object().temporal_duration_constructor();
+        new_target = realm.intrinsics().temporal_duration_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Duration.prototype%", « [[InitializedTemporalDuration]], [[Years]], [[Months]], [[Weeks]], [[Days]], [[Hours]], [[Minutes]], [[Seconds]], [[Milliseconds]], [[Microseconds]], [[Nanoseconds]] »).
     // 4. Set object.[[Years]] to ℝ(𝔽(years)).
@@ -347,7 +347,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(VM& vm, double years, doub
     // 11. Set object.[[Milliseconds]] to ℝ(𝔽(milliseconds)).
     // 12. Set object.[[Microseconds]] to ℝ(𝔽(microseconds)).
     // 13. Set object.[[Nanoseconds]] to ℝ(𝔽(nanoseconds)).
-    auto* object = TRY(ordinary_create_from_constructor<Duration>(vm, *new_target, &GlobalObject::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+    auto* object = TRY(ordinary_create_from_constructor<Duration>(vm, *new_target, &Intrinsics::temporal_duration_prototype, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
     // 14. Return object.
     return object;

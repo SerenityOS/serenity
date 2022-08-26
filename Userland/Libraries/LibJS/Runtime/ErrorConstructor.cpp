@@ -12,7 +12,7 @@
 namespace JS {
 
 ErrorConstructor::ErrorConstructor(Realm& realm)
-    : NativeFunction(vm().names.Error.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Error.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -22,7 +22,7 @@ void ErrorConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.5.2.1 Error.prototype, https://tc39.es/ecma262/#sec-error.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().error_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     auto options = vm.argument(1);
 
     // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-    auto* error = TRY(ordinary_create_from_constructor<Error>(vm, new_target, &GlobalObject::error_prototype));
+    auto* error = TRY(ordinary_create_from_constructor<Error>(vm, new_target, &Intrinsics::error_prototype));
 
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
@@ -61,57 +61,57 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
     return error;
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                       \
-    ConstructorName::ConstructorName(Realm& realm)                                                                             \
-        : NativeFunction(vm().names.ClassName.as_string(), *static_cast<Object*>(realm.global_object().error_constructor()))   \
-    {                                                                                                                          \
-    }                                                                                                                          \
-                                                                                                                               \
-    void ConstructorName::initialize(Realm& realm)                                                                             \
-    {                                                                                                                          \
-        auto& vm = this->vm();                                                                                                 \
-        NativeFunction::initialize(realm);                                                                                     \
-                                                                                                                               \
-        /* 20.5.6.2.1 NativeError.prototype, https://tc39.es/ecma262/#sec-nativeerror.prototype */                             \
-        define_direct_property(vm.names.prototype, realm.global_object().snake_name##_prototype(), 0);                         \
-                                                                                                                               \
-        define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                                            \
-    }                                                                                                                          \
-                                                                                                                               \
-    ConstructorName::~ConstructorName() = default;                                                                             \
-                                                                                                                               \
-    /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                           \
-    ThrowCompletionOr<Value> ConstructorName::call()                                                                           \
-    {                                                                                                                          \
-        /* 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget. */      \
-        return TRY(construct(*this));                                                                                          \
-    }                                                                                                                          \
-                                                                                                                               \
-    /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                           \
-    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                          \
-    {                                                                                                                          \
-        auto& vm = this->vm();                                                                                                 \
-                                                                                                                               \
-        auto message = vm.argument(0);                                                                                         \
-        auto options = vm.argument(1);                                                                                         \
-                                                                                                                               \
-        /* 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »). */          \
-        auto* error = TRY(ordinary_create_from_constructor<ClassName>(vm, new_target, &GlobalObject::snake_name##_prototype)); \
-                                                                                                                               \
-        /* 3. If message is not undefined, then */                                                                             \
-        if (!message.is_undefined()) {                                                                                         \
-            /* a. Let msg be ? ToString(message). */                                                                           \
-            auto msg = TRY(message.to_string(vm));                                                                             \
-                                                                                                                               \
-            /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                        \
-            error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));                   \
-        }                                                                                                                      \
-                                                                                                                               \
-        /* 4. Perform ? InstallErrorCause(O, options). */                                                                      \
-        TRY(error->install_error_cause(options));                                                                              \
-                                                                                                                               \
-        /* 5. Return O. */                                                                                                     \
-        return error;                                                                                                          \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                     \
+    ConstructorName::ConstructorName(Realm& realm)                                                                           \
+        : NativeFunction(vm().names.ClassName.as_string(), *static_cast<Object*>(realm.intrinsics().error_constructor()))    \
+    {                                                                                                                        \
+    }                                                                                                                        \
+                                                                                                                             \
+    void ConstructorName::initialize(Realm& realm)                                                                           \
+    {                                                                                                                        \
+        auto& vm = this->vm();                                                                                               \
+        NativeFunction::initialize(realm);                                                                                   \
+                                                                                                                             \
+        /* 20.5.6.2.1 NativeError.prototype, https://tc39.es/ecma262/#sec-nativeerror.prototype */                           \
+        define_direct_property(vm.names.prototype, realm.intrinsics().snake_name##_prototype(), 0);                          \
+                                                                                                                             \
+        define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                                          \
+    }                                                                                                                        \
+                                                                                                                             \
+    ConstructorName::~ConstructorName() = default;                                                                           \
+                                                                                                                             \
+    /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                         \
+    ThrowCompletionOr<Value> ConstructorName::call()                                                                         \
+    {                                                                                                                        \
+        /* 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget. */    \
+        return TRY(construct(*this));                                                                                        \
+    }                                                                                                                        \
+                                                                                                                             \
+    /* 20.5.6.1.1 NativeError ( message [ , options ] ), https://tc39.es/ecma262/#sec-nativeerror */                         \
+    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                        \
+    {                                                                                                                        \
+        auto& vm = this->vm();                                                                                               \
+                                                                                                                             \
+        auto message = vm.argument(0);                                                                                       \
+        auto options = vm.argument(1);                                                                                       \
+                                                                                                                             \
+        /* 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »). */        \
+        auto* error = TRY(ordinary_create_from_constructor<ClassName>(vm, new_target, &Intrinsics::snake_name##_prototype)); \
+                                                                                                                             \
+        /* 3. If message is not undefined, then */                                                                           \
+        if (!message.is_undefined()) {                                                                                       \
+            /* a. Let msg be ? ToString(message). */                                                                         \
+            auto msg = TRY(message.to_string(vm));                                                                           \
+                                                                                                                             \
+            /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                      \
+            error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, move(msg)));                 \
+        }                                                                                                                    \
+                                                                                                                             \
+        /* 4. Perform ? InstallErrorCause(O, options). */                                                                    \
+        TRY(error->install_error_cause(options));                                                                            \
+                                                                                                                             \
+        /* 5. Return O. */                                                                                                   \
+        return error;                                                                                                        \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

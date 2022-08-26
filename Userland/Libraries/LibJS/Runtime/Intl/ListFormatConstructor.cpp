@@ -16,7 +16,7 @@ namespace JS::Intl {
 
 // 13.1 The Intl.ListFormat Constructor, https://tc39.es/ecma402/#sec-intl-listformat-constructor
 ListFormatConstructor::ListFormatConstructor(Realm& realm)
-    : NativeFunction(vm().names.ListFormat.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.ListFormat.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ void ListFormatConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 13.2.1 Intl.ListFormat.prototype, https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_list_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_list_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_
     auto options_value = vm.argument(1);
 
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
-    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(vm, new_target, &GlobalObject::intl_list_format_prototype));
+    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(vm, new_target, &Intrinsics::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));

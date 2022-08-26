@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 1.2 The Intl.DurationFormat Constructor, https://tc39.es/proposal-intl-duration-format/#sec-intl-durationformat-constructor
 DurationFormatConstructor::DurationFormatConstructor(Realm& realm)
-    : NativeFunction(vm().names.DurationFormat.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.DurationFormat.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -26,7 +26,7 @@ void DurationFormatConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 1.3.1 Intl.DurationFormat.prototype, https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_duration_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_duration_format_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -49,7 +49,7 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     auto options_value = vm.argument(1);
 
     // 2. Let durationFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%DurationFormatPrototype%", « [[InitializedDurationFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[YearsStyle]], [[YearsDisplay]], [[MonthsStyle]], [[MonthsDisplay]] , [[WeeksStyle]], [[WeeksDisplay]] , [[DaysStyle]], [[DaysDisplay]] , [[HoursStyle]], [[HoursDisplay]] , [[MinutesStyle]], [[MinutesDisplay]] , [[SecondsStyle]], [[SecondsDisplay]] , [[MillisecondsStyle]], [[MillisecondsDisplay]] , [[MicrosecondsStyle]], [[MicrosecondsDisplay]] , [[NanosecondsStyle]], [[NanosecondsDisplay]], [[FractionalDigits]] »).
-    auto* duration_format = TRY(ordinary_create_from_constructor<DurationFormat>(vm, new_target, &GlobalObject::intl_duration_format_prototype));
+    auto* duration_format = TRY(ordinary_create_from_constructor<DurationFormat>(vm, new_target, &Intrinsics::intl_duration_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales));

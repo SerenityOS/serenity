@@ -27,7 +27,7 @@ ThrowCompletionOr<Array*> Array::create(Realm& realm, u64 length, Object* protot
 
     // 2. If proto is not present, set proto to %Array.prototype%.
     if (!prototype)
-        prototype = realm.global_object().array_prototype();
+        prototype = realm.intrinsics().array_prototype();
 
     // 3. Let A be MakeBasicObject(« [[Prototype]], [[Extensible]] »).
     // 4. Set A.[[Prototype]] to proto.

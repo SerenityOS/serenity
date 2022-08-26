@@ -11,7 +11,7 @@
 namespace JS {
 
 DataViewPrototype::DataViewPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 

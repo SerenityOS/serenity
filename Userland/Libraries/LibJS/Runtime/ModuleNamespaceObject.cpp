@@ -11,7 +11,7 @@
 namespace JS {
 
 ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vector<FlyString> exports)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
     , m_module(module)
     , m_exports(move(exports))
 {

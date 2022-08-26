@@ -21,7 +21,7 @@
 namespace JS {
 
 FunctionPrototype::FunctionPrototype(Realm& realm)
-    : FunctionObject(*realm.global_object().object_prototype())
+    : FunctionObject(*realm.intrinsics().object_prototype())
 {
 }
 

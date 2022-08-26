@@ -62,7 +62,7 @@ Object* create_segment_data_object(VM& vm, Segmenter const& segmenter, Utf16View
     VERIFY(start_index < end_index);
 
     // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
-    auto* result = Object::create(realm, realm.global_object().object_prototype());
+    auto* result = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 6. Let segment be the substring of string from startIndex to endIndex.
     auto segment = string.substring_view(start_index, end_index - start_index);

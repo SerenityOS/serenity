@@ -13,7 +13,7 @@ namespace JS::Intl {
 
 // 18.5.2 The %SegmentsPrototype% Object, https://tc39.es/ecma402/#sec-%segmentsprototype%-object
 SegmentsPrototype::SegmentsPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 

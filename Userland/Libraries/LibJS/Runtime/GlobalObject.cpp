@@ -8,7 +8,6 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Hex.h>
-#include <AK/Platform.h>
 #include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
@@ -17,125 +16,70 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
-#include <LibJS/Runtime/AggregateErrorPrototype.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
-#include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
-#include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
-#include <LibJS/Runtime/AsyncFromSyncIteratorPrototype.h>
 #include <LibJS/Runtime/AsyncFunctionConstructor.h>
-#include <LibJS/Runtime/AsyncFunctionPrototype.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
-#include <LibJS/Runtime/AsyncGeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/AsyncGeneratorPrototype.h>
-#include <LibJS/Runtime/AsyncIteratorPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
-#include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/BooleanConstructor.h>
-#include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
-#include <LibJS/Runtime/DataViewPrototype.h>
 #include <LibJS/Runtime/DateConstructor.h>
-#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
-#include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
 #include <LibJS/Runtime/FinalizationRegistryPrototype.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
-#include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
-#include <LibJS/Runtime/GeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorPrototype.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/CollatorConstructor.h>
-#include <LibJS/Runtime/Intl/CollatorPrototype.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
-#include <LibJS/Runtime/Intl/DateTimeFormatPrototype.h>
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
-#include <LibJS/Runtime/Intl/DisplayNamesPrototype.h>
 #include <LibJS/Runtime/Intl/DurationFormatConstructor.h>
-#include <LibJS/Runtime/Intl/DurationFormatPrototype.h>
 #include <LibJS/Runtime/Intl/Intl.h>
 #include <LibJS/Runtime/Intl/ListFormatConstructor.h>
-#include <LibJS/Runtime/Intl/ListFormatPrototype.h>
 #include <LibJS/Runtime/Intl/LocaleConstructor.h>
-#include <LibJS/Runtime/Intl/LocalePrototype.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
-#include <LibJS/Runtime/Intl/NumberFormatPrototype.h>
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
-#include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
-#include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
-#include <LibJS/Runtime/Intl/SegmentIteratorPrototype.h>
 #include <LibJS/Runtime/Intl/SegmenterConstructor.h>
-#include <LibJS/Runtime/Intl/SegmenterPrototype.h>
-#include <LibJS/Runtime/Intl/SegmentsPrototype.h>
-#include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
-#include <LibJS/Runtime/MapIteratorPrototype.h>
-#include <LibJS/Runtime/MapPrototype.h>
 #include <LibJS/Runtime/MathObject.h>
-#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberConstructor.h>
-#include <LibJS/Runtime/NumberPrototype.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
-#include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
-#include <LibJS/Runtime/PromisePrototype.h>
 #include <LibJS/Runtime/ProxyConstructor.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
-#include <LibJS/Runtime/RegExpPrototype.h>
-#include <LibJS/Runtime/RegExpStringIteratorPrototype.h>
 #include <LibJS/Runtime/SetConstructor.h>
-#include <LibJS/Runtime/SetIteratorPrototype.h>
-#include <LibJS/Runtime/SetPrototype.h>
 #include <LibJS/Runtime/ShadowRealmConstructor.h>
-#include <LibJS/Runtime/ShadowRealmPrototype.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
-#include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
-#include <LibJS/Runtime/SymbolPrototype.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
-#include <LibJS/Runtime/Temporal/CalendarPrototype.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
-#include <LibJS/Runtime/Temporal/DurationPrototype.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
-#include <LibJS/Runtime/Temporal/InstantPrototype.h>
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
-#include <LibJS/Runtime/Temporal/PlainDatePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
-#include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDayConstructor.h>
-#include <LibJS/Runtime/Temporal/PlainMonthDayPrototype.h>
 #include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
-#include <LibJS/Runtime/Temporal/PlainTimePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonthConstructor.h>
-#include <LibJS/Runtime/Temporal/PlainYearMonthPrototype.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
-#include <LibJS/Runtime/Temporal/TimeZonePrototype.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTimeConstructor.h>
-#include <LibJS/Runtime/Temporal/ZonedDateTimePrototype.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibJS/Runtime/TypedArrayConstructor.h>
-#include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/WeakMapConstructor.h>
-#include <LibJS/Runtime/WeakMapPrototype.h>
 #include <LibJS/Runtime/WeakRefConstructor.h>
-#include <LibJS/Runtime/WeakRefPrototype.h>
 #include <LibJS/Runtime/WeakSetConstructor.h>
-#include <LibJS/Runtime/WeakSetPrototype.h>
 
 namespace JS {
 
@@ -145,214 +89,99 @@ GlobalObject::GlobalObject(Realm& realm)
 {
 }
 
+// 9.3.4 SetDefaultGlobalBindings ( realmRec ), https://tc39.es/ecma262/#sec-setdefaultglobalbindings
 void GlobalObject::initialize_global_object(Realm& realm)
 {
     auto& vm = this->vm();
 
     ensure_shape_is_unique();
-
-    // These are done first since other prototypes depend on their presence.
-    m_empty_object_shape = heap().allocate_without_realm<Shape>(realm);
-    m_object_prototype = heap().allocate_without_realm<ObjectPrototype>(realm);
-    m_function_prototype = heap().allocate_without_realm<FunctionPrototype>(realm);
-
-    m_new_object_shape = vm.heap().allocate_without_realm<Shape>(realm);
-    m_new_object_shape->set_prototype_without_transition(m_object_prototype);
-
-    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_realm<Shape>(realm);
-    m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
-    m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
-
-    // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_realm().
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm);
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm);
-
-    Object::set_prototype(m_object_prototype);
-
-    // This must be initialized before allocating AggregateErrorPrototype, which uses ErrorPrototype as its prototype.
-    m_error_prototype = heap().allocate<ErrorPrototype>(realm, realm);
-
-#define __JS_ENUMERATE(ClassName, snake_name) \
-    if (!m_##snake_name##_prototype)          \
-        m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(realm, realm);
-    JS_ENUMERATE_ITERATOR_PROTOTYPES
-#undef __JS_ENUMERATE
-
-    // These must be initialized separately as they have no companion constructor
-    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(realm, realm);
-    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm);
-    m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm);
-    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm);
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (!m_##snake_name##_prototype)                                                     \
-        m_##snake_name##_prototype = heap().allocate<PrototypeName>(realm, realm);
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    if (!m_intl_##snake_name##_prototype)                                     \
-        m_intl_##snake_name##_prototype = heap().allocate<Intl::PrototypeName>(realm, realm);
-    JS_ENUMERATE_INTL_OBJECTS
-#undef __JS_ENUMERATE
-
-    // Must be allocated before `Intl::Intl` below.
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    initialize_constructor(realm, vm.names.ClassName, m_intl_##snake_name##_constructor, m_intl_##snake_name##_prototype);
-    JS_ENUMERATE_INTL_OBJECTS
-#undef __JS_ENUMERATE
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    if (!m_temporal_##snake_name##_prototype)                                 \
-        m_temporal_##snake_name##_prototype = heap().allocate<Temporal::PrototypeName>(realm, realm);
-    JS_ENUMERATE_TEMPORAL_OBJECTS
-#undef __JS_ENUMERATE
-
-    // Must be allocated before `Temporal::Temporal` below.
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    initialize_constructor(realm, vm.names.ClassName, m_temporal_##snake_name##_constructor, m_temporal_##snake_name##_prototype);
-    JS_ENUMERATE_TEMPORAL_OBJECTS
-#undef __JS_ENUMERATE
+    Object::set_prototype(realm.intrinsics().object_prototype());
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(realm, vm.names.gc, gc, 0, attr);
-    define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
+
+    // 19.2 Function Properties of the Global Object, https://tc39.es/ecma262/#sec-function-properties-of-the-global-object
+    define_native_function(realm, vm.names.eval, eval, 1, attr);
     define_native_function(realm, vm.names.isFinite, is_finite, 1, attr);
+    define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
     define_native_function(realm, vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(realm, vm.names.parseInt, parse_int, 2, attr);
-    define_native_function(realm, vm.names.eval, eval, 1, attr);
-
-    // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
-    m_throw_type_error_function = NativeFunction::create(
-        realm, [](VM& vm) {
-            return vm.throw_completion<TypeError>(ErrorType::RestrictedFunctionPropertiesAccess);
-        },
-        0, "", &realm);
-    m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
-    m_throw_type_error_function->define_direct_property(vm.names.name, js_string(vm, ""), 0);
-    MUST(m_throw_type_error_function->internal_prevent_extensions());
-
-    // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
-    m_function_prototype->define_direct_accessor(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
-    m_function_prototype->define_direct_accessor(vm.names.arguments, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
-
-    define_native_function(realm, vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(realm, vm.names.decodeURI, decode_uri, 1, attr);
-    define_native_function(realm, vm.names.encodeURIComponent, encode_uri_component, 1, attr);
     define_native_function(realm, vm.names.decodeURIComponent, decode_uri_component, 1, attr);
+    define_native_function(realm, vm.names.encodeURI, encode_uri, 1, attr);
+    define_native_function(realm, vm.names.encodeURIComponent, encode_uri_component, 1, attr);
+
+    // 19.1 Value Properties of the Global Object, https://tc39.es/ecma262/#sec-value-properties-of-the-global-object
+    define_direct_property(vm.names.globalThis, this, attr);
+    define_direct_property(vm.names.Infinity, js_infinity(), 0);
+    define_direct_property(vm.names.NaN, js_nan(), 0);
+    define_direct_property(vm.names.undefined, js_undefined(), 0);
+
+    // 19.3 Constructor Properties of the Global Object, https://tc39.es/ecma262/#sec-constructor-properties-of-the-global-object
+    define_direct_property(vm.names.AggregateError, realm.intrinsics().aggregate_error_constructor(), attr);
+    define_direct_property(vm.names.Array, realm.intrinsics().array_constructor(), attr);
+    define_direct_property(vm.names.ArrayBuffer, realm.intrinsics().array_buffer_constructor(), attr);
+    define_direct_property(vm.names.BigInt, realm.intrinsics().bigint_constructor(), attr);
+    define_direct_property(vm.names.BigInt64Array, realm.intrinsics().big_int64_array_constructor(), attr);
+    define_direct_property(vm.names.BigUint64Array, realm.intrinsics().big_uint64_array_constructor(), attr);
+    define_direct_property(vm.names.Boolean, realm.intrinsics().boolean_constructor(), attr);
+    define_direct_property(vm.names.DataView, realm.intrinsics().data_view_constructor(), attr);
+    define_direct_property(vm.names.Date, realm.intrinsics().date_constructor(), attr);
+    define_direct_property(vm.names.Error, realm.intrinsics().error_constructor(), attr);
+    define_direct_property(vm.names.EvalError, realm.intrinsics().eval_error_constructor(), attr);
+    define_direct_property(vm.names.FinalizationRegistry, realm.intrinsics().finalization_registry_constructor(), attr);
+    define_direct_property(vm.names.Float32Array, realm.intrinsics().float32_array_constructor(), attr);
+    define_direct_property(vm.names.Float64Array, realm.intrinsics().float64_array_constructor(), attr);
+    define_direct_property(vm.names.Function, realm.intrinsics().function_constructor(), attr);
+    define_direct_property(vm.names.Int8Array, realm.intrinsics().int8_array_constructor(), attr);
+    define_direct_property(vm.names.Int16Array, realm.intrinsics().int16_array_constructor(), attr);
+    define_direct_property(vm.names.Int32Array, realm.intrinsics().int32_array_constructor(), attr);
+    define_direct_property(vm.names.Map, realm.intrinsics().map_constructor(), attr);
+    define_direct_property(vm.names.Number, realm.intrinsics().number_constructor(), attr);
+    define_direct_property(vm.names.Object, realm.intrinsics().object_constructor(), attr);
+    define_direct_property(vm.names.Promise, realm.intrinsics().promise_constructor(), attr);
+    define_direct_property(vm.names.Proxy, realm.intrinsics().proxy_constructor(), attr);
+    define_direct_property(vm.names.RangeError, realm.intrinsics().range_error_constructor(), attr);
+    define_direct_property(vm.names.ReferenceError, realm.intrinsics().reference_error_constructor(), attr);
+    define_direct_property(vm.names.RegExp, realm.intrinsics().regexp_constructor(), attr);
+    define_direct_property(vm.names.Set, realm.intrinsics().set_constructor(), attr);
+    define_direct_property(vm.names.ShadowRealm, realm.intrinsics().shadow_realm_constructor(), attr);
+    define_direct_property(vm.names.String, realm.intrinsics().string_constructor(), attr);
+    define_direct_property(vm.names.Symbol, realm.intrinsics().symbol_constructor(), attr);
+    define_direct_property(vm.names.SyntaxError, realm.intrinsics().syntax_error_constructor(), attr);
+    define_direct_property(vm.names.TypeError, realm.intrinsics().type_error_constructor(), attr);
+    define_direct_property(vm.names.Uint8Array, realm.intrinsics().uint8_array_constructor(), attr);
+    define_direct_property(vm.names.Uint8ClampedArray, realm.intrinsics().uint8_clamped_array_constructor(), attr);
+    define_direct_property(vm.names.Uint16Array, realm.intrinsics().uint16_array_constructor(), attr);
+    define_direct_property(vm.names.Uint32Array, realm.intrinsics().uint32_array_constructor(), attr);
+    define_direct_property(vm.names.URIError, realm.intrinsics().uri_error_constructor(), attr);
+    define_direct_property(vm.names.WeakMap, realm.intrinsics().weak_map_constructor(), attr);
+    define_direct_property(vm.names.WeakRef, realm.intrinsics().weak_ref_constructor(), attr);
+    define_direct_property(vm.names.WeakSet, realm.intrinsics().weak_set_constructor(), attr);
+
+    // 19.4 Other Properties of the Global Object, https://tc39.es/ecma262/#sec-other-properties-of-the-global-object
+    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(realm, realm), attr);
+    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(realm, realm), attr);
+    define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(realm, realm), attr);
+    define_direct_property(vm.names.Math, heap().allocate<MathObject>(realm, realm), attr);
+    define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(realm, realm), attr);
+    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
+
+    // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
     define_native_function(realm, vm.names.escape, escape, 1, attr);
     define_native_function(realm, vm.names.unescape, unescape, 1, attr);
 
-    define_direct_property(vm.names.NaN, js_nan(), 0);
-    define_direct_property(vm.names.Infinity, js_infinity(), 0);
-    define_direct_property(vm.names.undefined, js_undefined(), 0);
-
-    define_direct_property(vm.names.globalThis, this, attr);
+    // Non-standard
+    define_direct_property(vm.names.InternalError, realm.intrinsics().internal_error_constructor(), attr);
     define_direct_property(vm.names.console, heap().allocate<ConsoleObject>(realm, realm), attr);
-    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(realm, realm), attr);
-    define_direct_property(vm.names.Math, heap().allocate<MathObject>(realm, realm), attr);
-    define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(realm, realm), attr);
-    define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(realm, realm), attr);
-    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(realm, realm), attr);
-    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
+    define_native_function(realm, vm.names.gc, gc, 0, attr);
 
-    // This must be initialized before allocating AggregateErrorConstructor, which uses ErrorConstructor as its prototype.
-    initialize_constructor(realm, vm.names.Error, m_error_constructor, m_error_prototype);
-
-    add_constructor(realm, vm.names.AggregateError, m_aggregate_error_constructor, m_aggregate_error_prototype);
-    add_constructor(realm, vm.names.Array, m_array_constructor, m_array_prototype);
-    add_constructor(realm, vm.names.ArrayBuffer, m_array_buffer_constructor, m_array_buffer_prototype);
-    add_constructor(realm, vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
-    add_constructor(realm, vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
-    add_constructor(realm, vm.names.DataView, m_data_view_constructor, m_data_view_prototype);
-    add_constructor(realm, vm.names.Date, m_date_constructor, m_date_prototype);
-    add_constructor(realm, vm.names.Error, m_error_constructor, m_error_prototype);
-    add_constructor(realm, vm.names.FinalizationRegistry, m_finalization_registry_constructor, m_finalization_registry_prototype);
-    add_constructor(realm, vm.names.Function, m_function_constructor, m_function_prototype);
-    add_constructor(realm, vm.names.Map, m_map_constructor, m_map_prototype);
-    add_constructor(realm, vm.names.Number, m_number_constructor, m_number_prototype);
-    add_constructor(realm, vm.names.Object, m_object_constructor, m_object_prototype);
-    add_constructor(realm, vm.names.Promise, m_promise_constructor, m_promise_prototype);
-    add_constructor(realm, vm.names.Proxy, m_proxy_constructor, nullptr);
-    add_constructor(realm, vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
-    add_constructor(realm, vm.names.Set, m_set_constructor, m_set_prototype);
-    add_constructor(realm, vm.names.ShadowRealm, m_shadow_realm_constructor, m_shadow_realm_prototype);
-    add_constructor(realm, vm.names.String, m_string_constructor, m_string_prototype);
-    add_constructor(realm, vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
-    add_constructor(realm, vm.names.WeakMap, m_weak_map_constructor, m_weak_map_prototype);
-    add_constructor(realm, vm.names.WeakRef, m_weak_ref_constructor, m_weak_ref_prototype);
-    add_constructor(realm, vm.names.WeakSet, m_weak_set_constructor, m_weak_set_prototype);
-
-    initialize_constructor(realm, vm.names.TypedArray, m_typed_array_constructor, m_typed_array_prototype);
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    add_constructor(realm, vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
-    JS_ENUMERATE_NATIVE_ERRORS
-    JS_ENUMERATE_TYPED_ARRAYS
-#undef __JS_ENUMERATE
-
-    // NOTE: These constructors cannot be initialized with add_constructor as they have no global binding.
-    initialize_constructor(realm, vm.names.GeneratorFunction, m_generator_function_constructor, m_generator_function_prototype, Attribute::Configurable);
-    initialize_constructor(realm, vm.names.AsyncGeneratorFunction, m_async_generator_function_constructor, m_async_generator_function_prototype, Attribute::Configurable);
-    initialize_constructor(realm, vm.names.AsyncFunction, m_async_function_constructor, m_async_function_prototype, Attribute::Configurable);
-
-    // 27.5.1.1 Generator.prototype.constructor, https://tc39.es/ecma262/#sec-generator.prototype.constructor
-    m_generator_prototype->define_direct_property(vm.names.constructor, m_generator_function_prototype, Attribute::Configurable);
-
-    // 27.6.1.1 AsyncGenerator.prototype.constructor, https://tc39.es/ecma262/#sec-asyncgenerator-prototype-constructor
-    m_async_generator_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_prototype, Attribute::Configurable);
-
-    m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
-    m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
-    m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
-    m_json_parse_function = &get_without_side_effects(vm.names.JSON).as_object().get_without_side_effects(vm.names.parse).as_function();
-    m_object_prototype_to_string_function = &m_object_prototype->get_without_side_effects(vm.names.toString).as_function();
+    // Assign intrinsics and functions that depend on the GlobalObject's native functions
+    realm.intrinsics().m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
+    realm.intrinsics().m_number_constructor->define_direct_property(vm.names.parseInt, get_without_side_effects(vm.names.parseInt), attr);
+    realm.intrinsics().m_number_constructor->define_direct_property(vm.names.parseFloat, get_without_side_effects(vm.names.parseFloat), attr);
 }
 
 GlobalObject::~GlobalObject() = default;
-
-void GlobalObject::visit_edges(Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-
-    visitor.visit(m_empty_object_shape);
-    visitor.visit(m_new_object_shape);
-    visitor.visit(m_new_ordinary_function_prototype_object_shape);
-    visitor.visit(m_proxy_constructor);
-    visitor.visit(m_async_from_sync_iterator_prototype);
-    visitor.visit(m_async_generator_prototype);
-    visitor.visit(m_generator_prototype);
-    visitor.visit(m_intl_segments_prototype);
-    visitor.visit(m_array_prototype_values_function);
-    visitor.visit(m_date_constructor_now_function);
-    visitor.visit(m_eval_function);
-    visitor.visit(m_json_parse_function);
-    visitor.visit(m_object_prototype_to_string_function);
-    visitor.visit(m_throw_type_error_function);
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    visitor.visit(m_##snake_name##_constructor);                                         \
-    visitor.visit(m_##snake_name##_prototype);
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    visitor.visit(m_intl_##snake_name##_constructor);                         \
-    visitor.visit(m_intl_##snake_name##_prototype);
-    JS_ENUMERATE_INTL_OBJECTS
-#undef __JS_ENUMERATE
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    visitor.visit(m_temporal_##snake_name##_constructor);                     \
-    visitor.visit(m_temporal_##snake_name##_prototype);
-    JS_ENUMERATE_TEMPORAL_OBJECTS
-#undef __JS_ENUMERATE
-
-#define __JS_ENUMERATE(ClassName, snake_name) \
-    visitor.visit(m_##snake_name##_prototype);
-    JS_ENUMERATE_ITERATOR_PROTOTYPES
-#undef __JS_ENUMERATE
-}
 
 Realm* GlobalObject::associated_realm()
 {

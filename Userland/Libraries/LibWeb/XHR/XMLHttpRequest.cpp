@@ -143,7 +143,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
         TextCodec::UTF8Decoder decoder;
 
-        auto json_object_result = JS::call(vm, realm.global_object().json_parse_function(), JS::js_undefined(), JS::js_string(vm, decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
+        auto json_object_result = JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), JS::js_string(vm, decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
         if (json_object_result.is_error())
             return JS::Value(JS::js_null());
 

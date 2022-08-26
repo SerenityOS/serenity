@@ -12,7 +12,7 @@ namespace JS {
 
 StringIterator* StringIterator::create(Realm& realm, String string)
 {
-    return realm.heap().allocate<StringIterator>(realm, move(string), *realm.global_object().string_iterator_prototype());
+    return realm.heap().allocate<StringIterator>(realm, move(string), *realm.intrinsics().string_iterator_prototype());
 }
 
 StringIterator::StringIterator(String string, Object& prototype)

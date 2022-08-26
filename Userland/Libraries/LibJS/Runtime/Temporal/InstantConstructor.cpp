@@ -14,7 +14,7 @@ namespace JS::Temporal {
 
 // 8.1 The Temporal.Instant Constructor, https://tc39.es/proposal-temporal/#sec-temporal-instant-constructor
 InstantConstructor::InstantConstructor(Realm& realm)
-    : NativeFunction(vm().names.Instant.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Instant.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -25,7 +25,7 @@ void InstantConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 8.2.1 Temporal.Instant.prototype, https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_instant_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_instant_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);

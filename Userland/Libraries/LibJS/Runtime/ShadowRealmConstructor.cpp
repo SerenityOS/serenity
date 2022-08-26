@@ -12,7 +12,7 @@ namespace JS {
 
 // 3.2 The ShadowRealm Constructor, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm-constructor
 ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
-    : NativeFunction(vm().names.ShadowRealm.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.ShadowRealm.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -22,7 +22,7 @@ void ShadowRealmConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 3.3.1 ShadowRealm.prototype, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().shadow_realm_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().shadow_realm_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -59,7 +59,7 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     // 2. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%ShadowRealm.prototype%", « [[ShadowRealm]], [[ExecutionContext]] »).
     // 4. Set O.[[ShadowRealm]] to realmRec.
     // 9. Set O.[[ExecutionContext]] to context.
-    auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(vm, new_target, &GlobalObject::shadow_realm_prototype, *realm, move(context)));
+    auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(vm, new_target, &Intrinsics::shadow_realm_prototype, *realm, move(context)));
 
     // 10. Perform ? SetRealmGlobalObject(realmRec, undefined, undefined).
     auto* new_global_object = vm.heap().allocate_without_realm<GlobalObject>(*realm);

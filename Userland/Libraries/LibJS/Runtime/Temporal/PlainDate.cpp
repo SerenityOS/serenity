@@ -67,14 +67,14 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_
 
     // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.
     if (!new_target)
-        new_target = realm.global_object().temporal_plain_date_constructor();
+        new_target = realm.intrinsics().temporal_plain_date_constructor();
 
     // 8. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainDate.prototype%", « [[InitializedTemporalDate]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[Calendar]] »).
     // 9. Set object.[[ISOYear]] to isoYear.
     // 10. Set object.[[ISOMonth]] to isoMonth.
     // 11. Set object.[[ISODay]] to isoDay.
     // 12. Set object.[[Calendar]] to calendar.
-    auto* object = TRY(ordinary_create_from_constructor<PlainDate>(vm, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar));
+    auto* object = TRY(ordinary_create_from_constructor<PlainDate>(vm, *new_target, &Intrinsics::temporal_plain_date_prototype, iso_year, iso_month, iso_day, calendar));
 
     return object;
 }

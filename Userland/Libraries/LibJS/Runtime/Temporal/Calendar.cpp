@@ -70,11 +70,11 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& iden
 
     // 2. If newTarget is not provided, set newTarget to %Temporal.Calendar%.
     if (!new_target)
-        new_target = realm.global_object().temporal_calendar_constructor();
+        new_target = realm.intrinsics().temporal_calendar_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
     // 4. Set object.[[Identifier]] to identifier.
-    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &GlobalObject::temporal_calendar_prototype, identifier));
+    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier));
 
     // 5. Return object.
     return object;
@@ -947,7 +947,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     auto& realm = *vm.current_realm();
 
     // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
-    auto* merged = Object::create(realm, realm.global_object().object_prototype());
+    auto* merged = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 2. Let fieldsKeys be ? EnumerableOwnPropertyNames(fields, key).
     auto fields_keys = TRY(fields.enumerable_own_property_names(Object::PropertyKind::Key));

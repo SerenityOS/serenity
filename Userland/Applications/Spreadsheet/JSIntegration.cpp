@@ -258,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     if (!position.has_value())
         return JS::js_undefined();
 
-    auto object = JS::Object::create(realm, realm.global_object().object_prototype());
+    auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.value().row), JS::default_attributes);
 
@@ -284,7 +284,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 
     auto position = current_cell->position();
 
-    auto object = JS::Object::create(realm, realm.global_object().object_prototype());
+    auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
     object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
     object->define_direct_property("row", JS::Value((unsigned)position.row), JS::default_attributes);
 
@@ -370,7 +370,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
 }
 
 WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
-    : JS::Object(*realm.global_object().object_prototype())
+    : JS::Object(*realm.intrinsics().object_prototype())
     , m_workbook(workbook)
 {
 }

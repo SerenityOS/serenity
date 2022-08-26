@@ -16,7 +16,7 @@ namespace JS::Intl {
 
 // 18.1 The Intl.Segmenter Constructor, https://tc39.es/ecma402/#sec-intl-segmenter-constructor
 SegmenterConstructor::SegmenterConstructor(Realm& realm)
-    : NativeFunction(vm().names.Segmenter.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Segmenter.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ void SegmenterConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 18.2.1 Intl.Segmenter.prototype, https://tc39.es/ecma402/#sec-intl.segmenter.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_segmenter_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_segmenter_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -51,7 +51,7 @@ ThrowCompletionOr<Object*> SegmenterConstructor::construct(FunctionObject& new_t
 
     // 2. Let internalSlotsList be « [[InitializedSegmenter]], [[Locale]], [[SegmenterGranularity]] ».
     // 3. Let segmenter be ? OrdinaryCreateFromConstructor(NewTarget, "%Segmenter.prototype%", internalSlotsList).
-    auto* segmenter = TRY(ordinary_create_from_constructor<Segmenter>(vm, new_target, &GlobalObject::intl_segmenter_prototype));
+    auto* segmenter = TRY(ordinary_create_from_constructor<Segmenter>(vm, new_target, &Intrinsics::intl_segmenter_prototype));
 
     // 4. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales));

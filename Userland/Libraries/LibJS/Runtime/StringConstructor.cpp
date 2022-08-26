@@ -18,7 +18,7 @@
 namespace JS {
 
 StringConstructor::StringConstructor(Realm& realm)
-    : NativeFunction(vm().names.String.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.String.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void StringConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().string_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().string_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.raw, raw, 1, attr);
@@ -60,7 +60,7 @@ ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_targ
         primitive_string = js_string(vm, "");
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
-    auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &GlobalObject::string_prototype));
+    auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
     return StringObject::create(realm, *primitive_string, *prototype);
 }
 

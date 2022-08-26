@@ -27,9 +27,9 @@ namespace JS {
 Object* Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm, *realm.global_object().empty_object_shape());
-    else if (prototype == realm.global_object().object_prototype())
-        return realm.heap().allocate<Object>(realm, *realm.global_object().new_object_shape());
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
+    else if (prototype == realm.intrinsics().object_prototype())
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
     else
         return realm.heap().allocate<Object>(realm, *prototype);
 }
@@ -52,14 +52,16 @@ Object::Object(ConstructWithoutPrototypeTag, Realm& realm)
 
 Object::Object(Realm& realm, Object* prototype)
 {
-    m_shape = realm.global_object().empty_object_shape();
+    m_shape = realm.intrinsics().empty_object_shape();
+    VERIFY(m_shape);
     if (prototype != nullptr)
         set_prototype(prototype);
 }
 
 Object::Object(Object& prototype)
 {
-    m_shape = prototype.global_object().empty_object_shape();
+    m_shape = prototype.shape().realm().intrinsics().empty_object_shape();
+    VERIFY(m_shape);
     set_prototype(&prototype);
 }
 

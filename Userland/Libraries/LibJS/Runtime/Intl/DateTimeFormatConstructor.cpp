@@ -18,7 +18,7 @@ namespace JS::Intl {
 
 // 11.1 The Intl.DateTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-datetimeformat-constructor
 DateTimeFormatConstructor::DateTimeFormatConstructor(Realm& realm)
-    : NativeFunction(vm().names.DateTimeFormat.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.DateTimeFormat.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -29,7 +29,7 @@ void DateTimeFormatConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 11.2.1 Intl.DateTimeFormat.prototype, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_date_time_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_date_time_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
@@ -53,7 +53,7 @@ ThrowCompletionOr<Object*> DateTimeFormatConstructor::construct(FunctionObject& 
     auto options = vm.argument(1);
 
     // 2. Let dateTimeFormat be ? OrdinaryCreateFromConstructor(newTarget, "%DateTimeFormat.prototype%", « [[InitializedDateTimeFormat]], [[Locale]], [[Calendar]], [[NumberingSystem]], [[TimeZone]], [[Weekday]], [[Era]], [[Year]], [[Month]], [[Day]], [[DayPeriod]], [[Hour]], [[Minute]], [[Second]], [[FractionalSecondDigits]], [[TimeZoneName]], [[HourCycle]], [[Pattern]], [[BoundFormat]] »).
-    auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(vm, new_target, &GlobalObject::intl_date_time_format_prototype));
+    auto* date_time_format = TRY(ordinary_create_from_constructor<DateTimeFormat>(vm, new_target, &Intrinsics::intl_date_time_format_prototype));
 
     // 3. Perform ? InitializeDateTimeFormat(dateTimeFormat, locales, options).
     TRY(initialize_date_time_format(vm, *date_time_format, locales, options));

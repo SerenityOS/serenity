@@ -14,7 +14,7 @@
 namespace JS {
 
 SetConstructor::SetConstructor(Realm& realm)
-    : NativeFunction(vm().names.Set.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Set.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void SetConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 24.2.2.1 Set.prototype, https://tc39.es/ecma262/#sec-set.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().set_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().set_prototype(), 0);
 
     define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
@@ -43,7 +43,7 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &GlobalObject::set_prototype));
+    auto* set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &Intrinsics::set_prototype));
 
     if (vm.argument(0).is_nullish())
         return set;

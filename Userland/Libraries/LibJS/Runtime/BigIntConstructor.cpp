@@ -18,7 +18,7 @@ namespace JS {
 static const Crypto::SignedBigInteger BIGINT_ONE { 1 };
 
 BigIntConstructor::BigIntConstructor(Realm& realm)
-    : NativeFunction(vm().names.BigInt.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.BigInt.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void BigIntConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 21.2.2.3 BigInt.prototype, https://tc39.es/ecma262/#sec-bigint.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().bigint_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().bigint_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.asIntN, as_int_n, 2, attr);

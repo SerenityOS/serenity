@@ -20,7 +20,7 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.Function.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Function.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -30,7 +30,7 @@ void FunctionConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.2.2.2 Function.prototype, https://tc39.es/ecma262/#sec-function.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().function_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -49,7 +49,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         new_target = &constructor;
 
     StringView prefix;
-    Object* (GlobalObject::*fallback_prototype)() = nullptr;
+    Object* (Intrinsics::*fallback_prototype)() = nullptr;
 
     switch (kind) {
     // 4. If kind is normal, then
@@ -62,7 +62,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // d. Let parameterSym be the grammar symbol FormalParameters[~Yield, ~Await].
 
         // e. Let fallbackProto be "%Function.prototype%".
-        fallback_prototype = &GlobalObject::function_prototype;
+        fallback_prototype = &Intrinsics::function_prototype;
         break;
 
     // 5. Else if kind is generator, then
@@ -75,7 +75,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // d. Let parameterSym be the grammar symbol FormalParameters[+Yield, ~Await].
 
         // e. Let fallbackProto be "%GeneratorFunction.prototype%".
-        fallback_prototype = &GlobalObject::generator_function_prototype;
+        fallback_prototype = &Intrinsics::generator_function_prototype;
         break;
 
     // 6. Else if kind is async, then
@@ -88,7 +88,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // d. Let parameterSym be the grammar symbol FormalParameters[~Yield, +Await].
 
         // e. Let fallbackProto be "%AsyncFunction.prototype%".
-        fallback_prototype = &GlobalObject::async_function_prototype;
+        fallback_prototype = &Intrinsics::async_function_prototype;
         break;
 
     // 7. Else,
@@ -103,7 +103,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         // e. Let parameterSym be the grammar symbol FormalParameters[+Yield, +Await].
 
         // f. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
-        fallback_prototype = &GlobalObject::async_generator_function_prototype;
+        fallback_prototype = &Intrinsics::async_generator_function_prototype;
         break;
 
     default:
@@ -232,7 +232,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 30. If kind is generator, then
     if (kind == FunctionKind::Generator) {
         // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-        prototype = Object::create(realm, realm.global_object().generator_function_prototype_prototype());
+        prototype = Object::create(realm, realm.intrinsics().generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -240,7 +240,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 31. Else if kind is asyncGenerator, then
     else if (kind == FunctionKind::AsyncGenerator) {
         // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-        prototype = Object::create(realm, realm.global_object().async_generator_function_prototype_prototype());
+        prototype = Object::create(realm, realm.intrinsics().async_generator_function_prototype_prototype());
 
         // b. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -248,7 +248,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 32. Else if kind is normal, perform MakeConstructor(F).
     else if (kind == FunctionKind::Normal) {
         // FIXME: Implement MakeConstructor
-        prototype = Object::create(realm, realm.global_object().object_prototype());
+        prototype = Object::create(realm, realm.intrinsics().object_prototype());
         prototype->define_direct_property(vm.names.constructor, function, Attribute::Writable | Attribute::Configurable);
         function->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }

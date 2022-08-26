@@ -11,7 +11,7 @@
 namespace JS {
 
 ArgumentsObject::ArgumentsObject(Realm& realm, Environment& environment)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
     , m_environment(environment)
 {
 }

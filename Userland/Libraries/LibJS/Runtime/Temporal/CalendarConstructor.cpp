@@ -12,7 +12,7 @@ namespace JS::Temporal {
 
 // 12.2 The Temporal.Calendar Constructor, https://tc39.es/proposal-temporal/#sec-temporal-calendar-constructor
 CalendarConstructor::CalendarConstructor(Realm& realm)
-    : NativeFunction(vm().names.Calendar.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Calendar.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -23,7 +23,7 @@ void CalendarConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.3.1 Temporal.Calendar.prototype, https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_calendar_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_calendar_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);

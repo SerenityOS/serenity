@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 14.3 Properties of the Intl.Locale Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-locale-prototype-object
 LocalePrototype::LocalePrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -258,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
-    auto* info = Object::create(realm, realm.global_object().object_prototype());
+    auto* info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let dir be ! CharacterDirectionOfLocale(loc).
     auto direction = character_direction_of_locale(*locale_object);
@@ -280,7 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
     [[maybe_unused]] auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
-    auto* info = Object::create(realm, realm.global_object().object_prototype());
+    auto* info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let wi be ! WeekInfoOfLocale(loc).
     auto week_info = week_info_of_locale(*locale_object);

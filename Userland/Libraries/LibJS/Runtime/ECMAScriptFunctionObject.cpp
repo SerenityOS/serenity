@@ -33,16 +33,16 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(Realm& realm, FlyStri
     Object* prototype = nullptr;
     switch (kind) {
     case FunctionKind::Normal:
-        prototype = realm.global_object().function_prototype();
+        prototype = realm.intrinsics().function_prototype();
         break;
     case FunctionKind::Generator:
-        prototype = realm.global_object().generator_function_prototype();
+        prototype = realm.intrinsics().generator_function_prototype();
         break;
     case FunctionKind::Async:
-        prototype = realm.global_object().async_function_prototype();
+        prototype = realm.intrinsics().async_function_prototype();
         break;
     case FunctionKind::AsyncGenerator:
-        prototype = realm.global_object().async_generator_function_prototype();
+        prototype = realm.intrinsics().async_generator_function_prototype();
         break;
     }
     return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name));
@@ -114,17 +114,17 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = vm.heap().allocate<Object>(realm, *realm.global_object().new_ordinary_function_prototype_object_shape());
+            prototype = vm.heap().allocate<Object>(realm, *realm.intrinsics().new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            prototype = Object::create(realm, realm.global_object().generator_function_prototype_prototype());
+            prototype = Object::create(realm, realm.intrinsics().generator_function_prototype_prototype());
             break;
         case FunctionKind::Async:
             break;
         case FunctionKind::AsyncGenerator:
-            prototype = Object::create(realm, realm.global_object().async_generator_function_prototype_prototype());
+            prototype = Object::create(realm, realm.intrinsics().async_generator_function_prototype_prototype());
             break;
         }
         // 27.7.4 AsyncFunction Instances, https://tc39.es/ecma262/#sec-async-function-instances
@@ -208,7 +208,7 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVe
     // 3. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
-        this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &GlobalObject::object_prototype));
+        this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype));
     }
 
     ExecutionContext callee_context(heap());
@@ -863,7 +863,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {
             // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-            auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+            auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
             // 2. Let declResult be Completion(FunctionDeclarationInstantiation(functionObject, argumentsList)).
             auto declaration_result = function_declaration_instantiation(ast_interpreter);

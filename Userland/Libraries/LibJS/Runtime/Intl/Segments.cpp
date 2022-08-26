@@ -23,7 +23,7 @@ Segments* Segments::create(Realm& realm, Segmenter& segmenter, Utf16String strin
 
 // 18.5 Segments Objects, https://tc39.es/ecma402/#sec-segments-objects
 Segments::Segments(Realm& realm, Segmenter& segmenter, Utf16String string)
-    : Object(*realm.global_object().intl_segments_prototype())
+    : Object(*realm.intrinsics().intl_segments_prototype())
     , m_segments_segmenter(segmenter)
     , m_segments_string(move(string))
 {

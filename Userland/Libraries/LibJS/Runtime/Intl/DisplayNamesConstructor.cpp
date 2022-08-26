@@ -17,7 +17,7 @@ namespace JS::Intl {
 
 // 12.1 The Intl.DisplayNames Constructor, https://tc39.es/ecma402/#sec-intl-displaynames-constructor
 DisplayNamesConstructor::DisplayNamesConstructor(Realm& realm)
-    : NativeFunction(vm().names.DisplayNames.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.DisplayNames.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void DisplayNamesConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.2.1 Intl.DisplayNames.prototype, https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_display_names_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_display_names_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
@@ -52,7 +52,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     auto options_value = vm.argument(1);
 
     // 2. Let displayNames be ? OrdinaryCreateFromConstructor(NewTarget, "%DisplayNames.prototype%", « [[InitializedDisplayNames]], [[Locale]], [[Style]], [[Type]], [[Fallback]], [[LanguageDisplay]], [[Fields]] »).
-    auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(vm, new_target, &GlobalObject::intl_display_names_prototype));
+    auto* display_names = TRY(ordinary_create_from_constructor<DisplayNames>(vm, new_target, &Intrinsics::intl_display_names_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locale_value));

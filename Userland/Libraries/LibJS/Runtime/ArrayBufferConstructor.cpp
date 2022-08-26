@@ -14,7 +14,7 @@
 namespace JS {
 
 ArrayBufferConstructor::ArrayBufferConstructor(Realm& realm)
-    : NativeFunction(vm().names.ArrayBuffer.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.ArrayBuffer.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void ArrayBufferConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 25.1.4.2 ArrayBuffer.prototype, https://tc39.es/ecma262/#sec-arraybuffer.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().array_buffer_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().array_buffer_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.isView, is_view, 1, attr);

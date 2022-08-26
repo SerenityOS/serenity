@@ -21,7 +21,7 @@ namespace JS::Temporal {
 
 // 12.4 Properties of the Temporal.Calendar Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-calendar-prototype-object
 CalendarPrototype::CalendarPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 

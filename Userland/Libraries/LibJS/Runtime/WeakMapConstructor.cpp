@@ -14,7 +14,7 @@
 namespace JS {
 
 WeakMapConstructor::WeakMapConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakMap.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.WeakMap.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ void WeakMapConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 24.3.2.1 WeakMap.prototype, https://tc39.es/ecma262/#sec-weakmap.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().weak_map_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().weak_map_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -41,7 +41,7 @@ ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_tar
 {
     auto& vm = this->vm();
 
-    auto* weak_map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &GlobalObject::weak_map_prototype));
+    auto* weak_map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &Intrinsics::weak_map_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_map;

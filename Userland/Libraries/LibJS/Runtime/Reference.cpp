@@ -118,11 +118,11 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
             auto string_value = m_base_value.as_string().get(vm, m_name);
             if (string_value.has_value())
                 return *string_value;
-            base_obj = realm.global_object().string_prototype();
+            base_obj = realm.intrinsics().string_prototype();
         } else if (m_base_value.is_number())
-            base_obj = realm.global_object().number_prototype();
+            base_obj = realm.intrinsics().number_prototype();
         else if (m_base_value.is_boolean())
-            base_obj = realm.global_object().boolean_prototype();
+            base_obj = realm.intrinsics().boolean_prototype();
         else
             base_obj = TRY(m_base_value.to_object(vm));
 

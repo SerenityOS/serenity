@@ -12,7 +12,7 @@ namespace JS::Intl {
 
 // 1.4 Properties of the Intl.DurationFormat Prototype Object, https://tc39.es/proposal-intl-duration-format/#sec-properties-of-intl-durationformat-prototype-object
 DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -89,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
         auto const& part = formatted[n];
 
         // a. Let obj be ! OrdinaryObjectCreate(%ObjectPrototype%).
-        auto* object = Object::create(realm, realm.global_object().object_prototype());
+        auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::resolved_options)
     auto* duration_format = TRY(typed_this_object(vm));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
-    auto* options = Object::create(realm, realm.global_object().object_prototype());
+    auto* options = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each row of Table 2, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.

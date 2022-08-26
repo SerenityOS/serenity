@@ -442,7 +442,7 @@ Completion CallExpression::execute(Interpreter& interpreter) const
 
     auto& function = callee.as_function();
 
-    if (&function == realm.global_object().eval_function()
+    if (&function == realm.intrinsics().eval_function()
         && callee_reference.is_environment_reference()
         && callee_reference.name().is_string()
         && callee_reference.name().as_string() == vm.names.eval.as_string()) {
@@ -1829,9 +1829,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             class_private_environment->add_private_name({}, opt_private_name.release_value());
     }
 
-    auto* proto_parent = vm.current_realm()->global_object().object_prototype();
-
-    auto* constructor_parent = vm.current_realm()->global_object().function_prototype();
+    auto* proto_parent = realm.intrinsics().object_prototype();
+    auto* constructor_parent = realm.intrinsics().function_prototype();
 
     if (!m_super_class.is_null()) {
         vm.running_execution_context().lexical_environment = class_environment;
@@ -3036,7 +3035,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
     auto& realm = *vm.current_realm();
 
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with argument obj.
     for (auto& property : m_properties) {
@@ -3347,7 +3346,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     // Note: options_value is undefined by default.
 
     // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 7. Let specifierString be Completion(ToString(specifier)).
     // 8. IfAbruptRejectPromise(specifierString, promiseCapability).

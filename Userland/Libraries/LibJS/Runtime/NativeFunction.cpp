@@ -26,7 +26,7 @@ NativeFunction* NativeFunction::create(Realm& allocating_realm, Function<ThrowCo
 
     // 2. If prototype is not present, set prototype to realm.[[Intrinsics]].[[%Function.prototype%]].
     if (!prototype.has_value())
-        prototype = realm.value()->global_object().function_prototype();
+        prototype = realm.value()->intrinsics().function_prototype();
 
     // 3. Let internalSlotsList be a List containing the names of all the internal slots that 10.3 requires for the built-in function object that is about to be created.
     // 4. Append to internalSlotsList the elements of additionalInternalSlotsList.
@@ -53,7 +53,7 @@ NativeFunction* NativeFunction::create(Realm& allocating_realm, Function<ThrowCo
 
 NativeFunction* NativeFunction::create(Realm& realm, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&)> function)
 {
-    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.global_object().function_prototype());
+    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype());
 }
 
 NativeFunction::NativeFunction(Function<ThrowCompletionOr<Value>(VM&)> native_function, Object* prototype, Realm& realm)
@@ -69,7 +69,7 @@ NativeFunction::NativeFunction(Function<ThrowCompletionOr<Value>(VM&)> native_fu
 
 NativeFunction::NativeFunction(Object& prototype)
     : FunctionObject(prototype)
-    , m_realm(global_object().associated_realm())
+    , m_realm(&prototype.shape().realm())
 {
 }
 
@@ -77,14 +77,14 @@ NativeFunction::NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_native_function(move(native_function))
-    , m_realm(global_object().associated_realm())
+    , m_realm(&prototype.shape().realm())
 {
 }
 
 NativeFunction::NativeFunction(FlyString name, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
-    , m_realm(global_object().associated_realm())
+    , m_realm(&prototype.shape().realm())
 {
 }
 

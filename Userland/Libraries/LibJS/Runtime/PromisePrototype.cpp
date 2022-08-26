@@ -17,7 +17,7 @@
 namespace JS {
 
 PromisePrototype::PromisePrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().object_prototype())
+    : PrototypeObject(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -48,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto* promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, *promise, *realm.global_object().promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *promise, *realm.intrinsics().promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
     auto result_capability = TRY(new_promise_capability(vm, constructor));
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, promise.to_string_without_side_effects());
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *realm.global_object().promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *realm.intrinsics().promise_constructor()));
 
     // 4. Assert: IsConstructor(C) is true.
     VERIFY(constructor);

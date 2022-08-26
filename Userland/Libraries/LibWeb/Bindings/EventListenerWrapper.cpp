@@ -13,7 +13,7 @@ namespace Web {
 namespace Bindings {
 
 EventListenerWrapper::EventListenerWrapper(JS::Realm& realm, DOM::IDLEventListener& impl)
-    : Wrapper(*realm.global_object().object_prototype())
+    : Wrapper(*realm.intrinsics().object_prototype())
     , m_impl(impl)
 {
 }

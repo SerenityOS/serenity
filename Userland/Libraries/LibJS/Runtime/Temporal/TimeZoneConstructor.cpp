@@ -12,7 +12,7 @@ namespace JS::Temporal {
 
 // 11.2 The Temporal.TimeZone Constructor, https://tc39.es/proposal-temporal/#sec-temporal-timezone-constructor
 TimeZoneConstructor::TimeZoneConstructor(Realm& realm)
-    : NativeFunction(vm().names.TimeZone.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.TimeZone.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -23,7 +23,7 @@ void TimeZoneConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 11.3.1 Temporal.TimeZone.prototype, https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_time_zone_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_time_zone_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);

@@ -20,7 +20,7 @@ namespace JS::Intl {
 
 // 17.1 The Intl.RelativeTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-relativetimeformat-constructor
 RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
-    : NativeFunction(vm().names.RelativeTimeFormat.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.RelativeTimeFormat.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -31,7 +31,7 @@ void RelativeTimeFormatConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 17.2.1 Intl.RelativeTimeFormat.prototype, https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().intl_relative_time_format_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().intl_relative_time_format_prototype(), 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -54,7 +54,7 @@ ThrowCompletionOr<Object*> RelativeTimeFormatConstructor::construct(FunctionObje
     auto options = vm.argument(1);
 
     // 2. Let relativeTimeFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%RelativeTimeFormat.prototype%", « [[InitializedRelativeTimeFormat]], [[Locale]], [[DataLocale]], [[Style]], [[Numeric]], [[NumberFormat]], [[NumberingSystem]], [[PluralRules]] »).
-    auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &GlobalObject::intl_relative_time_format_prototype));
+    auto* relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &Intrinsics::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
     return TRY(initialize_relative_time_format(vm, *relative_time_format, locales, options));
@@ -138,11 +138,11 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_numeric(numeric.as_string().string());
 
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto* number_format = MUST(construct(vm, *realm.global_object().intl_number_format_constructor(), js_string(vm, locale)));
+    auto* number_format = MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    auto* plural_rules = MUST(construct(vm, *realm.global_object().intl_plural_rules_constructor(), js_string(vm, locale)));
+    auto* plural_rules = MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), js_string(vm, locale)));
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules));
 
     // 21. Return relativeTimeFormat.

@@ -11,7 +11,7 @@
 namespace JS {
 
 SymbolConstructor::SymbolConstructor(Realm& realm)
-    : NativeFunction(vm().names.Symbol.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Symbol.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -21,7 +21,7 @@ void SymbolConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().symbol_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().symbol_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.for_, for_, 1, attr);

@@ -257,7 +257,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeForm
     // 4. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
-        auto* object = Object::create(realm, realm.global_object().object_prototype());
+        auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));

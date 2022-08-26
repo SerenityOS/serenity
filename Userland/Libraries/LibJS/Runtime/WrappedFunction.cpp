@@ -21,7 +21,7 @@ ThrowCompletionOr<WrappedFunction*> WrappedFunction::create(Realm& realm, Realm&
     // 4. Set wrapped.[[Call]] as described in 2.1.
     // 5. Set wrapped.[[WrappedTargetFunction]] to Target.
     // 6. Set wrapped.[[Realm]] to callerRealm.
-    auto& prototype = *caller_realm.global_object().function_prototype();
+    auto& prototype = *caller_realm.intrinsics().function_prototype();
     auto* wrapped = vm.heap().allocate<WrappedFunction>(realm, caller_realm, target, prototype);
 
     // 7. Let result be CopyNameAndLength(wrapped, Target).

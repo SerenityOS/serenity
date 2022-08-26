@@ -15,7 +15,7 @@
 namespace JS {
 
 AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.global_object().async_iterator_prototype())
+    : PrototypeObject(*realm.intrinsics().async_iterator_prototype())
 {
 }
 
@@ -46,7 +46,7 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
 
     // 6. Let valueWrapper be PromiseResolve(%Promise%, value).
     // 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
-    auto value_wrapper = TRY_OR_MUST_REJECT(vm, promise_capability, promise_resolve(vm, *realm.global_object().promise_constructor(), value));
+    auto value_wrapper = TRY_OR_MUST_REJECT(vm, promise_capability, promise_resolve(vm, *realm.intrinsics().promise_constructor(), value));
 
     // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm) -> ThrowCompletionOr<Value> {
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let syncIteratorRecord be O.[[SyncIteratorRecord]].
     auto& sync_iterator_record = this_object->sync_iterator_record();
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     auto* this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.global_object().promise_constructor()));
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
     auto* sync_iterator = this_object->sync_iterator_record().iterator;

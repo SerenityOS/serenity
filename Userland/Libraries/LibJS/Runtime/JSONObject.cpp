@@ -26,7 +26,7 @@
 namespace JS {
 
 JSONObject::JSONObject(Realm& realm)
-    : Object(*realm.global_object().object_prototype())
+    : Object(*realm.intrinsics().object_prototype())
 {
 }
 
@@ -101,7 +101,7 @@ ThrowCompletionOr<String> JSONObject::stringify_impl(VM& vm, Value value, Value 
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create(realm, realm.global_object().object_prototype());
+    auto* wrapper = Object::create(realm, realm.intrinsics().object_prototype());
     MUST(wrapper->create_data_property_or_throw(String::empty(), value));
     return serialize_json_property(vm, state, String::empty(), wrapper);
 }
@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         return vm.throw_completion<SyntaxError>(ErrorType::JsonMalformed);
     Value unfiltered = parse_json_value(vm, json.value());
     if (reviver.is_function()) {
-        auto* root = Object::create(realm, realm.global_object().object_prototype());
+        auto* root = Object::create(realm, realm.intrinsics().object_prototype());
         auto root_name = String::empty();
         MUST(root->create_data_property_or_throw(root_name, unfiltered));
         return internalize_json_property(vm, root, root_name, reviver.as_function());
@@ -430,7 +430,7 @@ Value JSONObject::parse_json_value(VM& vm, JsonValue const& value)
 Object* JSONObject::parse_json_object(VM& vm, JsonObject const& json_object)
 {
     auto& realm = *vm.current_realm();
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
         object->define_direct_property(key, parse_json_value(vm, value), default_attributes);
     });

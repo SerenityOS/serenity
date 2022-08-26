@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@ namespace JS {
 
 BigIntObject* BigIntObject::create(Realm& realm, BigInt& bigint)
 {
-    return realm.heap().allocate<BigIntObject>(realm, bigint, *realm.global_object().bigint_prototype());
+    return realm.heap().allocate<BigIntObject>(realm, bigint, *realm.intrinsics().bigint_prototype());
 }
 
 BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)

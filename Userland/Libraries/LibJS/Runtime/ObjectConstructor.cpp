@@ -18,7 +18,7 @@
 namespace JS {
 
 ObjectConstructor::ObjectConstructor(Realm& realm)
-    : NativeFunction(vm().names.Object.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Object.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ void ObjectConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 20.1.2.19 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().object_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().object_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.defineProperty, define_property, 3, attr);
@@ -70,10 +70,10 @@ ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_targ
     auto& realm = *vm.current_realm();
 
     if (&new_target != this)
-        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &GlobalObject::object_prototype));
+        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create(realm, realm.global_object().object_prototype());
+        return Object::create(realm, realm.intrinsics().object_prototype());
     return value.to_object(vm);
 }
 
@@ -223,7 +223,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
     auto& realm = *vm.current_realm();
     auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
 
-    auto* object = Object::create(realm, realm.global_object().object_prototype());
+    auto* object = Object::create(realm, realm.intrinsics().object_prototype());
 
     (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
@@ -274,7 +274,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto own_keys = TRY(object->internal_own_property_keys());
 
     // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
-    auto* descriptors = Object::create(realm, realm.global_object().object_prototype());
+    auto* descriptors = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 namespace JS {
 
 AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
-    : Object(*realm.global_object().error_prototype())
+    : Object(*realm.intrinsics().error_prototype())
 {
 }
 

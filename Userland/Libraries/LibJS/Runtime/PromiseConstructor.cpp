@@ -240,7 +240,7 @@ static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_
 }
 
 PromiseConstructor::PromiseConstructor(Realm& realm)
-    : NativeFunction(vm().names.Promise.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.Promise.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -250,7 +250,7 @@ void PromiseConstructor::initialize(Realm& realm)
     NativeFunction::initialize(realm);
 
     // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().promise_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().promise_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.all, all, 1, attr);
@@ -290,7 +290,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     // 5. Set promise.[[PromiseFulfillReactions]] to a new empty List.
     // 6. Set promise.[[PromiseRejectReactions]] to a new empty List.
     // 7. Set promise.[[PromiseIsHandled]] to false.
-    auto* promise = TRY(ordinary_create_from_constructor<Promise>(vm, new_target, &GlobalObject::promise_prototype));
+    auto* promise = TRY(ordinary_create_from_constructor<Promise>(vm, new_target, &Intrinsics::promise_prototype));
 
     // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
     auto [resolve_function, reject_function] = promise->create_resolving_functions();

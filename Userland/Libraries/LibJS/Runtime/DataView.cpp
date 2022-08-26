@@ -10,7 +10,7 @@ namespace JS {
 
 DataView* DataView::create(Realm& realm, ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset)
 {
-    return realm.heap().allocate<DataView>(realm, viewed_buffer, byte_length, byte_offset, *realm.global_object().data_view_prototype());
+    return realm.heap().allocate<DataView>(realm, viewed_buffer, byte_length, byte_offset, *realm.intrinsics().data_view_prototype());
 }
 
 DataView::DataView(ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset, Object& prototype)

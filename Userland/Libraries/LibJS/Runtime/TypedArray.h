@@ -32,7 +32,7 @@ public:
         Number,
     };
 
-    using IntrinsicConstructor = TypedArrayConstructor* (GlobalObject::*)();
+    using IntrinsicConstructor = TypedArrayConstructor* (Intrinsics::*)();
 
     u32 array_length() const { return m_array_length; }
     u32 byte_length() const { return m_byte_length; }

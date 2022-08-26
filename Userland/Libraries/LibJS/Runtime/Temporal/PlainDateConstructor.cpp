@@ -16,7 +16,7 @@ namespace JS::Temporal {
 
 // 3.1 The Temporal.PlainDate Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-constructor
 PlainDateConstructor::PlainDateConstructor(Realm& realm)
-    : NativeFunction(vm().names.PlainDate.as_string(), *realm.global_object().function_prototype())
+    : NativeFunction(vm().names.PlainDate.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ void PlainDateConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype
-    define_direct_property(vm.names.prototype, realm.global_object().temporal_plain_date_prototype(), 0);
+    define_direct_property(vm.names.prototype, realm.intrinsics().temporal_plain_date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);
