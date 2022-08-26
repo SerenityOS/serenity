@@ -5306,22 +5306,22 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
     Vector<CSS::GridTrackSize> params;
     for (auto& component_value : component_values) {
         // FIXME: Incomplete as a GridTrackSize can be a function like minmax(min, max), etc.
-        if (component_value.is_function())
-            return {};
+        if (component_value.is_function()) {
+            params.append(Length::make_auto());
+            continue;
+        }
         if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv)) {
             params.append(Length::make_auto());
             continue;
         }
         auto dimension = parse_dimension(component_value);
         if (!dimension.has_value())
-            return {};
+            return GridTrackSizeStyleValue::create({});
         if (dimension->is_length())
             params.append(dimension->length());
         if (dimension->is_percentage())
             params.append(dimension->percentage());
     }
-    if (params.size() == 0)
-        return {};
     return GridTrackSizeStyleValue::create(params);
 }
 
