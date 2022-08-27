@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Aaron Yoder <aaronjyoder@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +31,8 @@ static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs
     int a = rhs.red() - lhs.red();
     int b = rhs.green() - lhs.green();
     int c = rhs.blue() - lhs.blue();
-    return (a * a + b * b + c * c) / (3.0f * 255.0f * 255.0f);
+    int d = rhs.alpha() - lhs.alpha();
+    return (a * a + b * b + c * c + d * d) / (4.0f * 255.0f * 255.0f);
 }
 
 static bool can_paint(int x, int y, Gfx::Bitmap& bitmap, Gfx::Color const& target_color, float threshold_normalized_squared)
