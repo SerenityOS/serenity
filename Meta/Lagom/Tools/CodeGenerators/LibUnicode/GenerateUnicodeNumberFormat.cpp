@@ -26,7 +26,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
-#include <LibJS/Runtime/Intl/AbstractOperations.h>
+#include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
 #include <LibUnicode/PluralRules.h>
