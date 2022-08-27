@@ -61,7 +61,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(FlyString name, String source
     , m_private_environment(private_environment)
     , m_formal_parameters(move(formal_parameters))
     , m_ecmascript_code(ecmascript_code)
-    , m_realm(global_object().associated_realm())
+    , m_realm(&prototype.shape().realm())
     , m_source_text(move(source_text))
     , m_class_field_initializer_name(move(class_field_initializer_name))
     , m_strict(strict)
