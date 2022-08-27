@@ -442,7 +442,7 @@ void Window::event(Core::Event& event)
         return;
     }
 
-    if (blocking_modal_window() && !is_capturing_input()) {
+    if (blocking_modal_window()) {
         // We still want to handle the WindowDeactivated event below when a new modal is
         // created to notify its parent window, despite it being "blocked by modal window".
         if (event.type() != Event::WindowDeactivated)
@@ -660,6 +660,8 @@ bool Window::is_active() const
 Window* Window::blocking_modal_window()
 {
     auto maybe_blocker = WindowManager::the().for_each_window_in_modal_chain(*this, [&](auto& window) {
+        if (is_descendant_of(window))
+            return IterationDecision::Continue;
         if (window.is_blocking() && this != &window)
             return IterationDecision::Break;
         return IterationDecision::Continue;

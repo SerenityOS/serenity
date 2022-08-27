@@ -241,24 +241,24 @@ public:
     template<typename Callback>
     Window* for_each_window_in_modal_chain(Window& window, Callback callback)
     {
-        Window* maybe_break = nullptr;
         Function<Window*(Window&)> recurse = [&](Window& w) -> Window* {
             if (!w.is_modal()) {
                 auto decision = callback(w);
                 if (decision == IterationDecision::Break)
-                    return maybe_break = &w;
+                    return &w;
             }
             for (auto& child : w.child_windows()) {
                 if (!child || child->is_destroyed() || !child->is_modal())
                     continue;
                 auto decision = callback(*child);
+                if (auto* result = recurse(*child))
+                    return result;
                 if (decision == IterationDecision::Break)
-                    return maybe_break = child;
-                recurse(*child);
+                    return child;
             }
-            return maybe_break;
+            return nullptr;
         };
-        if (auto* modeless = window.modeless_ancestor(); modeless)
+        if (auto* modeless = window.modeless_ancestor())
             return recurse(*modeless);
         return nullptr;
     }
