@@ -14,7 +14,7 @@ namespace WindowServer {
 // - Passive:       Joins the modal chain but has no modal effect (default mode for child windows)
 // - RenderAbove:   Renders above its parent
 // - CaptureInput:  Captures input from its parent
-// - Blocking:      Preempts all interaction with its modal chain
+// - Blocking:      Preempts all interaction with its modal chain excepting descendants (default mode for Dialogs)
 enum class WindowMode {
     Modeless = 0,
     Passive,
