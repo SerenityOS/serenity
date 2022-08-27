@@ -420,6 +420,10 @@ void init_stage2(void*)
     g_init_pid = init_process->pid();
     init_thread->set_priority(THREAD_PRIORITY_HIGH);
 
+    NetworkTask::spawn();
+
+    // NOTE: All kernel processes must be created before enabling boot profiling.
+    //       This is so profiling_enable() can emit process created performance events for them.
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
         MutexLocker mutex_locker(Process::current().big_lock());
@@ -427,8 +431,6 @@ void init_stage2(void*)
         auto result = Process::current().profiling_enable(-1, enable_all);
         VERIFY(!result.is_error());
     }
-
-    NetworkTask::spawn();
 
     Process::current().sys$exit(0);
     VERIFY_NOT_REACHED();
