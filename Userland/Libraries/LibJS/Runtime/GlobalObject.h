@@ -24,9 +24,6 @@ public:
 
     Console& console() { return *m_console; }
 
-    Realm* associated_realm();
-    void set_associated_realm(Realm&);
-
 private:
     virtual bool is_global_object() const final { return true; }
 
@@ -44,7 +41,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(unescape);
 
     NonnullOwnPtr<Console> m_console;
-    WeakPtr<Realm> m_associated_realm;
 };
 
 inline GlobalObject* Shape::global_object() const
