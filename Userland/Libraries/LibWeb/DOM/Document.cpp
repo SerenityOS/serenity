@@ -1081,8 +1081,7 @@ JS::Realm& Document::realm()
 {
     VERIFY(m_window);
     VERIFY(m_window->wrapper());
-    VERIFY(m_window->wrapper()->associated_realm());
-    return *m_window->wrapper()->associated_realm();
+    return m_window->wrapper()->shape().realm();
 }
 
 JS::Interpreter& Document::interpreter()
