@@ -17,6 +17,10 @@ for fn in "${files[@]}"; do
         echo "$fn contains invalid characters in its filename. Only uppercase letters, numbers, +, and _ should be used."
         found_invalid_filenames=1
     fi
+    if [[ $basename == *U+0* ]] ; then
+        echo "$fn contains codepoint(s) with leading zeros. Leading zeros should be removed from codepoint(s)."
+        found_invalid_filenames=1
+    fi
     if [[ $basename == *+U* ]] ; then
         echo "$fn is incorrectly named. _ should be used as a separator between codepoints, not +."
         found_invalid_filenames=1
