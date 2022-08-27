@@ -541,9 +541,15 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
         main_available_space = specified_main_size(flex_container());
     } else {
         if (has_main_max_size(flex_container())) {
-            main_max_size = specified_main_max_size(flex_container());
-            main_available_space = main_max_size;
-            main_is_constrained = true;
+            bool main_max_size_behaves_like_auto = false;
+            if (computed_main_max_size(flex_container()).is_percentage())
+                main_max_size_behaves_like_auto = !has_definite_main_size(*flex_container().containing_block());
+
+            if (!main_max_size_behaves_like_auto) {
+                main_max_size = specified_main_max_size(flex_container());
+                main_available_space = main_max_size;
+                main_is_constrained = true;
+            }
         }
         if (has_main_min_size(flex_container())) {
             main_min_size = specified_main_min_size(flex_container());
@@ -567,8 +573,15 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
         cross_available_space = specified_cross_size(flex_container());
     } else {
         if (has_cross_max_size(flex_container())) {
-            cross_max_size = specified_cross_max_size(flex_container());
-            cross_is_constrained = true;
+
+            bool cross_max_size_behaves_like_auto = false;
+            if (computed_cross_max_size(flex_container()).is_percentage())
+                cross_max_size_behaves_like_auto = !has_definite_cross_size(*flex_container().containing_block());
+
+            if (!cross_max_size_behaves_like_auto) {
+                cross_max_size = specified_cross_max_size(flex_container());
+                cross_is_constrained = true;
+            }
         }
         if (has_cross_min_size(flex_container())) {
             cross_min_size = specified_cross_min_size(flex_container());
