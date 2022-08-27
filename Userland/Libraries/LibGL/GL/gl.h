@@ -813,6 +813,16 @@ GLAPI void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void
 GLAPI void glDeleteBuffers(GLsizei n, GLuint const* buffers);
 GLAPI void glGenBuffers(GLsizei n, GLuint* buffers);
 
+GLAPI GLuint glCreateShader(GLenum shader_type);
+GLAPI void glDeleteShader(GLuint shader);
+GLAPI void glShaderSource(GLuint shader, GLsizei count, GLchar const** string, GLint const* length);
+GLAPI void glCompileShader(GLuint shader);
+
+GLAPI GLuint glCreateProgram();
+GLAPI void glDeleteProgram(GLuint program);
+GLAPI void glAttachShader(GLuint program, GLuint shader);
+GLAPI void glLinkProgram(GLuint program);
+
 #ifdef __cplusplus
 }
 #endif

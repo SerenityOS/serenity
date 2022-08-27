@@ -10,6 +10,7 @@ set(SOURCES
     List.cpp
     Matrix.cpp
     NameAllocator.cpp
+    Shader.cpp
     Stencil.cpp
     Tex/Texture2D.cpp
     Texture.cpp
