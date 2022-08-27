@@ -183,17 +183,6 @@ void GlobalObject::initialize_global_object(Realm& realm)
 
 GlobalObject::~GlobalObject() = default;
 
-Realm* GlobalObject::associated_realm()
-{
-    return m_associated_realm;
-}
-
-void GlobalObject::set_associated_realm(Realm& realm)
-{
-    VERIFY(&realm == &shape().realm());
-    m_associated_realm = &realm;
-}
-
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
 #ifdef __serenity__

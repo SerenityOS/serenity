@@ -96,9 +96,6 @@ void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_va
     // 2. Assert: Type(globalObj) is Object.
     VERIFY(global_object);
 
-    // Non-standard
-    global_object->set_associated_realm(*this);
-
     // 3. If thisValue is undefined, set thisValue to globalObj.
     if (this_value == nullptr)
         this_value = global_object;
