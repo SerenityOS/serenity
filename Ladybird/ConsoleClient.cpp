@@ -35,7 +35,6 @@ ConsoleClient::ConsoleClient(JS::Console& console, WeakPtr<JS::Interpreter> inte
     // It gets removed immediately after creating the interpreter in Document::interpreter().
     auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().host_defined());
     vm.push_execution_context(eso.realm_execution_context());
-    console_global_object->set_associated_realm(m_interpreter->realm());
     console_global_object->initialize_global_object(realm);
     vm.pop_execution_context();
 
