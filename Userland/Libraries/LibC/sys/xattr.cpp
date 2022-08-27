@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -58,5 +59,23 @@ ssize_t llistxattr(char const*, char*, size_t)
 ssize_t flistxattr(int, char*, size_t)
 {
     dbgln("FIXME: Implement flistxattr()");
+    return 0;
+}
+
+int removexattr(char const*, char const*)
+{
+    dbgln("FIXME: Implement removexattr()");
+    return 0;
+}
+
+int lremovexattr(char const*, char const*)
+{
+    dbgln("FIXME: Implement lremovexattr()");
+    return 0;
+}
+
+int fremovexattr(int, char const*)
+{
+    dbgln("FIXME: Implement fremovexattr()");
     return 0;
 }
