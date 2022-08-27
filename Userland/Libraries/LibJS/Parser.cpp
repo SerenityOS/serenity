@@ -4403,29 +4403,45 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
         entries_with_location.append({ ExportEntry::named_export(default_string_value, move(local_name)), default_position });
     } else {
-        enum FromSpecifier {
+        enum class FromSpecifier {
             NotAllowed,
             Optional,
             Required
-        } check_for_from { NotAllowed };
+        } check_for_from { FromSpecifier::NotAllowed };
+
+        auto parse_module_export_name = [&](bool lhs) -> FlyString {
+            // https://tc39.es/ecma262/#prod-ModuleExportName
+            //  ModuleExportName :
+            //      IdentifierName
+            //      StringLiteral
+            if (match_identifier_name()) {
+                return consume().value();
+            }
+            if (match(TokenType::StringLiteral)) {
+                // It is a Syntax Error if ReferencedBindings of NamedExports contains any StringLiterals.
+                // Only for export { "a" as "b" }; // <-- no from
+                if (lhs)
+                    check_for_from = FromSpecifier::Required;
+                return consume_string_value();
+            }
+            expected("ExportSpecifier (string or identifier)");
+            return {};
+        };
 
         if (match(TokenType::Asterisk)) {
             auto asterisk_position = position();
             consume(TokenType::Asterisk);
 
             if (match_as()) {
+                //  * as ModuleExportName
                 consume(TokenType::Identifier);
-                if (match_identifier_name()) {
-                    auto namespace_position = position();
-                    auto exported_name = consume().value();
-                    entries_with_location.append({ ExportEntry::all_module_request(exported_name), namespace_position });
-                } else {
-                    expected("identifier");
-                }
+                auto namespace_position = position();
+                auto exported_name = parse_module_export_name(false);
+                entries_with_location.append({ ExportEntry::all_module_request(exported_name), namespace_position });
             } else {
                 entries_with_location.append({ ExportEntry::all_but_default_entry(), asterisk_position });
             }
-            check_for_from = Required;
+            check_for_from = FromSpecifier::Required;
         } else if (match_declaration()) {
             auto decl_position = position();
             auto declaration = parse_declaration();
@@ -4471,30 +4487,15 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             expression = variable_declaration;
         } else if (match(TokenType::CurlyOpen)) {
             consume(TokenType::CurlyOpen);
-            check_for_from = Optional;
-
-            auto parse_export_specifier = [&](bool lhs) -> FlyString {
-                if (match_identifier_name()) {
-                    return consume().value();
-                }
-                if (match(TokenType::StringLiteral)) {
-                    // It is a Syntax Error if ReferencedBindings of NamedExports contains any StringLiterals.
-                    // Only for export { "a" as "b" }; // <-- no from
-                    if (lhs)
-                        check_for_from = Required;
-                    return consume_string_value();
-                }
-                expected("ExportSpecifier (string or identifier)");
-                return {};
-            };
+            check_for_from = FromSpecifier::Optional;
 
             while (!done() && !match(TokenType::CurlyClose)) {
                 auto identifier_position = position();
-                auto identifier = parse_export_specifier(true);
+                auto identifier = parse_module_export_name(true);
 
                 if (match_as()) {
                     consume(TokenType::Identifier);
-                    auto export_name = parse_export_specifier(false);
+                    auto export_name = parse_module_export_name(false);
 
                     entries_with_location.append({ ExportEntry::named_export(move(export_name), move(identifier)), identifier_position });
                 } else {
@@ -4513,14 +4514,14 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             syntax_error("Unexpected token 'export'", rule_start.position());
         }
 
-        if (check_for_from != NotAllowed && match_from()) {
+        if (check_for_from != FromSpecifier::NotAllowed && match_from()) {
             consume(TokenType::Identifier);
             from_specifier = parse_module_request();
-        } else if (check_for_from == Required) {
+        } else if (check_for_from == FromSpecifier::Required) {
             expected("from");
         }
 
-        if (check_for_from != NotAllowed)
+        if (check_for_from != FromSpecifier::NotAllowed)
             consume_or_insert_semicolon();
     }
 
