@@ -18,10 +18,12 @@ set(SOURCES
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/OptionConstructor.cpp
+    Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
     Bindings/WindowObject.cpp
     Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp
+    Bindings/Wrapper.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp

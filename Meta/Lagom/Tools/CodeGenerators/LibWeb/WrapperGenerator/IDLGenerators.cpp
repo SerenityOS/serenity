@@ -972,7 +972,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_wrappable_type) {
             // 5. If V is a platform object, then:
             union_generator.append(R"~~~(
-            if (is<Wrapper>(@js_name@@js_suffix@_object)) {
+            if (is<PlatformObject>(@js_name@@js_suffix@_object)) {
 )~~~");
 
             //    1. If types includes an interface type that V implements, then return the IDL value that is a reference to the object V.
