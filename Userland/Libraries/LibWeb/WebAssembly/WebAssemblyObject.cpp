@@ -211,8 +211,14 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                     Wasm::HostFunction host_function {
                         [&](auto&, auto& arguments) -> Wasm::Result {
                             JS::MarkedVector<JS::Value> argument_values { vm.heap() };
-                            for (auto& entry : arguments)
-                                argument_values.append(to_js_value(vm, entry));
+                            for (auto& entry : arguments) {
+                                JS::ThrowCompletionOr<JS::Value> js_value_or_error = to_js_value(vm, entry);
+                                if (js_value_or_error.is_error()) {
+                                    // yikes.
+                                    return Wasm::Result { Wasm::Trap { js_value_or_error.release_error().release_value().release_value().to_string_without_side_effects() } };
+                                }
+                                argument_values.append(js_value_or_error.release_value());
+                            }
 
                             auto result_or_error = JS::call(vm, function, JS::js_undefined(), move(argument_values));
                             if (result_or_error.is_error()) {
@@ -365,7 +371,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     return promise;
 }
 
-JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
+JS::ThrowCompletionOr<JS::Value> to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
 {
     auto& realm = *vm.current_realm();
     switch (wasm_value.type().kind()) {
@@ -385,6 +391,8 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
     case Wasm::ValueType::ExternReference:
     case Wasm::ValueType::NullExternReference:
         TODO();
+    case Wasm::ValueType::V128:
+        return vm.throw_completion<JS::TypeError>("Cannot convert a vector value to a javascript value");
     }
     VERIFY_NOT_REACHED();
 }
@@ -433,6 +441,8 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value va
     case Wasm::ValueType::ExternReference:
     case Wasm::ValueType::NullExternReference:
         TODO();
+    case Wasm::ValueType::V128:
+        return vm.throw_completion<JS::TypeError>("Cannot convert a vector value to a javascript value");
     }
 
     VERIFY_NOT_REACHED();
@@ -472,7 +482,7 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
 
             Vector<JS::Value> result_values;
             for (auto& entry : result.values())
-                result_values.append(to_js_value(vm, entry));
+                result_values.append(TRY(to_js_value(vm, entry)));
 
             return JS::Value(JS::Array::create_from(realm, result_values));
         });

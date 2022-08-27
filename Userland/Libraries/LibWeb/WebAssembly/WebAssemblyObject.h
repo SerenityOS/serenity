@@ -16,7 +16,7 @@ namespace Web::Bindings {
 class WebAssemblyMemoryObject;
 JS::ThrowCompletionOr<size_t> parse_module(JS::VM&, JS::Object* buffer);
 JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress address, String const& name);
-JS::Value to_js_value(JS::VM&, Wasm::Value& wasm_value);
+JS::ThrowCompletionOr<JS::Value> to_js_value(JS::VM&, Wasm::Value& wasm_value);
 JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM&, JS::Value value, Wasm::ValueType const& type);
 
 class WebAssemblyObject final : public JS::Object {

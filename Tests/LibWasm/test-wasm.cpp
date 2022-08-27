@@ -175,6 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                     [&](auto const& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
                     [&](i32 value) { return JS::Value(static_cast<double>(value)); },
                     [&](i64 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger { value }); },
+                    [&](u128 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger::import_data(bit_cast<u8 const*>(&value), sizeof(value))); },
                     [&](Wasm::Reference const& reference) -> JS::Value {
                         return reference.ref().visit(
                             [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
@@ -227,6 +228,19 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         case Wasm::ValueType::Kind::F64:
             arguments.append(Wasm::Value(static_cast<double>(double_value)));
             break;
+        case Wasm::ValueType::Kind::V128: {
+            if (!argument.is_bigint()) {
+                if (argument.is_number())
+                    argument = JS::js_bigint(vm, Crypto::SignedBigInteger { TRY(argument.to_double(vm)) });
+                else
+                    argument = TRY(argument.to_bigint(vm));
+            }
+
+            u128 bits;
+            (void)argument.as_bigint().big_integer().export_data({ bit_cast<u8*>(&bits), sizeof(bits) });
+            arguments.append(Wasm::Value(bits));
+            break;
+        }
         case Wasm::ValueType::Kind::FunctionReference:
             arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(double_value) } }));
             break;
@@ -254,6 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         [&](auto const& value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](i32 value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](i64 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger { value })); },
+        [&](u128 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger::import_data(bit_cast<u8 const*>(&value), sizeof(value)))); },
         [&](Wasm::Reference const& reference) {
             reference.ref().visit(
                 [&](const Wasm::Reference::Null&) { return_value = JS::js_null(); },

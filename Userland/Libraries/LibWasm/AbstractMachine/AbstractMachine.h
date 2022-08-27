@@ -11,6 +11,7 @@
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
+#include <AK/UFixedBigInt.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -70,7 +71,7 @@ public:
     {
     }
 
-    using AnyValueType = Variant<i32, i64, float, double, Reference>;
+    using AnyValueType = Variant<i32, i64, float, double, u128, Reference>;
     explicit Value(AnyValueType value)
         : m_value(move(value))
     {
@@ -107,9 +108,15 @@ public:
             VERIFY(raw_value == 0);
             m_value = Reference { Reference::Null { ValueType(ValueType::Kind::ExternReference) } };
             break;
-        default:
-            VERIFY_NOT_REACHED();
+        case ValueType::Kind::V128:
+            m_value = u128(0ull, bit_cast<u64>(raw_value));
+            break;
         }
+    }
+
+    explicit Value(u128 raw_value)
+        : m_value(raw_value)
+    {
     }
 
     ALWAYS_INLINE Value(Value const& value) = default;
@@ -152,6 +159,7 @@ public:
             [](i64) { return ValueType::Kind::I64; },
             [](float) { return ValueType::Kind::F32; },
             [](double) { return ValueType::Kind::F64; },
+            [](u128) { return ValueType::Kind::V128; },
             [&](Reference const& type) {
                 return type.ref().visit(
                     [](Reference::Func const&) { return ValueType::Kind::FunctionReference; },
