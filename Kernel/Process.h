@@ -915,7 +915,6 @@ extern RecursiveSpinlock g_profiling_lock;
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     Process::all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
