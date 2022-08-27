@@ -829,28 +829,9 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
 ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
-    return m_global_data.with([&](auto& global_data) -> ErrorOr<CommittedPhysicalPageSet> {
+    auto result = m_global_data.with([&](auto& global_data) -> ErrorOr<CommittedPhysicalPageSet> {
         if (global_data.system_memory_info.physical_pages_uncommitted < page_count) {
             dbgln("MM: Unable to commit {} pages, have only {}", page_count, global_data.system_memory_info.physical_pages_uncommitted);
-
-            Process::for_each([&](Process const& process) {
-                size_t amount_resident = 0;
-                size_t amount_shared = 0;
-                size_t amount_virtual = 0;
-                process.address_space().with([&](auto& space) {
-                    amount_resident = space->amount_resident();
-                    amount_shared = space->amount_shared();
-                    amount_virtual = space->amount_virtual();
-                });
-                dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
-                    process.name(),
-                    process.pid(),
-                    amount_resident / PAGE_SIZE,
-                    amount_shared / PAGE_SIZE,
-                    amount_virtual / PAGE_SIZE);
-                return IterationDecision::Continue;
-            });
-
             return ENOMEM;
         }
 
@@ -858,6 +839,26 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
         global_data.system_memory_info.physical_pages_committed += page_count;
         return CommittedPhysicalPageSet { {}, page_count };
     });
+    if (result.is_error()) {
+        Process::for_each([&](Process const& process) {
+            size_t amount_resident = 0;
+            size_t amount_shared = 0;
+            size_t amount_virtual = 0;
+            process.address_space().with([&](auto& space) {
+                amount_resident = space->amount_resident();
+                amount_shared = space->amount_shared();
+                amount_virtual = space->amount_virtual();
+            });
+            dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
+                process.name(),
+                process.pid(),
+                amount_resident / PAGE_SIZE,
+                amount_shared / PAGE_SIZE,
+                amount_virtual / PAGE_SIZE);
+            return IterationDecision::Continue;
+        });
+    }
+    return result;
 }
 
 void MemoryManager::uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count)
