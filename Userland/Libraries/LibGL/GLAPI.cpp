@@ -62,6 +62,11 @@ void glArrayElement(GLint i)
     g_gl_context->gl_array_element(i);
 }
 
+void glAttachShader(GLuint program, GLuint shader)
+{
+    g_gl_context->gl_attach_shader(program, shader);
+}
+
 void glBegin(GLenum mode)
 {
     g_gl_context->gl_begin(mode);
@@ -226,6 +231,11 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, void const* pointer
     g_gl_context->gl_color_pointer(size, type, stride, pointer);
 }
 
+void glCompileShader(GLuint shader)
+{
+    g_gl_context->gl_compile_shader(shader);
+}
+
 void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
     g_gl_context->gl_copy_tex_image_2d(target, level, internalformat, x, y, width, height, border);
@@ -234,6 +244,16 @@ void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x
 void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     g_gl_context->gl_copy_tex_sub_image_2d(target, level, xoffset, yoffset, x, y, width, height);
+}
+
+GLuint glCreateProgram()
+{
+    return g_gl_context->gl_create_program();
+}
+
+GLuint glCreateShader(GLenum shader_type)
+{
+    return g_gl_context->gl_create_shader(shader_type);
 }
 
 void glCullFace(GLenum mode)
@@ -264,6 +284,16 @@ void glDepthRange(GLdouble min, GLdouble max)
 void glDeleteLists(GLuint list, GLsizei range)
 {
     return g_gl_context->gl_delete_lists(list, range);
+}
+
+void glDeleteProgram(GLuint program)
+{
+    g_gl_context->gl_delete_program(program);
+}
+
+void glDeleteShader(GLuint shader)
+{
+    g_gl_context->gl_delete_shader(shader);
 }
 
 void glDeleteTextures(GLsizei n, GLuint const* textures)
@@ -563,6 +593,11 @@ void glLineWidth(GLfloat width)
     g_gl_context->gl_line_width(width);
 }
 
+void glLinkProgram(GLuint program)
+{
+    g_gl_context->gl_link_program(program);
+}
+
 void glListBase(GLuint base)
 {
     return g_gl_context->gl_list_base(base);
@@ -839,6 +874,11 @@ void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 void glShadeModel(GLenum mode)
 {
     g_gl_context->gl_shade_model(mode);
+}
+
+void glShaderSource(GLuint shader, GLsizei count, GLchar const** string, GLint const* length)
+{
+    g_gl_context->gl_shader_source(shader, count, string, length);
 }
 
 void glStencilFunc(GLenum func, GLint ref, GLuint mask)

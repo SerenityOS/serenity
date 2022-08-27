@@ -228,6 +228,16 @@ public:
     void gl_delete_buffers(GLsizei n, GLuint const* buffers);
     void gl_gen_buffers(GLsizei n, GLuint* buffers);
 
+    GLuint gl_create_shader(GLenum shader_type);
+    void gl_delete_shader(GLuint shader);
+    void gl_shader_source(GLuint shader, GLsizei count, GLchar const** string, GLint const* length);
+    void gl_compile_shader(GLuint shader);
+
+    GLuint gl_create_program();
+    void gl_delete_program(GLuint program);
+    void gl_attach_shader(GLuint program, GLuint shader);
+    void gl_link_program(GLuint program);
+
 private:
     void sync_device_config();
     void sync_device_sampler_config();
