@@ -54,7 +54,7 @@ public:
     void begin_interactive_selection() { m_in_interactive_selection = true; }
     void end_interactive_selection() { m_in_interactive_selection = false; }
 
-    bool in_interactive_selection() { return m_in_interactive_selection; }
+    bool in_interactive_selection() const { return m_in_interactive_selection; }
 
     void add_client(SelectionClient&);
     void remove_client(SelectionClient&);
