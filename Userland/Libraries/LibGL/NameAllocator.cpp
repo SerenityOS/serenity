@@ -16,7 +16,7 @@ void NameAllocator::allocate(GLsizei count, GLuint* names)
             m_free_names.pop();
         } else {
             // We're out of free previously allocated names. Let's allocate a new contiguous amount from the
-            // last known texture name
+            // last known id
             names[i] = m_last_id++;
         }
     }
