@@ -54,4 +54,13 @@ ErrorOr<void> Program::link()
     return {};
 }
 
+size_t Program::info_log_length() const
+{
+    if (!m_info_log.has_value())
+        return 0;
+
+    // Per the spec we return the size including the null terminator
+    return m_info_log.value().bytes().size() + 1;
+}
+
 }

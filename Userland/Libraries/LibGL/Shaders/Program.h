@@ -8,7 +8,9 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGL/Shaders/Shader.h>
 
@@ -22,11 +24,13 @@ public:
     ErrorOr<void> attach_shader(Shader&);
     ErrorOr<void> link();
     bool link_status() const { return m_link_status; }
+    size_t info_log_length() const;
 
 private:
     bool m_link_status { false };
     Vector<NonnullRefPtr<Shader>> m_vertex_shaders;
     Vector<NonnullRefPtr<Shader>> m_fragment_shaders;
+    Optional<String> m_info_log;
 };
 
 }
