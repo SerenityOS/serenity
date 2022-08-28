@@ -21,4 +21,4 @@ set(SOURCES
 )
 
 serenity_app(HexEditor ICON app-hex-editor)
-target_link_libraries(HexEditor LibGUI LibConfig LibFileSystemAccessClient LibMain)
+target_link_libraries(HexEditor LibGUI LibConfig LibDesktop LibFileSystemAccessClient LibMain)

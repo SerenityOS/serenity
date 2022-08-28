@@ -18,6 +18,7 @@
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
+#include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -468,6 +469,9 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     little_endian_mode->set_checked(true);
 
     auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/HexEditor.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"sv), &window));
 }
 
