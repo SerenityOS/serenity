@@ -15,7 +15,7 @@
 namespace JS {
 
 // 9.1.2.5 NewGlobalEnvironment ( G, thisValue ), https://tc39.es/ecma262/#sec-newglobalenvironment
-GlobalEnvironment::GlobalEnvironment(GlobalObject& global_object, Object& this_value)
+GlobalEnvironment::GlobalEnvironment(Object& global_object, Object& this_value)
     : Environment(nullptr)
     , m_global_this_value(&this_value)
 {
