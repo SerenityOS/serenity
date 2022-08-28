@@ -15,7 +15,8 @@ NonnullRefPtr<Shader> Shader::create(GLenum shader_type)
 
 ErrorOr<void> Shader::compile()
 {
-    TODO();
+    // FIXME: Implement actual shader compilation
+    m_compile_status = true;
     return {};
 }
 
