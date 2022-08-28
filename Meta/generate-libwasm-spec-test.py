@@ -61,8 +61,70 @@ def parse_typed_value(ast):
         'i64.const': 'i64',
         'f32.const': 'float',
         'f64.const': 'double',
+        'v128.const': 'bigint',
     }
-    if len(ast) == 2 and ast[0][0] in types:
+
+    v128_multipliers = {
+        'i8x16': (1 << 8),
+        'i16x8': (1 << 16),
+        'i32x4': (1 << 32),
+        'i64x2': (1 << 64),
+        'f32x4': (1 << 32),
+        'f64x2': (1 << 64),
+    }
+
+    def parse_v128_chunk(num, type):
+        negative = 1
+        if num.startswith('-'):
+            negative = -1
+            num = num[1:]
+        elif num.startswith('+'):
+            num = num[1:]
+
+        # wtf spec test, split your wast tests already
+        while num.startswith('0') and not num.startswith('0x'):
+            num = num[1:]
+
+        if num == '':
+            num = '0'
+
+        if type.startswith('f'):
+            def generate():
+                if num == 'nan:canonical':
+                    return float.fromhex('0x7fc00000')
+                if num == 'nan:arithmetic':
+                    return float.fromhex('0x7ff00000')
+                if num == 'nan:signaling':
+                    return float.fromhex('0x7ff80000')
+                if num.startswith('nan:'):
+                    # FIXME: I have no idea if this is actually correct :P
+                    rest = num[4:]
+                    return float.fromhex('0x7ff80000') + int(rest, base=16)
+                if num.lower() == 'infinity':
+                    return float.fromhex('0x7ff00000') * negative
+                try:
+                    return float(num) * negative
+                except ValueError:
+                    return float.fromhex(num) * negative
+
+            value = generate()
+            struct_pack_format = 'd' if type == 'f64x2' else 'f'
+            struct_unpack_format = 'Q' if type == 'f64x2' else 'I'
+            return struct.unpack(f'={struct_unpack_format}', struct.pack(f'={struct_pack_format}', value))[0]
+        return int(num.replace('_', ''), base=0) * negative
+
+    if len(ast) >= 2 and ast[0][0] in types:
+        if ast[0][0] == 'v128.const':
+            value = 0
+            multiplier = v128_multipliers[ast[1][0]]
+            for num in ast[2:-1]:
+                value = value * multiplier + parse_v128_chunk(num[0], ast[1][0])
+
+            return {
+                'type': types[ast[0][0]],
+                'value': value
+            }
+
         return {"type": types[ast[0][0]], "value": ast[1][0]}
 
     return {"type": "error"}
@@ -285,6 +347,9 @@ def genarg(spec):
 
     def gen():
         x = spec['value']
+        if spec['type'] == 'bigint':
+            return f"{x}n"
+
         if spec['type'] in ('i32', 'i64'):
             if x.startswith('0x'):
                 if spec['type'] == 'i32':
