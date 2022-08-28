@@ -54,6 +54,14 @@ public:
         , m_high(0u)
     {
     }
+
+    template<Signed U>
+    requires(sizeof(T) >= sizeof(U)) constexpr UFixedBigInt(U low)
+        : m_low(low)
+        , m_high(0u)
+    {
+    }
+
     template<Unsigned U, Unsigned U2>
     requires(sizeof(T) >= sizeof(U) && sizeof(T) >= sizeof(U2)) constexpr UFixedBigInt(U low, U2 high)
         : m_low(low)
@@ -64,7 +72,7 @@ public:
     {
         return m_low;
     }
-    constexpr const T& low() const
+    constexpr T const& low() const
     {
         return m_low;
     }
@@ -72,7 +80,7 @@ public:
     {
         return m_high;
     }
-    constexpr const T& high() const
+    constexpr T const& high() const
     {
         return m_high;
     }
@@ -81,9 +89,9 @@ public:
     {
         return Span<u8>(reinterpret_cast<u8*>(this), sizeof(R));
     }
-    Span<const u8> bytes() const
+    Span<u8 const> bytes() const
     {
-        return Span<const u8>(reinterpret_cast<u8 const*>(this), sizeof(R));
+        return Span<u8 const>(reinterpret_cast<u8 const*>(this), sizeof(R));
     }
 
     template<Unsigned U>
@@ -93,39 +101,45 @@ public:
     }
 
     // Utils
-    constexpr size_t clz() const requires(IsSame<T, u64>)
+    constexpr size_t clz() const
+        requires(IsSame<T, u64>)
     {
         if (m_high)
             return count_leading_zeroes(m_high);
         else
             return sizeof(T) * 8 + count_leading_zeroes(m_low);
     }
-    constexpr size_t clz() const requires(!IsSame<T, u64>)
+    constexpr size_t clz() const
+        requires(!IsSame<T, u64>)
     {
         if (m_high)
             return m_high.clz();
         else
             return sizeof(T) * 8 + m_low.clz();
     }
-    constexpr size_t ctz() const requires(IsSame<T, u64>)
+    constexpr size_t ctz() const
+        requires(IsSame<T, u64>)
     {
         if (m_low)
             return count_trailing_zeroes(m_low);
         else
             return sizeof(T) * 8 + count_trailing_zeroes(m_high);
     }
-    constexpr size_t ctz() const requires(!IsSame<T, u64>)
+    constexpr size_t ctz() const
+        requires(!IsSame<T, u64>)
     {
         if (m_low)
             return m_low.ctz();
         else
             return sizeof(T) * 8 + m_high.ctz();
     }
-    constexpr size_t popcnt() const requires(IsSame<T, u64>)
+    constexpr size_t popcnt() const
+        requires(IsSame<T, u64>)
     {
         return __builtin_popcntll(m_low) + __builtin_popcntll(m_high);
     }
-    constexpr size_t popcnt() const requires(!IsSame<T, u64>)
+    constexpr size_t popcnt() const
+        requires(!IsSame<T, u64>)
     {
         return m_low.popcnt() + m_high.popcnt();
     }
@@ -140,59 +154,59 @@ public:
         return m_low || m_high;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator==(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator==(U const& other) const
     {
         return !m_high && m_low == other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator!=(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator!=(U const& other) const
     {
         return m_high || m_low != other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>(U const& other) const
     {
         return m_high || m_low > other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<(U const& other) const
     {
         return !m_high && m_low < other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>=(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>=(U const& other) const
     {
         return *this == other || *this > other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<=(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<=(U const& other) const
     {
         return *this == other || *this < other;
     }
 
-    constexpr bool operator==(const R& other) const
+    constexpr bool operator==(R const& other) const
     {
         return m_low == other.low() && m_high == other.high();
     }
-    constexpr bool operator!=(const R& other) const
+    constexpr bool operator!=(R const& other) const
     {
         return m_low != other.low() || m_high != other.high();
     }
-    constexpr bool operator>(const R& other) const
+    constexpr bool operator>(R const& other) const
     {
         return m_high > other.high()
             || (m_high == other.high() && m_low > other.low());
     }
-    constexpr bool operator<(const R& other) const
+    constexpr bool operator<(R const& other) const
     {
         return m_high < other.high()
             || (m_high == other.high() && m_low < other.low());
     }
-    constexpr bool operator>=(const R& other) const
+    constexpr bool operator>=(R const& other) const
     {
         return *this == other || *this > other;
     }
-    constexpr bool operator<=(const R& other) const
+    constexpr bool operator<=(R const& other) const
     {
         return *this == other || *this < other;
     }
@@ -203,22 +217,22 @@ public:
         return { ~m_low, ~m_high };
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr U operator&(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr U operator&(U const& other) const
     {
-        return static_cast<const U>(m_low) & other;
+        return static_cast<U const>(m_low) & other;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R operator|(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr R operator|(U const& other) const
     {
         return { m_low | other, m_high };
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R operator^(const U& other) const
+    requires(sizeof(T) >= sizeof(U)) constexpr R operator^(U const& other) const
     {
         return { m_low ^ other, m_high };
     }
     template<Unsigned U>
-    constexpr R operator<<(const U& shift) const
+    constexpr R operator<<(U const& shift) const
     {
         if (shift >= sizeof(R) * 8u)
             return 0u;
@@ -231,7 +245,7 @@ public:
         return R { m_low << shift, (m_high << shift) | overflow };
     }
     template<Unsigned U>
-    constexpr R operator>>(const U& shift) const
+    constexpr R operator>>(U const& shift) const
     {
         if (shift >= sizeof(R) * 8u)
             return 0u;
@@ -244,75 +258,75 @@ public:
         return R { (m_low >> shift) | underflow, m_high >> shift };
     }
     template<Unsigned U>
-    constexpr R rol(const U& shift) const
+    constexpr R rol(U const& shift) const
     {
         return (*this >> sizeof(T) * 8u - shift) | (*this << shift);
     }
     template<Unsigned U>
-    constexpr R ror(const U& shift) const
+    constexpr R ror(U const& shift) const
     {
         return (*this << sizeof(T) * 8u - shift) | (*this >> shift);
     }
 
-    constexpr R operator&(const R& other) const
+    constexpr R operator&(R const& other) const
     {
         return { m_low & other.low(), m_high & other.high() };
     }
-    constexpr R operator|(const R& other) const
+    constexpr R operator|(R const& other) const
     {
         return { m_low | other.low(), m_high | other.high() };
     }
-    constexpr R operator^(const R& other) const
+    constexpr R operator^(R const& other) const
     {
         return { m_low ^ other.low(), m_high ^ other.high() };
     }
 
     // Bitwise assignment
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator&=(const U& other)
+    requires(sizeof(T) >= sizeof(U)) constexpr R& operator&=(U const& other)
     {
         m_high = 0u;
         m_low &= other;
         return *this;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator|=(const U& other)
+    requires(sizeof(T) >= sizeof(U)) constexpr R& operator|=(U const& other)
     {
         m_low |= other;
         return *this;
     }
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator^=(const U& other)
+    requires(sizeof(T) >= sizeof(U)) constexpr R& operator^=(U const& other)
     {
         m_low ^= other;
         return *this;
     }
     template<Unsigned U>
-    constexpr R& operator>>=(const U& other)
+    constexpr R& operator>>=(U const& other)
     {
         *this = *this >> other;
         return *this;
     }
     template<Unsigned U>
-    constexpr R& operator<<=(const U& other)
+    constexpr R& operator<<=(U const& other)
     {
         *this = *this << other;
         return *this;
     }
 
-    constexpr R& operator&=(const R& other)
+    constexpr R& operator&=(R const& other)
     {
         m_high &= other.high();
         m_low &= other.low();
         return *this;
     }
-    constexpr R& operator|=(const R& other)
+    constexpr R& operator|=(R const& other)
     {
         m_high |= other.high();
         m_low |= other.low();
         return *this;
     }
-    constexpr R& operator^=(const R& other)
+    constexpr R& operator^=(R const& other)
     {
         m_high ^= other.high();
         m_low ^= other.low();
@@ -345,7 +359,7 @@ public:
         };
     }
     template<Unsigned U>
-    requires(my_size() > sizeof(U) && sizeof(T) > sizeof(u64)) constexpr R addc(const U& other, bool& carry) const
+    requires(my_size() > sizeof(U) && sizeof(T) > sizeof(u64)) constexpr R addc(U const& other, bool& carry) const
     {
         T lower = m_low.addc(other, carry);
         T higher = m_high.addc(0u, carry);
@@ -356,7 +370,7 @@ public:
         };
     }
     template<Unsigned U>
-    requires(IsSame<R, U>&& IsSame<T, u64>) constexpr R addc(const U& other, bool& carry) const
+    requires(IsSame<R, U>&& IsSame<T, u64>) constexpr R addc(U const& other, bool& carry) const
     {
         bool low_carry = Checked<T>::addition_would_overflow(m_low, other.low());
         bool high_carry = Checked<T>::addition_would_overflow(m_high, other.high());
@@ -376,7 +390,7 @@ public:
         };
     }
     template<Unsigned U>
-    requires(IsSame<R, U> && sizeof(T) > sizeof(u64)) constexpr R addc(const U& other, bool& carry) const
+    requires(IsSame<R, U> && sizeof(T) > sizeof(u64)) constexpr R addc(U const& other, bool& carry) const
     {
         T lower = m_low.addc(other.low(), carry);
         T higher = m_high.addc(other.high(), carry);
@@ -387,14 +401,14 @@ public:
         };
     }
     template<Unsigned U>
-    requires(my_size() < sizeof(U)) constexpr U addc(const U& other, bool& carry) const
+    requires(my_size() < sizeof(U)) constexpr U addc(U const& other, bool& carry) const
     {
         return other.addc(*this, carry);
     }
 
     // FIXME: subc for sizeof(T) < sizeof(U)
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R subc(const U& other, bool& carry) const
+    requires(sizeof(T) >= sizeof(U)) constexpr R subc(U const& other, bool& carry) const
     {
         bool low_carry = (!m_low && carry) || (m_low - carry) < other;
         bool high_carry = !m_high && low_carry;
@@ -405,7 +419,7 @@ public:
 
         return { lower, higher };
     }
-    constexpr R subc(const R& other, bool& carry) const
+    constexpr R subc(R const& other, bool& carry) const
     {
         bool low_carry = (!m_low && carry) || (m_low - carry) < other.low();
         bool high_carry = (!m_high && low_carry) || (m_high - low_carry) < other.high();
@@ -423,7 +437,7 @@ public:
         return addc((u8)other, carry);
     }
     template<Unsigned U>
-    constexpr R operator+(const U& other) const
+    constexpr R operator+(U const& other) const
     {
         bool carry = false; // unused
         return addc(other, carry);
@@ -436,20 +450,20 @@ public:
     }
 
     template<Unsigned U>
-    constexpr R operator-(const U& other) const
+    constexpr R operator-(U const& other) const
     {
         bool carry = false; // unused
         return subc(other, carry);
     }
 
     template<Unsigned U>
-    constexpr R& operator+=(const U& other)
+    constexpr R& operator+=(U const& other)
     {
         *this = *this + other;
         return *this;
     }
     template<Unsigned U>
-    constexpr R& operator-=(const U& other)
+    constexpr R& operator-=(U const& other)
     {
         *this = *this - other;
         return *this;
@@ -484,7 +498,7 @@ public:
 
     // FIXME: no restraints on this
     template<Unsigned U>
-    requires(my_size() >= sizeof(U)) constexpr R div_mod(const U& divisor, U& remainder) const
+    requires(my_size() >= sizeof(U)) constexpr R div_mod(U const& divisor, U& remainder) const
     {
         // FIXME: Is there a better way to raise a division by 0?
         //        Maybe as a compiletime warning?
@@ -606,13 +620,13 @@ public:
     }
 
     template<Unsigned U>
-    constexpr R operator/(const U& other) const
+    constexpr R operator/(U const& other) const
     {
         U mod { 0u }; // unused
         return div_mod(other, mod);
     }
     template<Unsigned U>
-    constexpr U operator%(const U& other) const
+    constexpr U operator%(U const& other) const
     {
         R res { 0u };
         div_mod(other, res);
@@ -620,19 +634,19 @@ public:
     }
 
     template<Unsigned U>
-    constexpr R& operator*=(const U& other)
+    constexpr R& operator*=(U const& other)
     {
         *this = *this * other;
         return *this;
     }
     template<Unsigned U>
-    constexpr R& operator/=(const U& other)
+    constexpr R& operator/=(U const& other)
     {
         *this = *this / other;
         return *this;
     }
     template<Unsigned U>
-    constexpr R& operator%=(const U& other)
+    constexpr R& operator%=(U const& other)
     {
         *this = *this % other;
         return *this;
@@ -763,11 +777,13 @@ public:
         return log2() / base.log2();
     }
 
-    constexpr u64 fold_or() const requires(IsSame<T, u64>)
+    constexpr u64 fold_or() const
+        requires(IsSame<T, u64>)
     {
         return m_low | m_high;
     }
-    constexpr u64 fold_or() const requires(!IsSame<T, u64>)
+    constexpr u64 fold_or() const
+        requires(!IsSame<T, u64>)
     {
         return m_low.fold_or() | m_high.fold_or();
     }
@@ -776,11 +792,13 @@ public:
         return fold_or() == 0;
     }
 
-    constexpr u64 fold_xor_pair(R& other) const requires(IsSame<T, u64>)
+    constexpr u64 fold_xor_pair(R& other) const
+        requires(IsSame<T, u64>)
     {
         return (m_low ^ other.low()) | (m_high ^ other.high());
     }
-    constexpr u64 fold_xor_pair(R& other) const requires(!IsSame<T, u64>)
+    constexpr u64 fold_xor_pair(R& other) const
+        requires(!IsSame<T, u64>)
     {
         return (m_low.fold_xor_pair(other.low())) | (m_high.fold_xor_pair(other.high()));
     }
@@ -796,13 +814,25 @@ private:
 
 // reverse operators
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<(const U a, UFixedBigInt<T> const& b) { return b >= a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<(const U a, UFixedBigInt<T> const& b)
+{
+    return b >= a;
+}
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>(const U a, UFixedBigInt<T> const& b) { return b <= a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>(const U a, UFixedBigInt<T> const& b)
+{
+    return b <= a;
+}
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<=(const U a, UFixedBigInt<T> const& b) { return b > a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<=(const U a, UFixedBigInt<T> const& b)
+{
+    return b > a;
+}
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>=(const U a, UFixedBigInt<T> const& b) { return b < a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>=(const U a, UFixedBigInt<T> const& b)
+{
+    return b < a;
+}
 
 template<Unsigned T>
 struct Formatter<UFixedBigInt<T>> : StandardFormatter {
@@ -858,6 +888,33 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
         return {};
     }
 };
+
+template<typename U>
+ALWAYS_INLINE constexpr UFixedBigInt<U> convert_between_host_and_little_endian(UFixedBigInt<U> value)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return value;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return {
+        convert_between_host_and_little_endian(value.high),
+        convert_between_host_and_little_endian(value.low),
+    };
+#endif
+}
+
+template<typename T>
+ALWAYS_INLINE constexpr UFixedBigInt<T> convert_between_host_and_big_endian(UFixedBigInt<T> value)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return {
+        convert_between_host_and_big_endian(value.high),
+        convert_between_host_and_big_endian(value.low),
+    };
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return value;
+#endif
+}
+
 }
 
 // Nit: Doing these as custom classes might be faster, especially when writing
