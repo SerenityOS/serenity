@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -17,6 +18,7 @@ class Program final : public RefCounted<Program> {
 public:
     static NonnullRefPtr<Program> create();
 
+    bool is_shader_attached(Shader const&) const;
     ErrorOr<void> attach_shader(Shader&);
     ErrorOr<void> link();
 
