@@ -65,6 +65,8 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constr
 
 // 27.2.1.2 PromiseReaction Records, https://tc39.es/ecma262/#sec-promisereaction-records
 class PromiseReaction final : public Cell {
+    JS_CELL(PromiseReaction, Cell);
+
 public:
     enum class Type {
         Fulfill,
@@ -86,7 +88,6 @@ public:
     Optional<JobCallback> const& handler() const { return m_handler; }
 
 private:
-    virtual StringView class_name() const override { return "PromiseReaction"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;

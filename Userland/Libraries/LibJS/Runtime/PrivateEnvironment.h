@@ -28,6 +28,8 @@ struct PrivateName {
 };
 
 class PrivateEnvironment : public Cell {
+    JS_CELL(PrivateEnvironment, Cell);
+
 public:
     explicit PrivateEnvironment(PrivateEnvironment* parent);
 
@@ -36,7 +38,6 @@ public:
     void add_private_name(Badge<ClassExpression>, FlyString description);
 
 private:
-    virtual StringView class_name() const override { return "PrivateEnvironment"sv; }
     virtual void visit_edges(Visitor&) override;
 
     auto find_private_name(FlyString const& description) const

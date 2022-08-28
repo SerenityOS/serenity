@@ -13,6 +13,8 @@
 namespace JS {
 
 class Intrinsics final : public Cell {
+    JS_CELL(Intrinsics, Cell);
+
 public:
     static Intrinsics* create(Realm&);
 
@@ -112,7 +114,6 @@ public:
 #undef __JS_ENUMERATE
 
 private:
-    virtual StringView class_name() const override { return "Intrinsics"sv; }
     virtual void visit_edges(Visitor&) override;
 
     void initialize_intrinsics(Realm&);

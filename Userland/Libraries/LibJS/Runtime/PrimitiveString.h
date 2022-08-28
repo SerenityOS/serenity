@@ -16,6 +16,8 @@
 namespace JS {
 
 class PrimitiveString final : public Cell {
+    JS_CELL(PrimitiveString, Cell);
+
 public:
     explicit PrimitiveString(PrimitiveString&, PrimitiveString&);
     explicit PrimitiveString(String);
@@ -37,7 +39,6 @@ public:
     Optional<Value> get(VM&, PropertyKey const&) const;
 
 private:
-    virtual StringView class_name() const override { return "PrimitiveString"sv; }
     virtual void visit_edges(Cell::Visitor&) override;
 
     void resolve_rope_if_needed() const;

@@ -13,6 +13,8 @@
 namespace JS {
 
 class BigInt final : public Cell {
+    JS_CELL(BigInt, Cell);
+
 public:
     explicit BigInt(Crypto::SignedBigInteger);
     virtual ~BigInt() override = default;
@@ -21,8 +23,6 @@ public:
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
-    virtual StringView class_name() const override { return "BigInt"sv; }
-
     Crypto::SignedBigInteger m_big_integer;
 };
 

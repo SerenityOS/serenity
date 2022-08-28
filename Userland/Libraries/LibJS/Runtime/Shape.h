@@ -37,6 +37,8 @@ struct TransitionKey {
 class Shape final
     : public Cell
     , public Weakable<Shape> {
+    JS_CELL(Shape, Cell);
+
 public:
     virtual ~Shape() override = default;
 
@@ -84,7 +86,6 @@ public:
     void reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes);
 
 private:
-    virtual StringView class_name() const override { return "Shape"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);

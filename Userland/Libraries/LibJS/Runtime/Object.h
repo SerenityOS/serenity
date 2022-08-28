@@ -46,6 +46,8 @@ struct PrivateElement {
 };
 
 class Object : public Cell {
+    JS_CELL(Object, Cell);
+
 public:
     static Object* create(Realm&, Object* prototype);
 
@@ -174,7 +176,6 @@ public:
     bool has_parameter_map() const { return m_has_parameter_map; }
     void set_has_parameter_map() { m_has_parameter_map = true; }
 
-    virtual StringView class_name() const override { return "Object"sv; }
     virtual void visit_edges(Cell::Visitor&) override;
 
     Value get_direct(size_t index) const { return m_storage[index]; }

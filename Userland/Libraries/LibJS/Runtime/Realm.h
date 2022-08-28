@@ -20,6 +20,8 @@ namespace JS {
 class Realm final
     : public Cell
     , public Weakable<Realm> {
+    JS_CELL(Realm, Cell);
+
 public:
     struct HostDefined {
         virtual ~HostDefined() = default;
@@ -47,7 +49,6 @@ public:
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
 private:
-    virtual StringView class_name() const override { return "Realm"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Intrinsics* m_intrinsics { nullptr };                // [[Intrinsics]]
