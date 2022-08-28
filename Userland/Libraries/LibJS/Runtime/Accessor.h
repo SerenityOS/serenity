@@ -14,6 +14,8 @@
 namespace JS {
 
 class Accessor final : public Cell {
+    JS_CELL(Accessor, Cell);
+
 public:
     static Accessor* create(VM& vm, FunctionObject* getter, FunctionObject* setter)
     {
@@ -39,8 +41,6 @@ public:
     }
 
 private:
-    StringView class_name() const override { return "Accessor"sv; };
-
     FunctionObject* m_getter { nullptr };
     FunctionObject* m_setter { nullptr };
 };

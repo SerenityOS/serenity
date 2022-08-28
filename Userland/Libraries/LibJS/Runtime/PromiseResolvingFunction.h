@@ -12,9 +12,9 @@
 namespace JS {
 
 struct AlreadyResolved final : public Cell {
-    bool value { false };
+    JS_CELL(AlreadyResolved, Cell);
 
-    virtual StringView class_name() const override { return "AlreadyResolved"sv; }
+    bool value { false };
 
 protected:
     // Allocated cells must be >= sizeof(FreelistEntry), which is 24 bytes -

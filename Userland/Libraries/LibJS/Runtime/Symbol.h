@@ -13,6 +13,7 @@
 namespace JS {
 
 class Symbol final : public Cell {
+    JS_CELL(Symbol, Cell);
     AK_MAKE_NONCOPYABLE(Symbol);
     AK_MAKE_NONMOVABLE(Symbol);
 
@@ -26,8 +27,6 @@ public:
     String to_string() const { return String::formatted("Symbol({})", description()); }
 
 private:
-    virtual StringView class_name() const override { return "Symbol"sv; }
-
     Optional<String> m_description;
     bool m_is_global;
 };

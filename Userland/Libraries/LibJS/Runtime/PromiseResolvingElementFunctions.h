@@ -13,6 +13,8 @@
 namespace JS {
 
 struct RemainingElements final : public Cell {
+    JS_CELL(RemainingElements, Cell);
+
     RemainingElements() = default;
 
     explicit RemainingElements(u64 initial_value)
@@ -20,12 +22,12 @@ struct RemainingElements final : public Cell {
     {
     }
 
-    virtual StringView class_name() const override { return "RemainingElements"sv; }
-
     u64 value { 0 };
 };
 
 class PromiseValueList final : public Cell {
+    JS_CELL(PromiseValueList, Cell);
+
 public:
     PromiseValueList()
     {
@@ -35,7 +37,6 @@ public:
     Vector<Value> const& values() const { return m_values; }
 
 private:
-    virtual StringView class_name() const override { return "PromiseValueList"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Vector<Value> m_values;

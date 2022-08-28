@@ -97,9 +97,9 @@ private:
     bool has_lazy_freelist() const { return m_next_lazy_freelist_index < cell_count(); }
 
     struct FreelistEntry final : public Cell {
-        FreelistEntry* next { nullptr };
+        JS_CELL(FreelistEntry, Cell);
 
-        virtual StringView class_name() const override { return "FreelistEntry"sv; }
+        FreelistEntry* next { nullptr };
     };
 
     Cell* cell(size_t index)

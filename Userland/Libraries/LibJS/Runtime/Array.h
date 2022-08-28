@@ -35,7 +35,6 @@ public:
         return Array::create_from(realm, values);
     }
 
-    explicit Array(Object& prototype);
     virtual ~Array() override = default;
 
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
