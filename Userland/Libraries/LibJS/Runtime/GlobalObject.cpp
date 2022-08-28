@@ -85,94 +85,114 @@ namespace JS {
 GlobalObject::GlobalObject(Realm& realm)
     : Object(GlobalObjectTag::Tag, realm)
 {
+    ensure_shape_is_unique();
+    Object::set_prototype(realm.intrinsics().object_prototype());
 }
 
 // 9.3.4 SetDefaultGlobalBindings ( realmRec ), https://tc39.es/ecma262/#sec-setdefaultglobalbindings
+Object& set_default_global_bindings(Realm& realm)
+{
+    auto& vm = realm.vm();
+
+    // 1. Let global be realmRec.[[GlobalObject]].
+    auto& global = realm.global_object();
+
+    // 2. For each property of the Global Object specified in clause 19, do
+    //     a. Let name be the String value of the property name.
+    //     b. Let desc be the fully populated data Property Descriptor for the property, containing the specified attributes for the property.
+    //        For properties listed in 19.2, 19.3, or 19.4 the value of the [[Value]] attribute is the corresponding intrinsic object from realmRec.
+    //     c. Perform ? DefinePropertyOrThrow(global, name, desc).
+    //     NOTE: This function is infallible as we set properties directly; property clashes in global object construction are not expected.
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+
+    // 19.2 Function Properties of the Global Object, https://tc39.es/ecma262/#sec-function-properties-of-the-global-object
+    global.define_direct_property(vm.names.eval, realm.intrinsics().eval_function(), attr);
+    global.define_direct_property(vm.names.isFinite, realm.intrinsics().is_finite_function(), attr);
+    global.define_direct_property(vm.names.isNaN, realm.intrinsics().is_nan_function(), attr);
+    global.define_direct_property(vm.names.parseFloat, realm.intrinsics().parse_float_function(), attr);
+    global.define_direct_property(vm.names.parseInt, realm.intrinsics().parse_int_function(), attr);
+    global.define_direct_property(vm.names.decodeURI, realm.intrinsics().decode_uri_function(), attr);
+    global.define_direct_property(vm.names.decodeURIComponent, realm.intrinsics().decode_uri_component_function(), attr);
+    global.define_direct_property(vm.names.encodeURI, realm.intrinsics().encode_uri_function(), attr);
+    global.define_direct_property(vm.names.encodeURIComponent, realm.intrinsics().encode_uri_component_function(), attr);
+
+    // 19.1 Value Properties of the Global Object, https://tc39.es/ecma262/#sec-value-properties-of-the-global-object
+    global.define_direct_property(vm.names.globalThis, &global, attr);
+    global.define_direct_property(vm.names.Infinity, js_infinity(), 0);
+    global.define_direct_property(vm.names.NaN, js_nan(), 0);
+    global.define_direct_property(vm.names.undefined, js_undefined(), 0);
+
+    // 19.3 Constructor Properties of the Global Object, https://tc39.es/ecma262/#sec-constructor-properties-of-the-global-object
+    global.define_direct_property(vm.names.AggregateError, realm.intrinsics().aggregate_error_constructor(), attr);
+    global.define_direct_property(vm.names.Array, realm.intrinsics().array_constructor(), attr);
+    global.define_direct_property(vm.names.ArrayBuffer, realm.intrinsics().array_buffer_constructor(), attr);
+    global.define_direct_property(vm.names.BigInt, realm.intrinsics().bigint_constructor(), attr);
+    global.define_direct_property(vm.names.BigInt64Array, realm.intrinsics().big_int64_array_constructor(), attr);
+    global.define_direct_property(vm.names.BigUint64Array, realm.intrinsics().big_uint64_array_constructor(), attr);
+    global.define_direct_property(vm.names.Boolean, realm.intrinsics().boolean_constructor(), attr);
+    global.define_direct_property(vm.names.DataView, realm.intrinsics().data_view_constructor(), attr);
+    global.define_direct_property(vm.names.Date, realm.intrinsics().date_constructor(), attr);
+    global.define_direct_property(vm.names.Error, realm.intrinsics().error_constructor(), attr);
+    global.define_direct_property(vm.names.EvalError, realm.intrinsics().eval_error_constructor(), attr);
+    global.define_direct_property(vm.names.FinalizationRegistry, realm.intrinsics().finalization_registry_constructor(), attr);
+    global.define_direct_property(vm.names.Float32Array, realm.intrinsics().float32_array_constructor(), attr);
+    global.define_direct_property(vm.names.Float64Array, realm.intrinsics().float64_array_constructor(), attr);
+    global.define_direct_property(vm.names.Function, realm.intrinsics().function_constructor(), attr);
+    global.define_direct_property(vm.names.Int8Array, realm.intrinsics().int8_array_constructor(), attr);
+    global.define_direct_property(vm.names.Int16Array, realm.intrinsics().int16_array_constructor(), attr);
+    global.define_direct_property(vm.names.Int32Array, realm.intrinsics().int32_array_constructor(), attr);
+    global.define_direct_property(vm.names.Map, realm.intrinsics().map_constructor(), attr);
+    global.define_direct_property(vm.names.Number, realm.intrinsics().number_constructor(), attr);
+    global.define_direct_property(vm.names.Object, realm.intrinsics().object_constructor(), attr);
+    global.define_direct_property(vm.names.Promise, realm.intrinsics().promise_constructor(), attr);
+    global.define_direct_property(vm.names.Proxy, realm.intrinsics().proxy_constructor(), attr);
+    global.define_direct_property(vm.names.RangeError, realm.intrinsics().range_error_constructor(), attr);
+    global.define_direct_property(vm.names.ReferenceError, realm.intrinsics().reference_error_constructor(), attr);
+    global.define_direct_property(vm.names.RegExp, realm.intrinsics().regexp_constructor(), attr);
+    global.define_direct_property(vm.names.Set, realm.intrinsics().set_constructor(), attr);
+    global.define_direct_property(vm.names.ShadowRealm, realm.intrinsics().shadow_realm_constructor(), attr);
+    global.define_direct_property(vm.names.String, realm.intrinsics().string_constructor(), attr);
+    global.define_direct_property(vm.names.Symbol, realm.intrinsics().symbol_constructor(), attr);
+    global.define_direct_property(vm.names.SyntaxError, realm.intrinsics().syntax_error_constructor(), attr);
+    global.define_direct_property(vm.names.TypeError, realm.intrinsics().type_error_constructor(), attr);
+    global.define_direct_property(vm.names.Uint8Array, realm.intrinsics().uint8_array_constructor(), attr);
+    global.define_direct_property(vm.names.Uint8ClampedArray, realm.intrinsics().uint8_clamped_array_constructor(), attr);
+    global.define_direct_property(vm.names.Uint16Array, realm.intrinsics().uint16_array_constructor(), attr);
+    global.define_direct_property(vm.names.Uint32Array, realm.intrinsics().uint32_array_constructor(), attr);
+    global.define_direct_property(vm.names.URIError, realm.intrinsics().uri_error_constructor(), attr);
+    global.define_direct_property(vm.names.WeakMap, realm.intrinsics().weak_map_constructor(), attr);
+    global.define_direct_property(vm.names.WeakRef, realm.intrinsics().weak_ref_constructor(), attr);
+    global.define_direct_property(vm.names.WeakSet, realm.intrinsics().weak_set_constructor(), attr);
+
+    // 19.4 Other Properties of the Global Object, https://tc39.es/ecma262/#sec-other-properties-of-the-global-object
+    global.define_direct_property(vm.names.Atomics, vm.heap().allocate<AtomicsObject>(realm, realm), attr);
+    global.define_direct_property(vm.names.Intl, vm.heap().allocate<Intl::Intl>(realm, realm), attr);
+    global.define_direct_property(vm.names.JSON, vm.heap().allocate<JSONObject>(realm, realm), attr);
+    global.define_direct_property(vm.names.Math, vm.heap().allocate<MathObject>(realm, realm), attr);
+    global.define_direct_property(vm.names.Reflect, vm.heap().allocate<ReflectObject>(realm, realm), attr);
+    global.define_direct_property(vm.names.Temporal, vm.heap().allocate<Temporal::Temporal>(realm, realm), attr);
+
+    // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
+    global.define_direct_property(vm.names.escape, realm.intrinsics().escape_function(), attr);
+    global.define_direct_property(vm.names.unescape, realm.intrinsics().unescape_function(), attr);
+
+    // Non-standard
+    global.define_direct_property(vm.names.InternalError, realm.intrinsics().internal_error_constructor(), attr);
+    global.define_direct_property(vm.names.console, realm.intrinsics().console_object(), attr);
+
+    // 3. Return global.
+    return global;
+}
+
 void GlobalObject::initialize(Realm& realm)
 {
     Base::initialize(realm);
 
     auto& vm = this->vm();
 
-    ensure_shape_is_unique();
-    Object::set_prototype(realm.intrinsics().object_prototype());
-
-    u8 attr = Attribute::Writable | Attribute::Configurable;
-
-    // 19.2 Function Properties of the Global Object, https://tc39.es/ecma262/#sec-function-properties-of-the-global-object
-    define_direct_property(vm.names.eval, realm.intrinsics().eval_function(), attr);
-    define_direct_property(vm.names.isFinite, realm.intrinsics().is_finite_function(), attr);
-    define_direct_property(vm.names.isNaN, realm.intrinsics().is_nan_function(), attr);
-    define_direct_property(vm.names.parseFloat, realm.intrinsics().parse_float_function(), attr);
-    define_direct_property(vm.names.parseInt, realm.intrinsics().parse_int_function(), attr);
-    define_direct_property(vm.names.decodeURI, realm.intrinsics().decode_uri_function(), attr);
-    define_direct_property(vm.names.decodeURIComponent, realm.intrinsics().decode_uri_component_function(), attr);
-    define_direct_property(vm.names.encodeURI, realm.intrinsics().encode_uri_function(), attr);
-    define_direct_property(vm.names.encodeURIComponent, realm.intrinsics().encode_uri_component_function(), attr);
-
-    // 19.1 Value Properties of the Global Object, https://tc39.es/ecma262/#sec-value-properties-of-the-global-object
-    define_direct_property(vm.names.globalThis, this, attr);
-    define_direct_property(vm.names.Infinity, js_infinity(), 0);
-    define_direct_property(vm.names.NaN, js_nan(), 0);
-    define_direct_property(vm.names.undefined, js_undefined(), 0);
-
-    // 19.3 Constructor Properties of the Global Object, https://tc39.es/ecma262/#sec-constructor-properties-of-the-global-object
-    define_direct_property(vm.names.AggregateError, realm.intrinsics().aggregate_error_constructor(), attr);
-    define_direct_property(vm.names.Array, realm.intrinsics().array_constructor(), attr);
-    define_direct_property(vm.names.ArrayBuffer, realm.intrinsics().array_buffer_constructor(), attr);
-    define_direct_property(vm.names.BigInt, realm.intrinsics().bigint_constructor(), attr);
-    define_direct_property(vm.names.BigInt64Array, realm.intrinsics().big_int64_array_constructor(), attr);
-    define_direct_property(vm.names.BigUint64Array, realm.intrinsics().big_uint64_array_constructor(), attr);
-    define_direct_property(vm.names.Boolean, realm.intrinsics().boolean_constructor(), attr);
-    define_direct_property(vm.names.DataView, realm.intrinsics().data_view_constructor(), attr);
-    define_direct_property(vm.names.Date, realm.intrinsics().date_constructor(), attr);
-    define_direct_property(vm.names.Error, realm.intrinsics().error_constructor(), attr);
-    define_direct_property(vm.names.EvalError, realm.intrinsics().eval_error_constructor(), attr);
-    define_direct_property(vm.names.FinalizationRegistry, realm.intrinsics().finalization_registry_constructor(), attr);
-    define_direct_property(vm.names.Float32Array, realm.intrinsics().float32_array_constructor(), attr);
-    define_direct_property(vm.names.Float64Array, realm.intrinsics().float64_array_constructor(), attr);
-    define_direct_property(vm.names.Function, realm.intrinsics().function_constructor(), attr);
-    define_direct_property(vm.names.Int8Array, realm.intrinsics().int8_array_constructor(), attr);
-    define_direct_property(vm.names.Int16Array, realm.intrinsics().int16_array_constructor(), attr);
-    define_direct_property(vm.names.Int32Array, realm.intrinsics().int32_array_constructor(), attr);
-    define_direct_property(vm.names.Map, realm.intrinsics().map_constructor(), attr);
-    define_direct_property(vm.names.Number, realm.intrinsics().number_constructor(), attr);
-    define_direct_property(vm.names.Object, realm.intrinsics().object_constructor(), attr);
-    define_direct_property(vm.names.Promise, realm.intrinsics().promise_constructor(), attr);
-    define_direct_property(vm.names.Proxy, realm.intrinsics().proxy_constructor(), attr);
-    define_direct_property(vm.names.RangeError, realm.intrinsics().range_error_constructor(), attr);
-    define_direct_property(vm.names.ReferenceError, realm.intrinsics().reference_error_constructor(), attr);
-    define_direct_property(vm.names.RegExp, realm.intrinsics().regexp_constructor(), attr);
-    define_direct_property(vm.names.Set, realm.intrinsics().set_constructor(), attr);
-    define_direct_property(vm.names.ShadowRealm, realm.intrinsics().shadow_realm_constructor(), attr);
-    define_direct_property(vm.names.String, realm.intrinsics().string_constructor(), attr);
-    define_direct_property(vm.names.Symbol, realm.intrinsics().symbol_constructor(), attr);
-    define_direct_property(vm.names.SyntaxError, realm.intrinsics().syntax_error_constructor(), attr);
-    define_direct_property(vm.names.TypeError, realm.intrinsics().type_error_constructor(), attr);
-    define_direct_property(vm.names.Uint8Array, realm.intrinsics().uint8_array_constructor(), attr);
-    define_direct_property(vm.names.Uint8ClampedArray, realm.intrinsics().uint8_clamped_array_constructor(), attr);
-    define_direct_property(vm.names.Uint16Array, realm.intrinsics().uint16_array_constructor(), attr);
-    define_direct_property(vm.names.Uint32Array, realm.intrinsics().uint32_array_constructor(), attr);
-    define_direct_property(vm.names.URIError, realm.intrinsics().uri_error_constructor(), attr);
-    define_direct_property(vm.names.WeakMap, realm.intrinsics().weak_map_constructor(), attr);
-    define_direct_property(vm.names.WeakRef, realm.intrinsics().weak_ref_constructor(), attr);
-    define_direct_property(vm.names.WeakSet, realm.intrinsics().weak_set_constructor(), attr);
-
-    // 19.4 Other Properties of the Global Object, https://tc39.es/ecma262/#sec-other-properties-of-the-global-object
-    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(realm, realm), attr);
-    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(realm, realm), attr);
-    define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(realm, realm), attr);
-    define_direct_property(vm.names.Math, heap().allocate<MathObject>(realm, realm), attr);
-    define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(realm, realm), attr);
-    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
-
-    // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
-    define_direct_property(vm.names.escape, realm.intrinsics().escape_function(), attr);
-    define_direct_property(vm.names.unescape, realm.intrinsics().unescape_function(), attr);
-
     // Non-standard
-    define_direct_property(vm.names.InternalError, realm.intrinsics().internal_error_constructor(), attr);
-    define_direct_property(vm.names.console, realm.intrinsics().console_object(), attr);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.gc, gc, 0, attr);
 }
 

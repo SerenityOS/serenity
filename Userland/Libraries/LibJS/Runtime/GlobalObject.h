@@ -40,6 +40,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(unescape);
 };
 
+Object& set_default_global_bindings(Realm&);
+
 template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
