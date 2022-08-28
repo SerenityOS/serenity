@@ -8,9 +8,9 @@ set(SOURCES
     Lighting.cpp
     List.cpp
     Matrix.cpp
+    NameAllocator.cpp
     Shader.cpp
     Stencil.cpp
-    Tex/NameAllocator.cpp
     Tex/Texture2D.cpp
     Texture.cpp
     Vertex.cpp
