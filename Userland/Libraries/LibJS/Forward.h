@@ -95,6 +95,7 @@
 
 #define JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS \
     __JS_ENUMERATE(AtomicsObject, atomics)     \
+    __JS_ENUMERATE(ConsoleObject, console)     \
     __JS_ENUMERATE(Intl::Intl, intl)           \
     __JS_ENUMERATE(JSONObject, json)           \
     __JS_ENUMERATE(MathObject, math)           \
@@ -216,6 +217,7 @@ class TypedArrayConstructor;
 class TypedArrayPrototype;
 
 class AtomicsObject;
+class ConsoleObject;
 class JSONObject;
 class MathObject;
 class ReflectObject;

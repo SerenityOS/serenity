@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/BooleanPrototype.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
 #include <LibJS/Runtime/DataViewPrototype.h>
 #include <LibJS/Runtime/DateConstructor.h>
