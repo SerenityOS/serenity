@@ -24,6 +24,7 @@ public:
     ErrorOr<void> add_source(StringView source_code);
     ErrorOr<void> compile();
     GLenum type() const { return m_type; }
+    bool compile_status() const { return m_compile_status; }
 
 private:
     explicit Shader(GLenum shader_type)
@@ -33,6 +34,7 @@ private:
 
     Vector<String> m_sources;
     GLenum m_type;
+    bool m_compile_status { false };
 };
 
 }
