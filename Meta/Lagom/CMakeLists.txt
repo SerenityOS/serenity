@@ -347,6 +347,7 @@ if (BUILD_LAGOM)
         Gemini
         Gfx
         GL
+        GLSL
         GPU
         HTTP
         IMAP
