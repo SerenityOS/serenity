@@ -15,6 +15,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
@@ -389,9 +390,10 @@ void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
     if (m_interpreter.ptr() == interpreter.ptr())
         return;
 
+    auto& console_object = *interpreter->realm().intrinsics().console_object();
     m_interpreter = interpreter;
-    m_console_client = make<WebContentConsoleClient>(interpreter->realm().global_object().console(), interpreter, *this);
-    interpreter->realm().global_object().console().set_client(*m_console_client.ptr());
+    m_console_client = make<WebContentConsoleClient>(console_object.console(), interpreter, *this);
+    console_object.console().set_client(*m_console_client.ptr());
 }
 
 void ConnectionFromClient::js_console_input(String const& js_source)

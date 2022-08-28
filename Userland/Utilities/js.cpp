@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/AsyncGenerator.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DatePrototype.h>
@@ -1559,8 +1560,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (evaluate_script.is_empty() && script_paths.is_empty()) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
-        ReplConsoleClient console_client(interpreter->realm().global_object().console());
-        interpreter->realm().global_object().console().set_client(console_client);
+        auto& console_object = *interpreter->realm().intrinsics().console_object();
+        ReplConsoleClient console_client(console_object.console());
+        console_object.console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         auto& global_environment = interpreter->realm().global_environment();
@@ -1769,8 +1771,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         s_editor->save_history(s_history_path);
     } else {
         interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
-        ReplConsoleClient console_client(interpreter->realm().global_object().console());
-        interpreter->realm().global_object().console().set_client(console_client);
+        auto& console_object = *interpreter->realm().intrinsics().console_object();
+        ReplConsoleClient console_client(console_object.console());
+        console_object.console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         signal(SIGINT, [](int) {
