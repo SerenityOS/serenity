@@ -45,6 +45,8 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
     // USBDevice::enumerate_device must be called before this.
     VERIFY(m_address > 0);
 
+    m_sysfs_device_info_node = TRY(SysFSUSBDeviceInformation::create(*this));
+
     if (m_device_descriptor.device_class != USB_CLASS_HUB) {
         dbgln("USB Hub: Trying to enumerate and power on a device that says it isn't a hub.");
         return EINVAL;
