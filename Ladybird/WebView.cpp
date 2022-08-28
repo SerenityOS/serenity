@@ -32,6 +32,7 @@
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Rect.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
@@ -187,10 +188,9 @@ public:
 
         m_interpreter = interpreter;
 
-        auto& realm = interpreter->realm();
-        auto& global_object = realm.global_object();
-        m_console_client = make<Ladybird::ConsoleClient>(global_object.console(), interpreter, m_view);
-        global_object.console().set_client(*m_console_client.ptr());
+        auto& console_object = *interpreter->realm().intrinsics().console_object();
+        m_console_client = make<Ladybird::ConsoleClient>(console_object.console(), interpreter, m_view);
+        console_object.console().set_client(*m_console_client.ptr());
     }
 
     virtual void page_did_change_selection() override
