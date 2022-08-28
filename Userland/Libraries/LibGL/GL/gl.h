@@ -825,6 +825,7 @@ GLAPI GLuint glCreateProgram();
 GLAPI void glDeleteProgram(GLuint program);
 GLAPI void glAttachShader(GLuint program, GLuint shader);
 GLAPI void glLinkProgram(GLuint program);
+GLAPI void glUseProgram(GLuint program);
 
 #ifdef __cplusplus
 }

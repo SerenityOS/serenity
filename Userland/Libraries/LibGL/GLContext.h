@@ -239,6 +239,7 @@ public:
     void gl_delete_program(GLuint program);
     void gl_attach_shader(GLuint program, GLuint shader);
     void gl_link_program(GLuint program);
+    void gl_use_program(GLuint program);
 
 private:
     void sync_device_config();
@@ -414,6 +415,7 @@ private:
     NameAllocator m_program_name_allocator;
     HashMap<GLuint, RefPtr<Shader>> m_allocated_shaders;
     HashMap<GLuint, RefPtr<Program>> m_allocated_programs;
+    RefPtr<Program> m_current_program;
 
     struct Listing {
 

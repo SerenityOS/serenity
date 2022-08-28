@@ -1043,6 +1043,11 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
     g_gl_context->gl_translate(x, y, z);
 }
 
+void glUseProgram(GLuint program)
+{
+    g_gl_context->gl_use_program(program);
+}
+
 void glVertex2d(GLdouble x, GLdouble y)
 {
     g_gl_context->gl_vertex(x, y, 0.0, 1.0);
