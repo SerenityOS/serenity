@@ -39,6 +39,8 @@ protected:
     void load_and_push(Configuration&, Instruction const&);
     template<typename PopT, typename StoreT>
     void pop_and_store(Configuration&, Instruction const&);
+    template<size_t M, size_t N, template<typename> typename SetSign>
+    void load_and_push_mxn(Configuration&, Instruction const&);
     void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data, i32 base);
     void call_address(Configuration&, FunctionAddress);
 

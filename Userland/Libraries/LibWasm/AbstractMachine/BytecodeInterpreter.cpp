@@ -5,12 +5,15 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/SIMDExtras.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Operators.h>
 #include <LibWasm/Opcode.h>
 #include <LibWasm/Printer/Printer.h>
+
+using namespace AK::SIMD;
 
 namespace Wasm {
 
@@ -105,6 +108,50 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
     dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, sizeof(ReadType));
     auto slice = memory->data().bytes().slice(instance_address, sizeof(ReadType));
     configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
+}
+
+template<size_t M>
+using NativeIntegralType = Conditional<M == 8, u8, Conditional<M == 16, u16, Conditional<M == 32, u32, Conditional<M == 64, u64, void>>>>;
+
+template<size_t M, size_t N, template<typename> typename SetSign, typename ElementType = SetSign<NativeIntegralType<M>>>
+using NativeVectorType __attribute__((vector_size(N * sizeof(ElementType)))) = ElementType;
+
+template<typename TDst, typename TSrc>
+ALWAYS_INLINE static TDst convert_vector(TSrc v)
+{
+    return __builtin_convertvector(v, TDst);
+}
+
+template<size_t M, size_t N, template<typename> typename SetSign>
+void BytecodeInterpreter::load_and_push_mxn(Configuration& configuration, Instruction const& instruction)
+{
+    auto& address = configuration.frame().module().memories().first();
+    auto memory = configuration.store().get(address);
+    if (!memory) {
+        m_trap = Trap { "Nonexistent memory" };
+        return;
+    }
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& entry = configuration.stack().peek();
+    auto base = entry.get<Value>().to<i32>();
+    if (!base.has_value()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        return;
+    }
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += M * N / 8;
+    if (addition.has_overflow() || addition.value() > memory->size()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        dbgln("LibWasm: Memory access out of bounds (expected {} to be less than or equal to {})", instance_address + M * N / 8, memory->size());
+        return;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "vec-load({} : {}) -> stack", instance_address, M * N / 8);
+    auto slice = memory->data().bytes().slice(instance_address, M * N / 8);
+    using V64 = NativeVectorType<M, N, SetSign>;
+    using V128 = NativeVectorType<M * 2, N, SetSign>;
+    auto result = convert_vector<V128>(*bit_cast<V64*>(slice.data()));
+    configuration.stack().peek() = Value(bit_cast<u128>(result));
 }
 
 void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
@@ -949,6 +996,19 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         }
         return;
     }
+    case Instructions::v128_const.value():
+        configuration.stack().push(Value(instruction.arguments().get<u128>()));
+        return;
+    case Instructions::v128_load.value():
+        return load_and_push<u128, u128>(configuration, instruction);
+    case Instructions::v128_load8x8_s.value():
+        return load_and_push_mxn<8, 8, MakeSigned>(configuration, instruction);
+    case Instructions::v128_load8x8_u.value():
+        return load_and_push_mxn<8, 8, MakeUnsigned>(configuration, instruction);
+    case Instructions::v128_load16x4_s.value():
+        return load_and_push_mxn<16, 4, MakeSigned>(configuration, instruction);
+    case Instructions::v128_load16x4_u.value():
+        return load_and_push_mxn<16, 4, MakeUnsigned>(configuration, instruction);
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
     case Instructions::memory_fill.value():

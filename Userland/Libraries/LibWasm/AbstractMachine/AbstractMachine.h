@@ -114,11 +114,6 @@ public:
         }
     }
 
-    explicit Value(u128 raw_value)
-        : m_value(raw_value)
-    {
-    }
-
     ALWAYS_INLINE Value(Value const& value) = default;
     ALWAYS_INLINE Value(Value&& value) = default;
     ALWAYS_INLINE Value& operator=(Value&& value) = default;
