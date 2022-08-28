@@ -62,25 +62,3 @@ function(generate_state_machine source header)
         add_dependencies(all_generated ${target_name})
     endif()
 endfunction()
-
-function(compile_jakt source)
-    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
-    get_filename_component(source_base ${source} NAME_WE)
-    set(output "${source_base}.cpp")
-    add_custom_command(
-        OUTPUT ${output}
-        COMMAND $<TARGET_FILE:Lagom::jakt> -S -o "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp" ${source}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp/${output}" ${output}
-        COMMAND "${CMAKE_COMMAND}" -E remove "${CMAKE_CURRENT_BINARY_DIR}/jakt_tmp/${output}"
-        VERBATIM
-        DEPENDS Lagom::jakt
-        MAIN_DEPENDENCY ${source}
-    )
-    get_property(JAKT_INCLUDE_DIR TARGET Lagom::jakt PROPERTY IMPORTED_INCLUDE_DIRECTORIES)
-    set_source_files_properties("${output}" PROPERTIES
-        INCLUDE_DIRECTORIES "${JAKT_INCLUDE_DIR}/runtime"
-        COMPILE_OPTIONS "-Wno-unused-local-typedefs;-Wno-unused-function")
-    get_filename_component(output_name ${output} NAME)
-    add_custom_target(generate_${output_name} DEPENDS ${output})
-    add_dependencies(all_generated generate_${output_name})
-endfunction()

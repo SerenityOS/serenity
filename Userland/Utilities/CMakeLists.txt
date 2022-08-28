@@ -52,8 +52,9 @@ foreach(CMD_SRC ${CMD_SOURCES})
 endforeach()
 
 if (ENABLE_JAKT)
-    add_executable(hello-jakt hello-world.cpp)
-    compile_jakt(hello-world.jakt)
+    add_jakt_executable(hello-jakt
+        MAIN_SOURCE hello-world.jakt
+    )
     target_link_libraries(hello-jakt LibC)
     set_target_properties(hello-jakt PROPERTIES EXCLUDE_FROM_ALL TRUE)
     install(TARGETS hello-jakt RUNTIME DESTINATION bin OPTIONAL)
