@@ -85,7 +85,7 @@ namespace JS {
 
 GlobalObject::GlobalObject(Realm& realm)
     : Object(GlobalObjectTag::Tag, realm)
-    , m_console(make<Console>(*this))
+    , m_console(make<Console>(realm.vm()))
 {
 }
 
