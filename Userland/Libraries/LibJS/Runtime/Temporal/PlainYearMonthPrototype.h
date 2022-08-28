@@ -15,11 +15,12 @@ class PlainYearMonthPrototype final : public PrototypeObject<PlainYearMonthProto
     JS_PROTOTYPE_OBJECT(PlainYearMonthPrototype, PlainYearMonth, Temporal.PlainYearMonth);
 
 public:
-    explicit PlainYearMonthPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~PlainYearMonthPrototype() override = default;
 
 private:
+    explicit PlainYearMonthPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(year_getter);
     JS_DECLARE_NATIVE_FUNCTION(month_getter);

@@ -19,11 +19,12 @@ class AsyncFromSyncIteratorPrototype final : public PrototypeObject<AsyncFromSyn
     JS_PROTOTYPE_OBJECT(AsyncFromSyncIteratorPrototype, AsyncFromSyncIterator, AsyncFromSyncIterator);
 
 public:
-    explicit AsyncFromSyncIteratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIteratorPrototype() override = default;
 
 private:
+    explicit AsyncFromSyncIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
     JS_DECLARE_NATIVE_FUNCTION(return_);
     JS_DECLARE_NATIVE_FUNCTION(throw_);

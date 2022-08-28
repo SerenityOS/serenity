@@ -18,7 +18,6 @@ class SetIterator final : public Object {
 public:
     static SetIterator* create(Realm&, Set& set, Object::PropertyKind iteration_kind);
 
-    explicit SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~SetIterator() override = default;
 
     Set& set() const { return m_set; }
@@ -27,6 +26,8 @@ public:
 
 private:
     friend class SetIteratorPrototype;
+
+    explicit SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

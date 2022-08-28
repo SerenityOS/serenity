@@ -16,8 +16,6 @@ class ModuleNamespaceObject final : public Object {
     JS_OBJECT(ModuleNamespaceObject, Object);
 
 public:
-    ModuleNamespaceObject(Realm&, Module* module, Vector<FlyString> exports);
-
     // 10.4.6 Module Namespace Exotic Objects, https://tc39.es/ecma262/#sec-module-namespace-exotic-objects
 
     virtual ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
@@ -34,6 +32,8 @@ public:
     virtual void initialize(Realm&) override;
 
 private:
+    ModuleNamespaceObject(Realm&, Module* module, Vector<FlyString> exports);
+
     // FIXME: UHHH how do we want to store this to avoid cycles but be safe??
     Module* m_module;            // [[Module]]
     Vector<FlyString> m_exports; // [[Exports]]

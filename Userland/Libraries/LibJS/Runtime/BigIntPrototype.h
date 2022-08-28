@@ -14,11 +14,12 @@ class BigIntPrototype final : public Object {
     JS_OBJECT(BigIntPrototype, Object);
 
 public:
-    explicit BigIntPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~BigIntPrototype() override = default;
 
 private:
+    explicit BigIntPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);

@@ -14,11 +14,12 @@ class AsyncIteratorPrototype final : public Object {
     JS_OBJECT(AsyncIteratorPrototype, Object)
 
 public:
-    explicit AsyncIteratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~AsyncIteratorPrototype() override = default;
 
 private:
+    explicit AsyncIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(symbol_async_iterator);
 };
 

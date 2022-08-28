@@ -16,13 +16,14 @@ class BigInt final : public Cell {
     JS_CELL(BigInt, Cell);
 
 public:
-    explicit BigInt(Crypto::SignedBigInteger);
     virtual ~BigInt() override = default;
 
     Crypto::SignedBigInteger const& big_integer() const { return m_big_integer; }
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
+    explicit BigInt(Crypto::SignedBigInteger);
+
     Crypto::SignedBigInteger m_big_integer;
 };
 

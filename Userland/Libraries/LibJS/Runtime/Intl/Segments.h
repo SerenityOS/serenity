@@ -18,7 +18,6 @@ class Segments final : public Object {
 public:
     static Segments* create(Realm&, Segmenter&, Utf16String);
 
-    Segments(Realm&, Segmenter&, Utf16String);
     virtual ~Segments() override = default;
 
     Segmenter& segments_segmenter() const { return m_segments_segmenter; }
@@ -28,6 +27,8 @@ public:
     Optional<Vector<size_t>>& boundaries_cache() const { return m_boundaries_cache; }
 
 private:
+    Segments(Realm&, Segmenter&, Utf16String);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     Segmenter& m_segments_segmenter; // [[SegmentsSegmenter]]

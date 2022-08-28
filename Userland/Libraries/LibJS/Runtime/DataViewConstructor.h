@@ -14,7 +14,6 @@ class DataViewConstructor final : public NativeFunction {
     JS_OBJECT(DataViewConstructor, NativeFunction);
 
 public:
-    explicit DataViewConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DataViewConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;
 
 private:
+    explicit DataViewConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 };
 

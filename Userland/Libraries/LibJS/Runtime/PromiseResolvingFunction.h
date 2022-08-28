@@ -30,13 +30,14 @@ public:
 
     static PromiseResolvingFunction* create(Realm&, Promise&, AlreadyResolved&, FunctionType);
 
-    explicit PromiseResolvingFunction(Promise&, AlreadyResolved&, FunctionType, Object& prototype);
     virtual void initialize(Realm&) override;
     virtual ~PromiseResolvingFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
 
 private:
+    explicit PromiseResolvingFunction(Promise&, AlreadyResolved&, FunctionType, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     Promise& m_promise;

@@ -14,11 +14,12 @@ class BooleanPrototype final : public BooleanObject {
     JS_OBJECT(BooleanPrototype, BooleanObject);
 
 public:
-    explicit BooleanPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~BooleanPrototype() override = default;
 
 private:
+    explicit BooleanPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };

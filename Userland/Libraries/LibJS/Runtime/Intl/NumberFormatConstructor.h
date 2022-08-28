@@ -15,7 +15,6 @@ class NumberFormatConstructor final : public NativeFunction {
     JS_OBJECT(NumberFormatConstructor, NativeFunction);
 
 public:
-    explicit NumberFormatConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~NumberFormatConstructor() override = default;
 
@@ -23,6 +22,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit NumberFormatConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);

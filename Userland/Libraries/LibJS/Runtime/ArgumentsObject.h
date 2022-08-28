@@ -16,8 +16,6 @@ class ArgumentsObject final : public Object {
     JS_OBJECT(ArgumentsObject, Object);
 
 public:
-    ArgumentsObject(Realm&, Environment&);
-
     virtual void initialize(Realm&) override;
     virtual ~ArgumentsObject() override = default;
 
@@ -33,6 +31,8 @@ public:
     Object& parameter_map() { return *m_parameter_map; }
 
 private:
+    ArgumentsObject(Realm&, Environment&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     Environment& m_environment;

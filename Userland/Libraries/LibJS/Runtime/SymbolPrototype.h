@@ -14,11 +14,12 @@ class SymbolPrototype final : public Object {
     JS_OBJECT(SymbolPrototype, Object);
 
 public:
-    explicit SymbolPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~SymbolPrototype() override = default;
 
 private:
+    explicit SymbolPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(description_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(to_string);

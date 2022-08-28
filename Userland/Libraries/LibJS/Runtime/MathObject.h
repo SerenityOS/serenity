@@ -14,11 +14,12 @@ class MathObject final : public Object {
     JS_OBJECT(MathObject, Object);
 
 public:
-    explicit MathObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~MathObject() override = default;
 
 private:
+    explicit MathObject(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(abs);
     JS_DECLARE_NATIVE_FUNCTION(random);
     JS_DECLARE_NATIVE_FUNCTION(sqrt);

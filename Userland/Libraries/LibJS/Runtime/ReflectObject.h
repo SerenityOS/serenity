@@ -14,11 +14,12 @@ class ReflectObject final : public Object {
     JS_OBJECT(ReflectObject, Object);
 
 public:
-    explicit ReflectObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ReflectObject() override = default;
 
 private:
+    explicit ReflectObject(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(apply);
     JS_DECLARE_NATIVE_FUNCTION(construct);
     JS_DECLARE_NATIVE_FUNCTION(define_property);

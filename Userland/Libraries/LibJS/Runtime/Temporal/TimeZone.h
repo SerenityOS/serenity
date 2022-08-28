@@ -20,7 +20,6 @@ public:
     // Needs to store values in the range -8.64 * 10^13 to 8.64 * 10^13
     using OffsetType = double;
 
-    explicit TimeZone(Object& prototype);
     virtual ~TimeZone() override = default;
 
     [[nodiscard]] String const& identifier() const { return m_identifier; }
@@ -30,6 +29,8 @@ public:
     void set_offset_nanoseconds(OffsetType offset_nanoseconds) { m_offset_nanoseconds = offset_nanoseconds; };
 
 private:
+    explicit TimeZone(Object& prototype);
+
     // 11.5 Properties of Temporal.TimeZone Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-timezone-instances
     String m_identifier;                       // [[Identifier]]
     Optional<OffsetType> m_offset_nanoseconds; // [[OffsetNanoseconds]]

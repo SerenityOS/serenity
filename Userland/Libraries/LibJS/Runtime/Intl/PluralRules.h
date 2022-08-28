@@ -19,7 +19,6 @@ class PluralRules final : public NumberFormatBase {
     JS_OBJECT(PluralRules, NumberFormatBase);
 
 public:
-    PluralRules(Object& prototype);
     virtual ~PluralRules() override = default;
 
     Unicode::PluralForm type() const { return m_type; }
@@ -27,6 +26,8 @@ public:
     void set_type(StringView type) { m_type = Unicode::plural_form_from_string(type); }
 
 private:
+    explicit PluralRules(Object& prototype);
+
     Unicode::PluralForm m_type { Unicode::PluralForm::Cardinal }; // [[Type]]
 };
 

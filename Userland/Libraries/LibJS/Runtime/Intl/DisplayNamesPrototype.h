@@ -15,11 +15,12 @@ class DisplayNamesPrototype final : public PrototypeObject<DisplayNamesPrototype
     JS_PROTOTYPE_OBJECT(DisplayNamesPrototype, DisplayNames, Intl.DisplayNames);
 
 public:
-    explicit DisplayNamesPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DisplayNamesPrototype() override = default;
 
 private:
+    explicit DisplayNamesPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(of);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };

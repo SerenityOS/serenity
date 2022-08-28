@@ -15,11 +15,12 @@ class ShadowRealmPrototype final : public PrototypeObject<ShadowRealmPrototype, 
     JS_PROTOTYPE_OBJECT(ShadowRealmPrototype, ShadowRealm, ShadowRealm);
 
 public:
-    explicit ShadowRealmPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ShadowRealmPrototype() override = default;
 
 private:
+    explicit ShadowRealmPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(evaluate);
     JS_DECLARE_NATIVE_FUNCTION(import_value);
 };

@@ -14,7 +14,6 @@ class SegmenterConstructor final : public NativeFunction {
     JS_OBJECT(SegmenterConstructor, NativeFunction);
 
 public:
-    explicit SegmenterConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~SegmenterConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit SegmenterConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);

@@ -19,7 +19,6 @@ class AsyncFunctionDriverWrapper final : public Promise {
 
 public:
     static ThrowCompletionOr<Value> create(Realm&, GeneratorObject*);
-    explicit AsyncFunctionDriverWrapper(Realm&, GeneratorObject*);
 
     virtual ~AsyncFunctionDriverWrapper() override = default;
     void visit_edges(Cell::Visitor&) override;
@@ -27,6 +26,8 @@ public:
     ThrowCompletionOr<Value> react_to_async_task_completion(VM&, Value, bool is_successful);
 
 private:
+    AsyncFunctionDriverWrapper(Realm&, GeneratorObject*);
+
     GeneratorObject* m_generator_object { nullptr };
     NativeFunction* m_on_fulfillment { nullptr };
     NativeFunction* m_on_rejection { nullptr };

@@ -17,13 +17,14 @@ class StringIterator final : public Object {
 public:
     static StringIterator* create(Realm&, String string);
 
-    explicit StringIterator(String string, Object& prototype);
     virtual ~StringIterator() override = default;
 
     Utf8CodePointIterator& iterator() { return m_iterator; }
     bool done() const { return m_done; }
 
 private:
+    explicit StringIterator(String string, Object& prototype);
+
     friend class StringIteratorPrototype;
 
     String m_string;

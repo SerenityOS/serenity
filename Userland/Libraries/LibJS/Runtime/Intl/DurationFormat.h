@@ -48,7 +48,6 @@ public:
         return AK::Array { "nu"sv };
     }
 
-    explicit DurationFormat(Object& prototype);
     virtual ~DurationFormat() override = default;
 
     void set_locale(String locale) { m_locale = move(locale); }
@@ -148,6 +147,8 @@ public:
     u8 fractional_digits() const { return m_fractional_digits.value(); }
 
 private:
+    explicit DurationFormat(Object& prototype);
+
     static Style style_from_string(StringView style);
     static StringView style_to_string(Style);
     static ValueStyle date_style_from_string(StringView date_style);

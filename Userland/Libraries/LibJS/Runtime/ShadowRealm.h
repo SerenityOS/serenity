@@ -17,7 +17,6 @@ class ShadowRealm final : public Object {
     JS_OBJECT(ShadowRealm, Object);
 
 public:
-    ShadowRealm(Realm&, ExecutionContext, Object& prototype);
     virtual ~ShadowRealm() override = default;
 
     [[nodiscard]] Realm const& shadow_realm() const { return m_shadow_realm; }
@@ -26,6 +25,8 @@ public:
     [[nodiscard]] ExecutionContext& execution_context() { return m_execution_context; }
 
 private:
+    ShadowRealm(Realm&, ExecutionContext, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     // 3.5 Properties of ShadowRealm Instances, https://tc39.es/proposal-shadowrealm/#sec-properties-of-shadowrealm-instances

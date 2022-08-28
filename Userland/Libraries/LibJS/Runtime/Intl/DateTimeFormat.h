@@ -41,7 +41,6 @@ public:
         return AK::Array { "ca"sv, "hc"sv, "nu"sv };
     }
 
-    DateTimeFormat(Object& prototype);
     virtual ~DateTimeFormat() override = default;
 
     String const& locale() const { return m_locale; }
@@ -128,6 +127,8 @@ public:
     void set_bound_format(NativeFunction* bound_format) { m_bound_format = bound_format; }
 
 private:
+    DateTimeFormat(Object& prototype);
+
     static Style style_from_string(StringView style);
     static StringView style_to_string(Style style);
 

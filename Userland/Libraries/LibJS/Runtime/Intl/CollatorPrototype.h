@@ -15,11 +15,12 @@ class CollatorPrototype final : public PrototypeObject<CollatorPrototype, Collat
     JS_PROTOTYPE_OBJECT(CollatorPrototype, Collator, Collator);
 
 public:
-    explicit CollatorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~CollatorPrototype() override = default;
 
 private:
+    explicit CollatorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(compare_getter);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };

@@ -33,7 +33,6 @@ public:
         return AK::Array { "nu"sv };
     }
 
-    RelativeTimeFormat(Object& prototype);
     virtual ~RelativeTimeFormat() override = default;
 
     String const& locale() const { return m_locale; }
@@ -60,6 +59,8 @@ public:
     void set_plural_rules(PluralRules* plural_rules) { m_plural_rules = plural_rules; }
 
 private:
+    explicit RelativeTimeFormat(Object& prototype);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     String m_locale;                                 // [[Locale]]

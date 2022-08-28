@@ -22,12 +22,6 @@ public:
         return vm.heap().allocate_without_realm<Accessor>(getter, setter);
     }
 
-    Accessor(FunctionObject* getter, FunctionObject* setter)
-        : m_getter(getter)
-        , m_setter(setter)
-    {
-    }
-
     FunctionObject* getter() const { return m_getter; }
     void set_getter(FunctionObject* getter) { m_getter = getter; }
 
@@ -41,6 +35,12 @@ public:
     }
 
 private:
+    Accessor(FunctionObject* getter, FunctionObject* setter)
+        : m_getter(getter)
+        , m_setter(setter)
+    {
+    }
+
     FunctionObject* m_getter { nullptr };
     FunctionObject* m_setter { nullptr };
 };

@@ -15,11 +15,12 @@ class MapIteratorPrototype final : public PrototypeObject<MapIteratorPrototype, 
     JS_PROTOTYPE_OBJECT(MapIteratorPrototype, MapIterator, MapIterator);
 
 public:
-    MapIteratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~MapIteratorPrototype() override = default;
 
 private:
+    MapIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
 };
 

@@ -15,11 +15,12 @@ class InstantPrototype final : public PrototypeObject<InstantPrototype, Instant>
     JS_PROTOTYPE_OBJECT(InstantPrototype, Instant, Temporal.Instant);
 
 public:
-    explicit InstantPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~InstantPrototype() override = default;
 
 private:
+    explicit InstantPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(epoch_seconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_milliseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_microseconds_getter);

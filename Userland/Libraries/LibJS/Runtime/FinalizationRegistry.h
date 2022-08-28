@@ -22,7 +22,6 @@ class FinalizationRegistry final
     JS_OBJECT(FinalizationRegistry, Object);
 
 public:
-    explicit FinalizationRegistry(Realm&, JobCallback, Object& prototype);
     virtual ~FinalizationRegistry() override = default;
 
     void add_finalization_record(Cell& target, Value held_value, Cell* unregister_token);
@@ -38,6 +37,8 @@ public:
     JobCallback const& cleanup_callback() const { return m_cleanup_callback; }
 
 private:
+    FinalizationRegistry(Realm&, JobCallback, Object& prototype);
+
     virtual void visit_edges(Visitor& visitor) override;
 
     Handle<Realm> m_realm;

@@ -21,7 +21,6 @@ class WeakMap final
 public:
     static WeakMap* create(Realm&);
 
-    explicit WeakMap(Object& prototype);
     virtual ~WeakMap() override = default;
 
     HashMap<Cell*, Value> const& values() const { return m_values; };
@@ -30,6 +29,8 @@ public:
     virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
+    explicit WeakMap(Object& prototype);
+
     void visit_edges(Visitor&) override;
 
     HashMap<Cell*, Value> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping

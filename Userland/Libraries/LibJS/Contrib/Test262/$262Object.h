@@ -17,11 +17,12 @@ class $262Object final : public Object {
     JS_OBJECT($262Object, Object);
 
 public:
-    explicit $262Object(Realm&);
     virtual void initialize(JS::Realm&) override;
     virtual ~$262Object() override = default;
 
 private:
+    explicit $262Object(Realm&);
+
     virtual void visit_edges(Visitor&) override;
 
     AgentObject* m_agent { nullptr };

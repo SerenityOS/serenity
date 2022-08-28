@@ -15,11 +15,12 @@ class ArrayPrototype final : public Array {
     JS_OBJECT(ArrayPrototype, Array);
 
 public:
-    ArrayPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ArrayPrototype() override = default;
 
 private:
+    explicit ArrayPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(at);
     JS_DECLARE_NATIVE_FUNCTION(concat);
     JS_DECLARE_NATIVE_FUNCTION(copy_within);

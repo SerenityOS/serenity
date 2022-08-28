@@ -14,7 +14,6 @@ class PlainDateConstructor final : public NativeFunction {
     JS_OBJECT(PlainDateConstructor, NativeFunction);
 
 public:
-    explicit PlainDateConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~PlainDateConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit PlainDateConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(from);

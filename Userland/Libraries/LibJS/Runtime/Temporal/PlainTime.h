@@ -19,7 +19,6 @@ class PlainTime final : public Object {
     JS_OBJECT(PlainDateTime, Object);
 
 public:
-    PlainTime(u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Calendar& calendar, Object& prototype);
     virtual ~PlainTime() override = default;
 
     [[nodiscard]] u8 iso_hour() const { return m_iso_hour; }
@@ -32,6 +31,8 @@ public:
     [[nodiscard]] Calendar& calendar() { return m_calendar; }
 
 private:
+    PlainTime(u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Calendar& calendar, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     // 4.4 Properties of Temporal.PlainTime Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaintime-instances

@@ -34,8 +34,6 @@ public:
         return AK::Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
     }
 
-    Locale(Object& prototype);
-    Locale(Unicode::LocaleID const&, Object& prototype);
     virtual ~Locale() override = default;
 
     String const& locale() const { return m_locale; }
@@ -65,6 +63,9 @@ public:
     void set_numeric(bool numeric) { m_numeric = numeric; }
 
 private:
+    explicit Locale(Object& prototype);
+    Locale(Unicode::LocaleID const&, Object& prototype);
+
     String m_locale;                     // [[Locale]]
     Optional<String> m_calendar;         // [[Calendar]]
     Optional<String> m_case_first;       // [[CaseFirst]]

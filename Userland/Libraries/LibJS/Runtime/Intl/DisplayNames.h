@@ -39,7 +39,6 @@ class DisplayNames final : public Object {
     };
 
 public:
-    DisplayNames(Object& prototype);
     virtual ~DisplayNames() override = default;
 
     String const& locale() const { return m_locale; }
@@ -63,6 +62,8 @@ public:
     StringView language_display_string() const;
 
 private:
+    DisplayNames(Object& prototype);
+
     String m_locale;                                 // [[Locale]]
     Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]
     Type m_type { Type::Invalid };                   // [[Type]]

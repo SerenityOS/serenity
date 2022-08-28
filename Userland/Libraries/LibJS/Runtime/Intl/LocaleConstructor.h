@@ -14,7 +14,6 @@ class LocaleConstructor final : public NativeFunction {
     JS_OBJECT(LocaleConstructor, NativeFunction);
 
 public:
-    explicit LocaleConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~LocaleConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit LocaleConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 };
 

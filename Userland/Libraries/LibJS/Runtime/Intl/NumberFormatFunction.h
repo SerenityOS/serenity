@@ -18,13 +18,14 @@ class NumberFormatFunction final : public NativeFunction {
 public:
     static NumberFormatFunction* create(Realm&, NumberFormat&);
 
-    explicit NumberFormatFunction(NumberFormat&, Object& prototype);
     virtual ~NumberFormatFunction() override = default;
     virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
 
 private:
+    explicit NumberFormatFunction(NumberFormat&, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     NumberFormat& m_number_format; // [[NumberFormat]]

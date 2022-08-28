@@ -16,9 +16,10 @@ class AggregateError : public Error {
 
 public:
     static AggregateError* create(Realm&);
-
-    explicit AggregateError(Object& prototype);
     virtual ~AggregateError() override = default;
+
+private:
+    explicit AggregateError(Object& prototype);
 };
 
 }

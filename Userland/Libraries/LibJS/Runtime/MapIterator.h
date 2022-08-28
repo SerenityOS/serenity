@@ -18,7 +18,6 @@ class MapIterator final : public Object {
 public:
     static MapIterator* create(Realm&, Map& map, Object::PropertyKind iteration_kind);
 
-    explicit MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~MapIterator() override = default;
 
     Map& map() const { return m_map; }
@@ -27,6 +26,8 @@ public:
 
 private:
     friend class MapIteratorPrototype;
+
+    explicit MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

@@ -29,8 +29,6 @@ public:
     static ArrayBuffer* create(Realm&, ByteBuffer);
     static ArrayBuffer* create(Realm&, ByteBuffer*);
 
-    ArrayBuffer(ByteBuffer buffer, Object& prototype);
-    ArrayBuffer(ByteBuffer* buffer, Object& prototype);
     virtual ~ArrayBuffer() override = default;
 
     size_t byte_length() const { return buffer_impl().size(); }
@@ -58,6 +56,9 @@ public:
     Value get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
 private:
+    ArrayBuffer(ByteBuffer buffer, Object& prototype);
+    ArrayBuffer(ByteBuffer* buffer, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     ByteBuffer& buffer_impl()

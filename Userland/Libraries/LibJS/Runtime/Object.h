@@ -45,9 +45,6 @@ class Object : public Cell {
 public:
     static Object* create(Realm&, Object* prototype);
 
-    Object(Realm&, Object* prototype);
-    explicit Object(Object& prototype);
-    explicit Object(Shape&);
     virtual void initialize(Realm&) override;
     virtual ~Object() = default;
 
@@ -189,8 +186,12 @@ public:
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
+
     Object(GlobalObjectTag, Realm&);
     Object(ConstructWithoutPrototypeTag, Realm&);
+    Object(Realm&, Object* prototype);
+    explicit Object(Object& prototype);
+    explicit Object(Shape&);
 
     void set_prototype(Object*);
 

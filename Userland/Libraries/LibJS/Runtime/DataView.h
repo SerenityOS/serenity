@@ -18,7 +18,6 @@ class DataView : public Object {
 public:
     static DataView* create(Realm&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
 
-    explicit DataView(ArrayBuffer*, size_t byte_length, size_t byte_offset, Object& prototype);
     virtual ~DataView() override = default;
 
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }
@@ -26,6 +25,8 @@ public:
     size_t byte_offset() const { return m_byte_offset; }
 
 private:
+    DataView(ArrayBuffer*, size_t byte_length, size_t byte_offset, Object& prototype);
+
     virtual void visit_edges(Visitor& visitor) override;
 
     ArrayBuffer* m_viewed_array_buffer { nullptr };

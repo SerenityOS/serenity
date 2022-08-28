@@ -49,10 +49,6 @@ public:
         Prototype,
     };
 
-    explicit Shape(Realm&);
-    Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType);
-    Shape(Shape& previous_shape, Object* new_prototype);
-
     Shape* create_put_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_configure_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
@@ -86,6 +82,10 @@ public:
     void reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes);
 
 private:
+    explicit Shape(Realm&);
+    Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType);
+    Shape(Shape& previous_shape, Object* new_prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);

@@ -18,7 +18,6 @@ class PlainDate final : public Object {
     JS_OBJECT(PlainDate, Object);
 
 public:
-    PlainDate(i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, Object& prototype);
     virtual ~PlainDate() override = default;
 
     [[nodiscard]] i32 iso_year() const { return m_iso_year; }
@@ -28,6 +27,8 @@ public:
     [[nodiscard]] Object& calendar() { return m_calendar; }
 
 private:
+    PlainDate(i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     // 3.4 Properties of Temporal.PlainDate Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindate-instances

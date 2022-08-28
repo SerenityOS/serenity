@@ -18,7 +18,6 @@ public:
         No,
         Yes,
     };
-    ObjectEnvironment(Object& binding_object, IsWithEnvironment, Environment* outer_environment);
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
     virtual ThrowCompletionOr<void> create_mutable_binding(VM&, FlyString const& name, bool can_be_deleted) override;
@@ -43,6 +42,8 @@ public:
     bool is_with_environment() const { return m_with_environment; }
 
 private:
+    ObjectEnvironment(Object& binding_object, IsWithEnvironment, Environment* outer_environment);
+
     virtual void visit_edges(Visitor&) override;
 
     Object& m_binding_object;

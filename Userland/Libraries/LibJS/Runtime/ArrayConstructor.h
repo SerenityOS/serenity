@@ -14,7 +14,6 @@ class ArrayConstructor final : public NativeFunction {
     JS_OBJECT(ArrayConstructor, NativeFunction);
 
 public:
-    explicit ArrayConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ArrayConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit ArrayConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(from);

@@ -15,11 +15,12 @@ class SetPrototype final : public PrototypeObject<SetPrototype, Set> {
     JS_PROTOTYPE_OBJECT(SetPrototype, Set, Set);
 
 public:
-    SetPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~SetPrototype() override = default;
 
 private:
+    explicit SetPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(clear);
     JS_DECLARE_NATIVE_FUNCTION(delete_);

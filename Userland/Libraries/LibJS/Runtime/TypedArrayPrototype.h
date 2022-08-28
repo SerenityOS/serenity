@@ -15,11 +15,12 @@ class TypedArrayPrototype final : public Object {
     JS_OBJECT(TypedArrayPrototype, Object);
 
 public:
-    explicit TypedArrayPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~TypedArrayPrototype() override = default;
 
 private:
+    explicit TypedArrayPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(buffer_getter);
     JS_DECLARE_NATIVE_FUNCTION(byte_length_getter);
     JS_DECLARE_NATIVE_FUNCTION(byte_offset_getter);

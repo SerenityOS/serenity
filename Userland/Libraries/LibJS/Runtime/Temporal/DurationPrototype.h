@@ -15,11 +15,12 @@ class DurationPrototype final : public PrototypeObject<DurationPrototype, Durati
     JS_PROTOTYPE_OBJECT(DurationPrototype, Duration, Temporal.Duration);
 
 public:
-    explicit DurationPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DurationPrototype() override = default;
 
 private:
+    explicit DurationPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(years_getter);
     JS_DECLARE_NATIVE_FUNCTION(months_getter);
     JS_DECLARE_NATIVE_FUNCTION(weeks_getter);

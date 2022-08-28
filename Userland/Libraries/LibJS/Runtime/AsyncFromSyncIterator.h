@@ -19,7 +19,6 @@ class AsyncFromSyncIterator final : public Object {
 public:
     static AsyncFromSyncIterator* create(Realm&, Iterator sync_iterator_record);
 
-    explicit AsyncFromSyncIterator(Realm&, Iterator sync_iterator_record);
     virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIterator() override = default;
 
@@ -29,6 +28,8 @@ public:
     Iterator const& sync_iterator_record() const { return m_sync_iterator_record; }
 
 private:
+    AsyncFromSyncIterator(Realm&, Iterator sync_iterator_record);
+
     Iterator m_sync_iterator_record; // [[SyncIteratorRecord]]
 };
 

@@ -15,12 +15,13 @@ class RegExpStringIteratorPrototype final : public PrototypeObject<RegExpStringI
     JS_PROTOTYPE_OBJECT(RegExpStringIteratorPrototype, RegExpStringIterator, RegExpStringIterator);
 
 public:
-    explicit RegExpStringIteratorPrototype(Realm&);
     virtual ~RegExpStringIteratorPrototype() override = default;
 
     virtual void initialize(Realm&) override;
 
 private:
+    explicit RegExpStringIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
 };
 

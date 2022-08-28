@@ -16,11 +16,12 @@ class StringIteratorPrototype final : public PrototypeObject<StringIteratorProto
     JS_PROTOTYPE_OBJECT(StringIteratorPrototype, StringIterator, StringIterator);
 
 public:
-    StringIteratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~StringIteratorPrototype() override = default;
 
 private:
+    explicit StringIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
 };
 

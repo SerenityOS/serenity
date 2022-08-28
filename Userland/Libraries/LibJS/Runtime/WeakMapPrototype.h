@@ -15,11 +15,12 @@ class WeakMapPrototype final : public PrototypeObject<WeakMapPrototype, WeakMap>
     JS_PROTOTYPE_OBJECT(WeakMapPrototype, WeakMap, WeakMap);
 
 public:
-    WeakMapPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~WeakMapPrototype() override = default;
 
 private:
+    explicit WeakMapPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(delete_);
     JS_DECLARE_NATIVE_FUNCTION(get);
     JS_DECLARE_NATIVE_FUNCTION(has);

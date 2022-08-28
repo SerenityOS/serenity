@@ -14,11 +14,12 @@ class AtomicsObject : public Object {
     JS_OBJECT(AtomicsObject, Object);
 
 public:
-    explicit AtomicsObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~AtomicsObject() override = default;
 
 private:
+    explicit AtomicsObject(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(and_);
     JS_DECLARE_NATIVE_FUNCTION(compare_exchange);

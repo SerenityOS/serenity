@@ -14,13 +14,14 @@ class ConsoleObject final : public Object {
     JS_OBJECT(ConsoleObject, Object);
 
 public:
-    explicit ConsoleObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ConsoleObject() override = default;
 
     Console& console() { return *m_console; }
 
 private:
+    explicit ConsoleObject(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(log);
     JS_DECLARE_NATIVE_FUNCTION(debug);
     JS_DECLARE_NATIVE_FUNCTION(info);

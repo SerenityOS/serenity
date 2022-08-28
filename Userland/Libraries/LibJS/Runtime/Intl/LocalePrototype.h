@@ -15,11 +15,12 @@ class LocalePrototype final : public PrototypeObject<LocalePrototype, Locale> {
     JS_PROTOTYPE_OBJECT(LocalePrototype, Locale, Intl.Locale);
 
 public:
-    explicit LocalePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~LocalePrototype() override = default;
 
 private:
+    explicit LocalePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(maximize);
     JS_DECLARE_NATIVE_FUNCTION(minimize);
     JS_DECLARE_NATIVE_FUNCTION(to_string);

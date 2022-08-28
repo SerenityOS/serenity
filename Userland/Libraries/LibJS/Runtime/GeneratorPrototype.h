@@ -16,11 +16,12 @@ class GeneratorPrototype final : public PrototypeObject<GeneratorPrototype, Gene
     JS_PROTOTYPE_OBJECT(GeneratorPrototype, GeneratorObject, Generator);
 
 public:
-    explicit GeneratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~GeneratorPrototype() override = default;
 
 private:
+    explicit GeneratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
     JS_DECLARE_NATIVE_FUNCTION(return_);
     JS_DECLARE_NATIVE_FUNCTION(throw_);

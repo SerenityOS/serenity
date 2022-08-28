@@ -16,7 +16,6 @@ class ArrayIterator final : public Object {
 public:
     static ArrayIterator* create(Realm&, Value array, Object::PropertyKind iteration_kind);
 
-    explicit ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~ArrayIterator() override = default;
 
     Value array() const { return m_array; }
@@ -25,6 +24,8 @@ public:
 
 private:
     friend class ArrayIteratorPrototype;
+
+    ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

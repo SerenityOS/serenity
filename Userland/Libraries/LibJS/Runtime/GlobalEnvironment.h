@@ -14,8 +14,6 @@ class GlobalEnvironment final : public Environment {
     JS_ENVIRONMENT(GlobalEnvironment, Environment);
 
 public:
-    GlobalEnvironment(Object&, Object& this_value);
-
     virtual bool has_this_binding() const final { return true; }
     virtual ThrowCompletionOr<Value> get_this_binding(VM&) const final;
 
@@ -40,6 +38,8 @@ public:
     ThrowCompletionOr<void> create_global_function_binding(FlyString const& name, Value, bool can_be_deleted);
 
 private:
+    GlobalEnvironment(Object&, Object& this_value);
+
     virtual bool is_global_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 

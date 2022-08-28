@@ -21,7 +21,6 @@ class WeakSet final
 public:
     static WeakSet* create(Realm&);
 
-    explicit WeakSet(Object& prototype);
     virtual ~WeakSet() override = default;
 
     HashTable<Cell*> const& values() const { return m_values; };
@@ -30,6 +29,8 @@ public:
     virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
+    explicit WeakSet(Object& prototype);
+
     HashTable<Cell*> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
 };
 

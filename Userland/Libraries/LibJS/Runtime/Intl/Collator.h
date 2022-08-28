@@ -43,7 +43,6 @@ public:
         return AK::Array { "co"sv, "kf"sv, "kn"sv };
     }
 
-    explicit Collator(Object& prototype);
     virtual ~Collator() override = default;
 
     String const& locale() const { return m_locale; }
@@ -74,6 +73,8 @@ public:
     void set_bound_compare(CollatorCompareFunction* bound_compare) { m_bound_compare = bound_compare; }
 
 private:
+    explicit Collator(Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     String m_locale;                                      // [[Locale]]

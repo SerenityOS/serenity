@@ -15,11 +15,12 @@ class SegmenterPrototype final : public PrototypeObject<SegmenterPrototype, Segm
     JS_PROTOTYPE_OBJECT(SegmenterPrototype, Segmenter, Segmenter);
 
 public:
-    explicit SegmenterPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~SegmenterPrototype() override = default;
 
 private:
+    explicit SegmenterPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(segment);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };

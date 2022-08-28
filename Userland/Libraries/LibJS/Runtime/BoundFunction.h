@@ -17,7 +17,6 @@ class BoundFunction final : public FunctionObject {
 public:
     static ThrowCompletionOr<BoundFunction*> create(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);
 
-    BoundFunction(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
     virtual ~BoundFunction() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
@@ -32,6 +31,8 @@ public:
     Vector<Value> const& bound_arguments() const { return m_bound_arguments; }
 
 private:
+    BoundFunction(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     FunctionObject* m_bound_target_function { nullptr }; // [[BoundTargetFunction]]

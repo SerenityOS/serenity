@@ -15,11 +15,12 @@ class FinalizationRegistryPrototype final : public PrototypeObject<FinalizationR
     JS_PROTOTYPE_OBJECT(FinalizationRegistryPrototype, FinalizationRegistry, FinalizationRegistry);
 
 public:
-    FinalizationRegistryPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~FinalizationRegistryPrototype() override = default;
 
 private:
+    explicit FinalizationRegistryPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(cleanup_some);
     JS_DECLARE_NATIVE_FUNCTION(register_);
     JS_DECLARE_NATIVE_FUNCTION(unregister);

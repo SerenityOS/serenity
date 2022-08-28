@@ -15,7 +15,6 @@ class ZonedDateTime final : public Object {
     JS_OBJECT(ZonedDateTime, Object);
 
 public:
-    ZonedDateTime(BigInt const& nanoseconds, Object& time_zone, Object& calendar, Object& prototype);
     virtual ~ZonedDateTime() override = default;
 
     [[nodiscard]] BigInt const& nanoseconds() const { return m_nanoseconds; }
@@ -25,6 +24,8 @@ public:
     [[nodiscard]] Object& calendar() { return m_calendar; }
 
 private:
+    ZonedDateTime(BigInt const& nanoseconds, Object& time_zone, Object& calendar, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     // 6.4 Properties of Temporal.ZonedDateTime Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances

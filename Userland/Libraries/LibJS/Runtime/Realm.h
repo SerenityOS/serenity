@@ -27,8 +27,6 @@ public:
         virtual ~HostDefined() = default;
     };
 
-    Realm() = default;
-
     static Realm* create(VM&);
     static ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> initialize_host_defined_realm(VM&, Function<Object*(Realm&)> create_global_object, Function<Object*(Realm&)> create_global_this_value);
 
@@ -49,6 +47,8 @@ public:
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
 private:
+    Realm() = default;
+
     virtual void visit_edges(Visitor&) override;
 
     Intrinsics* m_intrinsics { nullptr };                // [[Intrinsics]]

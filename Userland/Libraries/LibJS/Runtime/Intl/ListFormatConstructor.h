@@ -14,7 +14,6 @@ class ListFormatConstructor final : public NativeFunction {
     JS_OBJECT(ListFormatConstructor, NativeFunction);
 
 public:
-    explicit ListFormatConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ListFormatConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit ListFormatConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);
