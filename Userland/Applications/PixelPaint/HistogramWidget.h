@@ -24,7 +24,7 @@ public:
     void set_color_at_mouseposition(Color);
 
 private:
-    HistogramWidget();
+    HistogramWidget() = default;
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
