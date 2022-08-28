@@ -42,7 +42,7 @@ JS::Realm& EnvironmentSettingsObject::realm()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-global
-JS::GlobalObject& EnvironmentSettingsObject::global_object()
+JS::Object& EnvironmentSettingsObject::global_object()
 {
     // An environment settings object's Realm then has a [[GlobalObject]] field, which contains the environment settings object's global object.
     return realm().global_object();
@@ -294,7 +294,7 @@ JS::Realm& incumbent_realm()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-incumbent-global
-JS::GlobalObject& incumbent_global_object()
+JS::Object& incumbent_global_object()
 {
     // Similarly, the incumbent global object is the global object of the incumbent settings object.
     return incumbent_settings_object().global_object();
@@ -311,7 +311,7 @@ EnvironmentSettingsObject& current_settings_object()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#current-global-object
-JS::GlobalObject& current_global_object()
+JS::Object& current_global_object()
 {
     auto& event_loop = HTML::main_thread_event_loop();
     auto& vm = event_loop.vm();
@@ -341,7 +341,7 @@ EnvironmentSettingsObject& relevant_settings_object(DOM::Node const& node)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global
-JS::GlobalObject& relevant_global_object(JS::Object const& object)
+JS::Object& relevant_global_object(JS::Object const& object)
 {
     // Similarly, the relevant global object for a platform object o is the global object of the relevant Realm for o.
     return relevant_realm(object).global_object();

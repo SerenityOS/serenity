@@ -32,7 +32,7 @@ Realm* Realm::create(VM& vm)
 }
 
 // 9.6 InitializeHostDefinedRealm ( ), https://tc39.es/ecma262/#sec-initializehostdefinedrealm
-ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_defined_realm(VM& vm, Function<GlobalObject*(Realm&)> create_global_object, Function<GlobalObject*(Realm&)> create_global_this_value)
+ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_defined_realm(VM& vm, Function<Object*(Realm&)> create_global_object, Function<Object*(Realm&)> create_global_this_value)
 {
     DeferGC defer_gc(vm.heap());
 
@@ -57,14 +57,14 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
     // 7. If the host requires use of an exotic object to serve as realm's global object,
     //    let global be such an object created in a host-defined manner.
     //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
-    GlobalObject* global = nullptr;
+    Object* global = nullptr;
     if (create_global_object)
         global = create_global_object(*realm);
 
     // 8. If the host requires that the this binding in realm's global scope return an object other than the global object,
     //    let thisValue be such an object created in a host-defined manner.
     //    Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.
-    GlobalObject* this_value = nullptr;
+    Object* this_value = nullptr;
     if (create_global_this_value)
         this_value = create_global_this_value(*realm);
 
@@ -82,7 +82,7 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
 }
 
 // 9.3.3 SetRealmGlobalObject ( realmRec, globalObj, thisValue ), https://tc39.es/ecma262/#sec-setrealmglobalobject
-void Realm::set_global_object(GlobalObject* global_object, GlobalObject* this_value)
+void Realm::set_global_object(Object* global_object, Object* this_value)
 {
     // 1. If globalObj is undefined, then
     if (global_object == nullptr) {
