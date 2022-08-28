@@ -835,6 +835,7 @@ GPU::DeviceInfo Device::info() const
         .max_clip_planes = MAX_CLIP_PLANES,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
+        .supports_texture_env_add = true,
     };
 }
 
