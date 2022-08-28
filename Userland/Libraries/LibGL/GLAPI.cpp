@@ -504,6 +504,11 @@ GLubyte const* glGetString(GLenum name)
     return g_gl_context->gl_get_string(name);
 }
 
+void glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
+{
+    g_gl_context->gl_get_shader(shader, pname, params);
+}
+
 void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void* pixels)
 {
     g_gl_context->gl_get_tex_image(target, level, format, type, pixels);
