@@ -21,6 +21,7 @@ class ConsoleGlobalObject final : public JS::GlobalObject {
 
 public:
     ConsoleGlobalObject(JS::Realm&, Web::Bindings::WindowObject&);
+    virtual void initialize(JS::Realm&) override;
     virtual ~ConsoleGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
@@ -34,8 +35,6 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const& name) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
-
-    virtual void initialize_global_object(JS::Realm&) override;
 
 private:
     virtual void visit_edges(Visitor&) override;

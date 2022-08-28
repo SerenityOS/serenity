@@ -57,9 +57,9 @@ WindowObject::WindowObject(JS::Realm& realm, HTML::Window& impl)
     impl.set_wrapper({}, *this);
 }
 
-void WindowObject::initialize_global_object(JS::Realm& realm)
+void WindowObject::initialize(JS::Realm& realm)
 {
-    Base::initialize_global_object(realm);
+    Base::initialize(realm);
 
     Object::set_prototype(&ensure_web_prototype<WindowPrototype>("Window"));
 

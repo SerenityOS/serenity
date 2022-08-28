@@ -19,7 +19,7 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual void initialize_global_object(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GlobalObject() override = default;
 
     $262Object* $262() const { return m_$262; }

@@ -14,9 +14,9 @@
 
 namespace JS::Test262 {
 
-void GlobalObject::initialize_global_object(Realm& realm)
+void GlobalObject::initialize(Realm& realm)
 {
-    Base::initialize_global_object(realm);
+    Base::initialize(realm);
 
     m_$262 = vm().heap().allocate<$262Object>(realm, realm);
 

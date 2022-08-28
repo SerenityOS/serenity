@@ -144,9 +144,10 @@ JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKe
     return Base::internal_set(property_name, value, receiver);
 }
 
-void SheetGlobalObject::initialize_global_object(JS::Realm& realm)
+void SheetGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize_global_object(realm);
+    Base::initialize(realm);
+
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "get_real_cell_contents", get_real_cell_contents, 1, attr);
     define_native_function(realm, "set_real_cell_contents", set_real_cell_contents, 2, attr);
