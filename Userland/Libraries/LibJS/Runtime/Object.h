@@ -25,13 +25,7 @@
 
 namespace JS {
 
-#define JS_OBJECT(class_, base_class)              \
-public:                                            \
-    using Base = base_class;                       \
-    virtual StringView class_name() const override \
-    {                                              \
-        return #class_##sv;                        \
-    }
+#define JS_OBJECT(class_, base_class) JS_CELL(class_, base_class)
 
 struct PrivateElement {
     enum class Kind {

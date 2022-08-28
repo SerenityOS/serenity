@@ -17,10 +17,7 @@ struct Variable {
     DeclarationKind declaration_kind;
 };
 
-#define JS_ENVIRONMENT(class_, base_class) \
-public:                                    \
-    using Base = base_class;               \
-    virtual StringView class_name() const override { return #class_##sv; }
+#define JS_ENVIRONMENT(class_, base_class) JS_CELL(class_, base_class)
 
 class Environment : public Cell {
     JS_CELL(Environment, Cell);
