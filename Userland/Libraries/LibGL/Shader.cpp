@@ -52,15 +52,25 @@ void GLContext::gl_compile_shader(GLuint shader)
 
 GLuint GLContext::gl_create_program()
 {
-    dbgln("gl_create_program() unimplemented ");
-    TODO();
-    return 0;
+    GLuint program_name;
+    m_program_name_allocator.allocate(1, &program_name);
+    auto program = Program::create();
+    m_allocated_programs.set(program_name, program);
+    return program_name;
 }
 
 void GLContext::gl_delete_program(GLuint program)
 {
-    dbgln("gl_delete_program({}) unimplemented ", program);
-    TODO();
+    // "A value of 0 for program will be silently ignored." (https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteProgram.xhtml)
+    if (program == 0)
+        return;
+
+    auto it = m_allocated_programs.find(program);
+    RETURN_WITH_ERROR_IF(it == m_allocated_programs.end(), GL_INVALID_VALUE);
+
+    // FIXME: According to the spec, we should only flag the program for deletion here and delete it once it is not used anymore.
+    m_allocated_programs.remove(it);
+    m_program_name_allocator.free(program);
 }
 
 void GLContext::gl_attach_shader(GLuint program, GLuint shader)
