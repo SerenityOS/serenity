@@ -49,7 +49,8 @@ ErrorOr<void> Program::attach_shader(Shader& shader)
 
 ErrorOr<void> Program::link()
 {
-    TODO();
+    // FIXME: Implement actual program linker
+    m_link_status = true;
     return {};
 }
 
