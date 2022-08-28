@@ -15,11 +15,12 @@ class ListFormatPrototype final : public PrototypeObject<ListFormatPrototype, Li
     JS_PROTOTYPE_OBJECT(ListFormatPrototype, ListFormat, Intl.ListFormat);
 
 public:
-    explicit ListFormatPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ListFormatPrototype() override = default;
 
 private:
+    explicit ListFormatPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(format);
     JS_DECLARE_NATIVE_FUNCTION(format_to_parts);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);

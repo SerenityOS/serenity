@@ -17,7 +17,6 @@ class GeneratorObject final : public Object {
 
 public:
     static ThrowCompletionOr<GeneratorObject*> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
-    GeneratorObject(Realm&, Object& prototype, ExecutionContext);
     virtual void initialize(Realm&) override;
     virtual ~GeneratorObject() override = default;
     void visit_edges(Cell::Visitor&) override;
@@ -26,6 +25,8 @@ public:
     void set_done() { m_done = true; }
 
 private:
+    GeneratorObject(Realm&, Object& prototype, ExecutionContext);
+
     ExecutionContext m_execution_context;
     ECMAScriptFunctionObject* m_generating_function { nullptr };
     Value m_previous_value;

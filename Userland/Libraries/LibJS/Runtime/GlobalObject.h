@@ -19,9 +19,11 @@ class GlobalObject : public Object {
     friend class Intrinsics;
 
 public:
-    explicit GlobalObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~GlobalObject() override;
+
+protected:
+    explicit GlobalObject(Realm&);
 
 private:
     virtual bool is_global_object() const final { return true; }

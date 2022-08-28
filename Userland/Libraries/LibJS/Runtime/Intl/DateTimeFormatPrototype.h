@@ -15,11 +15,12 @@ class DateTimeFormatPrototype final : public PrototypeObject<DateTimeFormatProto
     JS_PROTOTYPE_OBJECT(DateTimeFormatPrototype, DateTimeFormat, Intl.DateTimeFormat);
 
 public:
-    explicit DateTimeFormatPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DateTimeFormatPrototype() override = default;
 
 private:
+    explicit DateTimeFormatPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(format);
     JS_DECLARE_NATIVE_FUNCTION(format_to_parts);
     JS_DECLARE_NATIVE_FUNCTION(format_range);

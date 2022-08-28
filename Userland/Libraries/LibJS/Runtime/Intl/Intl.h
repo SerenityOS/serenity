@@ -14,11 +14,12 @@ class Intl final : public Object {
     JS_OBJECT(Intl, Object);
 
 public:
-    explicit Intl(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~Intl() override = default;
 
 private:
+    explicit Intl(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(get_canonical_locales);
     JS_DECLARE_NATIVE_FUNCTION(supported_values_of);
 };

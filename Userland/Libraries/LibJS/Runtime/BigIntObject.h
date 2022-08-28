@@ -17,13 +17,14 @@ class BigIntObject final : public Object {
 public:
     static BigIntObject* create(Realm&, BigInt&);
 
-    BigIntObject(BigInt&, Object& prototype);
     virtual ~BigIntObject() override = default;
 
     BigInt const& bigint() const { return m_bigint; }
     BigInt& bigint() { return m_bigint; }
 
 private:
+    BigIntObject(BigInt&, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     BigInt& m_bigint;

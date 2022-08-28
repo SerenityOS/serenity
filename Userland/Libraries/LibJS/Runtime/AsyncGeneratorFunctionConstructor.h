@@ -14,7 +14,6 @@ class AsyncGeneratorFunctionConstructor final : public NativeFunction {
     JS_OBJECT(AsyncGeneratorFunctionConstructor, NativeFunction);
 
 public:
-    explicit AsyncGeneratorFunctionConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~AsyncGeneratorFunctionConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit AsyncGeneratorFunctionConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 };
 

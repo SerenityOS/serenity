@@ -14,7 +14,6 @@ class AggregateErrorConstructor final : public NativeFunction {
     JS_OBJECT(AggregateErrorConstructor, NativeFunction);
 
 public:
-    explicit AggregateErrorConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~AggregateErrorConstructor() override = default;
 
@@ -22,6 +21,7 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit AggregateErrorConstructor(Realm&);
     virtual bool has_constructor() const override { return true; }
 };
 

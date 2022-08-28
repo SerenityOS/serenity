@@ -15,11 +15,12 @@ class PlainDatePrototype final : public PrototypeObject<PlainDatePrototype, Plai
     JS_PROTOTYPE_OBJECT(PlainDatePrototype, PlainDate, Temporal.PlainDate);
 
 public:
-    explicit PlainDatePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~PlainDatePrototype() override = default;
 
 private:
+    explicit PlainDatePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(year_getter);
     JS_DECLARE_NATIVE_FUNCTION(month_getter);

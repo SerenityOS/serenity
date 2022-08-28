@@ -29,9 +29,6 @@ class DeclarativeEnvironment : public Environment {
 public:
     static DeclarativeEnvironment* create_for_per_iteration_bindings(Badge<ForStatement>, DeclarativeEnvironment& other, size_t bindings_size);
 
-    DeclarativeEnvironment();
-    explicit DeclarativeEnvironment(Environment* parent_environment);
-    explicit DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings);
     virtual ~DeclarativeEnvironment() override = default;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
@@ -62,6 +59,10 @@ public:
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, size_t index, Value, bool strict);
 
 protected:
+    DeclarativeEnvironment();
+    explicit DeclarativeEnvironment(Environment* parent_environment);
+    DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings);
+
     virtual void visit_edges(Visitor&) override;
 
 private:

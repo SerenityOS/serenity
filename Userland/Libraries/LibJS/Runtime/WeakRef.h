@@ -21,8 +21,6 @@ public:
     static WeakRef* create(Realm&, Object&);
     static WeakRef* create(Realm&, Symbol&);
 
-    explicit WeakRef(Object&, Object& prototype);
-    explicit WeakRef(Symbol&, Object& prototype);
     virtual ~WeakRef() override = default;
 
     auto const& value() const { return m_value; };
@@ -32,6 +30,9 @@ public:
     virtual void remove_dead_cells(Badge<Heap>) override;
 
 private:
+    explicit WeakRef(Object&, Object& prototype);
+    explicit WeakRef(Symbol&, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     Variant<Object*, Symbol*, Empty> m_value;

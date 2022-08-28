@@ -15,11 +15,12 @@ class PluralRulesPrototype final : public PrototypeObject<PluralRulesPrototype, 
     JS_PROTOTYPE_OBJECT(PluralRulesPrototype, PluralRules, Intl.PluralRules);
 
 public:
-    explicit PluralRulesPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~PluralRulesPrototype() override = default;
 
 private:
+    explicit PluralRulesPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(select);
     JS_DECLARE_NATIVE_FUNCTION(select_range);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);

@@ -78,7 +78,6 @@ public:
         return vm.heap().allocate_without_realm<PromiseReaction>(type, capability, move(handler));
     }
 
-    PromiseReaction(Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler);
     virtual ~PromiseReaction() = default;
 
     Type type() const { return m_type; }
@@ -88,6 +87,8 @@ public:
     Optional<JobCallback> const& handler() const { return m_handler; }
 
 private:
+    PromiseReaction(Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler);
+
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;

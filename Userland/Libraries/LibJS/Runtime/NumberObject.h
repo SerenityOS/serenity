@@ -16,10 +16,12 @@ class NumberObject : public Object {
 public:
     static NumberObject* create(Realm&, double);
 
-    NumberObject(double, Object& prototype);
     virtual ~NumberObject() override = default;
 
     double number() const { return m_value; }
+
+protected:
+    NumberObject(double, Object& prototype);
 
 private:
     double m_value { 0 };

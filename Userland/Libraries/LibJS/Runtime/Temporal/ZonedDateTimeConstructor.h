@@ -14,7 +14,6 @@ class ZonedDateTimeConstructor final : public NativeFunction {
     JS_OBJECT(ZonedDateTimeConstructor, NativeFunction);
 
 public:
-    explicit ZonedDateTimeConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ZonedDateTimeConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit ZonedDateTimeConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(from);

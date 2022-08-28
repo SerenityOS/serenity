@@ -14,7 +14,6 @@ class DateTimeFormatConstructor final : public NativeFunction {
     JS_OBJECT(DateTimeFormatConstructor, NativeFunction);
 
 public:
-    explicit DateTimeFormatConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DateTimeFormatConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit DateTimeFormatConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);

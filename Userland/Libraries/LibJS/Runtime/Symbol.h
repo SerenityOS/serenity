@@ -18,7 +18,6 @@ class Symbol final : public Cell {
     AK_MAKE_NONMOVABLE(Symbol);
 
 public:
-    Symbol(Optional<String>, bool);
     virtual ~Symbol() = default;
 
     String description() const { return m_description.value_or(""); }
@@ -27,6 +26,8 @@ public:
     String to_string() const { return String::formatted("Symbol({})", description()); }
 
 private:
+    Symbol(Optional<String>, bool);
+
     Optional<String> m_description;
     bool m_is_global;
 };

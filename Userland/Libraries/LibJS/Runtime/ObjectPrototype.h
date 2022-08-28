@@ -15,7 +15,6 @@ class ObjectPrototype final : public Object {
     JS_OBJECT(ObjectPrototype, Object);
 
 public:
-    explicit ObjectPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ObjectPrototype() override = default;
 
@@ -27,6 +26,8 @@ public:
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 
 private:
+    explicit ObjectPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(has_own_property);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);

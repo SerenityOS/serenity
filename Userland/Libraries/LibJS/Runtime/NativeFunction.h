@@ -23,8 +23,6 @@ public:
     static NativeFunction* create(Realm&, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
     static NativeFunction* create(Realm&, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&)>);
 
-    NativeFunction(Function<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
-    NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
     virtual void initialize(Realm&) override { }
     virtual ~NativeFunction() override = default;
 
@@ -46,6 +44,8 @@ public:
 
 protected:
     NativeFunction(FlyString name, Object& prototype);
+    NativeFunction(Function<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
+    NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
 private:

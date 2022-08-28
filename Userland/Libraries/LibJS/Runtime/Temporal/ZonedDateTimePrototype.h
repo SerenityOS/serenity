@@ -15,11 +15,12 @@ class ZonedDateTimePrototype final : public PrototypeObject<ZonedDateTimePrototy
     JS_PROTOTYPE_OBJECT(ZonedDateTimePrototype, ZonedDateTime, Temporal.ZonedDateTime);
 
 public:
-    explicit ZonedDateTimePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ZonedDateTimePrototype() override = default;
 
 private:
+    explicit ZonedDateTimePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(time_zone_getter);
     JS_DECLARE_NATIVE_FUNCTION(year_getter);

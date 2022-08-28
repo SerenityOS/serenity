@@ -14,7 +14,6 @@ class CalendarConstructor final : public NativeFunction {
     JS_OBJECT(CalendarConstructor, NativeFunction);
 
 public:
-    explicit CalendarConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~CalendarConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit CalendarConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(from);

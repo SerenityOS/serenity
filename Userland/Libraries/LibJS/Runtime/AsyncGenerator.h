@@ -26,10 +26,11 @@ public:
         Completed,
     };
 
-    explicit AsyncGenerator(Object& prototype);
     virtual ~AsyncGenerator() override = default;
 
 private:
+    explicit AsyncGenerator(Object& prototype);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     // At the time of constructing an AsyncGenerator, we still need to point to an

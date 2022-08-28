@@ -16,10 +16,12 @@ class BooleanObject : public Object {
 public:
     static BooleanObject* create(Realm&, bool);
 
-    BooleanObject(bool, Object& prototype);
     virtual ~BooleanObject() override = default;
 
     bool boolean() const { return m_value; }
+
+protected:
+    BooleanObject(bool, Object& prototype);
 
 private:
     bool m_value { false };

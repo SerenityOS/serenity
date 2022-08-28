@@ -56,7 +56,6 @@ public:
         StripIfInteger,
     };
 
-    NumberFormatBase(Object& prototype);
     virtual ~NumberFormatBase() override = default;
 
     String const& locale() const { return m_locale; }
@@ -98,6 +97,9 @@ public:
     TrailingZeroDisplay trailing_zero_display() const { return m_trailing_zero_display; }
     StringView trailing_zero_display_string() const;
     void set_trailing_zero_display(StringView trailing_zero_display);
+
+protected:
+    explicit NumberFormatBase(Object& prototype);
 
 private:
     String m_locale;                                                              // [[Locale]]
@@ -174,7 +176,6 @@ public:
         return AK::Array { "nu"sv };
     }
 
-    NumberFormat(Object& prototype);
     virtual ~NumberFormat() override = default;
 
     String const& numbering_system() const { return m_numbering_system; }
@@ -233,6 +234,8 @@ public:
     Unicode::NumberFormat compact_format() const { return *m_compact_format; }
 
 private:
+    explicit NumberFormat(Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     String m_locale;                                     // [[Locale]]

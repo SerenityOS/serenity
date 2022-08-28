@@ -20,12 +20,13 @@ class Calendar final : public Object {
     JS_OBJECT(Calendar, Object);
 
 public:
-    Calendar(String identifier, Object& prototype);
     virtual ~Calendar() override = default;
 
     [[nodiscard]] String const& identifier() const { return m_identifier; }
 
 private:
+    Calendar(String identifier, Object& prototype);
+
     // 12.5 Properties of Temporal.Calendar Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-calendar-instances
     String m_identifier; // [[Identifier]]
 };

@@ -14,7 +14,6 @@ class DurationFormatConstructor final : public NativeFunction {
     JS_OBJECT(DurationFormatConstructor, NativeFunction);
 
 public:
-    explicit DurationFormatConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DurationFormatConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit DurationFormatConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);

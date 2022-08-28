@@ -15,11 +15,12 @@ class PlainTimePrototype final : public PrototypeObject<PlainTimePrototype, Plai
     JS_PROTOTYPE_OBJECT(PlainTimePrototype, PlainTime, Temporal.PlainTime);
 
 public:
-    explicit PlainTimePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~PlainTimePrototype() override = default;
 
 private:
+    explicit PlainTimePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(hour_getter);
     JS_DECLARE_NATIVE_FUNCTION(minute_getter);

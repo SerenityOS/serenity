@@ -14,7 +14,6 @@ class RegExpConstructor final : public NativeFunction {
     JS_OBJECT(RegExpConstructor, NativeFunction);
 
 public:
-    explicit RegExpConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~RegExpConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit RegExpConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(symbol_species_getter);

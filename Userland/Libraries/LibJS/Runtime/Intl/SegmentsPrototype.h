@@ -15,11 +15,12 @@ class SegmentsPrototype final : public PrototypeObject<SegmentsPrototype, Segmen
     JS_PROTOTYPE_OBJECT(SegmentsPrototype, Segments, Segments);
 
 public:
-    explicit SegmentsPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~SegmentsPrototype() override = default;
 
 private:
+    explicit SegmentsPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(containing);
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };

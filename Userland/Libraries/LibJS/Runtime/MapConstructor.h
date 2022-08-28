@@ -14,7 +14,6 @@ class MapConstructor final : public NativeFunction {
     JS_OBJECT(MapConstructor, NativeFunction);
 
 public:
-    explicit MapConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~MapConstructor() override = default;
 
@@ -22,6 +21,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;
 
 private:
+    explicit MapConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(symbol_species_getter);

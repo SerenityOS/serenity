@@ -15,11 +15,12 @@ class DatePrototype final : public PrototypeObject<DatePrototype, Date> {
     JS_PROTOTYPE_OBJECT(DatePrototype, Date, Date);
 
 public:
-    explicit DatePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~DatePrototype() override = default;
 
 private:
+    explicit DatePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(get_date);
     JS_DECLARE_NATIVE_FUNCTION(get_day);
     JS_DECLARE_NATIVE_FUNCTION(get_full_year);

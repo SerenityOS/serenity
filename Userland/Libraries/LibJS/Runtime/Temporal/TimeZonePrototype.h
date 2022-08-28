@@ -15,11 +15,12 @@ class TimeZonePrototype final : public PrototypeObject<TimeZonePrototype, TimeZo
     JS_PROTOTYPE_OBJECT(TimeZonePrototype, TimeZone, Temporal.TimeZone);
 
 public:
-    explicit TimeZonePrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~TimeZonePrototype() override = default;
 
 private:
+    explicit TimeZonePrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(id_getter);
     JS_DECLARE_NATIVE_FUNCTION(get_offset_nanoseconds_for);
     JS_DECLARE_NATIVE_FUNCTION(get_offset_string_for);

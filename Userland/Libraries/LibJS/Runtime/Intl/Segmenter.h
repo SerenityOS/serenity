@@ -21,7 +21,6 @@ public:
         Sentence,
     };
 
-    explicit Segmenter(Object& prototype);
     virtual ~Segmenter() override = default;
 
     String const& locale() const { return m_locale; }
@@ -32,6 +31,8 @@ public:
     StringView segmenter_granularity_string() const;
 
 private:
+    explicit Segmenter(Object& prototype);
+
     String m_locale;                                                                 // [[Locale]]
     SegmenterGranularity m_segmenter_granularity { SegmenterGranularity::Grapheme }; // [[SegmenterGranularity]]
 };

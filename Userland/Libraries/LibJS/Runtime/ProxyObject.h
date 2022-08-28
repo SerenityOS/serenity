@@ -18,7 +18,6 @@ class ProxyObject final : public FunctionObject {
 public:
     static ProxyObject* create(Realm&, Object& target, Object& handler);
 
-    ProxyObject(Object& target, Object& handler, Object& prototype);
     virtual ~ProxyObject() override = default;
 
     virtual FlyString const& name() const override;
@@ -47,6 +46,8 @@ public:
     virtual ThrowCompletionOr<Object*> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;
 
 private:
+    ProxyObject(Object& target, Object& handler, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     virtual bool is_function() const override { return m_target.is_function(); }

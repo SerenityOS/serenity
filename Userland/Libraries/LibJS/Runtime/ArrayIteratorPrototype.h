@@ -15,11 +15,12 @@ class ArrayIteratorPrototype final : public PrototypeObject<ArrayIteratorPrototy
     JS_PROTOTYPE_OBJECT(ArrayIteratorPrototype, ArrayIterator, ArrayIterator);
 
 public:
-    ArrayIteratorPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ArrayIteratorPrototype() override = default;
 
 private:
+    explicit ArrayIteratorPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(next);
 };
 

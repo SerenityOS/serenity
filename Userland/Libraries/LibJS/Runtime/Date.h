@@ -18,7 +18,6 @@ public:
     static Date* create(Realm&, double date_value);
     static Date* now(VM&);
 
-    Date(double date_value, Object& prototype);
     virtual ~Date() override = default;
 
     double date_value() const { return m_date_value; }
@@ -27,6 +26,8 @@ public:
     String iso_date_string() const;
 
 private:
+    Date(double date_value, Object& prototype);
+
     double m_date_value { 0 }; // [[DateValue]]
 };
 

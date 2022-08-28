@@ -16,13 +16,14 @@ class CollatorCompareFunction : public NativeFunction {
 public:
     static CollatorCompareFunction* create(Realm&, Collator&);
 
-    CollatorCompareFunction(Realm&, Collator&);
     virtual void initialize(Realm&) override;
     virtual ~CollatorCompareFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
 
 private:
+    CollatorCompareFunction(Realm&, Collator&);
+
     virtual void visit_edges(Visitor&) override;
 
     Collator& m_collator; // [[Collator]]

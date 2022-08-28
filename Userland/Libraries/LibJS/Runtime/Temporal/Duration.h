@@ -22,7 +22,6 @@ class Duration final : public Object {
     JS_OBJECT(Duration, Object);
 
 public:
-    Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype);
     virtual ~Duration() override = default;
 
     [[nodiscard]] double years() const { return m_years; }
@@ -37,6 +36,8 @@ public:
     [[nodiscard]] double nanoseconds() const { return m_nanoseconds; }
 
 private:
+    Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype);
+
     // 7.4 Properties of Temporal.Duration Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances
     double m_years;        // [[Years]]
     double m_months;       // [[Months]]

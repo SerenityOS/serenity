@@ -14,7 +14,6 @@ class JSONObject final : public Object {
     JS_OBJECT(JSONObject, Object);
 
 public:
-    explicit JSONObject(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~JSONObject() override = default;
 
@@ -25,6 +24,8 @@ public:
     static Value parse_json_value(VM&, JsonValue const&);
 
 private:
+    explicit JSONObject(Realm&);
+
     struct StringifyState {
         FunctionObject* replacer_function { nullptr };
         HashTable<Object*> seen_objects;

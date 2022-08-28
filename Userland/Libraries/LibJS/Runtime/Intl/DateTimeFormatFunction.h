@@ -18,13 +18,14 @@ class DateTimeFormatFunction final : public NativeFunction {
 public:
     static DateTimeFormatFunction* create(Realm&, DateTimeFormat&);
 
-    explicit DateTimeFormatFunction(DateTimeFormat&, Object& prototype);
     virtual ~DateTimeFormatFunction() override = default;
     virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
 
 private:
+    explicit DateTimeFormatFunction(DateTimeFormat&, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     DateTimeFormat& m_date_time_format; // [[DateTimeFormat]]

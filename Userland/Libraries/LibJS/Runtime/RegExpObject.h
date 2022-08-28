@@ -39,9 +39,6 @@ public:
     static RegExpObject* create(Realm&);
     static RegExpObject* create(Realm&, Regex<ECMA262> regex, String pattern, String flags);
 
-    RegExpObject(Object& prototype);
-    RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);
-
     ThrowCompletionOr<RegExpObject*> regexp_initialize(VM&, Value pattern, Value flags);
     String escape_regexp_pattern() const;
 
@@ -54,6 +51,9 @@ public:
     Regex<ECMA262> const& regex() const { return *m_regex; }
 
 private:
+    RegExpObject(Object& prototype);
+    RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);
+
     String m_pattern;
     String m_flags;
     Optional<Regex<ECMA262>> m_regex;

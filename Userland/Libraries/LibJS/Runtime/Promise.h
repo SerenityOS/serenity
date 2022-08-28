@@ -29,7 +29,6 @@ public:
 
     static Promise* create(Realm&);
 
-    explicit Promise(Object& prototype);
     virtual ~Promise() = default;
 
     State state() const { return m_state; }
@@ -48,6 +47,8 @@ public:
     bool is_handled() const { return m_is_handled; }
 
 protected:
+    explicit Promise(Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
 private:

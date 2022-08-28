@@ -414,7 +414,7 @@ public:
         return { move(keys) };
     }
 
-    Span<const UnderlyingBufferDataType> data() const
+    Span<UnderlyingBufferDataType const> data() const
     {
         return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
@@ -471,22 +471,25 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
             Realm&, u32 length, FunctionObject& new_target);                                \
         static ThrowCompletionOr<ClassName*> create(Realm&, u32 length);                    \
         static ClassName* create(Realm&, u32 length, ArrayBuffer& buffer);                  \
-        ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
         virtual FlyString const& element_name() const override;                             \
+                                                                                            \
+    protected:                                                                              \
+        ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                \
     };                                                                                      \
     class PrototypeName final : public Object {                                             \
         JS_OBJECT(PrototypeName, Object);                                                   \
                                                                                             \
     public:                                                                                 \
-        PrototypeName(Realm&);                                                              \
         virtual void initialize(Realm&) override;                                           \
         virtual ~PrototypeName() override;                                                  \
+                                                                                            \
+    private:                                                                                \
+        PrototypeName(Realm&);                                                              \
     };                                                                                      \
     class ConstructorName final : public TypedArrayConstructor {                            \
         JS_OBJECT(ConstructorName, TypedArrayConstructor);                                  \
                                                                                             \
     public:                                                                                 \
-        explicit ConstructorName(Realm&);                                                   \
         virtual void initialize(Realm&) override;                                           \
         virtual ~ConstructorName() override;                                                \
                                                                                             \
@@ -494,6 +497,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;  \
                                                                                             \
     private:                                                                                \
+        explicit ConstructorName(Realm&);                                                   \
         virtual bool has_constructor() const override                                       \
         {                                                                                   \
             return true;                                                                    \

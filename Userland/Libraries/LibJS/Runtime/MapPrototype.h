@@ -15,11 +15,12 @@ class MapPrototype final : public PrototypeObject<MapPrototype, Map> {
     JS_PROTOTYPE_OBJECT(MapPrototype, Map, Map);
 
 public:
-    MapPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~MapPrototype() override = default;
 
 private:
+    explicit MapPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(clear);
     JS_DECLARE_NATIVE_FUNCTION(delete_);
     JS_DECLARE_NATIVE_FUNCTION(entries);

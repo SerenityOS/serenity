@@ -28,7 +28,6 @@ public:
         Unit,
     };
 
-    ListFormat(Object& prototype);
     virtual ~ListFormat() override = default;
 
     String const& locale() const { return m_locale; }
@@ -43,6 +42,8 @@ public:
     StringView style_string() const { return Unicode::style_to_string(m_style); }
 
 private:
+    explicit ListFormat(Object& prototype);
+
     String m_locale;                                 // [[Locale]]
     Type m_type { Type::Invalid };                   // [[Type]]
     Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]

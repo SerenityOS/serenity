@@ -19,11 +19,12 @@ class RegExpPrototype final : public PrototypeObject<RegExpPrototype, RegExpObje
     JS_PROTOTYPE_OBJECT(RegExpPrototype, RegExpObject, RegExp);
 
 public:
-    explicit RegExpPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~RegExpPrototype() override = default;
 
 private:
+    explicit RegExpPrototype(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(exec);
     JS_DECLARE_NATIVE_FUNCTION(flags);
     JS_DECLARE_NATIVE_FUNCTION(symbol_match);

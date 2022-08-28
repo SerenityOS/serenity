@@ -15,7 +15,6 @@ class ProxyConstructor final : public NativeFunction {
     JS_OBJECT(ProxyConstructor, NativeFunction);
 
 public:
-    explicit ProxyConstructor(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~ProxyConstructor() override = default;
 
@@ -23,6 +22,8 @@ public:
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
+    explicit ProxyConstructor(Realm&);
+
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(revocable);

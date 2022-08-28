@@ -14,12 +14,13 @@ class IsHTMLDDA final : public NativeFunction {
     JS_OBJECT(IsHTMLDDA, NativeFunction);
 
 public:
-    explicit IsHTMLDDA(Realm&);
     virtual ~IsHTMLDDA() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
 
 private:
+    explicit IsHTMLDDA(Realm&);
+
     virtual bool is_htmldda() const override { return true; }
 };
 

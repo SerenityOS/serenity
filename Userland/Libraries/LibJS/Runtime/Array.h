@@ -44,6 +44,9 @@ public:
 
     [[nodiscard]] bool length_is_writable() const { return m_length_writable; };
 
+protected:
+    explicit Array(Object& prototype);
+
 private:
     ThrowCompletionOr<bool> set_length(PropertyDescriptor const&);
 

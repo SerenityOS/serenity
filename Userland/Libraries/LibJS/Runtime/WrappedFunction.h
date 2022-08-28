@@ -17,7 +17,6 @@ class WrappedFunction final : public FunctionObject {
 public:
     static ThrowCompletionOr<WrappedFunction*> create(Realm&, Realm& caller_realm, FunctionObject& target_function);
 
-    WrappedFunction(Realm&, FunctionObject&, Object& prototype);
     virtual ~WrappedFunction() = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
@@ -31,6 +30,8 @@ public:
     FunctionObject& wrapped_target_function() { return m_wrapped_target_function; }
 
 private:
+    WrappedFunction(Realm&, FunctionObject&, Object& prototype);
+
     virtual void visit_edges(Visitor&) override;
 
     // Internal Slots of Wrapped Function Exotic Objects, https://tc39.es/proposal-shadowrealm/#table-internal-slots-of-wrapped-function-exotic-objects

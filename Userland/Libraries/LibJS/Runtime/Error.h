@@ -26,7 +26,6 @@ public:
     static Error* create(Realm&);
     static Error* create(Realm&, String const& message);
 
-    explicit Error(Object& prototype);
     virtual ~Error() override = default;
 
     [[nodiscard]] String stack_string() const;
@@ -34,6 +33,9 @@ public:
     ThrowCompletionOr<void> install_error_cause(Value options);
 
     Vector<TracebackFrame, 32> const& traceback() const { return m_traceback; }
+
+protected:
+    explicit Error(Object& prototype);
 
 private:
     void populate_stack();

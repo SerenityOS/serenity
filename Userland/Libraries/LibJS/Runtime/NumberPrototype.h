@@ -14,7 +14,6 @@ class NumberPrototype final : public NumberObject {
     JS_OBJECT(NumberPrototype, NumberObject);
 
 public:
-    explicit NumberPrototype(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~NumberPrototype() override = default;
 
@@ -24,6 +23,9 @@ public:
     JS_DECLARE_NATIVE_FUNCTION(to_precision);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
+
+private:
+    explicit NumberPrototype(Realm&);
 };
 
 }

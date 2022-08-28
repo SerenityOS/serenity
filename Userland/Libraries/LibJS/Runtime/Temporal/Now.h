@@ -15,11 +15,12 @@ class Now final : public Object {
     JS_OBJECT(Now, Object);
 
 public:
-    explicit Now(Realm&);
     virtual void initialize(Realm&) override;
     virtual ~Now() override = default;
 
 private:
+    explicit Now(Realm&);
+
     JS_DECLARE_NATIVE_FUNCTION(time_zone);
     JS_DECLARE_NATIVE_FUNCTION(instant);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_time);

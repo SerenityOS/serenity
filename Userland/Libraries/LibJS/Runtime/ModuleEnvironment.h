@@ -17,8 +17,6 @@ class ModuleEnvironment final : public DeclarativeEnvironment {
     JS_ENVIRONMENT(ModuleEnvironment, DeclarativeEnvironment);
 
 public:
-    ModuleEnvironment(Environment* outer_environment);
-
     // Note: Module Environment Records support all of the declarative Environment Record methods listed
     //       in Table 18 and share the same specifications for all of those methods except for
     //       GetBindingValue, DeleteBinding, HasThisBinding and GetThisBinding.
@@ -36,6 +34,8 @@ public:
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
 
 private:
+    explicit ModuleEnvironment(Environment* outer_environment);
+
     struct IndirectBinding {
         FlyString name;
         Module* module;

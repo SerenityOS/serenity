@@ -18,8 +18,6 @@ class Intrinsics final : public Cell {
 public:
     static Intrinsics* create(Realm&);
 
-    Intrinsics() = default;
-
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
     Shape* new_object_shape() { return m_new_object_shape; }
@@ -114,6 +112,8 @@ public:
 #undef __JS_ENUMERATE
 
 private:
+    Intrinsics() = default;
+
     virtual void visit_edges(Visitor&) override;
 
     void initialize_intrinsics(Realm&);
