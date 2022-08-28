@@ -20,7 +20,8 @@ public:                                            \
     virtual StringView class_name() const override \
     {                                              \
         return #class_##sv;                        \
-    }
+    }                                              \
+    friend class JS::Heap;
 
 class Cell {
     AK_MAKE_NONCOPYABLE(Cell);
