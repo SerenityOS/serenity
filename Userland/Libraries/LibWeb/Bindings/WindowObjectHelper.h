@@ -376,9 +376,9 @@
 
 #define ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(interface_name, constructor_name, prototype_name)                                \
     {                                                                                                                                \
-        auto& constructor = ensure_web_constructor<constructor_name>(#interface_name);                                               \
+        auto& constructor = ensure_web_constructor<Bindings::constructor_name>(#interface_name);                                     \
         constructor.define_direct_property(vm.names.name, js_string(vm, #interface_name), JS::Attribute::Configurable);              \
-        auto& prototype = ensure_web_prototype<prototype_name>(#interface_name);                                                     \
+        auto& prototype = ensure_web_prototype<Bindings::prototype_name>(#interface_name);                                           \
         prototype.define_direct_property(vm.names.constructor, &constructor, JS::Attribute::Writable | JS::Attribute::Configurable); \
     }
 

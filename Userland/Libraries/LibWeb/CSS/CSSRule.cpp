@@ -7,13 +7,13 @@
  */
 
 #include <LibWeb/Bindings/CSSRulePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSRule::CSSRule(Bindings::WindowObject& window_object)
+CSSRule::CSSRule(HTML::Window& window_object)
     : PlatformObject(window_object.ensure_web_prototype<Bindings::CSSRulePrototype>("CSSRule"))
 {
 }

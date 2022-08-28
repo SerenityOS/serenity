@@ -16,16 +16,14 @@ struct MediaQueryListEventInit : public DOM::EventInit {
 };
 
 class MediaQueryListEvent final : public DOM::Event {
-    JS_OBJECT(MediaQueryListEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(MediaQueryListEvent, DOM::Event);
 
 public:
-    static MediaQueryListEvent* create(Bindings::WindowObject&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
-    static MediaQueryListEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
+    static MediaQueryListEvent* create(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
+    static MediaQueryListEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
 
-    MediaQueryListEvent(Bindings::WindowObject&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
+    MediaQueryListEvent(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
     virtual ~MediaQueryListEvent() override;
-
-    MediaQueryListEvent& impl() { return *this; }
 
     String const& media() const { return m_media; }
     bool matches() const { return m_matches; }

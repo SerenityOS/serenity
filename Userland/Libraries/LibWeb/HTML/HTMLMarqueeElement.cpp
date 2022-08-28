@@ -4,13 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLMarqueeElementPrototype.h>
 #include <LibWeb/HTML/HTMLMarqueeElement.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
 HTMLMarqueeElement::HTMLMarqueeElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLMarqueeElementPrototype>("HTMLMarqueeElement"));
 }
 
 HTMLMarqueeElement::~HTMLMarqueeElement() = default;

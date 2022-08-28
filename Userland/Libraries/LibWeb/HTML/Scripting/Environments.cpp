@@ -6,7 +6,6 @@
  */
 
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -67,7 +66,7 @@ EventLoop& EnvironmentSettingsObject::responsible_event_loop()
 RunScriptDecision EnvironmentSettingsObject::can_run_script()
 {
     // 1. If the global object specified by settings is a Window object whose Document object is not fully active, then return "do not run".
-    if (is<Bindings::WindowObject>(global_object()) && !verify_cast<Bindings::WindowObject>(global_object()).impl().associated_document().is_fully_active())
+    if (is<HTML::Window>(global_object()) && !verify_cast<HTML::Window>(global_object()).associated_document().is_fully_active())
         return RunScriptDecision::DoNotRun;
 
     // 2. If scripting is disabled for settings, then return "do not run".
@@ -218,11 +217,11 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
                 /* .reason = */ promise.result(),
             };
             // FIXME: This currently assumes that global is a WindowObject.
-            auto& window = verify_cast<Bindings::WindowObject>(*global.cell());
+            auto& window = verify_cast<HTML::Window>(*global.cell());
 
             auto promise_rejection_event = PromiseRejectionEvent::create(window, HTML::EventNames::unhandledrejection, event_init);
 
-            bool not_handled = window.impl().dispatch_event(*promise_rejection_event);
+            bool not_handled = window.dispatch_event(*promise_rejection_event);
 
             // 3. If notHandled is false, then the promise rejection is handled. Otherwise, the promise rejection is not handled.
 

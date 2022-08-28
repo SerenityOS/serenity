@@ -36,7 +36,7 @@ public:
 
     static DOM::ExceptionOr<NonnullRefPtr<Headers>> create(Optional<HeadersInit> const&);
 
-    static DOM::ExceptionOr<NonnullRefPtr<Headers>> create_with_global_object(Bindings::WindowObject&, Optional<HeadersInit> const& init)
+    static DOM::ExceptionOr<NonnullRefPtr<Headers>> create_with_global_object(HTML::Window&, Optional<HeadersInit> const& init)
     {
         return create(init);
     }

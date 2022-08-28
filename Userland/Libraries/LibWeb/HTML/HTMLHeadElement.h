@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLHeadElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLHeadElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLHeadElement, HTMLElement);
 
-    HTMLHeadElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLHeadElement() override;
+
+private:
+    HTMLHeadElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLHeadElement, Web::HTML)

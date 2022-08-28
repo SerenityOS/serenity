@@ -16,13 +16,13 @@ class CanvasGradient final
     : public RefCounted<CanvasGradient>
     , public Bindings::Wrappable {
 public:
-    using WrapperType = Bindings::CanvasGradientWrapper;
-
     enum class Type {
         Linear,
         Radial,
         Conic,
     };
+
+    using WrapperType = Bindings::CanvasGradientWrapper;
 
     static NonnullRefPtr<CanvasGradient> create_radial(double x0, double y0, double r0, double x1, double y1, double r1);
     static NonnullRefPtr<CanvasGradient> create_linear(double x0, double y0, double x1, double y1);

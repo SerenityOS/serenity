@@ -11,25 +11,23 @@
 
 namespace Web::DOM {
 
-// NOTE: We must use RP instead of NNRP here, otherwise the generated code cannot default initialize this struct.
+// NOTE: We must use GCP instead of NNGCP here, otherwise the generated code cannot default initialize this struct.
 //       They will never be null, as they are marked as required and non-null in the dictionary.
 struct StaticRangeInit {
-    RefPtr<Node> start_container;
+    JS::GCPtr<Node> start_container;
     u32 start_offset { 0 };
-    RefPtr<Node> end_container;
+    JS::GCPtr<Node> end_container;
     u32 end_offset { 0 };
 };
 
 class StaticRange final : public AbstractRange {
-    JS_OBJECT(StaticRange, JS::Object);
+    WEB_PLATFORM_OBJECT(StaticRange, JS::Object);
 
 public:
-    static ExceptionOr<StaticRange*> create_with_global_object(Bindings::WindowObject&, StaticRangeInit& init);
+    static ExceptionOr<StaticRange*> create_with_global_object(HTML::Window&, StaticRangeInit& init);
 
     StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     virtual ~StaticRange() override;
-
-    StaticRange& impl() { return *this; }
 };
 
 }

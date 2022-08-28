@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLDataElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLDataElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLDataElement, HTMLElement);
 
-    HTMLDataElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLDataElement() override;
+
+private:
+    HTMLDataElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLDataElement, Web::HTML)

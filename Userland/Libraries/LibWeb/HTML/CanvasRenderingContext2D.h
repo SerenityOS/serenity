@@ -34,10 +34,10 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasimagesource
 // NOTE: This is the Variant created by the IDL wrapper generator, and needs to be updated accordingly.
-using CanvasImageSource = Variant<NonnullRefPtr<HTMLImageElement>, NonnullRefPtr<HTMLCanvasElement>>;
+using CanvasImageSource = Variant<JS::Handle<HTMLImageElement>, JS::Handle<HTMLCanvasElement>>;
 
 class CanvasRenderingContext2D
-    : public RefCountForwarder<HTMLCanvasElement>
+    : public RefCounted<CanvasRenderingContext2D>
     , public Bindings::Wrappable
     , public CanvasPath
     , public CanvasState
@@ -81,7 +81,7 @@ public:
 
     virtual void reset_to_default_state() override;
 
-    NonnullRefPtr<HTMLCanvasElement> canvas_for_binding() const;
+    JS::NonnullGCPtr<HTMLCanvasElement> canvas_for_binding() const;
 
     virtual RefPtr<TextMetrics> measure_text(String const& text) override;
 
@@ -111,6 +111,8 @@ private:
 
     void stroke_internal(Gfx::Path const&);
     void fill_internal(Gfx::Path&, String const& fill_rule);
+
+    JS::Handle<HTMLCanvasElement> m_element;
 
     // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-origin-clean
     bool m_origin_clean { true };

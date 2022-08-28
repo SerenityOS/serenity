@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLBRElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/Layout/BreakNode.h>
@@ -13,6 +14,7 @@ namespace Web::HTML {
 HTMLBRElement::HTMLBRElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLBRElementPrototype>("HTMLBRElement"));
 }
 
 HTMLBRElement::~HTMLBRElement() = default;

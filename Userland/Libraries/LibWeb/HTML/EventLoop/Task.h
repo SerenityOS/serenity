@@ -9,6 +9,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
@@ -38,8 +39,8 @@ public:
     Source source() const { return m_source; }
     void execute();
 
-    DOM::Document* document() { return m_document; }
-    DOM::Document const* document() const { return m_document; }
+    DOM::Document* document();
+    DOM::Document const* document() const;
 
     bool is_runnable() const;
 
@@ -48,7 +49,7 @@ private:
 
     Source m_source { Source::Unspecified };
     Function<void()> m_steps;
-    RefPtr<DOM::Document> m_document;
+    JS::Handle<DOM::Document> m_document;
 };
 
 }

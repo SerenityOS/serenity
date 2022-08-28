@@ -12,10 +12,9 @@ namespace Web::SVG {
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 class SVGRectElement final : public SVGGeometryElement {
-public:
-    using WrapperType = Bindings::SVGRectElementWrapper;
+    WEB_PLATFORM_OBJECT(SVGRectElement, SVGGeometryElement);
 
-    SVGRectElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~SVGRectElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -30,6 +29,8 @@ public:
     NonnullRefPtr<SVGAnimatedLength> ry() const;
 
 private:
+    SVGRectElement(DOM::Document&, DOM::QualifiedName);
+
     Gfx::FloatPoint calculate_used_corner_radius_values();
 
     Optional<Gfx::Path> m_path;
@@ -43,3 +44,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(SVGRectElement, Web::SVG)

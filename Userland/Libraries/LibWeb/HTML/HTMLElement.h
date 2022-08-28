@@ -16,10 +16,9 @@ namespace Web::HTML {
 class HTMLElement
     : public DOM::Element
     , public HTML::GlobalEventHandlers {
-public:
-    using WrapperType = Bindings::HTMLElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLElement, DOM::Element);
 
-    HTMLElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLElement() override;
 
     String title() const { return attribute(HTML::AttributeNames::title); }
@@ -38,8 +37,8 @@ public:
 
     bool cannot_navigate() const;
 
-    DOMStringMap* dataset() { return m_dataset.cell(); }
-    DOMStringMap const* dataset() const { return m_dataset.cell(); }
+    DOMStringMap* dataset() { return m_dataset.ptr(); }
+    DOMStringMap const* dataset() const { return m_dataset.ptr(); }
 
     void focus();
 
@@ -51,7 +50,11 @@ public:
     virtual bool is_labelable() const { return false; }
 
 protected:
+    HTMLElement(DOM::Document&, DOM::QualifiedName);
+
     virtual void parse_attribute(FlyString const& name, String const& value) override;
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     virtual bool is_html_element() const final { return true; }
@@ -66,7 +69,7 @@ private:
     };
     ContentEditableState content_editable_state() const;
 
-    JS::Handle<DOMStringMap> m_dataset;
+    JS::NonnullGCPtr<DOMStringMap> m_dataset;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
     bool m_locked_for_focus { false };
@@ -81,3 +84,5 @@ namespace Web::DOM {
 template<>
 inline bool Node::fast_is<HTML::HTMLElement>() const { return is_html_element(); }
 }
+
+WRAPPER_HACK(HTMLElement, Web::HTML)

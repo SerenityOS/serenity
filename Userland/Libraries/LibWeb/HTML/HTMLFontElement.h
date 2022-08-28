@@ -11,13 +11,17 @@
 namespace Web::HTML {
 
 class HTMLFontElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLFontElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLFontElement, HTMLElement);
 
-    HTMLFontElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLFontElement() override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
+private:
+    HTMLFontElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLFontElement, Web::HTML)

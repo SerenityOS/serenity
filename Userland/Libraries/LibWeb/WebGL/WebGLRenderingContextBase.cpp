@@ -12,7 +12,7 @@
 namespace Web::WebGL {
 
 WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-    : RefCountForwarder(canvas_element)
+    : m_canvas_element(canvas_element)
     , m_context(move(context))
     , m_context_creation_parameters(move(context_creation_parameters))
     , m_actual_context_parameters(move(actual_context_parameters))
@@ -69,17 +69,17 @@ void WebGLRenderingContextBase::present()
 
 HTML::HTMLCanvasElement& WebGLRenderingContextBase::canvas_element()
 {
-    return ref_count_target();
+    return *m_canvas_element;
 }
 
 HTML::HTMLCanvasElement const& WebGLRenderingContextBase::canvas_element() const
 {
-    return ref_count_target();
+    return *m_canvas_element;
 }
 
-NonnullRefPtr<HTML::HTMLCanvasElement> WebGLRenderingContextBase::canvas_for_binding() const
+JS::NonnullGCPtr<HTML::HTMLCanvasElement> WebGLRenderingContextBase::canvas_for_binding() const
 {
-    return canvas_element();
+    return *m_canvas_element;
 }
 
 void WebGLRenderingContextBase::needs_to_present()

@@ -12,15 +12,19 @@
 namespace Web::HTML {
 
 class HTMLTableSectionElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLTableSectionElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLTableSectionElement, HTMLElement);
 
-    HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLTableSectionElement() override;
 
     NonnullRefPtr<DOM::HTMLCollection> rows() const;
-    DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
+    DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     DOM::ExceptionOr<void> delete_row(long index);
+
+private:
+    HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLTableSectionElement, Web::HTML)

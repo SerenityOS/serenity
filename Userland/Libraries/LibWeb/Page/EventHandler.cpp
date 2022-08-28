@@ -180,7 +180,7 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
     }
 
     if (paintable) {
-        RefPtr<DOM::Node> node = paintable->mouse_event_target();
+        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
             node = paintable->dom_node();
 
@@ -205,12 +205,12 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
             handled_event = true;
 
             bool run_activation_behavior = true;
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
-                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
+                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
             }
 
             if (run_activation_behavior) {
@@ -228,8 +228,8 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
                 //        implemented in BrowsingContext::choose_a_browsing_context:
                 //
                 //        https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-                if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
-                    NonnullRefPtr document = *m_browsing_context.active_document();
+                if (JS::GCPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
+                    JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context.active_document();
                     auto href = link->href();
                     auto url = document->parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
@@ -279,8 +279,8 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
     if (!paint_root())
         return false;
 
-    NonnullRefPtr document = *m_browsing_context.active_document();
-    RefPtr<DOM::Node> node;
+    JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context.active_document();
+    JS::GCPtr<DOM::Node> node;
 
     {
         // TODO: Allow selecting element behind if one on top has pointer-events set to none.
@@ -332,9 +332,9 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
         if (!node || !layout_node)
             return false;
 
-        m_mousedown_target = node;
+        m_mousedown_target = node.ptr();
         auto offset = compute_mouse_event_offset(position, *layout_node);
-        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
+        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -405,7 +405,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
                 page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
         }
 
-        RefPtr<DOM::Node> node = paintable->mouse_event_target();
+        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
             node = paintable->dom_node();
 
@@ -420,7 +420,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
         if (pointer_events == CSS::PointerEvents::None)
             return false;
 
-        hovered_node_changed = node != document.hovered_node();
+        hovered_node_changed = node.ptr() != document.hovered_node();
         document.set_hovered_node(node);
         if (node) {
             hovered_link_element = node->enclosing_link_element();
@@ -455,7 +455,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
@@ -476,7 +476,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
         page->client().page_did_request_cursor_change(hovered_node_cursor);
 
         if (hovered_node_changed) {
-            RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
+            JS::GCPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
             if (hovered_html_element && !hovered_html_element->title().is_null()) {
                 page->client().page_did_enter_tooltip_area(m_browsing_context.to_top_level_position(position), hovered_html_element->title());
             } else {
@@ -515,7 +515,7 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     if (pointer_events == CSS::PointerEvents::None)
         return false;
 
-    RefPtr<DOM::Node> node = paintable->mouse_event_target();
+    JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
     if (!node)
         node = paintable->dom_node();
 
@@ -543,7 +543,7 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
         return false;
 
     auto offset = compute_mouse_event_offset(position, *layout_node);
-    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().preferred_window_object(), UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
+    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
@@ -639,7 +639,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (!m_browsing_context.active_document())
         return false;
 
-    NonnullRefPtr<DOM::Document> document = *m_browsing_context.active_document();
+    JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context.active_document();
     if (!document->layout_node())
         return false;
 
@@ -722,12 +722,12 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return true;
     }
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->preferred_window_object(), UIEvents::EventNames::keydown, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->window(), UIEvents::EventNames::keydown, key, modifiers, code_point);
 
-    if (RefPtr<DOM::Element> focused_element = document->focused_element())
+    if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
         return focused_element->dispatch_event(*event);
 
-    if (RefPtr<HTML::HTMLElement> body = m_browsing_context.active_document()->body())
+    if (JS::GCPtr<HTML::HTMLElement> body = m_browsing_context.active_document()->body())
         return body->dispatch_event(*event);
 
     return document->root().dispatch_event(*event);
@@ -735,16 +735,16 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    RefPtr<DOM::Document> document = m_browsing_context.active_document();
+    JS::GCPtr<DOM::Document> document = m_browsing_context.active_document();
     if (!document)
         return false;
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->preferred_window_object(), UIEvents::EventNames::keyup, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->window(), UIEvents::EventNames::keyup, key, modifiers, code_point);
 
-    if (RefPtr<DOM::Element> focused_element = document->focused_element())
+    if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
         return document->focused_element()->dispatch_event(*event);
 
-    if (RefPtr<HTML::HTMLElement> body = document->body())
+    if (JS::GCPtr<HTML::HTMLElement> body = document->body())
         return body->dispatch_event(*event);
 
     return document->root().dispatch_event(*event);

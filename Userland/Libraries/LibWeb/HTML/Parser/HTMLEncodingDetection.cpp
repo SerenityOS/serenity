@@ -96,7 +96,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     return TextCodec::get_standardized_encoding(encoding);
 }
 
-RefPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, ByteBuffer const& input, size_t& position)
+JS::GCPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, ByteBuffer const& input, size_t& position)
 {
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
@@ -111,7 +111,7 @@ RefPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, ByteBuffer
         } else if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ')
             goto spaces;
         else if (input[position] == '/' || input[position] == '>')
-            return DOM::Attribute::create(document, attribute_name.to_string(), "");
+            return *DOM::Attribute::create(document, attribute_name.to_string(), "");
         else
             attribute_name.append_as_lowercase(input[position]);
         ++position;

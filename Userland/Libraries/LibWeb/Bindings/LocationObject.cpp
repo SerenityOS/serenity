@@ -15,7 +15,6 @@
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
@@ -24,7 +23,7 @@ namespace Web::Bindings {
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
 LocationObject::LocationObject(JS::Realm& realm)
-    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<LocationPrototype>("Location"))
+    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<LocationPrototype>("Location"))
     , m_default_properties(heap())
 {
 }
@@ -60,7 +59,7 @@ DOM::Document const* LocationObject::relevant_document() const
     // A Location object has an associated relevant Document, which is this Location object's
     // relevant global object's browsing context's active document, if this Location object's
     // relevant global object's browsing context is non-null, and null otherwise.
-    auto* browsing_context = verify_cast<WindowObject>(HTML::relevant_global_object(*this)).impl().browsing_context();
+    auto* browsing_context = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).browsing_context();
     return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
@@ -95,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 {
-    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
 
     // FIXME: 1. If this's relevant Document is null, then return.
 
@@ -218,7 +217,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
-    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
     window.impl().did_call_location_reload({});
     return JS::js_undefined();
 }
@@ -226,7 +225,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
 {
-    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
     auto url = TRY(vm.argument(0).to_string(vm));
     // FIXME: This needs spec compliance work.
     window.impl().did_call_location_replace({}, move(url));

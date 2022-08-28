@@ -5,18 +5,18 @@
  */
 
 #include <LibWeb/Bindings/CSSSupportsRulePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSSupportsRule* CSSSupportsRule::create(Bindings::WindowObject& window_object, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
+CSSSupportsRule* CSSSupportsRule::create(HTML::Window& window_object, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
 {
     return window_object.heap().allocate<CSSSupportsRule>(window_object.realm(), window_object, move(supports), rules);
 }
 
-CSSSupportsRule::CSSSupportsRule(Bindings::WindowObject& window_object, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
+CSSSupportsRule::CSSSupportsRule(HTML::Window& window_object, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
     : CSSConditionRule(window_object, rules)
     , m_supports(move(supports))
 {

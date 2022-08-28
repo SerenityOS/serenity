@@ -6,17 +6,17 @@
 
 #include <AK/TypeCasts.h>
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSRuleList* CSSRuleList::create(Bindings::WindowObject& window_object, JS::MarkedVector<CSSRule*> const& rules)
+CSSRuleList* CSSRuleList::create(HTML::Window& window_object, JS::MarkedVector<CSSRule*> const& rules)
 {
     auto* rule_list = window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object);
     for (auto* rule : rules)
@@ -24,12 +24,12 @@ CSSRuleList* CSSRuleList::create(Bindings::WindowObject& window_object, JS::Mark
     return rule_list;
 }
 
-CSSRuleList::CSSRuleList(Bindings::WindowObject& window_object)
+CSSRuleList::CSSRuleList(HTML::Window& window_object)
     : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::CSSRuleListPrototype>("CSSRuleList"))
 {
 }
 
-CSSRuleList* CSSRuleList::create_empty(Bindings::WindowObject& window_object)
+CSSRuleList* CSSRuleList::create_empty(HTML::Window& window_object)
 {
     return window_object.heap().allocate<CSSRuleList>(window_object.realm(), window_object);
 }
@@ -65,7 +65,7 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, CS
     CSSRule* new_rule = nullptr;
     if (rule.has<StringView>()) {
         new_rule = parse_css_rule(
-            CSS::Parser::ParsingContext { static_cast<Bindings::WindowObject&>(global_object()) },
+            CSS::Parser::ParsingContext { static_cast<HTML::Window&>(global_object()) },
             rule.get<StringView>());
     } else {
         new_rule = rule.get<CSSRule*>();

@@ -11,10 +11,9 @@
 namespace Web::HTML {
 
 class HTMLBaseElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLBaseElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLBaseElement, HTMLElement);
 
-    HTMLBaseElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLBaseElement() override;
 
     String href() const;
@@ -26,6 +25,8 @@ public:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
 private:
+    HTMLBaseElement(DOM::Document&, DOM::QualifiedName);
+
     virtual bool is_html_base_element() const override { return true; }
 
     // https://html.spec.whatwg.org/multipage/semantics.html#frozen-base-url
@@ -41,3 +42,5 @@ namespace Web::DOM {
 template<>
 inline bool Node::fast_is<HTML::HTMLBaseElement>() const { return is_html_base_element(); }
 }
+
+WRAPPER_HACK(HTMLBaseElement, Web::HTML)

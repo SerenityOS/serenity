@@ -53,9 +53,9 @@ public:
     void register_document(Badge<DOM::Document>, DOM::Document&);
     void unregister_document(Badge<DOM::Document>, DOM::Document&);
 
-    NonnullRefPtrVector<DOM::Document> documents_in_this_event_loop() const;
+    Vector<JS::Handle<DOM::Document>> documents_in_this_event_loop() const;
 
-    NonnullRefPtrVector<Window> same_loop_windows() const;
+    Vector<JS::Handle<HTML::Window>> same_loop_windows() const;
 
     void push_onto_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object);
     void pop_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>);

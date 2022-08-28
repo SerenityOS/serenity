@@ -12,8 +12,8 @@
 
 namespace Web::HTML {
 
-using HTMLOptionOrOptGroupElement = Variant<NonnullRefPtr<HTMLOptionElement>, NonnullRefPtr<HTMLOptGroupElement>>;
-using HTMLElementOrElementIndex = Variant<NonnullRefPtr<HTMLElement>, i32>;
+using HTMLOptionOrOptGroupElement = Variant<JS::Handle<HTMLOptionElement>, JS::Handle<HTMLOptGroupElement>>;
+using HTMLElementOrElementIndex = Variant<JS::Handle<HTMLElement>, i32>;
 
 class HTMLOptionsCollection final : public DOM::HTMLCollection {
 public:

@@ -26,7 +26,7 @@ namespace Web::HTML {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<BrowsingContext> create_a_new_browsing_context(Page&, RefPtr<DOM::Document> creator, RefPtr<DOM::Element> embedder);
+    static NonnullRefPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder);
 
     ~BrowsingContext();
 
@@ -41,8 +41,8 @@ public:
     bool is_top_level() const;
     bool is_focused_context() const;
 
-    DOM::Document const* active_document() const { return m_active_document; }
-    DOM::Document* active_document() { return m_active_document; }
+    DOM::Document const* active_document() const;
+    DOM::Document* active_document();
 
     void set_active_document(DOM::Document*);
 
@@ -109,7 +109,7 @@ public:
 
     bool has_a_rendering_opportunity() const;
 
-    RefPtr<DOM::Node> currently_focused_area();
+    JS::GCPtr<DOM::Node> currently_focused_area();
 
     String const& name() const { return m_name; }
     void set_name(String const& name) { m_name = name; }
@@ -143,7 +143,7 @@ private:
     Optional<HTML::Origin> m_creator_origin;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
-    RefPtr<DOM::Document> m_active_document;
+    JS::Handle<DOM::Document> m_active_document;
     Gfx::IntSize m_size;
     Gfx::IntPoint m_viewport_scroll_offset;
 

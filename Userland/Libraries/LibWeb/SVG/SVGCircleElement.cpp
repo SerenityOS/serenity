@@ -4,15 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SVGCircleElement.h"
+#include <LibWeb/Bindings/SVGCircleElementPrototype.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGCircleElement.h>
 
 namespace Web::SVG {
 
 SVGCircleElement::SVGCircleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGCircleElementPrototype>("SVGCircleElement"));
 }
 
 void SVGCircleElement::parse_attribute(FlyString const& name, String const& value)

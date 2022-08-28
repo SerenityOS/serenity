@@ -12,7 +12,7 @@ namespace Web::Bindings {
 
 // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
 class LegacyPlatformObject : public PlatformObject {
-    JS_OBJECT(LegacyPlatformObject, PlatformObject);
+    WEB_PLATFORM_OBJECT(LegacyPlatformObject, PlatformObject);
 
 public:
     virtual ~LegacyPlatformObject() override;

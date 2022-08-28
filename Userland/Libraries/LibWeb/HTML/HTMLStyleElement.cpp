@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLStyleElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
@@ -14,9 +15,16 @@ namespace Web::HTML {
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLStyleElementPrototype>("HTMLStyleElement"));
 }
 
 HTMLStyleElement::~HTMLStyleElement() = default;
+
+void HTMLStyleElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_associated_css_style_sheet.ptr());
+}
 
 void HTMLStyleElement::children_changed()
 {
@@ -104,11 +112,11 @@ void HTMLStyleElement::update_a_style_block()
     // 1. Let element be the style element.
     // 2. If element has an associated CSS style sheet, remove the CSS style sheet in question.
 
-    if (m_associated_css_style_sheet.cell()) {
+    if (m_associated_css_style_sheet) {
         remove_a_css_style_sheet(document(), *m_associated_css_style_sheet);
 
         // FIXME: This should probably be handled by StyleSheet::set_owner_node().
-        m_associated_css_style_sheet = {};
+        m_associated_css_style_sheet = nullptr;
     }
 
     // 3. If element is not connected, then return.
@@ -129,7 +137,7 @@ void HTMLStyleElement::update_a_style_block()
         return;
 
     // FIXME: This should probably be handled by StyleSheet::set_owner_node().
-    m_associated_css_style_sheet = JS::make_handle(sheet);
+    m_associated_css_style_sheet = sheet;
 
     // 6. Create a CSS style sheet with the following properties...
     create_a_css_style_sheet(
@@ -150,14 +158,14 @@ void HTMLStyleElement::update_a_style_block()
 CSS::CSSStyleSheet* HTMLStyleElement::sheet()
 {
     // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.
-    return m_associated_css_style_sheet.cell();
+    return m_associated_css_style_sheet;
 }
 
 // https://www.w3.org/TR/cssom/#dom-linkstyle-sheet
 CSS::CSSStyleSheet const* HTMLStyleElement::sheet() const
 {
     // The sheet attribute must return the associated CSS style sheet for the node or null if there is no associated CSS style sheet.
-    return m_associated_css_style_sheet.cell();
+    return m_associated_css_style_sheet;
 }
 
 }

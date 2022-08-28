@@ -29,28 +29,17 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
 // WorkerGlobalScope is the base class of each real WorkerGlobalScope that will be created when the
 // user agent runs the run a worker algorithm.
-class WorkerGlobalScope
-    : public RefCounted<WorkerGlobalScope>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+class WorkerGlobalScope : public DOM::EventTarget {
+    WEB_PLATFORM_OBJECT(WorkerGlobalScope, DOM::EventTarget);
+
 public:
-    using WrapperType = Bindings::WorkerGlobalScopeWrapper;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
-
     virtual ~WorkerGlobalScope() override;
-
-    // ^EventTarget
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     // Following methods are from the WorkerGlobalScope IDL definition
     // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
 
     // https://html.spec.whatwg.org/multipage/workers.html#dom-workerglobalscope-self
-    NonnullRefPtr<WorkerGlobalScope const> self() const { return *this; }
+    JS::NonnullGCPtr<WorkerGlobalScope> self() const { return *this; }
 
     NonnullRefPtr<WorkerLocation const> location() const;
     NonnullRefPtr<WorkerNavigator const> navigator() const;
@@ -82,7 +71,7 @@ public:
     void set_location(NonnullRefPtr<WorkerLocation> loc) { m_location = move(loc); }
 
 protected:
-    explicit WorkerGlobalScope();
+    explicit WorkerGlobalScope(JS::Realm&);
 
 private:
     RefPtr<WorkerLocation> m_location;
@@ -124,3 +113,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(WorkerGlobalScope, Web::HTML)

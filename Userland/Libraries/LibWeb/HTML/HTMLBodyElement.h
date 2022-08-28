@@ -14,16 +14,17 @@ namespace Web::HTML {
 class HTMLBodyElement final
     : public HTMLElement
     , public WindowEventHandlers {
-public:
-    using WrapperType = Bindings::HTMLBodyElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLBodyElement, HTMLElement);
 
-    HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:
+    HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
+
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) override;
 
@@ -34,3 +35,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLBodyElement, Web::HTML)

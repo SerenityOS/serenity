@@ -15,16 +15,19 @@
 namespace Web::SVG {
 
 class SVGGraphicsElement : public SVGElement {
+    WEB_PLATFORM_OBJECT(SVGGraphicsElement, SVGElement);
+
 public:
-    using WrapperType = Bindings::SVGGraphicsElementWrapper;
-
-    SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
-
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     Optional<Gfx::Color> fill_color() const;
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
+
+protected:
+    SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(SVGGraphicsElement, Web::SVG)

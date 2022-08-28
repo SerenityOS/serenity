@@ -17,14 +17,14 @@
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
 // 7.2.3.1 CrossOriginProperties ( O ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginproperties-(-o-)
-Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, WindowObject const*> const& object)
+Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, HTML::Window const*> const& object)
 {
     // 1. Assert: O is a Location or Window object.
 
@@ -37,7 +37,7 @@ Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const
             };
         },
         // 3. Return « { [[Property]]: "window", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "self", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "location", [[NeedsGet]]: true, [[NeedsSet]]: true }, { [[Property]]: "close" }, { [[Property]]: "closed", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "focus" }, { [[Property]]: "blur" }, { [[Property]]: "frames", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "length", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "top", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "opener", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "parent", [[NeedsGet]]: true, [[NeedsSet]]: false }, { [[Property]]: "postMessage" } ».
-        [](WindowObject const*) -> Vector<CrossOriginProperty> {
+        [](HTML::Window const*) -> Vector<CrossOriginProperty> {
             return {
                 { .property = "window"sv, .needs_get = true, .needs_set = false },
                 { .property = "self"sv, .needs_get = true, .needs_set = false },
@@ -90,11 +90,11 @@ bool is_platform_object_same_origin(JS::Object const& object)
 }
 
 // 7.2.3.4 CrossOriginGetOwnPropertyHelper ( O, P ), https://html.spec.whatwg.org/multipage/browsers.html#crossorigingetownpropertyhelper-(-o,-p-)
-Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, WindowObject*> const& object, JS::PropertyKey const& property_key)
+Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, HTML::Window*> const& object, JS::PropertyKey const& property_key)
 {
     auto& realm = *main_thread_vm().current_realm();
     auto const* object_ptr = object.visit([](auto* o) { return static_cast<JS::Object const*>(o); });
-    auto const object_const_variant = object.visit([](auto* o) { return Variant<LocationObject const*, WindowObject const*> { o }; });
+    auto const object_const_variant = object.visit([](auto* o) { return Variant<LocationObject const*, HTML::Window const*> { o }; });
 
     // 1. Let crossOriginKey be a tuple consisting of the current settings object, O's relevant settings object, and P.
     auto cross_origin_key = CrossOriginKey {
@@ -227,7 +227,7 @@ JS::ThrowCompletionOr<bool> cross_origin_set(JS::VM& vm, JS::Object& object, JS:
 }
 
 // 7.2.3.7 CrossOriginOwnPropertyKeys ( O ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginownpropertykeys-(-o-)
-JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<LocationObject const*, WindowObject const*> const& object)
+JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<LocationObject const*, HTML::Window const*> const& object)
 {
     auto& event_loop = HTML::main_thread_event_loop();
     auto& vm = event_loop.vm();

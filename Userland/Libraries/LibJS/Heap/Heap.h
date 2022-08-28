@@ -20,7 +20,6 @@
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/MarkedVector.h>
-#include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/WeakContainer.h>
 
 namespace JS {

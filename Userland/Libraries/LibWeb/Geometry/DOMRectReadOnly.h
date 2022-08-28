@@ -20,7 +20,7 @@ class DOMRectReadOnly
 public:
     using WrapperType = Bindings::DOMRectReadOnlyWrapper;
 
-    static NonnullRefPtr<DOMRectReadOnly> create_with_global_object(Bindings::WindowObject&, double x = 0, double y = 0, double width = 0, double height = 0)
+    static NonnullRefPtr<DOMRectReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0)
     {
         return DOMRectReadOnly::create(x, y, width, height);
     }

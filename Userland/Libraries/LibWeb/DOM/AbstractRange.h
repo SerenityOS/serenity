@@ -13,19 +13,17 @@
 namespace Web::DOM {
 
 class AbstractRange : public Bindings::PlatformObject {
-    JS_OBJECT(AbstractRange, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(AbstractRange, Bindings::PlatformObject);
 
 public:
     virtual ~AbstractRange() override;
 
-    AbstractRange& impl() { return *this; }
-
-    Node* start_container() { return m_start_container; }
-    Node const* start_container() const { return m_start_container; }
+    Node* start_container() { return m_start_container.ptr(); }
+    Node const* start_container() const { return m_start_container.ptr(); }
     unsigned start_offset() const { return m_start_offset; }
 
-    Node* end_container() { return m_end_container; }
-    Node const* end_container() const { return m_end_container; }
+    Node* end_container() { return m_end_container.ptr(); }
+    Node const* end_container() const { return m_end_container.ptr(); }
     unsigned end_offset() const { return m_end_offset; }
 
     // https://dom.spec.whatwg.org/#range-collapsed
@@ -38,10 +36,12 @@ public:
 protected:
     AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
 
-    NonnullRefPtr<Node> m_start_container;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<Node> m_start_container;
     u32 m_start_offset;
 
-    NonnullRefPtr<Node> m_end_container;
+    JS::NonnullGCPtr<Node> m_end_container;
     u32 m_end_offset;
 };
 

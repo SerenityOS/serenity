@@ -10,7 +10,7 @@
 
 namespace Web::URL {
 
-DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(Bindings::WindowObject& window_object, String const& url, String const& base)
+DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(HTML::Window& window_object, String const& url, String const& base)
 {
     // 1. Let parsedBase be null.
     Optional<AK::URL> parsed_base;

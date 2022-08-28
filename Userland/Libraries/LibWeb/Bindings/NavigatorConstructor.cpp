@@ -7,7 +7,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorConstructor.h>
 #include <LibWeb/Bindings/NavigatorPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -31,7 +31,7 @@ JS::ThrowCompletionOr<JS::Object*> NavigatorConstructor::construct(FunctionObjec
 void NavigatorConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<NavigatorPrototype>("Navigator"), 0);

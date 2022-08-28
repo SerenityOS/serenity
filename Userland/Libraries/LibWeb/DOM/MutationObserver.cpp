@@ -5,14 +5,14 @@
  */
 
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
-MutationObserver::MutationObserver(Bindings::WindowObject& window_object, JS::Handle<Bindings::CallbackType> callback)
+MutationObserver::MutationObserver(HTML::Window& window_object, JS::Handle<Bindings::CallbackType> callback)
     : m_callback(move(callback))
 {
     // 1. Set this’s callback to callback.
@@ -83,7 +83,7 @@ ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserverInit o
         target.add_registered_observer(new_registered_observer);
 
         // 2. Append target to this’s node list.
-        m_node_list.append(target.make_weak_ptr());
+        m_node_list.append(target.make_weak_ptr<Node>());
     }
 
     return {};

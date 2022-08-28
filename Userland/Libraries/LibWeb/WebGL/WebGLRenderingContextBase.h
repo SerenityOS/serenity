@@ -16,14 +16,14 @@
 namespace Web::WebGL {
 
 class WebGLRenderingContextBase
-    : public RefCountForwarder<HTML::HTMLCanvasElement>
+    : public RefCounted<WebGLRenderingContextBase>
     , public Weakable<WebGLRenderingContextBase> {
 public:
     virtual ~WebGLRenderingContextBase();
 
     void present();
 
-    NonnullRefPtr<HTML::HTMLCanvasElement> canvas_for_binding() const;
+    JS::NonnullGCPtr<HTML::HTMLCanvasElement> canvas_for_binding() const;
 
     bool is_context_lost() const;
 
@@ -65,6 +65,8 @@ protected:
     WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
 
 private:
+    JS::Handle<HTML::HTMLCanvasElement> m_canvas_element;
+
     NonnullOwnPtr<GL::GLContext> m_context;
 
     // https://www.khronos.org/registry/webgl/specs/latest/1.0/#context-creation-parameters

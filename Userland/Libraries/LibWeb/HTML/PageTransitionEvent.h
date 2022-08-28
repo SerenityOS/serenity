@@ -15,17 +15,15 @@ struct PageTransitionEventInit : public DOM::EventInit {
 };
 
 class PageTransitionEvent final : public DOM::Event {
-    JS_OBJECT(PageTransitionEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(PageTransitionEvent, DOM::Event);
 
 public:
-    static PageTransitionEvent* create(Bindings::WindowObject&, FlyString const& event_name, PageTransitionEventInit const& event_init);
-    static PageTransitionEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    static PageTransitionEvent* create(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    static PageTransitionEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
-    PageTransitionEvent(Bindings::WindowObject&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    PageTransitionEvent(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
     virtual ~PageTransitionEvent() override;
-
-    PageTransitionEvent& impl() { return *this; }
 
     bool persisted() const { return m_persisted; }
 

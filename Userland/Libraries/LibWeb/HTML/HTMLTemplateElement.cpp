@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLTemplateElementPrototype.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 
@@ -12,17 +14,25 @@ namespace Web::HTML {
 HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    m_content = adopt_ref(*new DOM::DocumentFragment(appropriate_template_contents_owner_document(document)));
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTemplateElementPrototype>("HTMLTemplateElement"));
+
+    m_content = heap().allocate<DOM::DocumentFragment>(realm(), appropriate_template_contents_owner_document(document));
     m_content->set_host(this);
 }
 
 HTMLTemplateElement::~HTMLTemplateElement() = default;
 
+void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_content.ptr());
+}
+
 DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document(DOM::Document& document)
 {
     if (!document.created_for_appropriate_template_contents()) {
         if (!document.associated_inert_template_document()) {
-            auto new_document = DOM::Document::create();
+            auto new_document = DOM::Document::create(Bindings::main_thread_internal_window_object());
             new_document->set_created_for_appropriate_template_contents(true);
             new_document->set_document_type(document.document_type());
 

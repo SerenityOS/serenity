@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLParagraphElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLParagraphElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLParagraphElement, HTMLElement);
 
-    HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLParagraphElement() override;
+
+private:
+    HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLParagraphElement, Web::HTML)

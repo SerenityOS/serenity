@@ -16,12 +16,10 @@
 namespace Web::CSS {
 
 class StyleSheetList : public Bindings::LegacyPlatformObject {
-    JS_OBJECT(StyleSheetList, Bindings::LegacyPlatformObject);
+    WEB_PLATFORM_OBJECT(StyleSheetList, Bindings::LegacyPlatformObject);
 
 public:
-    StyleSheetList& impl() { return *this; }
     static StyleSheetList* create(DOM::Document& document);
-    explicit StyleSheetList(DOM::Document&);
 
     void add_sheet(CSSStyleSheet&);
     void remove_sheet(CSSStyleSheet&);
@@ -45,6 +43,8 @@ public:
     DOM::Document const& document() const { return m_document; }
 
 private:
+    explicit StyleSheetList(DOM::Document&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     DOM::Document& m_document;
@@ -53,7 +53,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::StyleSheetList& object) { return &object; }
-using StyleSheetListWrapper = Web::CSS::StyleSheetList;
-}
+WRAPPER_HACK(StyleSheetList, Web::CSS)

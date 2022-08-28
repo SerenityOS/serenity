@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
@@ -42,7 +42,7 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyInstanceConstructor::construct(Fun
 void WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"), 0);

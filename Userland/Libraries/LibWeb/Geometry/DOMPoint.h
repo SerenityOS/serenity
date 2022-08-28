@@ -15,7 +15,7 @@ class DOMPoint final : public DOMPointReadOnly {
 public:
     using WrapperType = Bindings::DOMPointWrapper;
 
-    static NonnullRefPtr<DOMPoint> create_with_global_object(Bindings::WindowObject&, double x = 0, double y = 0, double z = 0, double w = 0)
+    static NonnullRefPtr<DOMPoint> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0)
     {
         return DOMPoint::create(x, y, z, w);
     }

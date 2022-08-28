@@ -9,7 +9,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/WorkerGlobalScopeWrapper.h>
+#include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -20,8 +20,9 @@
 
 namespace Web::HTML {
 
-WorkerGlobalScope::WorkerGlobalScope()
-    : m_navigator(make_ref_counted<WorkerNavigator>())
+WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
+    : DOM::EventTarget(realm)
+    , m_navigator(make_ref_counted<WorkerNavigator>())
 {
 }
 
@@ -52,11 +53,6 @@ DOM::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)
     //        letting the exception or aborting continue to be processed by the calling script.
 
     return {};
-}
-
-JS::Object* WorkerGlobalScope::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerglobalscope-location

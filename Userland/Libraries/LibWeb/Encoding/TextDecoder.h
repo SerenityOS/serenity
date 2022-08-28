@@ -33,7 +33,7 @@ public:
         return adopt_ref(*new TextDecoder(*decoder, move(encoding), false, false));
     }
 
-    static DOM::ExceptionOr<NonnullRefPtr<TextDecoder>> create_with_global_object(Bindings::WindowObject&, FlyString label)
+    static DOM::ExceptionOr<NonnullRefPtr<TextDecoder>> create_with_global_object(HTML::Window&, FlyString label)
     {
         return TextDecoder::create(move(label));
     }

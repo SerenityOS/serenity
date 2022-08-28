@@ -10,8 +10,8 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abortcontroller
-AbortController::AbortController()
-    : m_signal(AbortSignal::create())
+AbortController::AbortController(HTML::Window& window)
+    : m_signal(JS::make_handle(*AbortSignal::create_with_global_object(window)))
 {
 }
 

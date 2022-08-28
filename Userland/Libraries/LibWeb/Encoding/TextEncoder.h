@@ -27,7 +27,7 @@ public:
         return adopt_ref(*new TextEncoder());
     }
 
-    static NonnullRefPtr<TextEncoder> create_with_global_object(Bindings::WindowObject&)
+    static NonnullRefPtr<TextEncoder> create_with_global_object(HTML::Window&)
     {
         return TextEncoder::create();
     }

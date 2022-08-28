@@ -16,17 +16,12 @@
 namespace Web::CSS {
 
 class CSSStyleRule final : public CSSRule {
-    JS_OBJECT(CSSStyleRule, CSSRule);
-    AK_MAKE_NONCOPYABLE(CSSStyleRule);
-    AK_MAKE_NONMOVABLE(CSSStyleRule);
+    WEB_PLATFORM_OBJECT(CSSStyleRule, CSSRule);
 
 public:
-    static CSSStyleRule* create(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
-    CSSStyleRule(Bindings::WindowObject&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    static CSSStyleRule* create(HTML::Window&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
 
     virtual ~CSSStyleRule() override = default;
-
-    CSSStyleRule& impl() { return *this; }
 
     NonnullRefPtrVector<Selector> const& selectors() const { return m_selectors; }
     CSSStyleDeclaration const& declaration() const { return m_declaration; }
@@ -39,6 +34,8 @@ public:
     CSSStyleDeclaration* style();
 
 private:
+    CSSStyleRule(HTML::Window&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+
     virtual void visit_edges(Cell::Visitor&) override;
     virtual String serialized() const override;
 
@@ -51,7 +48,4 @@ inline bool CSSRule::fast_is<CSSStyleRule>() const { return type() == CSSRule::T
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSStyleRule& object) { return &object; }
-using CSSStyleRuleWrapper = Web::CSS::CSSStyleRule;
-}
+WRAPPER_HACK(CSSStyleRule, Web::CSS)

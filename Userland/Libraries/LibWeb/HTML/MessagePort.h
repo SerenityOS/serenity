@@ -19,28 +19,13 @@ namespace Web::HTML {
     E(onmessageerror, HTML::EventNames::messageerror)
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports
-class MessagePort final
-    : public RefCounted<MessagePort>
-    , public Weakable<MessagePort>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+class MessagePort final : public DOM::EventTarget {
+    WEB_PLATFORM_OBJECT(MessagePort, DOM::EventTarget);
+
 public:
-    using WrapperType = Bindings::MessagePortWrapper;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
-
-    static NonnullRefPtr<MessagePort> create()
-    {
-        return adopt_ref(*new MessagePort());
-    }
+    static JS::NonnullGCPtr<MessagePort> create(HTML::Window&);
 
     virtual ~MessagePort() override;
-
-    // ^EventTarget
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#entangle
     void entangle_with(MessagePort&);
@@ -60,13 +45,15 @@ public:
 #undef __ENUMERATE
 
 private:
-    MessagePort();
+    explicit MessagePort(HTML::Window&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     bool is_entangled() const { return m_remote_port; }
     void disentangle();
 
     // The HTML spec implies(!) that this is MessagePort.[[RemotePort]]
-    WeakPtr<MessagePort> m_remote_port;
+    JS::GCPtr<MessagePort> m_remote_port;
 
     // https://html.spec.whatwg.org/multipage/web-messaging.html#has-been-shipped
     bool m_has_been_shipped { false };
@@ -76,3 +63,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(MessagePort, Web::HTML)

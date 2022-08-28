@@ -1,3 +1,4 @@
+#import <DOM/Document.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLObjectElement : HTMLElement {

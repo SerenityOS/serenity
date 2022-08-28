@@ -11,14 +11,16 @@
 namespace Web::HTML {
 
 class HTMLPreElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLPreElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLPreElement, HTMLElement);
 
-    HTMLPreElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLPreElement() override;
 
 private:
+    HTMLPreElement(DOM::Document&, DOM::QualifiedName);
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }
+
+WRAPPER_HACK(HTMLPreElement, Web::HTML)

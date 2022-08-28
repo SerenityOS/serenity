@@ -7,30 +7,29 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/Document.h>
 
 namespace Web::DOM {
 
 class DOMImplementation final : public Bindings::PlatformObject {
-    JS_OBJECT(DOMImplementation, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(DOMImplementation, Bindings::PlatformObject);
 
 public:
     static JS::NonnullGCPtr<DOMImplementation> create(Document&);
-    explicit DOMImplementation(Document&);
     virtual ~DOMImplementation();
 
-    DOMImplementation& impl() { return *this; }
-
-    ExceptionOr<NonnullRefPtr<Document>> create_document(String const&, String const&, RefPtr<DocumentType>) const;
-    NonnullRefPtr<Document> create_html_document(String const& title) const;
-    ExceptionOr<NonnullRefPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
+    ExceptionOr<JS::NonnullGCPtr<Document>> create_document(String const&, String const&, JS::GCPtr<DocumentType>) const;
+    JS::NonnullGCPtr<Document> create_html_document(String const& title) const;
+    ExceptionOr<JS::NonnullGCPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     bool has_feature() const { return true; }
 
 private:
+    explicit DOMImplementation(Document&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     Document& document() { return m_document; }
@@ -41,7 +40,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::DOMImplementation& object) { return &object; }
-using DOMImplementationWrapper = Web::DOM::DOMImplementation;
-}
+WRAPPER_HACK(DOMImplementation, Web::DOM)

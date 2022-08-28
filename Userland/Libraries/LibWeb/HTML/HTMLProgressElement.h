@@ -11,10 +11,9 @@
 namespace Web::HTML {
 
 class HTMLProgressElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLProgressElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLProgressElement, HTMLElement);
 
-    HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLProgressElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
@@ -34,9 +33,13 @@ public:
     bool using_system_appearance() const;
 
 private:
+    HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
+
     void progress_position_updated();
 
     bool is_determinate() const { return has_attribute(HTML::AttributeNames::value); }
 };
 
 }
+
+WRAPPER_HACK(HTMLProgressElement, Web::HTML)

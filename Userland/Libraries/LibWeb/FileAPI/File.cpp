@@ -56,7 +56,7 @@ DOM::ExceptionOr<NonnullRefPtr<File>> File::create(Vector<BlobPart> const& file_
     return adopt_ref(*new File(move(bytes), move(name), move(type), last_modified));
 }
 
-DOM::ExceptionOr<NonnullRefPtr<File>> File::create_with_global_object(Bindings::WindowObject&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+DOM::ExceptionOr<NonnullRefPtr<File>> File::create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     return create(file_bits, file_name, options);
 }

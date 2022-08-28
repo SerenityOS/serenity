@@ -127,7 +127,7 @@ JS::VM& main_thread_vm()
                 //    with the promise attribute initialized to promise, and the reason attribute initialized to the value of promise's [[PromiseResult]] internal slot.
                 HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [global = JS::make_handle(&global), promise = JS::make_handle(&promise)]() mutable {
                     // FIXME: This currently assumes that global is a WindowObject.
-                    auto& window = verify_cast<Bindings::WindowObject>(*global.cell());
+                    auto& window = verify_cast<HTML::Window>(*global.cell());
 
                     HTML::PromiseRejectionEventInit event_init {
                         {}, // Initialize the inherited DOM::EventInit
@@ -135,7 +135,7 @@ JS::VM& main_thread_vm()
                         /* .reason = */ promise.cell()->result(),
                     };
                     auto promise_rejection_event = HTML::PromiseRejectionEvent::create(window, HTML::EventNames::rejectionhandled, event_init);
-                    window.impl().dispatch_event(*promise_rejection_event);
+                    window.dispatch_event(*promise_rejection_event);
                 });
                 break;
             }
@@ -308,20 +308,18 @@ JS::VM& main_thread_vm()
         //       just to make sure that it's never empty.
         auto& custom_data = *verify_cast<WebEngineCustomData>(vm->custom_data());
         custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
-            *vm, [&](JS::Realm& realm) -> JS::GlobalObject* {
-                auto internal_window = HTML::Window::create();
-                custom_data.internal_window_object = JS::make_handle(vm->heap().allocate<Bindings::WindowObject>(realm, realm, internal_window));
-                return custom_data.internal_window_object.cell(); },
-            [](JS::Realm&) -> JS::GlobalObject* {
-                return nullptr;
-            }));
+            *vm, [&](JS::Realm& realm) -> JS::Object* {
+                custom_data.internal_window_object = JS::make_handle(*HTML::Window::create(realm));
+                return custom_data.internal_window_object.cell();
+            },
+            nullptr));
 
         vm->push_execution_context(*custom_data.root_execution_context);
     }
     return *vm;
 }
 
-Bindings::WindowObject& main_thread_internal_window_object()
+HTML::Window& main_thread_internal_window_object()
 {
     auto& vm = main_thread_vm();
     auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());
@@ -398,7 +396,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
-NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Function<JS::GlobalObject*(JS::Realm&)> create_global_object, Function<JS::GlobalObject*(JS::Realm&)> create_global_this_value)
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Function<JS::Object*(JS::Realm&)> create_global_object, Function<JS::Object*(JS::Realm&)> create_global_this_value)
 {
     // 1. Perform InitializeHostDefinedRealm() with the provided customizations for creating the global object and the global this binding.
     // 2. Let realm execution context be the running JavaScript execution context.

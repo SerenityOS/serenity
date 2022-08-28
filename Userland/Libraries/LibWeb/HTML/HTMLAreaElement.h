@@ -15,13 +15,14 @@ namespace Web::HTML {
 class HTMLAreaElement final
     : public HTMLElement
     , public HTMLHyperlinkElementUtils {
-public:
-    using WrapperType = Bindings::HTMLAreaElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLAreaElement, HTMLElement);
 
-    HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLAreaElement() override;
 
 private:
+    HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
+
     // ^DOM::Element
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
@@ -39,3 +40,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLAreaElement, Web::HTML)

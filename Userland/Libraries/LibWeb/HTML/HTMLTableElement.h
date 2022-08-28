@@ -15,36 +15,39 @@
 namespace Web::HTML {
 
 class HTMLTableElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLTableElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLTableElement, HTMLElement);
 
-    HTMLTableElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLTableElement() override;
 
-    RefPtr<HTMLTableCaptionElement> caption();
+    JS::GCPtr<HTMLTableCaptionElement> caption();
     void set_caption(HTMLTableCaptionElement*);
-    NonnullRefPtr<HTMLTableCaptionElement> create_caption();
+    JS::NonnullGCPtr<HTMLTableCaptionElement> create_caption();
     void delete_caption();
 
-    RefPtr<HTMLTableSectionElement> t_head();
+    JS::GCPtr<HTMLTableSectionElement> t_head();
     DOM::ExceptionOr<void> set_t_head(HTMLTableSectionElement* thead);
-    NonnullRefPtr<HTMLTableSectionElement> create_t_head();
+    JS::NonnullGCPtr<HTMLTableSectionElement> create_t_head();
     void delete_t_head();
 
-    RefPtr<HTMLTableSectionElement> t_foot();
+    JS::GCPtr<HTMLTableSectionElement> t_foot();
     DOM::ExceptionOr<void> set_t_foot(HTMLTableSectionElement* tfoot);
-    NonnullRefPtr<HTMLTableSectionElement> create_t_foot();
+    JS::NonnullGCPtr<HTMLTableSectionElement> create_t_foot();
     void delete_t_foot();
 
     NonnullRefPtr<DOM::HTMLCollection> t_bodies();
-    NonnullRefPtr<HTMLTableSectionElement> create_t_body();
+    JS::NonnullGCPtr<HTMLTableSectionElement> create_t_body();
 
     NonnullRefPtr<DOM::HTMLCollection> rows();
-    DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
+    DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     DOM::ExceptionOr<void> delete_row(long index);
 
 private:
+    HTMLTableElement(DOM::Document&, DOM::QualifiedName);
+
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }
+
+WRAPPER_HACK(HTMLTableElement, Web::HTML)

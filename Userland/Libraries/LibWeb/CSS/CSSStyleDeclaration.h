@@ -26,12 +26,10 @@ struct StyleProperty {
 };
 
 class CSSStyleDeclaration : public Bindings::PlatformObject {
-    JS_OBJECT(CSSStyleDeclaration, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(CSSStyleDeclaration, Bindings::PlatformObject);
 
 public:
     virtual ~CSSStyleDeclaration() = default;
-
-    CSSStyleDeclaration& impl() { return *this; }
 
     virtual size_t length() const = 0;
     virtual String item(size_t index) const = 0;
@@ -57,16 +55,15 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
 
 protected:
-    CSSStyleDeclaration(Bindings::WindowObject&);
+    explicit CSSStyleDeclaration(HTML::Window&);
 };
 
 class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
-    JS_OBJECT(PropertyOwningCSSStyleDeclaration, CSSStyleDeclaration);
+    WEB_PLATFORM_OBJECT(PropertyOwningCSSStyleDeclaration, CSSStyleDeclaration);
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
-    static PropertyOwningCSSStyleDeclaration* create(Bindings::WindowObject&, Vector<StyleProperty>, HashMap<String, StyleProperty> custom_properties);
-    PropertyOwningCSSStyleDeclaration(Bindings::WindowObject&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
+    static PropertyOwningCSSStyleDeclaration* create(HTML::Window&, Vector<StyleProperty>, HashMap<String, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
@@ -86,6 +83,8 @@ public:
     virtual String serialized() const final override;
 
 protected:
+    PropertyOwningCSSStyleDeclaration(HTML::Window&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
+
     virtual void update_style_attribute() { }
 
 private:
@@ -96,11 +95,10 @@ private:
 };
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
-    JS_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
+    WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
 
 public:
     static ElementInlineCSSStyleDeclaration* create(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
@@ -110,9 +108,13 @@ public:
     bool is_updating() const { return m_updating; }
 
 private:
+    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
     virtual void update_style_attribute() override;
 
-    WeakPtr<DOM::Element> m_element;
+    JS::GCPtr<DOM::Element> m_element;
 
     // https://drafts.csswg.org/cssom/#cssstyledeclaration-updating-flag
     bool m_updating { false };
@@ -120,7 +122,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSStyleDeclaration& object) { return &object; }
-using CSSStyleDeclarationWrapper = Web::CSS::CSSStyleDeclaration;
-}
+WRAPPER_HACK(CSSStyleDeclaration, Web::CSS)

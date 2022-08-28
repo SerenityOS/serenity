@@ -14,31 +14,29 @@
 
 namespace Web::HighResolutionTime {
 
-class Performance final
-    : public DOM::EventTarget
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::PerformanceWrapper;
-    using AllowOwnPtr = TrueType;
+class Performance final : public DOM::EventTarget {
+    WEB_PLATFORM_OBJECT(Performance, DOM::EventTarget);
 
-    explicit Performance(HTML::Window&);
-    ~Performance();
+public:
+    virtual ~Performance() override;
 
     double now() const { return m_timer.elapsed(); }
     double time_origin() const;
 
-    RefPtr<NavigationTiming::PerformanceTiming> timing() { return *m_timing; }
-
-    virtual void ref_event_target() override;
-    virtual void unref_event_target() override;
-
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
+    JS::GCPtr<NavigationTiming::PerformanceTiming> timing() { return *m_timing; }
 
 private:
-    HTML::Window& m_window;
+    explicit Performance(HTML::Window&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<HTML::Window> m_window;
+
     Core::ElapsedTimer m_timer;
 
     OwnPtr<NavigationTiming::PerformanceTiming> m_timing;
 };
 
 }
+
+WRAPPER_HACK(Performance, Web::HighResolutionTime)

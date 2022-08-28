@@ -5,18 +5,18 @@
  */
 
 #include <LibWeb/Bindings/CSSStyleRulePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSStyleRule* CSSStyleRule::create(Bindings::WindowObject& window_object, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
+CSSStyleRule* CSSStyleRule::create(HTML::Window& window_object, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
     return window_object.heap().allocate<CSSStyleRule>(window_object.realm(), window_object, move(selectors), declaration);
 }
 
-CSSStyleRule::CSSStyleRule(Bindings::WindowObject& window_object, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
+CSSStyleRule::CSSStyleRule(HTML::Window& window_object, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
     : CSSRule(window_object)
     , m_selectors(move(selectors))
     , m_declaration(declaration)

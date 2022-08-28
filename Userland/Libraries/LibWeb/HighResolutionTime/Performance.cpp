@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/PerformanceWrapper.h>
+#include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -14,34 +14,26 @@
 namespace Web::HighResolutionTime {
 
 Performance::Performance(HTML::Window& window)
-    : DOM::EventTarget()
+    : DOM::EventTarget(window.realm())
     , m_window(window)
     , m_timing(make<NavigationTiming::PerformanceTiming>(window))
 {
+    set_prototype(&window.ensure_web_prototype<Bindings::PerformancePrototype>("Performance"));
     m_timer.start();
 }
 
 Performance::~Performance() = default;
 
+void Performance::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
+}
+
 double Performance::time_origin() const
 {
     auto origin = m_timer.origin_time();
     return (origin.tv_sec * 1000.0) + (origin.tv_usec / 1000.0);
-}
-
-void Performance::ref_event_target()
-{
-    m_window.ref();
-}
-
-void Performance::unref_event_target()
-{
-    m_window.unref();
-}
-
-JS::Object* Performance::create_wrapper(JS::Realm& realm)
-{
-    return Bindings::wrap(realm, *this);
 }
 
 }

@@ -12,14 +12,19 @@
 namespace Web::HTML {
 
 class HTMLBlinkElement final : public HTMLElement {
+    WEB_PLATFORM_OBJECT(HTMLBlinkElement, HTMLElement);
+
 public:
-    HTMLBlinkElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLBlinkElement() override;
 
 private:
+    HTMLBlinkElement(DOM::Document&, DOM::QualifiedName);
+
     void blink();
 
     NonnullRefPtr<Core::Timer> m_timer;
 };
 
 }
+
+WRAPPER_HACK(HTMLBlinkElement, Web::HTML)

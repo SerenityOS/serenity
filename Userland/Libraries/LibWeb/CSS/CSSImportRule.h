@@ -19,17 +19,12 @@ namespace Web::CSS {
 class CSSImportRule final
     : public CSSRule
     , public ResourceClient {
-    AK_MAKE_NONCOPYABLE(CSSImportRule);
-    AK_MAKE_NONMOVABLE(CSSImportRule);
-    JS_OBJECT(CSSImportRule, CSSRule);
+    WEB_PLATFORM_OBJECT(CSSImportRule, CSSRule);
 
 public:
     static CSSImportRule* create(AK::URL, DOM::Document&);
-    CSSImportRule(AK::URL, DOM::Document&);
 
     virtual ~CSSImportRule() = default;
-
-    CSSImportRule& impl() { return *this; }
 
     AK::URL const& url() const { return m_url; }
     // FIXME: This should return only the specified part of the url. eg, "stuff/foo.css", not "https://example.com/stuff/foo.css".
@@ -44,6 +39,8 @@ public:
     virtual Type type() const override { return Type::Import; };
 
 private:
+    CSSImportRule(AK::URL, DOM::Document&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual String serialized() const override;
@@ -63,7 +60,4 @@ inline bool CSSRule::fast_is<CSSImportRule>() const { return type() == CSSRule::
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSImportRule& object) { return &object; }
-using CSSImportRuleWrapper = Web::CSS::CSSImportRule;
-}
+WRAPPER_HACK(CSSImportRule, Web::CSS)

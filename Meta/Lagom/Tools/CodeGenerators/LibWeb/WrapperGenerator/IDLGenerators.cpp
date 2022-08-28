@@ -108,6 +108,48 @@ static bool impl_is_wrapper(Type const& type)
     if (type.name == "CSSImportRule"sv)
         return true;
 
+    if (type.name == "EventTarget"sv)
+        return true;
+
+    if (type.name == "Node"sv)
+        return true;
+    if (type.name == "ShadowRoot"sv)
+        return true;
+    if (type.name == "DocumentTemporary"sv)
+        return true;
+    if (type.name == "Text"sv)
+        return true;
+    if (type.name == "Document"sv)
+        return true;
+    if (type.name == "DocumentType"sv)
+        return true;
+    if (type.name.ends_with("Element"sv))
+        return true;
+    if (type.name == "XMLHttpRequest"sv)
+        return true;
+    if (type.name == "XMLHttpRequestEventTarget"sv)
+        return true;
+    if (type.name == "AbortSignal"sv)
+        return true;
+    if (type.name == "WebSocket"sv)
+        return true;
+    if (type.name == "Worker"sv)
+        return true;
+    if (type.name == "NodeIterator"sv)
+        return true;
+    if (type.name == "TreeWalker"sv)
+        return true;
+    if (type.name == "MediaQueryList"sv)
+        return true;
+    if (type.name == "MessagePort"sv)
+        return true;
+    if (type.name == "NodeFilter"sv)
+        return true;
+    if (type.name == "DOMTokenList"sv)
+        return true;
+    if (type.name == "DOMStringMap"sv)
+        return true;
+
     return false;
 }
 
@@ -328,9 +370,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("parameter.type.name", parameter.type->name);
     if (parameter.type->name == "Window")
-        scoped_generator.set("wrapper_name", "WindowObject");
-    else
+        scoped_generator.set("wrapper_name", "HTML::Window");
+    else {
         scoped_generator.set("wrapper_name", String::formatted("{}Wrapper", parameter.type->name));
+    }
 
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
@@ -422,7 +465,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
-    Optional<NonnullRefPtr<@parameter.type.name@>> @cpp_name@;
+    Optional<JS::NonnullGCPtr<@parameter.type.name@>> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
         if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
@@ -1500,7 +1543,13 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
         }
 
-        generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
+        if (impl_is_wrapper(sequence_generic_type.parameters.first())) {
+            scoped_generator.append(R"~~~(
+            auto* wrapped_element@recursion_depth@ = wrap(realm, *element@recursion_depth@);
+)~~~");
+        } else {
+            generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
+        }
 
         scoped_generator.append(R"~~~(
         auto property_index@recursion_depth@ = JS::PropertyKey { i@recursion_depth@ };
@@ -1950,40 +1999,6 @@ private:
 };
 )~~~");
 
-    for (auto& it : interface.enumerations) {
-        if (!it.value.is_original_definition)
-            continue;
-        auto enum_generator = generator.fork();
-        enum_generator.set("enum.type.name", it.key);
-        enum_generator.append(R"~~~(
-enum class @enum.type.name@ {
-)~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.append(R"~~~(
-    @enum.entry@,
-)~~~");
-        }
-
-        enum_generator.append(R"~~~(
-};
-inline String idl_enum_to_string(@enum.type.name@ value) {
-    switch(value) {
-)~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.set("enum.string", entry.key);
-            enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return "@enum.string@";
-)~~~");
-        }
-        enum_generator.append(R"~~~(
-    default: return "<unknown>";
-    };
-}
-)~~~");
-    }
-
     if (should_emit_wrapper_factory(interface)) {
         generator.append(R"~~~(
 @wrapper_class@* wrap(JS::Realm&, @fully_qualified_name@&);
@@ -2021,8 +2036,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 )~~~");
 
     emit_includes_for_all_imports(interface, generator);
@@ -2055,7 +2069,7 @@ namespace Web::Bindings {
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
-    : Wrapper(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
+    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
     , m_impl(impl)
 {
 }
@@ -2065,7 +2079,7 @@ namespace Web::Bindings {
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
     : @wrapper_base_class@(realm, impl)
 {
-    set_prototype(&static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"));
+    set_prototype(&verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"));
 }
 )~~~");
     }
@@ -2902,11 +2916,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 #if __has_include(<LibWeb/Crypto/@name@.h>)
 #    include <LibWeb/Crypto/@name@.h>
 #elif __has_include(<LibWeb/CSS/@name@.h>)
@@ -3007,7 +3018,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
     auto& vm = this->vm();
     [[maybe_unused]] auto& realm = *vm.current_realm();
 
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
@@ -3039,7 +3050,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 void @constructor_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     NativeFunction::initialize(realm);
@@ -3165,8 +3176,46 @@ private:
     }
 
     generator.append(R"~~~(
+
 };
 
+)~~~");
+
+    for (auto& it : interface.enumerations) {
+        if (!it.value.is_original_definition)
+            continue;
+        auto enum_generator = generator.fork();
+        enum_generator.set("enum.type.name", it.key);
+        enum_generator.append(R"~~~(
+enum class @enum.type.name@ {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.append(R"~~~(
+    @enum.entry@,
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+};
+inline String idl_enum_to_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.set("enum.string", entry.key);
+            enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return "@enum.string@";
+)~~~");
+        }
+        enum_generator.append(R"~~~(
+    default: return "<unknown>";
+    };
+}
+)~~~");
+    }
+
+    generator.append(R"~~~(
 } // namespace Web::Bindings
     )~~~");
 
@@ -3208,10 +3257,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/WorkerLocationWrapper.h>
 #include <LibWeb/Bindings/WorkerNavigatorWrapper.h>
-#include <LibWeb/Bindings/WorkerWrapper.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/IDLEventListener.h>
@@ -3266,7 +3313,7 @@ namespace Web::Bindings {
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_base_class@>("@parent_name@"))
+    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_base_class@>("@parent_name@"))
 )~~~");
     } else {
         generator.append(R"~~~(
@@ -3418,8 +3465,8 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 
         if (interface.name == "EventTarget") {
             generator.append(R"~~~(
-    if (is<WindowObject>(this_object)) {
-        return &static_cast<WindowObject*>(this_object)->impl();
+    if (is<HTML::Window>(this_object)) {
+        return &static_cast<HTML::Window*>(this_object)->impl();
     }
 )~~~");
         }
@@ -3686,7 +3733,7 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #endif
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 
 )~~~");
 
@@ -3720,7 +3767,7 @@ namespace Web::Bindings {
 }
 
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
-    : Wrapper(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
+    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
     , m_impl(impl)
 {
 }
@@ -3804,7 +3851,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 
 #if __has_include(<LibWeb/@possible_include_path@.h>)
 #    include <LibWeb/@possible_include_path@.h>

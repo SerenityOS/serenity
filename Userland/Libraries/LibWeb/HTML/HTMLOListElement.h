@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLOListElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLOListElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLOListElement, HTMLElement);
 
-    HTMLOListElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLOListElement() override;
+
+private:
+    HTMLOListElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLOListElement, Web::HTML)

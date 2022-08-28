@@ -5,7 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/SVGGraphicsElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
@@ -15,6 +17,7 @@ namespace Web::SVG {
 SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGGraphicsElementPrototype>("SVGGraphicsElement"));
 }
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const

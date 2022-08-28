@@ -14,6 +14,6 @@
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-DOM::ExceptionOr<void> inner_html_setter(NonnullRefPtr<DOM::Node> context_object, String const& value);
+DOM::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value);
 
 }

@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLLegendElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLLegendElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLLegendElement, HTMLElement);
 
-    HTMLLegendElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLLegendElement() override;
+
+private:
+    HTMLLegendElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLLegendElement, Web::HTML)

@@ -8,6 +8,7 @@
 #include <AK/ExtraMathConstants.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <LibWeb/Bindings/SVGPathElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
@@ -86,6 +87,7 @@ namespace Web::SVG {
 SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGPathElementPrototype>("SVGPathElement"));
 }
 
 void SVGPathElement::parse_attribute(FlyString const& name, String const& value)

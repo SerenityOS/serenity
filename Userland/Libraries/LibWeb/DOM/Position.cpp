@@ -13,7 +13,7 @@
 namespace Web::DOM {
 
 Position::Position(Node& node, unsigned offset)
-    : m_node(node)
+    : m_node(JS::make_handle(node))
     , m_offset(offset)
 {
 }

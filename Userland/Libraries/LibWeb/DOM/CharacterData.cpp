@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CharacterDataPrototype.h>
 #include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/MutationType.h>
@@ -16,6 +17,7 @@ CharacterData::CharacterData(Document& document, NodeType type, String const& da
     : Node(document, type)
     , m_data(data)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::CharacterDataPrototype>("CharacterData"));
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data

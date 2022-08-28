@@ -10,6 +10,7 @@
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
@@ -37,9 +38,9 @@ public:
 
     size_t serial_id() const { return m_serial_id; }
 
-    bool is_anonymous() const { return !m_dom_node; }
-    const DOM::Node* dom_node() const { return m_dom_node; }
-    DOM::Node* dom_node() { return m_dom_node; }
+    bool is_anonymous() const;
+    DOM::Node const* dom_node() const;
+    DOM::Node* dom_node();
 
     Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
@@ -47,8 +48,8 @@ public:
 
     virtual RefPtr<Painting::Paintable> create_paintable() const;
 
-    DOM::Document& document() { return m_document; }
-    const DOM::Document& document() const { return m_document; }
+    DOM::Document& document();
+    DOM::Document const& document() const;
 
     HTML::BrowsingContext const& browsing_context() const;
     HTML::BrowsingContext& browsing_context();
@@ -140,8 +141,8 @@ protected:
 private:
     friend class NodeWithStyle;
 
-    NonnullRefPtr<DOM::Document> m_document;
-    RefPtr<DOM::Node> m_dom_node;
+    JS::Handle<DOM::Document> m_document;
+    JS::Handle<DOM::Node> m_dom_node;
     RefPtr<Painting::Paintable> m_paintable;
 
     size_t m_serial_id { 0 };

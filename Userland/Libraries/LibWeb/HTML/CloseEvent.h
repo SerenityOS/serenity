@@ -18,17 +18,15 @@ struct CloseEventInit : public DOM::EventInit {
 };
 
 class CloseEvent : public DOM::Event {
-    JS_OBJECT(CloseEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(CloseEvent, DOM::Event);
 
 public:
-    static CloseEvent* create(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init = {});
-    static CloseEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init);
+    static CloseEvent* create(HTML::Window&, FlyString const& event_name, CloseEventInit const& event_init = {});
+    static CloseEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, CloseEventInit const& event_init);
 
-    CloseEvent(Bindings::WindowObject&, FlyString const& event_name, CloseEventInit const& event_init);
+    CloseEvent(HTML::Window&, FlyString const& event_name, CloseEventInit const& event_init);
 
     virtual ~CloseEvent() override;
-
-    CloseEvent& impl() { return *this; }
 
     bool was_clean() const { return m_was_clean; }
     u16 code() const { return m_code; }

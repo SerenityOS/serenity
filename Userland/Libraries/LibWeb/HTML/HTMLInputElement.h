@@ -40,12 +40,10 @@ namespace Web::HTML {
 class HTMLInputElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLInputElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
 
 public:
-    using WrapperType = Bindings::HTMLInputElementWrapper;
-
-    HTMLInputElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLInputElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
@@ -106,11 +104,15 @@ public:
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
 private:
+    HTMLInputElement(DOM::Document&, DOM::QualifiedName);
+
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
     virtual void legacy_pre_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior_was_not_called() override;
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
@@ -120,7 +122,7 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     String value_sanitization_algorithm(String) const;
 
-    RefPtr<DOM::Text> m_text_node;
+    JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
 
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-checked-dirty-flag
@@ -131,10 +133,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
-    RefPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
+    JS::GCPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
     String m_value;
 };
 
 }
+
+WRAPPER_HACK(HTMLInputElement, Web::HTML)

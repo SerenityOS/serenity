@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLMapElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLMapElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLMapElement, HTMLElement);
 
-    HTMLMapElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLMapElement() override;
+
+private:
+    HTMLMapElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLMapElement, Web::HTML)

@@ -13,15 +13,13 @@
 namespace Web::DOM {
 
 class Range final : public AbstractRange {
-    JS_OBJECT(Range, AbstractRange);
+    WEB_PLATFORM_OBJECT(Range, AbstractRange);
 
 public:
-    Range& impl() { return *this; }
-
     static JS::NonnullGCPtr<Range> create(Document&);
     static JS::NonnullGCPtr<Range> create(HTML::Window&);
     static JS::NonnullGCPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
-    static JS::NonnullGCPtr<Range> create_with_global_object(Bindings::WindowObject&);
+    static JS::NonnullGCPtr<Range> create_with_global_object(HTML::Window&);
 
     explicit Range(Document&);
     Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
@@ -53,7 +51,7 @@ public:
     JS::NonnullGCPtr<Range> normalized() const;
     JS::NonnullGCPtr<Range> clone_range() const;
 
-    NonnullRefPtr<Node> common_ancestor_container() const;
+    JS::NonnullGCPtr<Node> common_ancestor_container() const;
 
     // https://dom.spec.whatwg.org/#dom-range-detach
     void detach() const
@@ -67,11 +65,11 @@ public:
     ExceptionOr<i16> compare_point(Node const&, u32 offset) const;
 
     ExceptionOr<void> delete_contents();
-    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
-    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_contents();
+    ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> extract_contents();
+    ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> clone_contents();
 
-    ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
-    ExceptionOr<void> surround_contents(NonnullRefPtr<Node> new_parent);
+    ExceptionOr<void> insert_node(JS::NonnullGCPtr<Node>);
+    ExceptionOr<void> surround_contents(JS::NonnullGCPtr<Node> new_parent);
 
     String to_string() const;
 
@@ -89,9 +87,9 @@ private:
     ExceptionOr<void> set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end);
     ExceptionOr<void> select(Node& node);
 
-    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract();
-    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_the_contents();
-    ExceptionOr<void> insert(NonnullRefPtr<Node>);
+    ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> extract();
+    ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> clone_the_contents();
+    ExceptionOr<void> insert(JS::NonnullGCPtr<Node>);
 
     bool contains_node(Node const&) const;
     bool partially_contains_node(Node const&) const;

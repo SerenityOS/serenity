@@ -12,15 +12,12 @@
 namespace Web::DOM {
 
 class NodeFilter final : public Bindings::PlatformObject {
-    JS_OBJECT(NodeFilter, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(NodeFilter, Bindings::PlatformObject);
 
 public:
     static JS::NonnullGCPtr<NodeFilter> create(JS::Realm&, Bindings::CallbackType&);
-    NodeFilter(JS::Realm&, Bindings::CallbackType&);
 
     virtual ~NodeFilter() = default;
-
-    NodeFilter& impl() { return *this; }
 
     Bindings::CallbackType& callback() { return m_callback; }
 
@@ -31,14 +28,13 @@ public:
     };
 
 private:
+    NodeFilter(JS::Realm&, Bindings::CallbackType&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     Bindings::CallbackType& m_callback;
 };
 
-inline JS::Object* wrap(JS::Realm&, Web::DOM::NodeFilter& filter)
-{
-    return &filter.callback().callback;
 }
 
-}
+WRAPPER_HACK(NodeFilter, Web::DOM)

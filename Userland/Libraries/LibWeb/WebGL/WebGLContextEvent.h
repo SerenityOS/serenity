@@ -16,17 +16,15 @@ struct WebGLContextEventInit final : public DOM::EventInit {
 };
 
 class WebGLContextEvent final : public DOM::Event {
-    JS_OBJECT(WebGLContextEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(WebGLContextEvent, DOM::Event);
 
 public:
-    static WebGLContextEvent* create(Bindings::WindowObject&, FlyString const& type, WebGLContextEventInit const& event_init);
-    static WebGLContextEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& type, WebGLContextEventInit const& event_init);
+    static WebGLContextEvent* create(HTML::Window&, FlyString const& type, WebGLContextEventInit const& event_init);
+    static WebGLContextEvent* create_with_global_object(HTML::Window&, FlyString const& type, WebGLContextEventInit const& event_init);
 
-    WebGLContextEvent(Bindings::WindowObject&, FlyString const& type, WebGLContextEventInit const& event_init);
+    WebGLContextEvent(HTML::Window&, FlyString const& type, WebGLContextEventInit const& event_init);
 
     virtual ~WebGLContextEvent() override;
-
-    WebGLContextEvent& impl() { return *this; }
 
     String const& status_message() const { return m_status_message; }
 

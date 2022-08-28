@@ -9,6 +9,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 class WindowObject;
@@ -20,7 +21,7 @@ class ConsoleGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(ConsoleGlobalObject, JS::GlobalObject);
 
 public:
-    ConsoleGlobalObject(JS::Realm&, Web::Bindings::WindowObject&);
+    ConsoleGlobalObject(JS::Realm&, Web::HTML::Window&);
     virtual void initialize(JS::Realm&) override;
     virtual ~ConsoleGlobalObject() override = default;
 
@@ -42,7 +43,7 @@ private:
     // Because $0 is not a nice C++ function name
     JS_DECLARE_NATIVE_FUNCTION(inspected_node_getter);
 
-    Web::Bindings::WindowObject* m_window_object;
+    Web::HTML::Window* m_window_object;
 };
 
 }

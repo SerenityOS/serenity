@@ -11,7 +11,6 @@
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -25,7 +24,7 @@
 namespace Web::HTML {
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(HTMLCanvasElement& element)
-    : RefCountForwarder(element)
+    : m_element(JS::make_handle(element))
 {
 }
 
@@ -33,17 +32,17 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
 
 HTMLCanvasElement& CanvasRenderingContext2D::canvas_element()
 {
-    return ref_count_target();
+    return *m_element;
 }
 
 HTMLCanvasElement const& CanvasRenderingContext2D::canvas_element() const
 {
-    return ref_count_target();
+    return *m_element;
 }
 
-NonnullRefPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding() const
+JS::NonnullGCPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding() const
 {
-    return canvas_element();
+    return *m_element;
 }
 
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
@@ -520,15 +519,15 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
     // 1. Switch on image:
     auto usability = TRY(image.visit(
         // HTMLOrSVGImageElement
-        [](HTMLImageElement const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+        [](JS::Handle<HTMLImageElement> const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
 
             // If image is not fully decodable, then return bad.
-            if (!image_element.bitmap())
+            if (!image_element->bitmap())
                 return { CanvasImageSourceUsability::Bad };
 
             // If image has an intrinsic width or intrinsic height (or both) equal to zero, then return bad.
-            if (image_element.bitmap()->width() == 0 || image_element.bitmap()->height() == 0)
+            if (image_element->bitmap()->width() == 0 || image_element->bitmap()->height() == 0)
                 return { CanvasImageSourceUsability::Bad };
             return Optional<CanvasImageSourceUsability> {};
         },
@@ -538,9 +537,9 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
 
         // HTMLCanvasElement
         // FIXME: OffscreenCanvas
-        [](HTMLCanvasElement const& canvas_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+        [](JS::Handle<HTMLCanvasElement> const& canvas_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // If image has either a horizontal dimension or a vertical dimension equal to zero, then throw an "InvalidStateError" DOMException.
-            if (canvas_element.width() == 0 || canvas_element.height() == 0)
+            if (canvas_element->width() == 0 || canvas_element->height() == 0)
                 return DOM::InvalidStateError::create("Canvas width or height is zero");
             return Optional<CanvasImageSourceUsability> {};
         }));
@@ -557,7 +556,7 @@ bool image_is_not_origin_clean(CanvasImageSource const& image)
     // An object image is not origin-clean if, switching on image's type:
     return image.visit(
         // HTMLOrSVGImageElement
-        [](HTMLImageElement const&) {
+        [](JS::Handle<HTMLImageElement> const&) {
             // FIXME: image's current request's image data is CORS-cross-origin.
             return false;
         },
@@ -567,7 +566,7 @@ bool image_is_not_origin_clean(CanvasImageSource const& image)
 
         // HTMLCanvasElement
         // FIXME: ImageBitmap
-        [](HTMLCanvasElement const&) {
+        [](JS::Handle<HTMLCanvasElement> const&) {
             // FIXME: image's bitmap's origin-clean flag is false.
             return false;
         });

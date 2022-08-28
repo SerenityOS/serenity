@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
+#include <LibWeb/Bindings/HTMLElementPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
@@ -30,11 +31,18 @@ namespace Web::HTML {
 
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
-    , m_dataset(JS::make_handle(DOMStringMap::create(*this)))
+    , m_dataset(DOMStringMap::create(*this))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLElementPrototype>("HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;
+
+void HTMLElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_dataset.ptr());
+}
 
 HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
@@ -200,7 +208,7 @@ void HTMLElement::parse_attribute(FlyString const& name, String const& value)
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#focus-update-steps
-static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, NonnullRefPtrVector<DOM::Node> new_chain, DOM::Node& new_focus_target)
+static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vector<JS::Handle<DOM::Node>> new_chain, DOM::Node& new_focus_target)
 {
     // 1. If the last entry in old chain and the last entry in new chain are the same,
     //    pop the last entry from old chain and the last entry from new chain and redo this step.
@@ -221,33 +229,33 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
         //           then fire an event named change at the element,
         //           with the bubbles attribute initialized to true.
 
-        RefPtr<DOM::EventTarget> blur_event_target;
-        if (is<DOM::Element>(entry)) {
+        JS::GCPtr<DOM::EventTarget> blur_event_target;
+        if (is<DOM::Element>(*entry)) {
             // 2. If entry is an element, let blur event target be entry.
-            blur_event_target = entry;
-        } else if (is<DOM::Document>(entry)) {
+            blur_event_target = entry.ptr();
+        } else if (is<DOM::Document>(*entry)) {
             // If entry is a Document object, let blur event target be that Document object's relevant global object.
-            blur_event_target = static_cast<DOM::Document&>(entry).window();
+            blur_event_target = &static_cast<DOM::Document&>(*entry).window();
         }
 
         // 3. If entry is the last entry in old chain, and entry is an Element,
         //    and the last entry in new chain is also an Element,
         //    then let related blur target be the last entry in new chain.
         //    Otherwise, let related blur target be null.
-        RefPtr<DOM::EventTarget> related_blur_target;
+        JS::GCPtr<DOM::EventTarget> related_blur_target;
         if (!old_chain.is_empty()
             && &entry == &old_chain.last()
-            && is<DOM::Element>(entry)
+            && is<DOM::Element>(*entry)
             && !new_chain.is_empty()
-            && is<DOM::Element>(new_chain.last())) {
-            related_blur_target = new_chain.last();
+            && is<DOM::Element>(*new_chain.last())) {
+            related_blur_target = new_chain.last().ptr();
         }
 
         // 4. If blur event target is not null, fire a focus event named blur at blur event target,
         //    with related blur target as the related target.
         if (blur_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto blur_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*blur_event_target).document().preferred_window_object(), HTML::EventNames::blur);
+            auto blur_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*blur_event_target).document().window(), HTML::EventNames::blur);
             blur_event->set_related_target(related_blur_target);
             blur_event_target->dispatch_event(*blur_event);
         }
@@ -261,50 +269,50 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
     for (auto& entry : new_chain.in_reverse()) {
         // 1. If entry is a focusable area: designate entry as the focused area of the document.
         // FIXME: This isn't entirely right.
-        if (is<DOM::Element>(entry))
-            entry.document().set_focused_element(&static_cast<DOM::Element&>(entry));
+        if (is<DOM::Element>(*entry))
+            entry->document().set_focused_element(&static_cast<DOM::Element&>(*entry));
 
-        RefPtr<DOM::EventTarget> focus_event_target;
-        if (is<DOM::Element>(entry)) {
+        JS::GCPtr<DOM::EventTarget> focus_event_target;
+        if (is<DOM::Element>(*entry)) {
             // 2. If entry is an element, let focus event target be entry.
-            focus_event_target = entry;
-        } else if (is<DOM::Document>(entry)) {
+            focus_event_target = entry.ptr();
+        } else if (is<DOM::Document>(*entry)) {
             // If entry is a Document object, let focus event target be that Document object's relevant global object.
-            focus_event_target = static_cast<DOM::Document&>(entry).window();
+            focus_event_target = &static_cast<DOM::Document&>(*entry).window();
         }
 
         // 3. If entry is the last entry in new chain, and entry is an Element,
         //    and the last entry in old chain is also an Element,
         //    then let related focus target be the last entry in old chain.
         //    Otherwise, let related focus target be null.
-        RefPtr<DOM::EventTarget> related_focus_target;
+        JS::GCPtr<DOM::EventTarget> related_focus_target;
         if (!new_chain.is_empty()
             && &entry == &new_chain.last()
-            && is<DOM::Element>(entry)
+            && is<DOM::Element>(*entry)
             && !old_chain.is_empty()
-            && is<DOM::Element>(old_chain.last())) {
-            related_focus_target = old_chain.last();
+            && is<DOM::Element>(*old_chain.last())) {
+            related_focus_target = old_chain.last().ptr();
         }
 
         // 4. If focus event target is not null, fire a focus event named focus at focus event target,
         //    with related focus target as the related target.
         if (focus_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto focus_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*focus_event_target).document().preferred_window_object(), HTML::EventNames::focus);
+            auto focus_event = UIEvents::FocusEvent::create(verify_cast<DOM::Node>(*focus_event_target).document().window(), HTML::EventNames::focus);
             focus_event->set_related_target(related_focus_target);
             focus_event_target->dispatch_event(*focus_event);
         }
     }
 }
 // https://html.spec.whatwg.org/multipage/interaction.html#focus-chain
-static NonnullRefPtrVector<DOM::Node> focus_chain(DOM::Node* subject)
+static Vector<JS::Handle<DOM::Node>> focus_chain(DOM::Node* subject)
 {
     // FIXME: Move this somewhere more spec-friendly.
     if (!subject)
         return {};
 
     // 1. Let output be an empty list.
-    NonnullRefPtrVector<DOM::Node> output;
+    Vector<JS::Handle<DOM::Node>> output;
 
     // 2. Let currentObject be subject.
     auto* current_object = subject;
@@ -312,7 +320,7 @@ static NonnullRefPtrVector<DOM::Node> focus_chain(DOM::Node* subject)
     // 3. While true:
     while (true) {
         // 1. Append currentObject to output.
-        output.append(*current_object);
+        output.append(JS::make_handle(*current_object));
 
         // FIXME: 2. If currentObject is an area element's shape, then append that area element to output.
 
@@ -369,7 +377,7 @@ static void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_
     if (!new_focus_target->document().browsing_context())
         return;
     auto& top_level_browsing_context = new_focus_target->document().browsing_context()->top_level_browsing_context();
-    if (new_focus_target == top_level_browsing_context.currently_focused_area())
+    if (new_focus_target == top_level_browsing_context.currently_focused_area().ptr())
         return;
 
     // 6. Let old chain be the current focus chain of the top-level browsing context in which
@@ -411,7 +419,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(document().preferred_window_object(), type);
+    auto event = UIEvents::MouseEvent::create(document().window(), type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);

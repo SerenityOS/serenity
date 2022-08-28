@@ -10,8 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/BlobWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
@@ -39,8 +38,10 @@ public:
     using WrapperType = Bindings::BlobWrapper;
     Blob(ByteBuffer byte_buffer, String type);
 
+    virtual ~Blob() override;
+
     static DOM::ExceptionOr<NonnullRefPtr<Blob>> create(Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
-    static DOM::ExceptionOr<NonnullRefPtr<Blob>> create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
+    static DOM::ExceptionOr<NonnullRefPtr<Blob>> create_with_global_object(HTML::Window&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 
     // https://w3c.github.io/FileAPI/#dfn-size
     u64 size() const { return m_byte_buffer.size(); }
@@ -51,8 +52,6 @@ public:
 
     JS::Promise* text();
     JS::Promise* array_buffer();
-
-    virtual JS::Object* create_wrapper(JS::Realm&);
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 

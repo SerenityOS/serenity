@@ -16,9 +16,9 @@ namespace Web::DOM {
 template<typename NodeType>
 class NonElementParentNode {
 public:
-    RefPtr<Element> get_element_by_id(FlyString const& id) const
+    JS::GCPtr<Element> get_element_by_id(FlyString const& id) const
     {
-        RefPtr<Element> found_element;
+        JS::GCPtr<Element> found_element;
         static_cast<NodeType const*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
             if (element.attribute(HTML::AttributeNames::id) == id) {
                 found_element = &element;
@@ -28,7 +28,7 @@ public:
         });
         return found_element;
     }
-    RefPtr<Element> get_element_by_id(FlyString const& id)
+    JS::GCPtr<Element> get_element_by_id(FlyString const& id)
     {
         return const_cast<NonElementParentNode const*>(this)->get_element_by_id(id);
     }

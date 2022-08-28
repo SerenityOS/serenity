@@ -11,19 +11,17 @@
 namespace Web::UIEvents {
 
 struct FocusEventInit : public UIEventInit {
-    RefPtr<DOM::EventTarget> related_target;
+    JS::GCPtr<DOM::EventTarget> related_target;
 };
 
 class FocusEvent final : public UIEvent {
-    JS_OBJECT(FocusEvent, UIEvent);
+    WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
 
 public:
-    static FocusEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, FocusEventInit const& event_init);
+    static FocusEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, FocusEventInit const& event_init);
 
-    FocusEvent(Bindings::WindowObject&, FlyString const& event_name, FocusEventInit const&);
+    FocusEvent(HTML::Window&, FlyString const& event_name, FocusEventInit const&);
     virtual ~FocusEvent() override;
-
-    FocusEvent& impl() { return *this; }
 };
 
 }

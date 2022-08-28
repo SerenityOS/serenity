@@ -21,17 +21,15 @@ struct ErrorEventInit : public DOM::EventInit {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#errorevent
 class ErrorEvent final : public DOM::Event {
-    JS_OBJECT(ErrorEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(ErrorEvent, DOM::Event);
 
 public:
-    static ErrorEvent* create(Bindings::WindowObject&, FlyString const& event_name, ErrorEventInit const& event_init = {});
-    static ErrorEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, ErrorEventInit const& event_init);
+    static ErrorEvent* create(HTML::Window&, FlyString const& event_name, ErrorEventInit const& event_init = {});
+    static ErrorEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, ErrorEventInit const& event_init);
 
-    ErrorEvent(Bindings::WindowObject&, FlyString const& event_name, ErrorEventInit const& event_init);
+    ErrorEvent(HTML::Window&, FlyString const& event_name, ErrorEventInit const& event_init);
 
     virtual ~ErrorEvent() override;
-
-    ErrorEvent& impl() { return *this; }
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#dom-errorevent-message
     String const& message() const { return m_message; }

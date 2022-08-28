@@ -6,33 +6,32 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/HTMLElementWrapper.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
 struct SubmitEventInit : public DOM::EventInit {
-    RefPtr<HTMLElement> submitter { nullptr };
+    JS::GCPtr<HTMLElement> submitter;
 };
 
 class SubmitEvent final : public DOM::Event {
-    JS_OBJECT(SubmitEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(SubmitEvent, DOM::Event);
 
 public:
-    static SubmitEvent* create(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
-    static SubmitEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
+    static SubmitEvent* create(HTML::Window&, FlyString const& event_name, SubmitEventInit const& event_init);
+    static SubmitEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, SubmitEventInit const& event_init);
 
     virtual ~SubmitEvent() override;
 
-    SubmitEvent(Bindings::WindowObject&, FlyString const& event_name, SubmitEventInit const& event_init);
+    SubmitEvent(HTML::Window&, FlyString const& event_name, SubmitEventInit const& event_init);
 
-    SubmitEvent& impl() { return *this; }
-
-    RefPtr<HTMLElement> submitter() const { return m_submitter; }
+    JS::GCPtr<HTMLElement> submitter() const { return m_submitter; }
 
 private:
-    RefPtr<HTMLElement> m_submitter;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::GCPtr<HTMLElement> m_submitter;
 };
 
 }

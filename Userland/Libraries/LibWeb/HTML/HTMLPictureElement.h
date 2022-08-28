@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLPictureElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLPictureElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLPictureElement, HTMLElement);
 
-    HTMLPictureElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLPictureElement() override;
+
+private:
+    HTMLPictureElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLPictureElement, Web::HTML)

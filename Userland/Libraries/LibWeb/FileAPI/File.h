@@ -21,7 +21,7 @@ public:
     using WrapperType = Bindings::FileWrapper;
 
     static DOM::ExceptionOr<NonnullRefPtr<File>> create(Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
-    static DOM::ExceptionOr<NonnullRefPtr<File>> create_with_global_object(Bindings::WindowObject&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static DOM::ExceptionOr<NonnullRefPtr<File>> create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
 
     // https://w3c.github.io/FileAPI/#dfn-name
     String const& name() const { return m_name; }

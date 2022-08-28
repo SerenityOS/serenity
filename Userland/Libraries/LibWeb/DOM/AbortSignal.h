@@ -16,26 +16,11 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#abortsignal
-class AbortSignal final
-    : public RefCounted<AbortSignal>
-    , public Weakable<AbortSignal>
-    , public EventTarget
-    , public Bindings::Wrappable {
+class AbortSignal final : public EventTarget {
+    WEB_PLATFORM_OBJECT(AbortSignal, EventTarget);
+
 public:
-    using WrapperType = Bindings::AbortSignalWrapper;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
-
-    static NonnullRefPtr<AbortSignal> create()
-    {
-        return adopt_ref(*new AbortSignal());
-    }
-
-    static NonnullRefPtr<AbortSignal> create_with_global_object(Bindings::WindowObject&)
-    {
-        return AbortSignal::create();
-    }
+    static JS::NonnullGCPtr<AbortSignal> create_with_global_object(HTML::Window&);
 
     virtual ~AbortSignal() override = default;
 
@@ -55,15 +40,10 @@ public:
 
     JS::ThrowCompletionOr<void> throw_if_aborted() const;
 
-    void visit_edges(JS::Cell::Visitor&);
-
-    // ^EventTarget
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
-
 private:
-    AbortSignal();
+    explicit AbortSignal(HTML::Window&);
+
+    virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#abortsignal-abort-reason
     // An AbortSignal object has an associated abort reason, which is a JavaScript value. It is undefined unless specified otherwise.
@@ -75,3 +55,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(AbortSignal, Web::DOM)

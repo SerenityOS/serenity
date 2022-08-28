@@ -19,17 +19,15 @@ struct PromiseRejectionEventInit : public DOM::EventInit {
 };
 
 class PromiseRejectionEvent final : public DOM::Event {
-    JS_OBJECT(PromiseRejectionEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(PromiseRejectionEvent, DOM::Event);
 
 public:
-    static PromiseRejectionEvent* create(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
-    static PromiseRejectionEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    static PromiseRejectionEvent* create(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
+    static PromiseRejectionEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
-    PromiseRejectionEvent(Bindings::WindowObject&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    PromiseRejectionEvent(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
     virtual ~PromiseRejectionEvent() override;
-
-    PromiseRejectionEvent& impl() { return *this; }
 
     // Needs to return a pointer for the generated JS bindings to work.
     JS::Promise const* promise() const { return m_promise; }

@@ -17,9 +17,9 @@ class CharacterData
     : public Node
     , public ChildNode<CharacterData>
     , public NonDocumentTypeChildNode<CharacterData> {
-public:
-    using WrapperType = Bindings::CharacterDataWrapper;
+    WEB_PLATFORM_OBJECT(CharacterData, Node);
 
+public:
     virtual ~CharacterData() override = default;
 
     String const& data() const { return m_data; }
@@ -41,3 +41,4 @@ private:
 };
 
 }
+WRAPPER_HACK(CharacterData, Web::DOM)

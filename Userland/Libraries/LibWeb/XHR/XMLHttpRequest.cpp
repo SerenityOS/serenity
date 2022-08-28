@@ -16,8 +16,9 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/BlobWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -40,19 +41,31 @@
 
 namespace Web::XHR {
 
+JS::NonnullGCPtr<XMLHttpRequest> XMLHttpRequest::create_with_global_object(HTML::Window& window)
+{
+    return *window.heap().allocate<XMLHttpRequest>(window.realm(), window);
+}
+
 XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
-    : XMLHttpRequestEventTarget()
+    : XMLHttpRequestEventTarget(window.realm())
     , m_window(window)
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
+    set_prototype(&window.ensure_web_prototype<Bindings::XMLHttpRequestPrototype>("XMLHttpRequest"));
 }
 
 XMLHttpRequest::~XMLHttpRequest() = default;
 
+void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
+}
+
 void XMLHttpRequest::set_ready_state(ReadyState ready_state)
 {
     m_ready_state = ready_state;
-    dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), EventNames::readystatechange));
+    dispatch_event(*DOM::Event::create(global_object(), EventNames::readystatechange));
 }
 
 void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitted, u64 length)
@@ -61,7 +74,7 @@ void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitt
     event_init.length_computable = true;
     event_init.loaded = transmitted;
     event_init.total = length;
-    dispatch_event(*ProgressEvent::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), event_name, event_init));
+    dispatch_event(*ProgressEvent::create(global_object(), event_name, event_init));
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
@@ -81,17 +94,14 @@ DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 // https://xhr.spec.whatwg.org/#response
 DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {
-    auto& vm = wrapper()->vm();
-    auto& realm = *vm.current_realm();
-
     // 1. If this’s response type is the empty string or "text", then:
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
         // 1. If this’s state is not loading or done, then return the empty string.
         if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
-            return JS::Value(JS::js_string(vm, ""));
+            return JS::Value(JS::js_string(vm(), ""));
 
         // 2. Return the result of getting a text response for this.
-        return JS::Value(JS::js_string(vm, get_text_response()));
+        return JS::Value(JS::js_string(vm(), get_text_response()));
     }
     // 2. If this’s state is not done, then return null.
     if (m_ready_state != ReadyState::Done)
@@ -108,7 +118,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 5. If this’s response type is "arraybuffer",
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Arraybuffer) {
         // then set this’s response object to a new ArrayBuffer object representing this’s received bytes. If this throws an exception, then set this’s response object to failure and return null.
-        auto buffer_result = JS::ArrayBuffer::create(realm, m_received_bytes.size());
+        auto buffer_result = JS::ArrayBuffer::create(realm(), m_received_bytes.size());
         if (buffer_result.is_error()) {
             m_response_object = Failure();
             return JS::js_null();
@@ -122,7 +132,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
         auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
         auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
-        m_response_object = JS::make_handle(JS::Value(blob->create_wrapper(realm)));
+        m_response_object = JS::make_handle(JS::Value(wrap(realm(), *blob)));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
@@ -142,7 +152,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
         TextCodec::UTF8Decoder decoder;
 
-        auto json_object_result = JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), JS::js_string(vm, decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
+        auto json_object_result = JS::call(vm(), realm().intrinsics().json_parse_function(), JS::js_undefined(), JS::js_string(vm(), decoder.to_utf8({ m_received_bytes.data(), m_received_bytes.size() })));
         if (json_object_result.is_error())
             return JS::Value(JS::js_null());
 
@@ -372,7 +382,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
     auto& settings_object = m_window->associated_document().relevant_settings_object();
 
     // 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
-    if (!settings_object.responsible_document().is_null() && !settings_object.responsible_document()->is_active())
+    if (settings_object.responsible_document() && !settings_object.responsible_document()->is_active())
         return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
@@ -468,7 +478,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         set_ready_state(ReadyState::Done);
-        dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(wrapper()->global_object()), HTML::EventNames::error));
+        dispatch_event(*DOM::Event::create(global_object(), HTML::EventNames::error));
         return {};
     }
 
@@ -518,8 +528,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
         //        See: https://github.com/whatwg/fetch/issues/1142
         ResourceLoader::the().load(
             request,
-            [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
-                auto strong_this = weak_this.strong_ref();
+            [weak_this = make_weak_ptr<XMLHttpRequest>()](auto data, auto& response_headers, auto status_code) {
+                JS::GCPtr<XMLHttpRequest> strong_this = weak_this.ptr();
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
@@ -538,37 +548,32 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 xhr.m_status = status_code.value_or(0);
                 xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
-                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), EventNames::readystatechange));
+                xhr.dispatch_event(*DOM::Event::create(xhr.global_object(), EventNames::readystatechange));
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
-            [weak_this = make_weak_ptr()](auto& error, auto status_code) {
+            [weak_this = make_weak_ptr<XMLHttpRequest>()](auto& error, auto status_code) {
                 dbgln("XHR failed to load: {}", error);
-                auto strong_this = weak_this.strong_ref();
+                JS::GCPtr<XMLHttpRequest> strong_this = weak_this.ptr();
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
                 xhr.set_ready_state(ReadyState::Done);
                 xhr.set_status(status_code.value_or(0));
-                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), HTML::EventNames::error));
+                xhr.dispatch_event(*DOM::Event::create(xhr.global_object(), HTML::EventNames::error));
             },
             m_timeout,
-            [weak_this = make_weak_ptr()] {
-                auto strong_this = weak_this.strong_ref();
+            [weak_this = make_weak_ptr<XMLHttpRequest>()] {
+                JS::GCPtr<XMLHttpRequest> strong_this = weak_this.ptr();
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
-                xhr.dispatch_event(*DOM::Event::create(verify_cast<Bindings::WindowObject>(xhr.wrapper()->global_object()), EventNames::timeout));
+                xhr.dispatch_event(*DOM::Event::create(xhr.global_object(), EventNames::timeout));
             });
     } else {
         TODO();
     }
     return {};
-}
-
-JS::Object* XMLHttpRequest::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 Bindings::CallbackType* XMLHttpRequest::onreadystatechange()
@@ -621,7 +626,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
 {
     // 1. If the current global object is a Window object and this’s synchronous flag is set,
     //    then throw an "InvalidAccessError" DOMException.
-    if (is<Bindings::WindowObject>(HTML::current_global_object()) && m_synchronous)
+    if (is<HTML::Window>(HTML::current_global_object()) && m_synchronous)
         return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
 
     // 2. Set this’s timeout to the given value.

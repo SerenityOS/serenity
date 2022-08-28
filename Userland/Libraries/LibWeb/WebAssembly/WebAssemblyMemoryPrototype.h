@@ -10,8 +10,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 

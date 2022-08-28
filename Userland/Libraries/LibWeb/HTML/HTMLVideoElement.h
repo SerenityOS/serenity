@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLVideoElement final : public HTMLMediaElement {
-public:
-    using WrapperType = Bindings::HTMLVideoElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLVideoElement, HTMLMediaElement);
 
-    HTMLVideoElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLVideoElement() override;
+
+private:
+    HTMLVideoElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLVideoElement, Web::HTML)

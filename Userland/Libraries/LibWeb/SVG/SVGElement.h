@@ -12,18 +12,22 @@
 namespace Web::SVG {
 
 class SVGElement : public DOM::Element {
-public:
-    using WrapperType = Bindings::SVGElementWrapper;
+    WEB_PLATFORM_OBJECT(SVGElement, DOM::Element);
 
+public:
     virtual bool requires_svg_container() const override { return true; }
 
-    HTML::DOMStringMap* dataset() { return m_dataset.cell(); }
-    HTML::DOMStringMap const* dataset() const { return m_dataset.cell(); }
+    HTML::DOMStringMap* dataset() { return m_dataset.ptr(); }
+    HTML::DOMStringMap const* dataset() const { return m_dataset.ptr(); }
 
 protected:
     SVGElement(DOM::Document&, DOM::QualifiedName);
 
-    JS::Handle<HTML::DOMStringMap> m_dataset;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<HTML::DOMStringMap> m_dataset;
 };
 
 }
+
+WRAPPER_HACK(SVGElement, Web::SVG)

@@ -17,33 +17,17 @@
 namespace Web::CSS {
 
 // 4.2. The MediaQueryList Interface, https://drafts.csswg.org/cssom-view/#the-mediaquerylist-interface
-class MediaQueryList final
-    : public RefCounted<MediaQueryList>
-    , public Weakable<MediaQueryList>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+class MediaQueryList final : public DOM::EventTarget {
+    WEB_PLATFORM_OBJECT(MediaQueryList, DOM::EventTarget);
 
 public:
-    using WrapperType = Bindings::MediaQueryListWrapper;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
-
-    static NonnullRefPtr<MediaQueryList> create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media_queries)
-    {
-        return adopt_ref(*new MediaQueryList(document, move(media_queries)));
-    }
+    static JS::NonnullGCPtr<MediaQueryList> create(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
 
     virtual ~MediaQueryList() override = default;
 
     String media() const;
     bool matches() const;
     bool evaluate();
-
-    // ^EventTarget
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
 
     void add_listener(DOM::IDLEventListener*);
     void remove_listener(DOM::IDLEventListener*);
@@ -54,14 +38,12 @@ public:
 private:
     MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
 
-    WeakPtr<DOM::Document> m_document;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<DOM::Document> m_document;
     NonnullRefPtrVector<MediaQuery> m_media;
 };
 
 }
 
-namespace Web::Bindings {
-
-MediaQueryListWrapper* wrap(JS::Realm&, CSS::MediaQueryList&);
-
-}
+WRAPPER_HACK(MediaQueryList, Web::CSS)

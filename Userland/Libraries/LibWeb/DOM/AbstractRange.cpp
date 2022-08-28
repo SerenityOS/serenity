@@ -5,14 +5,14 @@
  */
 
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/AbstractRange.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
 AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
-    : Bindings::PlatformObject(start_container.document().preferred_window_object().ensure_web_prototype<Bindings::AbstractRangePrototype>("AbstractRange"))
+    : Bindings::PlatformObject(start_container.document().window().ensure_web_prototype<Bindings::AbstractRangePrototype>("AbstractRange"))
     , m_start_container(start_container)
     , m_start_offset(start_offset)
     , m_end_container(end_container)
@@ -21,5 +21,12 @@ AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_
 }
 
 AbstractRange::~AbstractRange() = default;
+
+void AbstractRange::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_start_container.ptr());
+    visitor.visit(m_end_container.ptr());
+}
 
 }

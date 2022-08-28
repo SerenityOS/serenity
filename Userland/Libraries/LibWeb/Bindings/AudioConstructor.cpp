@@ -6,9 +6,8 @@
 
 #include <LibWeb/Bindings/AudioConstructor.h>
 #include <LibWeb/Bindings/HTMLAudioElementPrototype.h>
-#include <LibWeb/Bindings/HTMLAudioElementWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 
@@ -22,7 +21,7 @@ AudioConstructor::AudioConstructor(JS::Realm& realm)
 void AudioConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     NativeFunction::initialize(realm);
 
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<HTMLAudioElementPrototype>("HTMLAudioElement"), 0);
@@ -38,10 +37,9 @@ JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto& realm = *vm.current_realm();
 
     // 1. Let document be the current global object's associated Document.
-    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
     auto& document = window.impl().associated_document();
 
     // 2. Let audio be the result of creating an element given document, audio, and the HTML namespace.
@@ -60,7 +58,7 @@ JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
     }
 
     // 5. Return audio.
-    return wrap(realm, audio);
+    return audio.ptr();
 }
 
 }

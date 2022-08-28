@@ -14,7 +14,7 @@ namespace Web {
 namespace Bindings {
 
 NavigatorObject::NavigatorObject(JS::Realm& realm)
-    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<NavigatorPrototype>("Navigator"))
+    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<NavigatorPrototype>("Navigator"))
 {
 }
 

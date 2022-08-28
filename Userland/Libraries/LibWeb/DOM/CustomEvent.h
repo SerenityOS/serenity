@@ -17,18 +17,16 @@ struct CustomEventInit : public EventInit {
 
 // https://dom.spec.whatwg.org/#customevent
 class CustomEvent : public Event {
-    JS_OBJECT(CustomEvent, Event);
+    WEB_PLATFORM_OBJECT(CustomEvent, Event);
 
 public:
-    static CustomEvent* create(Bindings::WindowObject&, FlyString const& event_name, CustomEventInit const& event_init = {});
-    static CustomEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CustomEventInit const& event_init);
+    static CustomEvent* create(HTML::Window&, FlyString const& event_name, CustomEventInit const& event_init = {});
+    static CustomEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, CustomEventInit const& event_init);
 
-    CustomEvent(Bindings::WindowObject&, FlyString const& event_name);
-    CustomEvent(Bindings::WindowObject&, FlyString const& event_name, CustomEventInit const& event_init);
+    CustomEvent(HTML::Window&, FlyString const& event_name);
+    CustomEvent(HTML::Window&, FlyString const& event_name, CustomEventInit const& event_init);
 
     virtual ~CustomEvent() override;
-
-    CustomEvent& impl() { return *this; }
 
     // https://dom.spec.whatwg.org/#dom-customevent-detail
     JS::Value detail() const { return m_detail; }

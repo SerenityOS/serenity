@@ -10,17 +10,17 @@
 namespace Web::DOM {
 
 LiveNodeList::LiveNodeList(Node& root, Function<bool(Node const&)> filter)
-    : m_root(root)
+    : m_root(JS::make_handle(root))
     , m_filter(move(filter))
 {
 }
 
-NonnullRefPtrVector<Node> LiveNodeList::collection() const
+JS::MarkedVector<Node*> LiveNodeList::collection() const
 {
-    NonnullRefPtrVector<Node> nodes;
+    JS::MarkedVector<Node*> nodes(m_root->heap());
     m_root->for_each_in_inclusive_subtree([&](auto& node) {
         if (m_filter(node))
-            nodes.append(node);
+            nodes.append(const_cast<Node*>(&node));
 
         return IterationDecision::Continue;
     });
@@ -40,7 +40,7 @@ Node const* LiveNodeList::item(u32 index) const
     auto nodes = collection();
     if (index >= nodes.size())
         return nullptr;
-    return &nodes[index];
+    return nodes[index];
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices

@@ -15,12 +15,10 @@ namespace Web::HTML {
 class HTMLOutputElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLOutputElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLOutputElement)
 
 public:
-    using WrapperType = Bindings::HTMLOutputElementWrapper;
-
-    HTMLOutputElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLOutputElement() override;
 
     String const& type() const
@@ -42,6 +40,11 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+private:
+    HTMLOutputElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLOutputElement, Web::HTML)

@@ -9,6 +9,7 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/Forward.h>
 
@@ -45,7 +46,7 @@ public:
     Element* item(size_t index) const;
     Element* named_item(FlyString const& name) const;
 
-    Vector<NonnullRefPtr<Element>> collect_matching_elements() const;
+    JS::MarkedVector<Element*> collect_matching_elements() const;
 
     Vector<String> supported_property_names() const;
     bool is_supported_property_index(u32) const;
@@ -53,10 +54,10 @@ public:
 protected:
     HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter);
 
-    NonnullRefPtr<ParentNode> root() { return m_root; }
+    JS::NonnullGCPtr<ParentNode> root() { return *m_root; }
 
 private:
-    NonnullRefPtr<ParentNode> m_root;
+    JS::Handle<ParentNode> m_root;
     Function<bool(Element const&)> m_filter;
 };
 

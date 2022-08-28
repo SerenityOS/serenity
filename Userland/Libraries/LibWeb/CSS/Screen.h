@@ -15,7 +15,7 @@
 namespace Web::CSS {
 
 class Screen final
-    : public RefCountForwarder<HTML::Window>
+    : public RefCounted<Screen>
     , public Bindings::Wrappable {
 
 public:
@@ -37,9 +37,11 @@ public:
 private:
     explicit Screen(HTML::Window&);
 
-    HTML::Window const& window() const { return ref_count_target(); }
+    HTML::Window const& window() const { return *m_window; }
 
     Gfx::IntRect screen_rect() const;
+
+    JS::Handle<HTML::Window> m_window;
 };
 
 }

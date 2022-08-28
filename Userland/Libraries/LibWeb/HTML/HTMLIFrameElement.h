@@ -11,15 +11,16 @@
 namespace Web::HTML {
 
 class HTMLIFrameElement final : public BrowsingContextContainer {
-public:
-    using WrapperType = Bindings::HTMLIFrameElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLIFrameElement, BrowsingContextContainer);
 
-    HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLIFrameElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
 private:
+    HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
+
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -30,3 +31,5 @@ private:
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement&);
 
 }
+
+WRAPPER_HACK(HTMLIFrameElement, Web::HTML)

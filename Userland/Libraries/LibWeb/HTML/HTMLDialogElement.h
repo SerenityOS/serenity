@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLDialogElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLDialogElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLDialogElement, HTMLElement);
 
-    HTMLDialogElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLDialogElement() override;
+
+private:
+    HTMLDialogElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLDialogElement, Web::HTML)

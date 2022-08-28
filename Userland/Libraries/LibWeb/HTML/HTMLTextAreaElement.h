@@ -15,12 +15,10 @@ namespace Web::HTML {
 class HTMLTextAreaElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLTextAreaElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLTextAreaElement)
 
 public:
-    using WrapperType = Bindings::HTMLTextAreaElementWrapper;
-
-    HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTextAreaElement() override;
 
     String const& type() const
@@ -49,6 +47,11 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+private:
+    HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLTextAreaElement, Web::HTML)

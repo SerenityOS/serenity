@@ -20,15 +20,13 @@ namespace Web::CSS {
 
 // https://www.w3.org/TR/cssom/#the-cssrulelist-interface
 class CSSRuleList : public Bindings::LegacyPlatformObject {
-    JS_OBJECT(CSSRuleList, Bindings::LegacyPlatformObject);
+    WEB_PLATFORM_OBJECT(CSSRuleList, Bindings::LegacyPlatformObject);
 
 public:
-    CSSRuleList& impl() { return *this; }
+    static CSSRuleList* create(HTML::Window&, JS::MarkedVector<CSSRule*> const&);
+    static CSSRuleList* create_empty(HTML::Window&);
 
-    static CSSRuleList* create(Bindings::WindowObject&, JS::MarkedVector<CSSRule*> const&);
-    static CSSRuleList* create_empty(Bindings::WindowObject&);
-
-    explicit CSSRuleList(Bindings::WindowObject&);
+    explicit CSSRuleList(HTML::Window&);
     ~CSSRuleList() = default;
 
     CSSRule const* item(size_t index) const
@@ -74,7 +72,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSRuleList& object) { return &object; }
-using CSSRuleListWrapper = Web::CSS::CSSRuleList;
-}
+WRAPPER_HACK(CSSRuleList, Web::CSS)

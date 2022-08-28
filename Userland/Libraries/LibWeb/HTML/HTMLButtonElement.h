@@ -19,12 +19,10 @@ namespace Web::HTML {
 class HTMLButtonElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLButtonElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLButtonElement)
 
 public:
-    using WrapperType = Bindings::HTMLButtonElementWrapper;
-
-    HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLButtonElement() override;
 
     enum class TypeAttributeState {
@@ -54,6 +52,11 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+private:
+    HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLButtonElement, Web::HTML)

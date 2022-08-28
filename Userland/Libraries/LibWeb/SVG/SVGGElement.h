@@ -11,13 +11,17 @@
 namespace Web::SVG {
 
 class SVGGElement final : public SVGGraphicsElement {
-public:
-    using WrapperType = Bindings::SVGPathElementWrapper;
+    WEB_PLATFORM_OBJECT(SVGGElement, SVGGraphicsElement);
 
-    SVGGElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~SVGGElement() override = default;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+
+private:
+    SVGGElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(SVGGElement, Web::SVG)

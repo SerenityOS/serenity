@@ -25,7 +25,7 @@ class Path2D
 public:
     using WrapperType = Bindings::Path2DWrapper;
 
-    static NonnullRefPtr<Path2D> create_with_global_object(Bindings::WindowObject&, Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path) { return adopt_ref(*new Path2D(path)); }
+    static NonnullRefPtr<Path2D> create_with_global_object(HTML::Window&, Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path) { return adopt_ref(*new Path2D(path)); }
     static NonnullRefPtr<Path2D> create(Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path) { return adopt_ref(*new Path2D(path)); }
     ~Path2D() = default;
 

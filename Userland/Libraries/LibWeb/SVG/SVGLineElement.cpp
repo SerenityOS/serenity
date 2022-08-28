@@ -4,15 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SVGLineElement.h"
+#include <LibWeb/Bindings/SVGLineElementPrototype.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGLineElement.h>
 
 namespace Web::SVG {
 
 SVGLineElement::SVGLineElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGLineElementPrototype>("SVGLineElement"));
 }
 
 void SVGLineElement::parse_attribute(FlyString const& name, String const& value)

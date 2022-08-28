@@ -27,7 +27,7 @@ public:
     JS::GCPtr<IDLEventListener> callback;
 
     // signal (null or an AbortSignal object)
-    RefPtr<DOM::AbortSignal> signal;
+    JS::GCPtr<DOM::AbortSignal> signal;
 
     // capture (a boolean, initially false)
     bool capture { false };

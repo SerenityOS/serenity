@@ -13,12 +13,12 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet* CSSStyleSheet::create(Bindings::WindowObject& window_object, CSSRuleList& rules, Optional<AK::URL> location)
+CSSStyleSheet* CSSStyleSheet::create(HTML::Window& window_object, CSSRuleList& rules, Optional<AK::URL> location)
 {
     return window_object.heap().allocate<CSSStyleSheet>(window_object.realm(), window_object, rules, move(location));
 }
 
-CSSStyleSheet::CSSStyleSheet(Bindings::WindowObject& window_object, CSSRuleList& rules, Optional<AK::URL> location)
+CSSStyleSheet::CSSStyleSheet(HTML::Window& window_object, CSSRuleList& rules, Optional<AK::URL> location)
     : StyleSheet(window_object)
     , m_rules(&rules)
 {

@@ -116,6 +116,8 @@ Blob::Blob(ByteBuffer byte_buffer)
 {
 }
 
+Blob::~Blob() = default;
+
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
 DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
@@ -149,7 +151,7 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     return adopt_ref(*new Blob(move(byte_buffer), move(type)));
 }
 
-DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(Bindings::WindowObject&, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(HTML::Window&, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     return Blob::create(blob_parts, options);
 }
@@ -260,11 +262,6 @@ JS::Promise* Blob::array_buffer()
     // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.
     promise->fulfill(buffer);
     return promise;
-}
-
-JS::Object* Blob::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 }

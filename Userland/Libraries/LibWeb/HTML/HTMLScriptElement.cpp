@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/HTMLScriptElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -22,9 +23,17 @@ namespace Web::HTML {
 HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLScriptElementPrototype>("HTMLScriptElement"));
 }
 
 HTMLScriptElement::~HTMLScriptElement() = default;
+
+void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_parser_document.ptr());
+    visitor.visit(m_preparation_time_document.ptr());
+}
 
 void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& document)
 {
@@ -37,7 +46,7 @@ void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& docume
 void HTMLScriptElement::execute_script()
 {
     // 1. Let document be scriptElement's node document.
-    NonnullRefPtr<DOM::Document> node_document = document();
+    JS::NonnullGCPtr<DOM::Document> node_document = document();
 
     // 2. If scriptElement's preparation-time document is not equal to document, then return.
     if (m_preparation_time_document.ptr() != node_document.ptr()) {
@@ -48,7 +57,7 @@ void HTMLScriptElement::execute_script()
     // 3. If the script's script is null for scriptElement, then fire an event named error at scriptElement, and return.
     if (!m_script) {
         dbgln("HTMLScriptElement: Refusing to run script because the script's script is null.");
-        dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
+        dispatch_event(*DOM::Event::create(document().window(), HTML::EventNames::error));
         return;
     }
 
@@ -95,7 +104,7 @@ void HTMLScriptElement::execute_script()
 
     // 7. If scriptElement is from an external file, then fire an event named load at scriptElement.
     if (m_from_an_external_file)
-        dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::load));
+        dispatch_event(*DOM::Event::create(document().window(), HTML::EventNames::load));
 }
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
@@ -115,7 +124,7 @@ void HTMLScriptElement::prepare_script()
     }
 
     // 2. Let parser document be the element's parser document.
-    RefPtr<DOM::Document> parser_document = m_parser_document.ptr();
+    JS::GCPtr<DOM::Document> parser_document = m_parser_document.ptr();
 
     // 3. Set the element's parser document to null.
     m_parser_document = nullptr;
@@ -173,7 +182,7 @@ void HTMLScriptElement::prepare_script()
 
     // 9. If parser document is non-null, then set the element's parser document back to parser document and set the element's "non-blocking" flag to false.
     if (parser_document) {
-        m_parser_document = *parser_document;
+        m_parser_document = parser_document;
         m_non_blocking = false;
     }
 
@@ -181,7 +190,7 @@ void HTMLScriptElement::prepare_script()
     m_already_started = true;
 
     // 11. Set the element's preparation-time document to its node document.
-    m_preparation_time_document = document();
+    m_preparation_time_document = &document();
 
     // 12. If parser document is non-null, and parser document is not equal to the element's preparation-time document, then return.
     if (parser_document && parser_document.ptr() != m_preparation_time_document.ptr()) {
@@ -259,7 +268,7 @@ void HTMLScriptElement::prepare_script()
         if (src.is_empty()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
             queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
-                dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
+                dispatch_event(*DOM::Event::create(document().window(), HTML::EventNames::error));
             });
             return;
         }
@@ -272,7 +281,7 @@ void HTMLScriptElement::prepare_script()
         if (!url.is_valid()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
             queue_an_element_task(HTML::Task::Source::Unspecified, [this] {
-                dispatch_event(*DOM::Event::create(document().preferred_window_object(), HTML::EventNames::error));
+                dispatch_event(*DOM::Event::create(document().window(), HTML::EventNames::error));
             });
             return;
         }
@@ -374,13 +383,13 @@ void HTMLScriptElement::prepare_script()
             // 1. If the element is not now the first element in the list of scripts
             //    that will execute in order as soon as possible to which it was added above,
             //    then mark the element as ready but return without executing the script yet.
-            if (this != &m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first())
+            if (this != m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().ptr())
                 return;
 
             for (;;) {
                 // 2. Execution: Execute the script block corresponding to the first script element
                 //    in this list of scripts that will execute in order as soon as possible.
-                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().execute_script();
+                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->execute_script();
 
                 // 3. Remove the first element from this list of scripts that will execute in order
                 //    as soon as possible.
@@ -389,7 +398,7 @@ void HTMLScriptElement::prepare_script()
                 // 4. If this list of scripts that will execute in order as soon as possible is still
                 //    not empty and the first entry has already been marked as ready, then jump back
                 //    to the step labeled execution.
-                if (!m_preparation_time_document->scripts_to_execute_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().m_script_ready)
+                if (!m_preparation_time_document->scripts_to_execute_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->m_script_ready)
                     continue;
 
                 break;
@@ -409,7 +418,7 @@ void HTMLScriptElement::prepare_script()
         when_the_script_is_ready([this] {
             execute_script();
             m_preparation_time_document->scripts_to_execute_as_soon_as_possible().remove_first_matching([&](auto& entry) {
-                return entry == this;
+                return entry.ptr() == this;
             });
         });
     }

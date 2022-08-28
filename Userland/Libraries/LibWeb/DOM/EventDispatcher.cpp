@@ -8,10 +8,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/EventTargetWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -93,8 +90,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         Event* current_event = nullptr;
 
         // 8. If global is a Window object, then:
-        if (is<Bindings::WindowObject>(global)) {
-            auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
+        if (is<HTML::Window>(global)) {
+            auto& bindings_window_global = verify_cast<HTML::Window>(global);
             auto& window_impl = bindings_window_global.impl();
 
             // 1. Set currentEvent to global’s current event.
@@ -111,8 +108,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
 
         // 10. Call a user object’s operation with listener’s callback, "handleEvent", « event », and event’s currentTarget attribute value. If this throws an exception, then:
         // FIXME: These should be wrapped for us in call_user_object_operation, but it currently doesn't do that.
-        auto* this_value = Bindings::wrap(realm, *event.current_target());
-        auto* wrapped_event = Bindings::wrap(realm, event);
+        auto* this_value = event.current_target().ptr();
+        auto* wrapped_event = &event;
         auto result = Bindings::IDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
 
         // If this throws an exception, then:
@@ -127,8 +124,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         event.set_in_passive_listener(false);
 
         // 12. If global is a Window object, then set global’s current event to currentEvent.
-        if (is<Bindings::WindowObject>(global)) {
-            auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
+        if (is<HTML::Window>(global)) {
+            auto& bindings_window_global = verify_cast<HTML::Window>(global);
             auto& window_impl = bindings_window_global.impl();
             window_impl.set_current_event(current_event);
         }
@@ -146,17 +143,17 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
 void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Phase phase)
 {
     auto last_valid_shadow_adjusted_target = event.path().last_matching([&struct_](auto& entry) {
-        return entry.index <= struct_.index && !entry.shadow_adjusted_target.is_null();
+        return entry.index <= struct_.index && entry.shadow_adjusted_target;
     });
 
     VERIFY(last_valid_shadow_adjusted_target.has_value());
 
     // 1. Set event’s target to the shadow-adjusted target of the last struct in event’s path,
     // that is either struct or preceding struct, whose shadow-adjusted target is non-null.
-    event.set_target(last_valid_shadow_adjusted_target.value().shadow_adjusted_target);
+    event.set_target(last_valid_shadow_adjusted_target.value().shadow_adjusted_target.ptr());
 
     // 2. Set event’s relatedTarget to struct’s relatedTarget.
-    event.set_related_target(struct_.related_target);
+    event.set_related_target(struct_.related_target.ptr());
 
     // 3. Set event’s touch target list to struct’s touch target list.
     event.set_touch_target_list(struct_.touch_target_list);
@@ -166,7 +163,7 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
         return;
 
     // 5. Initialize event’s currentTarget attribute to struct’s invocation target.
-    event.set_current_target(struct_.invocation_target);
+    event.set_current_target(struct_.invocation_target.ptr());
 
     // 6. Let listeners be a clone of event’s currentTarget attribute value’s event listener list.
     // NOTE: This avoids event listeners added after this point from being run. Note that removal still has an effect due to the removed field.
@@ -205,25 +202,25 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
 }
 
 // https://dom.spec.whatwg.org/#concept-event-dispatch
-bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, Event& event, bool legacy_target_override)
+bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& event, bool legacy_target_override)
 {
     // 1. Set event’s dispatch flag.
     event.set_dispatched(true);
 
     // 2. Let targetOverride be target, if legacy target override flag is not given, and target’s associated Document otherwise. [HTML]
     // NOTE: legacy target override flag is only used by HTML and only when target is a Window object.
-    RefPtr<EventTarget> target_override;
+    JS::GCPtr<EventTarget> target_override;
     if (!legacy_target_override) {
         target_override = target;
     } else {
-        target_override = verify_cast<HTML::Window>(*target).associated_document();
+        target_override = &verify_cast<HTML::Window>(*target).associated_document();
     }
 
     // 3. Let activationTarget be null.
-    RefPtr<EventTarget> activation_target;
+    JS::GCPtr<EventTarget> activation_target;
 
     // 4. Let relatedTarget be the result of retargeting event’s relatedTarget against target.
-    RefPtr<EventTarget> related_target = retarget(event.related_target(), target);
+    JS::GCPtr<EventTarget> related_target = retarget(event.related_target(), target);
 
     bool clear_targets = false;
     // 5. If target is not relatedTarget or target is event’s relatedTarget, then:
@@ -285,12 +282,12 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, Event& event, 
 
             }
             // 7. Otherwise, if parent is relatedTarget, then set parent to null.
-            else if (related_target == parent) {
+            else if (related_target.ptr() == parent) {
                 parent = nullptr;
             }
             // 8. Otherwise, set target to parent and then:
             else {
-                target = *parent;
+                target = parent;
 
                 // 1. If isActivationEvent is true, activationTarget is null, and target has activation behavior, then set activationTarget to target.
                 if (is_activation_event && !activation_target && target->activation_behavior)
@@ -311,7 +308,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, Event& event, 
 
         // 10. Let clearTargetsStruct be the last struct in event’s path whose shadow-adjusted target is non-null.
         auto clear_targets_struct = event.path().last_matching([](auto& entry) {
-            return !entry.shadow_adjusted_target.is_null();
+            return entry.shadow_adjusted_target;
         });
 
         VERIFY(clear_targets_struct.has_value());

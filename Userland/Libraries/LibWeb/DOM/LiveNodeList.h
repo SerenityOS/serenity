@@ -29,9 +29,9 @@ public:
 private:
     LiveNodeList(Node& root, Function<bool(Node const&)> filter);
 
-    NonnullRefPtrVector<Node> collection() const;
+    JS::MarkedVector<Node*> collection() const;
 
-    NonnullRefPtr<Node> m_root;
+    JS::Handle<Node> m_root;
     Function<bool(Node const&)> m_filter;
 };
 
