@@ -241,6 +241,7 @@ public:
     void gl_attach_shader(GLuint program, GLuint shader);
     void gl_link_program(GLuint program);
     void gl_use_program(GLuint program);
+    void gl_get_program(GLuint program, GLenum pname, GLint* params);
 
 private:
     void sync_device_config();

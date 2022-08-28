@@ -606,6 +606,7 @@ extern "C" {
 #define GL_SHADER_TYPE 0x8B4F
 #define GL_DELETE_STATUS 0x8B80
 #define GL_COMPILE_STATUS 0x8B81
+#define GL_LINK_STATUS 0x8B82
 #define GL_INFO_LOG_LENGTH 0x8B84
 #define GL_SHADER_SOURCE_LENGTH 0x8B88
 
@@ -832,6 +833,7 @@ GLAPI void glDeleteProgram(GLuint program);
 GLAPI void glAttachShader(GLuint program, GLuint shader);
 GLAPI void glLinkProgram(GLuint program);
 GLAPI void glUseProgram(GLuint program);
+GLAPI void glGetProgramiv(GLuint program, GLenum pname, GLint* params);
 
 #ifdef __cplusplus
 }

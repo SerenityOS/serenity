@@ -499,6 +499,11 @@ void glGetMaterialiv(GLenum face, GLenum pname, GLint* params)
     g_gl_context->gl_get_material(face, pname, params, GL_INT);
 }
 
+void glGetProgramiv(GLuint program, GLenum pname, GLint* params)
+{
+    g_gl_context->gl_get_program(program, pname, params);
+}
+
 GLubyte const* glGetString(GLenum name)
 {
     return g_gl_context->gl_get_string(name);
