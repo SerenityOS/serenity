@@ -23,7 +23,8 @@ ErrorOr<void> Shader::add_source(StringView source_code)
 
 ErrorOr<void> Shader::compile()
 {
-    TODO();
+    // FIXME: Implement actual shader compilation
+    m_compile_status = true;
     return {};
 }
 
