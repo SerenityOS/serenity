@@ -5,6 +5,7 @@
  */
 
 #include <LibGL/Shaders/Shader.h>
+#include <LibGLSL/Compiler.h>
 
 namespace GL {
 
@@ -15,8 +16,22 @@ NonnullRefPtr<Shader> Shader::create(GLenum shader_type)
 
 ErrorOr<void> Shader::compile()
 {
-    // FIXME: Implement actual shader compilation
+    m_info_log = String::empty();
+
+    GLSL::Compiler compiler;
+
+    auto object_file_or_error = compiler.compile(m_sources);
+
+    if (object_file_or_error.is_error()) {
+        m_compile_status = false;
+        m_info_log = compiler.messages();
+        return object_file_or_error.error();
+    }
+
+    m_object_file = object_file_or_error.release_value();
+
     m_compile_status = true;
+
     return {};
 }
 

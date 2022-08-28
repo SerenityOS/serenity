@@ -9,10 +9,12 @@
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGL/Shaders/Shader.h>
+#include <LibGLSL/LinkedShader.h>
 
 namespace GL {
 
@@ -31,6 +33,8 @@ private:
     Vector<NonnullRefPtr<Shader>> m_vertex_shaders;
     Vector<NonnullRefPtr<Shader>> m_fragment_shaders;
     Optional<String> m_info_log;
+    OwnPtr<GLSL::LinkedShader> m_linked_vertex_shader;
+    OwnPtr<GLSL::LinkedShader> m_linked_fragment_shader;
 };
 
 }

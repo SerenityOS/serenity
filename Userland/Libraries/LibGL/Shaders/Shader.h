@@ -9,11 +9,13 @@
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibGL/GL/glplatform.h>
+#include <LibGL/GL/gl.h>
+#include <LibGLSL/ObjectFile.h>
 
 namespace GL {
 
@@ -26,6 +28,7 @@ public:
     ErrorOr<void> compile();
     GLenum type() const { return m_type; }
     bool compile_status() const { return m_compile_status; }
+    GLSL::ObjectFile const* object_file() const { return m_object_file.ptr(); }
 
     size_t info_log_length() const;
     size_t combined_source_length() const;
@@ -40,6 +43,7 @@ private:
     GLenum m_type;
     bool m_compile_status { false };
     Optional<String> m_info_log;
+    OwnPtr<GLSL::ObjectFile> m_object_file;
 };
 
 }
