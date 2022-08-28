@@ -240,7 +240,7 @@ void old_queue_global_task_with_document(HTML::Task::Source source, DOM::Documen
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
-void queue_global_task(HTML::Task::Source source, JS::GlobalObject& global_object, Function<void()> steps)
+void queue_global_task(HTML::Task::Source source, JS::Object& global_object, Function<void()> steps)
 {
     // 1. Let event loop be global's relevant agent's event loop.
     auto& global_custom_data = verify_cast<Bindings::WebEngineCustomData>(*global_object.vm().custom_data());
