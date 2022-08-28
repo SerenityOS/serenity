@@ -21,8 +21,10 @@ public:
     bool is_shader_attached(Shader const&) const;
     ErrorOr<void> attach_shader(Shader&);
     ErrorOr<void> link();
+    bool link_status() const { return m_link_status; }
 
 private:
+    bool m_link_status { false };
     Vector<NonnullRefPtr<Shader>> m_vertex_shaders;
     Vector<NonnullRefPtr<Shader>> m_fragment_shaders;
 };
