@@ -16,11 +16,6 @@ REGISTER_WIDGET(PixelPaint, HistogramWidget);
 
 namespace PixelPaint {
 
-HistogramWidget::HistogramWidget()
-{
-    set_height(65);
-}
-
 HistogramWidget::~HistogramWidget()
 {
     if (m_image)

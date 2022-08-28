@@ -66,14 +66,14 @@
 
             @GUI::GroupBox {
                 title: "Histogram"
-                max_height: 90
+                preferred_height: "shrink"
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6]
                 }
 
                 @PixelPaint::HistogramWidget {
                     name: "histogram_widget"
-                    max_height: 65
+                    min_height: 65
                 }
             }
 
