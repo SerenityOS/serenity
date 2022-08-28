@@ -16,6 +16,8 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGL/NameAllocator.h>
+#include <LibGL/Shaders/Program.h>
+#include <LibGL/Shaders/Shader.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGPU/Device.h>
@@ -406,6 +408,11 @@ private:
 
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
+
+    NameAllocator m_shader_name_allocator;
+    NameAllocator m_program_name_allocator;
+    HashMap<GLuint, RefPtr<Shader>> m_allocated_shaders;
+    HashMap<GLuint, RefPtr<Program>> m_allocated_programs;
 
     struct Listing {
 

@@ -587,6 +587,10 @@ extern "C" {
 #define GL_CLIP_PLANE4 0x3004
 #define GL_CLIP_PLANE5 0x3005
 
+// Programmable pipeline
+#define GL_FRAGMENT_SHADER 0x8B30
+#define GL_VERTEX_SHADER 0x8B31
+
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
