@@ -38,11 +38,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(unescape);
 };
 
-inline GlobalObject* Shape::global_object() const
-{
-    return &static_cast<GlobalObject&>(m_realm.global_object());
-}
-
 template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
