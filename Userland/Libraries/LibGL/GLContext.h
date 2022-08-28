@@ -234,6 +234,7 @@ public:
     void gl_delete_shader(GLuint shader);
     void gl_shader_source(GLuint shader, GLsizei count, GLchar const** string, GLint const* length);
     void gl_compile_shader(GLuint shader);
+    void gl_get_shader(GLuint shader, GLenum pname, GLint* params);
 
     GLuint gl_create_program();
     void gl_delete_program(GLuint program);

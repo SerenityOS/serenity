@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -27,6 +28,9 @@ public:
     GLenum type() const { return m_type; }
     bool compile_status() const { return m_compile_status; }
 
+    size_t info_log_length() const;
+    size_t combined_source_length() const;
+
 private:
     explicit Shader(GLenum shader_type)
         : m_type { shader_type }
@@ -36,6 +40,7 @@ private:
     Vector<String> m_sources;
     GLenum m_type;
     bool m_compile_status { false };
+    Optional<String> m_info_log;
 };
 
 }
