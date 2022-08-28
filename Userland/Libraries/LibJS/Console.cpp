@@ -12,14 +12,9 @@
 
 namespace JS {
 
-Console::Console(GlobalObject& global_object)
-    : m_global_object(global_object)
+Console::Console(VM& vm)
+    : m_vm(vm)
 {
-}
-
-VM& Console::vm()
-{
-    return m_global_object.vm();
 }
 
 // 1.1.3. debug(...data), https://console.spec.whatwg.org/#debug
@@ -140,7 +135,7 @@ ThrowCompletionOr<Value> Console::count()
     String concat = String::formatted("{}: {}", label, map.get(label).value());
 
     // 5. Perform Logger("count", « concat »).
-    MarkedVector<Value> concat_as_vector { global_object().heap() };
+    MarkedVector<Value> concat_as_vector { vm.heap() };
     concat_as_vector.append(js_string(vm, concat));
     if (m_client)
         TRY(m_client->logger(LogLevel::Count, concat_as_vector));
@@ -168,7 +163,7 @@ ThrowCompletionOr<Value> Console::count_reset()
         //    that the given label does not have an associated count.
         auto message = String::formatted("\"{}\" doesn't have a count", label);
         // 2. Perform Logger("countReset", « message »);
-        MarkedVector<Value> message_as_vector { global_object().heap() };
+        MarkedVector<Value> message_as_vector { vm.heap() };
         message_as_vector.append(js_string(vm, message));
         if (m_client)
             TRY(m_client->logger(LogLevel::CountReset, message_as_vector));
@@ -191,7 +186,7 @@ ThrowCompletionOr<Value> Console::assert_()
     auto message = js_string(vm, "Assertion failed");
 
     // NOTE: Assemble `data` from the function arguments.
-    MarkedVector<Value> data { global_object().heap() };
+    MarkedVector<Value> data { vm.heap() };
     if (vm.argument_count() > 1) {
         data.ensure_capacity(vm.argument_count() - 1);
         for (size_t i = 1; i < vm.argument_count(); ++i) {
@@ -320,7 +315,7 @@ ThrowCompletionOr<Value> Console::time()
     // a warning to the console indicating that a timer with label `label` has already been started.
     if (m_timer_table.contains(label)) {
         if (m_client) {
-            MarkedVector<Value> timer_already_exists_warning_message_as_vector { global_object().heap() };
+            MarkedVector<Value> timer_already_exists_warning_message_as_vector { vm.heap() };
             timer_already_exists_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' already exists.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_already_exists_warning_message_as_vector)));
         }
@@ -348,7 +343,7 @@ ThrowCompletionOr<Value> Console::time_log()
     // NOTE: Warn if the timer doesn't exist. Not part of the spec yet, but discussed here: https://github.com/whatwg/console/issues/134
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
-            MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { global_object().heap() };
+            MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { vm.heap() };
             timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
@@ -363,7 +358,7 @@ ThrowCompletionOr<Value> Console::time_log()
     auto concat = String::formatted("{}: {}", label, duration);
 
     // 5. Prepend concat to data.
-    MarkedVector<Value> data { global_object().heap() };
+    MarkedVector<Value> data { vm.heap() };
     data.ensure_capacity(vm.argument_count());
     data.append(js_string(vm, concat));
     for (size_t i = 1; i < vm.argument_count(); ++i)
@@ -391,7 +386,7 @@ ThrowCompletionOr<Value> Console::time_end()
     // NOTE: Warn if the timer doesn't exist. Not part of the spec yet, but discussed here: https://github.com/whatwg/console/issues/134
     if (maybe_start_time == m_timer_table.end()) {
         if (m_client) {
-            MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { global_object().heap() };
+            MarkedVector<Value> timer_does_not_exist_warning_message_as_vector { vm.heap() };
             timer_does_not_exist_warning_message_as_vector.append(js_string(vm, String::formatted("Timer '{}' does not exist.", label)));
             TRY(m_client->printer(LogLevel::Warn, move(timer_does_not_exist_warning_message_as_vector)));
         }
@@ -410,7 +405,7 @@ ThrowCompletionOr<Value> Console::time_end()
 
     // 6. Perform Printer("timeEnd", « concat »).
     if (m_client) {
-        MarkedVector<Value> concat_as_vector { global_object().heap() };
+        MarkedVector<Value> concat_as_vector { vm.heap() };
         concat_as_vector.append(js_string(vm, concat));
         TRY(m_client->printer(LogLevel::TimeEnd, move(concat_as_vector)));
     }
@@ -419,10 +414,12 @@ ThrowCompletionOr<Value> Console::time_end()
 
 MarkedVector<Value> Console::vm_arguments()
 {
-    MarkedVector<Value> arguments { global_object().heap() };
-    arguments.ensure_capacity(vm().argument_count());
-    for (size_t i = 0; i < vm().argument_count(); ++i) {
-        arguments.append(vm().argument(i));
+    auto& vm = this->vm();
+
+    MarkedVector<Value> arguments { vm.heap() };
+    arguments.ensure_capacity(vm.argument_count());
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        arguments.append(vm.argument(i));
     }
     return arguments;
 }
@@ -492,15 +489,10 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
     return builder.to_string();
 }
 
-VM& ConsoleClient::vm()
-{
-    return global_object().vm();
-}
-
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger
 ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, MarkedVector<Value> const& args)
 {
-    auto& vm = this->vm();
+    auto& vm = m_console.vm();
 
     // 1. If args is empty, return.
     if (args.is_empty())

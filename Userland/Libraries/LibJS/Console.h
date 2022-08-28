@@ -53,14 +53,12 @@ public:
         Vector<String> stack;
     };
 
-    explicit Console(GlobalObject&);
+    explicit Console(VM&);
 
     void set_client(ConsoleClient& client) { m_client = &client; }
 
-    GlobalObject& global_object() { return m_global_object; }
-    GlobalObject const& global_object() const { return m_global_object; }
+    VM& vm() const { return m_vm; }
 
-    VM& vm();
     MarkedVector<Value> vm_arguments();
 
     HashMap<String, unsigned>& counters() { return m_counters; }
@@ -89,7 +87,7 @@ private:
     ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
     ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
 
-    GlobalObject& m_global_object;
+    VM& m_vm;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
@@ -115,11 +113,6 @@ public:
 
 protected:
     virtual ~ConsoleClient() = default;
-
-    VM& vm();
-
-    GlobalObject& global_object() { return m_console.global_object(); }
-    GlobalObject const& global_object() const { return m_console.global_object(); }
 
     Console& m_console;
 };
