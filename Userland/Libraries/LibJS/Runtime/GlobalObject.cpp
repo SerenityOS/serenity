@@ -172,7 +172,7 @@ void GlobalObject::initialize_global_object(Realm& realm)
 
     // Non-standard
     define_direct_property(vm.names.InternalError, realm.intrinsics().internal_error_constructor(), attr);
-    define_direct_property(vm.names.console, heap().allocate<ConsoleObject>(realm, realm), attr);
+    define_direct_property(vm.names.console, realm.intrinsics().console_object(), attr);
     define_native_function(realm, vm.names.gc, gc, 0, attr);
 
     // Assign intrinsics and functions that depend on the GlobalObject's native functions
