@@ -62,15 +62,13 @@ ThrowCompletionOr<Object*> ShadowRealmConstructor::construct(FunctionObject& new
     auto* object = TRY(ordinary_create_from_constructor<ShadowRealm>(vm, new_target, &Intrinsics::shadow_realm_prototype, *realm, move(context)));
 
     // 10. Perform ? SetRealmGlobalObject(realmRec, undefined, undefined).
-    auto* new_global_object = vm.heap().allocate_without_realm<GlobalObject>(*realm);
-    realm->set_global_object(new_global_object, nullptr);
-    new_global_object->initialize(*realm);
+    realm->set_global_object(nullptr, nullptr);
 
-    // TODO: I don't think we should have these exactly like this, that doesn't work well with how
-    //       we create global objects. Still, it should be possible to make a ShadowRealm with a
-    //       non-LibJS GlobalObject somehow.
     // 11. Perform ? SetDefaultGlobalBindings(O.[[ShadowRealm]]).
-    // 12. Perform ? HostInitializeShadowRealm(O.[[ShadowRealm]]).
+    auto& global_object = set_default_global_bindings(object->shadow_realm());
+
+    // FIXME: 12. Perform ? HostInitializeShadowRealm(O.[[ShadowRealm]]).
+    global_object.initialize(object->shadow_realm());
 
     // 13. Return O.
     return object;
