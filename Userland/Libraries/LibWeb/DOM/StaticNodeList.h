@@ -14,10 +14,7 @@ namespace Web::DOM {
 
 class StaticNodeList : public NodeList {
 public:
-    static NonnullRefPtr<NodeList> create(NonnullRefPtrVector<Node> static_nodes)
-    {
-        return adopt_ref(*new StaticNodeList(move(static_nodes)));
-    }
+    static NonnullRefPtr<NodeList> create(Vector<JS::Handle<Node>> static_nodes);
 
     virtual ~StaticNodeList() override = default;
 
@@ -27,9 +24,9 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 private:
-    StaticNodeList(NonnullRefPtrVector<Node>&& static_nodes);
+    StaticNodeList(Vector<JS::Handle<Node>> static_nodes);
 
-    NonnullRefPtrVector<Node> m_static_nodes;
+    Vector<JS::Handle<Node>> m_static_nodes;
 };
 
 }

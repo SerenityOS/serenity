@@ -14,10 +14,9 @@
 namespace Web::HTML {
 
 class HTMLScriptElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLScriptElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLScriptElement, HTMLElement);
 
-    HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLScriptElement() override;
 
     bool is_non_blocking() const { return m_non_blocking; }
@@ -25,7 +24,7 @@ public:
     bool failed_to_load() const { return m_failed_to_load; }
 
     template<OneOf<XMLDocumentBuilder, HTMLParser> T>
-    void set_parser_document(Badge<T>, DOM::Document& document) { m_parser_document = document; }
+    void set_parser_document(Badge<T>, DOM::Document& document) { m_parser_document = &document; }
 
     template<OneOf<XMLDocumentBuilder, HTMLParser> T>
     void set_non_blocking(Badge<T>, bool b) { m_non_blocking = b; }
@@ -51,13 +50,17 @@ public:
     void set_source_line_number(Badge<HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
 
 private:
+    HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
     void prepare_script();
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
     void begin_delaying_document_load_event(DOM::Document&);
 
-    WeakPtr<DOM::Document> m_parser_document;
-    WeakPtr<DOM::Document> m_preparation_time_document;
+    JS::GCPtr<DOM::Document> m_parser_document;
+    JS::GCPtr<DOM::Document> m_preparation_time_document;
     bool m_non_blocking { false };
     bool m_already_started { false };
     bool m_from_an_external_file { false };
@@ -82,3 +85,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLScriptElement, Web::HTML)

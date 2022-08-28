@@ -21,14 +21,20 @@ namespace Web::CSS {
 
 ResolvedCSSStyleDeclaration* ResolvedCSSStyleDeclaration::create(DOM::Element& element)
 {
-    auto& window_object = element.document().preferred_window_object();
+    auto& window_object = element.document().window();
     return window_object.heap().allocate<ResolvedCSSStyleDeclaration>(window_object.realm(), element);
 }
 
 ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
-    : CSSStyleDeclaration(element.document().preferred_window_object())
+    : CSSStyleDeclaration(element.document().window())
     , m_element(element)
 {
+}
+
+void ResolvedCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_element.ptr());
 }
 
 size_t ResolvedCSSStyleDeclaration::length() const

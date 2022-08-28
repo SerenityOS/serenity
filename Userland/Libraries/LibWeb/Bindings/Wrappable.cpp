@@ -13,7 +13,7 @@ namespace Bindings {
 void Wrappable::set_wrapper(Wrapper& wrapper)
 {
     VERIFY(!m_wrapper);
-    m_wrapper = wrapper.make_weak_ptr();
+    m_wrapper = wrapper.make_weak_ptr<Wrapper>();
 }
 
 }

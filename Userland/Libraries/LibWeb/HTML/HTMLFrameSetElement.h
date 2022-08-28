@@ -15,11 +15,13 @@ namespace Web::HTML {
 class HTMLFrameSetElement final
     : public HTMLElement
     , public WindowEventHandlers {
-public:
-    using WrapperType = Bindings::HTMLFrameSetElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLFrameSetElement, HTMLElement);
 
-    HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLFrameSetElement() override;
+
+private:
+    HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void parse_attribute(FlyString const&, String const&) override;
 
@@ -32,3 +34,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLFrameSetElement, Web::HTML)

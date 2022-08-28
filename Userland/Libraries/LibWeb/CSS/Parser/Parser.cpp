@@ -44,27 +44,27 @@ ParsingContext::ParsingContext()
 {
 }
 
-ParsingContext::ParsingContext(Bindings::WindowObject& window_object)
+ParsingContext::ParsingContext(HTML::Window& window_object)
     : m_window_object(window_object)
 {
 }
 
 ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
-    : m_window_object(document.preferred_window_object())
+    : m_window_object(const_cast<HTML::Window&>(document.window()))
     , m_document(&document)
     , m_url(move(url))
 {
 }
 
 ParsingContext::ParsingContext(DOM::Document const& document)
-    : m_window_object(document.preferred_window_object())
+    : m_window_object(const_cast<HTML::Window&>(document.window()))
     , m_document(&document)
     , m_url(document.url())
 {
 }
 
 ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
-    : m_window_object(parent_node.document().preferred_window_object())
+    : m_window_object(parent_node.document().window())
     , m_document(&parent_node.document())
     , m_url(parent_node.document().url())
 {

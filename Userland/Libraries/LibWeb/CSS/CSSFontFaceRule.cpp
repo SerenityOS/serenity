@@ -6,17 +6,17 @@
  */
 
 #include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSFontFaceRule* CSSFontFaceRule::create(Bindings::WindowObject& window_object, FontFace&& font_face)
+CSSFontFaceRule* CSSFontFaceRule::create(HTML::Window& window_object, FontFace&& font_face)
 {
     return window_object.heap().allocate<CSSFontFaceRule>(window_object.realm(), window_object, move(font_face));
 }
 
-CSSFontFaceRule::CSSFontFaceRule(Bindings::WindowObject& window_object, FontFace&& font_face)
+CSSFontFaceRule::CSSFontFaceRule(HTML::Window& window_object, FontFace&& font_face)
     : CSSRule(window_object)
     , m_font_face(move(font_face))
 {

@@ -6,11 +6,13 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <ctype.h>
 
 namespace Web::HTML {
@@ -18,6 +20,7 @@ namespace Web::HTML {
 HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLOptionElementPrototype>("HTMLOptionElement"));
 }
 
 HTMLOptionElement::~HTMLOptionElement() = default;
@@ -138,7 +141,7 @@ int HTMLOptionElement::index() const
     if (auto select_element = first_ancestor_of_type<HTMLSelectElement>()) {
         int index = 0;
         for (auto const& option_element : select_element->list_of_options()) {
-            if (&option_element == this)
+            if (option_element.ptr() == this)
                 return index;
             ++index;
         }

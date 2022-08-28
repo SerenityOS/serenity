@@ -19,6 +19,7 @@ class HTMLObjectElement final
     : public BrowsingContextContainer
     , public FormAssociatedElement
     , public ResourceClient {
+    WEB_PLATFORM_OBJECT(HTMLObjectElement, BrowsingContextContainer)
     FORM_ASSOCIATED_ELEMENT(BrowsingContextContainer, HTMLObjectElement)
 
     enum class Representation {
@@ -29,9 +30,6 @@ class HTMLObjectElement final
     };
 
 public:
-    using WrapperType = Bindings::HTMLObjectElementWrapper;
-
-    HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLObjectElement() override;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -46,6 +44,8 @@ public:
     virtual bool is_listed() const override { return true; }
 
 private:
+    HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
+
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     bool has_ancestor_media_element_or_object_element_not_showing_fallback_content() const;
@@ -67,3 +67,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLObjectElement, Web::HTML)

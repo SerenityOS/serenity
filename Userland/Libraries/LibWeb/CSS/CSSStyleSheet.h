@@ -21,15 +21,13 @@ class CSSImportRule;
 class CSSStyleSheet final
     : public StyleSheet
     , public Weakable<CSSStyleSheet> {
-    JS_OBJECT(CSSStyleSheet, StyleSheet);
+    WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
 
 public:
-    static CSSStyleSheet* create(Bindings::WindowObject&, CSSRuleList& rules, Optional<AK::URL> location);
+    static CSSStyleSheet* create(HTML::Window&, CSSRuleList& rules, Optional<AK::URL> location);
 
-    explicit CSSStyleSheet(Bindings::WindowObject&, CSSRuleList&, Optional<AK::URL> location);
+    explicit CSSStyleSheet(HTML::Window&, CSSRuleList&, Optional<AK::URL> location);
     virtual ~CSSStyleSheet() override = default;
-
-    CSSStyleSheet& impl() { return *this; }
 
     void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
 
@@ -63,7 +61,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSStyleSheet& object) { return &object; }
-using CSSStyleSheetWrapper = Web::CSS::CSSStyleSheet;
-}
+WRAPPER_HACK(CSSStyleSheet, Web::CSS)

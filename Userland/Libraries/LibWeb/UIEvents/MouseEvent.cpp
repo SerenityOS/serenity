@@ -7,14 +7,14 @@
 
 #include <LibGUI/Event.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(Bindings::WindowObject& window_object, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent::MouseEvent(HTML::Window& window_object, FlyString const& event_name, MouseEventInit const& event_init)
     : UIEvent(window_object, event_name, event_init)
     , m_offset_x(event_init.offset_x)
     , m_offset_y(event_init.offset_y)
@@ -47,12 +47,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-MouseEvent* MouseEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent* MouseEvent::create(HTML::Window& window_object, FlyString const& event_name, MouseEventInit const& event_init)
 {
     return window_object.heap().allocate<MouseEvent>(window_object.realm(), window_object, event_name, event_init);
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(Bindings::WindowObject& window_object, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
+MouseEvent* MouseEvent::create_from_platform_event(HTML::Window& window_object, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = offset_x;

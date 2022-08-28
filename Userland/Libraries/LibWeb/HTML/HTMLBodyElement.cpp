@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLBodyElementPrototype.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
@@ -15,6 +16,7 @@ namespace Web::HTML {
 HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLBodyElementPrototype>("HTMLBodyElement"));
 }
 
 HTMLBodyElement::~HTMLBodyElement() = default;

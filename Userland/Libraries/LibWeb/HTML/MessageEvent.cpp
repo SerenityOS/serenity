@@ -5,22 +5,22 @@
  */
 
 #include <LibWeb/Bindings/MessageEventPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-MessageEvent* MessageEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, MessageEventInit const& event_init)
+MessageEvent* MessageEvent::create(HTML::Window& window_object, FlyString const& event_name, MessageEventInit const& event_init)
 {
     return window_object.heap().allocate<MessageEvent>(window_object.realm(), window_object, event_name, event_init);
 }
 
-MessageEvent* MessageEvent::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, MessageEventInit const& event_init)
+MessageEvent* MessageEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, MessageEventInit const& event_init)
 {
     return create(window_object, event_name, event_init);
 }
 
-MessageEvent::MessageEvent(Bindings::WindowObject& window_object, FlyString const& event_name, MessageEventInit const& event_init)
+MessageEvent::MessageEvent(HTML::Window& window_object, FlyString const& event_name, MessageEventInit const& event_init)
     : DOM::Event(window_object, event_name, event_init)
     , m_data(event_init.data)
     , m_origin(event_init.origin)

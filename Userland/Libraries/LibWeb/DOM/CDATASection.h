@@ -12,17 +12,21 @@
 namespace Web::DOM {
 
 class CDATASection final : public Text {
-public:
-    using WrapperType = Bindings::CDATASectionWrapper;
+    WEB_PLATFORM_OBJECT(Text, CDATASection);
 
-    CDATASection(Document&, String const&);
+public:
     virtual ~CDATASection() override;
 
     // ^Node
     virtual FlyString node_name() const override { return "#cdata-section"; }
+
+private:
+    CDATASection(Document&, String const&);
 };
 
 template<>
 inline bool Node::fast_is<CDATASection>() const { return is_cdata_section(); }
 
 }
+
+WRAPPER_HACK(CDATASection, Web::DOM)

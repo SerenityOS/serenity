@@ -17,7 +17,7 @@ static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, Fl
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
-    auto event = WebGLContextEvent::create(canvas_element.document().preferred_window_object(), type, WebGLContextEventInit {});
+    auto event = WebGLContextEvent::create(canvas_element.document().window(), type, WebGLContextEventInit {});
     event->set_is_trusted(true);
     event->set_cancelable(true);
     canvas_element.dispatch_event(*event);
@@ -33,8 +33,7 @@ static void fire_webgl_context_creation_error(HTML::HTMLCanvasElement& canvas_el
 JS::ThrowCompletionOr<RefPtr<WebGLRenderingContext>> WebGLRenderingContext::create(HTML::HTMLCanvasElement& canvas_element, JS::Value options)
 {
     // We should be coming here from getContext being called on a wrapped <canvas> element.
-    VERIFY(canvas_element.wrapper());
-    auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.wrapper()->vm(), options));
+    auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.vm(), options));
 
     bool created_bitmap = canvas_element.create_bitmap(/* minimum_width= */ 1, /* minimum_height= */ 1);
     if (!created_bitmap) {

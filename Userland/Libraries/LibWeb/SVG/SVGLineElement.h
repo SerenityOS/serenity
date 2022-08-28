@@ -12,10 +12,9 @@
 namespace Web::SVG {
 
 class SVGLineElement final : public SVGGeometryElement {
-public:
-    using WrapperType = Bindings::SVGLineElementWrapper;
+    WEB_PLATFORM_OBJECT(SVGLineElement, SVGGraphicsElement);
 
-    SVGLineElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~SVGLineElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -28,6 +27,8 @@ public:
     NonnullRefPtr<SVGAnimatedLength> y2() const;
 
 private:
+    SVGLineElement(DOM::Document&, DOM::QualifiedName);
+
     Optional<Gfx::Path> m_path;
 
     Optional<float> m_x1;
@@ -37,3 +38,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(SVGLineElement, Web::SVG)

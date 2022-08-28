@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

@@ -17,12 +17,10 @@ namespace Web::HTML {
 class HTMLSelectElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLSelectElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLSelectElement)
 
 public:
-    using WrapperType = Bindings::HTMLSelectElementWrapper;
-
-    HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLSelectElement() override;
 
     RefPtr<HTMLOptionsCollection> const& options();
@@ -32,7 +30,7 @@ public:
     int selected_index() const;
     void set_selected_index(int);
 
-    NonnullRefPtrVector<HTMLOptionElement> list_of_options() const;
+    Vector<JS::Handle<HTMLOptionElement>> list_of_options() const;
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-select-element
@@ -56,7 +54,11 @@ public:
     virtual bool is_labelable() const override { return true; }
 
 private:
+    HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
+
     RefPtr<HTMLOptionsCollection> m_options;
 };
 
 }
+
+WRAPPER_HACK(HTMLSelectElement, Web::HTML)

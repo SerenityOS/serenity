@@ -5,17 +5,17 @@
  */
 
 #include <LibWeb/Bindings/FocusEventPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
 namespace Web::UIEvents {
 
-FocusEvent* FocusEvent::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, FocusEventInit const& event_init)
+FocusEvent* FocusEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, FocusEventInit const& event_init)
 {
     return window_object.heap().allocate<FocusEvent>(window_object.realm(), window_object, event_name, event_init);
 }
 
-FocusEvent::FocusEvent(Bindings::WindowObject& window_object, FlyString const& event_name, FocusEventInit const& event_init)
+FocusEvent::FocusEvent(HTML::Window& window_object, FlyString const& event_name, FocusEventInit const& event_init)
     : UIEvent(window_object, event_name)
 {
     set_prototype(&window_object.ensure_web_prototype<Bindings::FocusEventPrototype>("FocusEvent"));

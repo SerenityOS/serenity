@@ -5,22 +5,22 @@
  */
 
 #include <LibWeb/Bindings/ErrorEventPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/ErrorEvent.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-ErrorEvent* ErrorEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::create(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
 {
     return window_object.heap().allocate<ErrorEvent>(window_object.realm(), window_object, event_name, event_init);
 }
 
-ErrorEvent* ErrorEvent::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
 {
     return create(window_object, event_name, event_init);
 }
 
-ErrorEvent::ErrorEvent(Bindings::WindowObject& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent::ErrorEvent(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
     : DOM::Event(window_object, event_name)
     , m_message(event_init.message)
     , m_filename(event_init.filename)

@@ -20,14 +20,11 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#domtokenlist
 class DOMTokenList final : public Bindings::LegacyPlatformObject {
-    JS_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
+    WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
     static DOMTokenList* create(Element const& associated_element, FlyString associated_attribute);
-    DOMTokenList(Element const& associated_element, FlyString associated_attribute);
     ~DOMTokenList() = default;
-
-    DOMTokenList& impl() { return *this; }
 
     void associated_attribute_changed(StringView value);
 
@@ -46,6 +43,8 @@ public:
     void set_value(String value);
 
 private:
+    DOMTokenList(Element const& associated_element, FlyString associated_attribute);
+
     ExceptionOr<void> validate_token(StringView token) const;
     void run_update_steps();
 
@@ -56,7 +55,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::DOMTokenList& object) { return &object; }
-using DOMTokenListWrapper = Web::DOM::DOMTokenList;
-}
+WRAPPER_HACK(DOMTokenList, Web::DOM)

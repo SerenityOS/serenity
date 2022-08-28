@@ -6,11 +6,12 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
+#include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
 
-ExceptionOr<NonnullRefPtr<Node>> convert_nodes_to_single_node(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes, DOM::Document& document);
+ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<Variant<JS::Handle<Node>, String>> const& nodes, DOM::Document& document);
 
 }

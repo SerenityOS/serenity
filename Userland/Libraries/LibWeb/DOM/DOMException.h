@@ -111,7 +111,7 @@ public:
     }
 
     // JS constructor has message first, name second
-    static NonnullRefPtr<DOMException> create_with_global_object(Bindings::WindowObject&, FlyString const& message, FlyString const& name)
+    static NonnullRefPtr<DOMException> create_with_global_object(HTML::Window&, FlyString const& message, FlyString const& name)
     {
         return adopt_ref(*new DOMException(name, message));
     }

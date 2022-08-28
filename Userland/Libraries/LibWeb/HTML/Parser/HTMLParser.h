@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 #include <LibWeb/HTML/Parser/ListOfActiveFormattingElements.h>
@@ -54,7 +53,7 @@ public:
 
     DOM::Document& document();
 
-    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, StringView);
+    static Vector<JS::Handle<DOM::Node>> parse_html_fragment(DOM::Element& context_element, StringView);
     static String serialize_html_fragment(DOM::Node const& node);
 
     enum class InsertionMode {
@@ -111,19 +110,19 @@ private:
 
     void generate_implied_end_tags(FlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    NonnullRefPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_, DOM::Node const& intended_parent);
+    JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_, DOM::Node const& intended_parent);
 
     struct AdjustedInsertionLocation {
-        RefPtr<DOM::Node> parent;
-        RefPtr<DOM::Node> insert_before_sibling;
+        JS::GCPtr<DOM::Node> parent;
+        JS::GCPtr<DOM::Node> insert_before_sibling;
     };
 
-    AdjustedInsertionLocation find_appropriate_place_for_inserting_node(RefPtr<DOM::Element> override_target = nullptr);
+    AdjustedInsertionLocation find_appropriate_place_for_inserting_node(JS::GCPtr<DOM::Element> override_target = nullptr);
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    NonnullRefPtr<DOM::Element> insert_foreign_element(HTMLToken const&, FlyString const&);
-    NonnullRefPtr<DOM::Element> insert_html_element(HTMLToken const&);
+    JS::NonnullGCPtr<DOM::Element> insert_foreign_element(HTMLToken const&, FlyString const&);
+    JS::NonnullGCPtr<DOM::Element> insert_html_element(HTMLToken const&);
     DOM::Element& current_node();
     DOM::Element& adjusted_current_node();
     DOM::Element& node_before_current_node();
@@ -173,14 +172,16 @@ private:
     bool m_stop_parsing { false };
     size_t m_script_nesting_level { 0 };
 
-    NonnullRefPtr<DOM::Document> m_document;
-    RefPtr<HTMLHeadElement> m_head_element;
-    RefPtr<HTMLFormElement> m_form_element;
-    RefPtr<DOM::Element> m_context_element;
+    JS::Realm& realm();
+
+    JS::Handle<DOM::Document> m_document;
+    JS::Handle<HTMLHeadElement> m_head_element;
+    JS::Handle<HTMLFormElement> m_form_element;
+    JS::Handle<DOM::Element> m_context_element;
 
     Vector<HTMLToken> m_pending_table_character_tokens;
 
-    RefPtr<DOM::Text> m_character_insertion_node;
+    JS::Handle<DOM::Text> m_character_insertion_node;
     StringBuilder m_character_insertion_builder;
 };
 

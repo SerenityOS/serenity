@@ -16,7 +16,7 @@ class DOMRect final
 public:
     using WrapperType = Bindings::DOMRectWrapper;
 
-    static NonnullRefPtr<DOMRect> create_with_global_object(Bindings::WindowObject&, double x = 0, double y = 0, double width = 0, double height = 0)
+    static NonnullRefPtr<DOMRect> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0)
     {
         return DOMRect::create(x, y, width, height);
     }

@@ -12,15 +12,19 @@
 namespace Web::HTML {
 
 class HTMLMeterElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLMeterElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLMeterElement, HTMLElement);
 
-    HTMLMeterElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLMeterElement() override;
 
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+private:
+    HTMLMeterElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLMeterElement, Web::HTML)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MessagePortWrapper.h>
+#include <LibWeb/Bindings/MessagePortPrototype.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -14,12 +14,24 @@
 
 namespace Web::HTML {
 
-MessagePort::MessagePort()
-    : DOM::EventTarget()
+JS::NonnullGCPtr<MessagePort> MessagePort::create(HTML::Window& window)
 {
+    return *window.heap().allocate<MessagePort>(window.realm(), window);
+}
+
+MessagePort::MessagePort(HTML::Window& window)
+    : DOM::EventTarget(window.realm())
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::MessagePortPrototype>("MessagePort"));
 }
 
 MessagePort::~MessagePort() = default;
+
+void MessagePort::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_remote_port.ptr());
+}
 
 void MessagePort::disentangle()
 {
@@ -30,7 +42,7 @@ void MessagePort::disentangle()
 // https://html.spec.whatwg.org/multipage/web-messaging.html#entangle
 void MessagePort::entangle_with(MessagePort& remote_port)
 {
-    if (m_remote_port == &remote_port)
+    if (m_remote_port.ptr() == &remote_port)
         return;
 
     // 1. If one of the ports is already entangled, then disentangle it and the port that it was entangled with.
@@ -41,7 +53,7 @@ void MessagePort::entangle_with(MessagePort& remote_port)
 
     // 2. Associate the two ports to be entangled, so that they form the two parts of a new channel.
     //    (There is no MessageChannel object that represents this channel.)
-    remote_port.m_remote_port = *this;
+    remote_port.m_remote_port = this;
     m_remote_port = &remote_port;
 }
 
@@ -76,17 +88,12 @@ void MessagePort::post_message(JS::Value message)
 
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [strong_port = NonnullRefPtr { *target_port }, message]() mutable {
+    main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [strong_port = JS::make_handle(*target_port), message]() mutable {
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        strong_port->dispatch_event(*MessageEvent::create(verify_cast<Bindings::WindowObject>(strong_port->wrapper()->global_object()), HTML::EventNames::message, event_init));
+        strong_port->dispatch_event(*MessageEvent::create(verify_cast<HTML::Window>(strong_port->realm().global_object()), HTML::EventNames::message, event_init));
     }));
-}
-
-JS::Object* MessagePort::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 void MessagePort::start()

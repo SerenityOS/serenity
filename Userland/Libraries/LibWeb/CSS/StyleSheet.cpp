@@ -6,14 +6,14 @@
  */
 
 #include <LibWeb/Bindings/StyleSheetPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-StyleSheet::StyleSheet(Bindings::WindowObject& window_object)
+StyleSheet::StyleSheet(HTML::Window& window_object)
     : PlatformObject(window_object.ensure_web_prototype<Bindings::StyleSheetPrototype>("StyleSheet"))
 {
 }

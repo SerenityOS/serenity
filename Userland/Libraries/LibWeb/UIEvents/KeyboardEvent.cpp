@@ -6,7 +6,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <LibWeb/Bindings/KeyboardEventPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 
 namespace Web::UIEvents {
@@ -67,7 +67,7 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
-KeyboardEvent* KeyboardEvent::create_from_platform_event(Bindings::WindowObject& window_object, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+KeyboardEvent* KeyboardEvent::create_from_platform_event(HTML::Window& window_object, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     // FIXME: Figure out what these should actually contain.
     String event_key = key_code_to_string(platform_key);
@@ -105,17 +105,17 @@ bool KeyboardEvent::get_modifier_state(String const& key_arg)
     return false;
 }
 
-KeyboardEvent* KeyboardEvent::create(Bindings::WindowObject& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::create(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
     return window_object.heap().allocate<KeyboardEvent>(window_object.realm(), window_object, event_name, event_init);
 }
 
-KeyboardEvent* KeyboardEvent::create_with_global_object(Bindings::WindowObject& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
     return create(window_object, event_name, event_init);
 }
 
-KeyboardEvent::KeyboardEvent(Bindings::WindowObject& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent::KeyboardEvent(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
     : UIEvent(window_object, event_name, event_init)
     , m_key(event_init.key)
     , m_code(event_init.code)

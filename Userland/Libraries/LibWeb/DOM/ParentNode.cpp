@@ -15,7 +15,7 @@
 
 namespace Web::DOM {
 
-ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text)
+ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
@@ -23,12 +23,12 @@ ExceptionOr<RefPtr<Element>> ParentNode::query_selector(StringView selector_text
 
     auto selectors = maybe_selectors.value();
 
-    RefPtr<Element> result;
+    JS::GCPtr<Element> result;
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, element)) {
-                result = element;
+                result = &element;
                 return IterationDecision::Break;
             }
         }
@@ -46,12 +46,12 @@ ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView s
 
     auto selectors = maybe_selectors.value();
 
-    NonnullRefPtrVector<Node> elements;
+    Vector<JS::Handle<Node>> elements;
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
             if (SelectorEngine::matches(selector, element)) {
-                elements.append(element);
+                elements.append(&element);
             }
         }
         return IterationDecision::Continue;
@@ -60,12 +60,12 @@ ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView s
     return StaticNodeList::create(move(elements));
 }
 
-RefPtr<Element> ParentNode::first_element_child()
+JS::GCPtr<Element> ParentNode::first_element_child()
 {
     return first_child_of_type<Element>();
 }
 
-RefPtr<Element> ParentNode::last_element_child()
+JS::GCPtr<Element> ParentNode::last_element_child()
 {
     return last_child_of_type<Element>();
 }
@@ -157,7 +157,7 @@ NonnullRefPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyString 
 }
 
 // https://dom.spec.whatwg.org/#dom-parentnode-prepend
-ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));
@@ -168,7 +168,7 @@ ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String
     return {};
 }
 
-ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));
@@ -179,7 +179,7 @@ ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>
     return {};
 }
 
-ExceptionOr<void> ParentNode::replace_children(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+ExceptionOr<void> ParentNode::replace_children(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
     auto node = TRY(convert_nodes_to_single_node(nodes, document()));
@@ -188,7 +188,7 @@ ExceptionOr<void> ParentNode::replace_children(Vector<Variant<NonnullRefPtr<Node
     TRY(ensure_pre_insertion_validity(node, nullptr));
 
     // 3. Replace all with node within this.
-    replace_all(node);
+    replace_all(*node);
     return {};
 }
 

@@ -18,14 +18,14 @@ class XMLSerializer final
 public:
     using WrapperType = Bindings::XMLSerializerWrapper;
 
-    static NonnullRefPtr<XMLSerializer> create_with_global_object(Bindings::WindowObject&)
+    static NonnullRefPtr<XMLSerializer> create_with_global_object(HTML::Window&)
     {
         return adopt_ref(*new XMLSerializer());
     }
 
     virtual ~XMLSerializer() override;
 
-    DOM::ExceptionOr<String> serialize_to_string(NonnullRefPtr<DOM::Node> root);
+    DOM::ExceptionOr<String> serialize_to_string(JS::NonnullGCPtr<DOM::Node> root);
 
 private:
     XMLSerializer();
@@ -36,6 +36,6 @@ enum class RequireWellFormed {
     Yes,
 };
 
-DOM::ExceptionOr<String> serialize_node_to_xml_string(NonnullRefPtr<DOM::Node> root, RequireWellFormed require_well_formed);
+DOM::ExceptionOr<String> serialize_node_to_xml_string(JS::NonnullGCPtr<DOM::Node> root, RequireWellFormed require_well_formed);
 
 }

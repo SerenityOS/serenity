@@ -4,15 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SVGEllipseElement.h"
+#include <LibWeb/Bindings/SVGEllipseElementPrototype.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGEllipseElement.h>
 
 namespace Web::SVG {
 
 SVGEllipseElement::SVGEllipseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGEllipseElementPrototype>("SVGEllipseElement"));
 }
 
 void SVGEllipseElement::parse_attribute(FlyString const& name, String const& value)

@@ -9,7 +9,7 @@
 namespace Web::NavigationTiming {
 
 PerformanceTiming::PerformanceTiming(HTML::Window& window)
-    : RefCountForwarder(window)
+    : m_window(JS::make_handle(window))
 {
 }
 

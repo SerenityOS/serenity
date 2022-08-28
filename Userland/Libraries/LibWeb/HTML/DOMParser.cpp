@@ -4,22 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/DOMParserWrapper.h>
+#include <LibWeb/Bindings/DOMParserPrototype.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/DOMParser.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web::HTML {
 
-DOMParser::DOMParser() = default;
+DOMParser::DOMParser(HTML::Window& window)
+    : m_window(JS::make_handle(window))
+{
+}
+
 DOMParser::~DOMParser() = default;
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
-NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)
+JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
-    // FIXME: Pass in this's relevant global object's associated Document's URL.
-    auto document = DOM::Document::create();
+    auto document = DOM::Document::create(Bindings::main_thread_internal_window_object(), m_window->associated_document().url());
     document->set_content_type(Bindings::idl_enum_to_string(type));
 
     // 2. Switch on type:
@@ -31,7 +35,7 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
         // 2. Create an HTML parser parser, associated with document.
         // 3. Place string into the input stream for parser. The encoding confidence is irrelevant.
         // FIXME: We don't have the concept of encoding confidence yet.
-        auto parser = HTMLParser::create(document, string, "UTF-8");
+        auto parser = HTMLParser::create(*document, string, "UTF-8");
 
         // 4. Start parser and let it run until it has consumed all the characters just inserted into the input stream.
         // FIXME: This is to match the default URL. Instead, pass in this's relevant global object's associated Document's URL.
@@ -41,7 +45,7 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
 
         // 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.
         XML::Parser parser(string, { .resolve_external_resource = resolve_xml_resource });
-        XMLDocumentBuilder builder { document, XMLScriptingSupport::Disabled };
+        XMLDocumentBuilder builder { *document, XMLScriptingSupport::Disabled };
         // 2. Parse string using parser.
         auto result = parser.parse_with_listener(builder);
         // 3. If the previous step resulted in an XML well-formedness or XML namespace well-formedness error, then:
@@ -50,10 +54,10 @@ NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, 
             // 1. Assert: document has no child nodes.
             document->remove_all_children(true);
             // 2. Let root be the result of creating an element given document, "parsererror", and "http://www.mozilla.org/newlayout/xml/parsererror.xml".
-            auto root = DOM::create_element(document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+            auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml");
             // FIXME: 3. Optionally, add attributes or children to root to describe the nature of the parsing error.
             // 4. Append root to document.
-            document->append_child(root);
+            document->append_child(*root);
         }
     }
 

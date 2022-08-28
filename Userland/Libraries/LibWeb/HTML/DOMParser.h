@@ -23,17 +23,19 @@ class DOMParser final
 public:
     using WrapperType = Bindings::DOMParserWrapper;
 
-    static DOM::ExceptionOr<NonnullRefPtr<DOMParser>> create_with_global_object(Bindings::WindowObject&)
+    static DOM::ExceptionOr<NonnullRefPtr<DOMParser>> create_with_global_object(HTML::Window& window)
     {
-        return adopt_ref(*new DOMParser());
+        return adopt_ref(*new DOMParser(window));
     }
 
     virtual ~DOMParser() override;
 
-    NonnullRefPtr<DOM::Document> parse_from_string(String const&, Bindings::DOMParserSupportedType type);
+    JS::NonnullGCPtr<DOM::Document> parse_from_string(String const&, Bindings::DOMParserSupportedType type);
 
 private:
-    DOMParser();
+    explicit DOMParser(HTML::Window&);
+
+    JS::Handle<HTML::Window> m_window;
 };
 
 }

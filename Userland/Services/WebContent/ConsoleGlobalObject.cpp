@@ -6,15 +6,12 @@
 
 #include "ConsoleGlobalObject.h"
 #include <LibJS/Runtime/Completion.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace WebContent {
 
-ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::Bindings::WindowObject& parent_object)
+ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::HTML::Window& parent_object)
     : GlobalObject(realm)
     , m_window_object(&parent_object)
 {

@@ -7,15 +7,13 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <AK/Weakable.h>
 #include <LibCore/Object.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Window.h>
 
 #define ENUMERATE_WEBSOCKET_EVENT_HANDLERS(E) \
     E(onerror, HTML::EventNames::error)       \
@@ -28,11 +26,9 @@ namespace Web::WebSockets {
 class WebSocketClientSocket;
 class WebSocketClientManager;
 
-class WebSocket final
-    : public RefCounted<WebSocket>
-    , public Weakable<WebSocket>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+class WebSocket final : public DOM::EventTarget {
+    WEB_PLATFORM_OBJECT(WebSocket, DOM::EventTarget);
+
 public:
     enum class ReadyState : u16 {
         Connecting = 0,
@@ -41,19 +37,9 @@ public:
         Closed = 3,
     };
 
-    using WrapperType = Bindings::WebSocketWrapper;
-
-    static NonnullRefPtr<WebSocket> create(HTML::Window& window, AK::URL& url)
-    {
-        return adopt_ref(*new WebSocket(window, url));
-    }
-
-    static DOM::ExceptionOr<NonnullRefPtr<WebSocket>> create_with_global_object(Bindings::WindowObject& window, String const& url);
+    static DOM::ExceptionOr<JS::NonnullGCPtr<WebSocket>> create_with_global_object(HTML::Window&, String const& url);
 
     virtual ~WebSocket() override;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
 
     String url() const { return m_url.to_string(); }
 
@@ -75,10 +61,6 @@ public:
     DOM::ExceptionOr<void> send(String const& data);
 
 private:
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual JS::Object* create_wrapper(JS::Realm&) override;
-
     void on_open();
     void on_message(ByteBuffer message, bool is_text);
     void on_error();
@@ -86,7 +68,9 @@ private:
 
     explicit WebSocket(HTML::Window&, AK::URL&);
 
-    NonnullRefPtr<HTML::Window> m_window;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<HTML::Window> m_window;
 
     AK::URL m_url;
     String m_binary_type { "blob" };
@@ -142,3 +126,5 @@ protected:
 };
 
 }
+
+WRAPPER_HACK(WebSocket, Web::WebSockets)

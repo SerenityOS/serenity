@@ -14,7 +14,7 @@
 namespace Web::NavigationTiming {
 
 class PerformanceTiming final
-    : public RefCountForwarder<HTML::Window>
+    : public RefCounted<PerformanceTiming>
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::PerformanceTimingWrapper;
@@ -44,6 +44,9 @@ public:
     u64 dom_complete() { return 0; }
     u64 load_event_start() { return 0; }
     u64 load_event_end() { return 0; }
+
+private:
+    JS::Handle<HTML::Window> m_window;
 };
 
 }

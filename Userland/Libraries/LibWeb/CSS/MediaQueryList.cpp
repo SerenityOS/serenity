@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MediaQueryListWrapper.h>
+#include <LibWeb/Bindings/MediaQueryListPrototype.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -14,12 +14,24 @@
 
 namespace Web::CSS {
 
+JS::NonnullGCPtr<MediaQueryList> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
+{
+    return *document.heap().allocate<MediaQueryList>(document.realm(), document, move(media));
+}
+
 MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
-    : DOM::EventTarget()
+    : DOM::EventTarget(document.realm())
     , m_document(document)
     , m_media(move(media))
 {
+    set_prototype(&document.window().ensure_web_prototype<Bindings::MediaQueryListPrototype>("MediaQueryList"));
     evaluate();
+}
+
+void MediaQueryList::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_document.ptr());
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
@@ -40,20 +52,12 @@ bool MediaQueryList::matches() const
 
 bool MediaQueryList::evaluate()
 {
-    if (!m_document)
-        return false;
-
     bool now_matches = false;
     for (auto& media : m_media) {
         now_matches = now_matches || media.evaluate(m_document->window());
     }
 
     return now_matches;
-}
-
-JS::Object* MediaQueryList::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-mediaquerylist-addlistener

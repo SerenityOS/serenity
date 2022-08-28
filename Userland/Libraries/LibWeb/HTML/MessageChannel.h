@@ -24,24 +24,24 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
-    static NonnullRefPtr<MessageChannel> create_with_global_object(Bindings::WindowObject&)
+    static NonnullRefPtr<MessageChannel> create_with_global_object(HTML::Window& window)
     {
-        return adopt_ref(*new MessageChannel());
+        return adopt_ref(*new MessageChannel(window));
     }
 
     virtual ~MessageChannel() override;
 
-    MessagePort* port1() { return m_port1; }
-    MessagePort const* port1() const { return m_port1; }
+    MessagePort* port1();
+    MessagePort const* port1() const;
 
-    MessagePort* port2() { return m_port2; }
-    MessagePort const* port2() const { return m_port2; }
+    MessagePort* port2();
+    MessagePort const* port2() const;
 
 private:
-    MessageChannel();
+    explicit MessageChannel(HTML::Window&);
 
-    RefPtr<MessagePort> m_port1;
-    RefPtr<MessagePort> m_port2;
+    JS::Handle<MessagePort> m_port1;
+    JS::Handle<MessagePort> m_port2;
 };
 
 }

@@ -12,7 +12,7 @@ namespace Web::HTML {
 Task::Task(Source source, DOM::Document* document, Function<void()> steps)
     : m_source(source)
     , m_steps(move(steps))
-    , m_document(document)
+    , m_document(JS::make_handle(document))
 {
 }
 
@@ -27,7 +27,17 @@ void Task::execute()
 bool Task::is_runnable() const
 {
     // A task is runnable if its document is either null or fully active.
-    return !m_document || m_document->is_fully_active();
+    return !m_document.ptr() || m_document->is_fully_active();
+}
+
+DOM::Document* Task::document()
+{
+    return m_document.ptr();
+}
+
+DOM::Document const* Task::document() const
+{
+    return m_document.ptr();
 }
 
 }

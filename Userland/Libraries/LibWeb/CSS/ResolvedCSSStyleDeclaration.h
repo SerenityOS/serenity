@@ -11,7 +11,7 @@
 namespace Web::CSS {
 
 class ResolvedCSSStyleDeclaration final : public CSSStyleDeclaration {
-    JS_OBJECT(ResolvedCSSStyleDeclaration, CSSStyleDeclaration);
+    WEB_PLATFORM_OBJECT(ResolvedCSSStyleDeclaration, CSSStyleDeclaration);
 
 public:
     static ResolvedCSSStyleDeclaration* create(DOM::Element& element);
@@ -28,9 +28,11 @@ public:
     virtual String serialized() const override;
 
 private:
+    virtual void visit_edges(Cell::Visitor&) override;
+
     RefPtr<StyleValue> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
 
-    NonnullRefPtr<DOM::Element> m_element;
+    JS::NonnullGCPtr<DOM::Element> m_element;
 };
 
 }

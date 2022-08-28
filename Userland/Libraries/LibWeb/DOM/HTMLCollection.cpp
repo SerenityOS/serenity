@@ -13,19 +13,19 @@
 namespace Web::DOM {
 
 HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter)
-    : m_root(root)
+    : m_root(JS::make_handle(root))
     , m_filter(move(filter))
 {
 }
 
 HTMLCollection::~HTMLCollection() = default;
 
-Vector<NonnullRefPtr<Element>> HTMLCollection::collect_matching_elements() const
+JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
 {
-    Vector<NonnullRefPtr<Element>> elements;
+    JS::MarkedVector<Element*> elements(m_root->heap());
     m_root->for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (m_filter(element))
-            elements.append(element);
+            elements.append(const_cast<Element*>(&element));
         return IterationDecision::Continue;
     });
     return elements;

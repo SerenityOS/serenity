@@ -600,4 +600,29 @@ RefPtr<Painting::Paintable> Node::create_paintable() const
     return nullptr;
 }
 
+bool Node::is_anonymous() const
+{
+    return !m_dom_node.ptr();
+}
+
+DOM::Node const* Node::dom_node() const
+{
+    return m_dom_node.ptr();
+}
+
+DOM::Node* Node::dom_node()
+{
+    return m_dom_node.ptr();
+}
+
+DOM::Document& Node::document()
+{
+    return *m_document;
+}
+
+DOM::Document const& Node::document() const
+{
+    return *m_document;
+}
+
 }

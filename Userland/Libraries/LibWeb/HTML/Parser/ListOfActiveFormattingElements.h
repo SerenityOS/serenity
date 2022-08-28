@@ -20,7 +20,7 @@ public:
     struct Entry {
         bool is_marker() const { return !element; }
 
-        RefPtr<DOM::Element> element;
+        JS::Handle<DOM::Element> element;
     };
 
     bool is_empty() const { return m_entries.is_empty(); }

@@ -14,8 +14,9 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/Bindings/DocumentPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
@@ -100,7 +101,7 @@ static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for
     VERIFY(browsing_context.page());
     auto new_browsing_context = HTML::BrowsingContext::create_a_new_browsing_context(*browsing_context.page(), nullptr, nullptr);
 
-    // FIXME: 4. If navigationCOOP's value is "same-origin-plus-COEP", then set newBrowsingContext's group's
+    // FIXME: 4. If navigationCOOP's value is "same-origin-plurs-COEP", then set newBrowsingContext's group's
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.
 
     // 5. If sandboxFlags is not empty, then:
@@ -120,7 +121,7 @@ static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#initialise-the-document-object
-NonnullRefPtr<Document> Document::create_and_initialize(Type type, String content_type, HTML::NavigationParams navigation_params)
+JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String content_type, HTML::NavigationParams navigation_params)
 {
     // 1. Let browsingContext be the result of the obtaining a browsing context to use for a navigation response
     //    given navigationParams's browsing context, navigationParams's final sandboxing flag set,
@@ -142,7 +143,7 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
         creation_url = navigation_params.request->current_url();
     }
 
-    RefPtr<HTML::Window> window;
+    JS::GCPtr<HTML::Window> window;
 
     // 5. If browsingContext is still on its initial about:blank Document,
     //    and navigationParams's history handling is "replace",
@@ -168,14 +169,12 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
         // 5. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
         auto realm_execution_context = Bindings::create_a_new_javascript_realm(
             Bindings::main_thread_vm(),
-            [&](JS::Realm& realm) -> JS::GlobalObject* {
+            [&](JS::Realm& realm) -> JS::Object* {
                 // - For the global object, create a new Window object.
-                window = HTML::Window::create();
-                auto* global_object = realm.heap().allocate_without_realm<Bindings::WindowObject>(realm, *window);
-                VERIFY(window->wrapper() == global_object);
-                return global_object;
+                window = HTML::Window::create(realm);
+                return window;
             },
-            [](JS::Realm&) -> JS::GlobalObject* {
+            [](JS::Realm&) -> JS::Object* {
                 // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
                 return nullptr;
             });
@@ -223,7 +222,7 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    FIXME: and navigation id is navigationParams's id.
-    auto document = Document::create();
+    auto document = Document::create(*window);
     document->m_type = type;
     document->m_content_type = content_type;
     document->set_origin(navigation_params.origin);
@@ -266,24 +265,25 @@ NonnullRefPtr<Document> Document::create_and_initialize(Type type, String conten
     return document;
 }
 
-NonnullRefPtr<Document> Document::create_with_global_object(Bindings::WindowObject&)
+JS::NonnullGCPtr<Document> Document::create_with_global_object(HTML::Window& window)
 {
-    return Document::create();
+    return Document::create(window);
 }
 
-NonnullRefPtr<Document> Document::create(AK::URL const& url)
+JS::NonnullGCPtr<Document> Document::create(HTML::Window& window, AK::URL const& url)
 {
-    return adopt_ref(*new Document(url));
+    auto& realm = window.realm();
+    return *realm.heap().allocate<Document>(realm, window, url);
 }
 
-Document::Document(const AK::URL& url)
-    : ParentNode(*this, NodeType::DOCUMENT_NODE)
+Document::Document(HTML::Window& window, const AK::URL& url)
+    : ParentNode(window.realm(), *this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
-    , m_window(HTML::Window::create_with_document(*this))
+    , m_window(window)
     , m_history(HTML::History::create(*this))
 {
-    m_style_sheets = JS::make_handle(CSS::StyleSheetList::create(*this));
+    set_prototype(&window.ensure_web_prototype<Bindings::DocumentPrototype>("Document"));
 
     HTML::main_thread_event_loop().register_document({}, *this);
 
@@ -296,63 +296,33 @@ Document::Document(const AK::URL& url)
     });
 }
 
-Document::~Document() = default;
-
-void Document::removed_last_ref()
+Document::~Document()
 {
-    VERIFY(!ref_count());
-    VERIFY(!m_deletion_has_begun);
-
-    if (m_referencing_node_count) {
-        // The document has reached ref_count==0 but still has nodes keeping it alive.
-        // At this point, sever all the node links we control.
-        // If nodes remain elsewhere (e.g JS wrappers), they will keep the document alive.
-
-        // NOTE: This makes sure we stay alive across for the duration of the cleanup below.
-        increment_referencing_node_count();
-
-        m_focused_element = nullptr;
-        m_hovered_node = nullptr;
-        m_pending_parsing_blocking_script = nullptr;
-        m_inspected_node = nullptr;
-        m_scripts_to_execute_when_parsing_has_finished.clear();
-        m_scripts_to_execute_as_soon_as_possible.clear();
-        m_associated_inert_template_document = nullptr;
-
-        m_interpreter = nullptr;
-
-        {
-            // Gather up all the descendants of this document and prune them from the tree.
-            // FIXME: This could definitely be more elegant.
-            NonnullRefPtrVector<Node> descendants;
-            for_each_in_inclusive_subtree([&](auto& node) {
-                if (&node != this)
-                    descendants.append(node);
-                return IterationDecision::Continue;
-            });
-
-            for (auto& node : descendants) {
-                VERIFY(&node.document() == this);
-                VERIFY(!node.is_document());
-                if (node.parent()) {
-                    // We need to suppress mutation observers so that they don't try and queue a microtask for this Document which is in the process of dying,
-                    // which will cause an `!m_in_removed_last_ref` assertion failure when it tries to ref this Document.
-                    node.remove(true);
-                }
-            }
-        }
-
-        m_in_removed_last_ref = false;
-        decrement_referencing_node_count();
-        return;
-    }
-
-    m_in_removed_last_ref = false;
-    m_deletion_has_begun = true;
-
     HTML::main_thread_event_loop().unregister_document({}, *this);
+}
 
-    delete this;
+void Document::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
+    visitor.visit(m_style_sheets.ptr());
+    visitor.visit(m_hovered_node.ptr());
+    visitor.visit(m_inspected_node.ptr());
+    visitor.visit(m_active_favicon.ptr());
+    visitor.visit(m_focused_element.ptr());
+    visitor.visit(m_active_element.ptr());
+    visitor.visit(m_implementation.ptr());
+    visitor.visit(m_current_script.ptr());
+    visitor.visit(m_associated_inert_template_document.ptr());
+    visitor.visit(m_pending_parsing_blocking_script.ptr());
+
+    for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
+        visitor.visit(script.ptr());
+    for (auto& script : m_scripts_to_execute_as_soon_as_possible)
+        visitor.visit(script.ptr());
+
+    for (auto& node_iterator : m_node_iterators)
+        visitor.visit(node_iterator);
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
@@ -642,14 +612,14 @@ void Document::set_title(String const& title)
     if (!head_element)
         return;
 
-    RefPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
+    JS::GCPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element) {
-        title_element = static_ptr_cast<HTML::HTMLTitleElement>(create_element(HTML::TagNames::title).release_value());
+        title_element = &static_cast<HTML::HTMLTitleElement&>(*create_element(HTML::TagNames::title).release_value());
         head_element->append_child(*title_element);
     }
 
     title_element->remove_all_children(true);
-    title_element->append_child(adopt_ref(*new Text(*this, title)));
+    title_element->append_child(*heap().allocate<Text>(realm(), *this, title));
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
@@ -725,13 +695,13 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     return &body_layout_node->background_layers();
 }
 
-RefPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
 {
-    RefPtr<HTML::HTMLBaseElement> base_element;
+    JS::GCPtr<HTML::HTMLBaseElement> base_element;
 
     for_each_in_subtree_of_type<HTML::HTMLBaseElement>([&base_element](HTML::HTMLBaseElement const& base_element_in_tree) {
         if (base_element_in_tree.has_attribute(HTML::AttributeNames::href)) {
-            base_element = base_element_in_tree;
+            base_element = &base_element_in_tree;
             return IterationDecision::Break;
         }
 
@@ -909,7 +879,7 @@ Layout::InitialContainingBlock* Document::layout_node()
 
 void Document::set_inspected_node(Node* node)
 {
-    if (m_inspected_node == node)
+    if (m_inspected_node.ptr() == node)
         return;
 
     if (m_inspected_node && m_inspected_node->layout_node())
@@ -943,10 +913,10 @@ static Node* find_common_ancestor(Node* a, Node* b)
 
 void Document::set_hovered_node(Node* node)
 {
-    if (m_hovered_node == node)
+    if (m_hovered_node.ptr() == node)
         return;
 
-    RefPtr<Node> old_hovered_node = move(m_hovered_node);
+    JS::GCPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
 
     if (auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node))
@@ -1077,13 +1047,6 @@ HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
     return verify_cast<HTML::EnvironmentSettingsObject>(*realm().host_defined());
 }
 
-JS::Realm& Document::realm()
-{
-    VERIFY(m_window);
-    VERIFY(m_window->wrapper());
-    return m_window->wrapper()->shape().realm();
-}
-
 JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter) {
@@ -1115,7 +1078,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
 // FIXME: This only implements step 6 of the algorithm and does not take in options.
-DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& tag_name)
+DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& tag_name)
 {
     if (!is_valid_name(tag_name))
         return DOM::InvalidCharacterError::create("Invalid character in tag name.");
@@ -1127,7 +1090,7 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
+DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
@@ -1139,19 +1102,19 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String cons
     return DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix());
 }
 
-NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
+JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return adopt_ref(*new DocumentFragment(*this));
+    return *heap().allocate<DocumentFragment>(realm(), *this);
 }
 
-NonnullRefPtr<Text> Document::create_text_node(String const& data)
+JS::NonnullGCPtr<Text> Document::create_text_node(String const& data)
 {
-    return adopt_ref(*new Text(*this, data));
+    return *heap().allocate<Text>(realm(), *this, data);
 }
 
-NonnullRefPtr<Comment> Document::create_comment(String const& data)
+JS::NonnullGCPtr<Comment> Document::create_comment(String const& data)
 {
-    return adopt_ref(*new Comment(*this, data));
+    return *heap().allocate<Comment>(realm(), *this, data);
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()
@@ -1162,7 +1125,7 @@ JS::NonnullGCPtr<Range> Document::create_range()
 // https://dom.spec.whatwg.org/#dom-document-createevent
 DOM::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
 {
-    auto& window_object = preferred_window_object();
+    auto& window_object = window();
 
     // NOTE: This is named event here, since we do step 5 and 6 as soon as possible for each case.
     // 1. Let constructor be null.
@@ -1238,33 +1201,36 @@ void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement
     m_pending_parsing_blocking_script = script;
 }
 
-NonnullRefPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLParser>)
+JS::NonnullGCPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLParser>)
 {
-    return m_pending_parsing_blocking_script.release_nonnull();
+    VERIFY(m_pending_parsing_blocking_script);
+    auto script = m_pending_parsing_blocking_script;
+    m_pending_parsing_blocking_script = nullptr;
+    return *script;
 }
 
 void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
-    m_scripts_to_execute_when_parsing_has_finished.append(script);
+    m_scripts_to_execute_when_parsing_has_finished.append(JS::make_handle(script));
 }
 
-NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLParser>)
+Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLParser>)
 {
     return move(m_scripts_to_execute_when_parsing_has_finished);
 }
 
 void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
-    m_scripts_to_execute_as_soon_as_possible.append(script);
+    m_scripts_to_execute_as_soon_as_possible.append(JS::make_handle(script));
 }
 
-NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>)
+Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>)
 {
     return move(m_scripts_to_execute_as_soon_as_possible);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-importnode
-ExceptionOr<NonnullRefPtr<Node>> Document::import_node(NonnullRefPtr<Node> node, bool deep)
+ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCPtr<Node> node, bool deep)
 {
     // 1. If node is a document or shadow root, then throw a "NotSupportedError" DOMException.
     if (is<Document>(*node) || is<ShadowRoot>(*node))
@@ -1299,10 +1265,11 @@ void Document::adopt_node(Node& node)
 
         // Transfer NodeIterators rooted at `node` from old_document to this document.
         Vector<NodeIterator&> node_iterators_to_transfer;
-        for (auto* node_iterator : old_document.m_node_iterators) {
-            if (node_iterator->root() == &node)
+        for (auto node_iterator : old_document.m_node_iterators) {
+            if (node_iterator->root().ptr() == &node)
                 node_iterators_to_transfer.append(*node_iterator);
         }
+
         for (auto& node_iterator : node_iterators_to_transfer) {
             old_document.m_node_iterators.remove(&node_iterator);
             m_node_iterators.set(&node_iterator);
@@ -1311,7 +1278,7 @@ void Document::adopt_node(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-adoptnode
-ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node> node)
+ExceptionOr<JS::NonnullGCPtr<Node>> Document::adopt_node_binding(JS::NonnullGCPtr<Node> node)
 {
     if (is<Document>(*node))
         return DOM::NotSupportedError::create("Cannot adopt a document into a document");
@@ -1350,7 +1317,7 @@ bool Document::is_editable() const
 
 void Document::set_focused_element(Element* element)
 {
-    if (m_focused_element == element)
+    if (m_focused_element.ptr() == element)
         return;
 
     if (m_focused_element) {
@@ -1371,7 +1338,7 @@ void Document::set_focused_element(Element* element)
 
 void Document::set_active_element(Element* element)
 {
-    if (m_active_element == element)
+    if (m_active_element.ptr() == element)
         return;
 
     m_active_element = element;
@@ -1410,7 +1377,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     // FIXME:    3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0, then set document's load timing info's DOM interactive time to now.
 
     // 3. Fire an event named readystatechange at document.
-    dispatch_event(*Event::create(preferred_window_object(), HTML::EventNames::readystatechange));
+    dispatch_event(*Event::create(window(), HTML::EventNames::readystatechange));
 }
 
 Page* Document::page()
@@ -1451,7 +1418,7 @@ void Document::completely_finish_loading()
     // Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container, this]() mutable {
-            container->dispatch_event(*DOM::Event::create(preferred_window_object(), HTML::EventNames::load));
+            container->dispatch_event(*DOM::Event::create(window(), HTML::EventNames::load));
         });
     }
 }
@@ -1531,7 +1498,7 @@ Bindings::LocationObject* Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return window().wrapper()->location_object();
+    return window().location_object();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
@@ -1562,14 +1529,14 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(*DOM::Event::create(preferred_window_object(), UIEvents::EventNames::resize));
+    window().dispatch_event(*DOM::Event::create(window(), UIEvents::EventNames::resize));
 
     update_layout();
 }
 
-void Document::add_media_query_list(NonnullRefPtr<CSS::MediaQueryList>& media_query_list)
+void Document::add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList> media_query_list)
 {
-    m_media_query_lists.append(media_query_list);
+    m_media_query_lists.append(*media_query_list);
 }
 
 // https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
@@ -1590,7 +1557,7 @@ void Document::evaluate_media_queries_and_report_changes()
         //    and its matches attribute initialized to target’s matches state.
         if (media_query_list_ptr.is_null())
             continue;
-        auto media_query_list = media_query_list_ptr.strong_ref();
+        JS::GCPtr<CSS::MediaQueryList> media_query_list = media_query_list_ptr.ptr();
         bool did_match = media_query_list->matches();
         bool now_matches = media_query_list->evaluate();
 
@@ -1598,7 +1565,7 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = media_query_list->media();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(preferred_window_object(), HTML::EventNames::change, init);
+            auto event = CSS::MediaQueryListEvent::create(window(), HTML::EventNames::change, init);
             event->set_is_trusted(true);
             media_query_list->dispatch_event(*event);
         }
@@ -1624,9 +1591,9 @@ void Document::evaluate_media_rules()
 
 DOMImplementation* Document::implementation()
 {
-    if (!m_implementation.cell())
-        m_implementation = JS::make_handle(*DOMImplementation::create(*this));
-    return m_implementation.cell();
+    if (!m_implementation)
+        m_implementation = DOMImplementation::create(*this);
+    return m_implementation;
 }
 
 bool Document::has_focus() const
@@ -1821,7 +1788,7 @@ void Document::check_favicon_after_loading_link_resource()
     for (auto i = favicon_link_elements->length(); i-- > 0;) {
         auto favicon_element = favicon_link_elements->item(i);
 
-        if (favicon_element == m_active_element)
+        if (favicon_element == m_active_element.ptr())
             return;
 
         // If the user agent tries to use an icon but that icon is determined, upon closer examination,
@@ -1838,14 +1805,19 @@ void Document::check_favicon_after_loading_link_resource()
 
 void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
 {
-    m_window = window;
+    m_window = &window;
 }
 
-Bindings::WindowObject& Document::preferred_window_object() const
+CSS::StyleSheetList& Document::style_sheets()
 {
-    if (m_window && m_window->wrapper())
-        return const_cast<Bindings::WindowObject&>(*m_window->wrapper());
-    return Bindings::main_thread_internal_window_object();
+    if (!m_style_sheets)
+        m_style_sheets = CSS::StyleSheetList::create(*this);
+    return *m_style_sheets;
+}
+
+CSS::StyleSheetList const& Document::style_sheets() const
+{
+    return const_cast<Document*>(this)->style_sheets();
 }
 
 }

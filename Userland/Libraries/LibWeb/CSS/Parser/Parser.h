@@ -35,7 +35,7 @@ namespace Web::CSS::Parser {
 class ParsingContext {
 public:
     ParsingContext();
-    explicit ParsingContext(Bindings::WindowObject&);
+    explicit ParsingContext(HTML::Window&);
     explicit ParsingContext(DOM::Document const&);
     explicit ParsingContext(DOM::Document const&, AK::URL);
     explicit ParsingContext(DOM::ParentNode&);
@@ -47,10 +47,10 @@ public:
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
 
-    Bindings::WindowObject& window_object() const { return m_window_object; }
+    HTML::Window& window_object() const { return m_window_object; }
 
 private:
-    Bindings::WindowObject& m_window_object;
+    HTML::Window& m_window_object;
     DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
     AK::URL m_url;

@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLSourceElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLSourceElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLSourceElement, HTMLElement);
 
-    HTMLSourceElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLSourceElement() override;
+
+private:
+    HTMLSourceElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLSourceElement, Web::HTML)

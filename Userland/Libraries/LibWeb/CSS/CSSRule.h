@@ -16,10 +16,9 @@
 namespace Web::CSS {
 
 class CSSRule : public Bindings::PlatformObject {
-    JS_OBJECT(CSSRule, JS::Object);
+    WEB_PLATFORM_OBJECT(CSSRule, JS::Object);
 
 public:
-    CSSRule& impl() { return *this; }
     virtual ~CSSRule() = default;
 
     // https://drafts.csswg.org/cssom/#dom-cssrule-type
@@ -46,7 +45,7 @@ public:
     bool fast_is() const = delete;
 
 protected:
-    explicit CSSRule(Bindings::WindowObject&);
+    explicit CSSRule(HTML::Window&);
 
     virtual String serialized() const = 0;
 
@@ -58,7 +57,4 @@ protected:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSRule& object) { return &object; }
-using CSSRuleWrapper = Web::CSS::CSSRule;
-}
+WRAPPER_HACK(CSSRule, Web::CSS)

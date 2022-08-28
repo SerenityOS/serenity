@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/AttributePrototype.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -12,9 +13,9 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Attribute> Attribute::create(Document& document, FlyString local_name, String value, Element const* owner_element)
+JS::NonnullGCPtr<Attribute> Attribute::create(Document& document, FlyString local_name, String value, Element const* owner_element)
 {
-    return adopt_ref(*new Attribute(document, move(local_name), move(value), owner_element));
+    return *document.heap().allocate<Attribute>(document.realm(), document, move(local_name), move(value), owner_element);
 }
 
 Attribute::Attribute(Document& document, FlyString local_name, String value, Element const* owner_element)
@@ -23,16 +24,23 @@ Attribute::Attribute(Document& document, FlyString local_name, String value, Ele
     , m_value(move(value))
     , m_owner_element(owner_element)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::AttributePrototype>("Attribute"));
+}
+
+void Attribute::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_owner_element.ptr());
 }
 
 Element* Attribute::owner_element()
 {
-    return m_owner_element;
+    return m_owner_element.ptr();
 }
 
 Element const* Attribute::owner_element() const
 {
-    return m_owner_element;
+    return m_owner_element.ptr();
 }
 
 void Attribute::set_owner_element(Element const* owner_element)

@@ -5,25 +5,25 @@
  */
 
 #include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSStyleDeclaration::CSSStyleDeclaration(Bindings::WindowObject& window_object)
+CSSStyleDeclaration::CSSStyleDeclaration(HTML::Window& window_object)
     : PlatformObject(window_object.ensure_web_prototype<Bindings::CSSStyleDeclarationPrototype>("CSSStyleDeclaration"))
 {
 }
 
-PropertyOwningCSSStyleDeclaration* PropertyOwningCSSStyleDeclaration::create(Bindings::WindowObject& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+PropertyOwningCSSStyleDeclaration* PropertyOwningCSSStyleDeclaration::create(HTML::Window& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
 {
     return window_object.heap().allocate<PropertyOwningCSSStyleDeclaration>(window_object.realm(), window_object, move(properties), move(custom_properties));
 }
 
-PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(Bindings::WindowObject& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(HTML::Window& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
     : CSSStyleDeclaration(window_object)
     , m_properties(move(properties))
     , m_custom_properties(move(custom_properties))
@@ -39,14 +39,20 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
 
 ElementInlineCSSStyleDeclaration* ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
 {
-    auto& window_object = element.document().preferred_window_object();
+    auto& window_object = element.document().window();
     return window_object.heap().allocate<ElementInlineCSSStyleDeclaration>(window_object.realm(), element, move(properties), move(custom_properties));
 }
 
 ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
-    : PropertyOwningCSSStyleDeclaration(element.document().preferred_window_object(), move(properties), move(custom_properties))
+    : PropertyOwningCSSStyleDeclaration(element.document().window(), move(properties), move(custom_properties))
     , m_element(element.make_weak_ptr<DOM::Element>())
 {
+}
+
+void ElementInlineCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_element.ptr());
 }
 
 size_t PropertyOwningCSSStyleDeclaration::length() const

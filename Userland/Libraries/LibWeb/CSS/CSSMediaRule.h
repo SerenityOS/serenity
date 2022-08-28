@@ -15,15 +15,10 @@ namespace Web::CSS {
 
 // https://www.w3.org/TR/css-conditional-3/#the-cssmediarule-interface
 class CSSMediaRule final : public CSSConditionRule {
-    AK_MAKE_NONCOPYABLE(CSSMediaRule);
-    AK_MAKE_NONMOVABLE(CSSMediaRule);
-    JS_OBJECT(CSSMediaRule, CSSConditionRule);
+    WEB_PLATFORM_OBJECT(CSSMediaRule, CSSConditionRule);
 
 public:
-    CSSMediaRule& impl() { return *this; }
-
-    static CSSMediaRule* create(Bindings::WindowObject&, MediaList& media_queries, CSSRuleList&);
-    explicit CSSMediaRule(Bindings::WindowObject&, MediaList&, CSSRuleList&);
+    static CSSMediaRule* create(HTML::Window&, MediaList& media_queries, CSSRuleList&);
 
     virtual ~CSSMediaRule() = default;
 
@@ -38,6 +33,8 @@ public:
     bool evaluate(HTML::Window const& window) { return m_media.evaluate(window); }
 
 private:
+    explicit CSSMediaRule(HTML::Window&, MediaList&, CSSRuleList&);
+
     virtual void visit_edges(Cell::Visitor&) override;
     virtual String serialized() const override;
 
@@ -49,7 +46,4 @@ inline bool CSSRule::fast_is<CSSMediaRule>() const { return type() == CSSRule::T
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSMediaRule& object) { return &object; }
-using CSSMediaRuleWrapper = Web::CSS::CSSMediaRule;
-}
+WRAPPER_HACK(CSSMediaRule, Web::CSS)

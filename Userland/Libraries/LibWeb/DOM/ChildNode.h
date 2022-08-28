@@ -16,7 +16,7 @@ template<typename NodeType>
 class ChildNode {
 public:
     // https://dom.spec.whatwg.org/#dom-childnode-before
-    ExceptionOr<void> before(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+    ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -46,7 +46,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-after
-    ExceptionOr<void> after(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+    ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -70,7 +70,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-replacewith
-    ExceptionOr<void> replace_with(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
+    ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -117,7 +117,7 @@ protected:
     ChildNode() = default;
 
 private:
-    RefPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes) const
+    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes) const
     {
         auto* node = static_cast<NodeType const*>(this);
 
@@ -125,11 +125,11 @@ private:
             bool contained_in_nodes = false;
 
             for (auto const& node_or_string : nodes) {
-                if (!node_or_string.template has<NonnullRefPtr<Node>>())
+                if (!node_or_string.template has<JS::Handle<Node>>())
                     continue;
 
-                auto node_in_vector = node_or_string.template get<NonnullRefPtr<Node>>();
-                if (node_in_vector.ptr() == previous_sibling) {
+                auto node_in_vector = node_or_string.template get<JS::Handle<Node>>();
+                if (node_in_vector.cell() == previous_sibling) {
                     contained_in_nodes = true;
                     break;
                 }
@@ -142,7 +142,7 @@ private:
         return nullptr;
     }
 
-    RefPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes) const
+    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes) const
     {
         auto* node = static_cast<NodeType const*>(this);
 
@@ -150,11 +150,11 @@ private:
             bool contained_in_nodes = false;
 
             for (auto const& node_or_string : nodes) {
-                if (!node_or_string.template has<NonnullRefPtr<Node>>())
+                if (!node_or_string.template has<JS::Handle<Node>>())
                     continue;
 
-                auto node_in_vector = node_or_string.template get<NonnullRefPtr<Node>>();
-                if (node_in_vector.ptr() == next_sibling) {
+                auto& node_in_vector = node_or_string.template get<JS::Handle<Node>>();
+                if (node_in_vector.cell() == next_sibling) {
                     contained_in_nodes = true;
                     break;
                 }

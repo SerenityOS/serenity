@@ -6,17 +6,17 @@
  */
 
 #include <LibWeb/Bindings/CSSMediaRulePrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSMediaRule* CSSMediaRule::create(Bindings::WindowObject& window_object, MediaList& media_queries, CSSRuleList& rules)
+CSSMediaRule* CSSMediaRule::create(HTML::Window& window_object, MediaList& media_queries, CSSRuleList& rules)
 {
     return window_object.heap().allocate<CSSMediaRule>(window_object.realm(), window_object, media_queries, rules);
 }
 
-CSSMediaRule::CSSMediaRule(Bindings::WindowObject& window_object, MediaList& media, CSSRuleList& rules)
+CSSMediaRule::CSSMediaRule(HTML::Window& window_object, MediaList& media, CSSRuleList& rules)
     : CSSConditionRule(window_object, rules)
     , m_media(media)
 {

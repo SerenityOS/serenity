@@ -16,10 +16,9 @@ namespace Web::HTML {
 class HTMLLinkElement final
     : public HTMLElement
     , public ResourceClient {
-public:
-    using WrapperType = Bindings::HTMLLinkElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLLinkElement, HTMLElement);
 
-    HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLLinkElement() override;
 
     virtual void inserted() override;
@@ -32,6 +31,8 @@ public:
     bool load_favicon_and_use_if_window_is_active();
 
 private:
+    HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
+
     void parse_attribute(FlyString const&, String const&) override;
 
     // ^ResourceClient
@@ -59,3 +60,5 @@ private:
 };
 
 }
+
+WRAPPER_HACK(HTMLLinkElement, Web::HTML)

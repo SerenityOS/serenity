@@ -88,7 +88,7 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
-NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, RefPtr<DOM::Document> creator, RefPtr<DOM::Element> embedder)
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder)
 {
     // 1. Let browsingContext be a new browsing context.
     BrowsingContextContainer* container = (embedder && is<BrowsingContextContainer>(*embedder)) ? static_cast<BrowsingContextContainer*>(embedder.ptr()) : nullptr;
@@ -117,19 +117,17 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
 
     // FIXME: 7. Let agent be the result of obtaining a similar-origin window agent given origin, group, and false.
 
-    RefPtr<Window> window;
+    JS::GCPtr<Window> window;
 
     // 8. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         Bindings::main_thread_vm(),
-        [&](JS::Realm& realm) -> JS::GlobalObject* {
+        [&](JS::Realm& realm) -> JS::Object* {
             // - For the global object, create a new Window object.
-            window = HTML::Window::create();
-            auto* global_object = realm.heap().allocate_without_realm<Bindings::WindowObject>(realm, *window);
-            VERIFY(window->wrapper() == global_object);
-            return global_object;
+            window = HTML::Window::create(realm);
+            return window.ptr();
         },
-        [](JS::Realm&) -> JS::GlobalObject* {
+        [](JS::Realm&) -> JS::Object* {
             // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
             return nullptr;
         });
@@ -172,7 +170,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     //     FIXME: load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create();
+    auto document = DOM::Document::create(*window);
 
     // Non-standard
     document->set_window({}, *window);
@@ -197,7 +195,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     document->append_child(html_node);
 
     // 19. Set the active document of browsingContext to document.
-    browsing_context->m_active_document = document;
+    browsing_context->m_active_document = JS::make_handle(*document);
 
     // 20. If browsingContext's creator URL is non-null, then set document's referrer to the serialization of it.
     if (browsing_context->m_creator_url.has_value()) {
@@ -209,7 +207,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     // 22. Append a new session history entry to browsingContext's session history whose URL is about:blank and document is document.
     browsing_context->m_session_history.append(HTML::SessionHistoryEntry {
         .url = AK::URL("about:blank"),
-        .document = document,
+        .document = document.ptr(),
         .serialized_state = {},
         .policy_container = {},
         .scroll_restoration_mode = {},
@@ -277,7 +275,7 @@ bool BrowsingContext::is_focused_context() const
 
 void BrowsingContext::set_active_document(DOM::Document* document)
 {
-    if (m_active_document == document)
+    if (m_active_document.ptr() == document)
         return;
 
     m_cursor_position = {};
@@ -298,7 +296,7 @@ void BrowsingContext::set_active_document(DOM::Document* document)
             m_name = String::empty();
     }
 
-    m_active_document = document;
+    m_active_document = JS::make_handle(document);
 
     if (m_active_document) {
         m_active_document->attach_to_browsing_context({}, *this);
@@ -392,7 +390,7 @@ void BrowsingContext::scroll_to_anchor(String const& fragment)
         auto candidates = active_document()->get_elements_by_name(fragment);
         for (auto& candidate : candidates->collect_matching_elements()) {
             if (is<HTML::HTMLAnchorElement>(*candidate)) {
-                element = verify_cast<HTML::HTMLAnchorElement>(*candidate);
+                element = &verify_cast<HTML::HTMLAnchorElement>(*candidate);
                 break;
             }
         }
@@ -603,7 +601,7 @@ bool BrowsingContext::has_a_rendering_opportunity() const
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context
-RefPtr<DOM::Node> BrowsingContext::currently_focused_area()
+JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
 {
     // 1. If topLevelBC does not have system focus, then return null.
     if (!is_focused_context())
@@ -754,6 +752,16 @@ bool BrowsingContext::still_on_its_initial_about_blank_document() const
     return m_session_history.size() == 1
         && m_session_history[0].document
         && m_session_history[0].document->is_initial_about_blank();
+}
+
+DOM::Document const* BrowsingContext::active_document() const
+{
+    return m_active_document.cell();
+}
+
+DOM::Document* BrowsingContext::active_document()
+{
+    return m_active_document.cell();
 }
 
 }

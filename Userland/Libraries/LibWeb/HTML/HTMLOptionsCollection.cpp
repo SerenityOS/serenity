@@ -20,11 +20,14 @@ HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<boo
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add
 DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
 {
-    auto resolved_element = element.visit([](auto const& e) -> NonnullRefPtr<HTMLElement> { return e; });
+    auto resolved_element = element.visit(
+        [](auto& e) -> JS::Handle<HTMLElement> {
+            return JS::make_handle(static_cast<HTML::HTMLElement&>(*e));
+        });
 
-    RefPtr<DOM::Node> before_element;
-    if (before.has_value() && before->has<NonnullRefPtr<HTMLElement>>())
-        before_element = before->get<NonnullRefPtr<HTMLElement>>();
+    JS::GCPtr<DOM::Node> before_element;
+    if (before.has_value() && before->has<JS::Handle<HTMLElement>>())
+        before_element = before->get<JS::Handle<HTMLElement>>().ptr();
 
     // 1. If element is an ancestor of the select element on which the HTMLOptionsCollection is rooted, then throw a "HierarchyRequestError" DOMException.
     if (resolved_element->is_ancestor_of(root()))
@@ -39,7 +42,7 @@ DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement el
         return {};
 
     // 4. If before is a node, then let reference be that node. Otherwise, if before is an integer, and there is a beforeth node in the collection, let reference be that node. Otherwise, let reference be null.
-    RefPtr<DOM::Node> reference;
+    JS::GCPtr<DOM::Node> reference;
 
     if (before_element)
         reference = move(before_element);
@@ -50,7 +53,7 @@ DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement el
     DOM::Node* parent = reference ? reference->parent() : root().ptr();
 
     // 6. Pre-insert element into parent node before reference.
-    (void)TRY(parent->pre_insert(resolved_element, reference));
+    (void)TRY(parent->pre_insert(*resolved_element, reference));
 
     return {};
 }

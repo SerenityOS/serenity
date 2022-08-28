@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/HTMLImageElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -22,11 +23,13 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLImageElementPrototype>("HTMLImageElement"));
+
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->document().preferred_window_object(), EventNames::load));
+            dispatch_event(*DOM::Event::create(this->document().window(), EventNames::load));
         });
     };
 
@@ -35,7 +38,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->document().preferred_window_object(), EventNames::error));
+            dispatch_event(*DOM::Event::create(this->document().window(), EventNames::error));
         });
     };
 

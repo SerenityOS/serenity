@@ -14,12 +14,10 @@ namespace Web::HTML {
 class HTMLFieldSetElement final
     : public HTMLElement
     , public FormAssociatedElement {
+    WEB_PLATFORM_OBJECT(HTMLFieldSetElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLFieldSetElement)
 
 public:
-    using WrapperType = Bindings::HTMLFieldSetElementWrapper;
-
-    HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
     String const& type() const
@@ -34,6 +32,11 @@ public:
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
+
+private:
+    HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLFieldSetElement, Web::HTML)

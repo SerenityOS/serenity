@@ -9,9 +9,9 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {
@@ -25,7 +25,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
 
     auto& vm = m_interpreter->vm();
     auto& realm = m_interpreter->realm();
-    auto& window = static_cast<Web::Bindings::WindowObject&>(realm.global_object());
+    auto& window = static_cast<Web::HTML::Window&>(realm.global_object());
 
     auto console_global_object = m_interpreter->heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
 

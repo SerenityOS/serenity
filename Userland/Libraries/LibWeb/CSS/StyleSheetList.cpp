@@ -31,12 +31,12 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 
 StyleSheetList* StyleSheetList::create(DOM::Document& document)
 {
-    auto& realm = document.preferred_window_object().realm();
+    auto& realm = document.window().realm();
     return realm.heap().allocate<StyleSheetList>(realm, document);
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(document.preferred_window_object().ensure_web_prototype<Bindings::StyleSheetListPrototype>("StyleSheetList"))
+    : Bindings::LegacyPlatformObject(document.window().ensure_web_prototype<Bindings::StyleSheetListPrototype>("StyleSheetList"))
     , m_document(document)
 {
 }

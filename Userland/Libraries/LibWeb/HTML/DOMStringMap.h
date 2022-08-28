@@ -14,15 +14,12 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/dom.html#domstringmap
 class DOMStringMap final : public Bindings::PlatformObject {
-    JS_OBJECT(DOMStringMap, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(DOMStringMap, Bindings::PlatformObject);
 
 public:
-    static DOMStringMap* create(DOM::Element&);
-    explicit DOMStringMap(DOM::Element&);
+    static JS::NonnullGCPtr<DOMStringMap> create(DOM::Element&);
 
     virtual ~DOMStringMap() override;
-
-    DOMStringMap& impl() { return *this; }
 
     Vector<String> supported_property_names() const;
 
@@ -34,6 +31,10 @@ public:
     bool delete_existing_named_property(String const&);
 
 private:
+    explicit DOMStringMap(DOM::Element&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
     struct NameValuePair {
         String name;
         String value;
@@ -42,12 +43,9 @@ private:
     Vector<NameValuePair> get_name_value_pairs() const;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-domstringmap-element
-    NonnullRefPtr<DOM::Element> m_associated_element;
+    JS::NonnullGCPtr<DOM::Element> m_associated_element;
 };
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::DOMStringMap& object) { return &object; }
-using DOMStringMapWrapper = Web::HTML::DOMStringMap;
-}
+WRAPPER_HACK(DOMStringMap, Web::HTML)

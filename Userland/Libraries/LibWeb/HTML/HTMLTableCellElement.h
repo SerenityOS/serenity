@@ -11,10 +11,9 @@
 namespace Web::HTML {
 
 class HTMLTableCellElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLTableCellElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLTableCellElement, HTMLElement);
 
-    HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLTableCellElement() override;
 
     unsigned col_span() const;
@@ -24,7 +23,10 @@ public:
     void set_row_span(unsigned);
 
 private:
+    HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }
+
+WRAPPER_HACK(HTMLTableCellElement, Web::HTML)

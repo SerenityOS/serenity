@@ -25,18 +25,16 @@ struct KeyboardEventInit : public EventModifierInit {
 
 // https://www.w3.org/TR/uievents/#interface-keyboardevent
 class KeyboardEvent final : public UIEvent {
-    JS_OBJECT(KeyboardEvent, UIEvent);
+    WEB_PLATFORM_OBJECT(KeyboardEvent, UIEvent);
 
 public:
-    static KeyboardEvent* create(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
-    static KeyboardEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init);
-    static KeyboardEvent* create_from_platform_event(Bindings::WindowObject&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
+    static KeyboardEvent* create(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
+    static KeyboardEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init);
+    static KeyboardEvent* create_from_platform_event(HTML::Window&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
 
-    KeyboardEvent(Bindings::WindowObject&, FlyString const& event_name, KeyboardEventInit const& event_init);
+    KeyboardEvent(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init);
 
     virtual ~KeyboardEvent() override;
-
-    KeyboardEvent& impl() { return *this; }
 
     u32 key_code() const { return m_key_code; }
     u32 char_code() const { return m_char_code; }

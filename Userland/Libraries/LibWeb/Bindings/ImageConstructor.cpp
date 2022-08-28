@@ -5,10 +5,9 @@
  */
 
 #include <LibWeb/Bindings/HTMLImageElementPrototype.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageConstructor.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 
@@ -22,7 +21,7 @@ ImageConstructor::ImageConstructor(JS::Realm& realm)
 void ImageConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     NativeFunction::initialize(realm);
 
     define_direct_property(vm.names.prototype, &window.ensure_web_prototype<HTMLImageElementPrototype>("HTMLImageElement"), 0);
@@ -38,11 +37,10 @@ JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto& realm = *vm.current_realm();
 
     // 1. Let document be the current global object's associated Document.
-    auto& window = static_cast<WindowObject&>(HTML::current_global_object());
-    auto& document = window.impl().associated_document();
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
+    auto& document = window.associated_document();
 
     // 2. Let img be the result of creating an element given document, img, and the HTML namespace.
     auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML);
@@ -60,7 +58,7 @@ JS::ThrowCompletionOr<JS::Object*> ImageConstructor::construct(FunctionObject&)
     }
 
     // 5. Return img.
-    return wrap(realm, image_element);
+    return image_element.ptr();
 }
 
 }

@@ -15,13 +15,9 @@
 namespace Web::CSS {
 
 class CSSGroupingRule : public CSSRule {
-    AK_MAKE_NONCOPYABLE(CSSGroupingRule);
-    AK_MAKE_NONMOVABLE(CSSGroupingRule);
-    JS_OBJECT(CSSGroupingRule, CSSRule);
+    WEB_PLATFORM_OBJECT(CSSGroupingRule, CSSRule);
 
 public:
-    CSSGroupingRule& impl() { return *this; }
-
     virtual ~CSSGroupingRule() = default;
 
     CSSRuleList const& css_rules() const { return m_rules; }
@@ -35,7 +31,7 @@ public:
     virtual void set_parent_style_sheet(CSSStyleSheet*) override;
 
 protected:
-    explicit CSSGroupingRule(Bindings::WindowObject&, CSSRuleList&);
+    explicit CSSGroupingRule(HTML::Window&, CSSRuleList&);
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
@@ -44,7 +40,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::CSSGroupingRule& object) { return &object; }
-using CSSGroupingRuleWrapper = Web::CSS::CSSGroupingRule;
-}
+WRAPPER_HACK(CSSGroupingRule, Web::CSS)

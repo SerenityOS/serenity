@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLIFrameElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -16,6 +17,7 @@ namespace Web::HTML {
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
+    set_prototype(&document.window().ensure_web_prototype<Bindings::HTMLIFrameElementPrototype>("HTMLIFrameElement"));
 }
 
 HTMLIFrameElement::~HTMLIFrameElement() = default;
@@ -92,7 +94,7 @@ void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
     // FIXME: 4. Set childDocument's iframe load in progress flag.
 
     // 5. Fire an event named load at element.
-    element.dispatch_event(*DOM::Event::create(element.document().preferred_window_object(), HTML::EventNames::load));
+    element.dispatch_event(*DOM::Event::create(element.document().window(), HTML::EventNames::load));
 
     // FIXME: 6. Unset childDocument's iframe load in progress flag.
 }

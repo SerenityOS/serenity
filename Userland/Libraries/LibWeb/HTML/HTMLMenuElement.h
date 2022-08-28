@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLMenuElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLMenuElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLMenuElement, HTMLElement);
 
-    HTMLMenuElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLMenuElement() override;
+
+private:
+    HTMLMenuElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLMenuElement, Web::HTML)

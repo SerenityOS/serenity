@@ -13,25 +13,23 @@
 namespace Web::UIEvents {
 
 struct UIEventInit : public DOM::EventInit {
-    RefPtr<HTML::Window> view { nullptr };
+    JS::GCPtr<HTML::Window> view;
     int detail { 0 };
 };
 
 class UIEvent : public DOM::Event {
-    JS_OBJECT(UIEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(UIEvent, DOM::Event);
 
 public:
-    static UIEvent* create(Bindings::WindowObject&, FlyString const& type);
-    static UIEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init);
+    static UIEvent* create(HTML::Window&, FlyString const& type);
+    static UIEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, UIEventInit const& event_init);
 
-    UIEvent(Bindings::WindowObject&, FlyString const& event_name);
-    UIEvent(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init);
+    UIEvent(HTML::Window&, FlyString const& event_name);
+    UIEvent(HTML::Window&, FlyString const& event_name, UIEventInit const& event_init);
 
     virtual ~UIEvent() override;
 
-    UIEvent& impl() { return *this; }
-
-    HTML::Window const* view() const { return m_view; }
+    HTML::Window const* view() const { return m_view.ptr(); }
     int detail() const { return m_detail; }
     virtual u32 which() const { return 0; }
 
@@ -43,7 +41,9 @@ public:
     }
 
 protected:
-    RefPtr<HTML::Window> m_view;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::GCPtr<HTML::Window> m_view;
     int m_detail { 0 };
 };
 

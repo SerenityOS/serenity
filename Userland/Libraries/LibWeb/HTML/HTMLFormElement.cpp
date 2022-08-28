@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/HTMLFormElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -25,11 +26,19 @@ namespace Web::HTML {
 HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLFormElementPrototype>("HTMLFormElement"));
 }
 
 HTMLFormElement::~HTMLFormElement() = default;
 
-void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding)
+void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& element : m_associated_elements)
+        visitor.visit(element.ptr());
+}
+
+void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding)
 {
     if (cannot_navigate())
         return;
@@ -58,14 +67,14 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
 
         // FIXME: If the submitter element's no-validate state is false...
 
-        RefPtr<HTMLElement> submitter_button;
+        JS::GCPtr<HTMLElement> submitter_button;
 
         if (submitter != this)
             submitter_button = submitter;
 
         SubmitEventInit event_init {};
         event_init.submitter = submitter_button;
-        auto submit_event = SubmitEvent::create(document().preferred_window_object(), EventNames::submit, event_init);
+        auto submit_event = SubmitEvent::create(document().window(), EventNames::submit, event_init);
         submit_event->set_bubbles(true);
         submit_event->set_cancelable(true);
         bool continue_ = dispatch_event(*submit_event);

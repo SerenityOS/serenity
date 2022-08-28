@@ -8,7 +8,6 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Forward.h>
@@ -24,28 +23,23 @@ class AbortController final
 public:
     using WrapperType = Bindings::AbortControllerWrapper;
 
-    static NonnullRefPtr<AbortController> create()
+    static NonnullRefPtr<AbortController> create_with_global_object(HTML::Window& window)
     {
-        return adopt_ref(*new AbortController());
-    }
-
-    static NonnullRefPtr<AbortController> create_with_global_object(Bindings::WindowObject&)
-    {
-        return AbortController::create();
+        return adopt_ref(*new AbortController(window));
     }
 
     virtual ~AbortController() override = default;
 
     // https://dom.spec.whatwg.org/#dom-abortcontroller-signal
-    NonnullRefPtr<AbortSignal> signal() const { return m_signal; }
+    JS::NonnullGCPtr<AbortSignal> signal() const { return *m_signal; }
 
     void abort(JS::Value reason);
 
 private:
-    AbortController();
+    explicit AbortController(HTML::Window&);
 
     // https://dom.spec.whatwg.org/#abortcontroller-signal
-    NonnullRefPtr<AbortSignal> m_signal;
+    JS::Handle<AbortSignal> m_signal;
 };
 
 }

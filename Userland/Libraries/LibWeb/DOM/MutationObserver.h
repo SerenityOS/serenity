@@ -34,7 +34,7 @@ class MutationObserver final
 public:
     using WrapperType = Bindings::MutationObserverWrapper;
 
-    static NonnullRefPtr<MutationObserver> create_with_global_object(Bindings::WindowObject& window_object, Bindings::CallbackType* callback)
+    static NonnullRefPtr<MutationObserver> create_with_global_object(HTML::Window& window_object, Bindings::CallbackType* callback)
     {
         return adopt_ref(*new MutationObserver(window_object, JS::make_handle(callback)));
     }
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    MutationObserver(Bindings::WindowObject& window_object, JS::Handle<Bindings::CallbackType> callback);
+    MutationObserver(HTML::Window& window_object, JS::Handle<Bindings::CallbackType> callback);
 
     // https://dom.spec.whatwg.org/#concept-mo-callback
     JS::Handle<Bindings::CallbackType> m_callback;

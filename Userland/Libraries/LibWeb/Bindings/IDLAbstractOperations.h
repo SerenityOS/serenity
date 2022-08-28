@@ -128,7 +128,7 @@ JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Va
 {
     auto& function_object = callback.callback;
 
-    JS::MarkedVector<JS::Value> arguments_list { function_object->vm().heap() };
+    JS::MarkedVector<JS::Value> arguments_list { function_object.vm().heap() };
     (arguments_list.append(forward<Args>(args)), ...);
 
     return invoke_callback(callback, move(this_argument), move(arguments_list));

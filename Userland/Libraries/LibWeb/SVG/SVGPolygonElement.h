@@ -11,10 +11,9 @@
 namespace Web::SVG {
 
 class SVGPolygonElement final : public SVGGeometryElement {
-public:
-    using WrapperType = Bindings::SVGPolygonElementWrapper;
+    WEB_PLATFORM_OBJECT(SVGPolygonElement, SVGGeometryElement);
 
-    SVGPolygonElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~SVGPolygonElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -22,9 +21,13 @@ public:
     virtual Gfx::Path& get_path() override;
 
 private:
+    SVGPolygonElement(DOM::Document&, DOM::QualifiedName);
+
     Optional<Gfx::Path> m_path;
 
     Vector<Gfx::FloatPoint> m_points;
 };
 
 }
+
+WRAPPER_HACK(SVGPolygonElement, Web::SVG)

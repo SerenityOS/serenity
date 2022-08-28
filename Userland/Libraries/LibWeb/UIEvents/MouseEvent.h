@@ -22,17 +22,15 @@ struct MouseEventInit : public EventModifierInit {
 };
 
 class MouseEvent final : public UIEvent {
-    JS_OBJECT(MouseEvent, UIEvent);
+    WEB_PLATFORM_OBJECT(MouseEvent, UIEvent);
 
 public:
-    static MouseEvent* create(Bindings::WindowObject&, FlyString const& event_name, MouseEventInit const& event_init = {});
-    static MouseEvent* create_from_platform_event(Bindings::WindowObject&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button = 1);
+    static MouseEvent* create(HTML::Window&, FlyString const& event_name, MouseEventInit const& event_init = {});
+    static MouseEvent* create_from_platform_event(HTML::Window&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button = 1);
 
-    MouseEvent(Bindings::WindowObject&, FlyString const& event_name, MouseEventInit const& event_init);
+    MouseEvent(HTML::Window&, FlyString const& event_name, MouseEventInit const& event_init);
 
     virtual ~MouseEvent() override;
-
-    MouseEvent& impl() { return *this; }
 
     double offset_x() const { return m_offset_x; }
     double offset_y() const { return m_offset_y; }

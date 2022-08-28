@@ -19,7 +19,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
-#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -42,7 +42,7 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
 
     auto& vm = this->vm();
 
-    auto& window = static_cast<WindowObject&>(realm.global_object());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     auto& memory_constructor = window.ensure_web_constructor<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
     memory_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
     auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");
@@ -482,7 +482,7 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
 }
 
 WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::Realm& realm, Wasm::MemoryAddress address)
-    : Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
+    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
     , m_address(address)
 {
 }

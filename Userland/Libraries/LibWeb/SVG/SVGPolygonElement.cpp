@@ -4,15 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SVGPolygonElement.h"
+#include <LibWeb/Bindings/SVGPolygonElementPrototype.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGPolygonElement.h>
 
 namespace Web::SVG {
 
 SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::SVGPolygonElementPrototype>("SVGPolygonElement"));
 }
 
 void SVGPolygonElement::parse_attribute(FlyString const& name, String const& value)

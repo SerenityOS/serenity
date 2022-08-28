@@ -62,7 +62,7 @@ struct EnvironmentSettingsObject
     // FIXME: A module map https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-module-map
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#responsible-document
-    virtual RefPtr<DOM::Document> responsible_document() = 0;
+    virtual JS::GCPtr<DOM::Document> responsible_document() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#api-url-character-encoding
     virtual String api_url_character_encoding() = 0;

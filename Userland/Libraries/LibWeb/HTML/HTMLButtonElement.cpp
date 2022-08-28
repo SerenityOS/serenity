@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLButtonElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -13,6 +14,8 @@ namespace Web::HTML {
 HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLButtonElementPrototype>("HTMLButtonElement"));
+
     // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:activation-behaviour
     activation_behavior = [this](auto&) {
         // 1. If element is disabled, then return.

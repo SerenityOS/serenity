@@ -24,10 +24,10 @@ XMLSerializer::XMLSerializer() = default;
 XMLSerializer::~XMLSerializer() = default;
 
 // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring
-DOM::ExceptionOr<String> XMLSerializer::serialize_to_string(NonnullRefPtr<DOM::Node> root)
+DOM::ExceptionOr<String> XMLSerializer::serialize_to_string(JS::NonnullGCPtr<DOM::Node> root)
 {
     // The serializeToString(root) method must produce an XML serialization of root passing a value of false for the require well-formed parameter, and return the result.
-    return serialize_node_to_xml_string(move(root), RequireWellFormed::No);
+    return serialize_node_to_xml_string(root, RequireWellFormed::No);
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-add
@@ -103,10 +103,10 @@ static bool prefix_is_in_prefix_map(String const& prefix, HashMap<FlyString, Vec
     return candidates_list_iterator->value.contains_slow(prefix);
 }
 
-DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(NonnullRefPtr<DOM::Node> root, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<String>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed);
+DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<DOM::Node> root, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<String>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed);
 
 // https://w3c.github.io/DOM-Parsing/#dfn-xml-serialization
-DOM::ExceptionOr<String> serialize_node_to_xml_string(NonnullRefPtr<DOM::Node> root, RequireWellFormed require_well_formed)
+DOM::ExceptionOr<String> serialize_node_to_xml_string(JS::NonnullGCPtr<DOM::Node> root, RequireWellFormed require_well_formed)
 {
     // 1. Let namespace be a context namespace with value null. The context namespace tracks the XML serialization algorithm's current default namespace.
     //    The context namespace is changed when either an Element Node has a default namespace declaration, or the algorithm generates a default namespace declaration
@@ -139,7 +139,7 @@ static DOM::ExceptionOr<String> serialize_document_type(DOM::DocumentType const&
 static DOM::ExceptionOr<String> serialize_processing_instruction(DOM::ProcessingInstruction const& processing_instruction, RequireWellFormed require_well_formed);
 
 // https://w3c.github.io/DOM-Parsing/#dfn-xml-serialization-algorithm
-DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(NonnullRefPtr<DOM::Node> root, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<String>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed)
+DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<DOM::Node> root, Optional<FlyString>& namespace_, HashMap<FlyString, Vector<String>>& namespace_prefix_map, u64& prefix_index, RequireWellFormed require_well_formed)
 {
     // Each of the following algorithms for producing an XML serialization of a DOM node take as input a node to serialize and the following arguments:
     // - A context namespace namespace
@@ -155,43 +155,43 @@ DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(NonnullRefPtr<DOM::No
     if (is<DOM::Element>(*root)) {
         // -> Element
         //    Run the algorithm for XML serializing an Element node node.
-        return serialize_element(static_ptr_cast<DOM::Element>(root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
+        return serialize_element(static_cast<DOM::Element&>(*root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
     }
 
     if (is<DOM::Document>(*root)) {
         // -> Document
         //    Run the algorithm for XML serializing a Document node node.
-        return serialize_document(static_ptr_cast<DOM::Document>(root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
+        return serialize_document(static_cast<DOM::Document&>(*root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
     }
 
     if (is<DOM::Comment>(*root)) {
         // -> Comment
         //    Run the algorithm for XML serializing a Comment node node.
-        return serialize_comment(static_ptr_cast<DOM::Comment>(root), require_well_formed);
+        return serialize_comment(static_cast<DOM::Comment&>(*root), require_well_formed);
     }
 
     if (is<DOM::Text>(*root) || is<DOM::CDATASection>(*root)) {
         // -> Text
         //    Run the algorithm for XML serializing a Text node node.
-        return serialize_text(static_ptr_cast<DOM::Text>(root), require_well_formed);
+        return serialize_text(static_cast<DOM::Text&>(*root), require_well_formed);
     }
 
     if (is<DOM::DocumentFragment>(*root)) {
         // -> DocumentFragment
         //    Run the algorithm for XML serializing a DocumentFragment node node.
-        return serialize_document_fragment(static_ptr_cast<DOM::DocumentFragment>(root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
+        return serialize_document_fragment(static_cast<DOM::DocumentFragment&>(*root), namespace_, namespace_prefix_map, prefix_index, require_well_formed);
     }
 
     if (is<DOM::DocumentType>(*root)) {
         // -> DocumentType
         //    Run the algorithm for XML serializing a DocumentType node node.
-        return serialize_document_type(static_ptr_cast<DOM::DocumentType>(root), require_well_formed);
+        return serialize_document_type(static_cast<DOM::DocumentType&>(*root), require_well_formed);
     }
 
     if (is<DOM::ProcessingInstruction>(*root)) {
         // -> ProcessingInstruction
         //    Run the algorithm for XML serializing a ProcessingInstruction node node.
-        return serialize_processing_instruction(static_ptr_cast<DOM::ProcessingInstruction>(root), require_well_formed);
+        return serialize_processing_instruction(static_cast<DOM::ProcessingInstruction&>(*root), require_well_formed);
     }
 
     if (is<DOM::Attribute>(*root)) {

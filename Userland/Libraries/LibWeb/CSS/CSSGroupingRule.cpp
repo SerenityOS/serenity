@@ -7,13 +7,13 @@
 
 #include <LibWeb/Bindings/CSSGroupingRulePrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/CSSGroupingRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSGroupingRule::CSSGroupingRule(Bindings::WindowObject& window_object, CSSRuleList& rules)
+CSSGroupingRule::CSSGroupingRule(HTML::Window& window_object, CSSRuleList& rules)
     : CSSRule(window_object)
     , m_rules(rules)
 {

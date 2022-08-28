@@ -13,11 +13,9 @@
 namespace Web::CSS {
 
 class StyleSheet : public Bindings::PlatformObject {
-    JS_OBJECT(StyleSheet, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(StyleSheet, Bindings::PlatformObject);
 
 public:
-    StyleSheet& impl() { return *this; }
-
     virtual ~StyleSheet() = default;
 
     virtual String type() const = 0;
@@ -48,7 +46,7 @@ public:
     void set_parent_css_style_sheet(CSSStyleSheet*);
 
 protected:
-    explicit StyleSheet(Bindings::WindowObject&);
+    explicit StyleSheet(HTML::Window&);
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
@@ -68,7 +66,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::StyleSheet& object) { return &object; }
-using StyleSheetWrapper = Web::CSS::StyleSheet;
-}
+WRAPPER_HACK(StyleSheet, Web::CSS)

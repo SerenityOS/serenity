@@ -18,16 +18,14 @@ struct MessageEventInit : public DOM::EventInit {
 };
 
 class MessageEvent : public DOM::Event {
-    JS_OBJECT(MessageEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(MessageEvent, DOM::Event);
 
 public:
-    static MessageEvent* create(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init = {});
-    static MessageEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init);
+    static MessageEvent* create(HTML::Window&, FlyString const& event_name, MessageEventInit const& event_init = {});
+    static MessageEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, MessageEventInit const& event_init);
 
-    MessageEvent(Bindings::WindowObject&, FlyString const& event_name, MessageEventInit const& event_init);
+    MessageEvent(HTML::Window&, FlyString const& event_name, MessageEventInit const& event_init);
     virtual ~MessageEvent() override;
-
-    MessageEvent& impl() { return *this; }
 
     JS::Value data() const { return m_data; }
     String const& origin() const { return m_origin; }

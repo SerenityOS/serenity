@@ -5,7 +5,6 @@ set(SOURCES
     Bindings/CSSNamespace.cpp
     Bindings/CallbackType.cpp
     Bindings/CrossOriginAbstractOperations.cpp
-    Bindings/EventTargetWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LegacyPlatformObject.cpp
@@ -14,11 +13,9 @@ set(SOURCES
     Bindings/MainThreadVM.cpp
     Bindings/NavigatorConstructor.cpp
     Bindings/NavigatorObject.cpp
-    Bindings/NodeWrapperFactory.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
-    Bindings/WindowObject.cpp
     Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp
     Bindings/Wrapper.cpp

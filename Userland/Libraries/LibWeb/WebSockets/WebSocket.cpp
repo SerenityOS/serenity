@@ -8,7 +8,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/WebSocketWrapper.h>
+#include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -48,7 +48,7 @@ WebSocketClientSocket::~WebSocketClientSocket() = default;
 WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, String const& url)
+DOM::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_object(HTML::Window& window, String const& url)
 {
     AK::URL url_record(url);
     if (!url_record.is_valid())
@@ -59,35 +59,37 @@ DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(
         return DOM::SyntaxError::create("Presence of URL fragment is invalid");
     // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
     // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-    return WebSocket::create(window.impl(), url_record);
+    return JS::NonnullGCPtr(*window.heap().allocate<WebSocket>(window.realm(), window.impl(), url_record));
 }
 
 WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
-    : EventTarget()
+    : EventTarget(window.realm())
     , m_window(window)
 {
+    set_prototype(&window.ensure_web_prototype<Bindings::WebSocketPrototype>("WebSocket"));
+
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
     auto origin_string = m_window->associated_document().origin().serialize();
     m_websocket = WebSocketClientManager::the().connect(url, origin_string);
-    m_websocket->on_open = [weak_this = make_weak_ptr()] {
+    m_websocket->on_open = [weak_this = make_weak_ptr<WebSocket>()] {
         if (!weak_this)
             return;
         auto& websocket = const_cast<WebSocket&>(*weak_this);
         websocket.on_open();
     };
-    m_websocket->on_message = [weak_this = make_weak_ptr()](auto message) {
+    m_websocket->on_message = [weak_this = make_weak_ptr<WebSocket>()](auto message) {
         if (!weak_this)
             return;
         auto& websocket = const_cast<WebSocket&>(*weak_this);
         websocket.on_message(move(message.data), message.is_text);
     };
-    m_websocket->on_close = [weak_this = make_weak_ptr()](auto code, auto reason, bool was_clean) {
+    m_websocket->on_close = [weak_this = make_weak_ptr<WebSocket>()](auto code, auto reason, bool was_clean) {
         if (!weak_this)
             return;
         auto& websocket = const_cast<WebSocket&>(*weak_this);
         websocket.on_close(code, reason, was_clean);
     };
-    m_websocket->on_error = [weak_this = make_weak_ptr()](auto) {
+    m_websocket->on_error = [weak_this = make_weak_ptr<WebSocket>()](auto) {
         if (!weak_this)
             return;
         auto& websocket = const_cast<WebSocket&>(*weak_this);
@@ -96,6 +98,12 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
 }
 
 WebSocket::~WebSocket() = default;
+
+void WebSocket::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
+}
 
 // https://websockets.spec.whatwg.org/#dom-websocket-readystate
 WebSocket::ReadyState WebSocket::ready_state() const
@@ -172,13 +180,13 @@ void WebSocket::on_open()
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(*DOM::Event::create(*m_window->wrapper(), HTML::EventNames::open));
+    dispatch_event(*DOM::Event::create(*m_window, HTML::EventNames::open));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(*DOM::Event::create(*m_window->wrapper(), HTML::EventNames::error));
+    dispatch_event(*DOM::Event::create(*m_window, HTML::EventNames::error));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -190,7 +198,7 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = move(reason);
-    dispatch_event(*HTML::CloseEvent::create(*m_window->wrapper(), HTML::EventNames::close, event_init));
+    dispatch_event(*HTML::CloseEvent::create(*m_window, HTML::EventNames::close, event_init));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -201,9 +209,9 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
     if (is_text) {
         auto text_message = String(ReadonlyBytes(message));
         HTML::MessageEventInit event_init;
-        event_init.data = JS::js_string(wrapper()->vm(), text_message);
+        event_init.data = JS::js_string(vm(), text_message);
         event_init.origin = url();
-        dispatch_event(*HTML::MessageEvent::create(*m_window->wrapper(), HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*m_window, HTML::EventNames::message, event_init));
         return;
     }
 
@@ -212,22 +220,15 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         TODO();
     } else if (m_binary_type == "arraybuffer") {
         // type indicates that the data is Binary and binaryType is "arraybuffer"
-        auto& vm = wrapper()->vm();
-        auto& realm = *vm.current_realm();
         HTML::MessageEventInit event_init;
-        event_init.data = JS::ArrayBuffer::create(realm, message);
+        event_init.data = JS::ArrayBuffer::create(realm(), message);
         event_init.origin = url();
-        dispatch_event(*HTML::MessageEvent::create(*m_window->wrapper(), HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*m_window, HTML::EventNames::message, event_init));
         return;
     }
 
     dbgln("Unsupported WebSocket message type {}", m_binary_type);
     TODO();
-}
-
-JS::Object* WebSocket::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
 }
 
 #undef __ENUMERATE

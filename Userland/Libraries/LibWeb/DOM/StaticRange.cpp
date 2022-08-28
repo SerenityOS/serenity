@@ -18,13 +18,13 @@ namespace Web::DOM {
 StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&start_container.document().preferred_window_object().ensure_web_prototype<Bindings::StaticRangePrototype>("StaticRange"));
+    set_prototype(&start_container.document().window().ensure_web_prototype<Bindings::StaticRangePrototype>("StaticRange"));
 }
 
 StaticRange::~StaticRange() = default;
 
 // https://dom.spec.whatwg.org/#dom-staticrange-staticrange
-ExceptionOr<StaticRange*> StaticRange::create_with_global_object(Bindings::WindowObject& window_object, StaticRangeInit& init)
+ExceptionOr<StaticRange*> StaticRange::create_with_global_object(HTML::Window& window_object, StaticRangeInit& init)
 {
     // 1. If init["startContainer"] or init["endContainer"] is a DocumentType or Attr node, then throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(*init.start_container) || is<Attribute>(*init.start_container))

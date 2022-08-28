@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLSlotElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLSlotElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLSlotElement, HTMLElement);
 
-    HTMLSlotElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLSlotElement() override;
+
+private:
+    HTMLSlotElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLSlotElement, Web::HTML)

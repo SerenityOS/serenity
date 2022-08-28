@@ -14,18 +14,18 @@ ListOfActiveFormattingElements::~ListOfActiveFormattingElements() = default;
 void ListOfActiveFormattingElements::add(DOM::Element& element)
 {
     // FIXME: Implement the Noah's Ark clause https://html.spec.whatwg.org/multipage/parsing.html#push-onto-the-list-of-active-formatting-elements
-    m_entries.append({ element });
+    m_entries.append({ JS::make_handle(element) });
 }
 
 void ListOfActiveFormattingElements::add_marker()
 {
-    m_entries.append({ nullptr });
+    m_entries.append({ JS::make_handle<DOM::Element>(nullptr) });
 }
 
 bool ListOfActiveFormattingElements::contains(const DOM::Element& element) const
 {
     for (auto& entry : m_entries) {
-        if (entry.element == &element)
+        if (entry.element.ptr() == &element)
             return true;
     }
     return false;
@@ -38,7 +38,7 @@ DOM::Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_
         if (entry.is_marker())
             return nullptr;
         if (entry.element->local_name() == tag_name)
-            return entry.element;
+            return entry.element.ptr();
     }
     return nullptr;
 }
@@ -46,7 +46,7 @@ DOM::Element* ListOfActiveFormattingElements::last_element_with_tag_name_before_
 void ListOfActiveFormattingElements::remove(DOM::Element& element)
 {
     m_entries.remove_first_matching([&](auto& entry) {
-        return entry.element == &element;
+        return entry.element.ptr() == &element;
     });
 }
 
@@ -62,7 +62,7 @@ void ListOfActiveFormattingElements::clear_up_to_the_last_marker()
 Optional<size_t> ListOfActiveFormattingElements::find_index(DOM::Element const& element) const
 {
     for (size_t i = 0; i < m_entries.size(); i++) {
-        if (m_entries[i].element == element)
+        if (m_entries[i].element.ptr() == &element)
             return i;
     }
     return {};
@@ -71,14 +71,14 @@ Optional<size_t> ListOfActiveFormattingElements::find_index(DOM::Element const& 
 void ListOfActiveFormattingElements::replace(DOM::Element& to_remove, DOM::Element& to_add)
 {
     for (size_t i = 0; i < m_entries.size(); i++) {
-        if (m_entries[i].element == to_remove)
-            m_entries[i].element = to_add;
+        if (m_entries[i].element.ptr() == &to_remove)
+            m_entries[i].element = JS::make_handle(to_add);
     }
 }
 
 void ListOfActiveFormattingElements::insert_at(size_t index, DOM::Element& element)
 {
-    m_entries.insert(index, { element });
+    m_entries.insert(index, { JS::make_handle(element) });
 }
 
 }

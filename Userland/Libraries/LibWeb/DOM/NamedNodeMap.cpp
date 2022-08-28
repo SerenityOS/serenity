@@ -6,9 +6,6 @@
  */
 
 #include <LibWeb/Bindings/NamedNodeMapPrototype.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
@@ -16,16 +13,24 @@
 
 namespace Web::DOM {
 
-NamedNodeMap* NamedNodeMap::create(Element& element)
+JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 {
-    auto& realm = element.document().preferred_window_object().realm();
-    return realm.heap().allocate<NamedNodeMap>(realm, element);
+    auto& realm = element.realm();
+    return *realm.heap().allocate<NamedNodeMap>(realm, element);
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(element.document().preferred_window_object().ensure_web_prototype<Bindings::NamedNodeMapPrototype>("NamedNodeMap"))
+    : Bindings::LegacyPlatformObject(element.document().window().ensure_web_prototype<Bindings::NamedNodeMapPrototype>("NamedNodeMap"))
     , m_element(element)
 {
+}
+
+void NamedNodeMap::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_element.ptr());
+    for (auto& attribute : m_attributes)
+        visitor.visit(attribute.ptr());
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3
@@ -42,8 +47,8 @@ Vector<String> NamedNodeMap::supported_property_names() const
     names.ensure_capacity(m_attributes.size());
 
     for (auto const& attribute : m_attributes) {
-        if (!names.contains_slow(attribute.name()))
-            names.append(attribute.name());
+        if (!names.contains_slow(attribute->name()))
+            names.append(attribute->name());
     }
 
     // 2. If this NamedNodeMap object’s element is in the HTML namespace and its node document is an HTML document, then for each name in names:
@@ -66,7 +71,7 @@ Attribute const* NamedNodeMap::item(u32 index) const
         return nullptr;
 
     // 2. Otherwise, return this’s attribute list[index].
-    return &m_attributes[index];
+    return m_attributes[index].ptr();
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditem
@@ -114,11 +119,11 @@ Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* 
     // 2. Return the first attribute in element’s attribute list whose qualified name is qualifiedName; otherwise null.
     for (auto const& attribute : m_attributes) {
         if (compare_as_lowercase) {
-            if (attribute.name().equals_ignoring_case(qualified_name))
-                return &attribute;
+            if (attribute->name().equals_ignoring_case(qualified_name))
+                return attribute.ptr();
         } else {
-            if (attribute.name() == qualified_name)
-                return &attribute;
+            if (attribute->name() == qualified_name)
+                return attribute.ptr();
         }
 
         if (item_index)
@@ -191,7 +196,7 @@ void NamedNodeMap::append_attribute(Attribute& attribute)
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove
 void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
 {
-    NonnullRefPtr<Attribute> attribute = m_attributes.at(attribute_index);
+    JS::NonnullGCPtr<Attribute> attribute = m_attributes.at(attribute_index);
 
     // 1. Handle attribute changes for attribute with attribute’s element, attribute’s value, and null.
     VERIFY(attribute->owner_element());
@@ -225,7 +230,7 @@ JS::Value NamedNodeMap::item_value(size_t index) const
     auto const* node = item(index);
     if (!node)
         return JS::js_undefined();
-    return Bindings::wrap(shape().realm(), const_cast<Attribute&>(*node));
+    return node;
 }
 
 JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
@@ -233,7 +238,7 @@ JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
     auto const* node = get_named_item(name);
     if (!node)
         return JS::js_undefined();
-    return Bindings::wrap(shape().realm(), const_cast<Attribute&>(*node));
+    return node;
 }
 
 }

@@ -15,10 +15,10 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#attr
 class Attribute final : public Node {
-public:
-    using WrapperType = Bindings::AttributeWrapper;
+    WEB_PLATFORM_OBJECT(Attribute, Node);
 
-    static NonnullRefPtr<Attribute> create(Document&, FlyString local_name, String value, Element const* = nullptr);
+public:
+    static JS::NonnullGCPtr<Attribute> create(Document&, FlyString local_name, String value, Element const* = nullptr);
 
     virtual ~Attribute() override = default;
 
@@ -44,12 +44,16 @@ public:
 private:
     Attribute(Document&, FlyString local_name, String value, Element const*);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     QualifiedName m_qualified_name;
     String m_value;
-    WeakPtr<Element> m_owner_element;
+    JS::GCPtr<Element> m_owner_element;
 };
 
 template<>
 inline bool Node::fast_is<Attribute>() const { return is_attribute(); }
 
 }
+
+WRAPPER_HACK(Attribute, Web::DOM)

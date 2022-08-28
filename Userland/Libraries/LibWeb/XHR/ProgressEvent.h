@@ -20,17 +20,15 @@ struct ProgressEventInit : public DOM::EventInit {
 };
 
 class ProgressEvent final : public DOM::Event {
-    JS_OBJECT(ProgressEvent, DOM::Event);
+    WEB_PLATFORM_OBJECT(ProgressEvent, DOM::Event);
 
 public:
-    static ProgressEvent* create(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
-    static ProgressEvent* create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
+    static ProgressEvent* create(HTML::Window&, FlyString const& event_name, ProgressEventInit const& event_init);
+    static ProgressEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, ProgressEventInit const& event_init);
 
-    ProgressEvent(Bindings::WindowObject&, FlyString const& event_name, ProgressEventInit const& event_init);
+    ProgressEvent(HTML::Window&, FlyString const& event_name, ProgressEventInit const& event_init);
 
     virtual ~ProgressEvent() override;
-
-    ProgressEvent& impl() { return *this; }
 
     bool length_computable() const { return m_length_computable; }
     u64 loaded() const { return m_loaded; }

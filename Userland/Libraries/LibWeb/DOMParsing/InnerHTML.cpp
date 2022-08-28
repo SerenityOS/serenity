@@ -12,27 +12,29 @@
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
-static DOM::ExceptionOr<NonnullRefPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
+static DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
 {
     // FIXME: Handle XML documents.
 
+    auto& realm = context_element.realm();
+
     auto new_children = HTML::HTMLParser::parse_html_fragment(context_element, markup);
-    auto fragment = make_ref_counted<DOM::DocumentFragment>(context_element.document());
+    auto fragment = realm.heap().allocate<DOM::DocumentFragment>(realm, context_element.document());
 
     for (auto& child : new_children) {
         // I don't know if this can throw here, but let's be safe.
-        (void)TRY(fragment->append_child(child));
+        (void)TRY(fragment->append_child(*child));
     }
 
-    return fragment;
+    return JS::NonnullGCPtr(*fragment);
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-DOM::ExceptionOr<void> inner_html_setter(NonnullRefPtr<DOM::Node> context_object, String const& value)
+DOM::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value)
 {
     // 1. Let context element be the context object's host if the context object is a ShadowRoot object, or the context object otherwise.
     //    (This is handled in Element and ShadowRoot)
-    NonnullRefPtr<DOM::Element> context_element = is<DOM::ShadowRoot>(*context_object) ? *verify_cast<DOM::ShadowRoot>(*context_object).host() : verify_cast<DOM::Element>(*context_object);
+    JS::NonnullGCPtr<DOM::Element> context_element = is<DOM::ShadowRoot>(*context_object) ? *verify_cast<DOM::ShadowRoot>(*context_object).host() : verify_cast<DOM::Element>(*context_object);
 
     // 2. Let fragment be the result of invoking the fragment parsing algorithm with the new value as markup, and with context element.
     auto fragment = TRY(parse_fragment(value, context_element));

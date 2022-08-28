@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLBaseElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
 
@@ -12,6 +13,7 @@ namespace Web::HTML {
 HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLBaseElementPrototype>("HTMLBaseElement"));
 }
 
 HTMLBaseElement::~HTMLBaseElement() = default;
@@ -25,7 +27,7 @@ void HTMLBaseElement::inserted()
 
     // NOTE: inserted() is called after this element has been inserted into the document.
     auto first_base_element_with_href_in_document = document().first_base_element_with_href_in_tree_order();
-    if (first_base_element_with_href_in_document == this)
+    if (first_base_element_with_href_in_document.ptr() == this)
         set_the_frozen_base_url();
 }
 
@@ -39,7 +41,7 @@ void HTMLBaseElement::parse_attribute(FlyString const& name, String const& value
         return;
 
     auto first_base_element_with_href_in_document = document().first_base_element_with_href_in_tree_order();
-    if (first_base_element_with_href_in_document == this)
+    if (first_base_element_with_href_in_document.ptr() == this)
         set_the_frozen_base_url();
 }
 

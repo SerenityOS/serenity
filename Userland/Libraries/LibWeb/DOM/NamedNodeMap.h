@@ -18,14 +18,11 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#interface-namednodemap
 class NamedNodeMap : public Bindings::LegacyPlatformObject {
-    JS_OBJECT(NamedNodeMap, Bindings::LegacyPlatformObject);
+    WEB_PLATFORM_OBJECT(NamedNodeMap, Bindings::LegacyPlatformObject);
 
 public:
-    static NamedNodeMap* create(Element&);
-    explicit NamedNodeMap(Element&);
+    static JS::NonnullGCPtr<NamedNodeMap> create(Element&);
     ~NamedNodeMap() = default;
-
-    NamedNodeMap& impl() { return *this; }
 
     virtual bool is_supported_property_index(u32 index) const override;
     virtual Vector<String> supported_property_names() const override;
@@ -50,18 +47,19 @@ public:
     Attribute const* remove_attribute(StringView qualified_name);
 
 private:
-    Element& associated_element() { return m_element; }
-    Element const& associated_element() const { return m_element; }
+    explicit NamedNodeMap(Element&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    Element& associated_element() { return *m_element; }
+    Element const& associated_element() const { return *m_element; }
 
     void remove_attribute_at_index(size_t attribute_index);
 
-    DOM::Element& m_element;
-    NonnullRefPtrVector<Attribute> m_attributes;
+    JS::NonnullGCPtr<DOM::Element> m_element;
+    Vector<JS::NonnullGCPtr<Attribute>> m_attributes;
 };
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::NamedNodeMap& object) { return &object; }
-using NamedNodeMapWrapper = Web::DOM::NamedNodeMap;
-}
+WRAPPER_HACK(NamedNodeMap, Web::DOM)

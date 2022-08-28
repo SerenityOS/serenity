@@ -10,8 +10,8 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -20,7 +20,7 @@ class WindowPrototype final : public JS::Object {
 
 public:
     explicit WindowPrototype(JS::Realm& realm)
-        : JS::Object(static_cast<WindowObject&>(realm.global_object()).ensure_web_prototype<EventTargetPrototype>("EventTarget"))
+        : JS::Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<EventTargetPrototype>("EventTarget"))
     {
     }
 };

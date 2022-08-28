@@ -17,16 +17,11 @@ namespace Web::CSS {
 
 // https://www.w3.org/TR/cssom-1/#the-medialist-interface
 class MediaList final : public Bindings::LegacyPlatformObject {
-    AK_MAKE_NONCOPYABLE(MediaList);
-    AK_MAKE_NONMOVABLE(MediaList);
-    JS_OBJECT(MediaList, Bindings::LegacyPlatformObject);
+    WEB_PLATFORM_OBJECT(MediaList, Bindings::LegacyPlatformObject);
 
 public:
-    static MediaList* create(Bindings::WindowObject&, NonnullRefPtrVector<MediaQuery>&& media);
-    explicit MediaList(Bindings::WindowObject&, NonnullRefPtrVector<MediaQuery>&&);
+    static MediaList* create(HTML::Window&, NonnullRefPtrVector<MediaQuery>&& media);
     ~MediaList() = default;
-
-    MediaList& impl() { return *this; }
 
     String media_text() const;
     void set_media_text(String const&);
@@ -42,12 +37,11 @@ public:
     bool matches() const;
 
 private:
+    explicit MediaList(HTML::Window&, NonnullRefPtrVector<MediaQuery>&&);
+
     NonnullRefPtrVector<MediaQuery> m_media;
 };
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::MediaList& object) { return &object; }
-using MediaListWrapper = Web::CSS::MediaList;
-}
+WRAPPER_HACK(MediaList, Web::CSS)

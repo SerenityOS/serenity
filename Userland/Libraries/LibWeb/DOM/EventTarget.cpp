@@ -13,8 +13,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/AbortSignal.h>
@@ -36,8 +35,31 @@
 
 namespace Web::DOM {
 
-EventTarget::EventTarget() = default;
+EventTarget::EventTarget(JS::Realm& realm)
+    : PlatformObject(realm)
+{
+}
+
 EventTarget::~EventTarget() = default;
+
+void EventTarget::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    for (auto& event_listener : m_event_listener_list)
+        visitor.visit(event_listener.ptr());
+
+    for (auto& it : m_event_handler_map)
+        visitor.visit(it.value.ptr());
+}
+
+Vector<JS::Handle<DOMEventListener>> EventTarget::event_listener_list()
+{
+    Vector<JS::Handle<DOMEventListener>> list;
+    for (auto& listener : m_event_listener_list)
+        list.append(*listener);
+    return list;
+}
 
 // https://dom.spec.whatwg.org/#concept-flatten-options
 static bool flatten_event_listener_options(Variant<EventListenerOptions, bool> const& options)
@@ -64,7 +86,7 @@ struct FlattenedAddEventListenerOptions {
     bool capture { false };
     bool passive { false };
     bool once { false };
-    RefPtr<AbortSignal> signal;
+    JS::GCPtr<AbortSignal> signal;
 };
 
 // https://dom.spec.whatwg.org/#event-flatten-more
@@ -78,7 +100,7 @@ static FlattenedAddEventListenerOptions flatten_add_event_listener_options(Varia
     bool passive = false;
 
     // 3. Let signal be null.
-    RefPtr<AbortSignal> signal;
+    JS::GCPtr<AbortSignal> signal;
 
     // 4. If options is a dictionary, then:
     if (options.has<AddEventListenerOptions>()) {
@@ -90,11 +112,11 @@ static FlattenedAddEventListenerOptions flatten_add_event_listener_options(Varia
 
         // 2. If options["signal"] exists, then set signal to options["signal"].
         if (add_event_listener_options.signal.has_value())
-            signal = add_event_listener_options.signal.value();
+            signal = add_event_listener_options.signal.value().ptr();
     }
 
     // 5. Return capture, passive, once, and signal.
-    return FlattenedAddEventListenerOptions { .capture = capture, .passive = passive, .once = once, .signal = signal };
+    return FlattenedAddEventListenerOptions { .capture = capture, .passive = passive, .once = once, .signal = signal.ptr() };
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
@@ -145,11 +167,11 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
             && entry->capture == listener.capture;
     });
     if (it == m_event_listener_list.end())
-        m_event_listener_list.append(JS::make_handle(listener));
+        m_event_listener_list.append(listener);
 
     // 5. If listener’s signal is not null, then add the following abort steps to it:
     if (listener.signal) {
-        listener.signal->add_abort_algorithm([strong_event_target = NonnullRefPtr(*this), listener = JS::make_handle(&listener)]() mutable {
+        listener.signal->add_abort_algorithm([strong_event_target = JS::make_handle(*this), listener = JS::make_handle(&listener)]() mutable {
             // 1. Remove an event listener with eventTarget and listener.
             strong_event_target->remove_an_event_listener(*listener);
         });
@@ -193,12 +215,12 @@ void EventTarget::remove_an_event_listener(DOMEventListener& listener)
 
     // 2. Set listener’s removed to true and remove listener from eventTarget’s event listener list.
     listener.removed = true;
-    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.cell() == &listener; });
+    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
 void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 {
-    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.cell() == &listener; });
+    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
@@ -313,17 +335,17 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
     if (event_handler->value.has<String>()) {
         // 1. If eventTarget is an element, then let element be eventTarget, and document be element's node document.
         //    Otherwise, eventTarget is a Window object, let element be null, and document be eventTarget's associated Document.
-        RefPtr<Element> element;
-        RefPtr<Document> document;
+        JS::GCPtr<Element> element;
+        JS::GCPtr<Document> document;
 
         if (is<Element>(this)) {
             auto* element_event_target = verify_cast<Element>(this);
             element = element_event_target;
-            document = element_event_target->document();
+            document = &element_event_target->document();
         } else {
             VERIFY(is<HTML::Window>(this));
             auto* window_event_target = verify_cast<HTML::Window>(this);
-            document = window_event_target->associated_document();
+            document = &window_event_target->associated_document();
         }
 
         VERIFY(document);
@@ -338,7 +360,7 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         // FIXME: 4. Let location be the location where the script body originated, as given by eventHandler's value.
 
         // 5. If element is not null and element has a form owner, let form owner be that form owner. Otherwise, let form owner be null.
-        RefPtr<HTML::HTMLFormElement> form_owner;
+        JS::GCPtr<HTML::HTMLFormElement> form_owner;
         if (is<HTML::FormAssociatedElement>(element.ptr())) {
             auto* form_associated_element = dynamic_cast<HTML::FormAssociatedElement*>(element.ptr());
             VERIFY(form_associated_element);
@@ -491,7 +513,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, Bindings::C
         //               unique call to activate_event_handler.
         event_target->activate_event_handler(name, *new_event_handler);
 
-        handler_map.set(name, JS::make_handle(new_event_handler));
+        handler_map.set(name, new_event_handler);
         return;
     }
 
@@ -515,21 +537,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     if (event_handler.listener)
         return;
 
-    JS::Realm* realm = nullptr;
-    // See step 3.1. in get_current_value_of_event_handler(), which explains these assumptions.
-    if (event_handler.value.has<Bindings::CallbackType*>()) {
-        realm = &event_handler.value.get<Bindings::CallbackType*>()->callback_context.realm();
-    } else if (is<Element>(this)) {
-        realm = &verify_cast<Element>(*this).document().realm();
-    } else {
-        auto& window = verify_cast<HTML::Window>(*this);
-        // If an element attribute is set on a <body> element before any script is run, Window::wrapper() will be null.
-        // Force creation of the global object via the Document::interpreter() lazy initialization mechanism.
-        if (window.wrapper() == nullptr)
-            window.associated_document().interpreter();
-        realm = &window.wrapper()->shape().realm();
-    }
-    VERIFY(realm);
+    JS::Realm& realm = shape().realm();
 
     // 4. Let callback be the result of creating a Web IDL EventListener instance representing a reference to a function of one argument that executes the steps of the event handler processing algorithm, given eventTarget, name, and its argument.
     //    The EventListener's callback context can be arbitrary; it does not impact the steps of the event handler processing algorithm. [DOM]
@@ -540,28 +548,28 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     //          location.reload();
     //       The body element is no longer in the DOM and there is no variable holding onto it. However, the onunload handler is still called, meaning the callback keeps the body element alive.
     auto callback_function = JS::NativeFunction::create(
-        *realm, [event_target = NonnullRefPtr(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
+        realm, [event_target = JS::make_handle(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
             // The event dispatcher should only call this with one argument.
             VERIFY(vm.argument_count() == 1);
 
-            // The argument must be an object and it must be an EventWrapper.
+            // The argument must be an object and it must be an Event.
             auto event_wrapper_argument = vm.argument(0);
             VERIFY(event_wrapper_argument.is_object());
-            auto& event_wrapper = verify_cast<Bindings::EventWrapper>(event_wrapper_argument.as_object());
+            auto& event_wrapper = verify_cast<DOM::Event>(event_wrapper_argument.as_object());
             auto& event = event_wrapper.impl();
 
             TRY(event_target->process_event_handler_for_event(name, event));
             return JS::js_undefined();
         },
-        0, "", realm);
+        0, "", &realm);
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    auto* callback = realm->heap().allocate_without_realm<Bindings::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm->host_defined()));
+    auto* callback = realm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()));
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
-    auto* listener = realm->heap().allocate_without_realm<DOMEventListener>();
+    auto* listener = realm.heap().allocate_without_realm<DOMEventListener>();
     listener->type = name;
-    listener->callback = IDLEventListener::create(*realm, *callback).ptr();
+    listener->callback = IDLEventListener::create(realm, *callback).ptr();
 
     // 6. Add an event listener with eventTarget and listener.
     add_an_event_listener(*listener);
@@ -723,7 +731,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
         //  6. Activate an event handler given eventTarget and name.
         event_target->activate_event_handler(local_name, *new_event_handler);
 
-        handler_map.set(local_name, JS::make_handle(new_event_handler));
+        handler_map.set(local_name, new_event_handler);
         return;
     }
 

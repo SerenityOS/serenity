@@ -8,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -45,12 +46,23 @@ namespace Web::DOM {
 Element::Element(Document& document, DOM::QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
-    , m_attributes(JS::make_handle(NamedNodeMap::create(*this)))
+    , m_attributes(NamedNodeMap::create(*this))
 {
+    set_prototype(&document.window().ensure_web_prototype<Bindings::ElementPrototype>("Element"));
+
     make_html_uppercased_qualified_name();
 }
 
 Element::~Element() = default;
+
+void Element::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_attributes.ptr());
+    visitor.visit(m_inline_style.ptr());
+    visitor.visit(m_class_list.ptr());
+    visitor.visit(m_shadow_root.ptr());
+}
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
 String Element::get_attribute(FlyString const& name) const
@@ -295,7 +307,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
 
 CSS::CSSStyleDeclaration const* Element::inline_style() const
 {
-    return m_inline_style.cell();
+    return m_inline_style.ptr();
 }
 
 void Element::parse_attribute(FlyString const& name, String const& value)
@@ -307,13 +319,13 @@ void Element::parse_attribute(FlyString const& name, String const& value)
         for (auto& new_class : new_classes) {
             m_classes.unchecked_append(new_class);
         }
-        if (m_class_list.cell())
+        if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
         // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
-        if (m_inline_style.cell() && m_inline_style->is_updating())
+        if (m_inline_style && m_inline_style->is_updating())
             return;
-        m_inline_style = JS::make_handle(parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this));
+        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
         set_needs_style_update(true);
     }
 }
@@ -321,8 +333,8 @@ void Element::parse_attribute(FlyString const& name, String const& value)
 void Element::did_remove_attribute(FlyString const& name)
 {
     if (name == HTML::AttributeNames::style) {
-        if (m_inline_style.cell()) {
-            m_inline_style = {};
+        if (m_inline_style) {
+            m_inline_style = nullptr;
             set_needs_style_update(true);
         }
     }
@@ -414,9 +426,9 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 
 DOMTokenList* Element::class_list()
 {
-    if (!m_class_list.cell())
-        m_class_list = JS::make_handle(DOMTokenList::create(*this, HTML::AttributeNames::class_));
-    return m_class_list.cell();
+    if (!m_class_list)
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
+    return m_class_list;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-matches
@@ -495,7 +507,7 @@ NonnullRefPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString cons
     });
 }
 
-void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
+void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
 {
     if (m_shadow_root == shadow_root)
         return;
@@ -509,9 +521,9 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
 
 CSS::CSSStyleDeclaration* Element::style_for_bindings()
 {
-    if (m_inline_style.is_null())
-        m_inline_style = JS::make_handle(CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {}));
-    return m_inline_style.cell();
+    if (!m_inline_style)
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
+    return m_inline_style;
 }
 
 // https://dom.spec.whatwg.org/#element-html-uppercased-qualified-name
@@ -527,7 +539,7 @@ void Element::make_html_uppercased_qualified_name()
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
 void Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
 {
-    auto task = HTML::Task::create(source, &document(), [strong_this = NonnullRefPtr(*this), steps = move(steps)] {
+    auto task = HTML::Task::create(source, &document(), [strong_this = JS::make_handle(*this), steps = move(steps)] {
         steps();
     });
     HTML::main_thread_event_loop().task_queue().add(move(task));

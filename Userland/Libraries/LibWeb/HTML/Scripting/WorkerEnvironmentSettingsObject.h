@@ -20,7 +20,7 @@ class WorkerEnvironmentSettingsObject final
 public:
     WorkerEnvironmentSettingsObject(DOM::Document& document, NonnullOwnPtr<JS::ExecutionContext> execution_context)
         : EnvironmentSettingsObject(move(execution_context))
-        , m_document(document)
+        , m_document(JS::make_handle(document))
     {
     }
 
@@ -37,14 +37,14 @@ public:
 
     virtual ~WorkerEnvironmentSettingsObject() override = default;
 
-    RefPtr<DOM::Document> responsible_document() override { return m_document; }
+    JS::GCPtr<DOM::Document> responsible_document() override { return m_document.ptr(); }
     String api_url_character_encoding() override { return m_document->encoding_or_default(); }
     AK::URL api_base_url() override { return m_document->url(); }
     Origin origin() override { return m_document->origin(); }
     CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { TODO(); }
 
 private:
-    NonnullRefPtr<DOM::Document> m_document;
+    JS::Handle<DOM::Document> m_document;
 };
 
 }

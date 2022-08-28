@@ -4,17 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLTableRowElementPrototype.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTableSectionElement.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
 HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>("HTMLTableRowElement"));
 }
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;
@@ -52,7 +55,7 @@ int HTMLTableRowElement::row_index() const
         return -1;
     auto rows = rows_collection->collect_matching_elements();
     for (size_t i = 0; i < rows.size(); ++i) {
-        if (rows[i].ptr() == this)
+        if (rows[i] == this)
             return i;
     }
     return -1;
@@ -77,7 +80,7 @@ int HTMLTableRowElement::section_row_index() const
         return -1;
     auto rows = rows_collection->collect_matching_elements();
     for (size_t i = 0; i < rows.size(); ++i) {
-        if (rows[i].ptr() == this)
+        if (rows[i] == this)
             return i;
     }
     return -1;

@@ -26,7 +26,7 @@ public:
         return adopt_ref(*new URL(move(url), move(query)));
     }
 
-    static DOM::ExceptionOr<NonnullRefPtr<URL>> create_with_global_object(Bindings::WindowObject&, String const& url, String const& base);
+    static DOM::ExceptionOr<NonnullRefPtr<URL>> create_with_global_object(HTML::Window&, String const& url, String const& base);
 
     String href() const;
     DOM::ExceptionOr<void> set_href(String const&);

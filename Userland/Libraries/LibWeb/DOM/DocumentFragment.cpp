@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/DocumentFragmentPrototype.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -12,12 +13,24 @@ namespace Web::DOM {
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::DocumentFragmentPrototype>("DocumentFragment"));
+}
+
+void DocumentFragment::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_host.ptr());
+}
+
+void DocumentFragment::set_host(Web::DOM::Element* element)
+{
+    m_host = element;
 }
 
 // https://dom.spec.whatwg.org/#dom-documentfragment-documentfragment
-NonnullRefPtr<DocumentFragment> DocumentFragment::create_with_global_object(Bindings::WindowObject& window)
+JS::NonnullGCPtr<DocumentFragment> DocumentFragment::create_with_global_object(HTML::Window& window)
 {
-    return make_ref_counted<DocumentFragment>(window.impl().associated_document());
+    return *window.heap().allocate<DocumentFragment>(window.realm(), window.associated_document());
 }
 
 }

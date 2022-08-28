@@ -11,8 +11,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/NodePrototype.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
@@ -23,7 +22,9 @@
 #include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/MutationType.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
@@ -58,26 +59,36 @@ Node* Node::from_id(i32 node_id)
     return s_node_directory.get(node_id).value_or(nullptr);
 }
 
-Node::Node(Document& document, NodeType type)
-    : EventTarget()
+Node::Node(JS::Realm& realm, Document& document, NodeType type)
+    : EventTarget(realm)
     , m_document(&document)
     , m_type(type)
     , m_id(allocate_node_id(this))
 {
-    if (!is_document())
-        m_document->ref_from_node({});
+}
+
+Node::Node(Document& document, NodeType type)
+    : Node(document.realm(), document, type)
+{
 }
 
 Node::~Node()
 {
-    VERIFY(m_deletion_has_begun);
     if (layout_node() && layout_node()->parent())
         layout_node()->parent()->remove_child(*layout_node());
 
-    if (!is_document())
-        m_document->unref_from_node({});
-
     deallocate_node_id(m_id);
+}
+
+void Node::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_document.ptr());
+    visitor.visit(m_parent.ptr());
+    visitor.visit(m_first_child.ptr());
+    visitor.visit(m_last_child.ptr());
+    visitor.visit(m_next_sibling.ptr());
+    visitor.visit(m_previous_sibling.ptr());
 }
 
 // https://dom.spec.whatwg.org/#dom-node-baseuri
@@ -291,7 +302,7 @@ Element const* Node::parent_element() const
 }
 
 // https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
-ExceptionOr<void> Node::ensure_pre_insertion_validity(NonnullRefPtr<Node> node, RefPtr<Node> child) const
+ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child) const
 {
     // 1. If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
@@ -342,14 +353,14 @@ ExceptionOr<void> Node::ensure_pre_insertion_validity(NonnullRefPtr<Node> node, 
 }
 
 // https://dom.spec.whatwg.org/#concept-node-insert
-void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool suppress_observers)
+void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, bool suppress_observers)
 {
     // 1. Let nodes be node’s children, if node is a DocumentFragment node; otherwise « node ».
-    NonnullRefPtrVector<Node> nodes;
+    Vector<JS::Handle<Node>> nodes;
     if (is<DocumentFragment>(*node))
         nodes = node->children_as_vector();
     else
-        nodes.append(node);
+        nodes.append(JS::make_handle(*node));
 
     // 2. Let count be nodes’s size.
     auto count = nodes.size();
@@ -384,7 +395,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
     }
 
     // 6. Let previousSibling be child’s previous sibling or parent’s last child if child is null.
-    RefPtr<Node> previous_sibling;
+    JS::GCPtr<Node> previous_sibling;
     if (child)
         previous_sibling = child->previous_sibling();
     else
@@ -394,14 +405,14 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
     // FIXME: In tree order
     for (auto& node_to_insert : nodes) {
         // 1. Adopt node into parent’s node document.
-        document().adopt_node(node_to_insert);
+        document().adopt_node(*node_to_insert);
 
         // 2. If child is null, then append node to parent’s children.
         if (!child)
-            TreeNode<Node>::append_child(node_to_insert);
+            append_child_impl(*node_to_insert);
         // 3. Otherwise, insert node into parent’s children before child’s index.
         else
-            TreeNode<Node>::insert_before(node_to_insert, child);
+            insert_before_impl(*node_to_insert, child);
 
         // FIXME: 4. If parent is a shadow host and node is a slottable, then assign a slot for node.
         // FIXME: 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
@@ -409,7 +420,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 
         // FIXME: This should be shadow-including.
         // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
-        node_to_insert.for_each_in_inclusive_subtree([&](Node& inclusive_descendant) {
+        node_to_insert->for_each_in_inclusive_subtree([&](Node& inclusive_descendant) {
             // 1. Run the insertion steps with inclusiveDescendant.
             inclusive_descendant.inserted();
 
@@ -427,7 +438,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
     if (!suppress_observers)
-        queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create({}), previous_sibling, child);
+        queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create({}), previous_sibling.ptr(), child.ptr());
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -436,7 +447,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
-ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> child)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::pre_insert(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child)
 {
     // 1. Ensure pre-insertion validity of node into parent before child.
     TRY(ensure_pre_insertion_validity(node, child));
@@ -456,14 +467,14 @@ ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefP
 }
 
 // https://dom.spec.whatwg.org/#dom-node-removechild
-ExceptionOr<NonnullRefPtr<Node>> Node::remove_child(NonnullRefPtr<Node> child)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::remove_child(JS::NonnullGCPtr<Node> child)
 {
     // The removeChild(child) method steps are to return the result of pre-removing child from this.
     return pre_remove(child);
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-remove
-ExceptionOr<NonnullRefPtr<Node>> Node::pre_remove(NonnullRefPtr<Node> child)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::pre_remove(JS::NonnullGCPtr<Node> child)
 {
     // 1. If child’s parent is not parent, then throw a "NotFoundError" DOMException.
     if (child->parent() != this)
@@ -477,7 +488,7 @@ ExceptionOr<NonnullRefPtr<Node>> Node::pre_remove(NonnullRefPtr<Node> child)
 }
 
 // https://dom.spec.whatwg.org/#concept-node-append
-ExceptionOr<NonnullRefPtr<Node>> Node::append_child(NonnullRefPtr<Node> node)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::append_child(JS::NonnullGCPtr<Node> node)
 {
     // To append a node to a parent, pre-insert node into parent before null.
     return pre_insert(node, nullptr);
@@ -487,7 +498,7 @@ ExceptionOr<NonnullRefPtr<Node>> Node::append_child(NonnullRefPtr<Node> node)
 void Node::remove(bool suppress_observers)
 {
     // 1. Let parent be node’s parent
-    auto* parent = TreeNode<Node>::parent();
+    auto* parent = this->parent();
 
     // 2. Assert: parent is non-null.
     VERIFY(parent);
@@ -525,13 +536,13 @@ void Node::remove(bool suppress_observers)
     });
 
     // 9. Let oldPreviousSibling be node’s previous sibling.
-    RefPtr<Node> old_previous_sibling = previous_sibling();
+    JS::GCPtr<Node> old_previous_sibling = previous_sibling();
 
     // 10. Let oldNextSibling be node’s next sibling.
-    RefPtr<Node> old_next_sibling = next_sibling();
+    JS::GCPtr<Node> old_next_sibling = next_sibling();
 
     // 11. Remove node from its parent’s children.
-    parent->TreeNode::remove_child(*this);
+    parent->remove_child_impl(*this);
 
     // FIXME: 12. If node is assigned, then run assign slottables for node’s assigned slot.
 
@@ -576,9 +587,9 @@ void Node::remove(bool suppress_observers)
 
     // 20. If suppress observers flag is unset, then queue a tree mutation record for parent with « », « node », oldPreviousSibling, and oldNextSibling.
     if (!suppress_observers) {
-        NonnullRefPtrVector<Node> removed_nodes;
-        removed_nodes.append(*this);
-        parent->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling, old_next_sibling);
+        Vector<JS::Handle<Node>> removed_nodes;
+        removed_nodes.append(JS::make_handle(*this));
+        parent->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -588,7 +599,7 @@ void Node::remove(bool suppress_observers)
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace
-ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, NonnullRefPtr<Node> child)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr<Node> node, JS::NonnullGCPtr<Node> child)
 {
     // If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
@@ -637,52 +648,52 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
     }
 
     // 7. Let referenceChild be child’s next sibling.
-    RefPtr<Node> reference_child = child->next_sibling();
+    JS::GCPtr<Node> reference_child = child->next_sibling();
 
     // 8. If referenceChild is node, then set referenceChild to node’s next sibling.
     if (reference_child == node)
         reference_child = node->next_sibling();
 
     // 9. Let previousSibling be child’s previous sibling.
-    RefPtr<Node> previous_sibling = child->previous_sibling();
+    JS::GCPtr<Node> previous_sibling = child->previous_sibling();
 
     // 10. Let removedNodes be the empty set.
-    NonnullRefPtrVector<Node> removed_nodes;
+    Vector<JS::Handle<Node>> removed_nodes;
 
     // 11. If child’s parent is non-null, then:
     // NOTE: The above can only be false if child is node.
     if (child->parent()) {
         // 1. Set removedNodes to « child ».
-        removed_nodes.append(child);
+        removed_nodes.append(JS::make_handle(*child));
 
         // 2. Remove child with the suppress observers flag set.
         child->remove(true);
     }
 
     // 12. Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ».
-    NonnullRefPtrVector<Node> nodes;
+    Vector<JS::Handle<Node>> nodes;
     if (is<DocumentFragment>(*node))
         nodes = node->children_as_vector();
     else
-        nodes.append(node);
+        nodes.append(JS::make_handle(*node));
 
     // 13. Insert node into parent before referenceChild with the suppress observers flag set.
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create(move(removed_nodes)), previous_sibling, reference_child);
+    queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create(move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
 }
 
 // https://dom.spec.whatwg.org/#concept-node-clone
-NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
+JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
 {
     // 1. If document is not given, let document be node’s node document.
     if (!document)
-        document = m_document;
-    RefPtr<Node> copy;
+        document = m_document.ptr();
+    JS::GCPtr<Node> copy;
 
     // 2. If node is an element, then:
     if (is<Element>(this)) {
@@ -703,7 +714,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
     else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
-        auto document_copy = Document::create(document_->url());
+        auto document_copy = Document::create(Bindings::main_thread_internal_window_object(), document_->url());
 
         // Set copy’s encoding, content type, URL, origin, type, and mode to those of node.
         document_copy->set_encoding(document_->encoding());
@@ -716,7 +727,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
     } else if (is<DocumentType>(this)) {
         // DocumentType
         auto document_type = verify_cast<DocumentType>(this);
-        auto document_type_copy = adopt_ref(*new DocumentType(*document));
+        auto document_type_copy = heap().allocate<DocumentType>(realm(), *document);
 
         // Set copy’s name, public ID, and system ID to those of node.
         document_type_copy->set_name(document_type->name());
@@ -733,26 +744,26 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto text = verify_cast<Text>(this);
 
         // Set copy’s data to that of node.
-        auto text_copy = adopt_ref(*new Text(*document, text->data()));
+        auto text_copy = heap().allocate<Text>(realm(), *document, text->data());
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         // Comment
         auto comment = verify_cast<Comment>(this);
 
         // Set copy’s data to that of node.
-        auto comment_copy = adopt_ref(*new Comment(*document, comment->data()));
+        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data());
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
         // ProcessingInstruction
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
 
         // Set copy’s target and data to those of node.
-        auto processing_instruction_copy = adopt_ref(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
-        copy = move(processing_instruction_copy);
+        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target());
+        copy = processing_instruction_copy;
     }
     // Otherwise, Do nothing.
     else if (is<DocumentFragment>(this)) {
-        copy = adopt_ref(*new DocumentFragment(*document));
+        copy = heap().allocate<DocumentFragment>(realm(), *document);
     }
 
     // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
@@ -768,11 +779,11 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
     }
 
     // 7. Return copy.
-    return copy.release_nonnull();
+    return *copy;
 }
 
 // https://dom.spec.whatwg.org/#dom-node-clonenode
-ExceptionOr<NonnullRefPtr<Node>> Node::clone_node_binding(bool deep)
+ExceptionOr<JS::NonnullGCPtr<Node>> Node::clone_node_binding(bool deep)
 {
     // 1. If this is a shadow root, then throw a "NotSupportedError" DOMException.
     if (is<ShadowRoot>(*this))
@@ -784,11 +795,9 @@ ExceptionOr<NonnullRefPtr<Node>> Node::clone_node_binding(bool deep)
 
 void Node::set_document(Badge<Document>, Document& document)
 {
-    if (m_document == &document)
+    if (m_document.ptr() == &document)
         return;
 
-    document.ref_from_node({});
-    m_document->unref_from_node({});
     m_document = &document;
 
     if (needs_style_update() || child_needs_style_update()) {
@@ -803,21 +812,6 @@ void Node::set_document(Badge<Document>, Document& document)
 bool Node::is_editable() const
 {
     return parent() && parent()->is_editable();
-}
-
-JS::Object* Node::create_wrapper(JS::Realm& realm)
-{
-    return wrap(realm, *this);
-}
-
-void Node::removed_last_ref()
-{
-    if (is<Document>(*this)) {
-        verify_cast<Document>(*this).removed_last_ref();
-        return;
-    }
-    m_deletion_has_begun = true;
-    delete this;
 }
 
 void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
@@ -866,12 +860,12 @@ NonnullRefPtr<NodeList> Node::child_nodes()
     });
 }
 
-NonnullRefPtrVector<Node> Node::children_as_vector() const
+Vector<JS::Handle<Node>> Node::children_as_vector() const
 {
-    NonnullRefPtrVector<Node> nodes;
+    Vector<JS::Handle<Node>> nodes;
 
     for_each_child([&](auto& child) {
-        nodes.append(child);
+        nodes.append(JS::make_handle(child));
     });
 
     return nodes;
@@ -879,12 +873,12 @@ NonnullRefPtrVector<Node> Node::children_as_vector() const
 
 void Node::remove_all_children(bool suppress_observers)
 {
-    while (RefPtr<Node> child = first_child())
+    while (JS::GCPtr<Node> child = first_child())
         child->remove(suppress_observers);
 }
 
 // https://dom.spec.whatwg.org/#dom-node-comparedocumentposition
-u16 Node::compare_document_position(RefPtr<Node> other)
+u16 Node::compare_document_position(JS::GCPtr<Node> other)
 {
     enum Position : u16 {
         DOCUMENT_POSITION_EQUAL = 0,
@@ -897,7 +891,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
     };
 
     // 1. If this is other, then return zero.
-    if (this == other)
+    if (this == other.ptr())
         return DOCUMENT_POSITION_EQUAL;
 
     // 2. Let node1 be other and node2 be this.
@@ -967,7 +961,7 @@ bool Node::is_host_including_inclusive_ancestor_of(Node const& other) const
 }
 
 // https://dom.spec.whatwg.org/#dom-node-ownerdocument
-RefPtr<Document> Node::owner_document() const
+JS::GCPtr<Document> Node::owner_document() const
 {
     // The ownerDocument getter steps are to return null, if this is a document; otherwise this’s node document.
     if (is_document())
@@ -1067,7 +1061,7 @@ bool Node::is_scripting_disabled() const
 }
 
 // https://dom.spec.whatwg.org/#dom-node-contains
-bool Node::contains(RefPtr<Node> other) const
+bool Node::contains(JS::GCPtr<Node> other) const
 {
     // The contains(other) method steps are to return true if other is an inclusive descendant of this; otherwise false (including when other is null).
     return other && other->is_inclusive_descendant_of(*this);
@@ -1113,13 +1107,13 @@ bool Node::is_shadow_including_inclusive_ancestor_of(Node const& other) const
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace-all
-void Node::replace_all(RefPtr<Node> node)
+void Node::replace_all(JS::GCPtr<Node> node)
 {
     // 1. Let removedNodes be parent’s children.
     auto removed_nodes = children_as_vector();
 
     // 2. Let addedNodes be the empty set.
-    NonnullRefPtrVector<Node> added_nodes;
+    Vector<JS::Handle<Node>> added_nodes;
 
     // 3. If node is a DocumentFragment node, then set addedNodes to node’s children.
     if (node && is<DocumentFragment>(*node)) {
@@ -1127,7 +1121,7 @@ void Node::replace_all(RefPtr<Node> node)
     }
     // 4. Otherwise, if node is non-null, set addedNodes to « node ».
     else if (node) {
-        added_nodes.append(*node);
+        added_nodes.append(JS::make_handle(*node));
     }
 
     // 5. Remove all parent’s children, in tree order, with the suppress observers flag set.
@@ -1146,11 +1140,11 @@ void Node::replace_all(RefPtr<Node> node)
 void Node::string_replace_all(String const& string)
 {
     // 1. Let node be null.
-    RefPtr<Node> node;
+    JS::GCPtr<Node> node;
 
     // 2. If string is not the empty string, then set node to a new Text node whose data is string and node document is parent’s node document.
     if (!string.is_empty())
-        node = make_ref_counted<Text>(document(), string);
+        node = heap().allocate<Text>(realm(), document(), string);
 
     // 3. Replace all with node within parent.
     replace_all(node);
@@ -1267,7 +1261,7 @@ bool Node::in_a_document_tree() const
 }
 
 // https://dom.spec.whatwg.org/#dom-node-getrootnode
-NonnullRefPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
+JS::NonnullGCPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
 {
     // The getRootNode(options) method steps are to return this’s shadow-including root if options["composed"] is true;
     if (options.composed)
@@ -1332,15 +1326,15 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
     OrderedHashMap<NonnullRefPtr<MutationObserver>, String> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
-    NonnullRefPtrVector<Node> nodes;
-    nodes.append(*this);
+    Vector<JS::Handle<Node>> nodes;
+    nodes.append(JS::make_handle(*this));
 
     for (auto* parent_node = parent(); parent_node; parent_node = parent_node->parent())
-        nodes.append(*parent_node);
+        nodes.append(JS::make_handle(*parent_node));
 
     // 3. For each node in nodes, and then for each registered of node’s registered observer list:
     for (auto& node : nodes) {
-        for (auto& registered_observer : node.m_registered_observer_list) {
+        for (auto& registered_observer : node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
             auto& options = registered_observer.options;
 
@@ -1351,7 +1345,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
             //      - type is "characterData" and options["characterData"] either does not exist or is false
             //      - type is "childList" and options["childList"] is false
             //    then:
-            if (!(&node != this && !options.subtree)
+            if (!(node.ptr() != this && !options.subtree)
                 && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
                 && !(type == MutationType::attributes && options.attribute_filter.has_value() && (!attribute_namespace.is_null() || !options.attribute_filter->contains_slow(attribute_name)))
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
@@ -1392,6 +1386,101 @@ void Node::queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, Nonnu
 
     // 2. Queue a mutation record of "childList" for target with null, null, null, addedNodes, removedNodes, previousSibling, and nextSibling.
     queue_mutation_record(MutationType::childList, {}, {}, {}, move(added_nodes), move(removed_nodes), previous_sibling, next_sibling);
+}
+
+void Node::append_child_impl(JS::NonnullGCPtr<Node> node)
+{
+    VERIFY(!node->m_parent);
+
+    if (!is_child_allowed(*node))
+        return;
+
+    if (m_last_child)
+        m_last_child->m_next_sibling = node.ptr();
+    node->m_previous_sibling = m_last_child;
+    node->m_parent = this;
+    m_last_child = node.ptr();
+    if (!m_first_child)
+        m_first_child = m_last_child;
+}
+
+void Node::insert_before_impl(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child)
+{
+    if (!child)
+        return append_child_impl(move(node));
+
+    VERIFY(!node->m_parent);
+    VERIFY(child->parent() == this);
+
+    node->m_previous_sibling = child->m_previous_sibling;
+    node->m_next_sibling = child;
+
+    if (child->m_previous_sibling)
+        child->m_previous_sibling->m_next_sibling = node;
+
+    if (m_first_child == child)
+        m_first_child = node;
+
+    child->m_previous_sibling = node;
+
+    node->m_parent = this;
+}
+
+void Node::remove_child_impl(JS::NonnullGCPtr<Node> node)
+{
+    VERIFY(node->m_parent.ptr() == this);
+
+    if (m_first_child == node)
+        m_first_child = node->m_next_sibling;
+
+    if (m_last_child == node)
+        m_last_child = node->m_previous_sibling;
+
+    if (node->m_next_sibling)
+        node->m_next_sibling->m_previous_sibling = node->m_previous_sibling;
+
+    if (node->m_previous_sibling)
+        node->m_previous_sibling->m_next_sibling = node->m_next_sibling;
+
+    node->m_next_sibling = nullptr;
+    node->m_previous_sibling = nullptr;
+    node->m_parent = nullptr;
+}
+
+bool Node::is_ancestor_of(Node const& other) const
+{
+    for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
+}
+
+bool Node::is_inclusive_ancestor_of(Node const& other) const
+{
+    return &other == this || is_ancestor_of(other);
+}
+
+bool Node::is_descendant_of(Node const& other) const
+{
+    return other.is_ancestor_of(*this);
+}
+
+bool Node::is_inclusive_descendant_of(Node const& other) const
+{
+    return other.is_inclusive_ancestor_of(*this);
+}
+
+// https://dom.spec.whatwg.org/#concept-tree-following
+bool Node::is_following(Node const& other) const
+{
+    // An object A is following an object B if A and B are in the same tree and A comes after B in tree order.
+    for (auto* node = previous_in_pre_order(); node; node = node->previous_in_pre_order()) {
+        if (node == &other)
+            return true;
+    }
+
+    return false;
 }
 
 }

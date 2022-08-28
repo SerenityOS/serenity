@@ -17,7 +17,7 @@ public:
 
     virtual ~WindowEnvironmentSettingsObject() override = default;
 
-    virtual RefPtr<DOM::Document> responsible_document() override;
+    virtual JS::GCPtr<DOM::Document> responsible_document() override;
     virtual String api_url_character_encoding() override;
     virtual AK::URL api_base_url() override;
     virtual Origin origin() override;
@@ -26,7 +26,7 @@ public:
 private:
     WindowEnvironmentSettingsObject(Window&, NonnullOwnPtr<JS::ExecutionContext>);
 
-    NonnullRefPtr<Window> m_window;
+    JS::Handle<Window> m_window;
 };
 
 }

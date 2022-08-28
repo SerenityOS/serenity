@@ -8,12 +8,13 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web::IntersectionObserver {
 
 struct IntersectionObserverInit {
-    Optional<Variant<NonnullRefPtr<DOM::Element>, NonnullRefPtr<DOM::Document>>> root;
+    Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> root;
     String root_margin { "0px"sv };
     Variant<double, Vector<double>> threshold { 0 };
 };
@@ -25,7 +26,7 @@ class IntersectionObserver
 public:
     using WrapperType = Bindings::IntersectionObserverWrapper;
 
-    static NonnullRefPtr<IntersectionObserver> create_with_global_object(JS::GlobalObject&, Bindings::CallbackType* callback, IntersectionObserverInit const& options = {});
+    static NonnullRefPtr<IntersectionObserver> create_with_global_object(HTML::Window&, Bindings::CallbackType* callback, IntersectionObserverInit const& options = {});
 
     void observe(DOM::Element& target);
     void unobserve(DOM::Element& target);

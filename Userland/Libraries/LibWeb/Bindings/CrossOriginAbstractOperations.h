@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <AK/Traits.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Bindings {
@@ -27,14 +28,14 @@ struct CrossOriginKey {
 
 using CrossOriginPropertyDescriptorMap = HashMap<CrossOriginKey, JS::PropertyDescriptor>;
 
-Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, WindowObject const*> const&);
+Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, HTML::Window const*> const&);
 bool is_cross_origin_accessible_window_property_name(JS::PropertyKey const&);
 JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::VM&, JS::PropertyKey const&);
 bool is_platform_object_same_origin(JS::Object const&);
-Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, WindowObject*> const&, JS::PropertyKey const&);
+Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, HTML::Window*> const&, JS::PropertyKey const&);
 JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::VM&, JS::Object const&, JS::PropertyKey const&, JS::Value receiver);
 JS::ThrowCompletionOr<bool> cross_origin_set(JS::VM&, JS::Object&, JS::PropertyKey const&, JS::Value, JS::Value receiver);
-JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<LocationObject const*, WindowObject const*> const&);
+JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<LocationObject const*, HTML::Window const*> const&);
 
 }
 

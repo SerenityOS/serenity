@@ -12,10 +12,9 @@
 namespace Web::HTML {
 
 class HTMLStyleElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLStyleElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLStyleElement, HTMLElement);
 
-    HTMLStyleElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;
@@ -28,8 +27,14 @@ public:
     CSS::CSSStyleSheet const* sheet() const;
 
 private:
+    HTMLStyleElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
     // https://www.w3.org/TR/cssom/#associated-css-style-sheet
-    JS::Handle<CSS::CSSStyleSheet> m_associated_css_style_sheet;
+    JS::GCPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
 };
 
 }
+
+WRAPPER_HACK(HTMLStyleElement, Web::HTML)

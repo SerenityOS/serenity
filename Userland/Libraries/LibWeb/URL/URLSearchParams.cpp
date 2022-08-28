@@ -68,7 +68,7 @@ Vector<QueryParam> url_decode(StringView input)
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams
 // https://url.spec.whatwg.org/#urlsearchparams-initialize
-DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> URLSearchParams::create_with_global_object(Bindings::WindowObject&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
+DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> URLSearchParams::create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
 {
     // 1. If init is a string and starts with U+003F (?), then remove the first code point from init.
     // NOTE: We do this when we know that it's a string on step 3 of initialization.

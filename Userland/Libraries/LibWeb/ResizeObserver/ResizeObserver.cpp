@@ -10,10 +10,9 @@
 namespace Web::ResizeObserver {
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-resizeobserver
-NonnullRefPtr<ResizeObserver> ResizeObserver::create_with_global_object(JS::GlobalObject& global_object, Bindings::CallbackType* callback)
+NonnullRefPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window&, Bindings::CallbackType* callback)
 {
     // FIXME: Implement
-    (void)global_object;
     (void)callback;
     return adopt_ref(*new ResizeObserver);
 }

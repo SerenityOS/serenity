@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLSpanElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLSpanElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLSpanElement, HTMLElement);
 
-    HTMLSpanElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLSpanElement() override;
+
+private:
+    HTMLSpanElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLSpanElement, Web::HTML)

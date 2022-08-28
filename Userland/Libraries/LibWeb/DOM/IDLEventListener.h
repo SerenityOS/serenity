@@ -22,15 +22,13 @@ struct EventListenerOptions {
 struct AddEventListenerOptions : public EventListenerOptions {
     bool passive { false };
     bool once { false };
-    Optional<NonnullRefPtr<AbortSignal>> signal;
+    Optional<JS::NonnullGCPtr<AbortSignal>> signal;
 };
 
 class IDLEventListener final : public JS::Object {
     JS_OBJECT(IDLEventListener, JS::Object);
 
 public:
-    IDLEventListener& impl() { return *this; }
-
     static JS::NonnullGCPtr<IDLEventListener> create(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
     IDLEventListener(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
 

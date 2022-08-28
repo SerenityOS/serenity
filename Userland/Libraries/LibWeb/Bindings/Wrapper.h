@@ -12,10 +12,8 @@
 
 namespace Web::Bindings {
 
-class Wrapper
-    : public PlatformObject
-    , public Weakable<Wrapper> {
-    JS_OBJECT(Wrapper, PlatformObject);
+class Wrapper : public PlatformObject {
+    WEB_PLATFORM_OBJECT(Wrapper, PlatformObject);
 
 public:
     virtual ~Wrapper() override;

@@ -12,7 +12,7 @@
 namespace Web::CSS {
 
 Screen::Screen(HTML::Window& window)
-    : RefCountForwarder(window)
+    : m_window(JS::make_handle(window))
 {
 }
 

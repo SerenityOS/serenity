@@ -29,10 +29,9 @@ class Element
     : public ParentNode
     , public ChildNode<Element>
     , public NonDocumentTypeChildNode<Element> {
+    WEB_PLATFORM_OBJECT(Element, ParentNode);
 
 public:
-    using WrapperType = Bindings::ElementWrapper;
-
     Element(Document&, DOM::QualifiedName);
     virtual ~Element() override;
 
@@ -59,7 +58,7 @@ public:
     void remove_attribute(FlyString const& name);
     DOM::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
-    NamedNodeMap const* attributes() const { return m_attributes.cell(); }
+    NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<String> get_attribute_names() const;
 
     DOMTokenList* class_list();
@@ -115,9 +114,9 @@ public:
 
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
-    ShadowRoot* shadow_root() { return m_shadow_root; }
-    ShadowRoot const* shadow_root() const { return m_shadow_root; }
-    void set_shadow_root(RefPtr<ShadowRoot>);
+    ShadowRoot* shadow_root() { return m_shadow_root.ptr(); }
+    ShadowRoot const* shadow_root() const { return m_shadow_root.ptr(); }
+    void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
     void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
     HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
@@ -145,22 +144,23 @@ public:
 protected:
     virtual void children_changed() override;
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     void make_html_uppercased_qualified_name();
 
     QualifiedName m_qualified_name;
     String m_html_uppercased_qualified_name;
-    JS::Handle<NamedNodeMap> m_attributes;
 
-    JS::Handle<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
+    JS::NonnullGCPtr<NamedNodeMap> m_attributes;
+    JS::GCPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
+    JS::GCPtr<DOMTokenList> m_class_list;
+    JS::GCPtr<ShadowRoot> m_shadow_root;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
-    JS::Handle<DOMTokenList> m_class_list;
     Vector<FlyString> m_classes;
-
-    RefPtr<ShadowRoot> m_shadow_root;
 
     Array<RefPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
 };
@@ -171,3 +171,5 @@ inline bool Node::fast_is<Element>() const { return is_element(); }
 ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name);
 
 }
+
+WRAPPER_HACK(Element, Web::DOM)

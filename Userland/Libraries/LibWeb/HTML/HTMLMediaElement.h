@@ -11,13 +11,17 @@
 namespace Web::HTML {
 
 class HTMLMediaElement : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLMediaElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLMediaElement, HTMLElement);
 
-    HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLMediaElement() override;
 
     Bindings::CanPlayTypeResult can_play_type(String const& type) const;
+
+protected:
+    HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLMediaElement, Web::HTML)

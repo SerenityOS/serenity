@@ -12,10 +12,9 @@
 namespace Web::DOM {
 
 class ProcessingInstruction final : public CharacterData {
-public:
-    using WrapperType = Bindings::ProcessingInstructionWrapper;
+    WEB_PLATFORM_OBJECT(ProcessingInstruction, CharacterData);
 
-    ProcessingInstruction(Document&, String const& data, String const& target);
+public:
     virtual ~ProcessingInstruction() override = default;
 
     virtual FlyString node_name() const override { return m_target; }
@@ -23,6 +22,8 @@ public:
     String const& target() const { return m_target; }
 
 private:
+    ProcessingInstruction(Document&, String const& data, String const& target);
+
     String m_target;
 };
 
@@ -30,3 +31,5 @@ template<>
 inline bool Node::fast_is<ProcessingInstruction>() const { return node_type() == (u16)NodeType::PROCESSING_INSTRUCTION_NODE; }
 
 }
+
+WRAPPER_HACK(ProcessingInstruction, Web::DOM)

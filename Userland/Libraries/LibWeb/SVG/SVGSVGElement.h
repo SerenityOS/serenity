@@ -13,11 +13,9 @@
 namespace Web::SVG {
 
 class SVGSVGElement final : public SVGGraphicsElement {
+    WEB_PLATFORM_OBJECT(SVGSVGElement, SVGGraphicsElement);
+
 public:
-    using WrapperType = Bindings::SVGSVGElementWrapper;
-
-    SVGSVGElement(DOM::Document&, DOM::QualifiedName);
-
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
@@ -28,6 +26,8 @@ public:
     Optional<ViewBox> const& view_box() const { return m_view_box; }
 
 private:
+    SVGSVGElement(DOM::Document&, DOM::QualifiedName);
+
     virtual bool is_svg_svg_element() const override { return true; }
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -43,3 +43,5 @@ template<>
 inline bool Node::fast_is<SVG::SVGSVGElement>() const { return is_svg_svg_element(); }
 
 }
+
+WRAPPER_HACK(SVGSVGElement, Web::SVG)

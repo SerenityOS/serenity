@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLInputElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -24,6 +25,8 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_value(String::empty())
 {
+    set_prototype(&window().ensure_web_prototype<Bindings::HTMLInputElementPrototype>("HTMLInputElement"));
+
     activation_behavior = [this](auto&) {
         // The activation behavior for input elements are these steps:
 
@@ -35,6 +38,13 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
 }
 
 HTMLInputElement::~HTMLInputElement() = default;
+
+void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_text_node.ptr());
+    visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
+}
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
@@ -90,17 +100,17 @@ void HTMLInputElement::run_input_activation_behavior()
             return;
 
         // 2. Fire an event named input at the element with the bubbles and composed attributes initialized to true.
-        auto input_event = DOM::Event::create(document().preferred_window_object(), HTML::EventNames::input);
+        auto input_event = DOM::Event::create(document().window(), HTML::EventNames::input);
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
 
         // 3. Fire an event named change at the element with the bubbles attribute initialized to true.
-        auto change_event = DOM::Event::create(document().preferred_window_object(), HTML::EventNames::change);
+        auto change_event = DOM::Event::create(document().window(), HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(*change_event);
     } else if (type_state() == TypeAttributeState::SubmitButton) {
-        RefPtr<HTMLFormElement> form;
+        JS::GCPtr<HTMLFormElement> form;
         // 1. If the element does not have a form owner, then return.
         if (!(form = this->form()))
             return;
@@ -112,7 +122,7 @@ void HTMLInputElement::run_input_activation_behavior()
         // 3. Submit the form owner from the element.
         form->submit_form(this);
     } else {
-        dispatch_event(*DOM::Event::create(document().preferred_window_object(), EventNames::change));
+        dispatch_event(*DOM::Event::create(document().window(), EventNames::change));
     }
 }
 
@@ -125,13 +135,13 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
     //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto input_event = DOM::Event::create(document().preferred_window_object(), HTML::EventNames::input);
+        auto input_event = DOM::Event::create(document().window(), HTML::EventNames::input);
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
 
         // FIXME: This should only fire when the input is "committed", whatever that means.
-        auto change_event = DOM::Event::create(document().preferred_window_object(), HTML::EventNames::change);
+        auto change_event = DOM::Event::create(document().window(), HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(*change_event);
     });
@@ -184,13 +194,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
+    auto* shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
     element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px");
-    m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
+    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_text_node->set_always_editable(true);
     m_text_node->set_owner_input_element({}, *this);
     element->append_child(*m_text_node);
@@ -348,7 +358,7 @@ void HTMLInputElement::legacy_pre_activation_behavior()
 
         document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
             if (element.checked() && element.name() == name) {
-                m_legacy_pre_activation_behavior_checked_element_in_group = element;
+                m_legacy_pre_activation_behavior_checked_element_in_group = &element;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;

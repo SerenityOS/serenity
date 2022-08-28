@@ -11,11 +11,15 @@
 namespace Web::HTML {
 
 class HTMLModElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLModElementWrapper;
+    WEB_PLATFORM_OBJECT(HTMLModElement, HTMLElement);
 
-    HTMLModElement(DOM::Document&, DOM::QualifiedName);
+public:
     virtual ~HTMLModElement() override;
+
+private:
+    HTMLModElement(DOM::Document&, DOM::QualifiedName);
 };
 
 }
+
+WRAPPER_HACK(HTMLModElement, Web::HTML)

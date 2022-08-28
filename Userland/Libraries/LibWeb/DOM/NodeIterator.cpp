@@ -7,15 +7,14 @@
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/NodeIteratorPrototype.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeIterator.h>
 
 namespace Web::DOM {
 
 NodeIterator::NodeIterator(Node& root)
-    : PlatformObject(root.document().preferred_window_object().ensure_web_prototype<Bindings::NodeIteratorPrototype>("NodeIterator"))
+    : PlatformObject(root.document().window().ensure_web_prototype<Bindings::NodeIteratorPrototype>("NodeIterator"))
     , m_root(root)
     , m_reference({ root })
 {
@@ -31,6 +30,11 @@ void NodeIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_filter.ptr());
+    visitor.visit(m_root.ptr());
+    visitor.visit(m_reference.node.ptr());
+
+    if (m_traversal_pointer.has_value())
+        visitor.visit(m_traversal_pointer->node.ptr());
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
@@ -39,7 +43,7 @@ JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to
     // 1. Let iterator be a new NodeIterator object.
     // 2. Set iterator’s root and iterator’s reference to root.
     // 3. Set iterator’s pointer before reference to true.
-    auto& window_object = root.document().preferred_window_object();
+    auto& window_object = root.document().window();
     auto* iterator = window_object.heap().allocate<NodeIterator>(window_object.realm(), root);
 
     // 4. Set iterator’s whatToShow to whatToShow.
@@ -60,13 +64,13 @@ void NodeIterator::detach()
 }
 
 // https://dom.spec.whatwg.org/#concept-nodeiterator-traverse
-JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
+JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::traverse(Direction direction)
 {
     // 1. Let node be iterator’s reference.
     // 2. Let beforeNode be iterator’s pointer before reference.
     m_traversal_pointer = m_reference;
 
-    RefPtr<Node> candidate;
+    JS::GCPtr<Node> candidate;
 
     // 3. While true:
     while (true) {
@@ -79,7 +83,7 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
                 auto* next_node = m_traversal_pointer->node->next_in_pre_order(m_root.ptr());
                 if (!next_node)
                     return nullptr;
-                m_traversal_pointer->node = *next_node;
+                m_traversal_pointer->node = next_node;
             } else {
                 // If beforeNode is true, then set it to false.
                 m_traversal_pointer->is_before_node = false;
@@ -89,12 +93,12 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
             // If beforeNode is true, then set node to the first node preceding node in iterator’s iterator collection.
             // If there is no such node, then return null.
             if (m_traversal_pointer->is_before_node) {
-                if (m_traversal_pointer->node == m_root.ptr())
+                if (m_traversal_pointer->node.ptr() == m_root.ptr())
                     return nullptr;
                 auto* previous_node = m_traversal_pointer->node->previous_in_pre_order();
                 if (!previous_node)
                     return nullptr;
-                m_traversal_pointer->node = *previous_node;
+                m_traversal_pointer->node = previous_node;
             } else {
                 // If beforeNode is false, then set it to true.
                 m_traversal_pointer->is_before_node = true;
@@ -161,13 +165,13 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-nodeiterator-nextnode
-JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::next_node()
+JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::next_node()
 {
     return traverse(Direction::Next);
 }
 
 // https://dom.spec.whatwg.org/#dom-nodeiterator-previousnode
-JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::previous_node()
+JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::previous_node()
 {
     return traverse(Direction::Previous);
 }
@@ -189,7 +193,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
             while (node && node->is_descendant_of(to_be_removed_node))
                 node = node->next_in_pre_order(root());
             if (node)
-                pointer.node = *node;
+                pointer.node = node;
             return;
         }
         if (auto* node = to_be_removed_node.previous_in_pre_order()) {
@@ -213,7 +217,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
                 node = node->previous_in_pre_order();
         }
         if (node)
-            pointer.node = *node;
+            pointer.node = node;
         return;
     }
     auto* node = to_be_removed_node.next_in_pre_order(root());
@@ -222,7 +226,7 @@ void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_
             node = node->previous_in_pre_order();
     }
     if (node)
-        pointer.node = *node;
+        pointer.node = node;
 }
 
 // https://dom.spec.whatwg.org/#nodeiterator-pre-removing-steps
