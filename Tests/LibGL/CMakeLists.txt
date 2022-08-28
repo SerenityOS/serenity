@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     TestAPI.cpp
     TestRender.cpp
+    TestShaders.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
