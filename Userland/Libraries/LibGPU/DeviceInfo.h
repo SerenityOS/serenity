@@ -18,6 +18,7 @@ struct DeviceInfo final {
     unsigned max_clip_planes;
     u8 stencil_bits;
     bool supports_npot_textures;
+    bool supports_texture_env_add;
 };
 
 }
