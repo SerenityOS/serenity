@@ -235,7 +235,9 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             }
 
             u128 bits;
-            (void)argument.as_bigint().big_integer().export_data({ bit_cast<u8*>(&bits), sizeof(bits) });
+            (void)argument.as_bigint().big_integer().unsigned_value().export_data({ bit_cast<u8*>(&bits), sizeof(bits) });
+            VERIFY(!argument.as_bigint().big_integer().is_negative());
+
             arguments.append(Wasm::Value(bits));
             break;
         }
@@ -269,7 +271,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             [](auto const& value) { return JS::Value(static_cast<double>(value)); },
             [](i32 value) { return JS::Value(static_cast<double>(value)); },
             [&](i64 value) { return JS::Value(JS::BigInt::create(vm, Crypto::SignedBigInteger { value })); },
-            [&](u128 value) { return JS::Value(JS::BigInt::create(vm, Crypto::SignedBigInteger::import_data(bit_cast<u8 const*>(&value), sizeof(value)))); },
+            [&](u128 value) {
+                auto unsigned_bigint_value = Crypto::UnsignedBigInteger::import_data(bit_cast<u8 const*>(&value), sizeof(value));
+                return JS::Value(JS::BigInt::create(vm, Crypto::SignedBigInteger(move(unsigned_bigint_value), false)));
+            },
             [](Wasm::Reference const& reference) {
                 return reference.ref().visit(
                     [](const Wasm::Reference::Null&) { return JS::js_null(); },
