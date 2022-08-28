@@ -16,6 +16,8 @@ namespace JS {
 class GlobalObject : public Object {
     JS_OBJECT(GlobalObject, Object);
 
+    friend class Intrinsics;
+
 public:
     explicit GlobalObject(Realm&);
     virtual void initialize(Realm&) override;

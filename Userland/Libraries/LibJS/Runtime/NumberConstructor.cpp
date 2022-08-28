@@ -41,10 +41,8 @@ void NumberConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.isInteger, is_integer, 1, attr);
     define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
     define_native_function(realm, vm.names.isSafeInteger, is_safe_integer, 1, attr);
-    // NOTE: These are set from the global object as at this point we don't have them allocated yet;
-    //       The native functions are part of the global object itself.
-    define_direct_property(vm.names.parseInt, js_undefined(), attr);
-    define_direct_property(vm.names.parseFloat, js_undefined(), attr);
+    define_direct_property(vm.names.parseInt, realm.intrinsics().parse_int_function(), attr);
+    define_direct_property(vm.names.parseFloat, realm.intrinsics().parse_float_function(), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
     define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);

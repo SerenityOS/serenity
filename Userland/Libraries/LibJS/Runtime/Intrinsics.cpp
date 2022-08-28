@@ -206,6 +206,19 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     m_proxy_constructor = heap().allocate<ProxyConstructor>(realm, realm);
 
+    // Global object functions
+    m_eval_function = NativeFunction::create(realm, GlobalObject::eval, 1, vm.names.eval, &realm);
+    m_is_finite_function = NativeFunction::create(realm, GlobalObject::is_finite, 1, vm.names.isFinite, &realm);
+    m_is_nan_function = NativeFunction::create(realm, GlobalObject::is_nan, 1, vm.names.isNaN, &realm);
+    m_parse_float_function = NativeFunction::create(realm, GlobalObject::parse_float, 1, vm.names.parseFloat, &realm);
+    m_parse_int_function = NativeFunction::create(realm, GlobalObject::parse_int, 2, vm.names.parseInt, &realm);
+    m_decode_uri_function = NativeFunction::create(realm, GlobalObject::decode_uri, 1, vm.names.decodeURI, &realm);
+    m_decode_uri_component_function = NativeFunction::create(realm, GlobalObject::decode_uri_component, 1, vm.names.decodeURIComponent, &realm);
+    m_encode_uri_function = NativeFunction::create(realm, GlobalObject::encode_uri, 1, vm.names.encodeURI, &realm);
+    m_encode_uri_component_function = NativeFunction::create(realm, GlobalObject::encode_uri_component, 1, vm.names.encodeURIComponent, &realm);
+    m_escape_function = NativeFunction::create(realm, GlobalObject::escape, 1, vm.names.escape, &realm);
+    m_unescape_function = NativeFunction::create(realm, GlobalObject::unescape, 1, vm.names.unescape, &realm);
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)         \
     /* These are the prototypes allocated earlier, everything else must not yet exist.*/         \
     if constexpr (!IsOneOf<PrototypeName, ErrorPrototype, FunctionPrototype, ObjectPrototype>) { \

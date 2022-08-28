@@ -100,15 +100,15 @@ void GlobalObject::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     // 19.2 Function Properties of the Global Object, https://tc39.es/ecma262/#sec-function-properties-of-the-global-object
-    define_native_function(realm, vm.names.eval, eval, 1, attr);
-    define_native_function(realm, vm.names.isFinite, is_finite, 1, attr);
-    define_native_function(realm, vm.names.isNaN, is_nan, 1, attr);
-    define_native_function(realm, vm.names.parseFloat, parse_float, 1, attr);
-    define_native_function(realm, vm.names.parseInt, parse_int, 2, attr);
-    define_native_function(realm, vm.names.decodeURI, decode_uri, 1, attr);
-    define_native_function(realm, vm.names.decodeURIComponent, decode_uri_component, 1, attr);
-    define_native_function(realm, vm.names.encodeURI, encode_uri, 1, attr);
-    define_native_function(realm, vm.names.encodeURIComponent, encode_uri_component, 1, attr);
+    define_direct_property(vm.names.eval, realm.intrinsics().eval_function(), attr);
+    define_direct_property(vm.names.isFinite, realm.intrinsics().is_finite_function(), attr);
+    define_direct_property(vm.names.isNaN, realm.intrinsics().is_nan_function(), attr);
+    define_direct_property(vm.names.parseFloat, realm.intrinsics().parse_float_function(), attr);
+    define_direct_property(vm.names.parseInt, realm.intrinsics().parse_int_function(), attr);
+    define_direct_property(vm.names.decodeURI, realm.intrinsics().decode_uri_function(), attr);
+    define_direct_property(vm.names.decodeURIComponent, realm.intrinsics().decode_uri_component_function(), attr);
+    define_direct_property(vm.names.encodeURI, realm.intrinsics().encode_uri_function(), attr);
+    define_direct_property(vm.names.encodeURIComponent, realm.intrinsics().encode_uri_component_function(), attr);
 
     // 19.1 Value Properties of the Global Object, https://tc39.es/ecma262/#sec-value-properties-of-the-global-object
     define_direct_property(vm.names.globalThis, this, attr);
@@ -167,18 +167,13 @@ void GlobalObject::initialize(Realm& realm)
     define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(realm, realm), attr);
 
     // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
-    define_native_function(realm, vm.names.escape, escape, 1, attr);
-    define_native_function(realm, vm.names.unescape, unescape, 1, attr);
+    define_direct_property(vm.names.escape, realm.intrinsics().escape_function(), attr);
+    define_direct_property(vm.names.unescape, realm.intrinsics().unescape_function(), attr);
 
     // Non-standard
     define_direct_property(vm.names.InternalError, realm.intrinsics().internal_error_constructor(), attr);
     define_direct_property(vm.names.console, realm.intrinsics().console_object(), attr);
     define_native_function(realm, vm.names.gc, gc, 0, attr);
-
-    // Assign intrinsics and functions that depend on the GlobalObject's native functions
-    realm.intrinsics().m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
-    realm.intrinsics().m_number_constructor->define_direct_property(vm.names.parseInt, get_without_side_effects(vm.names.parseInt), attr);
-    realm.intrinsics().m_number_constructor->define_direct_property(vm.names.parseFloat, get_without_side_effects(vm.names.parseFloat), attr);
 }
 
 GlobalObject::~GlobalObject() = default;
