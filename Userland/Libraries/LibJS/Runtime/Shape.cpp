@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Heap/DeferGC.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

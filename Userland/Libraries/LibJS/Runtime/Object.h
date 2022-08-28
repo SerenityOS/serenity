@@ -186,8 +186,6 @@ public:
     Shape& shape() { return *m_shape; }
     Shape const& shape() const { return *m_shape; }
 
-    GlobalObject& global_object() const;
-
     void ensure_shape_is_unique();
 
     template<typename T>

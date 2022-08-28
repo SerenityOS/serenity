@@ -34,11 +34,6 @@ Object* Object::create(Realm& realm, Object* prototype)
         return realm.heap().allocate<Object>(realm, *prototype);
 }
 
-GlobalObject& Object::global_object() const
-{
-    return *shape().global_object();
-}
-
 Object::Object(GlobalObjectTag, Realm& realm)
 {
     // This is the global object

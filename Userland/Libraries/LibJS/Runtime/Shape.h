@@ -62,7 +62,6 @@ public:
     Shape* create_unique_clone() const;
 
     Realm& realm() const { return m_realm; }
-    GlobalObject* global_object() const;
 
     Object* prototype() { return m_prototype; }
     Object const* prototype() const { return m_prototype; }
