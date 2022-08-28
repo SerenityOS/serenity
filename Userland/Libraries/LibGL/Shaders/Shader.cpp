@@ -28,4 +28,26 @@ ErrorOr<void> Shader::compile()
     return {};
 }
 
+size_t Shader::info_log_length() const
+{
+    if (!m_info_log.has_value())
+        return 0;
+
+    // Per the spec we return the size including the null terminator
+    return m_info_log.value().bytes().size() + 1;
+}
+
+size_t Shader::combined_source_length() const
+{
+    if (m_sources.is_empty())
+        return 0;
+
+    size_t combined_size = 0;
+    for (auto source : m_sources)
+        combined_size += source.bytes().size();
+
+    // Per the spec we return the size including the null terminator
+    return combined_size + 1;
+}
+
 }

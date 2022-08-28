@@ -44,10 +44,16 @@ TEST_CASE(0001_program_creation)
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_source, nullptr);
     glCompileShader(vertex_shader);
+    GLint vertex_shader_compile_status;
+    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &vertex_shader_compile_status);
+    EXPECT_EQ(vertex_shader_compile_status, GL_TRUE);
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
     glCompileShader(fragment_shader);
+    GLint fragment_shader_compile_status;
+    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &fragment_shader_compile_status);
+    EXPECT_EQ(fragment_shader_compile_status, GL_TRUE);
 
     program = glCreateProgram();
     glAttachShader(program, vertex_shader);

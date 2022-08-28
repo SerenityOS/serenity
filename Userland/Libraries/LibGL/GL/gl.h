@@ -603,6 +603,11 @@ extern "C" {
 // Programmable pipeline
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_VERTEX_SHADER 0x8B31
+#define GL_SHADER_TYPE 0x8B4F
+#define GL_DELETE_STATUS 0x8B80
+#define GL_COMPILE_STATUS 0x8B81
+#define GL_INFO_LOG_LENGTH 0x8B84
+#define GL_SHADER_SOURCE_LENGTH 0x8B88
 
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
@@ -820,6 +825,7 @@ GLAPI GLuint glCreateShader(GLenum shader_type);
 GLAPI void glDeleteShader(GLuint shader);
 GLAPI void glShaderSource(GLuint shader, GLsizei count, GLchar const** string, GLint const* length);
 GLAPI void glCompileShader(GLuint shader);
+GLAPI void glGetShaderiv(GLuint shader, GLenum pname, GLint* params);
 
 GLAPI GLuint glCreateProgram();
 GLAPI void glDeleteProgram(GLuint program);
