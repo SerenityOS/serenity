@@ -11,7 +11,6 @@
 #include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
-#include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -85,7 +84,6 @@ namespace JS {
 
 GlobalObject::GlobalObject(Realm& realm)
     : Object(GlobalObjectTag::Tag, realm)
-    , m_console(make<Console>(realm.vm()))
 {
 }
 

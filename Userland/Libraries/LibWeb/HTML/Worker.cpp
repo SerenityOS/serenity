@@ -5,6 +5,7 @@
  */
 
 #include <AK/String.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WorkerWrapper.h>
@@ -114,10 +115,11 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             return m_worker_scope;
         },
         nullptr);
-    m_worker_realm = realm_execution_context->realm;
 
-    m_console = adopt_ref(*new WorkerDebugConsoleClient(m_worker_scope->console()));
-    m_worker_scope->console().set_client(*m_console);
+    auto& console_object = *realm_execution_context->realm->intrinsics().console_object();
+    m_worker_realm = realm_execution_context->realm;
+    m_console = adopt_ref(*new WorkerDebugConsoleClient(console_object.console()));
+    console_object.console().set_client(*m_console);
 
     // FIXME: This should be done with IDL
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;

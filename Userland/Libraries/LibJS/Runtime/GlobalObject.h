@@ -22,8 +22,6 @@ public:
 
     virtual ~GlobalObject() override;
 
-    Console& console() { return *m_console; }
-
 private:
     virtual bool is_global_object() const final { return true; }
 
@@ -39,8 +37,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(decode_uri_component);
     JS_DECLARE_NATIVE_FUNCTION(escape);
     JS_DECLARE_NATIVE_FUNCTION(unescape);
-
-    NonnullOwnPtr<Console> m_console;
 };
 
 inline GlobalObject* Shape::global_object() const
