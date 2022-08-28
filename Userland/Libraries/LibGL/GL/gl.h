@@ -600,6 +600,9 @@ extern "C" {
 #define GL_DYNAMIC_DRAW 0x88e8
 #define GL_DYNAMIC_READ 0x88e9
 #define GL_DYNAMIC_COPY 0x88ea
+// Programmable pipeline
+#define GL_FRAGMENT_SHADER 0x8B30
+#define GL_VERTEX_SHADER 0x8B31
 
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
