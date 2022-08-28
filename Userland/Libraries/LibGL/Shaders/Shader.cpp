@@ -6,6 +6,7 @@
 
 #include <AK/String.h>
 #include <LibGL/Shaders/Shader.h>
+#include <LibGLSL/Compiler.h>
 
 namespace GL {
 
@@ -23,8 +24,22 @@ ErrorOr<void> Shader::add_source(StringView source_code)
 
 ErrorOr<void> Shader::compile()
 {
-    // FIXME: Implement actual shader compilation
+    m_info_log = TRY(String::from_utf8(""sv));
+
+    GLSL::Compiler compiler;
+
+    auto object_file_or_error = compiler.compile(m_sources);
+
+    if (object_file_or_error.is_error()) {
+        m_compile_status = false;
+        m_info_log = compiler.messages();
+        return object_file_or_error.error();
+    }
+
+    m_object_file = object_file_or_error.release_value();
+
     m_compile_status = true;
+
     return {};
 }
 

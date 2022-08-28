@@ -6,6 +6,7 @@
 
 #include <LibGL/GL/gl.h>
 #include <LibGL/Shaders/Program.h>
+#include <LibGLSL/Linker.h>
 
 namespace GL {
 
@@ -49,7 +50,42 @@ ErrorOr<void> Program::attach_shader(Shader& shader)
 
 ErrorOr<void> Program::link()
 {
-    // FIXME: Implement actual program linker
+    m_info_log = TRY(String::from_utf8(""sv));
+
+    GLSL::Linker linker;
+
+    // Link vertex shader objects
+
+    Vector<GLSL::ObjectFile const*> vertex_shader_object_files;
+    for (auto vertex_shader : m_vertex_shaders)
+        vertex_shader_object_files.append(vertex_shader->object_file());
+
+    auto linked_vertex_shader_or_error = linker.link(vertex_shader_object_files);
+
+    if (linked_vertex_shader_or_error.is_error()) {
+        m_link_status = false;
+        m_info_log = linker.messages();
+        return linked_vertex_shader_or_error.error();
+    }
+
+    m_linked_vertex_shader = linked_vertex_shader_or_error.release_value();
+
+    // Link fragment shader objects
+
+    Vector<GLSL::ObjectFile const*> fragment_shader_object_files;
+    for (auto fragment_shader : m_fragment_shaders)
+        fragment_shader_object_files.append(fragment_shader->object_file());
+
+    auto linked_fragment_shader_or_error = linker.link(fragment_shader_object_files);
+
+    if (linked_fragment_shader_or_error.is_error()) {
+        m_link_status = false;
+        m_info_log = linker.messages();
+        return linked_fragment_shader_or_error.error();
+    }
+
+    m_linked_fragment_shader = linked_fragment_shader_or_error.release_value();
+
     m_link_status = true;
     return {};
 }
