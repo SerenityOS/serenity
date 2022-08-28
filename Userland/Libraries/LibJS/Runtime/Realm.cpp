@@ -75,7 +75,7 @@ ThrowCompletionOr<NonnullOwnPtr<ExecutionContext>> Realm::initialize_host_define
 
     // 10. Let globalObj be ? SetDefaultGlobalBindings(realm).
     // 11. Create any host-defined global object properties on globalObj.
-    realm->global_object().initialize_global_object(*realm);
+    realm->global_object().initialize(*realm);
 
     // 12. Return unused.
     return new_context;

@@ -194,15 +194,14 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-
+    virtual void initialize(JS::Realm&) override;
     virtual ~TestRunnerGlobalObject() override = default;
-
-    virtual void initialize_global_object(JS::Realm&) override;
 };
 
-inline void TestRunnerGlobalObject::initialize_global_object(JS::Realm& realm)
+inline void TestRunnerGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize_global_object(realm);
+    Base::initialize(realm);
+
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
         define_native_function(

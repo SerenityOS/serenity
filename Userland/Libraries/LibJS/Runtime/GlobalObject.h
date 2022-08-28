@@ -18,8 +18,7 @@ class GlobalObject : public Object {
 
 public:
     explicit GlobalObject(Realm&);
-    virtual void initialize_global_object(Realm&);
-
+    virtual void initialize(Realm&) override;
     virtual ~GlobalObject() override;
 
 private:

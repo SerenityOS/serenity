@@ -88,8 +88,10 @@ GlobalObject::GlobalObject(Realm& realm)
 }
 
 // 9.3.4 SetDefaultGlobalBindings ( realmRec ), https://tc39.es/ecma262/#sec-setdefaultglobalbindings
-void GlobalObject::initialize_global_object(Realm& realm)
+void GlobalObject::initialize(Realm& realm)
 {
+    Base::initialize(realm);
+
     auto& vm = this->vm();
 
     ensure_shape_is_unique();
