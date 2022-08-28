@@ -14,7 +14,7 @@ class GlobalEnvironment final : public Environment {
     JS_ENVIRONMENT(GlobalEnvironment, Environment);
 
 public:
-    GlobalEnvironment(GlobalObject&, Object& this_value);
+    GlobalEnvironment(Object&, Object& this_value);
 
     virtual bool has_this_binding() const final { return true; }
     virtual ThrowCompletionOr<Value> get_this_binding(VM&) const final;
