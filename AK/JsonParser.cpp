@@ -190,6 +190,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
     JsonValue value;
     Vector<char, 128> number_buffer;
     Vector<char, 128> fraction_buffer;
+    Vector<char, 128> exponent_buffer;
 
     bool is_double = false;
     bool all_zero = true;
@@ -231,6 +232,30 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         break;
     }
 
+#ifndef KERNEL
+    if (peek() == 'e' || peek() == 'E') {
+        // Force it to be a double
+        is_double = true;
+        ++m_index;
+
+        for (;;) {
+            char ch = peek();
+            if (ch == '.')
+                return Error::from_string_literal("JsonParser: Error while parsing number");
+            if (ch == '-' || ch == '+' || (ch >= '0' && ch <= '9')) {
+                exponent_buffer.append(ch);
+
+                ++m_index;
+                continue;
+            }
+            break;
+        }
+
+        if (exponent_buffer.is_empty())
+            return Error::from_string_literal("JsonParser: Error while parsing number");
+    }
+#endif
+
     StringView number_string(number_buffer.data(), number_buffer.size());
 
 #ifndef KERNEL
@@ -250,16 +275,29 @@ ErrorOr<JsonValue> JsonParser::parse_number()
                 return Error::from_string_literal("JsonParser: Error while parsing number");
             whole = number.value();
         }
+        double number_value = whole;
 
-        StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
-        auto fraction_string_uint = fraction_string.to_uint<u64>();
-        if (!fraction_string_uint.has_value())
-            return Error::from_string_literal("JsonParser: Error while parsing number");
-        auto fraction = static_cast<double>(fraction_string_uint.value());
-        double sign = (whole < 0) ? -1 : 1;
+        if (!fraction_buffer.is_empty()) {
+            StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
+            auto fraction_string_uint = fraction_string.to_uint<u64>();
+            if (!fraction_string_uint.has_value())
+                return Error::from_string_literal("JsonParser: Error while parsing number");
+            auto fraction = static_cast<double>(fraction_string_uint.value());
+            double sign = (whole < 0) ? -1 : 1;
+            auto divider = pow(10.0, static_cast<double>(fraction_buffer.size()));
+            number_value += sign * (fraction / divider);
+        }
 
-        auto divider = pow(10.0, static_cast<double>(fraction_buffer.size()));
-        value = JsonValue((double)whole + sign * (fraction / divider));
+        if (exponent_buffer.size() > 0) {
+            StringView exponent_string(exponent_buffer.data(), exponent_buffer.size());
+            auto exponent_string_uint = exponent_string.to_int();
+            if (!exponent_string_uint.has_value())
+                return Error::from_string_literal("JsonParser: Error while parsing number");
+            double exponent = pow(10.0, static_cast<double>(exponent_string_uint.value()));
+            number_value *= exponent;
+        }
+
+        value = JsonValue(number_value);
     } else {
 #endif
         auto to_unsigned_result = number_string.to_uint<u64>();
