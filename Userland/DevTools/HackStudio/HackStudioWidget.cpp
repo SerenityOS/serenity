@@ -703,6 +703,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 {
     return GUI::Action::create("&Project...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+        if (warn_unsaved_changes("There are unsaved changes. Would you like to save before creating a new project?") == ContinueDecision::No)
+            return;
+        // If the user wishes to save the changes, this occurs in warn_unsaved_changes. If they do not,
+        // we need to mark the documents as clean so open_project works properly without asking again.
+        for (auto& editor_wrapper : m_all_editor_wrappers)
+            editor_wrapper.editor().document().set_unmodified();
         auto dialog = NewProjectDialog::construct(window());
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
