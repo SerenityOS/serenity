@@ -174,6 +174,13 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
 
         for (auto const& export_entry : export_statement.entries()) {
 
+            // Special case, export {} from "module" should add "module" to
+            // required_modules but not any import or export so skip here.
+            if (export_entry.kind == ExportStatement::ExportEntry::Kind::EmptyNamedExport) {
+                VERIFY(export_statement.entries().size() == 1);
+                break;
+            }
+
             // a. If ee.[[ModuleRequest]] is null, then
             if (!export_entry.is_module_request()) {
 

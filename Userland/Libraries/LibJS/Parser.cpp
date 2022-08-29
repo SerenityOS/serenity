@@ -550,7 +550,7 @@ void Parser::parse_module(Program& program)
         if (export_statement.has_statement())
             continue;
         for (auto& entry : export_statement.entries()) {
-            if (entry.is_module_request())
+            if (entry.is_module_request() || entry.kind == ExportStatement::ExportEntry::Kind::EmptyNamedExport)
                 return;
 
             auto const& exported_name = entry.local_or_import_name;
@@ -4489,6 +4489,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             consume(TokenType::CurlyOpen);
             check_for_from = FromSpecifier::Optional;
 
+            // FIXME: Even when empty should add module to requiredModules!
             while (!done() && !match(TokenType::CurlyClose)) {
                 auto identifier_position = position();
                 auto identifier = parse_module_export_name(true);
@@ -4506,6 +4507,12 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
                     break;
 
                 consume(TokenType::Comma);
+            }
+
+            if (entries_with_location.is_empty()) {
+                // export {} from "module"; Since this will never be a
+                // duplicate we can give a slightly wrong location.
+                entries_with_location.append({ ExportEntry::empty_named_export(), position() });
             }
 
             consume(TokenType::CurlyClose);
@@ -4535,7 +4542,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         }
 
         for (auto& new_entry : entries) {
-            if (new_entry.export_name == entry.entry.export_name)
+            if (new_entry.kind != ExportStatement::ExportEntry::Kind::EmptyNamedExport && new_entry.export_name == entry.entry.export_name)
                 syntax_error(String::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
         }
 

@@ -1,3 +1,4 @@
 Base/home/anon/Source/js
 Userland/Libraries/LibJS/Tests/invalid-lhs-in-assignment.js
 Userland/Libraries/LibJS/Tests/unicode-identifier-escape.js
+Userland/Libraries/LibJS/Tests/modules/failing.mjs
