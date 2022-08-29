@@ -335,13 +335,13 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
+    if (!m_active_tool)
+        return;
+
     auto image_event = event_with_pan_and_scale_applied(event);
     if (on_image_mouse_position_change) {
         on_image_mouse_position_change(image_event.position());
     }
-
-    if (!m_active_tool)
-        return;
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
