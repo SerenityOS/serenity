@@ -211,4 +211,9 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
     return m_properties_widget.ptr();
 }
 
+Gfx::IntPoint RectangleSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint const& position) const
+{
+    return position.to_rounded<int>();
+}
+
 }
