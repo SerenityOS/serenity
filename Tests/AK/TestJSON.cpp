@@ -134,3 +134,12 @@ TEST_CASE(json_parse_long_decimals)
     auto value = JsonValue::from_string("1644452550.6489999294281"sv);
     EXPECT_EQ(value.value().as_double(), 1644452550.6489999294281);
 }
+
+TEST_CASE(json_parse_number_with_exponent)
+{
+    auto value_without_fraction = JsonValue::from_string("10e5"sv);
+    EXPECT_EQ(value_without_fraction.value().as_double(), 1000000.0);
+
+    auto value_with_fraction = JsonValue::from_string("10.5e5"sv);
+    EXPECT_EQ(value_with_fraction.value().as_double(), 1050000.0);
+}
