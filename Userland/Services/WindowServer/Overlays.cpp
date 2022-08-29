@@ -292,7 +292,7 @@ void DndOverlay::update_rect()
     auto& font = this->font();
     int width = font.width(m_text) + bitmap_width;
     int height = max((int)font.glyph_height(), bitmap_height);
-    auto location = Compositor::the().current_cursor_rect().center().translated(8, 8);
+    auto location = ScreenInput::the().cursor_location().translated(8, 8);
     set_rect(Gfx::IntRect(location, { width, height }).inflated(16, 8));
 }
 
