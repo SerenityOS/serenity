@@ -10,6 +10,7 @@
 #include "HackStudio.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -72,6 +73,13 @@ void EditorWrapper::set_filename(String const& filename)
 
 void EditorWrapper::save()
 {
+    if (filename().is_empty()) {
+        auto file_picker_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), "file"sv, "txt"sv, project_root().value());
+            set_filename(save_path.value());
+        });
+        file_picker_action->activate();
+    }
     editor().write_to_file(filename());
     update_diff();
     editor().update();
