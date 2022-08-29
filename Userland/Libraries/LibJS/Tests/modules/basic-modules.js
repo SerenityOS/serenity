@@ -193,3 +193,25 @@ describe("loops", () => {
         expectModulePassed("./loop-entry.mjs");
     });
 });
+
+describe("failing modules cascade", () => {
+    let failingModuleError = "Left-hand side of postfix";
+    test("importing a file with a SyntaxError results in a SyntaxError", () => {
+        expectedModuleToThrowSyntaxError("./failing.mjs", failingModuleError);
+    });
+
+    test("importing a file without a syntax error which imports a file with a syntax error fails", () => {
+        expectedModuleToThrowSyntaxError("./importing-failing-module.mjs", failingModuleError);
+    });
+
+    test("importing a file which re exports a file with a syntax error fails", () => {
+        expectedModuleToThrowSyntaxError("./exporting-from-failing.mjs", failingModuleError);
+    });
+
+    test("importing a file re exports nothing from a file with a syntax error fails", () => {
+        expectedModuleToThrowSyntaxError(
+            "./exporting-nothing-from-failing.mjs",
+            failingModuleError
+        );
+    });
+});

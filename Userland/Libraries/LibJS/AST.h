@@ -360,6 +360,11 @@ public:
             NamedExport,
             ModuleRequestAll,
             ModuleRequestAllButDefault,
+            // EmptyNamedExport is a special type for export {} from "module",
+            // which should import the module without getting any of the exports
+            // however we don't want give it a fake export name which may get
+            // duplicates
+            EmptyNamedExport,
         } kind;
 
         FlyString export_name;          // [[ExportName]]
@@ -408,6 +413,11 @@ public:
         static ExportEntry all_module_request(FlyString export_name)
         {
             return ExportEntry { Kind::ModuleRequestAll, move(export_name), {} };
+        }
+
+        static ExportEntry empty_named_export()
+        {
+            return ExportEntry { Kind::EmptyNamedExport, {}, {} };
         }
     };
 
