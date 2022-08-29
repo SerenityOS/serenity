@@ -246,13 +246,19 @@ public:
         return Point<U>(roundf(x()), roundf(y()));
     }
 
+    template<typename U>
+    requires FloatingPoint<T>
+    [[nodiscard]] Point<U> to_ceiled() const
+    {
+        return Point<U>(ceil(x()), ceil(y()));
+    }
+
     [[nodiscard]] String to_string() const;
 
 private:
     T m_x { 0 };
     T m_y { 0 };
 };
-
 using IntPoint = Point<int>;
 using FloatPoint = Point<float>;
 
