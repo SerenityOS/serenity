@@ -29,7 +29,7 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 
     hostname().with_shared([&](auto const& name) {
         auto length = min(name->length(), UTSNAME_ENTRY_LEN - 1);
-        memcpy(buf.nodename, name->characters(), length);
+        AK::TypedTransfer<char>::copy(reinterpret_cast<char*>(buf.nodename), name->characters(), length);
         buf.nodename[length] = '\0';
     });
 
