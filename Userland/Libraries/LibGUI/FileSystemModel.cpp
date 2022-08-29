@@ -418,6 +418,12 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
             break;
         }
 
+        if (&child.value() == m_root) {
+            // Root directory of the filesystem model has been removed. All items became invalid.
+            invalidate();
+            break;
+        }
+
         auto index = child->index(0);
         begin_delete_rows(index.parent(), index.row(), index.row());
 
