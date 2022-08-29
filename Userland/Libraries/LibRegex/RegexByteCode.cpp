@@ -557,11 +557,14 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                     upper_case_needle = to_ascii_uppercase(needle);
                     lower_case_needle = to_ascii_lowercase(needle);
                 }
-                if (lower_case_needle > range.to && upper_case_needle > range.to)
+
+                if (lower_case_needle >= range.from && lower_case_needle <= range.to)
+                    return 0;
+                if (upper_case_needle >= range.from && upper_case_needle <= range.to)
+                    return 0;
+                if (lower_case_needle > range.to || upper_case_needle > range.to)
                     return 1;
-                if (lower_case_needle < range.from && upper_case_needle < range.from)
-                    return -1;
-                return 0;
+                return -1;
             });
 
             if (matching_range) {
