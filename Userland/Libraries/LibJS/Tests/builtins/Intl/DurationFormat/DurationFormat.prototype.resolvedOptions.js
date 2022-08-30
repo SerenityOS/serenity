@@ -56,7 +56,7 @@ describe("correct behavior", () => {
 
     test("style", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().style).toBe("long");
+        expect(en1.resolvedOptions().style).toBe("short");
 
         ["long", "short", "narrow", "digital"].forEach(style => {
             const en2 = new Intl.DurationFormat("en", { style: style });
@@ -66,7 +66,7 @@ describe("correct behavior", () => {
 
     test("years", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().years).toBe("long");
+        expect(en1.resolvedOptions().years).toBe("short");
 
         ["long", "short", "narrow"].forEach(years => {
             const en2 = new Intl.DurationFormat("en", { years: years });
@@ -86,7 +86,7 @@ describe("correct behavior", () => {
 
     test("months", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().months).toBe("long");
+        expect(en1.resolvedOptions().months).toBe("short");
 
         ["long", "short", "narrow"].forEach(months => {
             const en2 = new Intl.DurationFormat("en", { months: months });
@@ -106,7 +106,7 @@ describe("correct behavior", () => {
 
     test("weeks", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().weeks).toBe("long");
+        expect(en1.resolvedOptions().weeks).toBe("short");
 
         ["long", "short", "narrow"].forEach(weeks => {
             const en2 = new Intl.DurationFormat("en", { weeks: weeks });
@@ -126,7 +126,7 @@ describe("correct behavior", () => {
 
     test("days", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().days).toBe("long");
+        expect(en1.resolvedOptions().days).toBe("short");
 
         ["long", "short", "narrow"].forEach(days => {
             const en2 = new Intl.DurationFormat("en", { days: days });
@@ -146,7 +146,7 @@ describe("correct behavior", () => {
 
     test("hours", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().hours).toBe("long");
+        expect(en1.resolvedOptions().hours).toBe("short");
 
         ["long", "short", "narrow"].forEach(hours => {
             const en2 = new Intl.DurationFormat("en", { hours: hours });
@@ -170,7 +170,7 @@ describe("correct behavior", () => {
 
     test("minutes", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().minutes).toBe("long");
+        expect(en1.resolvedOptions().minutes).toBe("short");
 
         ["long", "short", "narrow"].forEach(minutes => {
             const en2 = new Intl.DurationFormat("en", { minutes: minutes });
@@ -194,7 +194,7 @@ describe("correct behavior", () => {
 
     test("seconds", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().seconds).toBe("long");
+        expect(en1.resolvedOptions().seconds).toBe("short");
 
         ["long", "short", "narrow"].forEach(seconds => {
             const en2 = new Intl.DurationFormat("en", { seconds: seconds });
@@ -218,7 +218,7 @@ describe("correct behavior", () => {
 
     test("milliseconds", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().milliseconds).toBe("long");
+        expect(en1.resolvedOptions().milliseconds).toBe("short");
 
         ["long", "short", "narrow"].forEach(milliseconds => {
             const en2 = new Intl.DurationFormat("en", { milliseconds: milliseconds });
@@ -240,7 +240,7 @@ describe("correct behavior", () => {
 
     test("microseconds", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().microseconds).toBe("long");
+        expect(en1.resolvedOptions().microseconds).toBe("short");
 
         ["long", "short", "narrow"].forEach(microseconds => {
             const en2 = new Intl.DurationFormat("en", { microseconds: microseconds });
@@ -262,7 +262,7 @@ describe("correct behavior", () => {
 
     test("nanoseconds", () => {
         const en1 = new Intl.DurationFormat("en");
-        expect(en1.resolvedOptions().nanoseconds).toBe("long");
+        expect(en1.resolvedOptions().nanoseconds).toBe("short");
 
         ["long", "short", "narrow", "numeric"].forEach(nanoseconds => {
             const en2 = new Intl.DurationFormat("en", { nanoseconds: nanoseconds });
