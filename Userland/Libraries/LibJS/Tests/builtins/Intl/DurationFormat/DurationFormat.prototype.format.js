@@ -17,22 +17,22 @@ describe("correct behavior", () => {
             nanoseconds: 9,
         };
         expect(new Intl.DurationFormat().format(duration)).toBe(
-            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, and 9 ns"
+            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, 9 ns"
         );
         expect(new Intl.DurationFormat("en").format(duration)).toBe(
-            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, and 9 ns"
+            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, 9 ns"
         );
         expect(new Intl.DurationFormat("en", { style: "long" }).format(duration)).toBe(
-            "1 year, 2 months, 3 weeks, 3 days, 4 hours, 5 minutes, 6 seconds, 7 milliseconds, 8 microseconds, and 9 nanoseconds"
+            "1 year, 2 months, 3 weeks, 3 days, 4 hours, 5 minutes, 6 seconds, 7 milliseconds, 8 microseconds, 9 nanoseconds"
         );
         expect(new Intl.DurationFormat("en", { style: "short" }).format(duration)).toBe(
-            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, and 9 ns"
+            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, 9 ns"
         );
         expect(new Intl.DurationFormat("en", { style: "narrow" }).format(duration)).toBe(
-            "1y, 2m, 3w, 3d, 4h, 5m, 6s, 7ms, 8μs, and 9ns"
+            "1y 2m 3w 3d 4h 5m 6s 7ms 8μs 9ns"
         );
         expect(new Intl.DurationFormat("en", { style: "digital" }).format(duration)).toBe(
-            "1y, 2m, 3w, 3d, and 4:05:06"
+            "1y 2m 3w 3d 4:05:06"
         );
         expect(
             new Intl.DurationFormat("en", {
@@ -40,7 +40,7 @@ describe("correct behavior", () => {
                 nanoseconds: "numeric",
                 fractionalDigits: 3,
             }).format(duration)
-        ).toBe("1y, 2m, 3w, 3d, 4h, 5m, 6s, 7ms, and 8.009μs");
+        ).toBe("1y 2m 3w 3d 4h 5m 6s 7ms 8.009μs");
 
         expect(new Intl.DurationFormat("de", { style: "long" }).format(duration)).toBe(
             "1 Jahr, 2 Monate, 3 Wochen, 3 Tage, 4 Stunden, 5 Minuten, 6 Sekunden, 7 Millisekunden, 8 Mikrosekunden und 9 Nanosekunden"

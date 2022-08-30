@@ -61,6 +61,7 @@ public:
     String const& numbering_system() const { return m_numbering_system; }
 
     void set_style(StringView style) { m_style = style_from_string(style); }
+    Style style() const { return m_style; }
     String style_string() const { return style_to_string(m_style); }
 
     void set_years_style(StringView years_style) { m_years_style = date_style_from_string(years_style); }
