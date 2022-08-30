@@ -135,10 +135,19 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
 
 void Layer::erase_selection(Selection const& selection)
 {
-    Gfx::Painter painter { content_bitmap() };
     auto const image_and_selection_intersection = m_image.rect().intersected(selection.bounding_rect());
     auto const translated_to_layer_space = image_and_selection_intersection.translated(-location());
-    painter.clear_rect(translated_to_layer_space, Color::Transparent);
+
+    for (int y = translated_to_layer_space.top(); y < translated_to_layer_space.top() + translated_to_layer_space.height(); ++y) {
+        for (int x = translated_to_layer_space.left(); x < translated_to_layer_space.left() + translated_to_layer_space.width(); ++x) {
+
+            // Selection is still in pre-translated coordinates, account for this by adding the layer's relative location
+            if (selection.is_selected(x + location().x(), y + location().y())) {
+                content_bitmap().set_pixel(x, y, Color::Transparent);
+            }
+        }
+    }
+
     did_modify_bitmap(translated_to_layer_space);
 }
 
