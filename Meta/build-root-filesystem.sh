@@ -148,11 +148,6 @@ printf "setting up sysfs folder... "
 mkdir -p mnt/sys
 echo "done"
 
-printf "writing version file... "
-GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | cut -c1-7) || true )
-printf "[Version]\nMajor=1\nMinor=0\nGit=%s\n" "$GIT_HASH" > mnt/res/version.ini
-echo "done"
-
 printf "installing users... "
 mkdir -p mnt/root
 mkdir -p mnt/home/anon
