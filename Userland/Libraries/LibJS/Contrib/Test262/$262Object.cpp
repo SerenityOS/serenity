@@ -80,12 +80,30 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
 
 JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
 {
-    auto source = TRY(vm.argument(0).to_string(vm));
-    auto script_or_error = Script::parse(source, *vm.current_realm());
-    if (script_or_error.is_error())
-        return vm.throw_completion<SyntaxError>(script_or_error.error()[0].to_string());
-    TRY(vm.interpreter().run(script_or_error.value()));
-    return js_undefined();
+    auto source_text = TRY(vm.argument(0).to_string(vm));
+
+    // 1. Let hostDefined be any host-defined values for the provided sourceText (obtained in an implementation dependent manner)
+
+    // 2. Let realm be the current Realm Record.
+    auto& realm = *vm.current_realm();
+
+    // 3. Let s be ParseScript(sourceText, realm, hostDefined).
+    auto script_or_error = Script::parse(source_text, realm);
+
+    // 4. If s is a List of errors, then
+    if (script_or_error.is_error()) {
+        // a. Let error be the first element of s.
+        auto& error = script_or_error.error()[0];
+
+        // b. Return Completion { [[Type]]: throw, [[Value]]: error, [[Target]]: empty }.
+        return vm.throw_completion<SyntaxError>(error.to_string());
+    }
+
+    // 5. Let status be ScriptEvaluation(s).
+    auto status = vm.interpreter().run(script_or_error.value());
+
+    // 6. Return Completion(status).
+    return status;
 }
 
 }
