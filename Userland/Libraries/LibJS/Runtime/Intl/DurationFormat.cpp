@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -311,174 +312,186 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
 
-    // 2. For each row in Table 1, except the header row, in table order, do
-    for (size_t i = 0; i < duration_instances_components.size(); ++i) {
+    // 2. Let done be false.
+    bool done = false;
+
+    // 3. While done is false, repeat for each row in Table 1 in order, except the header row:
+    for (size_t i = 0; !done && i < duration_instances_components.size(); ++i) {
         auto const& duration_instances_component = duration_instances_components[i];
 
         // a. Let styleSlot be the Style Slot value.
         auto style_slot = duration_instances_component.get_style_slot;
 
-        decltype(DurationInstanceComponent::get_style_slot) next_style_slot = nullptr;
-        // FIXME: Missing spec step - If this is not the last row
-        if (i < duration_instances_components.size() - 1) {
-            // b. Let nextStyleSlot be the Style Slot value of the next row.
-            next_style_slot = duration_instances_components[i + 1].get_style_slot;
-        }
-
-        // c. Let displaySlot be the Display Slot value.
+        // b. Let displaySlot be the Display Slot value.
         auto display_slot = duration_instances_component.get_display_slot;
 
-        // d. Let valueSlot be the Value Slot value.
+        // c. Let valueSlot be the Value Slot value.
         auto value_slot = duration_instances_component.value_slot;
 
-        // e. Let unit be the Unit value.
+        // d. Let unit be the Unit value.
         auto unit = duration_instances_component.unit;
 
-        // f. Let style be the current value of the styleSlot slot of durationFormat.
+        // e. Let style be durationFormat.[[<styleSlot>]].
         auto style = (duration_format.*style_slot)();
 
-        DurationFormat::ValueStyle next_style = DurationFormat::ValueStyle::Long;
-        // FIXME: Missing spec step - If this is not the last row
-        if (next_style_slot) {
-            // g. Let nextStyle be the current value of the nextStyleSlot slot of durationFormat.
-            next_style = (duration_format.*next_style_slot)();
-        }
+        // f. Let display be durationFormat.[[<displaySlot>]].
+        auto display = (duration_format.*display_slot)();
+
+        // g. Let value be duration.[[<valueSlot>]].
+        auto value = duration.*value_slot;
 
         // h. Let nfOpts be ! OrdinaryObjectCreate(null).
         auto* number_format_options = Object::create(realm, nullptr);
 
-        // i. Let value be 0.
-        auto value = Value(0);
+        // i. If unit is "seconds", "milliseconds", or "microseconds", then
+        if (unit.is_one_of("seconds"sv, "milliseconds"sv, "microseconds"sv)) {
+            DurationFormat::ValueStyle next_style;
 
-        // j. Let done be false.
-        auto done = false;
-
-        // k. If unit is "seconds", "milliseconds" or "microseconds" and nextStyle is "numeric", then
-        if (unit.is_one_of("seconds"sv, "milliseconds"sv, "microseconds"sv) && next_style == DurationFormat::ValueStyle::Numeric) {
-            // i. Set value to duration.[[Microseconds]] + duration.[[Nanoseconds]] / 1000.
-            auto value_number = duration.microseconds + (duration.nanoseconds / 1000);
-
-            // ii. If unit is "seconds" or "milliseconds", then
-            if (unit.is_one_of("seconds"sv, "milliseconds"sv)) {
-                // 1. Set value to duration.[[Milliseconds]] + value / 1000.
-                value_number = duration.milliseconds + (value_number / 1000);
-
-                // 2. If unit is "seconds", then
-                if (unit == "seconds"sv) {
-                    // a. Set value to duration.[[Seconds]] + value / 1000.
-                    value_number = duration.seconds + (value_number / 1000);
-                }
+            // i. If unit is "seconds", then
+            if (unit == "seconds"sv) {
+                // 1. Let nextStyle be durationFormat.[[MillisecondsStyle]].
+                next_style = duration_format.milliseconds_style();
             }
-            value = Value(value_number);
+            // ii. Else if unit is "milliseconds", then
+            else if (unit == "milliseconds"sv) {
+                // 1. Let nextStyle be durationFormat.[[MicrosecondsStyle]].
+                next_style = duration_format.microseconds_style();
+            }
+            // iii. Else,
+            else {
+                // 1. Let nextStyle be durationFormat.[[NanosecondsStyle]].
+                next_style = duration_format.nanoseconds_style();
+            }
 
-            // iii. Perform ! CreateDataPropertyOrThrow(nfOpts, "maximumFractionDigits", durationFormat.[[FractionalDigits]]).
-            MUST(number_format_options->create_data_property_or_throw(vm.names.maximumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
+            // iv. If nextStyle is "numeric", then
+            if (next_style == DurationFormat::ValueStyle::Numeric) {
+                // 1. If unit is "seconds", then
+                if (unit == "seconds"sv) {
+                    // a. Set value to value + duration.[[Milliseconds]] / 10^3 + duration.[[Microseconds]] / 10^6 + duration.[[Nanoseconds]] / 10^9.
+                    value += duration.milliseconds / 1'000.0 + duration.microseconds / 1'000'000.0 + duration.nanoseconds / 1'000'000'000.0;
+                }
+                // 2. Else if unit is "milliseconds", then
+                else if (unit == "milliseconds"sv) {
+                    // a. Set value to value + duration.[[Microseconds]] / 10^3 + duration.[[Nanoseconds]] / 10^6.
+                    value += duration.microseconds / 1'000.0 + duration.nanoseconds / 1'000'000.0;
+                }
+                // 3. Else,
+                else {
+                    // a. Set value to value + duration.[[Nanoseconds]] / 10^3.
+                    value += duration.nanoseconds / 1'000.0;
+                }
 
-            // iv. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumFractionDigits", durationFormat.[[FractionalDigits]]).
-            MUST(number_format_options->create_data_property_or_throw(vm.names.minimumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
+                // 4. Perform ! CreateDataPropertyOrThrow(nfOpts, "maximumFractionDigits", durationFormat.[[FractionalDigits]]).
+                MUST(number_format_options->create_data_property_or_throw(vm.names.maximumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
 
-            // v. Set done to true.
-            done = true;
+                // 5. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumFractionDigits", durationFormat.[[FractionalDigits]]).
+                MUST(number_format_options->create_data_property_or_throw(vm.names.minimumFractionDigits, duration_format.has_fractional_digits() ? Value(duration_format.fractional_digits()) : js_undefined()));
+
+                // 6. Set done to true.
+                done = true;
+            }
         }
-        // l. Else,
-        else {
-            // i. Set value to the current value of the valueSlot slot of duration.
-            value = Value(duration.*value_slot);
-        }
 
-        // m. If style is "2-digit", then
+        // j. If style is "2-digit", then
         if (style == DurationFormat::ValueStyle::TwoDigit) {
-            // i. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumIntegerDigits", 2).
+            // i. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumIntegerDigits", 2𝔽).
             MUST(number_format_options->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(2)));
         }
 
-        // FIXME: Missing spec step - Let display be the current value of the displaySlot slot of durationFormat.
-        auto display = (duration_format.*display_slot)();
+        // k. If value is not 0 or display is not "auto", then
+        if (value != 0.0 || display != DurationFormat::Display::Auto) {
+            // i. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
+            auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
 
-        // n. If value is +0𝔽 or -0𝔽 and display is "auto", then
-        if ((value.is_negative_zero() || value.is_positive_zero()) && display == DurationFormat::Display::Auto) {
-            // i. Skip to the next iteration.
-            continue;
-        }
+            // ii. Let dataLocale be durationFormat.[[DataLocale]].
+            auto const& data_locale = duration_format.data_locale();
 
-        // o. Let nf be ? Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
-        auto* number_format = static_cast<NumberFormat*>(TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
+            // iii. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
 
-        // FIXME: durationFormat.[[NumberFormat]] is not a thing, the spec likely means 'nf' in this case
-        // p. Let num be ! FormatNumeric(durationFormat.[[NumberFormat]], value).
-        auto number = format_numeric(vm, *number_format, value);
+            // iv. If style is "2-digit" or "numeric", then
+            if (style == DurationFormat::ValueStyle::TwoDigit || style == DurationFormat::ValueStyle::Numeric) {
+                // 1. Let num be ! FormatNumeric(nf, 𝔽(value)).
+                auto number = format_numeric(vm, *number_format, MathematicalValue(value));
 
-        // q. Let dataLocale be durationFormat.[[DataLocale]].
-        auto const& data_locale = duration_format.data_locale();
+                // 2. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
+                result.append({ unit, number });
 
-        // r. Let dataLocaleData be the current value of the dataLocale slot of %DurationFormat%.[[LocaleData]].
+                // 3. If unit is "hours" or "minutes", then
+                if (unit.is_one_of("hours"sv, "minutes"sv)) {
+                    double next_value = 0.0;
+                    DurationFormat::Display next_display;
 
-        // s. If style is "2-digit" or "numeric", then
-        if (style == DurationFormat::ValueStyle::TwoDigit || style == DurationFormat::ValueStyle::Numeric) {
-            // i. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
-            result.append({ unit, number });
+                    // a. If unit is "hours", then
+                    if (unit == "hours"sv) {
+                        // i. Let nextValue be duration.[[Minutes]].
+                        next_value = duration.minutes;
 
-            // ii. If unit is "hours" or "minutes", then
-            if (unit.is_one_of("hours"sv, "minutes"sv)) {
-                // 1. Let separator be dataLocaleData.[[formats]].[[digital]].[[separator]].
-                auto separator = Unicode::get_number_system_symbol(data_locale, duration_format.numbering_system(), Unicode::NumericSymbol::TimeSeparator).value_or(":"sv);
+                        // ii. Let nextDisplay be durationFormat.[[MinutesDisplay]].
+                        next_display = duration_format.minutes_display();
+                    }
+                    // b. Else,
+                    else {
+                        // i. Let nextValue be duration.[[Seconds]].
+                        next_value = duration.seconds;
 
-                // 2. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                result.append({ "literal"sv, separator });
+                        // ii. Let nextDisplay be durationFormat.[[SecondsDisplay]].
+                        next_display = duration_format.seconds_display();
+
+                        // iii. If durationFormat.[[MillisecondsStyle]] is "numeric", then
+                        if (duration_format.milliseconds_style() == DurationFormat::ValueStyle::Numeric) {
+                            // i. Set nextValue to nextValue + duration.[[Milliseconds]] / 10^3 + duration.[[Microseconds]] / 10^6 + duration.[[Nanoseconds]] / 10^9.
+                            next_value += duration.milliseconds / 1'000.0 + duration.microseconds / 1'000'000.0 + duration.nanoseconds / 1'000'000'000.0;
+                        }
+                    }
+
+                    // c. If nextValue is not 0 or nextDisplay is not "auto", then
+                    if (next_value != 0.0 || next_display != DurationFormat::Display::Auto) {
+                        // i. Let separator be dataLocaleData.[[formats]].[[digital]].[[separator]].
+                        auto separator = Unicode::get_number_system_symbol(data_locale, duration_format.numbering_system(), Unicode::NumericSymbol::TimeSeparator).value_or(":"sv);
+
+                        // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
+                        result.append({ "literal"sv, separator });
+                    }
+                }
             }
-        }
+            // v. Else,
+            else {
+                // 1. Let num be ! PartitionNumberPattern(nf, 𝔽(value)).
+                auto number = partition_number_pattern(vm, *number_format, MathematicalValue(value));
 
-        // t. Else,
-        else {
-            // i. Let pr be ? Construct(%PluralRules%, « durationFormat.[[Locale]] »).
-            auto* plural_rules = TRY(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), js_string(vm, duration_format.locale())));
+                // 2. Let pr be ! Construct(%PluralRules%, « durationFormat.[[Locale]] »).
+                auto* plural_rules = static_cast<PluralRules*>(MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), js_string(vm, duration_format.locale()))));
 
-            // ii. Let prv be ! ResolvePlural(pr, value).
-            auto plurality = resolve_plural(static_cast<PluralRules&>(*plural_rules), value);
+                // 3. Let prv be ! ResolvePlural(pr, 𝔽(value)).
+                auto plurality = resolve_plural(*plural_rules, Value(value));
 
-            auto formats = Unicode::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<Unicode::Style>(style));
-            auto pattern = formats.find_if([&](auto& p) { return p.plurality == plurality; });
-            if (pattern == formats.end())
-                continue;
+                auto formats = Unicode::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<Unicode::Style>(style));
+                auto pattern = formats.find_if([&](auto& p) { return p.plurality == plurality; });
+                if (pattern == formats.end())
+                    continue;
 
-            // iii. Let template be the current value of the prv slot of the unit slot of the style slot of dataLocaleData.[[formats]].
-            auto template_ = convert_number_format_pattern_to_duration_format_template(*pattern);
+                // 4. Let template be dataLocaleData.[[formats]].[[<style>]].[[<unit>]].[[<prv>]].
+                auto template_ = convert_number_format_pattern_to_duration_format_template(*pattern);
 
-            // FIXME: MakePartsList takes a list, not a string, so likely missing spec step: Let fv be ! PartitionNumberPattern(nf, value).
-            auto formatted_value = partition_number_pattern(vm, *number_format, value);
+                // 5. Let parts be ! MakePartsList(template, unit, num).
+                auto parts = make_parts_list(template_, unit, move(number));
 
-            // FIXME: Spec issue - see above, fv instead of num
-            // iv. Let parts be ! MakePartsList(template, unit, num).
-            auto parts = make_parts_list(template_, unit, formatted_value);
+                // 6. Let concat be an empty String.
+                StringBuilder concat;
 
-            // v. Let concat be an empty String.
-            StringBuilder concat;
+                // 7. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
+                for (auto const& part : parts) {
+                    // a. Set concat to the string-concatenation of concat and part.[[Value]].
+                    concat.append(part.value);
+                }
 
-            // vi. For each element part in parts, in List order, do
-            for (auto const& part : parts) {
-                // 1. Set concat to the string-concatenation of concat and part.[[Value]].
-                concat.append(part.value);
-
-                // FIXME: It's not clear why this step is here, the unit is functional, it should not be part of the final formatted text
-                // 2. If part has a [[Unit]] field, then
-                // if (!part.unit.is_null()) {
-                //     // a. Set concat to the string-concatenation of concat and part.[[Unit]].
-                //     concat.append(part.unit);
-                // }
+                // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
+                result.append({ unit, concat.build() });
             }
-
-            // vii. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-            result.append({ unit, concat.build() });
-        }
-
-        // u. If done is true, then
-        if (done) {
-            // i. Stop iteration.
-            break;
         }
     }
 
-    // 3. Let lf be ? Construct(%ListFormat%, « durationFormat.[[Locale]] »).
+    // 4. Let lf be ? Construct(%ListFormat%, « durationFormat.[[Locale]] »).
     auto* list_format = static_cast<ListFormat*>(TRY(construct(vm, *realm.intrinsics().intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
@@ -500,10 +513,10 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
         string_result.append(part.value);
     }
 
-    // 4. Set result to ! CreatePartsFromList(lf, result).
+    // 5. Set result to ! CreatePartsFromList(lf, result).
     auto final_result = create_parts_from_list(*list_format, string_result);
 
-    // 5. Return result.
+    // 6. Return result.
     return final_result;
 }
 
