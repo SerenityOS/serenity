@@ -521,6 +521,34 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Vector<Bytecode::Register> argument_registers;
+
+    if (m_is_synthetic == IsPartOfSyntheticConstructor::Yes) {
+        // NOTE: This is the case where we have a fake constructor(...args) { super(...args); } which
+        //       shouldn't call @@iterator of %Array.prototype%.
+        VERIFY(m_arguments.size() == 1);
+        VERIFY(m_arguments[0].is_spread);
+        auto const& argument = m_arguments[0];
+        // This generates a single argument, which will be implicitly passed in accumulator
+        MUST(argument.value->generate_bytecode(generator));
+    } else {
+        argument_registers.ensure_capacity(m_arguments.size());
+
+        for (auto const& arg : m_arguments) {
+            TRY(arg.value->generate_bytecode(generator));
+            auto arg_reg = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(arg_reg);
+            argument_registers.unchecked_append(arg_reg);
+        }
+    }
+
+    generator.emit_with_extra_register_slots<Bytecode::Op::SuperCall>(argument_registers.size(), m_is_synthetic == IsPartOfSyntheticConstructor::Yes, argument_registers);
+
+    return {};
+}
+
 static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode, Bytecode::Register const& value_reg);
 
 Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
