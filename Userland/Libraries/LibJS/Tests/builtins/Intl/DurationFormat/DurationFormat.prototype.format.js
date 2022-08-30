@@ -17,10 +17,10 @@ describe("correct behavior", () => {
             nanoseconds: 9,
         };
         expect(new Intl.DurationFormat().format(duration)).toBe(
-            "1 year, 2 months, 3 weeks, 3 days, 4 hours, 5 minutes, 6 seconds, 7 milliseconds, 8 microseconds, and 9 nanoseconds"
+            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, and 9 ns"
         );
         expect(new Intl.DurationFormat("en").format(duration)).toBe(
-            "1 year, 2 months, 3 weeks, 3 days, 4 hours, 5 minutes, 6 seconds, 7 milliseconds, 8 microseconds, and 9 nanoseconds"
+            "1 yr, 2 mths, 3 wks, 3 days, 4 hr, 5 min, 6 sec, 7 ms, 8 μs, and 9 ns"
         );
         expect(new Intl.DurationFormat("en", { style: "long" }).format(duration)).toBe(
             "1 year, 2 months, 3 weeks, 3 days, 4 hours, 5 minutes, 6 seconds, 7 milliseconds, 8 microseconds, and 9 nanoseconds"
