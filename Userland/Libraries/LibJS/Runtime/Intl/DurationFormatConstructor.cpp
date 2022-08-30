@@ -98,8 +98,8 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     // 15. Set durationFormat.[[DataLocale]] to r.[[dataLocale]].
     duration_format->set_data_locale(move(result.data_locale));
 
-    // 16. Let prevStyle be undefined.
-    Optional<String> previous_style;
+    // 16. Let prevStyle be the empty String.
+    auto previous_style = String::empty();
 
     // 17. For each row in Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
