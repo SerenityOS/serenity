@@ -161,6 +161,7 @@ Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResu
 double round_number_to_increment(double, u64 increment, StringView rounding_mode);
 Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
 Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
+ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, StringView iso_string);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, ParseResult const& parse_result);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM&, String const& iso_string);

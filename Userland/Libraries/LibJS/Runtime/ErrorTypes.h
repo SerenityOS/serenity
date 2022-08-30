@@ -243,6 +243,7 @@
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
     M(TemporalInvalidInstantString, "Invalid instant string '{}'")                                                                      \
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
+    M(TemporalInvalidISODateTime, "Invalid ISO date time")                                                                              \
     M(TemporalInvalidMonthCode, "Invalid month code")                                                                                   \
     M(TemporalInvalidMonthDayString, "Invalid month day string '{}'")                                                                   \
     M(TemporalInvalidMonthDayStringUTCDesignator, "Invalid month day string '{}': must not contain a UTC designator")                   \
