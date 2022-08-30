@@ -17,7 +17,7 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(StringView name, Gfx::Bitmap const* icon, Window* parent_window, StringView version)
+AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon, Window* parent_window)
     : Dialog(parent_window)
     , m_name(name)
     , m_icon(icon)

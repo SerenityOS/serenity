@@ -21,6 +21,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("ladyball"sv));
-    GUI::AboutDialog::show("SerenityOS"sv, app_icon.bitmap_for_size(32), nullptr, app_icon.bitmap_for_size(16), Core::Version::read_long_version_string());
+    GUI::AboutDialog::show("SerenityOS"sv, Core::Version::read_long_version_string(), app_icon.bitmap_for_size(32), nullptr, app_icon.bitmap_for_size(16));
     return app->exec();
 }

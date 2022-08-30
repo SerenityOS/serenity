@@ -10,8 +10,6 @@
 
 namespace Core::Version {
 
-constexpr StringView SERENITY_VERSION = "Version 1.0"sv;
-
 String read_long_version_string();
 
 }
