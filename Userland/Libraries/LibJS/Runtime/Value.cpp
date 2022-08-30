@@ -527,7 +527,7 @@ static Optional<NumberParseResult> parse_number_text(StringView text)
 static Optional<Value> string_to_number(StringView string)
 {
     // 1. Let text be StringToCodePoints(str).
-    String text = string.trim_whitespace();
+    String text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringNumericLiteral).
     if (text.is_empty())
