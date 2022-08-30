@@ -675,7 +675,7 @@ Optional<BigInt*> Value::string_to_bigint(VM& vm) const
     VERIFY(is_string());
 
     // 1. Let text be StringToCodePoints(str).
-    auto text = as_string().string().view().trim_whitespace();
+    auto text = Utf8View(as_string().string().view()).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringIntegerLiteral).
     auto result = parse_bigint_text(text);
