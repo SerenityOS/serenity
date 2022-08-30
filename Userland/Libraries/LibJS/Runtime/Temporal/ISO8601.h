@@ -52,8 +52,8 @@ enum class Production {
     TemporalTimeZoneString,
     TemporalYearMonthString,
     TemporalZonedDateTimeString,
-    TemporalCalendarString,
     TimeZoneNumericUTCOffset,
+    CalendarName,
 };
 
 Optional<ParseResult> parse_iso8601(Production, StringView);
@@ -166,7 +166,6 @@ public:
     [[nodiscard]] bool parse_temporal_time_zone_string();
     [[nodiscard]] bool parse_temporal_year_month_string();
     [[nodiscard]] bool parse_temporal_zoned_date_time_string();
-    [[nodiscard]] bool parse_temporal_calendar_string();
 
 private:
     struct State {

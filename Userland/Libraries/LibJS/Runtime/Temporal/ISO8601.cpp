@@ -1446,24 +1446,6 @@ bool ISO8601Parser::parse_temporal_zoned_date_time_string()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TemporalCalendarString
-bool ISO8601Parser::parse_temporal_calendar_string()
-{
-    // TemporalCalendarString :
-    //     CalendarName
-    //     TemporalInstantString
-    //     CalendarDateTime
-    //     CalendarTime
-    //     DateSpecYearMonth
-    //     DateSpecMonthDay
-    return parse_calendar_name()
-        || parse_temporal_instant_string()
-        || parse_calendar_date_time()
-        || parse_date_spec_year_month()
-        || parse_date_spec_month_day()
-        || parse_calendar_time();
-}
-
 }
 
 #define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                                        \
@@ -1475,8 +1457,8 @@ bool ISO8601Parser::parse_temporal_calendar_string()
     __JS_ENUMERATE(TemporalTimeZoneString, parse_temporal_time_zone_string)            \
     __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)          \
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
-    __JS_ENUMERATE(TemporalCalendarString, parse_temporal_calendar_string)             \
-    __JS_ENUMERATE(TimeZoneNumericUTCOffset, parse_time_zone_numeric_utc_offset)
+    __JS_ENUMERATE(TimeZoneNumericUTCOffset, parse_time_zone_numeric_utc_offset)       \
+    __JS_ENUMERATE(CalendarName, parse_calendar_name)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {

@@ -406,17 +406,14 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
     // 2. Let identifier be ? ToString(temporalCalendarLike).
     auto identifier = TRY(temporal_calendar_like.to_string(vm));
 
-    // 3. If IsBuiltinCalendar(identifier) is false, then
-    if (!is_builtin_calendar(identifier)) {
-        // a. Set identifier to ? ParseTemporalCalendarString(identifier).
-        identifier = TRY(parse_temporal_calendar_string(vm, identifier));
+    // 3. Set identifier to ? ParseTemporalCalendarString(identifier).
+    identifier = TRY(parse_temporal_calendar_string(vm, identifier));
 
-        // b. If IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
-        if (!is_builtin_calendar(identifier))
-            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
-    }
+    // 4. If IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
+    if (!is_builtin_calendar(identifier))
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
-    // 4. Return ! CreateTemporalCalendar(identifier).
+    // 5. Return ! CreateTemporalCalendar(identifier).
     return MUST(create_temporal_calendar(vm, identifier));
 }
 

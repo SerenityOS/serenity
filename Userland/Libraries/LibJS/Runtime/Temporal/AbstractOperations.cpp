@@ -1162,14 +1162,38 @@ Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::Signed
 }
 
 // 13.28 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
-ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& parse_result)
+ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be empty.
-    // 2. For each nonterminal goal of « TemporalDateTimeString, TemporalInstantString, TemporalMonthDayString, TemporalTimeString, TemporalYearMonthString, TemporalZonedDateTimeString », do
-    //    a. If parseResult is not a Parse Node, set parseResult to ParseText(StringToCodePoints(isoString), goal).
-    // 3. Assert: parseResult is a Parse Node.
-    // NOTE: All of this is done by receiving an already parsed ISO string (ParseResult).
+    Optional<ParseResult> parse_result;
 
+    static constexpr auto productions = AK::Array {
+        Production::TemporalDateTimeString,
+        Production::TemporalInstantString,
+        Production::TemporalMonthDayString,
+        Production::TemporalTimeString,
+        Production::TemporalYearMonthString,
+        Production::TemporalZonedDateTimeString,
+    };
+
+    // 2. For each nonterminal goal of « TemporalDateTimeString, TemporalInstantString, TemporalMonthDayString, TemporalTimeString, TemporalYearMonthString, TemporalZonedDateTimeString », do
+    for (auto goal : productions) {
+        // a. If parseResult is not a Parse Node, set parseResult to ParseText(StringToCodePoints(isoString), goal).
+        parse_result = parse_iso8601(goal, iso_string);
+        if (parse_result.has_value())
+            break;
+    }
+
+    // 3. If parseResult is not a Parse Node, throw a RangeError exception.
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidISODateTime);
+
+    return parse_iso_date_time(vm, *parse_result);
+}
+
+// 13.28 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
+ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& parse_result)
+{
     // 4. Let each of year, month, day, hour, minute, second, fSeconds, and calendar be the source text matched by the respective DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, TimeFraction, and CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto year = parse_result.date_year;
     auto month = parse_result.date_month;
@@ -1357,24 +1381,33 @@ ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, Str
 // 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
 ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, String const& iso_string)
 {
-    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalCalendarString).
-    auto parse_result = parse_iso8601(Production::TemporalCalendarString, iso_string);
+    // 1. Let parseResult be Completion(ParseISODateTime(isoString)).
+    auto parse_result_completion = parse_iso_date_time(vm, iso_string);
 
-    // 2. If parseResult is a List of errors, throw a RangeError exception.
-    if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarString, iso_string);
+    // 2. If parseResult is a normal completion, then
+    if (!parse_result_completion.is_error()) {
+        // a. Let calendar be parseResult.[[Value]].[[Calendar]].
+        auto calendar = parse_result_completion.value().calendar;
 
-    // 3. Let id be the source text matched by the CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
-    auto id = parse_result->calendar_name;
-
-    // 4. If id is empty, then
-    if (!id.has_value()) {
-        // a. Return "iso8601".
-        return "iso8601"sv;
+        // b. If calendar is undefined, return "iso8601".
+        if (!calendar.has_value())
+            return "iso8601"sv;
+        // c. Else, return calendar.
+        else
+            return calendar.release_value();
     }
+    // 3. Else,
+    else {
+        // a. Set parseResult to ParseText(StringToCodePoints(isoString), CalendarName).
+        auto parse_result = parse_iso8601(Production::CalendarName, iso_string);
 
-    // 5. Return CodePointsToString(id).
-    return id.value();
+        // b. If parseResult is a List of errors, throw a RangeError exception.
+        if (!parse_result.has_value())
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarString, iso_string);
+        // c. Else, return isoString.
+        else
+            return iso_string;
+    }
 }
 
 // 13.32 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
