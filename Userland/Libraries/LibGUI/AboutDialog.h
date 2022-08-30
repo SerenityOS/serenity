@@ -17,16 +17,16 @@ class AboutDialog final : public Dialog {
 public:
     virtual ~AboutDialog() override = default;
 
-    static void show(StringView name, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr, StringView version = Core::Version::SERENITY_VERSION)
+    static void show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
     {
-        auto dialog = AboutDialog::construct(name, icon, parent_window, version);
+        auto dialog = AboutDialog::construct(name, version, icon, parent_window);
         if (window_icon)
             dialog->set_icon(window_icon);
         dialog->exec();
     }
 
 private:
-    AboutDialog(StringView name, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, StringView version = Core::Version::SERENITY_VERSION);
+    AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
 
     String m_name;
     RefPtr<Gfx::Bitmap> m_icon;

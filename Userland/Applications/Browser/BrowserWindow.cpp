@@ -18,6 +18,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
+#include <LibCore/Version.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -128,7 +129,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
     m_window_actions.on_about = [this] {
         auto app_icon = GUI::Icon::default_icon("app-browser"sv);
-        GUI::AboutDialog::show("Browser"sv, app_icon.bitmap_for_size(32), this);
+        GUI::AboutDialog::show("Browser"sv, Core::Version::read_long_version_string(), app_icon.bitmap_for_size(32), this);
     };
 
     m_window_actions.on_show_bookmarks_bar = [](auto& action) {
