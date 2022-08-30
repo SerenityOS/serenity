@@ -14,6 +14,8 @@
     }
 
     @GUI::HorizontalSplitter {
+        opportunistic_resizee: "First"
+
         @HexEditor::HexEditor {
             name: "editor"
         }

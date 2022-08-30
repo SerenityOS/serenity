@@ -7,7 +7,7 @@
     @GUI::HorizontalSplitter {
         @GUI::TreeView {
             name: "mailbox_list"
-            fixed_width: 250
+            preferred_width: 250
         }
 
         @GUI::VerticalSplitter {

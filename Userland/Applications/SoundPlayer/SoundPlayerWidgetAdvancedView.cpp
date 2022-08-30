@@ -38,7 +38,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_playlist_widget = PlaylistWidget::construct();
     m_playlist_widget->set_data_model(playlist().model());
-    m_playlist_widget->set_fixed_width(150);
+    m_playlist_widget->set_preferred_width(150);
 
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
 

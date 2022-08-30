@@ -28,9 +28,11 @@ PDFViewerWidget::PDFViewerWidget()
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto& splitter = add<GUI::HorizontalSplitter>();
+    splitter.layout()->set_spacing(4);
 
     m_sidebar = splitter.add<SidebarWidget>();
-    m_sidebar->set_fixed_width(0);
+    m_sidebar->set_preferred_width(200);
+    m_sidebar->set_visible(false);
 
     m_viewer = splitter.add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
@@ -73,7 +75,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     auto open_outline_action = GUI::Action::create(
         "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
-            m_sidebar->set_fixed_width(m_sidebar_open ? 200 : 0);
+            m_sidebar->set_visible(m_sidebar_open ? true : false);
         },
         nullptr);
     open_outline_action->set_enabled(false);
@@ -214,11 +216,11 @@ void PDFViewerWidget::open_file(Core::File& file)
     if (document->outline()) {
         auto outline = document->outline();
         m_sidebar->set_outline(outline.release_nonnull());
-        m_sidebar->set_fixed_width(200);
+        m_sidebar->set_visible(true);
         m_sidebar_open = true;
     } else {
         m_sidebar->set_outline({});
-        m_sidebar->set_fixed_width(0);
+        m_sidebar->set_visible(false);
         m_sidebar_open = false;
     }
 }

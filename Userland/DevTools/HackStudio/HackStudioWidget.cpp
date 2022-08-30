@@ -94,7 +94,7 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     left_hand_splitter.layout()->set_spacing(6);
-    left_hand_splitter.set_fixed_width(150);
+    left_hand_splitter.set_preferred_width(150);
     create_project_tab(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
 
@@ -980,7 +980,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
 void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 {
     if (m_action_tab_widget->effective_min_size().height().as_int() < 200)
-        m_action_tab_widget->set_fixed_height(200);
+        m_action_tab_widget->set_preferred_height(200);
     m_action_tab_widget->set_active_widget(&widget);
 }
 
@@ -1149,7 +1149,7 @@ void HackStudioWidget::run()
 
 void HackStudioWidget::hide_action_tabs()
 {
-    m_action_tab_widget->set_fixed_height(24);
+    m_action_tab_widget->set_preferred_height(24);
 };
 
 Project& HackStudioWidget::project()
@@ -1300,13 +1300,13 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
 {
     m_action_tab_widget = parent.add<GUI::TabWidget>();
 
-    m_action_tab_widget->set_fixed_height(24);
+    m_action_tab_widget->set_preferred_height(24);
     m_action_tab_widget->on_change = [this](auto&) {
         on_action_tab_change();
 
         static bool first_time = true;
         if (!first_time)
-            m_action_tab_widget->set_fixed_height(200);
+            m_action_tab_widget->set_preferred_height(200);
         first_time = false;
     };
 

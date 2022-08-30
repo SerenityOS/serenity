@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& tree_view = splitter.add<GUI::TreeView>();
     tree_view.set_model(remote_process.object_graph_model());
     tree_view.set_activates_on_selection(true);
-    tree_view.set_fixed_width(286);
+    tree_view.set_preferred_width(286);
 
     auto& properties_tree_view = splitter.add<GUI::TreeView>();
     properties_tree_view.set_should_fill_selected_rows(true);
