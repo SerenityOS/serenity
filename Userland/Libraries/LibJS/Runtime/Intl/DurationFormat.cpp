@@ -305,7 +305,7 @@ static String convert_number_format_pattern_to_duration_format_template(Unicode:
 }
 
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
-ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
+Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& realm = *vm.current_realm();
 
@@ -491,8 +491,8 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
         }
     }
 
-    // 4. Let lf be ? Construct(%ListFormat%, « durationFormat.[[Locale]] »).
-    auto* list_format = static_cast<ListFormat*>(TRY(construct(vm, *realm.intrinsics().intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
+    // 4. Let lf be ! Construct(%ListFormat%, « durationFormat.[[Locale]] »).
+    auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, *realm.intrinsics().intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right

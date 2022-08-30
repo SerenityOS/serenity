@@ -224,6 +224,6 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM&, Value input)
 i8 duration_sign(Temporal::DurationRecord const&);
 bool is_valid_duration_record(Temporal::DurationRecord const&);
 ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM&, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style);
-ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM&, DurationFormat const&, Temporal::DurationRecord const& duration);
+Vector<PatternPartition> partition_duration_format_pattern(VM&, DurationFormat const&, Temporal::DurationRecord const& duration);
 
 }
