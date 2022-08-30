@@ -101,12 +101,12 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     // 16. Let prevStyle be the empty String.
     auto previous_style = String::empty();
 
-    // 17. For each row in Table 1, except the header row, in table order, do
+    // 17. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
-        // a. Let styleSlot be the Style Slot value.
+        // a. Let styleSlot be the Style Slot value of the current row.
         auto style_slot = duration_instances_component.set_style_slot;
 
-        // b. Let displaySlot be the Display Slot value.
+        // b. Let displaySlot be the Display Slot value of the current row.
         auto display_slot = duration_instances_component.set_display_slot;
 
         // c. Let unit be the Unit value.

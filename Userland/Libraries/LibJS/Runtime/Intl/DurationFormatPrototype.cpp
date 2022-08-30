@@ -46,14 +46,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let formatted be ! PartitionDurationFormatPattern(df, record).
-    auto formatted = partition_duration_format_pattern(vm, *duration_format, record);
+    // 5. Let parts be ! PartitionDurationFormatPattern(df, record).
+    auto parts = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be a new empty String.
     StringBuilder result;
 
-    // 7. For each element part in formatted, in List order, do
-    for (auto const& part : formatted) {
+    // 7. For each Record { [[Type]], [[Value]] } part in parts, do
+    for (auto const& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
         result.append(part.value);
     }
@@ -78,16 +78,16 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let formatted be ! PartitionDurationFormatPattern(df, record).
-    auto formatted = partition_duration_format_pattern(vm, *duration_format, record);
+    // 5. Let parts be ! PartitionDurationFormatPattern(df, record).
+    auto parts = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));
 
     // 7. Let n be 0.
-    // 8. For each element part in formatted, in List order, do
-    for (size_t n = 0; n < formatted.size(); ++n) {
-        auto const& part = formatted[n];
+    // 8. For each { [[Type]], [[Value]] } part in parts, do
+    for (size_t n = 0; n < parts.size(); ++n) {
+        auto const& part = parts[n];
 
         // a. Let obj be ! OrdinaryObjectCreate(%ObjectPrototype%).
         auto* object = Object::create(realm, realm.intrinsics().object_prototype());

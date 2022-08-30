@@ -145,7 +145,7 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
     // 3. Let any be false.
     auto any = false;
 
-    // 4. For each row in Table 1, except the header row, in table order, do
+    // 4. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
         // a. Let valueSlot be the Value Slot value of the current row.
         auto value_slot = duration_instances_component.value_slot;
@@ -180,12 +180,12 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
 // 1.1.4 DurationRecordSign ( record ), https://tc39.es/proposal-intl-duration-format/#sec-durationrecordsign
 i8 duration_record_sign(Temporal::DurationRecord const& record)
 {
-    // 1. For each row in Table 1, except the header row, in table order, do
+    // 1. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
-        // a. Let valueSlot be the Value Slot value.
+        // a. Let valueSlot be the Value Slot value of the current row.
         auto value_slot = duration_instances_component.value_slot;
 
-        // b. Let v be value of the valueSlot slot of record.
+        // b. Let v be record.[[<valueSlot>]].
         auto value = record.*value_slot;
 
         // c. If v < 0, return -1.
@@ -207,17 +207,16 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
     // 1. Let sign be ! DurationRecordSign(record).
     auto sign = duration_record_sign(record);
 
-    // 2. For each row in Table 1, except the header row, in table order, do
+    // 2. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
-        // a. Let valueSlot be the Value Slot value.
+        // a. Let valueSlot be the Value Slot value of the current row.
         auto value_slot = duration_instances_component.value_slot;
 
-        // b. Let v be value of the valueSlot slot of record.
+        // b. Let v be record.[[<valueSlot>]].
         auto value = record.*value_slot;
 
-        // c. If 𝔽(v) is not finite, return false.
-        if (!isfinite(value))
-            return false;
+        // c. Assert: 𝔽(v) is finite.
+        VERIFY(isfinite(value));
 
         // d. If v < 0 and sign > 0, return false.
         if (value < 0 && sign > 0)
