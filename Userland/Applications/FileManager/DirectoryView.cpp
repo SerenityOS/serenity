@@ -196,6 +196,19 @@ void DirectoryView::setup_model()
             on_path_change(model().root_path(), true, can_write_in_path);
     };
 
+    m_model->on_root_path_removed = [this] {
+        // Change model root to the first existing parent directory.
+        LexicalPath model_root(model().root_path());
+
+        while (model_root.string() != "/") {
+            model_root = model_root.parent();
+            if (Core::File::is_directory(model_root.string()))
+                break;
+        }
+
+        open(model_root.string());
+    };
+
     m_model->register_client(*this);
 
     m_model->on_thumbnail_progress = [this](int done, int total) {
