@@ -139,39 +139,34 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, input);
     auto& input_object = input.as_object();
 
-    // 2. Let result be a new Record.
-    Temporal::DurationRecord result;
+    // 2. Let result be a new Duration Record with each field set to 0.
+    Temporal::DurationRecord result = {};
 
     // 3. Let any be false.
     auto any = false;
 
     // 4. For each row in Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
-        // a. Let valueSlot be the Value Slot value.
+        // a. Let valueSlot be the Value Slot value of the current row.
         auto value_slot = duration_instances_component.value_slot;
 
-        // b. Let unit be the Unit value.
+        // b. Let unit be the Unit value of the current row.
         auto unit = duration_instances_component.unit;
 
         // c. Let value be ? Get(input, unit).
         auto value = TRY(input_object.get(FlyString(unit)));
 
-        double value_number;
         // d. If value is not undefined, then
         if (!value.is_undefined()) {
             // i. Set any to true.
             any = true;
-            // ii. Set value to ? ToIntegerWithoutRounding(value).
-            value_number = TRY(Temporal::to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
-        }
-        // e. Else,
-        else {
-            // i. Set value to 0.
-            value_number = 0;
-        }
 
-        // f. Set the field of result whose name is valueSlot to value.
-        result.*value_slot = value_number;
+            // ii. Set value to ? ToIntegerWithoutRounding(value).
+            auto value_number = TRY(Temporal::to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
+
+            // iii. Set result.[[<valueSlot>]] to value.
+            result.*value_slot = value_number;
+        }
     }
 
     // 5. If any is false, throw a TypeError exception.
