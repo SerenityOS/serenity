@@ -71,6 +71,7 @@ public:
     virtual Vector<GUI::ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, GUI::ModelIndex const& = GUI::ModelIndex()) override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     void update();
+    bool is_default_column(int index) const;
 
     struct CpuInfo {
         u32 id;
