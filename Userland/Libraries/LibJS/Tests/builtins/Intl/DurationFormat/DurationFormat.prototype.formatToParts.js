@@ -34,7 +34,7 @@ describe("correct behavior", () => {
             { type: "element", value: "7 ms" },
             { type: "literal", value: ", " },
             { type: "element", value: "8 μs" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: ", " },
             { type: "element", value: "9 ns" },
         ]);
         expect(new Intl.DurationFormat("en").formatToParts(duration)).toEqual([
@@ -55,7 +55,7 @@ describe("correct behavior", () => {
             { type: "element", value: "7 ms" },
             { type: "literal", value: ", " },
             { type: "element", value: "8 μs" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: ", " },
             { type: "element", value: "9 ns" },
         ]);
         expect(new Intl.DurationFormat("en", { style: "long" }).formatToParts(duration)).toEqual([
@@ -76,7 +76,7 @@ describe("correct behavior", () => {
             { type: "element", value: "7 milliseconds" },
             { type: "literal", value: ", " },
             { type: "element", value: "8 microseconds" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: ", " },
             { type: "element", value: "9 nanoseconds" },
         ]);
         expect(new Intl.DurationFormat("en", { style: "short" }).formatToParts(duration)).toEqual([
@@ -97,40 +97,40 @@ describe("correct behavior", () => {
             { type: "element", value: "7 ms" },
             { type: "literal", value: ", " },
             { type: "element", value: "8 μs" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: ", " },
             { type: "element", value: "9 ns" },
         ]);
         expect(new Intl.DurationFormat("en", { style: "narrow" }).formatToParts(duration)).toEqual([
             { type: "element", value: "1y" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "2m" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "3w" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "3d" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "4h" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "5m" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "6s" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "7ms" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "8μs" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: " " },
             { type: "element", value: "9ns" },
         ]);
         expect(new Intl.DurationFormat("en", { style: "digital" }).formatToParts(duration)).toEqual(
             [
                 { type: "element", value: "1y" },
-                { type: "literal", value: ", " },
+                { type: "literal", value: " " },
                 { type: "element", value: "2m" },
-                { type: "literal", value: ", " },
+                { type: "literal", value: " " },
                 { type: "element", value: "3w" },
-                { type: "literal", value: ", " },
+                { type: "literal", value: " " },
                 { type: "element", value: "3d" },
-                { type: "literal", value: ", and " },
+                { type: "literal", value: " " },
                 { type: "element", value: "4:05:06" },
             ]
         );
@@ -142,21 +142,21 @@ describe("correct behavior", () => {
             }).formatToParts(duration)
         ).toEqual([
             { type: "element", value: "1y" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "2m" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "3w" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "3d" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "4h" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "5m" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "6s" },
-            { type: "literal", value: ", " },
+            { type: "literal", value: " " },
             { type: "element", value: "7ms" },
-            { type: "literal", value: ", and " },
+            { type: "literal", value: " " },
             { type: "element", value: "8.009μs" },
         ]);
 

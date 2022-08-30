@@ -490,8 +490,28 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         }
     }
 
-    // 4. Let lf be ! Construct(%ListFormat%, « durationFormat.[[Locale]] »).
-    auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, *realm.intrinsics().intl_list_format_constructor(), js_string(vm, duration_format.locale()))));
+    // 4. Let lfOpts be ! OrdinaryObjectCreate(null).
+    auto* list_format_options = Object::create(realm, nullptr);
+
+    // 5. Perform ! CreateDataPropertyOrThrow(lfOpts, "type", "unit").
+    MUST(list_format_options->create_data_property_or_throw(vm.names.type, js_string(vm, "unit"sv)));
+
+    // 6. Let listStyle be durationFormat.[[Style]].
+    auto list_style = duration_format.style();
+
+    // 7. If listStyle is "digital", then
+    if (list_style == DurationFormat::Style::Digital) {
+        // a. Set listStyle to "narrow".
+        list_style = DurationFormat::Style::Narrow;
+    }
+
+    auto unicode_list_style = Unicode::style_to_string(static_cast<Unicode::Style>(list_style));
+
+    // 8. Perform ! CreateDataPropertyOrThrow(lfOpts, "style", listStyle).
+    MUST(list_format_options->create_data_property_or_throw(vm.names.style, js_string(vm, unicode_list_style)));
+
+    // 9. Let lf be ! Construct(%ListFormat%, « durationFormat.[[Locale]], lfOpts »).
+    auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, *realm.intrinsics().intl_list_format_constructor(), js_string(vm, duration_format.locale()), list_format_options)));
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right
@@ -512,10 +532,10 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         string_result.append(part.value);
     }
 
-    // 5. Set result to ! CreatePartsFromList(lf, result).
+    // 10. Set result to ! CreatePartsFromList(lf, result).
     auto final_result = create_parts_from_list(*list_format, string_result);
 
-    // 6. Return result.
+    // 11. Return result.
     return final_result;
 }
 
