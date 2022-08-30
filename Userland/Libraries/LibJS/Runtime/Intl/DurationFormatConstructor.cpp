@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,10 +64,10 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
     // 6. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
     auto numbering_system = TRY(get_option(vm, *options, vm.names.numberingSystem, OptionType::String, {}, Empty {}));
 
-    // FIXME: Missing spec step - If numberingSystem is not undefined, then
+    // 7. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
-        // 7. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (numbering_system.is_undefined() || !Unicode::is_type_identifier(numbering_system.as_string().string()))
+        // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
+        if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
     }
 
