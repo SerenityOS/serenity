@@ -410,6 +410,18 @@ set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Validation.cpp
 )
 
+add_custom_command(
+    COMMAND "${SerenityOS_SOURCE_DIR}/Kernel/generate-version-file.sh" "${CMAKE_CURRENT_BINARY_DIR}/Version.h.tmp"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/Version.h.tmp" "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
+    COMMAND "${CMAKE_COMMAND}" -E remove "${CMAKE_CURRENT_BINARY_DIR}/Version.h.tmp"
+    WORKING_DIRECTORY "${SerenityOS_SOURCE_DIR}"
+    COMMENT "Generating SerenityOS version information"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
+    VERBATIM
+)
+add_custom_target(generate_version_header ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
+set(GENERATED_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
+
 generate_state_machine(../Userland/Libraries/LibVT/StateMachine.txt ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h)
 
 set(VT_SOURCES
@@ -437,6 +449,7 @@ set(SOURCES
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${KERNEL_SOURCES}
+        ${GENERATED_SOURCES}
         ${SOURCES}
         ${EDID_SOURCES}
         ${ELF_SOURCES}
