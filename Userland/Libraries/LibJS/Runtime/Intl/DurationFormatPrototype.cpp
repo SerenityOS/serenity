@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,8 +46,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
-    auto formatted = TRY(partition_duration_format_pattern(vm, *duration_format, record));
+    // 5. Let formatted be ! PartitionDurationFormatPattern(df, record).
+    auto formatted = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be a new empty String.
     StringBuilder result;
@@ -77,8 +78,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     if (!is_valid_duration_record(record))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDurationLikeObject);
 
-    // 5. Let formatted be ? PartitionDurationFormatPattern(df, record).
-    auto formatted = TRY(partition_duration_format_pattern(vm, *duration_format, record));
+    // 5. Let formatted be ! PartitionDurationFormatPattern(df, record).
+    auto formatted = partition_duration_format_pattern(vm, *duration_format, record);
 
     // 6. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(realm, 0));
