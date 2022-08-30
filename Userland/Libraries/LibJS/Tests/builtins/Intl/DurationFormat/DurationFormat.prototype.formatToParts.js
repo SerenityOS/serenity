@@ -131,7 +131,7 @@ describe("correct behavior", () => {
                 { type: "literal", value: ", " },
                 { type: "element", value: "3d" },
                 { type: "literal", value: ", and " },
-                { type: "element", value: "4:05:06.007" },
+                { type: "element", value: "4:05:06" },
             ]
         );
         expect(
@@ -233,7 +233,7 @@ describe("correct behavior", () => {
                 { type: "literal", value: ", " },
                 { type: "element", value: "3 T" },
                 { type: "literal", value: " und " },
-                { type: "element", value: "4:05:06,007" },
+                { type: "element", value: "4:05:06" },
             ]
         );
         expect(

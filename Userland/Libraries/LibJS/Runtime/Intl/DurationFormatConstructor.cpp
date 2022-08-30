@@ -134,8 +134,8 @@ ThrowCompletionOr<Object*> DurationFormatConstructor::construct(FunctionObject& 
         }
     }
 
-    // 18. Set durationFormat.[[FractionalDigits]] to ? GetNumberOption(options, "fractionalDigits", 0, 9, undefined).
-    duration_format->set_fractional_digits(Optional<u8>(TRY(get_number_option(vm, *options, vm.names.fractionalDigits, 0, 9, {}))));
+    // 18. Set durationFormat.[[FractionalDigits]] to ? GetNumberOption(options, "fractionalDigits", 0, 9, 0).
+    duration_format->set_fractional_digits(Optional<u8>(TRY(get_number_option(vm, *options, vm.names.fractionalDigits, 0, 9, 0))));
 
     // 19. Return durationFormat.
     return duration_format;

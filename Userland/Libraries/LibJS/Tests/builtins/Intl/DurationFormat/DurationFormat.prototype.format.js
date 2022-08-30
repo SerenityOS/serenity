@@ -32,7 +32,7 @@ describe("correct behavior", () => {
             "1y, 2m, 3w, 3d, 4h, 5m, 6s, 7ms, 8μs, and 9ns"
         );
         expect(new Intl.DurationFormat("en", { style: "digital" }).format(duration)).toBe(
-            "1y, 2m, 3w, 3d, and 4:05:06.007"
+            "1y, 2m, 3w, 3d, and 4:05:06"
         );
         expect(
             new Intl.DurationFormat("en", {
@@ -52,7 +52,7 @@ describe("correct behavior", () => {
             "1 J, 2 M, 3 W, 3 T, 4 Std., 5 Min., 6 Sek., 7 ms, 8 μs und 9 ns"
         );
         expect(new Intl.DurationFormat("de", { style: "digital" }).format(duration)).toBe(
-            "1 J, 2 M, 3 W, 3 T und 4:05:06,007"
+            "1 J, 2 M, 3 W, 3 T und 4:05:06"
         );
         expect(
             new Intl.DurationFormat("de", {
