@@ -383,7 +383,6 @@ public:
     ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
     String to_string_without_side_effects() const;
-    Optional<BigInt*> string_to_bigint(VM&) const;
 
     Value value_or(Value fallback) const
     {

@@ -586,6 +586,8 @@ ThrowCompletionOr<Value> Value::to_number(VM& vm) const
     }
 }
 
+static Optional<BigInt*> string_to_bigint(VM& vm, StringView string);
+
 // 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
 ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
 {
@@ -608,7 +610,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
         return &primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
-        auto bigint = primitive.string_to_bigint(vm);
+        auto bigint = string_to_bigint(vm, primitive.as_string().string());
 
         // 2. If n is undefined, throw a SyntaxError exception.
         if (!bigint.has_value())
@@ -670,12 +672,10 @@ static Optional<BigIntParseResult> parse_bigint_text(StringView text)
 }
 
 // 7.1.14 StringToBigInt ( str ), https://tc39.es/ecma262/#sec-stringtobigint
-Optional<BigInt*> Value::string_to_bigint(VM& vm) const
+static Optional<BigInt*> string_to_bigint(VM& vm, StringView string)
 {
-    VERIFY(is_string());
-
     // 1. Let text be StringToCodePoints(str).
-    auto text = Utf8View(as_string().string().view()).trim(whitespace_characters, AK::TrimMode::Both).as_string();
+    auto text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringIntegerLiteral).
     auto result = parse_bigint_text(text);
@@ -1487,7 +1487,7 @@ ThrowCompletionOr<bool> is_loosely_equal(VM& vm, Value lhs, Value rhs)
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
         // a. Let n be StringToBigInt(y).
-        auto bigint = rhs.string_to_bigint(vm);
+        auto bigint = string_to_bigint(vm, rhs.as_string().string());
 
         // b. If n is undefined, return false.
         if (!bigint.has_value())
@@ -1584,7 +1584,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
-        auto y_bigint = y_primitive.string_to_bigint(vm);
+        auto y_bigint = string_to_bigint(vm, y_primitive.as_string().string());
         if (!y_bigint.has_value())
             return TriState::Unknown;
 
@@ -1594,7 +1594,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     }
 
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
-        auto x_bigint = x_primitive.string_to_bigint(vm);
+        auto x_bigint = string_to_bigint(vm, x_primitive.as_string().string());
         if (!x_bigint.has_value())
             return TriState::Unknown;
 
