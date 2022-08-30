@@ -267,6 +267,10 @@ describe("normal behavior", () => {
         });
         ["numeric", "2-digit"].forEach(seconds => {
             expect(() => {
+                new Intl.DurationFormat("en", { hours: seconds });
+            }).not.toThrow();
+
+            expect(() => {
                 new Intl.DurationFormat("en", { style: "digital", hours: seconds });
             }).not.toThrow();
         });
@@ -287,6 +291,10 @@ describe("normal behavior", () => {
             }).not.toThrow();
         });
         ["numeric", "2-digit"].forEach(seconds => {
+            expect(() => {
+                new Intl.DurationFormat("en", { minutes: seconds });
+            }).not.toThrow();
+
             expect(() => {
                 new Intl.DurationFormat("en", { style: "digital", minutes: seconds });
             }).not.toThrow();
@@ -309,6 +317,10 @@ describe("normal behavior", () => {
         });
         ["numeric", "2-digit"].forEach(seconds => {
             expect(() => {
+                new Intl.DurationFormat("en", { seconds: seconds });
+            }).not.toThrow();
+
+            expect(() => {
                 new Intl.DurationFormat("en", { style: "digital", seconds: seconds });
             }).not.toThrow();
         });
@@ -328,6 +340,11 @@ describe("normal behavior", () => {
                 new Intl.DurationFormat("en", { milliseconds: milliseconds });
             }).not.toThrow();
         });
+
+        expect(() => {
+            new Intl.DurationFormat("en", { milliseconds: "numeric" });
+        }).not.toThrow();
+
         expect(() => {
             new Intl.DurationFormat("en", { style: "digital", milliseconds: "numeric" });
         }).not.toThrow();
@@ -347,6 +364,11 @@ describe("normal behavior", () => {
                 new Intl.DurationFormat("en", { microseconds: microseconds });
             }).not.toThrow();
         });
+
+        expect(() => {
+            new Intl.DurationFormat("en", { microseconds: "numeric" });
+        }).not.toThrow();
+
         expect(() => {
             new Intl.DurationFormat("en", { style: "digital", microseconds: "numeric" });
         }).not.toThrow();
@@ -366,6 +388,11 @@ describe("normal behavior", () => {
                 new Intl.DurationFormat("en", { nanoseconds: nanoseconds });
             }).not.toThrow();
         });
+
+        expect(() => {
+            new Intl.DurationFormat("en", { nanoseconds: "numeric" });
+        }).not.toThrow();
+
         expect(() => {
             new Intl.DurationFormat("en", { style: "digital", nanoseconds: "numeric" });
         }).not.toThrow();

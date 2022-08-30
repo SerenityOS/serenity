@@ -252,7 +252,12 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
             // i. Set style to digitalBase.
             style = digital_base;
         }
-        // c. Else,
+        // c. Else if prevStyle is "numeric" or "2-digit", then
+        else if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {
+            // i. Set style to "numeric".
+            style = "numeric"sv;
+        }
+        // d. Else,
         else {
             // i. Set style to baseStyle.
             style = base_style;
