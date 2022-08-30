@@ -421,6 +421,7 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         if (&child.value() == m_root) {
             // Root directory of the filesystem model has been removed. All items became invalid.
             invalidate();
+            on_root_path_removed();
             break;
         }
 
