@@ -177,8 +177,8 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
     return result;
 }
 
-// 1.1.4 DurationSign ( record ), https://tc39.es/proposal-intl-duration-format/#sec-durationsign
-i8 duration_sign(Temporal::DurationRecord const& record)
+// 1.1.4 DurationRecordSign ( record ), https://tc39.es/proposal-intl-duration-format/#sec-durationrecordsign
+i8 duration_record_sign(Temporal::DurationRecord const& record)
 {
     // 1. For each row in Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
@@ -204,8 +204,8 @@ i8 duration_sign(Temporal::DurationRecord const& record)
 // 1.1.5 IsValidDurationRecord ( record ), https://tc39.es/proposal-intl-duration-format/#sec-isvaliddurationrecord
 bool is_valid_duration_record(Temporal::DurationRecord const& record)
 {
-    // 1. Let sign be ! DurationSign(record).
-    auto sign = duration_sign(record);
+    // 1. Let sign be ! DurationRecordSign(record).
+    auto sign = duration_record_sign(record);
 
     // 2. For each row in Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
