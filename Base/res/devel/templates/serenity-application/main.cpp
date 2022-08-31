@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"));
     button->on_click = [&](auto) {
-        GUI::MessageBox::show(window, "Hello friends!", ":^)");
+        GUI::MessageBox::show(window, "Hello friends!"sv, ":^)"sv);
     };
 
     window->show();
