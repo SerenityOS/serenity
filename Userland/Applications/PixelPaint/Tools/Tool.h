@@ -27,6 +27,7 @@ public:
     class MouseEvent {
     public:
         enum class Action {
+            DoubleClick,
             MouseDown,
             MouseMove,
             MouseUp
@@ -53,6 +54,7 @@ public:
         GUI::MouseEvent& m_raw_event;
     };
 
+    virtual void on_doubleclick(Layer*, MouseEvent&) { }
     virtual void on_mousedown(Layer*, MouseEvent&) { }
     virtual void on_mousemove(Layer*, MouseEvent&) { }
     virtual void on_mouseup(Layer*, MouseEvent&) { }
