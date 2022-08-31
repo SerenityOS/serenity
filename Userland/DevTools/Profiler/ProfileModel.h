@@ -14,8 +14,8 @@ namespace Profiler {
 class Profile;
 
 // Number of digits after the decimal point for sample percentages.
-static constexpr int const number_of_percent_digits = 3;
-static constexpr float const percent_digits_rounding_constant = AK::pow(10, number_of_percent_digits);
+static constexpr int const number_of_percent_digits = 2;
+static constexpr int const percent_digits_rounding = AK::pow(10, number_of_percent_digits);
 
 class ProfileModel final : public GUI::Model {
 public:
