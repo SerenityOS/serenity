@@ -111,10 +111,16 @@ GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         return {};
     }
     if (role == GUI::ModelRole::Display) {
-        auto round_percentages = [this](auto percentage) {
-            return roundf(static_cast<float>(percentage) / static_cast<float>(m_profile.filtered_event_indices().size())
-                       * percent_digits_rounding_constant)
-                * 100.0f / percent_digits_rounding_constant;
+        auto round_percentages = [this](auto value) {
+            auto percentage_full_precision = round_to<int>(
+                static_cast<float>(value)
+                * 100.f
+                / static_cast<float>(m_profile.filtered_event_indices().size())
+                * percent_digits_rounding);
+            return String::formatted(
+                "{}.{:02}",
+                percentage_full_precision / percent_digits_rounding,
+                percentage_full_precision % percent_digits_rounding);
         };
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
