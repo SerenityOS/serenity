@@ -890,11 +890,7 @@ String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
     if (m_excluded_names_count != 0) {
         builder.append(" excluding:["sv);
-        for (size_t i = 0; i < m_excluded_names_count; ++i) {
-            builder.appendff("{}", m_excluded_names[i]);
-            if (i != m_excluded_names_count - 1)
-                builder.append(',');
-        }
+        builder.join(", "sv, Span<Register const>(m_excluded_names, m_excluded_names_count));
         builder.append(']');
     }
     return builder.to_string();
@@ -998,11 +994,7 @@ String Call::to_string_impl(Bytecode::Executable const&) const
     builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
     if (m_argument_count != 0) {
         builder.append(", arguments:["sv);
-        for (size_t i = 0; i < m_argument_count; ++i) {
-            builder.appendff("{}", m_arguments[i]);
-            if (i != m_argument_count - 1)
-                builder.append(',');
-        }
+        builder.join(", "sv, Span<Register const>(m_arguments, m_argument_count));
         builder.append(']');
     }
     return builder.to_string();
