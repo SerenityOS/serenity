@@ -1,0 +1,849 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Wed, 31 Aug 2022 13:22:33 +0200
+Subject: [PATCH] Add SerenityOS platform support
+
+Co-Authored-By: Jesse Buhagiar <jooster669@gmail.com>
+---
+ CMakeLists.txt        |   9 --
+ README.md             |  32 ++--
+ src/CMakeLists.txt    |  72 +++------
+ src/linux/glw_linux.h |   2 +-
+ src/linux/net_udp.c   |   2 +-
+ src/linux/q_shlinux.c |  36 +++--
+ src/linux/rw_sdl.c    |   4 +-
+ src/linux/snd_sdl.c   |   4 +-
+ src/linux/sys_linux.c | 354 +++++++++++++++++++++---------------------
+ src/linux/vid_so.c    |  11 +-
+ 10 files changed, 248 insertions(+), 278 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 45d107b..49d329b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,16 +3,7 @@ cmake_policy(SET CMP0048 NEW)
+ 
+ project (quake2sdl VERSION 0.17)
+ 
+-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/Modules")
+ set (CMAKE_C_FLAGS_RELEASE "-O3")
+ find_package (SDL2 REQUIRED)
+-find_package (OpenGL REQUIRED)
+-
+-option (WITH_RETEX "Support for retexture" OFF)
+-option (WITH_QMAX "Improved graphics" OFF)
+-
+-if (WITH_QMAX)
+-  find_package (JPEG REQUIRED)
+-endif (WITH_QMAX)
+ 
+ add_subdirectory (src)
+diff --git a/README.md b/README.md
+index d86b324..1b119bf 100644
+--- a/README.md
++++ b/README.md
+@@ -26,20 +26,18 @@ TODO:
+ Building and installation
+ -------------------------
+ 
+-To build **Quake2 SDL** install SDL2, OpenGL  and jpeg libraries, then
+-run the following commands:
+-````
+-mkdir build
+-cd build
+-cmake ..
+-make
+-make install
+-````
+-
+-You can pass `-DWITH_QMAX=ON` option to cmake to build an improved
+-OpenGL renderer or `-DWITH_RETEX=ON` to allow retexture packs. You
+-will need to download these packs from
+-[icculus](http://offload1.icculus.org/quake2/files/) site (download
+-`.pak` files). You will also need `pak0.pak` from the original
+-game. Place these files where `game.so` is installed or to
+-`/install/prefix/share/quake2/baseq2`.
++Build like a regular Serenity Port.
++In the `quake2` port directory, run `./package.sh`.
++
++You'll then need to source the QuakeII demo pak file yourself. iD's FTP is offline, however you can find the demo in a few places. Once you've downloaded the demo, move the `pak0.pak` file to `/home/anon/.quake2/baseq2/` and run `quake2` from the command line. 
++
++Running with OpenGL
++-------------------
++
++Dynamically switching between software rendering and LibGL does not yet work; to run Quake2 in OpenGL mode, add the
++following statements to `~/.quake2/baseq2/config.cfg`:
++
++```
++set vid_ref "sdlgl"
++set gl_driver "libgl.so.serenity"
++```
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index d8ea312..cd976cd 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -2,23 +2,7 @@ set (quake_resource_libdir ${CMAKE_INSTALL_PREFIX}/lib/quake2sdl)
+ set (quake_resource_datadir ${CMAKE_INSTALL_PREFIX}/share/quake2)
+ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/q_resources.h.in ${CMAKE_CURRENT_BINARY_DIR}/q_resources.h)
+ 
+-add_definitions (-DHAVE_IPV6 -DLINUX_VERSION="1")
+ include_directories (${SDL2_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${OPENGL_INCLUDE_DIR})
+-if (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+-  add_definitions (-DHAVE_SIN6_LEN)
+-elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+-  # Linux-specific stuff like mremap
+-  add_definitions (-D_GNU_SOURCE)
+-endif ()
+-
+-if (WITH_RETEX)
+-  add_definitions (-DRETEX)
+-endif (WITH_RETEX)
+-
+-if (WITH_QMAX)
+-  add_definitions (-DQMAX)
+-  include_directories (${JPEG_INCLUDE_DIR})
+-endif (WITH_QMAX)
+ 
+ set (Q2_SOURCES
+   client/cl_cin.c
+@@ -65,22 +49,14 @@ set (Q2_SOURCES
+   linux/vid_so.c
+   linux/sys_linux.c
+   linux/glob.c
+-  linux/net_udp6.c
++  linux/net_udp.c
+   game/q_shared.c
+   linux/snd_sdl.c
+-  )
+-
+-if (WITH_QMAX)
+-  set (Q2_SOURCES ${Q2_SOURCES} client/cl_fxmax.c)
+-else (WITH_QMAX)
+-  set (Q2_SOURCES ${Q2_SOURCES} client/cl_fx.c)
+-endif (WITH_QMAX)
++)
+ 
++set (Q2_SOURCES ${Q2_SOURCES} client/cl_fx.c)
+ add_executable (quake2 ${Q2_SOURCES})
+-target_link_libraries (quake2 ${SDL2_LIBRARY} m)
+-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+-  target_link_libraries (quake2 dl)
+-endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
++target_link_libraries (quake2 dl SDL2 pthread gfx gui c m)
+ 
+ add_library (ref-softsdl SHARED
+   ref_soft/r_aclip.c
+@@ -109,31 +85,31 @@ add_library (ref-softsdl SHARED
+ set_target_properties (ref-softsdl PROPERTIES OUTPUT_NAME ref_softsdl PREFIX "")
+ 
+ if (WITH_QMAX)
+-  set (GL_DIR ref_candygl)
++    set (GL_DIR ref_candygl)
+ else (WITH_QMAX)
+-  set (GL_DIR ref_gl)
++    set (GL_DIR ref_gl)
+ endif (WITH_QMAX)
+ 
+ add_library (ref-sdlgl SHARED
+-  ${GL_DIR}/gl_draw.c
+-  ${GL_DIR}/gl_image.c
+-  ${GL_DIR}/gl_light.c
+-  ${GL_DIR}/gl_mesh.c
+-  ${GL_DIR}/gl_model.c
+-  ${GL_DIR}/gl_rmain.c
+-  ${GL_DIR}/gl_rmisc.c
+-  ${GL_DIR}/gl_rsurf.c
+-  ${GL_DIR}/gl_warp.c
+-  linux/qgl_linux.c
+-  game/q_shared.c
+-  linux/q_shlinux.c
+-  linux/glob.c
+-  linux/rw_sdl.c
+-  linux/rw_linux.c
+-  linux/joystick.c
+-)
++        ${GL_DIR}/gl_draw.c
++        ${GL_DIR}/gl_image.c
++        ${GL_DIR}/gl_light.c
++        ${GL_DIR}/gl_mesh.c
++        ${GL_DIR}/gl_model.c
++        ${GL_DIR}/gl_rmain.c
++        ${GL_DIR}/gl_rmisc.c
++        ${GL_DIR}/gl_rsurf.c
++        ${GL_DIR}/gl_warp.c
++        linux/qgl_linux.c
++        game/q_shared.c
++        linux/q_shlinux.c
++        linux/glob.c
++        linux/rw_sdl.c
++        linux/rw_linux.c
++        linux/joystick.c
++        )
+ if (WITH_QMAX)
+-  target_link_libraries (ref-sdlgl ${JPEG_LIBRARY})
++    target_link_libraries (ref-sdlgl ${JPEG_LIBRARY})
+ endif (WITH_QMAX)
+ target_compile_definitions (ref-sdlgl PRIVATE -DOPENGL)
+ set_target_properties (ref-sdlgl PROPERTIES OUTPUT_NAME ref_sdlgl PREFIX "")
+diff --git a/src/linux/glw_linux.h b/src/linux/glw_linux.h
+index 4994129..9b0cd6b 100644
+--- a/src/linux/glw_linux.h
++++ b/src/linux/glw_linux.h
+@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+ #ifndef __linux__
+ #ifndef __FreeBSD__
+-#error You shouldnt be including this file on non-unix platforms
++// #error You shouldnt be including this file on non-unix platforms
+ #endif
+ #endif
+ 
+diff --git a/src/linux/net_udp.c b/src/linux/net_udp.c
+index 447317b..b630e0f 100644
+--- a/src/linux/net_udp.c
++++ b/src/linux/net_udp.c
+@@ -496,7 +496,7 @@ int NET_Socket (char *net_interface, int port)
+         return 0;
+     }
+ 
+-    if (!net_interface || !net_interface[0] || !stricmp(net_interface, "localhost"))
++    if (!net_interface || !net_interface[0] || !strcmp(net_interface, "localhost"))
+         address.sin_addr.s_addr = INADDR_ANY;
+     else
+         NET_StringToSockaddr (net_interface, (struct sockaddr *)&address);
+diff --git a/src/linux/q_shlinux.c b/src/linux/q_shlinux.c
+index 801f750..1851276 100644
+--- a/src/linux/q_shlinux.c
++++ b/src/linux/q_shlinux.c
+@@ -76,26 +76,30 @@ void *Hunk_Alloc (int size)
+     return buf;
+ }
+ 
++
++// FIXME: 64-bit????
++#define PAGE_SIZE 4096
++
+ int Hunk_End (void)
+ {
+     byte *n;
+ 
+-#if defined(__FreeBSD__)
+-  size_t old_size = maxhunksize;
+-  size_t new_size = curhunksize + sizeof(int);
+-  void * unmap_base;
+-  size_t unmap_len;
+-
+-  new_size = round_page(new_size);
+-  old_size = round_page(old_size);
+-  if (new_size > old_size)
+-      n = 0; /* error */
+-  else if (new_size < old_size)
+-  {
+-    unmap_base = (caddr_t)(membase + new_size);
+-    unmap_len = old_size - new_size;
+-    n = munmap(unmap_base, unmap_len) + membase;
+-  }
++#if defined(__FreeBSD__) || defined(__serenity__)
++    size_t old_size = maxhunksize;
++    size_t new_size = curhunksize + sizeof(int);
++    void * unmap_base;
++    size_t unmap_len;
++
++    new_size = ((new_size + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)));
++    old_size = ((old_size + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)));
++    if (new_size > old_size)
++        n = 0; /* error */
++    else if (new_size < old_size)
++    {
++        unmap_base = (caddr_t)(membase + new_size);
++        unmap_len = old_size - new_size;
++        n = munmap(unmap_base, unmap_len) + membase;
++    }
+ #endif
+ #if defined(__linux__)
+     n = mremap(membase, maxhunksize, curhunksize + sizeof(int), 0);
+diff --git a/src/linux/rw_sdl.c b/src/linux/rw_sdl.c
+index 460e28a..b873dfa 100644
+--- a/src/linux/rw_sdl.c
++++ b/src/linux/rw_sdl.c
+@@ -20,7 +20,7 @@
+ #include <string.h>
+ #include <sys/mman.h>
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #ifdef OPENGL
+ #include <GL/gl.h>
+@@ -562,7 +562,7 @@ static qboolean SWimp_InitGraphics( qboolean fullscreen )
+         return false;
+     }
+ 
+-    renderer = SDL_CreateRenderer (window, -1, SDL_RENDERER_ACCELERATED);
++    renderer = SDL_CreateRenderer (window, -1, SDL_RENDERER_SOFTWARE);
+     if (renderer == NULL) {
+         Sys_Error("(SOFTSDL) SDL CreateRenderer failed: %s\n", SDL_GetError());
+         return false;
+diff --git a/src/linux/snd_sdl.c b/src/linux/snd_sdl.c
+index b9ae691..5c66159 100644
+--- a/src/linux/snd_sdl.c
++++ b/src/linux/snd_sdl.c
+@@ -2,7 +2,7 @@
+     snd_sdl.c
+ 
+     Sound code taken from SDLQuake and modified to work with Quake2
+-    Robert Bäuml 2001-12-25
++    Robert Bï¿½uml 2001-12-25
+ 
+     This program is free software; you can redistribute it and/or
+     modify it under the terms of the GNU General Public License
+@@ -25,7 +25,7 @@
+     $Id: snd_sdl.c,v 1.2 2002/02/09 20:29:38 relnev Exp $
+ */
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "../client/client.h"
+ #include "../client/snd_loc.h"
+diff --git a/src/linux/sys_linux.c b/src/linux/sys_linux.c
+index 9d12722..a437f61 100644
+--- a/src/linux/sys_linux.c
++++ b/src/linux/sys_linux.c
+@@ -27,8 +27,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ #include <fcntl.h>
+ #include <stdarg.h>
+ #include <stdio.h>
+-#include <sys/ipc.h>
+-#include <sys/shm.h>
+ #include <sys/stat.h>
+ #include <string.h>
+ #include <ctype.h>
+@@ -43,7 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ 
+ cvar_t *nostdout;
+ 
+-unsigned    sys_frame_time;
++unsigned	sys_frame_time;
+ 
+ uid_t saved_euid;
+ qboolean stdin_active = true;
+@@ -54,78 +52,78 @@ qboolean stdin_active = true;
+ 
+ void Sys_ConsoleOutput (char *string)
+ {
+-    if (nostdout && nostdout->value)
+-        return;
++	if (nostdout && nostdout->value)
++		return;
+ 
+-    fputs(string, stdout);
++	fputs(string, stdout);
+ }
+ 
+ void Sys_Printf (char *fmt, ...)
+ {
+-    va_list        argptr;
+-    char        text[1024];
+-    unsigned char    *p;
+-
+-    va_start (argptr,fmt);
+-    vsnprintf (text,1024,fmt,argptr);
+-    va_end (argptr);
+-
+-    if (nostdout && nostdout->value)
+-        return;
+-
+-    for (p = (unsigned char *)text; *p; p++) {
+-        *p &= 0x7f;
+-        if ((*p > 128 || *p < 32) && *p != 10 && *p != 13 && *p != 9)
+-            printf("[%02x]", *p);
+-        else
+-            putc(*p, stdout);
+-    }
++	va_list		argptr;
++	char		text[1024];
++	unsigned char	*p;
++
++	va_start (argptr,fmt);
++	vsnprintf (text,1024,fmt,argptr);
++	va_end (argptr);
++
++	if (nostdout && nostdout->value)
++		return;
++
++	for (p = (unsigned char *)text; *p; p++) {
++		*p &= 0x7f;
++		if ((*p > 128 || *p < 32) && *p != 10 && *p != 13 && *p != 9)
++			printf("[%02x]", *p);
++		else
++			putc(*p, stdout);
++	}
+ }
+ 
+ void Sys_Quit (void)
+ {
+-    CL_Shutdown ();
+-    Qcommon_Shutdown ();
+-    fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+-    _exit(0);
++	CL_Shutdown ();
++	Qcommon_Shutdown ();
++	//fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
++	_exit(0);
+ }
+ 
+ void Sys_Init(void)
+ {
+ #if id386
+-//    Sys_SetFPCW();
++//	Sys_SetFPCW();
+ #endif
+ }
+ 
+ void Sys_Error (char *error, ...)
+ { 
+-    va_list     argptr;
+-    char        string[1024];
++	va_list     argptr;
++	char        string[1024];
+ 
+ // change stdin to non blocking
+-    fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
++	//fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+ 
+-    CL_Shutdown ();
+-    Qcommon_Shutdown ();
++	CL_Shutdown ();
++	Qcommon_Shutdown ();
+     
+-    va_start (argptr,error);
+-    vsnprintf (string,1024,error,argptr);
+-    va_end (argptr);
+-    fprintf(stderr, "Error: %s\n", string);
++	va_start (argptr,error);
++	vsnprintf (string,1024,error,argptr);
++	va_end (argptr);
++	fprintf(stderr, "Error: %s\n", string);
+ 
+-    _exit (1);
++	_exit (1);
+ 
+ } 
+ 
+ void Sys_Warn (char *warning, ...)
+ { 
+-    va_list     argptr;
+-    char        string[1024];
++	va_list     argptr;
++	char        string[1024];
+ 
+-    va_start (argptr,warning);
+-    vsnprintf (string,1024,warning,argptr);
+-    va_end (argptr);
+-    fprintf(stderr, "Warning: %s", string);
++	va_start (argptr,warning);
++	vsnprintf (string,1024,warning,argptr);
++	va_end (argptr);
++	fprintf(stderr, "Warning: %s", string);
+ } 
+ 
+ /*
+@@ -135,53 +133,53 @@ Sys_FileTime
+ returns -1 if not present
+ ============
+ */
+-int    Sys_FileTime (char *path)
++int	Sys_FileTime (char *path)
+ {
+-    struct    stat    buf;
+-    
+-    if (stat (path,&buf) == -1)
+-        return -1;
+-    
+-    return buf.st_mtime;
++	struct	stat	buf;
++	
++	if (stat (path,&buf) == -1)
++		return -1;
++	
++	return buf.st_mtime;
+ }
+ 
+ void floating_point_exception_handler(int whatever)
+ {
+-//    Sys_Warn("floating point exception\n");
+-    signal(SIGFPE, floating_point_exception_handler);
++//	Sys_Warn("floating point exception\n");
++	signal(SIGFPE, floating_point_exception_handler);
+ }
+ 
+ char *Sys_ConsoleInput(void)
+ {
+-    static char text[256];
+-    int     len;
+-    fd_set    fdset;
+-    struct timeval timeout;
+-
+-    if (!dedicated || !dedicated->value)
+-        return NULL;
+-
+-    if (!stdin_active)
+-        return NULL;
+-
+-    FD_ZERO(&fdset);
+-    FD_SET(0, &fdset); // stdin
+-    timeout.tv_sec = 0;
+-    timeout.tv_usec = 0;
+-    if (select (1, &fdset, NULL, NULL, &timeout) == -1 || !FD_ISSET(0, &fdset))
+-        return NULL;
+-
+-    len = read (0, text, sizeof(text));
+-    if (len == 0) { // eof!
+-        stdin_active = false;
+-        return NULL;
+-    }
+-
+-    if (len < 1)
+-        return NULL;
+-    text[len-1] = 0;    // rip off the /n and terminate
+-
+-    return text;
++	static char text[256];
++	int     len;
++	fd_set	fdset;
++	struct timeval timeout;
++
++	if (!dedicated || !dedicated->value)
++		return NULL;
++
++	if (!stdin_active)
++		return NULL;
++
++	FD_ZERO(&fdset);
++	FD_SET(0, &fdset); // stdin
++	timeout.tv_sec = 0;
++	timeout.tv_usec = 0;
++	//if (select (1, &fdset, NULL, NULL, &timeout) == -1 || !FD_ISSET(0, &fdset))
++		//return NULL;
++
++	len = read (0, text, sizeof(text));
++	if (len == 0) { // eof!
++		stdin_active = false;
++		return NULL;
++	}
++
++	if (len < 1)
++		return NULL;
++	text[len-1] = 0;    // rip off the /n and terminate
++
++	return text;
+ }
+ 
+ /*****************************************************************************/
+@@ -195,9 +193,9 @@ Sys_UnloadGame
+ */
+ void Sys_UnloadGame (void)
+ {
+-    if (game_library) 
+-        dlclose (game_library);
+-    game_library = NULL;
++	if (game_library) 
++		dlclose (game_library);
++	game_library = NULL;
+ }
+ 
+ /*
+@@ -210,7 +208,7 @@ Loads the game dll
+ void *Sys_GetGameAPI (void *parms)
+ {
+     void    *(*GetGameAPI) (void *);
+-    
++
+     FILE    *fp;
+     char    name[MAX_OSPATH];
+     char    *path;
+@@ -233,33 +231,33 @@ void *Sys_GetGameAPI (void *parms)
+         if (!path)
+             return NULL;        // couldn't find one anywhere
+         snprintf (name, MAX_OSPATH, "%s/%s", path, gamename);
+-        
++
+         /* skip it if it just doesn't exist */
+         fp = fopen(name, "rb");
+         if (fp == NULL)
+             continue;
+         fclose(fp);
+-        
++
+         game_library = dlopen (name, RTLD_NOW);
+         if (game_library)
+         {
+             Com_MDPrintf ("LoadLibrary (%s)\n",name);
+             break;
+-        } 
+-        else 
++        }
++        else
+         {
+             Com_Printf ("LoadLibrary (%s):", name);
+-            
++
+             path = dlerror();
+             str_p = strchr(path, ':'); // skip the path (already shown)
+             if (str_p == NULL)
+                 str_p = path;
+             else
+                 str_p++;
+-                
++
+             Com_Printf ("%s\n", str_p);
+-            
+-            return NULL; 
++
++            return NULL;
+         }
+     }
+ 
+@@ -267,7 +265,7 @@ void *Sys_GetGameAPI (void *parms)
+ 
+     if (!GetGameAPI)
+     {
+-        Sys_UnloadGame ();        
++        Sys_UnloadGame ();
+         return NULL;
+     }
+ 
+@@ -283,97 +281,97 @@ void Sys_AppActivate (void)
+ void Sys_SendKeyEvents (void)
+ {
+ #ifndef DEDICATED_ONLY
+-    if (KBD_Update_fp)
+-        KBD_Update_fp();
++	if (KBD_Update_fp)
++		KBD_Update_fp();
+ #endif
+ 
+-    // grab frame time 
+-    sys_frame_time = Sys_Milliseconds();
++	// grab frame time 
++	sys_frame_time = Sys_Milliseconds();
+ }
+ 
+ /*****************************************************************************/
+ 
+ int main (int argc, char **argv)
+ {
+-    int     time, oldtime, newtime;
++	int 	time, oldtime, newtime;
+ 
+-    // go back to real user for config loads
+-    saved_euid = geteuid();
+-    seteuid(getuid());
+-    
+-    printf ("Quake 2 -- Version %s\n", LINUX_VERSION);
++	// go back to real user for config loads
++	saved_euid = geteuid();
++	seteuid(getuid());
++	
++	printf ("Quake 2 -- Version %s Serenity\n", "0.1");
+ 
+-    Qcommon_Init(argc, argv);
++	Qcommon_Init(argc, argv);
+ 
+-    fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);
++	//fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);
+ 
+-    nostdout = Cvar_Get("nostdout", "0", 0);
+-    if (!nostdout->value) {
+-        fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);    
+-    }
+-    oldtime = Sys_Milliseconds ();
+-    while (1)
+-    {
++	nostdout = Cvar_Get("nostdout", "0", 0);
++	if (!nostdout->value) {
++		//fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);	
++	}
++	oldtime = Sys_Milliseconds ();
++	while (1)
++	{
+ // find time spent rendering last frame
+-        do {
+-            newtime = Sys_Milliseconds ();
+-            time = newtime - oldtime;
+-        } while (time < 1);
+-        Qcommon_Frame (time);
+-        oldtime = newtime;
+-    }
++		do {
++			newtime = Sys_Milliseconds ();
++			time = newtime - oldtime;
++		} while (time < 1);
++		Qcommon_Frame (time);
++		oldtime = newtime;
++	}
+ }
+ 
+ #if 0
+ void Sys_CopyProtect(void)
+ {
+-    FILE *mnt;
+-    struct mntent *ent;
+-    char path[MAX_OSPATH];
+-    struct stat st;
+-    qboolean found_cd = false;
+-
+-    static qboolean checked = false;
+-
+-    if (checked)
+-        return;
+-
+-    if ((mnt = setmntent("/etc/mtab", "r")) == NULL)
+-        Com_Error(ERR_FATAL, "Can't read mount table to determine mounted cd location.");
+-
+-    while ((ent = getmntent(mnt)) != NULL) {
+-        if (strcmp(ent->mnt_type, "iso9660") == 0) {
+-            // found a cd file system
+-            found_cd = true;
+-            sprintf(path, "%s/%s", ent->mnt_dir, "install/data/quake2.exe");
+-            if (stat(path, &st) == 0) {
+-                // found it
+-                checked = true;
+-                endmntent(mnt);
+-                return;
+-            }
+-            sprintf(path, "%s/%s", ent->mnt_dir, "Install/Data/quake2.exe");
+-            if (stat(path, &st) == 0) {
+-                // found it
+-                checked = true;
+-                endmntent(mnt);
+-                return;
+-            }
+-            sprintf(path, "%s/%s", ent->mnt_dir, "quake2.exe");
+-            if (stat(path, &st) == 0) {
+-                // found it
+-                checked = true;
+-                endmntent(mnt);
+-                return;
+-            }
+-        }
+-    }
+-    endmntent(mnt);
+-
+-    if (found_cd)
+-        Com_Error (ERR_FATAL, "Could not find a Quake2 CD in your CD drive.");
+-    Com_Error (ERR_FATAL, "Unable to find a mounted iso9660 file system.\n"
+-        "You must mount the Quake2 CD in a cdrom drive in order to play.");
++	FILE *mnt;
++	struct mntent *ent;
++	char path[MAX_OSPATH];
++	struct stat st;
++	qboolean found_cd = false;
++
++	static qboolean checked = false;
++
++	if (checked)
++		return;
++
++	if ((mnt = setmntent("/etc/mtab", "r")) == NULL)
++		Com_Error(ERR_FATAL, "Can't read mount table to determine mounted cd location.");
++
++	while ((ent = getmntent(mnt)) != NULL) {
++		if (strcmp(ent->mnt_type, "iso9660") == 0) {
++			// found a cd file system
++			found_cd = true;
++			sprintf(path, "%s/%s", ent->mnt_dir, "install/data/quake2.exe");
++			if (stat(path, &st) == 0) {
++				// found it
++				checked = true;
++				endmntent(mnt);
++				return;
++			}
++			sprintf(path, "%s/%s", ent->mnt_dir, "Install/Data/quake2.exe");
++			if (stat(path, &st) == 0) {
++				// found it
++				checked = true;
++				endmntent(mnt);
++				return;
++			}
++			sprintf(path, "%s/%s", ent->mnt_dir, "quake2.exe");
++			if (stat(path, &st) == 0) {
++				// found it
++				checked = true;
++				endmntent(mnt);
++				return;
++			}
++		}
++	}
++	endmntent(mnt);
++
++	if (found_cd)
++		Com_Error (ERR_FATAL, "Could not find a Quake2 CD in your CD drive.");
++	Com_Error (ERR_FATAL, "Unable to find a mounted iso9660 file system.\n"
++		"You must mount the Quake2 CD in a cdrom drive in order to play.");
+ }
+ #endif
+ 
+@@ -386,19 +384,19 @@ Sys_MakeCodeWriteable
+ void Sys_MakeCodeWriteable (unsigned long startaddr, unsigned long length)
+ {
+ 
+-    int r;
+-    unsigned long addr;
+-    int psize = getpagesize();
++	int r;
++	unsigned long addr;
++	int psize = getpagesize();
+ 
+-    addr = (startaddr & ~(psize-1)) - psize;
++	addr = (startaddr & ~(psize-1)) - psize;
+ 
+-//    fprintf(stderr, "writable code %lx(%lx)-%lx, length=%lx\n", startaddr,
+-//            addr, startaddr+length, length);
++//	fprintf(stderr, "writable code %lx(%lx)-%lx, length=%lx\n", startaddr,
++//			addr, startaddr+length, length);
+ 
+-    r = mprotect((char*)addr, length + startaddr - addr + psize, 7);
++	r = mprotect((char*)addr, length + startaddr - addr + psize, 7);
+ 
+-    if (r < 0)
+-            Sys_Error("Protection change failed\n");
++	if (r < 0)
++    		Sys_Error("Protection change failed\n");
+ 
+ }
+ 
+diff --git a/src/linux/vid_so.c b/src/linux/vid_so.c
+index a060303..d456865 100644
+--- a/src/linux/vid_so.c
++++ b/src/linux/vid_so.c
+@@ -140,12 +140,12 @@ typedef struct vidmode_s
+ 
+ vidmode_t vid_modes[] =
+ {
+-    { "Mode 0: 320x240",   320, 240,   0 },
++    { "Mode 0: 320x240",   640, 480,   0 }, // HACK: Trying to access graphics options or setting video mode kills the program.
+     { "Mode 1: 400x300",   400, 300,   1 },
+     { "Mode 2: 512x384",   512, 384,   2 },
+     { "Mode 3: 640x480",   640, 480,   3 },
+     { "Mode 4: 800x600",   800, 600,   4 },
+-    { "Mode 5: 960x720",   960, 720,   5 },
++    { "Mode 5: 960x720",   960, 3720,   5 },
+     { "Mode 6: 1024x768",  1024, 768,  6 },
+     { "Mode 7: 1152x864",  1152, 864,  7 },
+     { "Mode 8: 1280x1024",  1280, 1024, 8 },
+@@ -239,8 +239,11 @@ qboolean VID_LoadRefresh( char *name )
+     //regain root
+     seteuid(saved_euid);
+ 
+-    snprintf (fn, MAX_OSPATH, "%s/%s", RESOURCE_LIBDIR, name );
+-    
++    // FIXME: RESOURCE_LIBDIR is a completely invalid path!
++    // Un-hardcode me eventually please!
++    //snprintf (fn, MAX_OSPATH, "%s/%s", RESOURCE_LIBDIR, name );
++    snprintf (fn, MAX_OSPATH, "%s/%s", "/usr/local/lib/quake2sdl", name );
++    Com_Printf("%s\n", fn);
+     if (stat(fn, &st) == -1) {
+         Com_Printf( "LoadLibrary(\"%s\") failed: %s\n", name, strerror(errno));
+         return false;
