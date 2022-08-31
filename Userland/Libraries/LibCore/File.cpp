@@ -202,6 +202,33 @@ bool File::looks_like_shared_library(DeprecatedString const& filename)
     return filename.ends_with(".so"sv) || filename.contains(".so."sv);
 }
 
+bool File::can_delete_or_move(StringView path)
+{
+    VERIFY(!path.is_empty());
+    auto directory = LexicalPath::dirname(path);
+    auto directory_has_write_access = !Core::System::access(directory, W_OK).is_error();
+    if (!directory_has_write_access)
+        return false;
+
+    auto stat_or_empty = [](StringView path) {
+        auto stat_or_error = Core::System::stat(path);
+        if (stat_or_error.is_error()) {
+            struct stat stat { };
+            return stat;
+        }
+        return stat_or_error.release_value();
+    };
+
+    auto directory_stat = stat_or_empty(directory);
+    bool is_directory_sticky = directory_stat.st_mode & S_ISVTX;
+    if (!is_directory_sticky)
+        return true;
+
+    // Directory is sticky, only the file owner, directory owner, and root can modify (rename, remove) it.
+    auto user_id = geteuid();
+    return user_id == 0 || directory_stat.st_uid == user_id || stat_or_empty(path).st_uid == user_id;
+}
+
 bool File::exists(StringView filename)
 {
     return !Core::System::stat(filename).is_error();
