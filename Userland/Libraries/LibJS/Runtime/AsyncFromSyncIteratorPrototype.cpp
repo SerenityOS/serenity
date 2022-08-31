@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
         auto* iter_result = create_iterator_result_object(vm, vm.argument(0), true);
 
         // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
-        MUST(call(vm, *promise_capability.reject, js_undefined(), iter_result));
+        MUST(call(vm, *promise_capability.resolve, js_undefined(), iter_result));
 
         // c. Return promiseCapability.[[Promise]].
         return promise_capability.promise;

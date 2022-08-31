@@ -44,6 +44,30 @@ describe("basic behavior", () => {
         expect(loopIterations).toBe(1);
         expect(rejected).toBeFalse();
     });
+
+    test("can break a for-await-of loop", () => {
+        var loopIterations = 0;
+        var rejected = false;
+        async function f() {
+            for await (const v of [1, 2, 3]) {
+                expect(v).toBe(1);
+                loopIterations++;
+                break;
+            }
+        }
+
+        f().then(
+            () => {
+                expect(loopIterations).toBe(1);
+            },
+            () => {
+                rejected = true;
+            }
+        );
+        runQueuedPromiseJobs();
+        expect(loopIterations).toBe(1);
+        expect(rejected).toBeFalse();
+    });
 });
 
 describe("only allowed in async functions", () => {
