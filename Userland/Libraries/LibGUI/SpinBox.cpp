@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,10 +25,15 @@ SpinBox::SpinBox()
             return;
 
         auto value = m_editor->text().to_uint();
+        if (!value.has_value() && m_editor->text().length() > 0)
+            m_editor->do_delete();
+    };
+    m_editor->on_focusout = [this] {
+        auto value = m_editor->text().to_int();
         if (value.has_value())
             set_value(value.value());
         else
-            m_editor->set_text(String::number(m_value));
+            set_value(min());
     };
     m_editor->on_up_pressed = [this] {
         set_value(m_value + 1);
