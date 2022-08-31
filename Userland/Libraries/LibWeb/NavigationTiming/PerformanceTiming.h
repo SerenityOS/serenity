@@ -6,21 +6,18 @@
 
 #pragma once
 
-#include <AK/RefCountForwarder.h>
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::NavigationTiming {
 
-class PerformanceTiming final
-    : public RefCounted<PerformanceTiming>
-    , public Bindings::Wrappable {
+class PerformanceTiming final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(PerformanceTiming, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::PerformanceTimingWrapper;
     using AllowOwnPtr = TrueType;
 
-    explicit PerformanceTiming(HTML::Window&);
     ~PerformanceTiming();
 
     u64 navigation_start() { return 0; }
@@ -46,7 +43,13 @@ public:
     u64 load_event_end() { return 0; }
 
 private:
-    JS::Handle<HTML::Window> m_window;
+    explicit PerformanceTiming(HTML::Window&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::GCPtr<HTML::Window> m_window;
 };
 
 }
+
+WRAPPER_HACK(PerformanceTiming, Web::NavigationTiming)

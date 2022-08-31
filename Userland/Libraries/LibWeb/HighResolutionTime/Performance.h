@@ -10,7 +10,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
 
 namespace Web::HighResolutionTime {
 
@@ -23,7 +22,7 @@ public:
     double now() const { return m_timer.elapsed(); }
     double time_origin() const;
 
-    JS::GCPtr<NavigationTiming::PerformanceTiming> timing() { return *m_timing; }
+    JS::GCPtr<NavigationTiming::PerformanceTiming> timing();
 
 private:
     explicit Performance(HTML::Window&);
@@ -31,10 +30,9 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<HTML::Window> m_window;
+    JS::GCPtr<NavigationTiming::PerformanceTiming> m_timing;
 
     Core::ElapsedTimer m_timer;
-
-    OwnPtr<NavigationTiming::PerformanceTiming> m_timing;
 };
 
 }

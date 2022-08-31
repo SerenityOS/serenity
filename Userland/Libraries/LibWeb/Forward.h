@@ -474,7 +474,6 @@ class MutationRecordWrapper;
 class NodeListWrapper;
 class OptionConstructor;
 class Path2DWrapper;
-class PerformanceTimingWrapper;
 class RangePrototype;
 class ResizeObserverWrapper;
 class SelectionWrapper;
