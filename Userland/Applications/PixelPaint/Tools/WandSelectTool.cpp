@@ -56,37 +56,15 @@ static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint
     // As we find neighbors that are paintable we update their pixel, add them to the queue, and mark them in the mask
     while (!points_to_visit.is_empty()) {
         auto current_point = points_to_visit.dequeue();
-        Gfx::IntPoint candidate_point = {};
-
-        if (current_point.x() > 0) {
-            candidate_point = current_point.moved_left(1);
-            if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && meets_wand_threshold(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
-                points_to_visit.enqueue(candidate_point);
-                selection_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-            }
-            flood_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-        }
-
-        if (current_point.x() < bitmap.width() - 1) {
-            candidate_point = current_point.moved_right(1);
-            if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && meets_wand_threshold(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
-                points_to_visit.enqueue(candidate_point);
-                selection_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-            }
-            flood_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-        }
-
-        if (current_point.y() > 0) {
-            candidate_point = current_point.moved_up(1);
-            if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && meets_wand_threshold(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
-                points_to_visit.enqueue(candidate_point);
-                selection_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-            }
-            flood_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-        }
-
-        if (current_point.y() < bitmap.height() - 1) {
-            candidate_point = current_point.moved_down(1);
+        auto candidate_points = Array {
+            current_point.moved_left(1),
+            current_point.moved_right(1),
+            current_point.moved_up(1),
+            current_point.moved_down(1)
+        };
+        for (auto candidate_point : candidate_points) {
+            if (!bitmap.rect().contains(candidate_point))
+                continue;
             if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && meets_wand_threshold(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
                 points_to_visit.enqueue(candidate_point);
                 selection_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
