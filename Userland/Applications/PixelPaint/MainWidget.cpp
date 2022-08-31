@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021-2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -579,6 +580,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     m_layer_menu = window.add_menu("&Layer");
+
+    m_layer_menu->on_visibility_change = [this](bool visible) {
+        if (!visible)
+            return;
+
+        bool image_has_selection = !current_image_editor()->active_layer()->image().selection().is_empty();
+
+        m_layer_via_copy->set_enabled(image_has_selection);
+        m_layer_via_cut->set_enabled(image_has_selection);
+    };
+
     m_layer_menu->add_action(GUI::Action::create(
         "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, g_icon_bag.new_layer, [&](auto&) {
             auto* editor = current_image_editor();
@@ -596,6 +608,31 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 m_layer_list_widget->select_top_layer();
             }
         }));
+
+    m_layer_via_copy = GUI::Action::create(
+        "Layer via Copy", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.new_layer, [&](auto&) {
+            auto add_layer_success = current_image_editor()->add_new_layer_from_selection();
+            if (add_layer_success.is_error()) {
+                GUI::MessageBox::show_error(&window, add_layer_success.release_error().string_literal());
+                return;
+            }
+            current_image_editor()->did_complete_action("New Layer via Copy"sv);
+            m_layer_list_widget->select_top_layer();
+        });
+    m_layer_menu->add_action(*m_layer_via_copy);
+
+    m_layer_via_cut = GUI::Action::create(
+        "Layer via Cut", { Mod_Ctrl | Mod_Shift, Key_X }, g_icon_bag.new_layer, [&](auto&) {
+            auto add_layer_success = current_image_editor()->add_new_layer_from_selection();
+            if (add_layer_success.is_error()) {
+                GUI::MessageBox::show_error(&window, add_layer_success.release_error().string_literal());
+                return;
+            }
+            current_image_editor()->active_layer()->erase_selection(current_image_editor()->image().selection());
+            current_image_editor()->did_complete_action("New Layer via Cut"sv);
+            m_layer_list_widget->select_top_layer();
+        });
+    m_layer_menu->add_action(*m_layer_via_cut);
 
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(

@@ -101,6 +101,9 @@ private:
     RefPtr<GUI::Action> m_show_guides_action;
     RefPtr<GUI::Action> m_show_rulers_action;
     RefPtr<GUI::Action> m_show_active_layer_boundary_action;
+
+    RefPtr<GUI::Action> m_layer_via_copy;
+    RefPtr<GUI::Action> m_layer_via_cut;
 };
 
 }
