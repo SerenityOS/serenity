@@ -7,15 +7,15 @@ Co-Authored-By: Jesse Buhagiar <jooster669@gmail.com>
 ---
  CMakeLists.txt        |   9 --
  README.md             |  32 ++--
- src/CMakeLists.txt    |  72 +++------
+ src/CMakeLists.txt    |  71 +++------
  src/linux/glw_linux.h |   2 +-
  src/linux/net_udp.c   |   2 +-
  src/linux/q_shlinux.c |  36 +++--
- src/linux/rw_sdl.c    |   4 +-
+ src/linux/rw_sdl.c    |   9 +-
  src/linux/snd_sdl.c   |   4 +-
  src/linux/sys_linux.c | 354 +++++++++++++++++++++---------------------
  src/linux/vid_so.c    |  11 +-
- 10 files changed, 248 insertions(+), 278 deletions(-)
+ 10 files changed, 252 insertions(+), 278 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 45d107b..49d329b 100644
@@ -79,7 +79,7 @@ index d86b324..1b119bf 100644
 +set gl_driver "libgl.so.serenity"
 +```
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index d8ea312..cd976cd 100644
+index d8ea312..7ed0d8a 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -2,23 +2,7 @@ set (quake_resource_libdir ${CMAKE_INSTALL_PREFIX}/lib/quake2sdl)
@@ -133,7 +133,7 @@ index d8ea312..cd976cd 100644
  
  add_library (ref-softsdl SHARED
    ref_soft/r_aclip.c
-@@ -109,31 +85,31 @@ add_library (ref-softsdl SHARED
+@@ -109,31 +85,30 @@ add_library (ref-softsdl SHARED
  set_target_properties (ref-softsdl PROPERTIES OUTPUT_NAME ref_softsdl PREFIX "")
  
  if (WITH_QMAX)
@@ -177,7 +177,6 @@ index d8ea312..cd976cd 100644
 +        linux/glob.c
 +        linux/rw_sdl.c
 +        linux/rw_linux.c
-+        linux/joystick.c
 +        )
  if (WITH_QMAX)
 -  target_link_libraries (ref-sdlgl ${JPEG_LIBRARY})
@@ -263,7 +262,7 @@ index 801f750..1851276 100644
  #if defined(__linux__)
      n = mremap(membase, maxhunksize, curhunksize + sizeof(int), 0);
 diff --git a/src/linux/rw_sdl.c b/src/linux/rw_sdl.c
-index 460e28a..b873dfa 100644
+index 460e28a..2e5a82f 100644
 --- a/src/linux/rw_sdl.c
 +++ b/src/linux/rw_sdl.c
 @@ -20,7 +20,7 @@
@@ -284,6 +283,15 @@ index 460e28a..b873dfa 100644
      if (renderer == NULL) {
          Sys_Error("(SOFTSDL) SDL CreateRenderer failed: %s\n", SDL_GetError());
          return false;
+@@ -951,3 +951,8 @@ void Fake_glColorTableEXT( GLenum target, GLenum internalformat,
+     qgl3DfxSetPaletteEXT((GLuint *)temptable);
+ }
+ #endif
++
++void UpdateHardwareGamma(void)
++{
++    // Noop
++}
 diff --git a/src/linux/snd_sdl.c b/src/linux/snd_sdl.c
 index b9ae691..5c66159 100644
 --- a/src/linux/snd_sdl.c
