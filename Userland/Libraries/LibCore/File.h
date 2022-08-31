@@ -43,6 +43,7 @@ public:
     bool looks_like_shared_library() const;
     static bool looks_like_shared_library(String const& filename);
 
+    static bool is_removable(StringView path);
     static bool exists(String const& filename);
     static ErrorOr<size_t> size(String const& filename);
     static String current_working_directory();
