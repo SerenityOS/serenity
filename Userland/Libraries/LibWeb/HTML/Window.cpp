@@ -25,7 +25,6 @@
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
-#include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/SelectionWrapper.h>
 #include <LibWeb/Bindings/StorageWrapper.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
@@ -33,6 +32,7 @@
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
+#include <LibWeb/CSS/Screen.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -95,7 +95,6 @@ JS::NonnullGCPtr<Window> Window::create_with_document(DOM::Document& document)
 Window::Window(JS::Realm& realm)
     : DOM::EventTarget(realm)
     , m_crypto(Crypto::Crypto::create())
-    , m_screen(CSS::Screen::create({}, *this))
 {
     // FIXME: Should this be WindowPrototype?
 }
@@ -104,7 +103,6 @@ Window::Window(DOM::Document& document)
     : DOM::EventTarget(document.shape().realm())
     , m_associated_document(document)
     , m_crypto(Crypto::Crypto::create())
-    , m_screen(CSS::Screen::create({}, *this))
 {
 }
 
@@ -114,6 +112,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_associated_document.ptr());
     visitor.visit(m_current_event.ptr());
     visitor.visit(m_performance.ptr());
+    visitor.visit(m_screen.ptr());
     visitor.visit(m_location_object);
     for (auto& it : m_prototypes)
         visitor.visit(it.value);
@@ -138,6 +137,13 @@ HighResolutionTime::Performance& Window::performance()
     if (!m_performance)
         m_performance = heap().allocate<HighResolutionTime::Performance>(realm(), *this);
     return *m_performance;
+}
+
+CSS::Screen& Window::screen()
+{
+    if (!m_screen)
+        m_screen = heap().allocate<CSS::Screen>(realm(), *this);
+    return *m_screen;
 }
 
 void Window::alert_impl(String const& message)

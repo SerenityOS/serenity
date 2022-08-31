@@ -477,7 +477,6 @@ class Path2DWrapper;
 class PerformanceTimingWrapper;
 class RangePrototype;
 class ResizeObserverWrapper;
-class ScreenWrapper;
 class SelectionWrapper;
 class StorageWrapper;
 class SubtleCryptoWrapper;

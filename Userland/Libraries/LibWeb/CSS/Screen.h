@@ -6,26 +6,20 @@
 
 #pragma once
 
-#include <AK/RefCountForwarder.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-class Screen final
-    : public RefCounted<Screen>
-    , public Bindings::Wrappable {
+class Screen final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(Screen, Bindings::PlatformObject);
 
 public:
-    using WrapperType = Bindings::ScreenWrapper;
     using AllowOwnPtr = TrueType;
 
-    static NonnullOwnPtr<Screen> create(Badge<HTML::Window>, HTML::Window& window)
-    {
-        return adopt_own(*new Screen(window));
-    }
+    static JS::NonnullGCPtr<Screen> create(HTML::Window&);
 
     i32 width() const { return screen_rect().width(); }
     i32 height() const { return screen_rect().height(); }
@@ -37,11 +31,15 @@ public:
 private:
     explicit Screen(HTML::Window&);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     HTML::Window const& window() const { return *m_window; }
 
     Gfx::IntRect screen_rect() const;
 
-    JS::Handle<HTML::Window> m_window;
+    JS::NonnullGCPtr<HTML::Window> m_window;
 };
 
 }
+
+WRAPPER_HACK(Screen, Web::CSS)
