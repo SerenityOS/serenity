@@ -12,7 +12,6 @@
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
-#include <LibWeb/CSS/Screen.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
@@ -79,7 +78,7 @@ public:
 
     Crypto::Crypto& crypto() { return *m_crypto; }
 
-    CSS::Screen& screen() { return *m_screen; }
+    CSS::Screen& screen();
 
     DOM::Event* current_event() { return m_current_event.ptr(); }
     DOM::Event const* current_event() const { return m_current_event.ptr(); }
@@ -149,7 +148,7 @@ private:
 
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
-    NonnullOwnPtr<CSS::Screen> m_screen;
+    JS::GCPtr<CSS::Screen> m_screen;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 

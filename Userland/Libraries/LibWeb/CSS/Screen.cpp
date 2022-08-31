@@ -11,9 +11,22 @@
 
 namespace Web::CSS {
 
-Screen::Screen(HTML::Window& window)
-    : m_window(JS::make_handle(window))
+JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 {
+    return *window.heap().allocate<Screen>(window.realm(), window);
+}
+
+Screen::Screen(HTML::Window& window)
+    : PlatformObject(window.realm())
+    , m_window(window)
+{
+    set_prototype(&window.cached_web_prototype("Screen"));
+}
+
+void Screen::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
 }
 
 Gfx::IntRect Screen::screen_rect() const
