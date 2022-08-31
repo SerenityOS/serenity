@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     auto button = GUI::Button::construct();
     button->set_text("Click me!");
     button->on_click = [&](auto) {
-        GUI::MessageBox::show(window, "Hello friends!", ":^)");
+        GUI::MessageBox::show(window, "Hello friends!"sv, ":^)"sv);
     };
 
     window->set_main_widget(button);

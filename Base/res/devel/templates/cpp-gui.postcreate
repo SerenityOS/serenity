@@ -4,7 +4,7 @@ echo > $2/Makefile <<-EOF
 PROGRAM = $1
 OBJS = main.o
 CXXFLAGS = -g -std=c++2a
-LDFLAGS = -lgui
+LDFLAGS = -lgui -lgcc_s
 
 all: \$(PROGRAM)
 
