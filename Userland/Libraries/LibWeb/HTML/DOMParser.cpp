@@ -8,13 +8,20 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/DOMParser.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web::HTML {
 
-DOMParser::DOMParser(HTML::Window& window)
-    : m_window(JS::make_handle(window))
+DOM::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::create_with_global_object(HTML::Window& window)
 {
+    return JS::NonnullGCPtr(*window.heap().allocate<DOMParser>(window.realm(), window));
+}
+
+DOMParser::DOMParser(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::DOMParserPrototype>("DOMParser"));
 }
 
 DOMParser::~DOMParser() = default;
@@ -23,7 +30,7 @@ DOMParser::~DOMParser() = default;
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
-    auto document = DOM::Document::create(Bindings::main_thread_internal_window_object(), m_window->associated_document().url());
+    auto document = DOM::Document::create(Bindings::main_thread_internal_window_object(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
     document->set_content_type(Bindings::idl_enum_to_string(type));
 
     // 2. Switch on type:

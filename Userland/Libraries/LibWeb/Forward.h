@@ -453,7 +453,6 @@ class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
 class CryptoWrapper;
 class DOMExceptionWrapper;
-class DOMParserWrapper;
 class DOMPointWrapper;
 class DOMPointReadOnlyWrapper;
 class DOMRectListWrapper;
