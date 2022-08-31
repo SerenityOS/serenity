@@ -210,16 +210,19 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_delete(PropertyKey const
 ThrowCompletionOr<MarkedVector<Value>> ModuleNamespaceObject::internal_own_property_keys() const
 {
     // 1. Let exports be O.[[Exports]].
+    // NOTE: We only add the exports after we know the size of symbolKeys
+    MarkedVector<Value> exports { vm().heap() };
 
     // 2. Let symbolKeys be OrdinaryOwnPropertyKeys(O).
     auto symbol_keys = MUST(Object::internal_own_property_keys());
 
     // 3. Return the list-concatenation of exports and symbolKeys.
-    for (auto& export_name : m_exports) {
-        symbol_keys.append(js_string(vm(), export_name));
-    }
+    exports.ensure_capacity(m_exports.size() + symbol_keys.size());
+    for (auto const& export_name : m_exports)
+        exports.unchecked_append(js_string(vm(), export_name));
+    exports.extend(symbol_keys);
 
-    return symbol_keys;
+    return exports;
 }
 
 }

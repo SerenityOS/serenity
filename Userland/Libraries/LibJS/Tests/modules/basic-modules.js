@@ -182,6 +182,10 @@ describe("in- and exports", () => {
     test("can import with (useless) assertions", () => {
         expectModulePassed("./import-with-assertions.mjs");
     });
+
+    test("namespace has expected ordering", () => {
+        expectModulePassed("./namespace-order.mjs");
+    });
 });
 
 describe("loops", () => {
