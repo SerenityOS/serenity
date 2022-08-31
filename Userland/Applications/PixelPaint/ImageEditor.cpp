@@ -356,6 +356,14 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     m_active_tool->on_mousedown(m_active_layer.ptr(), tool_event);
 }
 
+void ImageEditor::doubleclick_event(GUI::MouseEvent& event)
+{
+    auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
+    auto image_event = event_with_pan_and_scale_applied(event);
+    Tool::MouseEvent tool_event(Tool::MouseEvent::Action::DoubleClick, layer_event, image_event, event);
+    m_active_tool->on_doubleclick(m_active_layer.ptr(), tool_event);
+}
+
 void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 {
     m_mouse_position = event.position();
