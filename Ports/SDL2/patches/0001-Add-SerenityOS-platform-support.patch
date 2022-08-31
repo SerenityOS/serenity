@@ -34,8 +34,8 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 600 ++++++++++++++++++
- src/video/serenity/SDL_serenityvideo.h        |  98 +++
+ src/video/serenity/SDL_serenityvideo.cpp      | 597 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.h        | 101 +++
  20 files changed, 1292 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
@@ -862,10 +862,10 @@ index 0000000..039f036
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000..85e69ef
+index 0000000..e222405
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,600 @@
+@@ -0,0 +1,597 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -904,14 +904,14 @@ index 0000000..85e69ef
 +#    include "SDL_serenitymouse.h"
 +#    include "SDL_serenityvideo.h"
 +
-+#    include <dlfcn.h>
 +#    include <LibCore/EventLoop.h>
-+#    include <LibGfx/Bitmap.h>
 +#    include <LibGUI/Application.h>
 +#    include <LibGUI/Desktop.h>
 +#    include <LibGUI/Painter.h>
 +#    include <LibGUI/Widget.h>
 +#    include <LibGUI/Window.h>
++#    include <LibGfx/Bitmap.h>
++#    include <dlfcn.h>
 +
 +static SDL_Scancode scancode_map[] = {
 +    SDL_SCANCODE_UNKNOWN,
@@ -1112,11 +1112,12 @@ index 0000000..85e69ef
 +
 +int SERENITY_VideoInit(_THIS)
 +{
-+    VERIFY(!g_app);
-+    g_app = GUI::Application::construct(0, nullptr);
-+    g_app->set_quit_when_last_window_deleted(false);
++    dbgln("{}: Initialising SDL application", __FUNCTION__);
 +
-+    dbgln("SDL2: Initialising SDL application");
++    if (!g_app) {
++        g_app = GUI::Application::construct(0, nullptr);
++        g_app->set_quit_when_last_window_deleted(false);
++    }
 +
 +    SERENITY_InitMouse(_this);
 +
@@ -1131,9 +1132,8 @@ index 0000000..85e69ef
 +    mode.refresh_rate = 60;
 +    mode.driverdata = nullptr;
 +
-+    if (SDL_AddBasicVideoDisplay(&mode) < 0) {
++    if (SDL_AddBasicVideoDisplay(&mode) < 0)
 +        return -1;
-+    }
 +
 +    SDL_AddDisplayMode(&_this->displays[0], &mode);
 +
@@ -1152,13 +1152,11 @@ index 0000000..85e69ef
 +{
 +    dbgln("SERENITY_VideoQuit");
 +    SERENITY_QuitMouse(_this);
-+    g_app->quit();
 +}
 +
-+SerenitySDLWidget::SerenitySDLWidget(SDL_Window* window)
-+    : m_sdl_window(window)
++SerenitySDLWidget::SerenitySDLWidget(SDL_Window* sdl_window)
++    : m_sdl_window(sdl_window)
 +{
-+    update();
 +}
 +
 +void SerenitySDLWidget::paint_event(GUI::PaintEvent& event)
@@ -1248,7 +1246,8 @@ index 0000000..85e69ef
 +
 +int Serenity_CreateWindow(_THIS, SDL_Window* window)
 +{
-+    dbgln("SDL2: Creating new window of size {}x{}", window->w, window->h);
++    dbgln("{}: Creating new window of size {}x{}", __FUNCTION__, window->w, window->h);
++
 +    auto w = new SerenityPlatformWindow(window);
 +    window->driverdata = w;
 +    w->window()->set_double_buffering_enabled(false);
@@ -1357,7 +1356,7 @@ index 0000000..85e69ef
 +int Serenity_CreateWindowFramebuffer(_THIS, SDL_Window* window, Uint32* format,
 +    void** pixels, int* pitch)
 +{
-+    dbgln("SDL2: Creating a new framebuffer of size {}x{}", window->w, window->h);
++    dbgln("{}: Creating a new framebuffer of size {}x{}", __FUNCTION__, window->w, window->h);
 +    auto win = SerenityPlatformWindow::from_sdl_window(window);
 +    *format = SDL_PIXELFORMAT_RGB888;
 +    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, {window->w, window->h});
@@ -1366,7 +1365,6 @@ index 0000000..85e69ef
 +    win->widget()->m_buffer = bitmap_or_error.release_value();
 +    *pitch = win->widget()->m_buffer->pitch();
 +    *pixels = win->widget()->m_buffer->scanline(0);
-+    dbgln("Created framebuffer {}x{}", win->widget()->width(), win->widget()->height());
 +    return 0;
 +}
 +
@@ -1385,32 +1383,29 @@ index 0000000..85e69ef
 +void Serenity_DestroyWindowFramebuffer(_THIS, SDL_Window* window)
 +{
 +    auto widget = SerenityPlatformWindow::from_sdl_window(window)->widget();
-+    dbgln("SDL2: Destroy framebuffer {}", widget->m_buffer->size());
++    dbgln("{}: Destroy framebuffer {}", __FUNCTION__, widget->m_buffer->size());
 +    widget->m_buffer = nullptr;
 +}
 +
 +SDL_GLContext Serenity_GL_CreateContext(_THIS, SDL_Window* window)
 +{
-+    auto win = SerenityPlatformWindow::from_sdl_window(window);
++    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
 +
 +    Uint32 format;
 +    void* pixels;
 +    int pitch;
 +    Serenity_CreateWindowFramebuffer(_this, window, &format, &pixels, &pitch);
 +
-+    win->widget()->m_gl_context = GL::create_context(*win->widget()->m_buffer);
-+    GL::make_context_current(win->widget()->m_gl_context);
-+
-+    return new SerenityGLContext(*window);
++    auto gl_context = GL::create_context(*platform_window->widget()->m_buffer);
++    auto serenity_gl_context = new SerenityGLContext(move(gl_context));
++    platform_window->set_serenity_gl_context(serenity_gl_context);
++    GL::make_context_current(&serenity_gl_context->gl_context());
++    return serenity_gl_context;
 +}
 +
 +void Serenity_GL_DeleteContext(_THIS, SDL_GLContext context)
 +{
 +    auto platform_context = static_cast<SerenityGLContext*>(context);
-+    auto sdl_window = platform_context->sdl_window();
-+    auto platform_window = SerenityPlatformWindow::from_sdl_window(&sdl_window);
-+
-+    platform_window->widget()->m_gl_context = nullptr;
 +    delete platform_context;
 +}
 +
@@ -1449,17 +1444,19 @@ index 0000000..85e69ef
 +        return 0;
 +
 +    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
-+    GL::make_context_current(platform_window->widget()->m_gl_context);
++    auto serenity_gl_context = static_cast<SerenityGLContext*>(context);
++    platform_window->set_serenity_gl_context(serenity_gl_context);
++    GL::make_context_current(&serenity_gl_context->gl_context());
 +    return 0;
 +}
 +
 +int Serenity_GL_SwapWindow(_THIS, SDL_Window* window)
 +{
-+    auto win = SerenityPlatformWindow::from_sdl_window(window);
-+    if (win->widget()->m_gl_context)
-+        GL::present_context(win->widget()->m_gl_context);
++    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
++    if (platform_window->serenity_gl_context())
++        GL::present_context(&platform_window->serenity_gl_context()->gl_context());
 +
-+    win->widget()->repaint();
++    platform_window->widget()->repaint();
 +    return 0;
 +}
 +
@@ -1468,10 +1465,10 @@ index 0000000..85e69ef
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.h b/src/video/serenity/SDL_serenityvideo.h
 new file mode 100644
-index 0000000..b5c6759
+index 0000000..f74e1bd
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.h
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,101 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1508,7 +1505,6 @@ index 0000000..b5c6759
 +public:
 +    explicit SerenitySDLWidget(SDL_Window*);
 +    RefPtr<Gfx::Bitmap> m_buffer;
-+    OwnPtr<GL::GLContext> m_gl_context;
 +
 +protected:
 +    void paint_event(GUI::PaintEvent&) override;
@@ -1531,11 +1527,24 @@ index 0000000..b5c6759
 +    SDL_Window* m_sdl_window = nullptr;
 +};
 +
++class SerenityGLContext final {
++public:
++    explicit SerenityGLContext(NonnullOwnPtr<GL::GLContext> gl_context)
++        : m_gl_context(move(gl_context))
++    {
++    }
++
++    GL::GLContext& gl_context() { return *m_gl_context; }
++
++private:
++    NonnullOwnPtr<GL::GLContext> m_gl_context;
++};
++
 +class SerenityPlatformWindow final {
 +public:
-+    SerenityPlatformWindow(SDL_Window* sdl_window)
-+        : m_window(GUI::Window::construct())
-+        , m_widget(SerenitySDLWidget::construct(sdl_window))
++    explicit SerenityPlatformWindow(SDL_Window* sdl_window)
++        : m_window(MUST(GUI::Window::try_create()))
++        , m_widget(MUST(SerenitySDLWidget::try_create(sdl_window)))
 +    {
 +        m_window->resize(sdl_window->w, sdl_window->h);
 +        m_window->set_resizable(false);
@@ -1546,25 +1555,16 @@ index 0000000..b5c6759
 +        return static_cast<SerenityPlatformWindow*>(window->driverdata);
 +    }
 +
++    SerenityGLContext* serenity_gl_context() { return m_serenity_gl_context; }
++    void set_serenity_gl_context(SerenityGLContext* serenity_gl_context) { m_serenity_gl_context = serenity_gl_context; }
++
 +    NonnullRefPtr<GUI::Window> window() { return m_window; }
 +    NonnullRefPtr<SerenitySDLWidget> widget() { return m_widget; }
 +
 +private:
++    SerenityGLContext* m_serenity_gl_context;
 +    NonnullRefPtr<GUI::Window> m_window;
 +    NonnullRefPtr<SerenitySDLWidget> m_widget;
-+};
-+
-+class SerenityGLContext final {
-+public:
-+    explicit SerenityGLContext(SDL_Window& sdl_window)
-+        : m_sdl_window(sdl_window)
-+    {
-+    }
-+
-+    SDL_Window& sdl_window() const { return m_sdl_window; }
-+
-+private:
-+    SDL_Window& m_sdl_window;
 +};
 +
 +#endif /* SDL_serenityvideo_h_ */
