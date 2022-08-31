@@ -40,6 +40,7 @@ constexpr auto sanctioned_single_unit_identifiers()
         "megabit"sv,
         "megabyte"sv,
         "meter"sv,
+        "microsecond"sv,
         "mile"sv,
         "mile-scandinavian"sv,
         "milliliter"sv,
@@ -47,6 +48,7 @@ constexpr auto sanctioned_single_unit_identifiers()
         "millisecond"sv,
         "minute"sv,
         "month"sv,
+        "nanosecond"sv,
         "ounce"sv,
         "percent"sv,
         "petabyte"sv,
@@ -59,12 +61,6 @@ constexpr auto sanctioned_single_unit_identifiers()
         "yard"sv,
         "year"sv,
     };
-}
-
-// Additional single units used in ECMAScript required by the Intl.DurationFormat proposal
-constexpr auto extra_sanctioned_single_unit_identifiers()
-{
-    return AK::Array { "microsecond"sv, "nanosecond"sv };
 }
 
 }

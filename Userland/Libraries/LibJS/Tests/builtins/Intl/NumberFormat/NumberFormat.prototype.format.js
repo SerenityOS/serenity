@@ -1518,6 +1518,15 @@ describe("style=unit", () => {
         expect(en2.format(1.2)).toBe("1.2 kilometers per hour");
         expect(en2.format(123)).toBe("123 kilometers per hour");
 
+        const en3 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "nanosecond",
+            unitDisplay: "long",
+        });
+        expect(en3.format(1)).toBe("1 nanosecond");
+        expect(en3.format(1.2)).toBe("1.2 nanoseconds");
+        expect(en3.format(123)).toBe("123 nanoseconds");
+
         const ar = new Intl.NumberFormat("ar", {
             style: "unit",
             unit: "foot",
@@ -1556,6 +1565,15 @@ describe("style=unit", () => {
         expect(en2.format(1.2)).toBe("1.2 km/h");
         expect(en2.format(123)).toBe("123 km/h");
 
+        const en3 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "nanosecond",
+            unitDisplay: "short",
+        });
+        expect(en3.format(1)).toBe("1 ns");
+        expect(en3.format(1.2)).toBe("1.2 ns");
+        expect(en3.format(123)).toBe("123 ns");
+
         const ar = new Intl.NumberFormat("ar", {
             style: "unit",
             unit: "foot",
@@ -1593,6 +1611,15 @@ describe("style=unit", () => {
         expect(en2.format(1)).toBe("1km/h");
         expect(en2.format(1.2)).toBe("1.2km/h");
         expect(en2.format(123)).toBe("123km/h");
+
+        const en3 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "nanosecond",
+            unitDisplay: "narrow",
+        });
+        expect(en3.format(1)).toBe("1ns");
+        expect(en3.format(1.2)).toBe("1.2ns");
+        expect(en3.format(123)).toBe("123ns");
 
         const ar = new Intl.NumberFormat("ar", {
             style: "unit",

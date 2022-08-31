@@ -638,10 +638,7 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
         // LibUnicode generally tries to avoid being directly dependent on ECMA-402, but this rather significantly reduces the amount
         // of data generated here, and ECMA-402 is currently the only consumer of this data.
         constexpr auto sanctioned_units = JS::Intl::sanctioned_single_unit_identifiers();
-        if (find(sanctioned_units.begin(), sanctioned_units.end(), unit_name) != sanctioned_units.end())
-            return true;
-        static constexpr auto extra_sanctioned_units = JS::Intl::extra_sanctioned_single_unit_identifiers();
-        return find(extra_sanctioned_units.begin(), extra_sanctioned_units.end(), unit_name) != extra_sanctioned_units.end();
+        return find(sanctioned_units.begin(), sanctioned_units.end(), unit_name) != sanctioned_units.end();
     };
 
     auto parse_units_object = [&](auto const& units_object, Locale::Style style) {
