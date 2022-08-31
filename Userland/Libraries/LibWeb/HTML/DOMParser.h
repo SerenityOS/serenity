@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
@@ -16,17 +14,11 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparser
-class DOMParser final
-    : public RefCounted<DOMParser>
-    , public Weakable<DOMParser>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::DOMParserWrapper;
+class DOMParser final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMParser, Bindings::PlatformObject);
 
-    static DOM::ExceptionOr<NonnullRefPtr<DOMParser>> create_with_global_object(HTML::Window& window)
-    {
-        return adopt_ref(*new DOMParser(window));
-    }
+public:
+    static DOM::ExceptionOr<JS::NonnullGCPtr<DOMParser>> create_with_global_object(HTML::Window&);
 
     virtual ~DOMParser() override;
 
@@ -34,8 +26,8 @@ public:
 
 private:
     explicit DOMParser(HTML::Window&);
-
-    JS::Handle<HTML::Window> m_window;
 };
 
 }
+
+WRAPPER_HACK(DOMParser, Web::HTML)
