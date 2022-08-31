@@ -69,6 +69,10 @@ void SpinBox::set_value(int value, AllowCallback allow_callback)
     if (m_value == value)
         return;
     m_value = value;
+
+    m_increment_button->set_enabled(m_value < m_max);
+    m_decrement_button->set_enabled(m_value > m_min);
+
     m_editor->set_text(String::number(value));
     update();
     if (on_change && allow_callback == AllowCallback::Yes)
