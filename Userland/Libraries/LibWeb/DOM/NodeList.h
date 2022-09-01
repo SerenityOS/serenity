@@ -1,37 +1,33 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Bindings/LegacyPlatformObject.h>
 
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#nodelist
-class NodeList
-    : public RefCounted<NodeList>
-    , public Bindings::Wrappable {
-    AK_MAKE_NONCOPYABLE(NodeList);
-    AK_MAKE_NONMOVABLE(NodeList);
+class NodeList : public Bindings::LegacyPlatformObject {
+    WEB_PLATFORM_OBJECT(NodeList, Bindings::LegacyPlatformObject);
 
 public:
-    using WrapperType = Bindings::NodeListWrapper;
-
-    virtual ~NodeList() override = default;
+    virtual ~NodeList() override;
 
     virtual u32 length() const = 0;
     virtual Node const* item(u32 index) const = 0;
 
-    virtual bool is_supported_property_index(u32) const = 0;
+    virtual JS::Value item_value(size_t index) const override;
+    virtual bool is_supported_property_index(u32) const override;
 
 protected:
-    NodeList() = default;
+    explicit NodeList(HTML::Window&);
 };
 
 }
+
+WRAPPER_HACK(NodeList, Web::DOM)

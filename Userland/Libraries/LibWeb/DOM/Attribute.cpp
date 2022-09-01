@@ -70,7 +70,7 @@ void Attribute::set_value(String value)
 void Attribute::handle_attribute_changes(Element& element, String const& old_value, [[maybe_unused]] String const& new_value)
 {
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
-    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, StaticNodeList::create({}), StaticNodeList::create({}), nullptr, nullptr);
+    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, StaticNodeList::create(window(), {}), StaticNodeList::create(window(), {}), nullptr, nullptr);
 
     // FIXME: 2. If element is custom, then enqueue a custom element callback reaction with element, callback name "attributeChangedCallback", and an argument list containing attribute’s local name, oldValue, newValue, and attribute’s namespace.
 

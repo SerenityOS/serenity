@@ -104,6 +104,7 @@ set(SOURCES
     DOM/Node.cpp
     DOM/NodeFilter.cpp
     DOM/NodeIterator.cpp
+    DOM/NodeList.cpp
     DOM/NodeOperations.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
