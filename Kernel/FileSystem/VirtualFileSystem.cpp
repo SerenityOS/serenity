@@ -645,7 +645,7 @@ ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, Custody&
         return EACCES;
 
     if (old_parent_inode.metadata().is_sticky()) {
-        if (!credentials.is_superuser() && old_inode.metadata().uid != credentials.euid())
+        if (!credentials.is_superuser() && old_parent_inode.metadata().uid != credentials.euid() && old_inode.metadata().uid != credentials.euid())
             return EACCES;
     }
 
@@ -807,7 +807,7 @@ ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringVi
         return EACCES;
 
     if (parent_inode.metadata().is_sticky()) {
-        if (!credentials.is_superuser() && inode.metadata().uid != credentials.euid())
+        if (!credentials.is_superuser() && parent_inode.metadata().uid != credentials.euid() && inode.metadata().uid != credentials.euid())
             return EACCES;
     }
 
