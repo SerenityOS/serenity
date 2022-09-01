@@ -47,11 +47,11 @@ void DeclarativeEnvironment::visit_edges(Visitor& visitor)
 // 9.1.1.1.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n
 ThrowCompletionOr<bool> DeclarativeEnvironment::has_binding(FlyString const& name, Optional<size_t>* out_index) const
 {
-    auto index = find_binding_index(name);
-    if (!index.has_value())
+    auto binding_and_index = find_binding_and_index(name);
+    if (!binding_and_index.has_value())
         return false;
-    if (!is_permanently_screwed_by_eval() && out_index)
-        *out_index = *index;
+    if (!is_permanently_screwed_by_eval() && out_index && binding_and_index->index().has_value())
+        *out_index = *(binding_and_index->index());
     return true;
 }
 
@@ -98,16 +98,14 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(VM&, Fl
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
 ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(VM& vm, FlyString const& name, Value value)
 {
-    auto index = find_binding_index(name);
-    VERIFY(index.has_value());
+    auto binding_and_index = find_binding_and_index(name);
+    VERIFY(binding_and_index.has_value());
 
-    return initialize_binding_direct(vm, *index, value);
+    return initialize_binding_direct(vm, binding_and_index->binding(), value);
 }
 
-ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(VM&, size_t index, Value value)
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(VM&, Binding& binding, Value value)
 {
-    auto& binding = m_bindings[index];
-
     // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
 
@@ -125,8 +123,8 @@ ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(VM&, s
 ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(VM& vm, FlyString const& name, Value value, bool strict)
 {
     // 1. If envRec does not have a binding for N, then
-    auto index = find_binding_index(name);
-    if (!index.has_value()) {
+    auto binding_and_index = find_binding_and_index(name);
+    if (!binding_and_index.has_value()) {
         // a. If S is true, throw a ReferenceError exception.
         if (strict)
             return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
@@ -142,7 +140,7 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(VM& vm, FlyS
     }
 
     // 2-5. (extracted into a non-standard function below)
-    TRY(set_mutable_binding_direct(vm, *index, value, strict));
+    TRY(set_mutable_binding_direct(vm, binding_and_index->binding(), value, strict));
 
     // 6. Return unused.
     return {};
@@ -150,7 +148,11 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding(VM& vm, FlyS
 
 ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(VM& vm, size_t index, Value value, bool strict)
 {
-    auto& binding = m_bindings[index];
+    return set_mutable_binding_direct(vm, m_bindings[index], value, strict);
+}
+
+ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(VM& vm, Binding& binding, Value value, bool strict)
+{
     if (binding.strict)
         strict = true;
 
@@ -171,17 +173,20 @@ ThrowCompletionOr<void> DeclarativeEnvironment::set_mutable_binding_direct(VM& v
 ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value(VM& vm, FlyString const& name, bool strict)
 {
     // 1. Assert: envRec has a binding for N.
-    auto index = find_binding_index(name);
-    VERIFY(index.has_value());
+    auto binding_and_index = find_binding_and_index(name);
+    VERIFY(binding_and_index.has_value());
 
     // 2-3. (extracted into a non-standard function below)
-    return get_binding_value_direct(vm, *index, strict);
+    return get_binding_value_direct(vm, binding_and_index->binding(), strict);
 }
 
-ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM&, size_t index, bool)
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM& vm, size_t index, bool strict)
 {
-    auto& binding = m_bindings[index];
+    return get_binding_value_direct(vm, m_bindings[index], strict);
+}
 
+ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM&, Binding& binding, bool)
+{
     // 2. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (!binding.initialized)
         return vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, binding.name);
@@ -194,18 +199,16 @@ ThrowCompletionOr<Value> DeclarativeEnvironment::get_binding_value_direct(VM&, s
 ThrowCompletionOr<bool> DeclarativeEnvironment::delete_binding(VM&, FlyString const& name)
 {
     // 1. Assert: envRec has a binding for the name that is the value of N.
-    auto index = find_binding_index(name);
-    VERIFY(index.has_value());
-
-    auto& binding = m_bindings[*index];
+    auto binding_and_index = find_binding_and_index(name);
+    VERIFY(binding_and_index.has_value());
 
     // 2. If the binding for N in envRec cannot be deleted, return false.
-    if (!binding.can_be_deleted)
+    if (!binding_and_index->binding().can_be_deleted)
         return false;
 
     // 3. Remove the binding for N from envRec.
     // NOTE: We keep the entries in m_bindings to avoid disturbing indices.
-    binding = {};
+    binding_and_index->binding() = {};
 
     // 4. Return true.
     return true;
@@ -213,10 +216,10 @@ ThrowCompletionOr<bool> DeclarativeEnvironment::delete_binding(VM&, FlyString co
 
 ThrowCompletionOr<void> DeclarativeEnvironment::initialize_or_set_mutable_binding(VM& vm, FlyString const& name, Value value)
 {
-    auto index = find_binding_index(name);
-    VERIFY(index.has_value());
-    auto& binding = m_bindings[*index];
-    if (!binding.initialized)
+    auto binding_and_index = find_binding_and_index(name);
+    VERIFY(binding_and_index.has_value());
+
+    if (!binding_and_index->binding().initialized)
         TRY(initialize_binding(vm, name, value));
     else
         TRY(set_mutable_binding(vm, name, value, false));
