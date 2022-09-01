@@ -12,6 +12,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/EmojiInputDialog.h>
+#include <LibGUI/EmojiInputDialogGML.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Frame.h>
 #include <stdlib.h>
@@ -43,20 +44,17 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
 {
     auto& main_widget = set_main_widget<Frame>();
-    main_widget.set_frame_shape(Gfx::FrameShape::Container);
-    main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
-    main_widget.set_fill_with_background_color(true);
-    auto& main_layout = main_widget.set_layout<VerticalBoxLayout>();
-    main_layout.set_margins(1);
-    main_layout.set_spacing(0);
+    if (!main_widget.load_from_gml(emoji_input_dialog_gml))
+        VERIFY_NOT_REACHED();
 
+    auto& emojis_widget = *main_widget.find_descendant_of_type_named<GUI::Widget>("emojis"sv);
     auto code_points = supported_emoji_code_points();
 
     size_t index = 0;
-    size_t columns = 10;
+    size_t columns = 18;
     size_t rows = ceil_div(code_points.size(), columns);
 
-    constexpr int button_size = 18;
+    constexpr int button_size = 20;
     // FIXME: I have no idea why this is needed, you'd think that button width * number of buttons would make them fit, but the last one gets cut off.
     constexpr int magic_offset = 7;
     int dialog_width = button_size * columns + magic_offset;
@@ -66,7 +64,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     set_frameless(true);
 
     for (size_t row = 0; row < rows && index < code_points.size(); ++row) {
-        auto& horizontal_container = main_widget.add<Widget>();
+        auto& horizontal_container = emojis_widget.add<Widget>();
         auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
         horizontal_layout.set_spacing(0);
         for (size_t column = 0; column < columns; ++column) {
