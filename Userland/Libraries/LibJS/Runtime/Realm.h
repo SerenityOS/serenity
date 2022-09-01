@@ -25,6 +25,8 @@ class Realm final
 public:
     struct HostDefined {
         virtual ~HostDefined() = default;
+
+        virtual void visit_edges(Cell::Visitor&) { }
     };
 
     static Realm* create(VM&);

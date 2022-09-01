@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
@@ -15,7 +15,7 @@ class WindowEnvironmentSettingsObject final : public EnvironmentSettingsObject {
 public:
     static void setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext>, Optional<Environment>, AK::URL top_level_creation_url, Origin top_level_origin);
 
-    virtual ~WindowEnvironmentSettingsObject() override = default;
+    virtual ~WindowEnvironmentSettingsObject() override;
 
     virtual JS::GCPtr<DOM::Document> responsible_document() override;
     virtual String api_url_character_encoding() override;
@@ -26,7 +26,9 @@ public:
 private:
     WindowEnvironmentSettingsObject(Window&, NonnullOwnPtr<JS::ExecutionContext>);
 
-    WeakPtr<Window> m_window;
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
+    JS::GCPtr<Window> m_window;
 };
 
 }
