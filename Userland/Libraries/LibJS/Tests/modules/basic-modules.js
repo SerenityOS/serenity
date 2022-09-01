@@ -202,6 +202,10 @@ describe("in- and exports", () => {
     test("import lexical binding before import statement behaves as initialized but non mutable binding", () => {
         expectModulePassed("./accessing-lex-import-before-decl.mjs");
     });
+
+    test("exporting anonymous function", () => {
+        expectModulePassed("./anon-func-decl-default-export.mjs");
+    });
 });
 
 describe("loops", () => {
