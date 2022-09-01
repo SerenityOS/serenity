@@ -26,7 +26,7 @@ public:
 private:
     WindowEnvironmentSettingsObject(Window&, NonnullOwnPtr<JS::ExecutionContext>);
 
-    JS::Handle<Window> m_window;
+    WeakPtr<Window> m_window;
 };
 
 }

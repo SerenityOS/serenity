@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window, NonnullOwnPtr<JS::ExecutionContext> execution_context)
     : EnvironmentSettingsObject(move(execution_context))
-    , m_window(JS::make_handle(window))
+    , m_window(window)
 {
 }
 
