@@ -1047,14 +1047,6 @@ HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
     return verify_cast<HTML::EnvironmentSettingsObject>(*realm().host_defined());
 }
 
-JS::Interpreter& Document::interpreter()
-{
-    if (!m_interpreter) {
-        m_interpreter = JS::Interpreter::create_with_existing_realm(realm());
-    }
-    return *m_interpreter;
-}
-
 JS::Value Document::run_javascript(StringView source, StringView filename)
 {
     // FIXME: The only user of this function now is javascript: URLs. Refactor them to follow the spec: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
