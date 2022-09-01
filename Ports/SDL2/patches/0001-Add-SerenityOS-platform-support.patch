@@ -34,9 +34,9 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 597 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 600 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1292 insertions(+), 25 deletions(-)
+ 20 files changed, 1295 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -862,10 +862,10 @@ index 0000000..039f036
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000..e222405
+index 0000000..56e6e66
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,597 @@
+@@ -0,0 +1,600 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1253,6 +1253,9 @@ index 0000000..e222405
 +    w->window()->set_double_buffering_enabled(false);
 +    w->widget()->set_fill_with_background_color(false);
 +    w->window()->set_main_widget(w->widget());
++    w->window()->on_close = [&window] {
++        SDL_SendWindowEvent(window, SDL_WINDOWEVENT_CLOSE, 0, 0);
++    };
 +    w->window()->on_close_request = [] {
 +        if (SDL_SendQuit())
 +            return GUI::Window::CloseRequestDecision::Close;
