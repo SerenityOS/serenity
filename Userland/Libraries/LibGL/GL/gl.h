@@ -79,8 +79,10 @@ extern "C" {
 
 // Alpha blending
 #define GL_BLEND 0x0BE2
-#define GL_BLEND_SRC_ALPHA 0x0302
-#define GL_BLEND_DST_ALPHA 0x0304
+#define GL_BLEND_SRC_ALPHA 0x80CB
+#define GL_BLEND_SRC_ALPHA_EXT 0x80CB
+#define GL_BLEND_DST_ALPHA 0x80CA
+#define GL_BLEND_DST_ALPHA_EXT 0x80CA
 
 // Attribute enum
 #define GL_EVAL_BIT 0x00010000
