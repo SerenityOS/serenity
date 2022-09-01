@@ -15,7 +15,6 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
-#include <LibWeb/DOM/MutationObserver.h>
 
 namespace Web::DOM {
 
@@ -217,8 +216,8 @@ public:
 
     size_t length() const;
 
-    NonnullRefPtrVector<RegisteredObserver>& registered_observers_list() { return m_registered_observer_list; }
-    NonnullRefPtrVector<RegisteredObserver> const& registered_observers_list() const { return m_registered_observer_list; }
+    auto& registered_observers_list() { return m_registered_observer_list; }
+    auto const& registered_observers_list() const { return m_registered_observer_list; }
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
@@ -638,7 +637,7 @@ protected:
 
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
-    NonnullRefPtrVector<RegisteredObserver> m_registered_observer_list;
+    Vector<RegisteredObserver&> m_registered_observer_list;
 
 private:
     void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
