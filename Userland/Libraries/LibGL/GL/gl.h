@@ -55,9 +55,9 @@ extern "C" {
 #define GL_ALWAYS 0x0207
 
 // Buffer bits
-#define GL_DEPTH_BUFFER_BIT 0x00100
-#define GL_STENCIL_BUFFER_BIT 0x00400
-#define GL_COLOR_BUFFER_BIT 0x04000
+#define GL_DEPTH_BUFFER_BIT 0x00000100
+#define GL_STENCIL_BUFFER_BIT 0x00000400
+#define GL_COLOR_BUFFER_BIT 0x00004000
 
 // Enable capabilities
 #define GL_LINE_SMOOTH 0x0B20
@@ -411,70 +411,69 @@ extern "C" {
 
 // Texture Unit indices
 #define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE0_ARB 0x84C0
 #define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE1_ARB 0x84C1
 #define GL_TEXTURE2 0x84C2
+#define GL_TEXTURE2_ARB 0x84C2
 #define GL_TEXTURE3 0x84C3
+#define GL_TEXTURE3_ARB 0x84C3
 #define GL_TEXTURE4 0x84C4
+#define GL_TEXTURE4_ARB 0x84C4
 #define GL_TEXTURE5 0x84C5
+#define GL_TEXTURE5_ARB 0x84C5
 #define GL_TEXTURE6 0x84C6
+#define GL_TEXTURE6_ARB 0x84C6
 #define GL_TEXTURE7 0x84C7
+#define GL_TEXTURE7_ARB 0x84C7
 #define GL_TEXTURE8 0x84C8
+#define GL_TEXTURE8_ARB 0x84C8
 #define GL_TEXTURE9 0x84C9
+#define GL_TEXTURE9_ARB 0x84C9
 #define GL_TEXTURE10 0x84CA
+#define GL_TEXTURE10_ARB 0x84CA
 #define GL_TEXTURE11 0x84CB
+#define GL_TEXTURE11_ARB 0x84CB
 #define GL_TEXTURE12 0x84CC
+#define GL_TEXTURE12_ARB 0x84CC
 #define GL_TEXTURE13 0x84CD
+#define GL_TEXTURE13_ARB 0x84CD
 #define GL_TEXTURE14 0x84CE
+#define GL_TEXTURE14_ARB 0x84CE
 #define GL_TEXTURE15 0x84CF
+#define GL_TEXTURE15_ARB 0x84CF
 #define GL_TEXTURE16 0x84D0
+#define GL_TEXTURE16_ARB 0x84D0
 #define GL_TEXTURE17 0x84D1
+#define GL_TEXTURE17_ARB 0x84D1
 #define GL_TEXTURE18 0x84D2
+#define GL_TEXTURE18_ARB 0x84D2
 #define GL_TEXTURE19 0x84D3
+#define GL_TEXTURE19_ARB 0x84D3
 #define GL_TEXTURE20 0x84D4
+#define GL_TEXTURE20_ARB 0x84D4
 #define GL_TEXTURE21 0x84D5
+#define GL_TEXTURE21_ARB 0x84D5
 #define GL_TEXTURE22 0x84D6
+#define GL_TEXTURE22_ARB 0x84D6
 #define GL_TEXTURE23 0x84D7
+#define GL_TEXTURE23_ARB 0x84D7
 #define GL_TEXTURE24 0x84D8
+#define GL_TEXTURE24_ARB 0x84D8
 #define GL_TEXTURE25 0x84D9
+#define GL_TEXTURE25_ARB 0x84D9
 #define GL_TEXTURE26 0x84DA
+#define GL_TEXTURE26_ARB 0x84DA
 #define GL_TEXTURE27 0x84DB
+#define GL_TEXTURE27_ARB 0x84DB
 #define GL_TEXTURE28 0x84DC
+#define GL_TEXTURE28_ARB 0x84DC
 #define GL_TEXTURE29 0x84DD
+#define GL_TEXTURE29_ARB 0x84DD
 #define GL_TEXTURE30 0x84DE
+#define GL_TEXTURE30_ARB 0x84DE
 #define GL_TEXTURE31 0x84DF
-
-#define GL_TEXTURE0_ARB GL_TEXTURE0
-#define GL_TEXTURE1_ARB GL_TEXTURE1
-#define GL_TEXTURE2_ARB GL_TEXTURE2
-#define GL_TEXTURE3_ARB GL_TEXTURE3
-#define GL_TEXTURE4_ARB GL_TEXTURE4
-#define GL_TEXTURE5_ARB GL_TEXTURE5
-#define GL_TEXTURE6_ARB GL_TEXTURE6
-#define GL_TEXTURE7_ARB GL_TEXTURE7
-#define GL_TEXTURE8_ARB GL_TEXTURE8
-#define GL_TEXTURE9_ARB GL_TEXTURE9
-#define GL_TEXTURE10_ARB GL_TEXTURE10
-#define GL_TEXTURE11_ARB GL_TEXTURE11
-#define GL_TEXTURE12_ARB GL_TEXTURE12
-#define GL_TEXTURE13_ARB GL_TEXTURE13
-#define GL_TEXTURE14_ARB GL_TEXTURE14
-#define GL_TEXTURE15_ARB GL_TEXTURE15
-#define GL_TEXTURE16_ARB GL_TEXTURE16
-#define GL_TEXTURE17_ARB GL_TEXTURE17
-#define GL_TEXTURE18_ARB GL_TEXTURE18
-#define GL_TEXTURE19_ARB GL_TEXTURE19
-#define GL_TEXTURE20_ARB GL_TEXTURE20
-#define GL_TEXTURE21_ARB GL_TEXTURE21
-#define GL_TEXTURE22_ARB GL_TEXTURE22
-#define GL_TEXTURE23_ARB GL_TEXTURE23
-#define GL_TEXTURE24_ARB GL_TEXTURE24
-#define GL_TEXTURE25_ARB GL_TEXTURE25
-#define GL_TEXTURE26_ARB GL_TEXTURE26
-#define GL_TEXTURE27_ARB GL_TEXTURE27
-#define GL_TEXTURE28_ARB GL_TEXTURE28
-#define GL_TEXTURE29_ARB GL_TEXTURE29
-#define GL_TEXTURE30_ARB GL_TEXTURE30
-#define GL_TEXTURE31_ARB GL_TEXTURE31
+#define GL_TEXTURE31_ARB 0x84DF
 
 // Texture coord names
 #define GL_S 0x2000
@@ -572,7 +571,7 @@ GLAPI void glEnd();
 GLAPI void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
 GLAPI void glGenTextures(GLsizei n, GLuint* textures);
 GLAPI GLenum glGetError();
-GLAPI GLubyte* glGetString(GLenum name);
+GLAPI GLubyte const* glGetString(GLenum name);
 GLAPI void glLoadIdentity();
 GLAPI void glLoadMatrixd(GLdouble const* matrix);
 GLAPI void glLoadMatrixf(GLfloat const* matrix);
@@ -684,7 +683,7 @@ GLAPI void glDepthRange(GLdouble nearVal, GLdouble farVal);
 GLAPI void glDepthFunc(GLenum func);
 GLAPI void glPolygonMode(GLenum face, GLenum mode);
 GLAPI void glPolygonOffset(GLfloat factor, GLfloat units);
-GLAPI void glFogfv(GLenum mode, GLfloat* params);
+GLAPI void glFogfv(GLenum mode, GLfloat const* params);
 GLAPI void glFogf(GLenum pname, GLfloat param);
 GLAPI void glFogi(GLenum pname, GLint param);
 GLAPI void glPixelStorei(GLenum pname, GLint param);

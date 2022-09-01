@@ -191,21 +191,21 @@ GLenum GLContext::gl_get_error()
     return last_error;
 }
 
-GLubyte* GLContext::gl_get_string(GLenum name)
+GLubyte const* GLContext::gl_get_string(GLenum name)
 {
     RETURN_VALUE_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION, nullptr);
 
     switch (name) {
     case GL_VENDOR:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.vendor_name.characters()));
+        return reinterpret_cast<GLubyte const*>(m_device_info.vendor_name.characters());
     case GL_RENDERER:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.device_name.characters()));
+        return reinterpret_cast<GLubyte const*>(m_device_info.device_name.characters());
     case GL_VERSION:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
+        return reinterpret_cast<GLubyte const*>("1.5");
     case GL_EXTENSIONS:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_extensions.characters()));
+        return reinterpret_cast<GLubyte const*>(m_extensions.characters());
     case GL_SHADING_LANGUAGE_VERSION:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
+        return reinterpret_cast<GLubyte const*>("0.0");
     default:
         dbgln_if(GL_DEBUG, "gl_get_string({:#x}): unknown name", name);
         break;
@@ -725,7 +725,7 @@ void GLContext::gl_polygon_offset(GLfloat factor, GLfloat units)
     m_rasterizer->set_options(rasterizer_options);
 }
 
-void GLContext::gl_fogfv(GLenum pname, GLfloat* params)
+void GLContext::gl_fogfv(GLenum pname, GLfloat const* params)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_fogfv, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);

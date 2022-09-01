@@ -113,7 +113,7 @@ public:
     void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val);
     void gl_gen_textures(GLsizei n, GLuint* textures);
     GLenum gl_get_error();
-    GLubyte* gl_get_string(GLenum name);
+    GLubyte const* gl_get_string(GLenum name);
     void gl_load_identity();
     void gl_load_matrix(FloatMatrix4x4 const& matrix);
     void gl_matrix_mode(GLenum mode);
@@ -177,7 +177,7 @@ public:
     void gl_depth_func(GLenum func);
     void gl_polygon_mode(GLenum face, GLenum mode);
     void gl_polygon_offset(GLfloat factor, GLfloat units);
-    void gl_fogfv(GLenum pname, GLfloat* params);
+    void gl_fogfv(GLenum pname, GLfloat const* params);
     void gl_fogf(GLenum pname, GLfloat param);
     void gl_fogi(GLenum pname, GLint param);
     void gl_pixel_storei(GLenum pname, GLint param);
