@@ -115,9 +115,12 @@ void Realm::set_global_object(Object* global_object, Object* this_value)
 
 void Realm::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_intrinsics);
     visitor.visit(m_global_object);
     visitor.visit(m_global_environment);
+    if (m_host_defined)
+        m_host_defined->visit_edges(visitor);
 }
 
 }

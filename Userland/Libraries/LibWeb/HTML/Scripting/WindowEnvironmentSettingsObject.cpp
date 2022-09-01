@@ -16,6 +16,14 @@ WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window,
 {
 }
 
+WindowEnvironmentSettingsObject::~WindowEnvironmentSettingsObject() = default;
+
+void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
+{
+    EnvironmentSettingsObject::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
+}
+
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object
 void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
 {
