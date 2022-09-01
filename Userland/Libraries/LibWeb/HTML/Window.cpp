@@ -118,6 +118,8 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(it.value);
     for (auto& it : m_constructors)
         visitor.visit(it.value);
+    for (auto& it : m_timers)
+        visitor.visit(it.value.ptr());
 }
 
 Window::~Window() = default;
