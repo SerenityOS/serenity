@@ -15,6 +15,7 @@
 #include <LibGUI/EmojiInputDialogGML.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/ScrollableContainerWidget.h>
 #include <stdlib.h>
 
 namespace GUI {
@@ -47,6 +48,10 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     if (!main_widget.load_from_gml(emoji_input_dialog_gml))
         VERIFY_NOT_REACHED();
 
+    set_frameless(true);
+    resize(400, 300);
+
+    auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
     auto& emojis_widget = *main_widget.find_descendant_of_type_named<GUI::Widget>("emojis"sv);
     auto code_points = supported_emoji_code_points();
 
@@ -55,13 +60,8 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     size_t rows = ceil_div(code_points.size(), columns);
 
     constexpr int button_size = 20;
-    // FIXME: I have no idea why this is needed, you'd think that button width * number of buttons would make them fit, but the last one gets cut off.
-    constexpr int magic_offset = 7;
-    int dialog_width = button_size * columns + magic_offset;
-    int dialog_height = button_size * rows;
 
-    resize(dialog_width, dialog_height);
-    set_frameless(true);
+    scrollable_container.horizontal_scrollbar().set_visible(false);
 
     for (size_t row = 0; row < rows && index < code_points.size(); ++row) {
         auto& horizontal_container = emojis_widget.add<Widget>();
