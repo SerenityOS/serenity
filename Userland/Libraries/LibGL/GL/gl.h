@@ -739,6 +739,7 @@ GLAPI void glTexGenfv(GLenum coord, GLenum pname, GLfloat const* params);
 GLAPI void glTexGeni(GLenum coord, GLenum pname, GLint param);
 GLAPI void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 GLAPI void glRecti(GLint x1, GLint y1, GLint x2, GLint y2);
+GLAPI void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void* pixels);
 GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params);
 GLAPI void glPointSize(GLfloat size);
 GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);

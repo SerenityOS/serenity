@@ -143,6 +143,36 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     }
 }
 
+void GLContext::gl_get_tex_image(GLenum target, GLint level, GLenum format, GLenum type, void* pixels)
+{
+    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    auto pixel_type_or_error = get_validated_pixel_type(target, GL_NONE, format, type);
+    RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
+
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    VERIFY(!texture_2d.is_null());
+
+    u32 width = texture_2d->width_at_lod(level);
+    u32 height = texture_2d->height_at_lod(level);
+
+    GPU::ImageDataLayout output_layout = {
+        .pixel_type = pixel_type_or_error.release_value(),
+        .packing = get_packing_specification(PackingType::Pack),
+        .dimensions = {
+            .width = width,
+            .height = height,
+            .depth = 1,
+        },
+        .selection = {
+            .width = width,
+            .height = height,
+            .depth = 1,
+        },
+    };
+
+    texture_2d->download_texture_data(level, output_layout, pixels);
+}
+
 void GLContext::gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum pname, GLint* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
