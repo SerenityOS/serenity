@@ -27,12 +27,6 @@ public:
     virtual ThrowCompletionOr<Value> get_this_binding(VM&) const final;
     ThrowCompletionOr<void> create_import_binding(FlyString name, Module* module, FlyString binding_name);
 
-    // Note: Although the spec does not explicitly say this we also have to implement HasBinding as
-    //       the HasBinding method of Declarative Environment records states:
-    //       "It determines if the argument identifier is one of the identifiers bound by the record"
-    //       And this means that we have to include the indirect bindings of a Module Environment.
-    virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
-
 private:
     explicit ModuleEnvironment(Environment* outer_environment);
 
@@ -42,6 +36,8 @@ private:
         FlyString binding_name;
     };
     IndirectBinding const* get_indirect_binding(FlyString const& name) const;
+
+    virtual Optional<BindingAndIndex> find_binding_and_index(FlyString const& name) const override;
 
     // FIXME: Since we always access this via the name this could be a map.
     Vector<IndirectBinding> m_indirect_bindings;

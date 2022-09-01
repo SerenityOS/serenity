@@ -194,6 +194,14 @@ describe("in- and exports", () => {
     test("can export namespace via binding", () => {
         expectModulePassed("./re-export-namespace-via-binding.mjs");
     });
+
+    test("import variable before import statement behaves as undefined and non mutable variable", () => {
+        expectModulePassed("./accessing-var-import-before-decl.mjs");
+    });
+
+    test("import lexical binding before import statement behaves as initialized but non mutable binding", () => {
+        expectModulePassed("./accessing-lex-import-before-decl.mjs");
+    });
 });
 
 describe("loops", () => {
