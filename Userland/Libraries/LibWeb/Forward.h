@@ -467,7 +467,6 @@ class IdleDeadlineWrapper;
 class ImageDataWrapper;
 class IntersectionObserverWrapper;
 class LocationObject;
-class MessageChannelWrapper;
 class OptionConstructor;
 class Path2DWrapper;
 class RangePrototype;
