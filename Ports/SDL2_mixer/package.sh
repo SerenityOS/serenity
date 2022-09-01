@@ -4,7 +4,7 @@ version='2.6.2'
 useconfigure='true'
 files="https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz 8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371"
 auth_type='sha256'
-depends=("libmodplug" "libmpg123" "libvorbis" "SDL2")
+depends=("libmodplug" "libmpg123" "libvorbis" "SDL2" "timidity")
 
 configure() {
     export LIBS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
