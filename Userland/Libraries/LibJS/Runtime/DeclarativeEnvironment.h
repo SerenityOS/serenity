@@ -54,9 +54,13 @@ public:
         return names;
     }
 
-    ThrowCompletionOr<void> initialize_binding_direct(VM&, size_t index, Value);
-    ThrowCompletionOr<Value> get_binding_value_direct(VM&, size_t index, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, size_t index, Value, bool strict);
+    ThrowCompletionOr<Value> get_binding_value_direct(VM&, size_t index, bool strict);
+
+private:
+    ThrowCompletionOr<void> initialize_binding_direct(VM&, Binding&, Value);
+    ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
+    ThrowCompletionOr<void> set_mutable_binding_direct(VM&, Binding&, Value, bool strict);
 
 protected:
     DeclarativeEnvironment();
@@ -65,10 +69,37 @@ protected:
 
     virtual void visit_edges(Visitor&) override;
 
-private:
-    virtual bool is_declarative_environment() const override { return true; }
+    class BindingAndIndex {
+    public:
+        Binding& binding()
+        {
+            if (m_referenced_binding)
+                return *m_referenced_binding;
+            return m_temporary_binding;
+        }
 
-    Optional<size_t> find_binding_index(FlyString const& name) const
+        BindingAndIndex(Binding* binding, Optional<size_t> index)
+            : m_referenced_binding(binding)
+            , m_index(move(index))
+        {
+        }
+
+        explicit BindingAndIndex(Binding temporary_binding)
+            : m_temporary_binding(move(temporary_binding))
+        {
+        }
+
+        Optional<size_t> const& index() const { return m_index; }
+
+    private:
+        Binding* m_referenced_binding { nullptr };
+        Binding m_temporary_binding {};
+        Optional<size_t> m_index;
+    };
+
+    friend class ModuleEnvironment;
+
+    virtual Optional<BindingAndIndex> find_binding_and_index(FlyString const& name) const
     {
         auto it = m_bindings.find_if([&](auto const& binding) {
             return binding.name == name;
@@ -76,8 +107,12 @@ private:
 
         if (it == m_bindings.end())
             return {};
-        return it.index();
+
+        return BindingAndIndex { const_cast<Binding*>(&(*it)), it.index() };
     }
+
+private:
+    virtual bool is_declarative_environment() const override { return true; }
 
     Vector<Binding> m_bindings;
 };
