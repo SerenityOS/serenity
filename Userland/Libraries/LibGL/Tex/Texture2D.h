@@ -27,6 +27,7 @@ public:
 
     virtual bool is_texture_2d() const override { return true; }
 
+    void download_texture_data(GLuint lod, GPU::ImageDataLayout output_layout, GLvoid* pixels);
     void upload_texture_data(GLuint lod, GLenum internal_format, GPU::ImageDataLayout input_layout, GLvoid const* pixels);
     void replace_sub_texture_data(GLuint lod, GPU::ImageDataLayout input_layout, Vector3<i32> const& output_offset, GLvoid const* pixels);
 

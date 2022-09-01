@@ -449,6 +449,11 @@ GLubyte const* glGetString(GLenum name)
     return g_gl_context->gl_get_string(name);
 }
 
+void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void* pixels)
+{
+    g_gl_context->gl_get_tex_image(target, level, format, type, pixels);
+}
+
 void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params)
 {
     g_gl_context->gl_get_tex_parameter_integerv(target, level, pname, params);
