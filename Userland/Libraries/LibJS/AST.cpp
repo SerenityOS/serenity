@@ -4498,7 +4498,7 @@ bool ExportStatement::has_export(FlyString const& export_name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         // Make sure that empty exported names does not overlap with anything
-        if (entry.kind == ExportEntry::Kind::EmptyNamedExport)
+        if (entry.kind != ExportEntry::Kind::NamedExport)
             return false;
         return entry.export_name == export_name;
     });
