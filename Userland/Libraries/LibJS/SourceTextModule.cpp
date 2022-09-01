@@ -202,8 +202,6 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
                     // 2. If ie.[[ImportName]] is namespace-object, then
                     if (import_entry.is_namespace) {
                         // a. NOTE: This is a re-export of an imported module namespace object.
-                        VERIFY(export_entry.is_module_request() && export_entry.kind != ExportStatement::ExportEntry::Kind::NamedExport);
-
                         // b. Append ee to localExportEntries.
                         local_export_entries.empend(export_entry);
                     }

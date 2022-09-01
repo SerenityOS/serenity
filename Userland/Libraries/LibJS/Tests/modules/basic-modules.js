@@ -186,6 +186,10 @@ describe("in- and exports", () => {
     test("namespace has expected ordering", () => {
         expectModulePassed("./namespace-order.mjs");
     });
+
+    test("can have multiple star imports even from the same file", () => {
+        expectModulePassed("./multiple-star-imports.mjs");
+    });
 });
 
 describe("loops", () => {
