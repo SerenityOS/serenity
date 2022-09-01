@@ -6,8 +6,11 @@
         margins: [4]
     }
 
-    @GUI::Widget {
-        name: "emojis"
-        layout: @GUI::VerticalBoxLayout {}
+    @GUI::ScrollableContainerWidget {
+        name: "scrollable_container"
+        content_widget: @GUI::Widget {
+            name: "emojis"
+            layout: @GUI::VerticalBoxLayout {}
+        }
     }
 }
