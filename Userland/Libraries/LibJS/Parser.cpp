@@ -565,8 +565,15 @@ void Parser::parse_module(Program& program)
                 if (name == exported_name)
                     found = true;
             });
+            for (auto& import : program.imports()) {
+                if (import.has_bound_name(exported_name)) {
+                    found = true;
+                    break;
+                }
+            }
+
             if (!found)
-                syntax_error(String::formatted("'{}' is not declared", exported_name));
+                syntax_error(String::formatted("'{}' in export is not declared", exported_name), export_statement.source_range().start);
         }
     }
 }

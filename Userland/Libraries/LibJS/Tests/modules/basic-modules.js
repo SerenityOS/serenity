@@ -190,6 +190,10 @@ describe("in- and exports", () => {
     test("can have multiple star imports even from the same file", () => {
         expectModulePassed("./multiple-star-imports.mjs");
     });
+
+    test("can export namespace via binding", () => {
+        expectModulePassed("./re-export-namespace-via-binding.mjs");
+    });
 });
 
 describe("loops", () => {
