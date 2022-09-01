@@ -172,17 +172,17 @@ public:
     void schedule_style_update();
     void schedule_layout_update();
 
-    NonnullRefPtr<HTMLCollection> get_elements_by_name(String const&);
-    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(String const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
-    NonnullRefPtr<HTMLCollection> applets();
-    NonnullRefPtr<HTMLCollection> anchors();
-    NonnullRefPtr<HTMLCollection> images();
-    NonnullRefPtr<HTMLCollection> embeds();
-    NonnullRefPtr<HTMLCollection> plugins();
-    NonnullRefPtr<HTMLCollection> links();
-    NonnullRefPtr<HTMLCollection> forms();
-    NonnullRefPtr<HTMLCollection> scripts();
+    JS::NonnullGCPtr<HTMLCollection> applets();
+    JS::NonnullGCPtr<HTMLCollection> anchors();
+    JS::NonnullGCPtr<HTMLCollection> images();
+    JS::NonnullGCPtr<HTMLCollection> embeds();
+    JS::NonnullGCPtr<HTMLCollection> plugins();
+    JS::NonnullGCPtr<HTMLCollection> links();
+    JS::NonnullGCPtr<HTMLCollection> forms();
+    JS::NonnullGCPtr<HTMLCollection> scripts();
 
     String const& source() const { return m_source; }
     void set_source(String const& source) { m_source = source; }

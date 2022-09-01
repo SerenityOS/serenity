@@ -184,7 +184,7 @@ static bool is_form_control(DOM::Element const& element)
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
-NonnullRefPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
 {
     // FIXME: This should return the same HTMLFormControlsCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.

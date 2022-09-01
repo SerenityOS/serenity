@@ -23,7 +23,7 @@ HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::Qualified
 HTMLTableRowElement::~HTMLTableRowElement() = default;
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tr-cells
-NonnullRefPtr<DOM::HTMLCollection> HTMLTableRowElement::cells() const
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableRowElement::cells() const
 {
     // The cells attribute must return an HTMLCollection rooted at this tr element,
     // whose filter matches only td and th elements that are children of the tr element.
@@ -42,7 +42,7 @@ int HTMLTableRowElement::row_index() const
     // or a parent tbody, thead, or tfoot element and a grandparent table element,
     // return the index of this tr element in that table element's rows collection.
     // If there is no such table element, then the attribute must return −1.
-    auto rows_collection = [&]() -> RefPtr<DOM::HTMLCollection> {
+    auto rows_collection = [&]() -> JS::GCPtr<DOM::HTMLCollection> {
         if (!parent())
             return nullptr;
         if (is<HTMLTableElement>(*parent()))
@@ -67,7 +67,7 @@ int HTMLTableRowElement::section_row_index() const
     // return the index of the tr element in the parent element's rows collection
     // (for tables, that's HTMLTableElement's rows collection; for table sections, that's HTMLTableSectionElement's rows collection).
     // If there is no such parent element, then the attribute must return −1.
-    auto rows_collection = [&]() -> RefPtr<DOM::HTMLCollection> {
+    auto rows_collection = [&]() -> JS::GCPtr<DOM::HTMLCollection> {
         if (!parent())
             return nullptr;
         if (is<HTMLTableElement>(*parent()))

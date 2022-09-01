@@ -16,24 +16,18 @@ using HTMLOptionOrOptGroupElement = Variant<JS::Handle<HTMLOptionElement>, JS::H
 using HTMLElementOrElementIndex = Variant<JS::Handle<HTMLElement>, i32>;
 
 class HTMLOptionsCollection final : public DOM::HTMLCollection {
-public:
-    using WrapperType = Bindings::HTMLOptionsCollectionWrapper;
+    WEB_PLATFORM_OBJECT(HTMLOptionsCollection, DOM::HTMLCollection);
 
-    static NonnullRefPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
-    {
-        return adopt_ref(*new HTMLOptionsCollection(root, move(filter)));
-    }
+public:
+    static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
+    virtual ~HTMLOptionsCollection() override;
 
     DOM::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
-protected:
+private:
     HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
 };
 
 }
 
-namespace Web::Bindings {
-
-HTMLOptionsCollectionWrapper* wrap(JS::Realm&, HTML::HTMLOptionsCollection&);
-
-}
+WRAPPER_HACK(HTMLOptionsCollection, Web::HTML)

@@ -35,10 +35,10 @@ public:
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_foot();
     void delete_t_foot();
 
-    NonnullRefPtr<DOM::HTMLCollection> t_bodies();
+    JS::NonnullGCPtr<DOM::HTMLCollection> t_bodies();
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_body();
 
-    NonnullRefPtr<DOM::HTMLCollection> rows();
+    JS::NonnullGCPtr<DOM::HTMLCollection> rows();
     DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     DOM::ExceptionOr<void> delete_row(long index);
 

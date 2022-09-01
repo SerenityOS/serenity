@@ -500,7 +500,7 @@ bool Element::is_active() const
     return document().active_element() == this;
 }
 
-NonnullRefPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_name)
+JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_name)
 {
     return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
         return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
