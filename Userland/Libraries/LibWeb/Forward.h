@@ -470,7 +470,6 @@ class IntersectionObserverWrapper;
 class LocationObject;
 class MessageChannelWrapper;
 class MutationObserverWrapper;
-class MutationRecordWrapper;
 class OptionConstructor;
 class Path2DWrapper;
 class RangePrototype;

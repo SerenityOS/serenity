@@ -149,6 +149,8 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "DOMStringMap"sv)
         return true;
+    if (type.name == "MutationRecord"sv)
+        return true;
 
     return false;
 }

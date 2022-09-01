@@ -15,7 +15,6 @@
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/MutationObserverWrapper.h>
-#include <LibWeb/Bindings/MutationRecordWrapper.h>
 #include <LibWeb/Bindings/WindowProxy.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
@@ -378,9 +377,8 @@ void queue_mutation_observer_microtask(DOM::Document& document)
                 auto* wrapped_records = MUST(JS::Array::create(realm, 0));
                 for (size_t i = 0; i < records.size(); ++i) {
                     auto& record = records.at(i);
-                    auto* wrapped_record = Bindings::wrap(realm, record);
                     auto property_index = JS::PropertyKey { i };
-                    MUST(wrapped_records->create_data_property(property_index, wrapped_record));
+                    MUST(wrapped_records->create_data_property(property_index, record.ptr()));
                 }
 
                 auto* wrapped_mutation_observer = Bindings::wrap(realm, mutation_observer);

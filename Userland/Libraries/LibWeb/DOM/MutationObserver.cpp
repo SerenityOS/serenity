@@ -108,7 +108,7 @@ void MutationObserver::disconnect()
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-takerecords
-NonnullRefPtrVector<MutationRecord> MutationObserver::take_records()
+Vector<JS::Handle<MutationRecord>> MutationObserver::take_records()
 {
     // 1. Let records be a clone of this’s record queue.
     auto records = m_record_queue;
