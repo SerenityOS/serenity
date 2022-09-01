@@ -1368,7 +1368,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
+        auto record = MutationRecord::create(window(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));

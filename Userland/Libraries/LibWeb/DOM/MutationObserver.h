@@ -43,16 +43,16 @@ public:
 
     ExceptionOr<void> observe(Node& target, MutationObserverInit options = {});
     void disconnect();
-    NonnullRefPtrVector<MutationRecord> take_records();
+    Vector<JS::Handle<MutationRecord>> take_records();
 
     Vector<WeakPtr<Node>>& node_list() { return m_node_list; }
     Vector<WeakPtr<Node>> const& node_list() const { return m_node_list; }
 
     Bindings::CallbackType& callback() { return *m_callback; }
 
-    void enqueue_record(Badge<Node>, NonnullRefPtr<MutationRecord> mutation_record)
+    void enqueue_record(Badge<Node>, JS::NonnullGCPtr<MutationRecord> mutation_record)
     {
-        m_record_queue.append(move(mutation_record));
+        m_record_queue.append(*mutation_record);
     }
 
 private:
@@ -65,7 +65,7 @@ private:
     Vector<WeakPtr<Node>> m_node_list;
 
     // https://dom.spec.whatwg.org/#concept-mo-queue
-    NonnullRefPtrVector<MutationRecord> m_record_queue;
+    Vector<JS::Handle<MutationRecord>> m_record_queue;
 };
 
 // https://dom.spec.whatwg.org/#registered-observer
