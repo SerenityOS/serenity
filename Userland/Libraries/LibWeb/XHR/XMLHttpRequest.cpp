@@ -60,6 +60,9 @@ void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_window.ptr());
+
+    if (auto* value = m_response_object.get_pointer<JS::Value>())
+        visitor.visit(*value);
 }
 
 void XMLHttpRequest::set_ready_state(ReadyState ready_state)
@@ -113,7 +116,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 
     // 4. If this’s response object is non-null, then return it.
     if (!m_response_object.has<Empty>())
-        return m_response_object.get<JS::Handle<JS::Value>>().value();
+        return m_response_object.get<JS::Value>();
 
     // 5. If this’s response type is "arraybuffer",
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Arraybuffer) {
@@ -126,13 +129,13 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
 
         auto buffer = buffer_result.release_value();
         buffer->buffer().overwrite(0, m_received_bytes.data(), m_received_bytes.size());
-        m_response_object = JS::make_handle(JS::Value(buffer));
+        m_response_object = JS::Value(buffer);
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
         auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
         auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
-        m_response_object = JS::make_handle(JS::Value(wrap(realm(), *blob)));
+        m_response_object = JS::Value(wrap(realm(), *blob));
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
@@ -157,11 +160,11 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
             return JS::Value(JS::js_null());
 
         // 4. Set this’s response object to jsonObject.
-        m_response_object = JS::make_handle(json_object_result.release_value());
+        m_response_object = json_object_result.release_value();
     }
 
     // 9. Return this’s response object.
-    return m_response_object.get<JS::Handle<JS::Value>>().value();
+    return m_response_object.get<JS::Value>();
 }
 
 // https://xhr.spec.whatwg.org/#text-response

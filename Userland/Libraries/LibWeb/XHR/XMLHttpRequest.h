@@ -106,7 +106,7 @@ private:
     enum class Failure {
         /// ????
     };
-    Variant<JS::Handle<JS::Value>, Failure, Empty> m_response_object;
+    Variant<JS::Value, Failure, Empty> m_response_object;
 
     // https://xhr.spec.whatwg.org/#override-mime-type
     Optional<MimeSniff::MimeType> m_override_mime_type;
