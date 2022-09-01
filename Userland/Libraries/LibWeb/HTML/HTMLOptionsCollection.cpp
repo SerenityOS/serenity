@@ -4,18 +4,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/HTMLOptionsCollectionPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLOptionsCollection.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
+
+JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
+{
+    return *root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter));
+}
 
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
     : DOM::HTMLCollection(root, move(filter))
 {
+    set_prototype(&root.window().ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>("HTMLOptionsCollection"));
 }
+
+HTMLOptionsCollection::~HTMLOptionsCollection() = default;
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add
 DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)

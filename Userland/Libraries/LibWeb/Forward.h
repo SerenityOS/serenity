@@ -463,8 +463,6 @@ class FileWrapper;
 class HeadersWrapper;
 class HeadersIteratorWrapper;
 class HistoryWrapper;
-class HTMLCollectionWrapper;
-class HTMLOptionsCollectionWrapper;
 class IdleDeadlineWrapper;
 class ImageDataWrapper;
 class IntersectionObserverWrapper;

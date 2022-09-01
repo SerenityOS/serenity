@@ -222,7 +222,7 @@ void HTMLTableElement::delete_t_foot()
     }
 }
 
-NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
 {
     return DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
         return element.local_name() == TagNames::tbody;
@@ -253,7 +253,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
     return static_cast<HTMLTableSectionElement&>(*tbody);
 }
 
-NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
 {
     HTMLTableElement* table_node = this;
     // FIXME:  The elements in the collection must be ordered such that those elements whose parent is a thead are

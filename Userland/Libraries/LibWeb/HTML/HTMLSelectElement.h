@@ -23,7 +23,7 @@ class HTMLSelectElement final
 public:
     virtual ~HTMLSelectElement() override;
 
-    RefPtr<HTMLOptionsCollection> const& options();
+    JS::GCPtr<HTMLOptionsCollection> const& options();
 
     DOM::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
@@ -56,7 +56,9 @@ public:
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
 
-    RefPtr<HTMLOptionsCollection> m_options;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::GCPtr<HTMLOptionsCollection> m_options;
 };
 
 }

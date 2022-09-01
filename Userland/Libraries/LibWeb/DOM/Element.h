@@ -112,7 +112,7 @@ public:
     bool is_focused() const;
     bool is_active() const;
 
-    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root.ptr(); }
     ShadowRoot const* shadow_root() const { return m_shadow_root.ptr(); }

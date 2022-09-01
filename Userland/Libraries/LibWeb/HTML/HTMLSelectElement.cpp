@@ -22,8 +22,14 @@ HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLSelectElement::~HTMLSelectElement() = default;
 
+void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_options.ptr());
+}
+
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options
-RefPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
+JS::GCPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
 {
     if (!m_options) {
         m_options = HTMLOptionsCollection::create(*this, [](DOM::Element const& element) {
@@ -41,7 +47,7 @@ RefPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
 DOM::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
 {
     // Similarly, the add(element, before) method must act like its namesake method on that same options collection.
-    return const_cast<RefPtr<HTMLOptionsCollection>&>(options())->add(move(element), move(before));
+    return const_cast<HTMLOptionsCollection&>(*options()).add(move(element), move(before));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-select-option-list

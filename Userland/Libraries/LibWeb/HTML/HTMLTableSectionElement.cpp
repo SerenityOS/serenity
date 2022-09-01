@@ -24,7 +24,7 @@ HTMLTableSectionElement::HTMLTableSectionElement(DOM::Document& document, DOM::Q
 HTMLTableSectionElement::~HTMLTableSectionElement() = default;
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-rows
-NonnullRefPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
+JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
 {
     // The rows attribute must return an HTMLCollection rooted at this element,
     // whose filter matches only tr elements that are children of this element.

@@ -17,7 +17,7 @@ class HTMLTableSectionElement final : public HTMLElement {
 public:
     virtual ~HTMLTableSectionElement() override;
 
-    NonnullRefPtr<DOM::HTMLCollection> rows() const;
+    JS::NonnullGCPtr<DOM::HTMLCollection> rows() const;
     DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     DOM::ExceptionOr<void> delete_row(long index);
 

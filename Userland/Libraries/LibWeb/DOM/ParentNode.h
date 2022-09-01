@@ -26,10 +26,10 @@ public:
     ExceptionOr<JS::GCPtr<Element>> query_selector(StringView);
     ExceptionOr<JS::NonnullGCPtr<NodeList>> query_selector_all(StringView);
 
-    NonnullRefPtr<HTMLCollection> children();
+    JS::NonnullGCPtr<HTMLCollection> children();
 
-    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
-    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name_ns(FlyString const&, FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(FlyString const&, FlyString const&);
 
     ExceptionOr<void> prepend(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
     ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, String>> const& nodes);

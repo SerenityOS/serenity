@@ -925,14 +925,14 @@ void Document::set_hovered_node(Node* node)
         invalidate_style();
 }
 
-NonnullRefPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
 {
     return HTMLCollection::create(*this, [name](Element const& element) {
         return element.name() == name;
     });
 }
 
-NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
 {
     return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
         return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
@@ -940,7 +940,7 @@ NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString con
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
-NonnullRefPtr<HTMLCollection> Document::applets()
+JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -948,7 +948,7 @@ NonnullRefPtr<HTMLCollection> Document::applets()
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-anchors
-NonnullRefPtr<HTMLCollection> Document::anchors()
+JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -958,7 +958,7 @@ NonnullRefPtr<HTMLCollection> Document::anchors()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-images
-NonnullRefPtr<HTMLCollection> Document::images()
+JS::NonnullGCPtr<HTMLCollection> Document::images()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -968,7 +968,7 @@ NonnullRefPtr<HTMLCollection> Document::images()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-embeds
-NonnullRefPtr<HTMLCollection> Document::embeds()
+JS::NonnullGCPtr<HTMLCollection> Document::embeds()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -978,13 +978,13 @@ NonnullRefPtr<HTMLCollection> Document::embeds()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-plugins
-NonnullRefPtr<HTMLCollection> Document::plugins()
+JS::NonnullGCPtr<HTMLCollection> Document::plugins()
 {
     return embeds();
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-links
-NonnullRefPtr<HTMLCollection> Document::links()
+JS::NonnullGCPtr<HTMLCollection> Document::links()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -994,7 +994,7 @@ NonnullRefPtr<HTMLCollection> Document::links()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-forms
-NonnullRefPtr<HTMLCollection> Document::forms()
+JS::NonnullGCPtr<HTMLCollection> Document::forms()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
@@ -1004,7 +1004,7 @@ NonnullRefPtr<HTMLCollection> Document::forms()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-scripts
-NonnullRefPtr<HTMLCollection> Document::scripts()
+JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
