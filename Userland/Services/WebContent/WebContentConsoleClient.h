@@ -18,7 +18,7 @@ namespace WebContent {
 
 class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
-    WebContentConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, ConnectionFromClient&);
+    WebContentConsoleClient(JS::Console&, JS::Realm&, ConnectionFromClient&);
 
     void handle_input(String const& js_source);
     void send_messages(i32 start_index);
@@ -28,7 +28,7 @@ private:
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
     ConnectionFromClient& m_client;
-    WeakPtr<JS::Interpreter> m_interpreter;
+    WeakPtr<JS::Realm> m_realm;
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
 
     void clear_output();

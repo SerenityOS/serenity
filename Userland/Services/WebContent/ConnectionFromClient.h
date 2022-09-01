@@ -92,7 +92,7 @@ private:
 
     HashMap<i32, NonnullRefPtr<Gfx::Bitmap>> m_backing_stores;
 
-    WeakPtr<JS::Interpreter> m_interpreter;
+    WeakPtr<JS::Realm> m_realm;
     OwnPtr<WebContentConsoleClient> m_console_client;
     JS::Handle<JS::GlobalObject> m_console_global_object;
 

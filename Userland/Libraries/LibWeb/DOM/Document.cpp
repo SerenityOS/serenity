@@ -1058,14 +1058,14 @@ JS::Interpreter& Document::interpreter()
 JS::Value Document::run_javascript(StringView source, StringView filename)
 {
     // FIXME: The only user of this function now is javascript: URLs. Refactor them to follow the spec: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
-    auto& interpreter = document().interpreter();
-    auto script_or_error = JS::Script::parse(source, interpreter.realm(), filename);
+    auto interpreter = JS::Interpreter::create_with_existing_realm(realm());
+    auto script_or_error = JS::Script::parse(source, realm(), filename);
     if (script_or_error.is_error()) {
         // FIXME: Add error logging back.
         return JS::js_undefined();
     }
 
-    auto result = interpreter.run(script_or_error.value());
+    auto result = interpreter->run(script_or_error.value());
 
     if (result.is_error()) {
         // FIXME: I'm sure the spec could tell us something about error propagation here!

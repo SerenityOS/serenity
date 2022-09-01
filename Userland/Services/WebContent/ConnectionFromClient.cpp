@@ -13,7 +13,6 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -386,13 +385,13 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_h
 void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
 {
     auto* document = page().top_level_browsing_context().active_document();
-    auto interpreter = document->interpreter().make_weak_ptr();
-    if (m_interpreter.ptr() == interpreter.ptr())
+    auto realm = document->realm().make_weak_ptr();
+    if (m_realm.ptr() == realm.ptr())
         return;
 
-    auto& console_object = *interpreter->realm().intrinsics().console_object();
-    m_interpreter = interpreter;
-    m_console_client = make<WebContentConsoleClient>(console_object.console(), interpreter, *this);
+    auto& console_object = *realm->intrinsics().console_object();
+    m_realm = realm;
+    m_console_client = make<WebContentConsoleClient>(console_object.console(), *m_realm, *this);
     console_object.console().set_client(*m_console_client.ptr());
 }
 
