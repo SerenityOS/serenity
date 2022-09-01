@@ -2534,7 +2534,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Optional<Position> const& function_start)
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, Optional<Position> const& function_start)
 {
     auto rule_start = function_start.has_value()
         ? RulePosition { *this, *function_start }
@@ -2572,7 +2572,9 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Op
             parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
         }
 
-        if (FunctionNodeType::must_have_name() || match_identifier())
+        if (parse_options & FunctionNodeParseOptions::HasDefaultExportName)
+            name = ExportStatement::local_name_for_default;
+        else if (FunctionNodeType::must_have_name() || match_identifier())
             name = consume_identifier().flystring_value();
         else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await)))
             name = consume().flystring_value();
@@ -2624,7 +2626,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options, Op
         contains_direct_call_to_eval);
 }
 
-Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u8 parse_options)
+Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u16 parse_options)
 {
     auto rule_start = push_start();
     bool has_default_parameter = false;
@@ -4327,6 +4329,12 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
         auto lookahead_token = next_token();
 
+        enum class MatchesFunctionDeclaration {
+            Yes,
+            No,
+            WithoutName,
+        };
+
         // Note: For some reason the spec here has declaration which can have no name
         //       and the rest of the parser is just not setup for that. With these
         //       hacks below we get through most things but we should probably figure
@@ -4337,6 +4345,14 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         //          `export default function() {}()`
         //       Since we parse this as an expression you are immediately allowed to call it
         //       which is incorrect and this should give a SyntaxError.
+
+        auto has_name = [&](Token const& token) {
+            if (token.type() != TokenType::ParenOpen)
+                return MatchesFunctionDeclaration::Yes;
+
+            return MatchesFunctionDeclaration::WithoutName;
+        };
+
         auto match_function_declaration = [&] {
             // Hack part 1.
             // Match a function declaration with a name, since we have async and generator
@@ -4347,32 +4363,40 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 
             if (current_type == TokenType::Function) {
                 if (lookahead_token.type() == TokenType::Asterisk)
-                    return lookahead_lexer.next().type() != TokenType::ParenOpen; // function * <name>
+                    return has_name(lookahead_lexer.next()); // function * [name]
                 else
-                    return lookahead_token.type() != TokenType::ParenOpen; // function <name>
+                    return has_name(lookahead_token); // function [name]
             }
 
             if (current_type == TokenType::Async) {
                 if (lookahead_token.type() != TokenType::Function)
-                    return false;
+                    return MatchesFunctionDeclaration::No;
 
                 if (lookahead_token.trivia_contains_line_terminator())
-                    return false;
+                    return MatchesFunctionDeclaration::No;
 
                 auto lookahead_two_token = lookahead_lexer.next();
                 if (lookahead_two_token.type() == TokenType::Asterisk)
-                    return lookahead_lexer.next().type() != TokenType::ParenOpen; // async function * <name>
+                    return has_name(lookahead_lexer.next()); // async function * [name]
                 else
-                    return lookahead_two_token.type() != TokenType::ParenOpen; // async function <name>
+                    return has_name(lookahead_two_token); // async function [name]
             }
 
-            return false;
+            return MatchesFunctionDeclaration::No;
         };
 
-        if (match_function_declaration()) {
-            auto function_declaration = parse_function_node<FunctionDeclaration>();
+        if (auto matches_function = match_function_declaration(); matches_function != MatchesFunctionDeclaration::No) {
+
+            auto function_declaration = parse_function_node<FunctionDeclaration>(
+                (matches_function == MatchesFunctionDeclaration::WithoutName ? FunctionNodeParseOptions::HasDefaultExportName : 0)
+                | FunctionNodeParseOptions::CheckForFunctionAndName);
+
             m_state.current_scope_pusher->add_declaration(function_declaration);
-            local_name = function_declaration->name();
+            if (matches_function == MatchesFunctionDeclaration::WithoutName)
+                local_name = ExportStatement::local_name_for_default;
+            else
+                local_name = function_declaration->name();
+
             expression = move(function_declaration);
         } else if (match(TokenType::Class) && lookahead_token.type() != TokenType::CurlyOpen && lookahead_token.type() != TokenType::Extends) {
             // Hack part 2.
@@ -4633,7 +4657,7 @@ Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<To
     return result;
 }
 
-template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u8, Optional<Position> const&);
-template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u8, Optional<Position> const&);
+template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u16, Optional<Position> const&);
+template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u16, Optional<Position> const&);
 
 }

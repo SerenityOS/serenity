@@ -27,7 +27,7 @@ enum class Associativity {
 };
 
 struct FunctionNodeParseOptions {
-    enum {
+    enum : u16 {
         CheckForFunctionAndName = 1 << 0,
         AllowSuperPropertyLookup = 1 << 1,
         AllowSuperConstructorCall = 1 << 2,
@@ -36,6 +36,7 @@ struct FunctionNodeParseOptions {
         IsArrowFunction = 1 << 5,
         IsGeneratorFunction = 1 << 6,
         IsAsyncFunction = 1 << 7,
+        HasDefaultExportName = 1 << 8,
     };
 };
 
@@ -55,8 +56,8 @@ public:
     NonnullRefPtr<Program> parse_program(bool starts_in_strict_mode = false);
 
     template<typename FunctionNodeType>
-    NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName, Optional<Position> const& function_start = {});
-    Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
+    NonnullRefPtr<FunctionNodeType> parse_function_node(u16 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName, Optional<Position> const& function_start = {});
+    Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u16 parse_options = 0);
 
     enum class AllowDuplicates {
         Yes,
