@@ -29,7 +29,6 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     auto console_global_object = realm.heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
 
     // NOTE: We need to push an execution context here for NativeFunction::create() to succeed during global object initialization.
-    // It gets removed immediately after creating the interpreter in Document::interpreter().
     auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*realm.host_defined());
     vm.push_execution_context(eso.realm_execution_context());
     console_global_object->initialize(realm);

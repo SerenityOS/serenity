@@ -188,7 +188,6 @@ public:
     void set_source(String const& source) { m_source = source; }
 
     HTML::EnvironmentSettingsObject& relevant_settings_object();
-    JS::Interpreter& interpreter();
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
@@ -394,8 +393,6 @@ private:
     bool m_active_parser_was_aborted { false };
 
     String m_source;
-
-    OwnPtr<JS::Interpreter> m_interpreter;
 
     JS::GCPtr<HTML::HTMLScriptElement> m_pending_parsing_blocking_script;
     Vector<JS::Handle<HTML::HTMLScriptElement>> m_scripts_to_execute_when_parsing_has_finished;
