@@ -10,24 +10,29 @@
 
 namespace Web::HTML {
 
-NonnullRefPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
+JS::NonnullGCPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
 {
-    return adopt_ref(*new Timer(window, milliseconds, move(callback), id));
+    return *window.heap().allocate_without_realm<Timer>(window, milliseconds, move(callback), id);
 }
 
 Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
     : m_window(window)
+    , m_callback(move(callback))
     , m_id(id)
 {
-    m_timer = Core::Timer::create_single_shot(milliseconds, [this, callback = move(callback)] {
-        NonnullRefPtr strong_timer { *this };
-        callback();
+    m_timer = Core::Timer::create_single_shot(milliseconds, [this] {
+        m_callback();
     });
+}
+
+void Timer::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_window.ptr());
 }
 
 Timer::~Timer()
 {
-    m_window.deallocate_timer_id({}, m_id);
 }
 
 void Timer::start()

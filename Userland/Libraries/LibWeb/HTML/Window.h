@@ -144,7 +144,7 @@ private:
     JS::GCPtr<DOM::Event> m_current_event;
 
     IDAllocator m_timer_id_allocator;
-    HashMap<int, NonnullRefPtr<Timer>> m_timers;
+    HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;
 
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
