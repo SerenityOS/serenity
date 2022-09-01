@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/SinglyLinkedList.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JobCallback.h>
@@ -30,8 +31,8 @@ public:
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 
-    Realm& realm() { return *m_realm.cell(); }
-    Realm const& realm() const { return *m_realm.cell(); }
+    Realm& realm() { return *m_realm; }
+    Realm const& realm() const { return *m_realm; }
 
     JobCallback& cleanup_callback() { return m_cleanup_callback; }
     JobCallback const& cleanup_callback() const { return m_cleanup_callback; }
@@ -41,7 +42,7 @@ private:
 
     virtual void visit_edges(Visitor& visitor) override;
 
-    Handle<Realm> m_realm;
+    NonnullGCPtr<Realm> m_realm;
     JobCallback m_cleanup_callback;
 
     struct FinalizationRecord {

@@ -12,7 +12,7 @@ namespace JS {
 FinalizationRegistry::FinalizationRegistry(Realm& realm, JobCallback cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
-    , m_realm(make_handle(realm))
+    , m_realm(realm)
     , m_cleanup_callback(move(cleanup_callback))
 {
 }
@@ -82,6 +82,7 @@ ThrowCompletionOr<void> FinalizationRegistry::cleanup(Optional<JobCallback> call
 void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_realm.ptr());
     for (auto& record : m_records) {
         visitor.visit(record.held_value);
         visitor.visit(record.unregister_token);
