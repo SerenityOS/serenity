@@ -14,7 +14,6 @@
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/MutationObserverWrapper.h>
 #include <LibWeb/Bindings/WindowProxy.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
@@ -356,22 +355,22 @@ void queue_mutation_observer_microtask(DOM::Document& document)
         for (auto& mutation_observer : notify_set) {
             // 1. Let records be a clone of mo’s record queue.
             // 2. Empty mo’s record queue.
-            auto records = mutation_observer.take_records();
+            auto records = mutation_observer->take_records();
 
             // 3. For each node of mo’s node list, remove all transient registered observers whose observer is mo from node’s registered observer list.
-            for (auto& node : mutation_observer.node_list()) {
+            for (auto& node : mutation_observer->node_list()) {
                 // FIXME: Is this correct?
                 if (node.is_null())
                     continue;
 
                 node->registered_observers_list().remove_all_matching([&mutation_observer](DOM::RegisteredObserver& registered_observer) {
-                    return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer.ptr() == &mutation_observer;
+                    return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer().ptr() == mutation_observer.ptr();
                 });
             }
 
             // 4. If records is not empty, then invoke mo’s callback with « records, mo », and mo. If this throws an exception, catch it, and report the exception.
             if (!records.is_empty()) {
-                auto& callback = mutation_observer.callback();
+                auto& callback = mutation_observer->callback();
                 auto& realm = callback.callback_context.realm();
 
                 auto* wrapped_records = MUST(JS::Array::create(realm, 0));
@@ -381,9 +380,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
                     MUST(wrapped_records->create_data_property(property_index, record.ptr()));
                 }
 
-                auto* wrapped_mutation_observer = Bindings::wrap(realm, mutation_observer);
-
-                auto result = IDL::invoke_callback(callback, wrapped_mutation_observer, wrapped_records, wrapped_mutation_observer);
+                auto result = IDL::invoke_callback(callback, mutation_observer.ptr(), wrapped_records, mutation_observer.ptr());
                 if (result.is_abrupt())
                     HTML::report_exception(result);
             }

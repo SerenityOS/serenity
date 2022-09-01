@@ -9,6 +9,7 @@
 #include <AK/IDAllocator.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/NodePrototype.h>
@@ -89,6 +90,9 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child.ptr());
     visitor.visit(m_next_sibling.ptr());
     visitor.visit(m_previous_sibling.ptr());
+
+    for (auto& registered_observer : m_registered_observer_list)
+        visitor.visit(registered_observer);
 }
 
 // https://dom.spec.whatwg.org/#dom-node-baseuri
@@ -578,8 +582,8 @@ void Node::remove(bool suppress_observers)
     //     whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
     for (auto* inclusive_ancestor = parent; inclusive_ancestor; inclusive_ancestor = inclusive_ancestor->parent()) {
         for (auto& registered : inclusive_ancestor->m_registered_observer_list) {
-            if (registered.options.subtree) {
-                auto transient_observer = TransientRegisteredObserver::create(registered.observer, registered.options, registered);
+            if (registered.options().subtree) {
+                auto transient_observer = TransientRegisteredObserver::create(registered.observer(), registered.options(), registered);
                 m_registered_observer_list.append(move(transient_observer));
             }
         }
@@ -1321,9 +1325,13 @@ Painting::PaintableBox const* Node::paint_box() const
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
 void Node::queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
+    // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
+    // FIXME: This is a total hack.
+    JS::DeferGC defer_gc(heap());
+
     // 1. Let interestedObservers be an empty map.
     // mutationObserver -> mappedOldValue
-    OrderedHashMap<NonnullRefPtr<MutationObserver>, String> interested_observers;
+    OrderedHashMap<MutationObserver*, String> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
     Vector<JS::Handle<Node>> nodes;
@@ -1336,7 +1344,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
     for (auto& node : nodes) {
         for (auto& registered_observer : node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
-            auto& options = registered_observer.options;
+            auto& options = registered_observer.options();
 
             // 2. If none of the following are true
             //      - node is not target and options["subtree"] is false
@@ -1351,7 +1359,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
                 && !(type == MutationType::childList && !options.child_list)) {
                 // 1. Let mo be registered’s observer.
-                auto mutation_observer = registered_observer.observer;
+                auto mutation_observer = registered_observer.observer();
 
                 // 2. If interestedObservers[mo] does not exist, then set interestedObservers[mo] to null.
                 if (!interested_observers.contains(mutation_observer))
