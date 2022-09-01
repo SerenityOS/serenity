@@ -24,7 +24,7 @@ public:
     u32 child_element_count() const;
 
     ExceptionOr<JS::GCPtr<Element>> query_selector(StringView);
-    ExceptionOr<NonnullRefPtr<NodeList>> query_selector_all(StringView);
+    ExceptionOr<JS::NonnullGCPtr<NodeList>> query_selector_all(StringView);
 
     NonnullRefPtr<HTMLCollection> children();
 

@@ -471,7 +471,6 @@ class LocationObject;
 class MessageChannelWrapper;
 class MutationObserverWrapper;
 class MutationRecordWrapper;
-class NodeListWrapper;
 class OptionConstructor;
 class Path2DWrapper;
 class RangePrototype;

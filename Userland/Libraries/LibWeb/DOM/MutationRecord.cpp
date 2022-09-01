@@ -40,8 +40,8 @@ public:
 private:
     FlyString m_type;
     JS::Handle<Node> m_target;
-    NonnullRefPtr<NodeList> m_added_nodes;
-    NonnullRefPtr<NodeList> m_removed_nodes;
+    JS::Handle<NodeList> m_added_nodes;
+    JS::Handle<NodeList> m_removed_nodes;
     JS::Handle<Node> m_previous_sibling;
     JS::Handle<Node> m_next_sibling;
     String m_attribute_name;

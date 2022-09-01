@@ -101,7 +101,7 @@ public:
 
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
-    NonnullRefPtr<NodeList> child_nodes();
+    JS::NonnullGCPtr<NodeList> child_nodes();
     Vector<JS::Handle<Node>> children_as_vector() const;
 
     virtual FlyString node_name() const = 0;
@@ -117,6 +117,8 @@ public:
 
     Document& document() { return *m_document; }
     Document const& document() const { return *m_document; }
+
+    HTML::Window& window() const;
 
     JS::GCPtr<Document> owner_document() const;
 
@@ -220,7 +222,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>
@@ -639,7 +641,7 @@ protected:
     NonnullRefPtrVector<RegisteredObserver> m_registered_observer_list;
 
 private:
-    void queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     void insert_before_impl(JS::NonnullGCPtr<Node>, JS::GCPtr<Node> child);
     void append_child_impl(JS::NonnullGCPtr<Node>);

@@ -64,7 +64,7 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
         count = length - offset;
 
     // 4. Queue a mutation record of "characterData" for node with null, null, node’s data, « », « », null, and null.
-    queue_mutation_record(MutationType::characterData, {}, {}, m_data, StaticNodeList::create({}), StaticNodeList::create({}), nullptr, nullptr);
+    queue_mutation_record(MutationType::characterData, {}, {}, m_data, StaticNodeList::create(window(), {}), StaticNodeList::create(window(), {}), nullptr, nullptr);
 
     // 5. Insert data into node’s data after offset code units.
     // 6. Let delete offset be offset + data’s length.

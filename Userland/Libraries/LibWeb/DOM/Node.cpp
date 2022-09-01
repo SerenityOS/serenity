@@ -376,7 +376,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
         // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
-        node->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(nodes), nullptr, nullptr);
+        node->queue_tree_mutation_record(StaticNodeList::create(window(), {}), StaticNodeList::create(window(), nodes), nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -438,7 +438,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
     if (!suppress_observers)
-        queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create({}), previous_sibling.ptr(), child.ptr());
+        queue_tree_mutation_record(StaticNodeList::create(window(), move(nodes)), StaticNodeList::create(window(), {}), previous_sibling.ptr(), child.ptr());
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -589,7 +589,7 @@ void Node::remove(bool suppress_observers)
     if (!suppress_observers) {
         Vector<JS::Handle<Node>> removed_nodes;
         removed_nodes.append(JS::make_handle(*this));
-        parent->queue_tree_mutation_record(StaticNodeList::create({}), StaticNodeList::create(move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
+        parent->queue_tree_mutation_record(StaticNodeList::create(window(), {}), StaticNodeList::create(window(), move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -681,7 +681,7 @@ ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr<Node> n
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    queue_tree_mutation_record(StaticNodeList::create(move(nodes)), StaticNodeList::create(move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
+    queue_tree_mutation_record(StaticNodeList::create(window(), move(nodes)), StaticNodeList::create(window(), move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
@@ -851,11 +851,11 @@ ParentNode* Node::parent_or_shadow_host()
     return verify_cast<ParentNode>(parent());
 }
 
-NonnullRefPtr<NodeList> Node::child_nodes()
+JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
     // FIXME: This should return the same LiveNodeList object every time,
     //        but that would cause a reference cycle since NodeList refs the root.
-    return LiveNodeList::create(*this, [this](auto& node) {
+    return LiveNodeList::create(window(), *this, [this](auto& node) {
         return is_parent_of(node);
     });
 }
@@ -1133,7 +1133,7 @@ void Node::replace_all(JS::GCPtr<Node> node)
 
     // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
     if (!added_nodes.is_empty() || !removed_nodes.is_empty())
-        queue_tree_mutation_record(StaticNodeList::create(move(added_nodes)), StaticNodeList::create(move(removed_nodes)), nullptr, nullptr);
+        queue_tree_mutation_record(StaticNodeList::create(window(), move(added_nodes)), StaticNodeList::create(window(), move(removed_nodes)), nullptr, nullptr);
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
@@ -1319,7 +1319,7 @@ Painting::PaintableBox const* Node::paint_box() const
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_mutation_record(FlyString const& type, String attribute_name, String attribute_namespace, String old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
     // 1. Let interestedObservers be an empty map.
     // mutationObserver -> mappedOldValue
@@ -1379,7 +1379,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
 }
 
 // https://dom.spec.whatwg.org/#queue-a-tree-mutation-record
-void Node::queue_tree_mutation_record(NonnullRefPtr<NodeList> added_nodes, NonnullRefPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
     // 1. Assert: either addedNodes or removedNodes is not empty.
     VERIFY(added_nodes->length() > 0 || removed_nodes->length() > 0);
@@ -1481,6 +1481,11 @@ bool Node::is_following(Node const& other) const
     }
 
     return false;
+}
+
+HTML::Window& Node::window() const
+{
+    return document().window();
 }
 
 }

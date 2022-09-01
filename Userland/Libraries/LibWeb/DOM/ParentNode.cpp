@@ -38,7 +38,7 @@ ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView selector_t
     return result;
 }
 
-ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView selector_text)
+ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(StringView selector_text)
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
@@ -57,7 +57,7 @@ ExceptionOr<NonnullRefPtr<NodeList>> ParentNode::query_selector_all(StringView s
         return IterationDecision::Continue;
     });
 
-    return StaticNodeList::create(move(elements));
+    return StaticNodeList::create(window(), move(elements));
 }
 
 JS::GCPtr<Element> ParentNode::first_element_child()

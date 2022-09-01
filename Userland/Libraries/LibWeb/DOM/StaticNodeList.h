@@ -12,11 +12,13 @@
 
 namespace Web::DOM {
 
-class StaticNodeList : public NodeList {
-public:
-    static NonnullRefPtr<NodeList> create(Vector<JS::Handle<Node>> static_nodes);
+class StaticNodeList final : public NodeList {
+    WEB_PLATFORM_OBJECT(StaticNodeList, NodeList);
 
-    virtual ~StaticNodeList() override = default;
+public:
+    static JS::NonnullGCPtr<NodeList> create(HTML::Window&, Vector<JS::Handle<Node>>);
+
+    virtual ~StaticNodeList() override;
 
     virtual u32 length() const override;
     virtual Node const* item(u32 index) const override;
@@ -24,9 +26,11 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 private:
-    StaticNodeList(Vector<JS::Handle<Node>> static_nodes);
+    StaticNodeList(HTML::Window&, Vector<JS::Handle<Node>>);
 
-    Vector<JS::Handle<Node>> m_static_nodes;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    Vector<Node&> m_static_nodes;
 };
 
 }
