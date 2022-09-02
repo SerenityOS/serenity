@@ -4,13 +4,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Path2DPrototype.h>
 #include <LibWeb/HTML/Path2D.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-// https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
-Path2D::Path2D(Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path)
+JS::NonnullGCPtr<Path2D> Path2D::create_with_global_object(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
 {
+    return *window.heap().allocate<Path2D>(window.realm(), window, path);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
+Path2D::Path2D(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::Path2DPrototype>("Path2D"));
+
     // 1. Let output be a new Path2D object.
     // 2. If path is not given, then return output.
     if (!path.has_value())
@@ -18,8 +28,8 @@ Path2D::Path2D(Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path)
 
     // 3. If path is a Path2D object, then add all subpaths of path to output and return output.
     //    (In other words, it returns a copy of the argument.)
-    if (path->has<NonnullRefPtr<Path2D>>()) {
-        this->path() = path->get<NonnullRefPtr<Path2D>>()->path();
+    if (path->has<JS::Handle<Path2D>>()) {
+        this->path() = path->get<JS::Handle<Path2D>>()->path();
         return;
     }
 
@@ -31,5 +41,7 @@ Path2D::Path2D(Optional<Variant<NonnullRefPtr<Path2D>, String>> const& path)
     // FIXME: 7. Create a new subpath in output with (x, y) as the only point in the subpath.
     // FIXME: 8. Return output.
 }
+
+Path2D::~Path2D() = default;
 
 }

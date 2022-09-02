@@ -155,6 +155,8 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "WebGLRenderingContext"sv)
         return true;
+    if (type.name == "Path2D"sv)
+        return true;
 
     return false;
 }
