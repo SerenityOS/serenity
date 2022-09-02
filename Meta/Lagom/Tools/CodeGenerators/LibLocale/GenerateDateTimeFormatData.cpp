@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "GeneratorUtil.h"
+#include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Find.h>
@@ -1770,9 +1770,9 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/StringView.h>
 #include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
+#include <LibUnicode/DateTimeFormatData.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/UnicodeDateTimeFormat.h>
-#include <LibUnicode/UnicodeLocale.h>
+#include <LibUnicode/LocaleData.h>
 
 namespace Unicode {
 )~~~");

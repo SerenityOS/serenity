@@ -687,7 +687,7 @@ enum class @name@ : @underlying@ {)~~~");
 
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
-#include <LibUnicode/UnicodeLocale.h>
+#include <LibUnicode/LocaleData.h>
 
 namespace Unicode {
 )~~~");
