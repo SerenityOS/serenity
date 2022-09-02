@@ -448,7 +448,6 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
-class AbortControllerWrapper;
 class BlobWrapper;
 class CanvasGradientWrapper;
 class CanvasRenderingContext2DWrapper;
