@@ -59,43 +59,43 @@ Gfx::Path& SVGLineElement::get_path()
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#LineElementX1Attribute
-NonnullRefPtr<SVGAnimatedLength> SVGLineElement::x1() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGLineElement::x1() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_x1.value_or(0));
-    auto anim_length = SVGLength::create(0, m_x1.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_x1.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_x1.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#LineElementY1Attribute
-NonnullRefPtr<SVGAnimatedLength> SVGLineElement::y1() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGLineElement::y1() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_y1.value_or(0));
-    auto anim_length = SVGLength::create(0, m_y1.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_y1.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_y1.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#LineElementX2Attribute
-NonnullRefPtr<SVGAnimatedLength> SVGLineElement::x2() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGLineElement::x2() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_x2.value_or(0));
-    auto anim_length = SVGLength::create(0, m_x2.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_x2.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_x2.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#LineElementY2Attribute
-NonnullRefPtr<SVGAnimatedLength> SVGLineElement::y2() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGLineElement::y2() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_y2.value_or(0));
-    auto anim_length = SVGLength::create(0, m_y2.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_y2.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_y2.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 }

@@ -156,63 +156,63 @@ Gfx::FloatPoint SVGRectElement::calculate_used_corner_radius_values()
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementXAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::x() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::x() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_x.value_or(0));
-    auto anim_length = SVGLength::create(0, m_x.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_x.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_x.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementYAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::y() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::y() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_y.value_or(0));
-    auto anim_length = SVGLength::create(0, m_y.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_y.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_y.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementWidthAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::width() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::width() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_width.value_or(0));
-    auto anim_length = SVGLength::create(0, m_width.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_width.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_width.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementHeightAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::height() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::height() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_height.value_or(0));
-    auto anim_length = SVGLength::create(0, m_height.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_height.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_height.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementRXAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::rx() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::rx() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_radius_x.value_or(0));
-    auto anim_length = SVGLength::create(0, m_radius_x.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_radius_x.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_radius_x.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementRYAttribute
-NonnullRefPtr<SVGAnimatedLength> SVGRectElement::ry() const
+JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::ry() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(0, m_radius_y.value_or(0));
-    auto anim_length = SVGLength::create(0, m_radius_y.value_or(0));
-    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(window(), 0, m_radius_y.value_or(0));
+    auto anim_length = SVGLength::create(window(), 0, m_radius_y.value_or(0));
+    return SVGAnimatedLength::create(window(), move(base_length), move(anim_length));
 }
 
 }
