@@ -7,6 +7,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/x86/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
@@ -32,7 +33,6 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/Console/VGATextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

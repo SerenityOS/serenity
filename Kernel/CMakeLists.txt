@@ -164,7 +164,6 @@ set(KERNEL_SOURCES
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
-    Firmware/Hypervisor/VMWareBackdoor.cpp
     Firmware/MultiProcessor/Parser.cpp
     FutexQueue.cpp
     Interrupts/APIC.cpp
@@ -338,6 +337,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Shutdown.cpp
+
+        Arch/x86/Hypervisor/VMWareBackdoor.cpp
 
         Arch/x86/PCI/Controller/HostBridge.cpp
         Arch/x86/PCI/Initializer.cpp

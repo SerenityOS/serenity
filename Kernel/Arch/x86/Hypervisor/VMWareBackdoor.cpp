@@ -8,9 +8,9 @@
 #include <AK/Singleton.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/Arch/x86/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Firmware/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
