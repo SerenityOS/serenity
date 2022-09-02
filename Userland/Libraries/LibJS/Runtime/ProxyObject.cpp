@@ -746,11 +746,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     auto& realm = *vm.current_realm();
 
     // A Proxy exotic object only has a [[Call]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Call]] internal method.
-    // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
-    //       According to the spec, the Call() AO may be called with a non-function argument, but
-    //       throws before calling [[Call]]() if that's the case.
-    if (!is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
+    VERIFY(is_function());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
@@ -794,10 +790,7 @@ ThrowCompletionOr<Object*> ProxyObject::internal_construct(MarkedVector<Value> a
     auto& realm = *vm.current_realm();
 
     // A Proxy exotic object only has a [[Construct]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Construct]] internal method.
-    // TODO: We should be able to turn this into a VERIFY(), this must be checked at the call site.
-    //       According to the spec, the Construct() AO is only ever called with a constructor argument.
-    if (!is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
+    VERIFY(is_function());
 
     // 1. Let handler be O.[[ProxyHandler]].
 
