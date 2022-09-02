@@ -20,7 +20,7 @@ UNMAP_AFTER_INIT void PCISerialDevice::detect()
             if (board_definition.device_id != device_identifier.hardware_id())
                 continue;
 
-            auto bar_base = PCI::get_BAR(device_identifier.address(), board_definition.pci_bar) & ~1;
+            auto bar_base = PCI::get_BAR(device_identifier.address(), static_cast<PCI::HeaderType0BaseRegister>(board_definition.pci_bar)) & ~1;
             auto port_base = IOAddress(bar_base + board_definition.first_offset);
             for (size_t i = 0; i < board_definition.port_count; i++) {
                 auto serial_device = new SerialDevice(port_base.offset(board_definition.port_size * i), current_device_minor++);

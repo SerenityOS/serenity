@@ -41,7 +41,7 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     // Note: Bochs (the real bochs graphics adapter in the Bochs emulator) uses revision ID of 0x0
     // and doesn't support memory-mapped IO registers.
     bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
-    auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), 0);
+    auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), PCI::HeaderType0BaseRegister::BAR0);
     if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
         m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, virtual_box_hardware);
     } else {

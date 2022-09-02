@@ -40,9 +40,9 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 {
     auto address = pci_address();
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", address);
-    auto bar0_space_size = PCI::get_BAR_space_size(address, 0);
+    auto bar0_space_size = PCI::get_BAR_space_size(address, PCI::HeaderType0BaseRegister::BAR0);
     VERIFY(bar0_space_size == 0x80000);
-    auto bar2_space_size = PCI::get_BAR_space_size(address, 2);
+    auto bar2_space_size = PCI::get_BAR_space_size(address, PCI::HeaderType0BaseRegister::BAR2);
     dmesgln("Intel Native Graphics Adapter @ {}, MMIO @ {}, space size is {:x} bytes", address, PhysicalAddress(PCI::get_BAR0(address)), bar0_space_size);
     dmesgln("Intel Native Graphics Adapter @ {}, framebuffer @ {}", address, PhysicalAddress(PCI::get_BAR2(address)));
     PCI::enable_bus_mastering(address);
