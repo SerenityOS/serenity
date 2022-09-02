@@ -105,7 +105,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 7. If calendar is not undefined, then
     if (!calendar.is_undefined()) {
         // a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!Unicode::is_type_identifier(calendar.as_string().string()))
+        if (!::Locale::is_type_identifier(calendar.as_string().string()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
 
         // 8. Set opt.[[ca]] to calendar.
@@ -118,7 +118,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 10. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
+        if (!::Locale::is_type_identifier(numbering_system.as_string().string()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 11. Set opt.[[nu]] to numberingSystem.
@@ -165,30 +165,30 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 23. Let dataLocaleData be localeData.[[<dataLocale>]].
     // 24. Let hcDefault be dataLocaleData.[[hourCycle]].
-    auto default_hour_cycle = Unicode::get_default_regional_hour_cycle(data_locale);
+    auto default_hour_cycle = ::Locale::get_default_regional_hour_cycle(data_locale);
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
     if (!default_hour_cycle.has_value())
         return &date_time_format;
 
-    Optional<Unicode::HourCycle> hour_cycle_value;
+    Optional<::Locale::HourCycle> hour_cycle_value;
 
     // 25. If hour12 is true, then
     if (hour12.is_boolean() && hour12.as_bool()) {
         // a. If hcDefault is "h11" or "h23", let hc be "h11". Otherwise, let hc be "h12".
-        if ((default_hour_cycle == Unicode::HourCycle::H11) || (default_hour_cycle == Unicode::HourCycle::H23))
-            hour_cycle_value = Unicode::HourCycle::H11;
+        if ((default_hour_cycle == ::Locale::HourCycle::H11) || (default_hour_cycle == ::Locale::HourCycle::H23))
+            hour_cycle_value = ::Locale::HourCycle::H11;
         else
-            hour_cycle_value = Unicode::HourCycle::H12;
+            hour_cycle_value = ::Locale::HourCycle::H12;
 
     }
     // 26. Else if hour12 is false, then
     else if (hour12.is_boolean() && !hour12.as_bool()) {
         // a. If hcDefault is "h11" or "h23", let hc be "h23". Otherwise, let hc be "h24".
-        if ((default_hour_cycle == Unicode::HourCycle::H11) || (default_hour_cycle == Unicode::HourCycle::H23))
-            hour_cycle_value = Unicode::HourCycle::H23;
+        if ((default_hour_cycle == ::Locale::HourCycle::H11) || (default_hour_cycle == ::Locale::HourCycle::H23))
+            hour_cycle_value = ::Locale::HourCycle::H23;
         else
-            hour_cycle_value = Unicode::HourCycle::H24;
+            hour_cycle_value = ::Locale::HourCycle::H24;
 
     }
     // 27. Else,
@@ -198,7 +198,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
         // b. Let hc be r.[[hc]].
         if (result.hc.has_value())
-            hour_cycle_value = Unicode::hour_cycle_from_string(*result.hc);
+            hour_cycle_value = ::Locale::hour_cycle_from_string(*result.hc);
 
         // c. If hc is null, set hc to hcDefault.
         if (!hour_cycle_value.has_value())
@@ -237,7 +237,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     date_time_format.set_time_zone(move(time_zone));
 
     // 33. Let formatOptions be a new Record.
-    Unicode::CalendarPattern format_options {};
+    ::Locale::CalendarPattern format_options {};
 
     // 34. Set formatOptions.[[hourCycle]] to hc.
     format_options.hour_cycle = hour_cycle_value;
@@ -274,7 +274,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
             // d. Set formatOptions.[[<prop>]] to value.
             if (!value.is_undefined()) {
-                option = Unicode::calendar_pattern_style_from_string(value.as_string().string());
+                option = ::Locale::calendar_pattern_style_from_string(value.as_string().string());
 
                 // e. If value is not undefined, then
                 //     i. Set hasExplicitFormatComponents to true.
@@ -302,7 +302,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     if (!time_style.is_undefined())
         date_time_format.set_time_style(time_style.as_string().string());
 
-    Optional<Unicode::CalendarPattern> best_format {};
+    Optional<::Locale::CalendarPattern> best_format {};
 
     // 42. If dateStyle is not undefined or timeStyle is not undefined, then
     if (date_time_format.has_date_style() || date_time_format.has_time_style()) {
@@ -319,7 +319,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 43. Else,
     else {
         // a. Let formats be dataLocaleData.[[formats]].[[<resolvedCalendar>]].
-        auto formats = Unicode::get_calendar_available_formats(data_locale, date_time_format.calendar());
+        auto formats = ::Locale::get_calendar_available_formats(data_locale, date_time_format.calendar());
 
         // b. If matcher is "basic", then
         if (matcher.as_string().string() == "basic"sv) {
@@ -345,7 +345,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     });
 
     String pattern;
-    Vector<Unicode::CalendarRangePattern> range_patterns;
+    Vector<::Locale::CalendarRangePattern> range_patterns;
 
     // 45. If dateTimeFormat.[[Hour]] is undefined, then
     if (!date_time_format.has_hour()) {
@@ -354,7 +354,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     }
 
     // 46. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
-    if ((hour_cycle_value == Unicode::HourCycle::H11) || (hour_cycle_value == Unicode::HourCycle::H12)) {
+    if ((hour_cycle_value == ::Locale::HourCycle::H11) || (hour_cycle_value == ::Locale::HourCycle::H12)) {
         // a. Let pattern be bestFormat.[[pattern12]].
         if (best_format->pattern12.has_value()) {
             pattern = best_format->pattern12.release_value();
@@ -365,7 +365,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         }
 
         // b. Let rangePatterns be bestFormat.[[rangePatterns12]].
-        range_patterns = Unicode::get_calendar_range12_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
+        range_patterns = ::Locale::get_calendar_range12_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
     }
     // 47. Else,
     else {
@@ -373,7 +373,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         pattern = move(best_format->pattern);
 
         // b. Let rangePatterns be bestFormat.[[rangePatterns]].
-        range_patterns = Unicode::get_calendar_range_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
+        range_patterns = ::Locale::get_calendar_range_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
     }
 
     // 48. Set dateTimeFormat.[[Pattern]] to pattern.

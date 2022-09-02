@@ -10,91 +10,91 @@
 
 TEST_CASE(is_unicode_language_subtag)
 {
-    EXPECT(Unicode::is_unicode_language_subtag("aa"sv));
-    EXPECT(Unicode::is_unicode_language_subtag("aaa"sv));
-    EXPECT(Unicode::is_unicode_language_subtag("aaaaa"sv));
-    EXPECT(Unicode::is_unicode_language_subtag("aaaaaa"sv));
-    EXPECT(Unicode::is_unicode_language_subtag("aaaaaaa"sv));
-    EXPECT(Unicode::is_unicode_language_subtag("aaaaaaaa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aaa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aaaaa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aaaaaa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aaaaaaa"sv));
+    EXPECT(Locale::is_unicode_language_subtag("aaaaaaaa"sv));
 
-    EXPECT(!Unicode::is_unicode_language_subtag(""sv));
-    EXPECT(!Unicode::is_unicode_language_subtag("a"sv));
-    EXPECT(!Unicode::is_unicode_language_subtag("aaaa"sv));
-    EXPECT(!Unicode::is_unicode_language_subtag("aaaaaaaaa"sv));
-    EXPECT(!Unicode::is_unicode_language_subtag("123"sv));
+    EXPECT(!Locale::is_unicode_language_subtag(""sv));
+    EXPECT(!Locale::is_unicode_language_subtag("a"sv));
+    EXPECT(!Locale::is_unicode_language_subtag("aaaa"sv));
+    EXPECT(!Locale::is_unicode_language_subtag("aaaaaaaaa"sv));
+    EXPECT(!Locale::is_unicode_language_subtag("123"sv));
 }
 
 TEST_CASE(is_unicode_script_subtag)
 {
-    EXPECT(Unicode::is_unicode_script_subtag("aaaa"sv));
+    EXPECT(Locale::is_unicode_script_subtag("aaaa"sv));
 
-    EXPECT(!Unicode::is_unicode_script_subtag(""sv));
-    EXPECT(!Unicode::is_unicode_script_subtag("a"sv));
-    EXPECT(!Unicode::is_unicode_script_subtag("aa"sv));
-    EXPECT(!Unicode::is_unicode_script_subtag("aaa"sv));
-    EXPECT(!Unicode::is_unicode_script_subtag("aaaaa"sv));
-    EXPECT(!Unicode::is_unicode_script_subtag("1234"sv));
+    EXPECT(!Locale::is_unicode_script_subtag(""sv));
+    EXPECT(!Locale::is_unicode_script_subtag("a"sv));
+    EXPECT(!Locale::is_unicode_script_subtag("aa"sv));
+    EXPECT(!Locale::is_unicode_script_subtag("aaa"sv));
+    EXPECT(!Locale::is_unicode_script_subtag("aaaaa"sv));
+    EXPECT(!Locale::is_unicode_script_subtag("1234"sv));
 }
 
 TEST_CASE(is_unicode_region_subtag)
 {
-    EXPECT(Unicode::is_unicode_region_subtag("aa"sv));
-    EXPECT(Unicode::is_unicode_region_subtag("123"sv));
+    EXPECT(Locale::is_unicode_region_subtag("aa"sv));
+    EXPECT(Locale::is_unicode_region_subtag("123"sv));
 
-    EXPECT(!Unicode::is_unicode_region_subtag(""sv));
-    EXPECT(!Unicode::is_unicode_region_subtag("a"sv));
-    EXPECT(!Unicode::is_unicode_region_subtag("aaa"sv));
-    EXPECT(!Unicode::is_unicode_region_subtag("12"sv));
-    EXPECT(!Unicode::is_unicode_region_subtag("12a"sv));
+    EXPECT(!Locale::is_unicode_region_subtag(""sv));
+    EXPECT(!Locale::is_unicode_region_subtag("a"sv));
+    EXPECT(!Locale::is_unicode_region_subtag("aaa"sv));
+    EXPECT(!Locale::is_unicode_region_subtag("12"sv));
+    EXPECT(!Locale::is_unicode_region_subtag("12a"sv));
 }
 
 TEST_CASE(is_unicode_variant_subtag)
 {
-    EXPECT(Unicode::is_unicode_variant_subtag("aaaaa"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("aaaaaa"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("aaaaaaa"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("aaaaaaaa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("aaaaa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("aaaaaa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("aaaaaaa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("aaaaaaaa"sv));
 
-    EXPECT(Unicode::is_unicode_variant_subtag("1aaa"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("12aa"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("123a"sv));
-    EXPECT(Unicode::is_unicode_variant_subtag("1234"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("1aaa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("12aa"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("123a"sv));
+    EXPECT(Locale::is_unicode_variant_subtag("1234"sv));
 
-    EXPECT(!Unicode::is_unicode_variant_subtag(""sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("a"sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("aa"sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("aaa"sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("aaaa"sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("aaaaaaaaa"sv));
-    EXPECT(!Unicode::is_unicode_variant_subtag("a234"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag(""sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("a"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("aa"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("aaa"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("aaaa"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("aaaaaaaaa"sv));
+    EXPECT(!Locale::is_unicode_variant_subtag("a234"sv));
 }
 
 TEST_CASE(is_type_identifier)
 {
-    EXPECT(Unicode::is_type_identifier("aaaa"sv));
-    EXPECT(Unicode::is_type_identifier("aaaa-bbbb"sv));
-    EXPECT(Unicode::is_type_identifier("aaaa-bbbb-cccc"sv));
+    EXPECT(Locale::is_type_identifier("aaaa"sv));
+    EXPECT(Locale::is_type_identifier("aaaa-bbbb"sv));
+    EXPECT(Locale::is_type_identifier("aaaa-bbbb-cccc"sv));
 
-    EXPECT(Unicode::is_type_identifier("1aaa"sv));
-    EXPECT(Unicode::is_type_identifier("12aa"sv));
-    EXPECT(Unicode::is_type_identifier("123a"sv));
-    EXPECT(Unicode::is_type_identifier("1234"sv));
+    EXPECT(Locale::is_type_identifier("1aaa"sv));
+    EXPECT(Locale::is_type_identifier("12aa"sv));
+    EXPECT(Locale::is_type_identifier("123a"sv));
+    EXPECT(Locale::is_type_identifier("1234"sv));
 
-    EXPECT(!Unicode::is_type_identifier(""sv));
-    EXPECT(!Unicode::is_type_identifier("a"sv));
-    EXPECT(!Unicode::is_type_identifier("aa"sv));
-    EXPECT(!Unicode::is_type_identifier("aaaaaaaaa"sv));
-    EXPECT(!Unicode::is_type_identifier("aaaa-"sv));
+    EXPECT(!Locale::is_type_identifier(""sv));
+    EXPECT(!Locale::is_type_identifier("a"sv));
+    EXPECT(!Locale::is_type_identifier("aa"sv));
+    EXPECT(!Locale::is_type_identifier("aaaaaaaaa"sv));
+    EXPECT(!Locale::is_type_identifier("aaaa-"sv));
 }
 
 TEST_CASE(parse_unicode_locale_id)
 {
     auto fail = [](StringView locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
     auto pass = [](StringView locale, Optional<StringView> expected_language, Optional<StringView> expected_script, Optional<StringView> expected_region, Vector<String> expected_variants) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
         EXPECT_EQ(locale_id->language_id.language, expected_language);
@@ -121,15 +121,15 @@ TEST_CASE(parse_unicode_locale_id)
 TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
 {
     auto fail = [](StringView locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
-    auto pass = [](StringView locale, Unicode::LocaleExtension const& expected_extension) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+    auto pass = [](StringView locale, Locale::LocaleExtension const& expected_extension) {
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
         EXPECT_EQ(locale_id->extensions.size(), 1u);
 
-        auto const& actual_extension = locale_id->extensions[0].get<Unicode::LocaleExtension>();
+        auto const& actual_extension = locale_id->extensions[0].get<Locale::LocaleExtension>();
         VERIFY(actual_extension.attributes == expected_extension.attributes);
         EXPECT_EQ(actual_extension.keywords.size(), expected_extension.keywords.size());
 
@@ -167,15 +167,15 @@ TEST_CASE(parse_unicode_locale_id_with_unicode_locale_extension)
 TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
 {
     auto fail = [](StringView locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
-    auto pass = [](StringView locale, Unicode::TransformedExtension const& expected_extension) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+    auto pass = [](StringView locale, Locale::TransformedExtension const& expected_extension) {
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
         EXPECT_EQ(locale_id->extensions.size(), 1u);
 
-        auto const& actual_extension = locale_id->extensions[0].get<Unicode::TransformedExtension>();
+        auto const& actual_extension = locale_id->extensions[0].get<Locale::TransformedExtension>();
 
         VERIFY(actual_extension.language.has_value() == expected_extension.language.has_value());
         if (actual_extension.language.has_value()) {
@@ -216,32 +216,32 @@ TEST_CASE(parse_unicode_locale_id_with_transformed_extension)
     fail("en-t-k0-aa"sv);
     fail("en-t-k0-aaaaaaaaa"sv);
 
-    pass("en-t-en"sv, { Unicode::LanguageID { false, "en"sv }, {} });
-    pass("en-t-en-latn"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv }, {} });
-    pass("en-t-en-us"sv, { Unicode::LanguageID { false, "en"sv, {}, "us"sv }, {} });
-    pass("en-t-en-latn-us"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, "us"sv }, {} });
-    pass("en-t-en-posix"sv, { Unicode::LanguageID { false, "en"sv, {}, {}, { "posix"sv } }, {} });
-    pass("en-t-en-latn-posix"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, {}, { "posix"sv } }, {} });
-    pass("en-t-en-us-posix"sv, { Unicode::LanguageID { false, "en"sv, {}, "us"sv, { "posix"sv } }, {} });
-    pass("en-t-en-latn-us-posix"sv, { Unicode::LanguageID { false, "en"sv, "latn"sv, "us"sv, { "posix"sv } }, {} });
+    pass("en-t-en"sv, { Locale::LanguageID { false, "en"sv }, {} });
+    pass("en-t-en-latn"sv, { Locale::LanguageID { false, "en"sv, "latn"sv }, {} });
+    pass("en-t-en-us"sv, { Locale::LanguageID { false, "en"sv, {}, "us"sv }, {} });
+    pass("en-t-en-latn-us"sv, { Locale::LanguageID { false, "en"sv, "latn"sv, "us"sv }, {} });
+    pass("en-t-en-posix"sv, { Locale::LanguageID { false, "en"sv, {}, {}, { "posix"sv } }, {} });
+    pass("en-t-en-latn-posix"sv, { Locale::LanguageID { false, "en"sv, "latn"sv, {}, { "posix"sv } }, {} });
+    pass("en-t-en-us-posix"sv, { Locale::LanguageID { false, "en"sv, {}, "us"sv, { "posix"sv } }, {} });
+    pass("en-t-en-latn-us-posix"sv, { Locale::LanguageID { false, "en"sv, "latn"sv, "us"sv, { "posix"sv } }, {} });
     pass("en-t-k0-aaa"sv, { {}, { { "k0"sv, { "aaa"sv } } } });
     pass("en-t-k0-aaa-bbbb"sv, { {}, { { "k0"sv, "aaa-bbbb"sv } } });
     pass("en-t-k0-aaa-k1-bbbb"sv, { {}, { { "k0"sv, { "aaa"sv } }, { "k1"sv, "bbbb"sv } } });
-    pass("en-t-en-k0-aaa"sv, { Unicode::LanguageID { false, "en"sv }, { { "k0"sv, "aaa"sv } } });
+    pass("en-t-en-k0-aaa"sv, { Locale::LanguageID { false, "en"sv }, { { "k0"sv, "aaa"sv } } });
 }
 
 TEST_CASE(parse_unicode_locale_id_with_other_extension)
 {
     auto fail = [](StringView locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
-    auto pass = [](StringView locale, Unicode::OtherExtension const& expected_extension) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+    auto pass = [](StringView locale, Locale::OtherExtension const& expected_extension) {
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
         EXPECT_EQ(locale_id->extensions.size(), 1u);
 
-        auto const& actual_extension = locale_id->extensions[0].get<Unicode::OtherExtension>();
+        auto const& actual_extension = locale_id->extensions[0].get<Locale::OtherExtension>();
         EXPECT_EQ(actual_extension.key, expected_extension.key);
         EXPECT_EQ(actual_extension.value, expected_extension.value);
     };
@@ -267,11 +267,11 @@ TEST_CASE(parse_unicode_locale_id_with_other_extension)
 TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
 {
     auto fail = [](StringView locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         EXPECT(!locale_id.has_value());
     };
     auto pass = [](StringView locale, Vector<String> const& expected_extension) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
         EXPECT_EQ(locale_id->private_use_extensions, expected_extension);
     };
@@ -291,10 +291,10 @@ TEST_CASE(parse_unicode_locale_id_with_private_use_extension)
 TEST_CASE(canonicalize_unicode_locale_id)
 {
     auto test = [](StringView locale, StringView expected_canonical_locale) {
-        auto locale_id = Unicode::parse_unicode_locale_id(locale);
+        auto locale_id = Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
-        auto canonical_locale = Unicode::canonicalize_unicode_locale_id(*locale_id);
+        auto canonical_locale = Locale::canonicalize_unicode_locale_id(*locale_id);
         EXPECT_EQ(*canonical_locale, expected_canonical_locale);
     };
 
@@ -466,8 +466,8 @@ TEST_CASE(canonicalize_unicode_locale_id)
 
 TEST_CASE(supports_locale_aliases)
 {
-    EXPECT(Unicode::is_locale_available("zh"sv));
-    EXPECT(Unicode::is_locale_available("zh-Hant"sv));
-    EXPECT(Unicode::is_locale_available("zh-TW"sv));
-    EXPECT(Unicode::is_locale_available("zh-Hant-TW"sv));
+    EXPECT(Locale::is_locale_available("zh"sv));
+    EXPECT(Locale::is_locale_available("zh-Hant"sv));
+    EXPECT(Locale::is_locale_available("zh-TW"sv));
+    EXPECT(Locale::is_locale_available("zh-Hant-TW"sv));
 }

@@ -14,7 +14,7 @@
 #    include <LibUnicode/UnicodeData.h>
 #endif
 
-namespace Unicode {
+namespace Locale {
 
 Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
 Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
@@ -83,19 +83,19 @@ Optional<String> augment_currency_format_pattern([[maybe_unused]] StringView cur
     if (*number_index < *currency_index) {
         u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *currency_index));
 
-        if (!code_point_has_general_category(last_pattern_code_point, GeneralCategory::Separator)) {
+        if (!Unicode::code_point_has_general_category(last_pattern_code_point, Unicode::GeneralCategory::Separator)) {
             u32 first_currency_code_point = *utf8_currency_display.begin();
 
-            if (!code_point_has_general_category(first_currency_code_point, GeneralCategory::Symbol))
+            if (!Unicode::code_point_has_general_category(first_currency_code_point, Unicode::GeneralCategory::Symbol))
                 currency_key_with_spacing = String::formatted("{}{}", spacing, currency_key);
         }
     } else {
         u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *number_index));
 
-        if (!code_point_has_general_category(last_pattern_code_point, GeneralCategory::Separator)) {
+        if (!Unicode::code_point_has_general_category(last_pattern_code_point, Unicode::GeneralCategory::Separator)) {
             u32 last_currency_code_point = last_code_point(currency_display);
 
-            if (!code_point_has_general_category(last_currency_code_point, GeneralCategory::Symbol))
+            if (!Unicode::code_point_has_general_category(last_currency_code_point, Unicode::GeneralCategory::Symbol))
                 currency_key_with_spacing = String::formatted("{}{}", currency_key, spacing);
         }
     }
@@ -123,17 +123,17 @@ Optional<String> augment_range_pattern([[maybe_unused]] StringView range_separat
     // To determine whether to add spacing, the currently recommended heuristic is:
     // 2. If the range pattern does not contain a character having the White_Space binary Unicode property after the {0} or before the {1} placeholders.
     for (auto it = utf8_range_separator.begin(); it != utf8_range_separator.end(); ++it) {
-        if (code_point_has_property(*it, Property::White_Space))
+        if (Unicode::code_point_has_property(*it, Unicode::Property::White_Space))
             return {};
     }
 
     // 1. If the lower string ends with a character other than a digit, or if the upper string begins with a character other than a digit.
     if (auto it = utf8_upper.begin(); it != utf8_upper.end()) {
-        if (!code_point_has_general_category(*it, GeneralCategory::Decimal_Number))
+        if (!Unicode::code_point_has_general_category(*it, Unicode::GeneralCategory::Decimal_Number))
             return range_pattern_with_spacing();
     }
 
-    if (!code_point_has_general_category(last_code_point(lower), GeneralCategory::Decimal_Number))
+    if (!Unicode::code_point_has_general_category(last_code_point(lower), Unicode::GeneralCategory::Decimal_Number))
         return range_pattern_with_spacing();
 #endif
 

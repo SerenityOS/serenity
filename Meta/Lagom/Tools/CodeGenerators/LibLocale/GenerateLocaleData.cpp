@@ -1051,7 +1051,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 
 #include <AK/Types.h>
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     auto locales = cldr.locales.keys();
@@ -1107,7 +1107,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     cldr.unique_strings.generate(generator);

@@ -21,7 +21,7 @@ class Locale final : public Object {
     JS_OBJECT(Locale, Object);
 
 public:
-    static Locale* create(Realm&, Unicode::LocaleID const&);
+    static Locale* create(Realm&, ::Locale::LocaleID const&);
 
     static constexpr auto relevant_extension_keys()
     {
@@ -64,7 +64,7 @@ public:
 
 private:
     explicit Locale(Object& prototype);
-    Locale(Unicode::LocaleID const&, Object& prototype);
+    Locale(::Locale::LocaleID const&, Object& prototype);
 
     String m_locale;                     // [[Locale]]
     Optional<String> m_calendar;         // [[Calendar]]

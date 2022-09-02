@@ -180,12 +180,12 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.hourCycle, js_string(vm, date_time_format->hour_cycle_string())));
 
         switch (date_time_format->hour_cycle()) {
-        case Unicode::HourCycle::H11:
-        case Unicode::HourCycle::H12:
+        case ::Locale::HourCycle::H11:
+        case ::Locale::HourCycle::H12:
             MUST(options->create_data_property_or_throw(vm.names.hour12, Value(true)));
             break;
-        case Unicode::HourCycle::H23:
-        case Unicode::HourCycle::H24:
+        case ::Locale::HourCycle::H23:
+        case ::Locale::HourCycle::H24:
             MUST(options->create_data_property_or_throw(vm.names.hour12, Value(false)));
             break;
         }
@@ -201,7 +201,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
             if constexpr (IsIntegral<ValueType>) {
                 TRY(options->create_data_property_or_throw(property, Value(*option)));
             } else {
-                auto name = Unicode::calendar_pattern_style_to_string(*option);
+                auto name = ::Locale::calendar_pattern_style_to_string(*option);
                 TRY(options->create_data_property_or_throw(property, js_string(vm, name)));
             }
 

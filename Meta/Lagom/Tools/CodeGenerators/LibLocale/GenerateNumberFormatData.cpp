@@ -55,8 +55,8 @@ enum class NumberFormatType {
     Compact,
 };
 
-struct NumberFormat : public Unicode::NumberFormat {
-    using Base = Unicode::NumberFormat;
+struct NumberFormat : public Locale::NumberFormat {
+    using Base = Locale::NumberFormat;
 
     unsigned hash() const
     {
@@ -478,7 +478,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
                 VERIFY(split_key[0] == "unitPattern"sv);
             }
 
-            format.plurality = Unicode::plural_category_from_string(split_key[2]);
+            format.plurality = Locale::plural_category_from_string(split_key[2]);
             parse_number_pattern(move(patterns), cldr, NumberFormatType::Compact, format);
 
             auto format_index = cldr.unique_formats.ensure(move(format));
@@ -488,27 +488,27 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
         return cldr.unique_format_lists.ensure(move(result));
     };
 
-    auto numeric_symbol_from_string = [&](StringView numeric_symbol) -> Optional<Unicode::NumericSymbol> {
+    auto numeric_symbol_from_string = [&](StringView numeric_symbol) -> Optional<Locale::NumericSymbol> {
         if (numeric_symbol == "approximatelySign"sv)
-            return Unicode::NumericSymbol::ApproximatelySign;
+            return Locale::NumericSymbol::ApproximatelySign;
         if (numeric_symbol == "decimal"sv)
-            return Unicode::NumericSymbol::Decimal;
+            return Locale::NumericSymbol::Decimal;
         if (numeric_symbol == "exponential"sv)
-            return Unicode::NumericSymbol::Exponential;
+            return Locale::NumericSymbol::Exponential;
         if (numeric_symbol == "group"sv)
-            return Unicode::NumericSymbol::Group;
+            return Locale::NumericSymbol::Group;
         if (numeric_symbol == "infinity"sv)
-            return Unicode::NumericSymbol::Infinity;
+            return Locale::NumericSymbol::Infinity;
         if (numeric_symbol == "minusSign"sv)
-            return Unicode::NumericSymbol::MinusSign;
+            return Locale::NumericSymbol::MinusSign;
         if (numeric_symbol == "nan"sv)
-            return Unicode::NumericSymbol::NaN;
+            return Locale::NumericSymbol::NaN;
         if (numeric_symbol == "percentSign"sv)
-            return Unicode::NumericSymbol::PercentSign;
+            return Locale::NumericSymbol::PercentSign;
         if (numeric_symbol == "plusSign"sv)
-            return Unicode::NumericSymbol::PlusSign;
+            return Locale::NumericSymbol::PlusSign;
         if (numeric_symbol == "timeSeparator"sv)
-            return Unicode::NumericSymbol::TimeSeparator;
+            return Locale::NumericSymbol::TimeSeparator;
         return {};
     };
 
@@ -548,11 +548,11 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
             auto end_index = range_separator.find("{1}"sv).value();
             range_separator = range_separator.substring(begin_index, end_index - begin_index);
 
-            if (to_underlying(Unicode::NumericSymbol::RangeSeparator) >= symbols.size())
-                symbols.resize(to_underlying(Unicode::NumericSymbol::RangeSeparator) + 1);
+            if (to_underlying(Locale::NumericSymbol::RangeSeparator) >= symbols.size())
+                symbols.resize(to_underlying(Locale::NumericSymbol::RangeSeparator) + 1);
 
             auto symbol_index = cldr.unique_strings.ensure(move(range_separator));
-            symbols[to_underlying(Unicode::NumericSymbol::RangeSeparator)] = symbol_index;
+            symbols[to_underlying(Locale::NumericSymbol::RangeSeparator)] = symbol_index;
 
             number_system.symbols = cldr.unique_symbols.ensure(move(symbols));
         } else if (key.starts_with(decimal_formats_prefix)) {
@@ -644,7 +644,7 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
         return find(extra_sanctioned_units.begin(), extra_sanctioned_units.end(), unit_name) != extra_sanctioned_units.end();
     };
 
-    auto parse_units_object = [&](auto const& units_object, Unicode::Style style) {
+    auto parse_units_object = [&](auto const& units_object, Locale::Style style) {
         constexpr auto unit_pattern_prefix = "unitPattern-count-"sv;
         constexpr auto combined_unit_separator = "-per-"sv;
 
@@ -676,7 +676,7 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
                 NumberFormat format {};
 
                 auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
-                format.plurality = Unicode::plural_category_from_string(plurality);
+                format.plurality = Locale::plural_category_from_string(plurality);
 
                 auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
                 zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, cldr, format);
@@ -691,13 +691,13 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
             auto number_format_list_index = cldr.unique_format_lists.ensure(move(formats));
 
             switch (style) {
-            case Unicode::Style::Long:
+            case Locale::Style::Long:
                 unit.long_formats = number_format_list_index;
                 break;
-            case Unicode::Style::Short:
+            case Locale::Style::Short:
                 unit.short_formats = number_format_list_index;
                 break;
-            case Unicode::Style::Narrow:
+            case Locale::Style::Narrow:
                 unit.narrow_formats = number_format_list_index;
                 break;
             default:
@@ -706,9 +706,9 @@ static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleDat
         });
     };
 
-    parse_units_object(long_object.as_object(), Unicode::Style::Long);
-    parse_units_object(short_object.as_object(), Unicode::Style::Short);
-    parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
+    parse_units_object(long_object.as_object(), Locale::Style::Long);
+    parse_units_object(short_object.as_object(), Locale::Style::Short);
+    parse_units_object(narrow_object.as_object(), Locale::Style::Narrow);
 
     for (auto& unit : units) {
         auto unit_index = cldr.unique_units.ensure(move(unit.value));
@@ -776,7 +776,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 
 #pragma once
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     generate_enum(generator, format_identifier, "NumberSystem"sv, {}, cldr.number_systems);
@@ -812,7 +812,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <LibUnicode/NumberFormat.h>
 #include <LibUnicode/PluralRules.h>
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     cldr.unique_strings.generate(generator);

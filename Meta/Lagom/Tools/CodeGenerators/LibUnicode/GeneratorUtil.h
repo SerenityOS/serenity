@@ -285,7 +285,7 @@ struct CanonicalLanguageID {
         VERIFY(!segments.is_empty());
         size_t index = 0;
 
-        if (Unicode::is_unicode_language_subtag(segments[index])) {
+        if (Locale::is_unicode_language_subtag(segments[index])) {
             language_id.language = unique_strings.ensure(segments[index]);
             if (segments.size() == ++index)
                 return language_id;
@@ -293,20 +293,20 @@ struct CanonicalLanguageID {
             return Error::from_string_literal("Expected language subtag");
         }
 
-        if (Unicode::is_unicode_script_subtag(segments[index])) {
+        if (Locale::is_unicode_script_subtag(segments[index])) {
             language_id.script = unique_strings.ensure(segments[index]);
             if (segments.size() == ++index)
                 return language_id;
         }
 
-        if (Unicode::is_unicode_region_subtag(segments[index])) {
+        if (Locale::is_unicode_region_subtag(segments[index])) {
             language_id.region = unique_strings.ensure(segments[index]);
             if (segments.size() == ++index)
                 return language_id;
         }
 
         while (index < segments.size()) {
-            if (!Unicode::is_unicode_variant_subtag(segments[index]))
+            if (!Locale::is_unicode_variant_subtag(segments[index]))
                 return Error::from_string_literal("Expected variant subtag");
             language_id.variants.append(unique_strings.ensure(segments[index++]));
         }

@@ -118,22 +118,22 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 2. If key is "calendar", then
     if (key == "calendar"sv) {
         // a. Let list be ! AvailableCalendars( ).
-        list = Unicode::get_available_calendars();
+        list = ::Locale::get_available_calendars();
     }
     // 3. Else if key is "collation", then
     else if (key == "collation"sv) {
         // a. Let list be ! AvailableCollations( ).
-        list = Unicode::get_available_collation_types();
+        list = ::Locale::get_available_collation_types();
     }
     // 4. Else if key is "currency", then
     else if (key == "currency"sv) {
         // a. Let list be ! AvailableCurrencies( ).
-        list = Unicode::get_available_currencies();
+        list = ::Locale::get_available_currencies();
     }
     // 5. Else if key is "numberingSystem", then
     else if (key == "numberingSystem"sv) {
         // a. Let list be ! AvailableNumberingSystems( ).
-        list = Unicode::get_available_number_systems();
+        list = ::Locale::get_available_number_systems();
     }
     // 6. Else if key is "timeZone", then
     else if (key == "timeZone"sv) {

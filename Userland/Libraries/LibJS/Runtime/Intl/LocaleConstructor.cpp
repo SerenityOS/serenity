@@ -52,23 +52,23 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
     // 4. Let language be ? GetOption(options, "language", "string", undefined, undefined).
     // 5. If language is not undefined, then
     //     a. If language does not match the unicode_language_subtag production, throw a RangeError exception.
-    auto language = TRY(get_string_option(vm, options, vm.names.language, Unicode::is_unicode_language_subtag));
+    auto language = TRY(get_string_option(vm, options, vm.names.language, ::Locale::is_unicode_language_subtag));
 
     // 6. Let script be ? GetOption(options, "script", "string", undefined, undefined).
     // 7. If script is not undefined, then
     //     a. If script does not match the unicode_script_subtag production, throw a RangeError exception.
-    auto script = TRY(get_string_option(vm, options, vm.names.script, Unicode::is_unicode_script_subtag));
+    auto script = TRY(get_string_option(vm, options, vm.names.script, ::Locale::is_unicode_script_subtag));
 
     // 8. Let region be ? GetOption(options, "region", "string", undefined, undefined).
     // 9. If region is not undefined, then
     //     a. If region does not match the unicode_region_subtag production, throw a RangeError exception.
-    auto region = TRY(get_string_option(vm, options, vm.names.region, Unicode::is_unicode_region_subtag));
+    auto region = TRY(get_string_option(vm, options, vm.names.region, ::Locale::is_unicode_region_subtag));
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
     auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
-    locale_id = Unicode::parse_unicode_locale_id(canonicalized_tag);
+    locale_id = ::Locale::parse_unicode_locale_id(canonicalized_tag);
     VERIFY(locale_id.has_value());
 
     // 12. Let languageId be the substring of tag corresponding to the unicode_language_id production.
@@ -108,20 +108,20 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.
-    auto locale_id = Unicode::parse_unicode_locale_id(tag);
+    auto locale_id = ::Locale::parse_unicode_locale_id(tag);
     VERIFY(locale_id.has_value());
 
     Vector<String> attributes;
-    Vector<Unicode::Keyword> keywords;
+    Vector<::Locale::Keyword> keywords;
 
     // 3. If tag contains a substring that is a Unicode locale extension sequence, then
     for (auto& extension : locale_id->extensions) {
-        if (!extension.has<Unicode::LocaleExtension>())
+        if (!extension.has<::Locale::LocaleExtension>())
             continue;
 
         // a. Let extension be the String value consisting of the substring of the Unicode locale extension sequence within tag.
         // b. Let components be ! UnicodeExtensionComponents(extension).
-        auto& components = extension.get<Unicode::LocaleExtension>();
+        auto& components = extension.get<::Locale::LocaleExtension>();
         // c. Let attributes be components.[[Attributes]].
         attributes = move(components.attributes);
         // d. Let keywords be components.[[Keywords]].
@@ -157,7 +157,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
         // a. Let value be undefined.
         Optional<String> value {};
 
-        Unicode::Keyword* entry = nullptr;
+        ::Locale::Keyword* entry = nullptr;
         // b. If keywords contains an element whose [[Key]] is the same as key, then
         if (auto it = keywords.find_if([&](auto const& k) { return key == k.key; }); it != keywords.end()) {
             // i. Let entry be the element of keywords whose [[Key]] is the same as key.
@@ -196,11 +196,11 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     }
 
     // 7. Let locale be the String value that is tag with any Unicode locale extension sequences removed.
-    locale_id->remove_extension_type<Unicode::LocaleExtension>();
+    locale_id->remove_extension_type<::Locale::LocaleExtension>();
     auto locale = locale_id->to_string();
 
     // 8. Let newExtension be a Unicode BCP 47 U Extension based on attributes and keywords.
-    Unicode::LocaleExtension new_extension { move(attributes), move(keywords) };
+    ::Locale::LocaleExtension new_extension { move(attributes), move(keywords) };
 
     // 9. If newExtension is not the empty String, then
     if (!new_extension.attributes.is_empty() || !new_extension.keywords.is_empty()) {
@@ -290,13 +290,13 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 14. If calendar is not undefined, then
     //     a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 15. Set opt.[[ca]] to calendar.
-    opt.ca = TRY(get_string_option(vm, *options, vm.names.calendar, Unicode::is_type_identifier));
+    opt.ca = TRY(get_string_option(vm, *options, vm.names.calendar, ::Locale::is_type_identifier));
 
     // 16. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
     // 17. If collation is not undefined, then
     //     a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 18. Set opt.[[co]] to collation.
-    opt.co = TRY(get_string_option(vm, *options, vm.names.collation, Unicode::is_type_identifier));
+    opt.co = TRY(get_string_option(vm, *options, vm.names.collation, ::Locale::is_type_identifier));
 
     // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
@@ -318,7 +318,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     // 27. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 28. Set opt.[[nu]] to numberingSystem.
-    opt.nu = TRY(get_string_option(vm, *options, vm.names.numberingSystem, Unicode::is_type_identifier));
+    opt.nu = TRY(get_string_option(vm, *options, vm.names.numberingSystem, ::Locale::is_type_identifier));
 
     // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
     auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);

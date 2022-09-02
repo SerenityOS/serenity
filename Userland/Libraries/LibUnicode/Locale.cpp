@@ -12,7 +12,7 @@
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 
-namespace Unicode {
+namespace Locale {
 
 static bool is_key(StringView key)
 {
@@ -809,7 +809,7 @@ Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id
     auto language_id = move(locale_id.language_id);
     VERIFY(language_id.language.has_value());
 
-    auto patterns = Unicode::get_locale_display_patterns(locale);
+    auto patterns = get_locale_display_patterns(locale);
     if (!patterns.has_value())
         return {};
 

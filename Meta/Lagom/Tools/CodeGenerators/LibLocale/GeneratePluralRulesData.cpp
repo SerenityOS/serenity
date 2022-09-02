@@ -67,7 +67,7 @@ struct Relation {
             else if (symbol == 'e' || symbol == 'c')
                 generator.append(exponential_variable_name());
             else
-                generator.append(String::formatted("ops.{}", Unicode::PluralOperands::symbol_to_variable_name(symbol)));
+                generator.append(String::formatted("ops.{}", Locale::PluralOperands::symbol_to_variable_name(symbol)));
         };
 
         auto append_value = [&](u32 value) {
@@ -78,7 +78,7 @@ struct Relation {
 
         auto append_range = [&](auto const& range) {
             // This check avoids generating "0 <= unsigned_value", which is always true.
-            if (range[0] != 0 || Unicode::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
+            if (range[0] != 0 || Locale::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
                 generator.append(String::formatted("{} <= ", range[0]));
                 append_variable_name();
                 generator.append(" && "sv);
@@ -129,10 +129,10 @@ struct Relation {
 
         generated_variables.set(variable);
         generator.set("variable"sv, move(variable));
-        generator.set("operand"sv, Unicode::PluralOperands::symbol_to_variable_name(symbol));
+        generator.set("operand"sv, Locale::PluralOperands::symbol_to_variable_name(symbol));
         generator.set("modulus"sv, String::number(*modulus));
 
-        if (Unicode::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
+        if (Locale::PluralOperands::symbol_requires_floating_point_modulus(symbol)) {
             generator.append(R"~~~(
     auto @variable@ = fmod(ops.@operand@, @modulus@);)~~~");
         } else {
@@ -439,7 +439,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 
 #pragma once
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     generator.append(R"~~~(
@@ -466,7 +466,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <LibUnicode/PluralRules.h>
 #include <math.h>
 
-namespace Unicode {
+namespace Locale {
 
 using PluralCategoryFunction = PluralCategory(*)(PluralOperands);
 using PluralRangeFunction = PluralCategory(*)(PluralCategory, PluralCategory);

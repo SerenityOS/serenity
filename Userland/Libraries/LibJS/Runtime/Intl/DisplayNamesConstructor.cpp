@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
     auto options = vm.argument(1);
 
     // 1. Let availableLocales be %DisplayNames%.[[AvailableLocales]].
-    // No-op, availability of each requested locale is checked via Unicode::is_locale_available()
+    // No-op, availability of each requested locale is checked via ::Locale::is_locale_available()
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales));

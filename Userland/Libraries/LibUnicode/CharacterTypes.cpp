@@ -163,17 +163,17 @@ static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t in
 
 static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length)
 {
-    auto requested_locale = Locale::None;
+    auto requested_locale = Locale::Locale::None;
 
     if (locale.has_value()) {
-        if (auto maybe_locale = locale_from_string(*locale); maybe_locale.has_value())
+        if (auto maybe_locale = Locale::locale_from_string(*locale); maybe_locale.has_value())
             requested_locale = *maybe_locale;
     }
 
     auto special_casings = special_case_mapping(code_point);
 
     for (auto const* special_casing : special_casings) {
-        if (special_casing->locale != Locale::None && special_casing->locale != requested_locale)
+        if (special_casing->locale != Locale::Locale::None && special_casing->locale != requested_locale)
             continue;
 
         switch (special_casing->condition) {

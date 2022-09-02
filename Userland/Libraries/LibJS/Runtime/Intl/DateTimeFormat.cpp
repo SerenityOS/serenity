@@ -150,13 +150,13 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
 }
 
 // 11.5.2 DateTimeStyleFormat ( dateStyle, timeStyle, styles ), https://tc39.es/ecma402/#sec-date-time-style-format
-Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format)
+Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format)
 {
-    Unicode::CalendarPattern time_format {};
-    Unicode::CalendarPattern date_format {};
+    ::Locale::CalendarPattern time_format {};
+    ::Locale::CalendarPattern date_format {};
 
-    auto get_pattern = [&](auto type, auto style) -> Optional<Unicode::CalendarPattern> {
-        auto formats = Unicode::get_calendar_format(data_locale, date_time_format.calendar(), type);
+    auto get_pattern = [&](auto type, auto style) -> Optional<::Locale::CalendarPattern> {
+        auto formats = ::Locale::get_calendar_format(data_locale, date_time_format.calendar(), type);
 
         if (formats.has_value()) {
             switch (style) {
@@ -178,7 +178,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
     if (date_time_format.has_time_style()) {
         // a. Assert: timeStyle is one of "full", "long", "medium", or "short".
         // b. Let timeFormat be styles.[[TimeFormat]].[[<timeStyle>]].
-        auto pattern = get_pattern(Unicode::CalendarFormatType::Time, date_time_format.time_style());
+        auto pattern = get_pattern(::Locale::CalendarFormatType::Time, date_time_format.time_style());
         if (!pattern.has_value())
             return {};
 
@@ -189,7 +189,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
     if (date_time_format.has_date_style()) {
         // a. Assert: dateStyle is one of "full", "long", "medium", or "short".
         // b. Let dateFormat be styles.[[DateFormat]].[[<dateStyle>]].
-        auto pattern = get_pattern(Unicode::CalendarFormatType::Date, date_time_format.date_style());
+        auto pattern = get_pattern(::Locale::CalendarFormatType::Date, date_time_format.date_style());
         if (!pattern.has_value())
             return {};
 
@@ -199,7 +199,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
     // 3. If dateStyle is not undefined and timeStyle is not undefined, then
     if (date_time_format.has_date_style() && date_time_format.has_time_style()) {
         // a. Let format be a new Record.
-        Unicode::CalendarPattern format {};
+        ::Locale::CalendarPattern format {};
 
         // b. Add to format all fields from dateFormat except [[pattern]] and [[rangePatterns]].
         format.for_each_calendar_field_zipped_with(date_format, [](auto& format_field, auto const& date_format_field, auto) {
@@ -213,7 +213,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
         });
 
         // d. Let connector be styles.[[DateTimeFormat]].[[<dateStyle>]].
-        auto connector = get_pattern(Unicode::CalendarFormatType::DateTime, date_time_format.date_style());
+        auto connector = get_pattern(::Locale::CalendarFormatType::DateTime, date_time_format.date_style());
         if (!connector.has_value())
             return {};
 
@@ -235,7 +235,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
         // NOTE: Our implementation of steps h-j differ from the spec. LibUnicode does not attach range patterns to the
         //       format pattern; rather, lookups for range patterns are performed separately based on the format pattern's
         //       skeleton. So we form a new skeleton here and defer the range pattern lookups.
-        format.skeleton = Unicode::combine_skeletons(date_format.skeleton, time_format.skeleton);
+        format.skeleton = ::Locale::combine_skeletons(date_format.skeleton, time_format.skeleton);
 
         // k. Return format.
         return format;
@@ -255,7 +255,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
 }
 
 // 11.5.3 BasicFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-basicformatmatcher
-Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats)
+Optional<::Locale::CalendarPattern> basic_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats)
 {
     // 1. Let removalPenalty be 120.
     constexpr int removal_penalty = 120;
@@ -282,7 +282,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     int best_score = NumericLimits<int>::min();
 
     // 9. Let bestFormat be undefined.
-    Optional<Unicode::CalendarPattern> best_format;
+    Optional<::Locale::CalendarPattern> best_format;
 
     // 10. Assert: Type(formats) is List.
     // 11. For each element format of formats, do
@@ -306,53 +306,53 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
                 score -= removal_penalty;
             }
             // v. Else if property is "timeZoneName", then
-            else if (type == Unicode::CalendarPattern::Field::TimeZoneName) {
+            else if (type == ::Locale::CalendarPattern::Field::TimeZoneName) {
                 // This is needed to avoid a compile error. Although we only enter this branch for TimeZoneName,
                 // the lambda we are in will be generated with property types other than CalendarPatternStyle.
                 auto compare_prop = [](auto prop, auto test) { return prop == static_cast<ValueType>(test); };
 
                 // 1. If optionsProp is "short" or "shortGeneric", then
-                if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Short) || compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortGeneric)) {
+                if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::Short) || compare_prop(options_prop, ::Locale::CalendarPatternStyle::ShortGeneric)) {
                     // a. If formatProp is "shortOffset", decrease score by offsetPenalty.
-                    if (compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset))
+                    if (compare_prop(format_prop, ::Locale::CalendarPatternStyle::ShortOffset))
                         score -= offset_penalty;
                     // b. Else if formatProp is "longOffset", decrease score by (offsetPenalty + shortMorePenalty).
-                    else if (compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset))
+                    else if (compare_prop(format_prop, ::Locale::CalendarPatternStyle::LongOffset))
                         score -= offset_penalty + short_more_penalty;
                     // c. Else if optionsProp is "short" and formatProp is "long", decrease score by shortMorePenalty.
-                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Short) || compare_prop(format_prop, Unicode::CalendarPatternStyle::Long))
+                    else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::Short) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::Long))
                         score -= short_more_penalty;
                     // d. Else if optionsProp is "shortGeneric" and formatProp is "longGeneric", decrease score by shortMorePenalty.
-                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortGeneric) || compare_prop(format_prop, Unicode::CalendarPatternStyle::LongGeneric))
+                    else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::ShortGeneric) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::LongGeneric))
                         score -= short_more_penalty;
                     // e. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
                     else if (options_prop != format_prop)
                         score -= removal_penalty;
                 }
                 // 2. Else if optionsProp is "shortOffset" and formatProp is "longOffset", decrease score by shortMorePenalty.
-                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::ShortOffset) || compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset)) {
+                else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::ShortOffset) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::LongOffset)) {
                     score -= short_more_penalty;
                 }
                 // 3. Else if optionsProp is "long" or "longGeneric", then
-                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Long) || compare_prop(options_prop, Unicode::CalendarPatternStyle::LongGeneric)) {
+                else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::Long) || compare_prop(options_prop, ::Locale::CalendarPatternStyle::LongGeneric)) {
                     // a. If formatProp is "longOffset", decrease score by offsetPenalty.
-                    if (compare_prop(format_prop, Unicode::CalendarPatternStyle::LongOffset))
+                    if (compare_prop(format_prop, ::Locale::CalendarPatternStyle::LongOffset))
                         score -= offset_penalty;
                     // b. Else if formatProp is "shortOffset", decrease score by (offsetPenalty + longLessPenalty).
-                    else if (compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset))
+                    else if (compare_prop(format_prop, ::Locale::CalendarPatternStyle::ShortOffset))
                         score -= offset_penalty + long_less_penalty;
                     // c. Else if optionsProp is "long" and formatProp is "short", decrease score by longLessPenalty.
-                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::Long) || compare_prop(format_prop, Unicode::CalendarPatternStyle::Short))
+                    else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::Long) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::Short))
                         score -= long_less_penalty;
                     // d. Else if optionsProp is "longGeneric" and formatProp is "shortGeneric", decrease score by longLessPenalty.
-                    else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::LongGeneric) || compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortGeneric))
+                    else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::LongGeneric) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::ShortGeneric))
                         score -= long_less_penalty;
                     // e. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
                     else if (options_prop != format_prop)
                         score -= removal_penalty;
                 }
                 // 4. Else if optionsProp is "longOffset" and formatProp is "shortOffset", decrease score by longLessPenalty.
-                else if (compare_prop(options_prop, Unicode::CalendarPatternStyle::LongOffset) || compare_prop(format_prop, Unicode::CalendarPatternStyle::ShortOffset)) {
+                else if (compare_prop(options_prop, ::Locale::CalendarPatternStyle::LongOffset) || compare_prop(format_prop, ::Locale::CalendarPatternStyle::ShortOffset)) {
                     score -= long_less_penalty;
                 }
                 // 5. Else if optionsProp ≠ formatProp, decrease score by removalPenalty.
@@ -362,7 +362,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
             }
             // vi. Else if optionsProp ≠ formatProp, then
             else if (options_prop != format_prop) {
-                using ValuesType = Conditional<IsIntegral<ValueType>, AK::Array<u8, 3>, AK::Array<Unicode::CalendarPatternStyle, 5>>;
+                using ValuesType = Conditional<IsIntegral<ValueType>, AK::Array<u8, 3>, AK::Array<::Locale::CalendarPatternStyle, 5>>;
                 ValuesType values {};
 
                 // 1. If property is "fractionalSecondDigits", then
@@ -374,11 +374,11 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
                 else {
                     // a. Let values be « "2-digit", "numeric", "narrow", "short", "long" ».
                     values = {
-                        Unicode::CalendarPatternStyle::TwoDigit,
-                        Unicode::CalendarPatternStyle::Numeric,
-                        Unicode::CalendarPatternStyle::Narrow,
-                        Unicode::CalendarPatternStyle::Short,
-                        Unicode::CalendarPatternStyle::Long,
+                        ::Locale::CalendarPatternStyle::TwoDigit,
+                        ::Locale::CalendarPatternStyle::Numeric,
+                        ::Locale::CalendarPatternStyle::Narrow,
+                        ::Locale::CalendarPatternStyle::Short,
+                        ::Locale::CalendarPatternStyle::Long,
                     };
                 }
 
@@ -430,14 +430,14 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     // differ by field length, we expand the field lengths here.
     best_format->for_each_calendar_field_zipped_with(options, [&](auto& best_format_field, auto const& option_field, auto field_type) {
         switch (field_type) {
-        case Unicode::CalendarPattern::Field::FractionalSecondDigits:
+        case ::Locale::CalendarPattern::Field::FractionalSecondDigits:
             if ((best_format_field.has_value() || best_format->second.has_value()) && option_field.has_value())
                 best_format_field = option_field;
             break;
 
-        case Unicode::CalendarPattern::Field::Hour:
-        case Unicode::CalendarPattern::Field::Minute:
-        case Unicode::CalendarPattern::Field::Second:
+        case ::Locale::CalendarPattern::Field::Hour:
+        case ::Locale::CalendarPattern::Field::Minute:
+        case ::Locale::CalendarPattern::Field::Second:
             break;
 
         default:
@@ -452,7 +452,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
 }
 
 // 11.5.4 BestFitFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-bestfitformatmatcher
-Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats)
+Optional<::Locale::CalendarPattern> best_fit_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats)
 {
     // When the BestFitFormatMatcher abstract operation is called with two arguments options and formats, it performs
     // implementation dependent steps, which should return a set of component representations that a typical user of
@@ -462,11 +462,11 @@ Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPatt
 
 struct StyleAndValue {
     StringView name {};
-    Unicode::CalendarPatternStyle style {};
+    ::Locale::CalendarPatternStyle style {};
     i32 value { 0 };
 };
 
-static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::CalendarPattern const& options, Unicode::CalendarPattern const* range_options, LocalTime const& local_time)
+static Optional<StyleAndValue> find_calendar_field(StringView name, ::Locale::CalendarPattern const& options, ::Locale::CalendarPattern const* range_options, LocalTime const& local_time)
 {
     auto make_style_and_value = [](auto name, auto style, auto fallback_style, auto value) {
         if (style.has_value())
@@ -483,7 +483,7 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::Cal
     constexpr auto minute = "minute"sv;
     constexpr auto second = "second"sv;
 
-    Optional<Unicode::CalendarPatternStyle> empty;
+    Optional<::Locale::CalendarPatternStyle> empty;
 
     if (name == weekday)
         return make_style_and_value(weekday, range_options ? range_options->weekday : empty, *options.weekday, local_time.weekday);
@@ -504,7 +504,7 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::Cal
     return {};
 }
 
-static Optional<StringView> resolve_day_period(StringView locale, StringView calendar, Unicode::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
+static Optional<StringView> resolve_day_period(StringView locale, StringView calendar, ::Locale::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
 {
     // Use the "noon" day period if the locale has it, but only if the time is either exactly 12:00.00 or would be displayed as such.
     if (local_time.hour == 12) {
@@ -519,17 +519,17 @@ static Optional<StringView> resolve_day_period(StringView locale, StringView cal
         });
 
         if (it == pattern_parts.end()) {
-            auto noon_symbol = Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Noon);
+            auto noon_symbol = ::Locale::get_calendar_day_period_symbol(locale, calendar, style, ::Locale::DayPeriod::Noon);
             if (noon_symbol.has_value())
                 return *noon_symbol;
         }
     }
 
-    return Unicode::get_calendar_day_period_symbol_for_hour(locale, calendar, style, local_time.hour);
+    return ::Locale::get_calendar_day_period_symbol_for_hour(locale, calendar, style, local_time.hour);
 }
 
 // 11.5.6 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
-ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, Unicode::CalendarPattern const* range_format_options)
+ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, double time, ::Locale::CalendarPattern const* range_format_options)
 {
     auto& realm = *vm.current_realm();
 
@@ -650,7 +650,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // iii. Let fv be a String value representing v in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
             //      The String value may also depend on the value of the [[InDST]] field of tm if f is "short", "long", "shortOffset", or "longOffset".
             //      If the implementation does not have a localized representation of f, then use the String value of v itself.
-            auto formatted_value = Unicode::format_time_zone(data_locale, value, style, local_time.time_since_epoch());
+            auto formatted_value = ::Locale::format_time_zone(data_locale, value, style, local_time.time_since_epoch());
 
             // iv. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
             result.append({ "timeZoneName"sv, move(formatted_value) });
@@ -680,17 +680,17 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 auto hour_cycle = date_time_format.hour_cycle();
 
                 // vi. If p is "hour" and dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
-                if ((hour_cycle == Unicode::HourCycle::H11) || (hour_cycle == Unicode::HourCycle::H12)) {
+                if ((hour_cycle == ::Locale::HourCycle::H11) || (hour_cycle == ::Locale::HourCycle::H12)) {
                     // 1. Let v be v modulo 12.
                     value = value % 12;
 
                     // 2. If v is 0 and dateTimeFormat.[[HourCycle]] is "h12", let v be 12.
-                    if ((value == 0) && (hour_cycle == Unicode::HourCycle::H12))
+                    if ((value == 0) && (hour_cycle == ::Locale::HourCycle::H12))
                         value = 12;
                 }
 
                 // vii. If p is "hour" and dateTimeFormat.[[HourCycle]] is "h24", then
-                if (hour_cycle == Unicode::HourCycle::H24) {
+                if (hour_cycle == ::Locale::HourCycle::H24) {
                     // 1. If v is 0, let v be 24.
                     if (value == 0)
                         value = 24;
@@ -699,13 +699,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 
             switch (style) {
             // viii. If f is "numeric", then
-            case Unicode::CalendarPatternStyle::Numeric:
+            case ::Locale::CalendarPatternStyle::Numeric:
                 // 1. Let fv be FormatNumeric(nf, v).
                 formatted_value = format_numeric(vm, *number_format, Value(value));
                 break;
 
             // ix. Else if f is "2-digit", then
-            case Unicode::CalendarPatternStyle::TwoDigit:
+            case ::Locale::CalendarPatternStyle::TwoDigit:
                 // 1. Let fv be FormatNumeric(nf2, v).
                 formatted_value = format_numeric(vm, *number_format2, Value(value));
 
@@ -725,17 +725,17 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             //    If p is "era" and rangeFormatOptions is undefined, then the String value may also depend on whether dateTimeFormat.[[Era]] is undefined.
             //    If p is "era" and rangeFormatOptions is not undefined, then the String value may also depend on whether rangeFormatOptions.[[era]] is undefined.
             //    If the implementation does not have a localized representation of f, then use the String value of v itself.
-            case Unicode::CalendarPatternStyle::Narrow:
-            case Unicode::CalendarPatternStyle::Short:
-            case Unicode::CalendarPatternStyle::Long: {
+            case ::Locale::CalendarPatternStyle::Narrow:
+            case ::Locale::CalendarPatternStyle::Short:
+            case ::Locale::CalendarPatternStyle::Long: {
                 Optional<StringView> symbol;
 
                 if (part == "era"sv)
-                    symbol = Unicode::get_calendar_era_symbol(data_locale, date_time_format.calendar(), style, static_cast<Unicode::Era>(value));
+                    symbol = ::Locale::get_calendar_era_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Era>(value));
                 else if (part == "month"sv)
-                    symbol = Unicode::get_calendar_month_symbol(data_locale, date_time_format.calendar(), style, static_cast<Unicode::Month>(value - 1));
+                    symbol = ::Locale::get_calendar_month_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Month>(value - 1));
                 else if (part == "weekday"sv)
-                    symbol = Unicode::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<Unicode::Weekday>(value));
+                    symbol = ::Locale::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Weekday>(value));
 
                 formatted_value = symbol.value_or(String::number(value));
                 break;
@@ -759,13 +759,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // ii. If v is greater than 11, then
             if (value > 11) {
                 // 1. Let fv be an implementation and locale dependent String value representing "post meridiem".
-                auto symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, Unicode::DayPeriod::PM);
+                auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::PM);
                 formatted_value = symbol.value_or("PM"sv);
             }
             // iii. Else,
             else {
                 // 1. Let fv be an implementation and locale dependent String value representing "ante meridiem".
-                auto symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, Unicode::DayPeriod::AM);
+                auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::AM);
                 formatted_value = symbol.value_or("AM"sv);
             }
 
@@ -794,7 +794,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         // Non-standard, TR-35 requires the decimal separator before injected {fractionalSecondDigits} partitions
         // to adhere to the selected locale. This depends on other generated data, so it is deferred to here.
         else if (part == "decimal"sv) {
-            auto decimal_symbol = Unicode::get_number_system_symbol(data_locale, date_time_format.numbering_system(), Unicode::NumericSymbol::Decimal).value_or("."sv);
+            auto decimal_symbol = ::Locale::get_number_system_symbol(data_locale, date_time_format.numbering_system(), ::Locale::NumericSymbol::Decimal).value_or("."sv);
             result.append({ "literal"sv, decimal_symbol });
         }
 
@@ -884,30 +884,30 @@ template<typename Callback>
 void for_each_range_pattern_field(LocalTime const& time1, LocalTime const& time2, Callback&& callback)
 {
     // Table 4: Range pattern fields, https://tc39.es/ecma402/#table-datetimeformat-rangepatternfields
-    if (callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), Unicode::CalendarRangePattern::Field::Era) == IterationDecision::Break)
+    if (callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), ::Locale::CalendarRangePattern::Field::Era) == IterationDecision::Break)
         return;
-    if (callback(time1.year, time2.year, Unicode::CalendarRangePattern::Field::Year) == IterationDecision::Break)
+    if (callback(time1.year, time2.year, ::Locale::CalendarRangePattern::Field::Year) == IterationDecision::Break)
         return;
-    if (callback(time1.month, time2.month, Unicode::CalendarRangePattern::Field::Month) == IterationDecision::Break)
+    if (callback(time1.month, time2.month, ::Locale::CalendarRangePattern::Field::Month) == IterationDecision::Break)
         return;
-    if (callback(time1.day, time2.day, Unicode::CalendarRangePattern::Field::Day) == IterationDecision::Break)
+    if (callback(time1.day, time2.day, ::Locale::CalendarRangePattern::Field::Day) == IterationDecision::Break)
         return;
-    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::AmPm) == IterationDecision::Break)
+    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::AmPm) == IterationDecision::Break)
         return;
-    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::DayPeriod) == IterationDecision::Break)
+    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::DayPeriod) == IterationDecision::Break)
         return;
-    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::Hour) == IterationDecision::Break)
+    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::Hour) == IterationDecision::Break)
         return;
-    if (callback(time1.minute, time2.minute, Unicode::CalendarRangePattern::Field::Minute) == IterationDecision::Break)
+    if (callback(time1.minute, time2.minute, ::Locale::CalendarRangePattern::Field::Minute) == IterationDecision::Break)
         return;
-    if (callback(time1.second, time2.second, Unicode::CalendarRangePattern::Field::Second) == IterationDecision::Break)
+    if (callback(time1.second, time2.second, ::Locale::CalendarRangePattern::Field::Second) == IterationDecision::Break)
         return;
-    if (callback(time1.millisecond, time2.millisecond, Unicode::CalendarRangePattern::Field::FractionalSecondDigits) == IterationDecision::Break)
+    if (callback(time1.millisecond, time2.millisecond, ::Locale::CalendarRangePattern::Field::FractionalSecondDigits) == IterationDecision::Break)
         return;
 }
 
 template<typename Callback>
-ThrowCompletionOr<void> for_each_range_pattern_with_source(Unicode::CalendarRangePattern& pattern, Callback&& callback)
+ThrowCompletionOr<void> for_each_range_pattern_with_source(::Locale::CalendarRangePattern& pattern, Callback&& callback)
 {
     TRY(callback(pattern.start_range, "startRange"sv));
     TRY(callback(pattern.separator, "shared"sv));
@@ -942,7 +942,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     auto range_patterns = date_time_format.range_patterns();
 
     // 8. Let rangePattern be undefined.
-    Optional<Unicode::CalendarRangePattern> range_pattern;
+    Optional<::Locale::CalendarRangePattern> range_pattern;
 
     // 9. Let dateFieldsPracticallyEqual be true.
     bool date_fields_practically_equal = true;
@@ -955,7 +955,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         // a. Let fieldName be the name given in the Range Pattern Field column of the row.
 
         // b. If rangePatterns has a field [[<fieldName>]], let rp be rangePatterns.[[<fieldName>]]; else let rp be undefined.
-        Optional<Unicode::CalendarRangePattern> pattern;
+        Optional<::Locale::CalendarRangePattern> pattern;
         for (auto const& range : range_patterns) {
             if (range.field == field_name) {
                 pattern = range;
@@ -975,7 +975,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 
             switch (field_name) {
             // ii. If fieldName is equal to [[AmPm]], then
-            case Unicode::CalendarRangePattern::Field::AmPm: {
+            case ::Locale::CalendarRangePattern::Field::AmPm: {
                 // 1. Let v1 be tm1.[[Hour]].
                 // 2. Let v2 be tm2.[[Hour]].
 
@@ -988,12 +988,12 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
                 break;
             }
             // iii. Else if fieldName is equal to [[DayPeriod]], then
-            case Unicode::CalendarRangePattern::Field::DayPeriod: {
+            case ::Locale::CalendarRangePattern::Field::DayPeriod: {
                 // 1. Let v1 be a String value representing the day period of tm1; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto start_period = Unicode::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, start_value);
+                auto start_period = ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, start_value);
 
                 // 2. Let v2 be a String value representing the day period of tm2; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto end_period = Unicode::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, end_value);
+                auto end_period = ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, end_value);
 
                 // 3. If v1 is not equal to v2, then
                 if (start_period != end_period) {
@@ -1004,7 +1004,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
                 break;
             }
             // iv. Else if fieldName is equal to [[FractionalSecondDigits]], then
-            case Unicode::CalendarRangePattern::Field::FractionalSecondDigits: {
+            case ::Locale::CalendarRangePattern::Field::FractionalSecondDigits: {
                 // 1. Let fractionalSecondDigits be dateTimeFormat.[[FractionalSecondDigits]].
                 Optional<u8> fractional_second_digits;
                 if (date_time_format.has_fractional_second_digits())
@@ -1083,7 +1083,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     // 14. If rangePattern is undefined, then
     if (!range_pattern.has_value()) {
         // a. Let rangePattern be rangePatterns.[[Default]].
-        range_pattern = Unicode::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar());
+        range_pattern = ::Locale::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar());
 
         // Non-standard, range_pattern will be empty if Unicode data generation is disabled.
         if (!range_pattern.has_value())
@@ -1217,7 +1217,7 @@ ThrowCompletionOr<LocalTime> to_local_time(VM& vm, double time, StringView calen
             // WeekDay(tz) specified in es2022's Week Day.
             .weekday = week_day(zoned_time),
             // Let year be YearFromTime(tz) specified in es2022's Year Number. If year is less than 0, return 'BC', else, return 'AD'.
-            .era = year < 0 ? Unicode::Era::BC : Unicode::Era::AD,
+            .era = year < 0 ? ::Locale::Era::BC : ::Locale::Era::AD,
             // YearFromTime(tz) specified in es2022's Year Number.
             .year = year,
             // undefined.

@@ -1147,7 +1147,7 @@ String time_zone_string(double time)
 
     // Most implementations seem to prefer the long-form display name of the time zone. Not super important, but we may as well match that behavior.
     if (auto maybe_offset = TimeZone::get_time_zone_offset(tz_name, AK::Time::from_milliseconds(time)); maybe_offset.has_value()) {
-        if (auto long_name = Unicode::get_time_zone_name(Unicode::default_locale(), tz_name, Unicode::CalendarPatternStyle::Long, maybe_offset->in_dst); long_name.has_value())
+        if (auto long_name = Locale::get_time_zone_name(Locale::default_locale(), tz_name, Locale::CalendarPatternStyle::Long, maybe_offset->in_dst); long_name.has_value())
             tz_name = long_name.release_value();
     }
 

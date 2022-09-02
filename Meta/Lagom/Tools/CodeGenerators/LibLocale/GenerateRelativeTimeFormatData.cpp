@@ -180,7 +180,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 
 #include <LibUnicode/Forward.h>
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     generator.append(R"~~~(
@@ -207,7 +207,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <LibUnicode/PluralRules.h>
 #include <LibUnicode/RelativeTimeFormat.h>
 
-namespace Unicode {
+namespace Locale {
 )~~~");
 
     cldr.unique_strings.generate(generator);
