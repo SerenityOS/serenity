@@ -6,7 +6,6 @@
 
 #include <AK/Memory.h>
 #include <Kernel/Arch/x86/Hypervisor/VMWareBackdoor.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/PS2MouseDevice.h>

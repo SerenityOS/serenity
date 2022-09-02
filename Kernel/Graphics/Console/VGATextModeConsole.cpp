@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Graphics/Console/VGATextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Sections.h>
