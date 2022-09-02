@@ -462,7 +462,6 @@ class DOMRectWrapper;
 class FileWrapper;
 class HeadersWrapper;
 class HeadersIteratorWrapper;
-class HistoryWrapper;
 class IdleDeadlineWrapper;
 class ImageDataWrapper;
 class IntersectionObserverWrapper;

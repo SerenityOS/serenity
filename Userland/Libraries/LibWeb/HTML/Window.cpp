@@ -19,7 +19,6 @@
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HistoryWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/IdleDeadlineWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
