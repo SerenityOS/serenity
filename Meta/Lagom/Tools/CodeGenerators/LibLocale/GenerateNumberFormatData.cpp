@@ -236,13 +236,13 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
     static unsigned hash(Unit const& u) { return u.hash(); }
 };
 
-struct Locale {
+struct LocaleData {
     Vector<NumberSystemIndexType> number_systems;
     HashMap<String, UnitIndexType> units {};
     u8 minimum_grouping_digits { 0 };
 };
 
-struct UnicodeLocaleData {
+struct CLDR {
     UniqueStringStorage<StringIndexType> unique_strings;
     UniqueStorage<NumberFormat, NumberFormatIndexType> unique_formats;
     UniqueStorage<NumberFormatList, NumberFormatListIndexType> unique_format_lists;
@@ -253,11 +253,11 @@ struct UnicodeLocaleData {
     HashMap<String, Array<u32, 10>> number_system_digits;
     Vector<String> number_systems;
 
-    HashMap<String, Locale> locales;
+    HashMap<String, LocaleData> locales;
     size_t max_identifier_count { 0 };
 };
 
-static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, CLDR& cldr)
 {
     LexicalPath number_systems_path(move(core_supplemental_path));
     number_systems_path = number_systems_path.append("numberingSystems.json"sv);
@@ -276,20 +276,20 @@ static ErrorOr<void> parse_number_system_digits(String core_supplemental_path, U
         Utf8View utf8_digits { digits };
         VERIFY(utf8_digits.length() == 10);
 
-        auto& number_system_digits = locale_data.number_system_digits.ensure(number_system);
+        auto& number_system_digits = cldr.number_system_digits.ensure(number_system);
         size_t index = 0;
 
         for (u32 digit : utf8_digits)
             number_system_digits[index++] = digit;
 
-        if (!locale_data.number_systems.contains_slow(number_system))
-            locale_data.number_systems.append(number_system);
+        if (!cldr.number_systems.contains_slow(number_system))
+            cldr.number_systems.append(number_system);
     });
 
     return {};
 }
 
-static String parse_identifiers(String pattern, StringView replacement, UnicodeLocaleData& locale_data, NumberFormat& format)
+static String parse_identifiers(String pattern, StringView replacement, CLDR& cldr, NumberFormat& format)
 {
     static constexpr Utf8View whitespace { "\u0020\u00a0\u200f"sv };
 
@@ -323,7 +323,7 @@ static String parse_identifiers(String pattern, StringView replacement, UnicodeL
         utf8_pattern = utf8_pattern.trim(whitespace);
 
         auto identifier = utf8_pattern.as_string().replace("'.'"sv, "."sv, ReplaceMode::FirstOnly);
-        auto identifier_index = locale_data.unique_strings.ensure(move(identifier));
+        auto identifier_index = cldr.unique_strings.ensure(move(identifier));
         size_t replacement_index = 0;
 
         if (auto index = format.identifier_indices.find_first_index(identifier_index); index.has_value()) {
@@ -332,7 +332,7 @@ static String parse_identifiers(String pattern, StringView replacement, UnicodeL
             replacement_index = format.identifier_indices.size();
             format.identifier_indices.append(identifier_index);
 
-            locale_data.max_identifier_count = max(locale_data.max_identifier_count, format.identifier_indices.size());
+            cldr.max_identifier_count = max(cldr.max_identifier_count, format.identifier_indices.size());
         }
 
         pattern = String::formatted("{}{{{}:{}}}{}",
@@ -343,7 +343,7 @@ static String parse_identifiers(String pattern, StringView replacement, UnicodeL
     }
 }
 
-static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& locale_data, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
@@ -401,33 +401,33 @@ static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& loc
         }
 
         if (type == NumberFormatType::Compact)
-            return parse_identifiers(move(pattern), "compactIdentifier"sv, locale_data, format);
+            return parse_identifiers(move(pattern), "compactIdentifier"sv, cldr, format);
 
         return pattern;
     };
 
     auto zero_format = replace_patterns(move(patterns[0]));
-    format.positive_format_index = locale_data.unique_strings.ensure(String::formatted("{{plusSign}}{}", zero_format));
+    format.positive_format_index = cldr.unique_strings.ensure(String::formatted("{{plusSign}}{}", zero_format));
 
     if (patterns.size() == 2) {
         auto negative_format = replace_patterns(move(patterns[1]));
-        format.negative_format_index = locale_data.unique_strings.ensure(move(negative_format));
+        format.negative_format_index = cldr.unique_strings.ensure(move(negative_format));
     } else {
-        format.negative_format_index = locale_data.unique_strings.ensure(String::formatted("{{minusSign}}{}", zero_format));
+        format.negative_format_index = cldr.unique_strings.ensure(String::formatted("{{minusSign}}{}", zero_format));
     }
 
-    format.zero_format_index = locale_data.unique_strings.ensure(move(zero_format));
+    format.zero_format_index = cldr.unique_strings.ensure(move(zero_format));
 }
 
-static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& locale_data, NumberFormatType type, NumberFormatIndexType& format_index, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, NumberFormatIndexType& format_index, NumberSystem* number_system_for_groupings = nullptr)
 {
     NumberFormat format {};
-    parse_number_pattern(move(patterns), locale_data, type, format, number_system_for_groupings);
+    parse_number_pattern(move(patterns), cldr, type, format, number_system_for_groupings);
 
-    format_index = locale_data.unique_formats.ensure(move(format));
+    format_index = cldr.unique_formats.ensure(move(format));
 }
 
-static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
@@ -439,10 +439,10 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     auto const& minimum_grouping_digits = locale_numbers_object.as_object().get("minimumGroupingDigits"sv);
 
     Vector<Optional<NumberSystem>> number_systems;
-    number_systems.resize(locale_data.number_systems.size());
+    number_systems.resize(cldr.number_systems.size());
 
     auto ensure_number_system = [&](auto const& system) -> NumberSystem& {
-        auto system_index = locale_data.number_systems.find_first_index(system).value();
+        auto system_index = cldr.number_systems.find_first_index(system).value();
         VERIFY(system_index < number_systems.size());
 
         auto& number_system = number_systems.at(system_index);
@@ -479,13 +479,13 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             }
 
             format.plurality = Unicode::plural_category_from_string(split_key[2]);
-            parse_number_pattern(move(patterns), locale_data, NumberFormatType::Compact, format);
+            parse_number_pattern(move(patterns), cldr, NumberFormatType::Compact, format);
 
-            auto format_index = locale_data.unique_formats.ensure(move(format));
+            auto format_index = cldr.unique_formats.ensure(move(format));
             result.append(format_index);
         });
 
-        return locale_data.unique_format_lists.ensure(move(result));
+        return cldr.unique_format_lists.ensure(move(result));
     };
 
     auto numeric_symbol_from_string = [&](StringView numeric_symbol) -> Optional<Unicode::NumericSymbol> {
@@ -534,7 +534,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
                 if (to_underlying(*numeric_symbol) >= symbols.size())
                     symbols.resize(to_underlying(*numeric_symbol) + 1);
 
-                auto symbol_index = locale_data.unique_strings.ensure(localization.as_string());
+                auto symbol_index = cldr.unique_strings.ensure(localization.as_string());
                 symbols[to_underlying(*numeric_symbol)] = symbol_index;
             });
 
@@ -551,16 +551,16 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             if (to_underlying(Unicode::NumericSymbol::RangeSeparator) >= symbols.size())
                 symbols.resize(to_underlying(Unicode::NumericSymbol::RangeSeparator) + 1);
 
-            auto symbol_index = locale_data.unique_strings.ensure(move(range_separator));
+            auto symbol_index = cldr.unique_strings.ensure(move(range_separator));
             symbols[to_underlying(Unicode::NumericSymbol::RangeSeparator)] = symbol_index;
 
-            number_system.symbols = locale_data.unique_symbols.ensure(move(symbols));
+            number_system.symbols = cldr.unique_symbols.ensure(move(symbols));
         } else if (key.starts_with(decimal_formats_prefix)) {
             auto system = key.substring(decimal_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.decimal_format, &number_system);
+            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.decimal_format, &number_system);
 
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
@@ -572,10 +572,10 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.currency_format);
+            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.currency_format);
 
             format_object = value.as_object().get("accounting"sv);
-            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.accounting_format);
+            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.accounting_format);
 
             number_system.currency_unit_formats = parse_number_format(value.as_object());
 
@@ -588,13 +588,13 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.percent_format);
+            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.percent_format);
         } else if (key.starts_with(scientific_formats_prefix)) {
             auto system = key.substring(scientific_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.scientific_format);
+            parse_number_pattern(format_object.as_string().split(';'), cldr, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
 
@@ -603,7 +603,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     for (auto& number_system : number_systems) {
         NumberSystemIndexType system_index = 0;
         if (number_system.has_value())
-            system_index = locale_data.unique_systems.ensure(number_system.release_value());
+            system_index = cldr.unique_systems.ensure(number_system.release_value());
 
         locale.number_systems.append(system_index);
     }
@@ -612,7 +612,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     return {};
 }
 
-static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_units(String locale_units_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath units_path(move(locale_units_path));
     units_path = units_path.append("units.json"sv);
@@ -629,7 +629,7 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
 
     auto ensure_unit = [&](auto const& unit) -> Unit& {
         return units.ensure(unit, [&]() {
-            auto unit_index = locale_data.unique_strings.ensure(unit);
+            auto unit_index = cldr.unique_strings.ensure(unit);
             return Unit { .unit = unit_index };
         });
     };
@@ -679,16 +679,16 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
                 format.plurality = Unicode::plural_category_from_string(plurality);
 
                 auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv, ReplaceMode::FirstOnly);
-                zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, locale_data, format);
+                zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, cldr, format);
 
-                format.positive_format_index = locale_data.unique_strings.ensure(zero_format.replace("{number}"sv, "{plusSign}{number}"sv, ReplaceMode::FirstOnly));
-                format.negative_format_index = locale_data.unique_strings.ensure(zero_format.replace("{number}"sv, "{minusSign}{number}"sv, ReplaceMode::FirstOnly));
-                format.zero_format_index = locale_data.unique_strings.ensure(move(zero_format));
+                format.positive_format_index = cldr.unique_strings.ensure(zero_format.replace("{number}"sv, "{plusSign}{number}"sv, ReplaceMode::FirstOnly));
+                format.negative_format_index = cldr.unique_strings.ensure(zero_format.replace("{number}"sv, "{minusSign}{number}"sv, ReplaceMode::FirstOnly));
+                format.zero_format_index = cldr.unique_strings.ensure(move(zero_format));
 
-                formats.append(locale_data.unique_formats.ensure(move(format)));
+                formats.append(cldr.unique_formats.ensure(move(format)));
             });
 
-            auto number_format_list_index = locale_data.unique_format_lists.ensure(move(formats));
+            auto number_format_list_index = cldr.unique_format_lists.ensure(move(formats));
 
             switch (style) {
             case Unicode::Style::Long:
@@ -711,14 +711,14 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
     parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
 
     for (auto& unit : units) {
-        auto unit_index = locale_data.unique_units.ensure(move(unit.value));
+        auto unit_index = cldr.unique_units.ensure(move(unit.value));
         locale.units.set(unit.key, unit_index);
     }
 
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, String units_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, String units_path, CLDR& cldr)
 {
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
     auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
@@ -727,16 +727,16 @@ static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, St
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
-    TRY(parse_number_system_digits(core_supplemental_path.string(), locale_data));
+    TRY(parse_number_system_digits(core_supplemental_path.string(), cldr));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale.language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
+        builder.append(cldr.unique_strings.get(parsed_locale.language));
+        if (auto script = cldr.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
+        if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
@@ -746,16 +746,16 @@ static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, St
         auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
         auto language = TRY(remove_variants_from_path(numbers_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_number_systems(numbers_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_number_systems(numbers_path, cldr, locale));
     }
 
     while (units_iterator.has_next()) {
         auto units_path = TRY(next_path_from_dir_iterator(units_iterator));
         auto language = TRY(remove_variants_from_path(units_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_units(units_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_units(units_path, cldr, locale));
     }
 
     return {};
@@ -766,7 +766,7 @@ static String format_identifier(StringView, String identifier)
     return identifier.to_titlecase();
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -779,7 +779,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 namespace Unicode {
 )~~~");
 
-    generate_enum(generator, format_identifier, "NumberSystem"sv, {}, locale_data.number_systems);
+    generate_enum(generator, format_identifier, "NumberSystem"sv, {}, cldr.number_systems);
 
     generator.append(R"~~~(
 }
@@ -789,7 +789,7 @@ namespace Unicode {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -797,7 +797,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
     generator.set("number_format_index_type"sv, s_number_format_index_type);
     generator.set("number_format_list_index_type"sv, s_number_format_list_index_type);
     generator.set("numeric_symbol_list_index_type"sv, s_numeric_symbol_list_index_type);
-    generator.set("identifier_count", String::number(locale_data.max_identifier_count));
+    generator.set("identifier_count", String::number(cldr.max_identifier_count));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -815,7 +815,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 namespace Unicode {
 )~~~");
 
-    locale_data.unique_strings.generate(generator);
+    cldr.unique_strings.generate(generator);
 
     generator.append(R"~~~(
 struct NumberFormatImpl {
@@ -872,13 +872,13 @@ struct Unit {
 };
 )~~~");
 
-    locale_data.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
-    locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
-    locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
-    locale_data.unique_systems.generate(generator, "NumberSystemData"sv, "s_number_systems"sv, 10);
-    locale_data.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
+    cldr.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
+    cldr.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
+    cldr.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
+    cldr.unique_systems.generate(generator, "NumberSystemData"sv, "s_number_systems"sv, 10);
+    cldr.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
 
-    auto locales = locale_data.locales.keys();
+    auto locales = cldr.locales.keys();
     quick_sort(locales);
 
     generator.set("size", String::number(locales.size()));
@@ -888,7 +888,7 @@ static constexpr Array<u8, @size@> s_minimum_grouping_digits { { )~~~");
     bool first = true;
     for (auto const& locale : locales) {
         generator.append(first ? " "sv : ", "sv);
-        generator.append(String::number(locale_data.locales.find(locale)->value.minimum_grouping_digits));
+        generator.append(String::number(cldr.locales.find(locale)->value.minimum_grouping_digits));
         first = false;
     }
     generator.append(" } };\n");
@@ -914,16 +914,16 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    generate_mapping(generator, locale_data.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
-    generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
-    generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
+    generate_mapping(generator, cldr.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
+    generate_mapping(generator, cldr.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
+    generate_mapping(generator, cldr.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
 
     generator.append(R"~~~(
 static Optional<NumberSystem> keyword_to_number_system(KeywordNumbers keyword)
 {
     switch (keyword) {)~~~");
 
-    for (auto const& number_system : locale_data.number_systems) {
+    for (auto const& number_system : cldr.number_systems) {
         generator.set("name"sv, format_identifier({}, number_system));
         generator.append(R"~~~(
     case KeywordNumbers::@name@:
@@ -1152,11 +1152,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
-    UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(core_path, numbers_path, units_path, locale_data));
+    CLDR cldr;
+    TRY(parse_all_locales(core_path, numbers_path, units_path, cldr));
 
-    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
-    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
+    TRY(generate_unicode_locale_header(*generated_header_file, cldr));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, cldr));
 
     return 0;
 }

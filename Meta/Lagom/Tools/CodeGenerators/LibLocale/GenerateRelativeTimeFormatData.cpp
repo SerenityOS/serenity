@@ -72,18 +72,18 @@ struct AK::Traits<RelativeTimeFormat> : public GenericTraits<RelativeTimeFormat>
     static unsigned hash(RelativeTimeFormat const& format) { return format.hash(); }
 };
 
-struct Locale {
+struct LocaleData {
     Vector<RelativeTimeFormatIndexType> time_units;
 };
 
-struct UnicodeLocaleData {
+struct CLDR {
     UniqueStringStorage<StringIndexType> unique_strings;
     UniqueStorage<RelativeTimeFormat, RelativeTimeFormatIndexType> unique_formats;
 
-    HashMap<String, Locale> locales;
+    HashMap<String, LocaleData> locales;
 };
 
-static ErrorOr<void> parse_date_fields(String locale_dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_date_fields(String locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath date_fields_path(move(locale_dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
@@ -105,10 +105,10 @@ static ErrorOr<void> parse_date_fields(String locale_dates_path, UnicodeLocaleDa
         format.time_unit = unit.to_titlecase_string();
         format.style = style.to_titlecase_string();
         format.plurality = plurality.to_titlecase_string();
-        format.tense_or_number = locale_data.unique_strings.ensure(tense_or_number);
-        format.pattern = locale_data.unique_strings.ensure(pattern.as_string());
+        format.tense_or_number = cldr.unique_strings.ensure(tense_or_number);
+        format.pattern = cldr.unique_strings.ensure(pattern.as_string());
 
-        locale.time_units.append(locale_data.unique_formats.ensure(move(format)));
+        locale.time_units.append(cldr.unique_formats.ensure(move(format)));
     };
 
     fields_object.as_object().for_each_member([&](auto const& unit_and_style, auto const& patterns) {
@@ -142,18 +142,18 @@ static ErrorOr<void> parse_date_fields(String locale_dates_path, UnicodeLocaleDa
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String dates_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String dates_path, CLDR& cldr)
 {
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale.language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
+        builder.append(cldr.unique_strings.get(parsed_locale.language));
+        if (auto script = cldr.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
+        if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
@@ -163,14 +163,14 @@ static ErrorOr<void> parse_all_locales(String dates_path, UnicodeLocaleData& loc
         auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
         auto language = TRY(remove_variants_from_path(dates_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_date_fields(move(dates_path), locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_date_fields(move(dates_path), cldr, locale));
     }
 
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData&)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -191,7 +191,7 @@ namespace Unicode {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -210,7 +210,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 namespace Unicode {
 )~~~");
 
-    locale_data.unique_strings.generate(generator);
+    cldr.unique_strings.generate(generator);
 
     generator.append(R"~~~(
 struct RelativeTimeFormatImpl {
@@ -231,7 +231,7 @@ struct RelativeTimeFormatImpl {
 };
 )~~~");
 
-    locale_data.unique_formats.generate(generator, "RelativeTimeFormatImpl"sv, "s_relative_time_formats"sv, 10);
+    cldr.unique_formats.generate(generator, "RelativeTimeFormatImpl"sv, "s_relative_time_formats"sv, 10);
 
     auto append_list = [&](String name, auto const& list) {
         generator.set("name", name);
@@ -250,7 +250,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
         generator.append(" } };");
     };
 
-    generate_mapping(generator, locale_data.locales, s_relative_time_format_index_type, "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
+    generate_mapping(generator, cldr.locales, s_relative_time_format_index_type, "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
 
     generator.append(R"~~~(
 Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
@@ -302,11 +302,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
-    UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(dates_path, locale_data));
+    CLDR cldr;
+    TRY(parse_all_locales(dates_path, cldr));
 
-    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
-    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
+    TRY(generate_unicode_locale_header(*generated_header_file, cldr));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, cldr));
 
     return 0;
 }

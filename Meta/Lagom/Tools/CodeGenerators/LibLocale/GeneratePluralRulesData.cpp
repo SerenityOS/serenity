@@ -193,7 +193,7 @@ struct Range {
 using Conditions = HashMap<String, Condition>;
 using Ranges = Vector<Range>;
 
-struct Locale {
+struct LocaleData {
     static String generated_method_name(StringView form, StringView locale)
     {
         return String::formatted("{}_plurality_{}", form, format_identifier({}, locale));
@@ -213,10 +213,10 @@ struct Locale {
     Ranges plural_ranges;
 };
 
-struct UnicodeLocaleData {
+struct CLDR {
     UniqueStringStorage<StringIndexType> unique_strings;
 
-    HashMap<String, Locale> locales;
+    HashMap<String, LocaleData> locales;
 };
 
 static Relation parse_relation(StringView relation)
@@ -324,7 +324,7 @@ static void parse_condition(StringView category, StringView rule, Conditions& ru
     });
 }
 
-static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringView file_name, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringView file_name, CLDR& cldr)
 {
     static constexpr auto form_prefix = "plurals-type-"sv;
     static constexpr auto rule_prefix = "pluralRule-count-"sv;
@@ -342,7 +342,7 @@ static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringVie
         auto form = key.substring_view(form_prefix.length());
 
         plurals_object.as_object().for_each_member([&](auto const& loc, auto const& rules) {
-            auto locale = locale_data.locales.get(loc);
+            auto locale = cldr.locales.get(loc);
             if (!locale.has_value())
                 return;
 
@@ -359,7 +359,7 @@ static ErrorOr<void> parse_plural_rules(String core_supplemental_path, StringVie
 }
 
 // https://unicode.org/reports/tr35/tr35-numbers.html#Plural_Ranges
-static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, CLDR& cldr)
 {
     static constexpr auto start_segment = "-start-"sv;
     static constexpr auto end_segment = "-end-"sv;
@@ -372,7 +372,7 @@ static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, UnicodeL
     auto const& plurals_object = supplemental_object.as_object().get("plurals"sv);
 
     plurals_object.as_object().for_each_member([&](auto const& loc, auto const& ranges_object) {
-        auto locale = locale_data.locales.get(loc);
+        auto locale = cldr.locales.get(loc);
         if (!locale.has_value())
             return;
 
@@ -395,7 +395,7 @@ static ErrorOr<void> parse_plural_ranges(String core_supplemental_path, UnicodeL
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, CLDR& cldr)
 {
     auto identity_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
 
@@ -404,13 +404,13 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale.language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
+        builder.append(cldr.unique_strings.get(parsed_locale.language));
+        if (auto script = cldr.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
+        if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
@@ -420,16 +420,16 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         auto locale_path = TRY(next_path_from_dir_iterator(identity_iterator));
         auto language = TRY(remove_variants_from_path(locale_path));
 
-        locale_data.locales.ensure(language);
+        cldr.locales.ensure(language);
     }
 
-    TRY(parse_plural_rules(core_supplemental_path.string(), "plurals.json"sv, locale_data));
-    TRY(parse_plural_rules(core_supplemental_path.string(), "ordinals.json"sv, locale_data));
-    TRY(parse_plural_ranges(core_supplemental_path.string(), locale_data));
+    TRY(parse_plural_rules(core_supplemental_path.string(), "plurals.json"sv, cldr));
+    TRY(parse_plural_rules(core_supplemental_path.string(), "ordinals.json"sv, cldr));
+    TRY(parse_plural_ranges(core_supplemental_path.string(), cldr));
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData&)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -450,12 +450,12 @@ namespace Unicode {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    auto locales = locale_data.locales.keys();
+    auto locales = cldr.locales.keys();
     quick_sort(locales);
 
     generator.append(R"~~~(
@@ -487,7 +487,7 @@ static PluralCategory default_range(PluralCategory, PluralCategory end)
         if (rules.is_empty())
             return;
 
-        generator.set("method"sv, Locale::generated_method_name(form, locale));
+        generator.set("method"sv, LocaleData::generated_method_name(form, locale));
         HashTable<String> generated_variables;
 
         generator.append(R"~~~(
@@ -517,7 +517,7 @@ static PluralCategory @method@([[maybe_unused]] PluralOperands ops)
         if (ranges.is_empty())
             return;
 
-        generator.set("method"sv, Locale::generated_method_name("range"sv, locale));
+        generator.set("method"sv, LocaleData::generated_method_name("range"sv, locale));
 
         generator.append(R"~~~(
 static PluralCategory @method@(PluralCategory start, PluralCategory end)
@@ -549,13 +549,13 @@ static PluralCategory @method@(PluralCategory start, PluralCategory end)
 static constexpr Array<@type@, @size@> s_@form@_functions { {)~~~");
 
         for (auto const& locale : locales) {
-            auto& rules = data_for_locale(locale_data.locales.find(locale)->value, form);
+            auto& rules = data_for_locale(cldr.locales.find(locale)->value, form);
 
             if (rules.is_empty()) {
                 generator.append(R"~~~(
     @default@,)~~~");
             } else {
-                generator.set("method"sv, Locale::generated_method_name(form, locale));
+                generator.set("method"sv, LocaleData::generated_method_name(form, locale));
                 generator.append(R"~~~(
     @method@,)~~~");
             }
@@ -581,7 +581,7 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
         generator.append("} };");
     };
 
-    for (auto [locale, rules] : locale_data.locales) {
+    for (auto [locale, rules] : cldr.locales) {
         append_rules("cardinal"sv, locale, rules.cardinal_rules);
         append_rules("ordinal"sv, locale, rules.ordinal_rules);
         append_ranges(locale, rules.plural_ranges);
@@ -593,13 +593,13 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
 
     generate_mapping(generator, locales, "PluralCategory"sv, "s_cardinal_categories"sv, "s_cardinal_categories_{}"sv, format_identifier,
         [&](auto const& name, auto const& locale) {
-            auto& rules = locale_data.locales.find(locale)->value;
+            auto& rules = cldr.locales.find(locale)->value;
             append_categories(name, rules.rules_for_form("cardinal"sv));
         });
 
     generate_mapping(generator, locales, "PluralCategory"sv, "s_ordinal_categories"sv, "s_ordinal_categories_{}"sv, format_identifier,
         [&](auto const& name, auto const& locale) {
-            auto& rules = locale_data.locales.find(locale)->value;
+            auto& rules = cldr.locales.find(locale)->value;
             append_categories(name, rules.rules_for_form("ordinal"sv));
         });
 
@@ -679,11 +679,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
-    UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(core_path, locale_names_path, locale_data));
+    CLDR cldr;
+    TRY(parse_all_locales(core_path, locale_names_path, cldr));
 
-    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
-    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
+    TRY(generate_unicode_locale_header(*generated_header_file, cldr));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, cldr));
 
     return 0;
 }

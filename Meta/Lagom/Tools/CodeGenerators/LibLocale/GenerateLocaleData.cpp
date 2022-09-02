@@ -188,7 +188,7 @@ using DateFieldList = Vector<StringIndexType>;
 using KeywordList = Vector<StringIndexType>;
 using ListPatternList = Vector<ListPatternIndexType>;
 
-struct Locale {
+struct LocaleData {
     String language;
     Optional<String> territory;
     Optional<String> variant;
@@ -217,7 +217,7 @@ struct LanguageMapping {
     CanonicalLanguageID<StringIndexType> alias {};
 };
 
-struct UnicodeLocaleData {
+struct CLDR {
     UniqueStringStorage<StringIndexType> unique_strings;
     UniqueStorage<DisplayPattern, DisplayPatternIndexType> unique_display_patterns;
     UniqueStorage<LanguageList, LanguageListIndexType> unique_language_lists;
@@ -231,7 +231,7 @@ struct UnicodeLocaleData {
     UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
     UniqueStorage<TextLayout, TextLayoutIndexType> unique_text_layouts;
 
-    HashMap<String, Locale> locales;
+    HashMap<String, LocaleData> locales;
     Vector<Alias> locale_aliases;
 
     Vector<String> languages;
@@ -274,14 +274,14 @@ struct UnicodeLocaleData {
         _temporary_result.release_value();     \
     })
 
-static ErrorOr<LanguageMapping> parse_language_mapping(UnicodeLocaleData& locale_data, StringView key, StringView alias)
+static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView key, StringView alias)
 {
-    auto parsed_key = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, key));
-    auto parsed_alias = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, alias));
+    auto parsed_key = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, key));
+    auto parsed_alias = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, alias));
     return LanguageMapping { move(parsed_key), move(parsed_alias) };
 }
 
-static ErrorOr<void> parse_core_aliases(String core_supplemental_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_core_aliases(String core_supplemental_path, CLDR& cldr)
 {
     LexicalPath core_aliases_path(move(core_supplemental_path));
     core_aliases_path = core_aliases_path.append("aliases.json"sv);
@@ -296,26 +296,26 @@ static ErrorOr<void> parse_core_aliases(String core_supplemental_path, UnicodeLo
             auto alias = value.as_object().get("_replacement"sv).as_string();
 
             if (key.contains('-')) {
-                auto mapping = TRY_OR_DISCARD(parse_language_mapping(locale_data, key, alias));
-                locale_data.max_variant_size = max(mapping.key.variants.size(), locale_data.max_variant_size);
-                locale_data.max_variant_size = max(mapping.alias.variants.size(), locale_data.max_variant_size);
-                locale_data.complex_mappings.append(move(mapping));
+                auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, alias));
+                cldr.max_variant_size = max(mapping.key.variants.size(), cldr.max_variant_size);
+                cldr.max_variant_size = max(mapping.alias.variants.size(), cldr.max_variant_size);
+                cldr.complex_mappings.append(move(mapping));
             } else {
-                alias_map.set(key, locale_data.unique_strings.ensure(alias));
+                alias_map.set(key, cldr.unique_strings.ensure(alias));
             }
         });
     };
 
-    append_aliases(alias_object.as_object().get("languageAlias"sv), locale_data.language_aliases);
-    append_aliases(alias_object.as_object().get("territoryAlias"sv), locale_data.territory_aliases);
-    append_aliases(alias_object.as_object().get("scriptAlias"sv), locale_data.script_aliases);
-    append_aliases(alias_object.as_object().get("variantAlias"sv), locale_data.variant_aliases);
-    append_aliases(alias_object.as_object().get("subdivisionAlias"sv), locale_data.subdivision_aliases);
+    append_aliases(alias_object.as_object().get("languageAlias"sv), cldr.language_aliases);
+    append_aliases(alias_object.as_object().get("territoryAlias"sv), cldr.territory_aliases);
+    append_aliases(alias_object.as_object().get("scriptAlias"sv), cldr.script_aliases);
+    append_aliases(alias_object.as_object().get("variantAlias"sv), cldr.variant_aliases);
+    append_aliases(alias_object.as_object().get("subdivisionAlias"sv), cldr.subdivision_aliases);
 
     return {};
 }
 
-static ErrorOr<void> parse_likely_subtags(String core_supplemental_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_likely_subtags(String core_supplemental_path, CLDR& cldr)
 {
     LexicalPath likely_subtags_path(move(core_supplemental_path));
     likely_subtags_path = likely_subtags_path.append("likelySubtags.json"sv);
@@ -325,16 +325,16 @@ static ErrorOr<void> parse_likely_subtags(String core_supplemental_path, Unicode
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
     likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto mapping = TRY_OR_DISCARD(parse_language_mapping(locale_data, key, value.as_string()));
-        locale_data.max_variant_size = max(mapping.key.variants.size(), locale_data.max_variant_size);
-        locale_data.max_variant_size = max(mapping.alias.variants.size(), locale_data.max_variant_size);
-        locale_data.likely_subtags.append(move(mapping));
+        auto mapping = TRY_OR_DISCARD(parse_language_mapping(cldr, key, value.as_string()));
+        cldr.max_variant_size = max(mapping.key.variants.size(), cldr.max_variant_size);
+        cldr.max_variant_size = max(mapping.alias.variants.size(), cldr.max_variant_size);
+        cldr.likely_subtags.append(move(mapping));
     });
 
     return {};
 }
 
-static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_identity(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath languages_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
     languages_path = languages_path.append("languages.json"sv);
@@ -352,26 +352,26 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
 
     if (territory_string.is_string()) {
         locale.territory = territory_string.as_string();
-        if (!locale_data.territories.contains_slow(*locale.territory))
-            locale_data.territories.append(*locale.territory);
+        if (!cldr.territories.contains_slow(*locale.territory))
+            cldr.territories.append(*locale.territory);
     }
 
     if (script_string.is_string()) {
         auto script = script_string.as_string();
-        if (!locale_data.scripts.contains_slow(script))
-            locale_data.scripts.append(script);
+        if (!cldr.scripts.contains_slow(script))
+            cldr.scripts.append(script);
     }
 
     if (variant_string.is_string()) {
         locale.variant = variant_string.as_string();
-        if (!locale_data.variants.contains_slow(*locale.variant))
-            locale_data.variants.append(*locale.variant);
+        if (!cldr.variants.contains_slow(*locale.variant))
+            cldr.variants.append(*locale.variant);
     }
 
     return {};
 }
 
-static ErrorOr<void> parse_locale_display_patterns(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_display_patterns(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
@@ -385,14 +385,14 @@ static ErrorOr<void> parse_locale_display_patterns(String locale_path, UnicodeLo
     auto const& locale_separator = locale_display_patterns_object.as_object().get("localeSeparator"sv);
 
     DisplayPattern patterns {};
-    patterns.locale_pattern = locale_data.unique_strings.ensure(locale_pattern.as_string());
-    patterns.locale_separator = locale_data.unique_strings.ensure(locale_separator.as_string());
+    patterns.locale_pattern = cldr.unique_strings.ensure(locale_pattern.as_string());
+    patterns.locale_separator = cldr.unique_strings.ensure(locale_separator.as_string());
 
-    locale.display_patterns = locale_data.unique_display_patterns.ensure(move(patterns));
+    locale.display_patterns = cldr.unique_display_patterns.ensure(move(patterns));
     return {};
 }
 
-static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> preprocess_languages(String locale_path, CLDR& cldr)
 {
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
@@ -404,14 +404,14 @@ static ErrorOr<void> preprocess_languages(String locale_path, UnicodeLocaleData&
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
     languages_object.as_object().for_each_member([&](auto const& key, auto const&) {
-        if (!key.contains("-alt-"sv) && !locale_data.languages.contains_slow(key))
-            locale_data.languages.append(key);
+        if (!key.contains("-alt-"sv) && !cldr.languages.contains_slow(key))
+            cldr.languages.append(key);
     });
 
     return {};
 }
 
-static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, CLDR& cldr)
 {
     constexpr auto desired_keywords = Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
     auto keywords = TRY(read_json_file(bcp47_path));
@@ -426,9 +426,9 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
             return;
 
         auto const& name = value.as_object().get("_alias"sv);
-        locale_data.keyword_names.set(key, name.as_string());
+        cldr.keyword_names.set(key, name.as_string());
 
-        auto& keywords = locale_data.keywords.ensure(key);
+        auto& keywords = cldr.keywords.ensure(key);
 
         // FIXME: ECMA-402 requires the list of supported collation types to include "default", but
         //        that type does not appear in collation.json.
@@ -448,12 +448,12 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
                 return;
 
             if (auto const& preferred = properties.as_object().get("_preferred"sv); preferred.is_string()) {
-                locale_data.keyword_aliases.ensure(key).append({ preferred.as_string(), keyword });
+                cldr.keyword_aliases.ensure(key).append({ preferred.as_string(), keyword });
                 return;
             }
 
             if (auto const& alias = properties.as_object().get("_alias"sv); alias.is_string())
-                locale_data.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
+                cldr.keyword_aliases.ensure(key).append({ keyword, alias.as_string() });
 
             keywords.append(keyword);
         });
@@ -462,10 +462,10 @@ static ErrorOr<void> parse_unicode_extension_keywords(String bcp47_path, Unicode
     return {};
 }
 
-static Optional<String> find_keyword_alias(StringView key, StringView calendar, UnicodeLocaleData& locale_data)
+static Optional<String> find_keyword_alias(StringView key, StringView calendar, CLDR& cldr)
 {
-    auto it = locale_data.keyword_aliases.find(key);
-    if (it == locale_data.keyword_aliases.end())
+    auto it = cldr.keyword_aliases.find(key);
+    if (it == cldr.keyword_aliases.end())
         return {};
 
     auto alias = it->value.find_if([&](auto const& alias) { return calendar == alias.alias; });
@@ -475,7 +475,7 @@ static Optional<String> find_keyword_alias(StringView key, StringView calendar, 
     return alias->name;
 }
 
-static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_languages(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
@@ -487,21 +487,21 @@ static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleDat
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
     LanguageList languages;
-    languages.resize(locale_data.languages.size());
+    languages.resize(cldr.languages.size());
 
     languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (key.contains("-alt-"sv))
             return;
 
-        auto index = locale_data.languages.find_first_index(key).value();
-        languages[index] = locale_data.unique_strings.ensure(value.as_string());
+        auto index = cldr.languages.find_first_index(key).value();
+        languages[index] = cldr.unique_strings.ensure(value.as_string());
     });
 
-    locale.languages = locale_data.unique_language_lists.ensure(move(languages));
+    locale.languages = cldr.unique_language_lists.ensure(move(languages));
     return {};
 }
 
-static ErrorOr<void> parse_locale_territories(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_territories(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath territories_path(move(locale_path));
     territories_path = territories_path.append("territories.json"sv);
@@ -513,18 +513,18 @@ static ErrorOr<void> parse_locale_territories(String locale_path, UnicodeLocaleD
     auto const& territories_object = locale_display_names_object.as_object().get("territories"sv);
 
     TerritoryList territories;
-    territories.resize(locale_data.territories.size());
+    territories.resize(cldr.territories.size());
 
     territories_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        if (auto index = locale_data.territories.find_first_index(key); index.has_value())
-            territories[*index] = locale_data.unique_strings.ensure(value.as_string());
+        if (auto index = cldr.territories.find_first_index(key); index.has_value())
+            territories[*index] = cldr.unique_strings.ensure(value.as_string());
     });
 
-    locale.territories = locale_data.unique_territory_lists.ensure(move(territories));
+    locale.territories = cldr.unique_territory_lists.ensure(move(territories));
     return {};
 }
 
-static ErrorOr<void> parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_scripts(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath scripts_path(move(locale_path));
     scripts_path = scripts_path.append("scripts.json"sv);
@@ -536,18 +536,18 @@ static ErrorOr<void> parse_locale_scripts(String locale_path, UnicodeLocaleData&
     auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
 
     ScriptList scripts;
-    scripts.resize(locale_data.scripts.size());
+    scripts.resize(cldr.scripts.size());
 
     scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        if (auto index = locale_data.scripts.find_first_index(key); index.has_value())
-            scripts[*index] = locale_data.unique_strings.ensure(value.as_string());
+        if (auto index = cldr.scripts.find_first_index(key); index.has_value())
+            scripts[*index] = cldr.unique_strings.ensure(value.as_string());
     });
 
-    locale.scripts = locale_data.unique_script_lists.ensure(move(scripts));
+    locale.scripts = cldr.unique_script_lists.ensure(move(scripts));
     return {};
 }
 
-static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_list_patterns(String misc_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath list_patterns_path(move(misc_path));
     list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
@@ -582,23 +582,23 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
         auto type = list_pattern_type(key);
         auto style = list_pattern_style(key);
 
-        auto start = locale_data.unique_strings.ensure(value.as_object().get("start"sv).as_string());
-        auto middle = locale_data.unique_strings.ensure(value.as_object().get("middle"sv).as_string());
-        auto end = locale_data.unique_strings.ensure(value.as_object().get("end"sv).as_string());
-        auto pair = locale_data.unique_strings.ensure(value.as_object().get("2"sv).as_string());
+        auto start = cldr.unique_strings.ensure(value.as_object().get("start"sv).as_string());
+        auto middle = cldr.unique_strings.ensure(value.as_object().get("middle"sv).as_string());
+        auto end = cldr.unique_strings.ensure(value.as_object().get("end"sv).as_string());
+        auto pair = cldr.unique_strings.ensure(value.as_object().get("2"sv).as_string());
 
-        if (!locale_data.list_pattern_types.contains_slow(type))
-            locale_data.list_pattern_types.append(type);
+        if (!cldr.list_pattern_types.contains_slow(type))
+            cldr.list_pattern_types.append(type);
 
         ListPatterns list_pattern { type, style, start, middle, end, pair };
-        list_patterns.append(locale_data.unique_list_patterns.ensure(move(list_pattern)));
+        list_patterns.append(cldr.unique_list_patterns.ensure(move(list_pattern)));
     });
 
-    locale.list_patterns = locale_data.unique_list_pattern_lists.ensure(move(list_patterns));
+    locale.list_patterns = cldr.unique_list_pattern_lists.ensure(move(list_patterns));
     return {};
 }
 
-static ErrorOr<void> parse_locale_layout(String misc_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_layout(String misc_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath layout_path(move(misc_path));
     layout_path = layout_path.append("layout.json"sv);
@@ -623,14 +623,14 @@ static ErrorOr<void> parse_locale_layout(String misc_path, UnicodeLocaleData& lo
     TextLayout layout {};
     layout.character_order = text_layout_character_order(character_order);
 
-    if (!locale_data.character_orders.contains_slow(layout.character_order))
-        locale_data.character_orders.append(layout.character_order);
+    if (!cldr.character_orders.contains_slow(layout.character_order))
+        cldr.character_orders.append(layout.character_order);
 
-    locale.text_layout = locale_data.unique_text_layouts.ensure(move(layout));
+    locale.text_layout = cldr.unique_text_layouts.ensure(move(layout));
     return {};
 }
 
-static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_currencies(String numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
@@ -642,21 +642,21 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
     auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
 
     currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const&) {
-        if (!locale_data.currencies.contains_slow(key))
-            locale_data.currencies.append(key);
+        if (!cldr.currencies.contains_slow(key))
+            cldr.currencies.append(key);
     });
 
     CurrencyList long_currencies {};
-    long_currencies.resize(locale_data.currencies.size());
+    long_currencies.resize(cldr.currencies.size());
 
     CurrencyList short_currencies {};
-    short_currencies.resize(locale_data.currencies.size());
+    short_currencies.resize(cldr.currencies.size());
 
     CurrencyList narrow_currencies {};
-    narrow_currencies.resize(locale_data.currencies.size());
+    narrow_currencies.resize(cldr.currencies.size());
 
     CurrencyList numeric_currencies {};
-    numeric_currencies.resize(locale_data.currencies.size());
+    numeric_currencies.resize(cldr.currencies.size());
 
     currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         auto const& long_name = value.as_object().get("displayName"sv);
@@ -664,21 +664,21 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
         auto const& narrow_name = value.as_object().get("symbol-alt-narrow"sv);
         auto const& numeric_name = value.as_object().get("displayName-count-other"sv);
 
-        auto index = locale_data.currencies.find_first_index(key).value();
-        long_currencies[index] = locale_data.unique_strings.ensure(long_name.as_string());
-        short_currencies[index] = locale_data.unique_strings.ensure(short_name.as_string());
-        narrow_currencies[index] = narrow_name.is_null() ? 0 : locale_data.unique_strings.ensure(narrow_name.as_string());
-        numeric_currencies[index] = locale_data.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string());
+        auto index = cldr.currencies.find_first_index(key).value();
+        long_currencies[index] = cldr.unique_strings.ensure(long_name.as_string());
+        short_currencies[index] = cldr.unique_strings.ensure(short_name.as_string());
+        narrow_currencies[index] = narrow_name.is_null() ? 0 : cldr.unique_strings.ensure(narrow_name.as_string());
+        numeric_currencies[index] = cldr.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string());
     });
 
-    locale.long_currencies = locale_data.unique_currency_lists.ensure(move(long_currencies));
-    locale.short_currencies = locale_data.unique_currency_lists.ensure(move(short_currencies));
-    locale.narrow_currencies = locale_data.unique_currency_lists.ensure(move(narrow_currencies));
-    locale.numeric_currencies = locale_data.unique_currency_lists.ensure(move(numeric_currencies));
+    locale.long_currencies = cldr.unique_currency_lists.ensure(move(long_currencies));
+    locale.short_currencies = cldr.unique_currency_lists.ensure(move(short_currencies));
+    locale.narrow_currencies = cldr.unique_currency_lists.ensure(move(narrow_currencies));
+    locale.numeric_currencies = cldr.unique_currency_lists.ensure(move(numeric_currencies));
     return {};
 }
 
-static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_calendars(String locale_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
@@ -690,7 +690,7 @@ static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleDat
     auto const& types_object = locale_display_names_object.as_object().get("types"sv);
     auto const& calendar_object = types_object.as_object().get("calendar"sv);
 
-    auto const& supported_calendars = locale_data.keywords.find("ca"sv)->value;
+    auto const& supported_calendars = cldr.keywords.find("ca"sv)->value;
 
     CalendarList calendars;
     calendars.resize(supported_calendars.size());
@@ -698,18 +698,18 @@ static ErrorOr<void> parse_locale_calendars(String locale_path, UnicodeLocaleDat
     calendar_object.as_object().for_each_member([&](auto const& key, auto const& calendar) {
         auto index = supported_calendars.find_first_index(key);
         if (!index.has_value()) {
-            auto alias = find_keyword_alias("ca"sv, key, locale_data);
+            auto alias = find_keyword_alias("ca"sv, key, cldr);
             index = supported_calendars.find_first_index(*alias);
         }
 
-        calendars[*index] = locale_data.unique_strings.ensure(calendar.as_string());
+        calendars[*index] = cldr.unique_strings.ensure(calendar.as_string());
     });
 
-    locale.calendars = locale_data.unique_calendar_lists.ensure(move(calendars));
+    locale.calendars = cldr.unique_calendar_lists.ensure(move(calendars));
     return {};
 }
 
-static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_locale_date_fields(String dates_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath date_fields_path(move(dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
@@ -730,20 +730,20 @@ static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleDa
         if (!is_sanctioned_field(key))
             return;
 
-        if (!locale_data.date_fields.contains_slow(key))
-            locale_data.date_fields.append(key);
+        if (!cldr.date_fields.contains_slow(key))
+            cldr.date_fields.append(key);
     });
 
-    quick_sort(locale_data.date_fields);
+    quick_sort(cldr.date_fields);
 
     DateFieldList long_date_fields {};
-    long_date_fields.resize(locale_data.date_fields.size());
+    long_date_fields.resize(cldr.date_fields.size());
 
     DateFieldList short_date_fields {};
-    short_date_fields.resize(locale_data.date_fields.size());
+    short_date_fields.resize(cldr.date_fields.size());
 
     DateFieldList narrow_date_fields {};
-    narrow_date_fields.resize(locale_data.date_fields.size());
+    narrow_date_fields.resize(cldr.date_fields.size());
 
     fields_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         if (!is_sanctioned_field(key))
@@ -753,19 +753,19 @@ static ErrorOr<void> parse_locale_date_fields(String dates_path, UnicodeLocaleDa
         auto const& short_name = fields_object.as_object().get(String::formatted("{}-short", key)).as_object().get("displayName"sv);
         auto const& narrow_name = fields_object.as_object().get(String::formatted("{}-narrow", key)).as_object().get("displayName"sv);
 
-        auto index = locale_data.date_fields.find_first_index(key).value();
-        long_date_fields[index] = locale_data.unique_strings.ensure(long_name.as_string());
-        short_date_fields[index] = locale_data.unique_strings.ensure(short_name.as_string());
-        narrow_date_fields[index] = locale_data.unique_strings.ensure(narrow_name.as_string());
+        auto index = cldr.date_fields.find_first_index(key).value();
+        long_date_fields[index] = cldr.unique_strings.ensure(long_name.as_string());
+        short_date_fields[index] = cldr.unique_strings.ensure(short_name.as_string());
+        narrow_date_fields[index] = cldr.unique_strings.ensure(narrow_name.as_string());
     });
 
-    locale.long_date_fields = locale_data.unique_date_field_lists.ensure(move(long_date_fields));
-    locale.short_date_fields = locale_data.unique_date_field_lists.ensure(move(short_date_fields));
-    locale.narrow_date_fields = locale_data.unique_date_field_lists.ensure(move(narrow_date_fields));
+    locale.long_date_fields = cldr.unique_date_field_lists.ensure(move(long_date_fields));
+    locale.short_date_fields = cldr.unique_date_field_lists.ensure(move(short_date_fields));
+    locale.narrow_date_fields = cldr.unique_date_field_lists.ensure(move(narrow_date_fields));
     return {};
 }
 
-static ErrorOr<void> parse_number_system_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_number_system_keywords(String locale_numbers_path, CLDR& cldr, LocaleData& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
@@ -780,10 +780,10 @@ static ErrorOr<void> parse_number_system_keywords(String locale_numbers_path, Un
     KeywordList keywords {};
 
     auto append_numbering_system = [&](String system_name) {
-        if (auto system_alias = find_keyword_alias("nu"sv, system_name, locale_data); system_alias.has_value())
+        if (auto system_alias = find_keyword_alias("nu"sv, system_name, cldr); system_alias.has_value())
             system_name = system_alias.release_value();
 
-        auto index = locale_data.unique_strings.ensure(move(system_name));
+        auto index = cldr.unique_strings.ensure(move(system_name));
         if (!keywords.contains_slow(index))
             keywords.append(move(index));
     };
@@ -800,11 +800,11 @@ static ErrorOr<void> parse_number_system_keywords(String locale_numbers_path, Un
         append_numbering_system(value.as_string());
     });
 
-    locale.number_system_keywords = locale_data.unique_keyword_lists.ensure(move(keywords));
+    locale.number_system_keywords = cldr.unique_keyword_lists.ensure(move(keywords));
     return {};
 }
 
-static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
     auto calendars_iterator = TRY(path_to_dir_iterator(locale_dates_path, {}));
     KeywordList keywords {};
@@ -828,22 +828,22 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
             if (calendar_name == "generic"sv)
                 return;
 
-            if (auto calendar_alias = find_keyword_alias("ca"sv, calendar_name, locale_data); calendar_alias.has_value())
+            if (auto calendar_alias = find_keyword_alias("ca"sv, calendar_name, cldr); calendar_alias.has_value())
                 calendar_name = calendar_alias.release_value();
 
-            keywords.append(locale_data.unique_strings.ensure(calendar_name));
+            keywords.append(cldr.unique_strings.ensure(calendar_name));
         });
     }
 
-    locale.calendar_keywords = locale_data.unique_keyword_lists.ensure(move(keywords));
+    locale.calendar_keywords = cldr.unique_keyword_lists.ensure(move(keywords));
     return {};
 }
 
-static void fill_in_collation_keywords(UnicodeLocaleData& locale_data, Locale& locale)
+static void fill_in_collation_keywords(CLDR& cldr, LocaleData& locale)
 {
     // FIXME: If collation data becomes available in the CLDR, parse per-locale ordering from there.
     auto create_list_with_default_first = [&](auto key, auto default_value) {
-        auto& values = locale_data.keywords.find(key)->value;
+        auto& values = cldr.keywords.find(key)->value;
 
         quick_sort(values, [&](auto const& lhs, auto const& rhs) {
             if (lhs == default_value)
@@ -857,9 +857,9 @@ static void fill_in_collation_keywords(UnicodeLocaleData& locale_data, Locale& l
         keywords.ensure_capacity(values.size());
 
         for (auto const& value : values)
-            keywords.append(locale_data.unique_strings.ensure(value));
+            keywords.append(cldr.unique_strings.ensure(value));
 
-        return locale_data.unique_keyword_lists.ensure(move(keywords));
+        return cldr.unique_keyword_lists.ensure(move(keywords));
     };
 
     static auto kf_index = create_list_with_default_first("kf"sv, "upper"sv);
@@ -869,7 +869,7 @@ static void fill_in_collation_keywords(UnicodeLocaleData& locale_data, Locale& l
     locale.collation_numeric_keywords = kn_index;
 }
 
-static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_default_content_locales(String core_path, CLDR& cldr)
 {
     LexicalPath default_content_path(move(core_path));
     default_content_path = default_content_path.append("defaultContent.json"sv);
@@ -882,7 +882,7 @@ static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLoca
         StringView default_locale = locale;
 
         while (true) {
-            if (locale_data.locales.contains(default_locale))
+            if (cldr.locales.contains(default_locale))
                 break;
 
             auto pos = default_locale.find_last('-');
@@ -893,13 +893,13 @@ static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLoca
         }
 
         if (default_locale != locale)
-            locale_data.locale_aliases.append({ default_locale, move(locale) });
+            cldr.locale_aliases.append({ default_locale, move(locale) });
     });
 
     return {};
 }
 
-static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_data)
+static ErrorOr<void> define_aliases_without_scripts(CLDR& cldr)
 {
     // From ECMA-402: https://tc39.es/ecma402/#sec-internal-slots
     //
@@ -910,40 +910,40 @@ static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_da
     // care to handle when the locale itself or the locale without a script subtag are an alias
     // by way of default-content locales.
     auto find_alias = [&](auto const& locale) {
-        return locale_data.locale_aliases.find_if([&](auto const& alias) { return locale == alias.alias; });
+        return cldr.locale_aliases.find_if([&](auto const& alias) { return locale == alias.alias; });
     };
 
     auto append_alias_without_script = [&](auto const& locale) -> ErrorOr<void> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, locale));
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, locale));
         if ((parsed_locale.language == 0) || (parsed_locale.script == 0) || (parsed_locale.region == 0))
             return {};
 
         auto locale_without_script = String::formatted("{}-{}",
-            locale_data.unique_strings.get(parsed_locale.language),
-            locale_data.unique_strings.get(parsed_locale.region));
+            cldr.unique_strings.get(parsed_locale.language),
+            cldr.unique_strings.get(parsed_locale.region));
 
-        if (locale_data.locales.contains(locale_without_script))
+        if (cldr.locales.contains(locale_without_script))
             return {};
-        if (find_alias(locale_without_script) != locale_data.locale_aliases.end())
+        if (find_alias(locale_without_script) != cldr.locale_aliases.end())
             return {};
 
-        if (auto it = find_alias(locale); it != locale_data.locale_aliases.end())
-            locale_data.locale_aliases.append({ it->name, locale_without_script });
+        if (auto it = find_alias(locale); it != cldr.locale_aliases.end())
+            cldr.locale_aliases.append({ it->name, locale_without_script });
         else
-            locale_data.locale_aliases.append({ locale, locale_without_script });
+            cldr.locale_aliases.append({ locale, locale_without_script });
 
         return {};
     };
 
-    for (auto const& locale : locale_data.locales)
+    for (auto const& locale : cldr.locales)
         TRY(append_alias_without_script(locale.key));
-    for (auto const& locale : locale_data.locale_aliases)
+    for (auto const& locale : cldr.locale_aliases)
         TRY(append_alias_without_script(locale.alias));
 
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, CLDR& cldr)
 {
     auto bcp47_iterator = TRY(path_to_dir_iterator(move(bcp47_path), "bcp47"sv));
     auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
@@ -957,17 +957,17 @@ static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, Stri
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
-    TRY(parse_core_aliases(core_supplemental_path.string(), locale_data));
-    TRY(parse_likely_subtags(core_supplemental_path.string(), locale_data));
+    TRY(parse_core_aliases(core_supplemental_path.string(), cldr));
+    TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale.language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
+        builder.append(cldr.unique_strings.get(parsed_locale.language));
+        if (auto script = cldr.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
+        if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
@@ -977,71 +977,71 @@ static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, Stri
         auto locale_path = TRY(next_path_from_dir_iterator(identity_iterator));
         auto language = TRY(remove_variants_from_path(locale_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_identity(locale_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_identity(locale_path, cldr, locale));
     }
 
     while (preprocess_iterator.has_next()) {
         auto locale_path = TRY(next_path_from_dir_iterator(preprocess_iterator));
-        TRY(preprocess_languages(locale_path, locale_data));
+        TRY(preprocess_languages(locale_path, cldr));
     }
 
-    quick_sort(locale_data.languages);
-    quick_sort(locale_data.territories);
-    quick_sort(locale_data.scripts);
+    quick_sort(cldr.languages);
+    quick_sort(cldr.territories);
+    quick_sort(cldr.scripts);
 
     while (bcp47_iterator.has_next()) {
         auto bcp47_path = TRY(next_path_from_dir_iterator(bcp47_iterator));
-        TRY(parse_unicode_extension_keywords(move(bcp47_path), locale_data));
+        TRY(parse_unicode_extension_keywords(move(bcp47_path), cldr));
     }
 
     while (locale_names_iterator.has_next()) {
         auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
         auto language = TRY(remove_variants_from_path(locale_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_locale_display_patterns(locale_path, locale_data, locale));
-        TRY(parse_locale_languages(locale_path, locale_data, locale));
-        TRY(parse_locale_territories(locale_path, locale_data, locale));
-        TRY(parse_locale_scripts(locale_path, locale_data, locale));
-        TRY(parse_locale_calendars(locale_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_locale_display_patterns(locale_path, cldr, locale));
+        TRY(parse_locale_languages(locale_path, cldr, locale));
+        TRY(parse_locale_territories(locale_path, cldr, locale));
+        TRY(parse_locale_scripts(locale_path, cldr, locale));
+        TRY(parse_locale_calendars(locale_path, cldr, locale));
     }
 
     while (misc_iterator.has_next()) {
         auto misc_path = TRY(next_path_from_dir_iterator(misc_iterator));
         auto language = TRY(remove_variants_from_path(misc_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_locale_list_patterns(misc_path, locale_data, locale));
-        TRY(parse_locale_layout(misc_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_locale_list_patterns(misc_path, cldr, locale));
+        TRY(parse_locale_layout(misc_path, cldr, locale));
     }
 
     while (numbers_iterator.has_next()) {
         auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
         auto language = TRY(remove_variants_from_path(numbers_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_locale_currencies(numbers_path, locale_data, locale));
-        TRY(parse_number_system_keywords(numbers_path, locale_data, locale));
-        fill_in_collation_keywords(locale_data, locale);
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_locale_currencies(numbers_path, cldr, locale));
+        TRY(parse_number_system_keywords(numbers_path, cldr, locale));
+        fill_in_collation_keywords(cldr, locale);
     }
 
     while (dates_iterator.has_next()) {
         auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
         auto language = TRY(remove_variants_from_path(dates_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_locale_date_fields(dates_path, locale_data, locale));
-        TRY(parse_calendar_keywords(dates_path, locale_data, locale));
+        auto& locale = cldr.locales.ensure(language);
+        TRY(parse_locale_date_fields(dates_path, cldr, locale));
+        TRY(parse_calendar_keywords(dates_path, cldr, locale));
     }
 
-    TRY(parse_default_content_locales(move(core_path), locale_data));
-    TRY(define_aliases_without_scripts(locale_data));
+    TRY(parse_default_content_locales(move(core_path), cldr));
+    TRY(define_aliases_without_scripts(cldr));
 
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1054,25 +1054,25 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
 namespace Unicode {
 )~~~");
 
-    auto locales = locale_data.locales.keys();
-    auto keywords = locale_data.keywords.keys();
+    auto locales = cldr.locales.keys();
+    auto keywords = cldr.keywords.keys();
 
-    generate_enum(generator, format_identifier, "Locale"sv, "None"sv, locales, locale_data.locale_aliases);
-    generate_enum(generator, format_identifier, "Language"sv, {}, locale_data.languages);
-    generate_enum(generator, format_identifier, "Territory"sv, {}, locale_data.territories);
-    generate_enum(generator, format_identifier, "ScriptTag"sv, {}, locale_data.scripts);
-    generate_enum(generator, format_identifier, "Currency"sv, {}, locale_data.currencies);
-    generate_enum(generator, format_identifier, "DateField"sv, {}, locale_data.date_fields, locale_data.date_field_aliases);
-    generate_enum(generator, format_identifier, "Variant"sv, {}, locale_data.variants);
-    generate_enum(generator, format_identifier, "ListPatternType"sv, {}, locale_data.list_pattern_types);
-    generate_enum(generator, format_identifier, "CharacterOrder"sv, {}, locale_data.character_orders);
+    generate_enum(generator, format_identifier, "Locale"sv, "None"sv, locales, cldr.locale_aliases);
+    generate_enum(generator, format_identifier, "Language"sv, {}, cldr.languages);
+    generate_enum(generator, format_identifier, "Territory"sv, {}, cldr.territories);
+    generate_enum(generator, format_identifier, "ScriptTag"sv, {}, cldr.scripts);
+    generate_enum(generator, format_identifier, "Currency"sv, {}, cldr.currencies);
+    generate_enum(generator, format_identifier, "DateField"sv, {}, cldr.date_fields, cldr.date_field_aliases);
+    generate_enum(generator, format_identifier, "Variant"sv, {}, cldr.variants);
+    generate_enum(generator, format_identifier, "ListPatternType"sv, {}, cldr.list_pattern_types);
+    generate_enum(generator, format_identifier, "CharacterOrder"sv, {}, cldr.character_orders);
     generate_enum(generator, format_identifier, "Key"sv, {}, keywords);
 
-    for (auto& keyword : locale_data.keywords) {
-        auto const& keyword_name = locale_data.keyword_names.find(keyword.key)->value;
+    for (auto& keyword : cldr.keywords) {
+        auto const& keyword_name = cldr.keyword_names.find(keyword.key)->value;
         auto enum_name = String::formatted("Keyword{}", format_identifier({}, keyword_name));
 
-        if (auto aliases = locale_data.keyword_aliases.find(keyword.key); aliases != locale_data.keyword_aliases.end())
+        if (auto aliases = cldr.keyword_aliases.find(keyword.key); aliases != cldr.keyword_aliases.end())
             generate_enum(generator, format_identifier, enum_name, {}, keyword.value, aliases->value);
         else
             generate_enum(generator, format_identifier, enum_name, {}, keyword.value);
@@ -1086,14 +1086,14 @@ namespace Unicode {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, UnicodeLocaleData& locale_data)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("string_index_type"sv, s_string_index_type);
-    generator.set("locales_size"sv, String::number(locale_data.locales.size()));
-    generator.set("territories_size", String::number(locale_data.territories.size()));
-    generator.set("variants_size", String::number(locale_data.max_variant_size));
+    generator.set("locales_size"sv, String::number(cldr.locales.size()));
+    generator.set("territories_size", String::number(cldr.territories.size()));
+    generator.set("variants_size", String::number(cldr.max_variant_size));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -1110,7 +1110,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 namespace Unicode {
 )~~~");
 
-    locale_data.unique_strings.generate(generator);
+    cldr.unique_strings.generate(generator);
 
     generator.append(R"~~~(
 struct DisplayPatternImpl {
@@ -1141,21 +1141,21 @@ struct TextLayout {
 };
 )~~~");
 
-    generate_available_values(generator, "get_available_calendars"sv, locale_data.keywords.find("ca"sv)->value, locale_data.keyword_aliases.find("ca"sv)->value,
+    generate_available_values(generator, "get_available_calendars"sv, cldr.keywords.find("ca"sv)->value, cldr.keyword_aliases.find("ca"sv)->value,
         [](auto calendar) {
             // FIXME: Remove this filter when we support all calendars.
             return calendar.is_one_of("gregory"sv, "iso8601"sv);
         });
-    generate_available_values(generator, "get_available_collation_case_orderings"sv, locale_data.keywords.find("kf"sv)->value, locale_data.keyword_aliases.find("kf"sv)->value);
-    generate_available_values(generator, "get_available_collation_numeric_orderings"sv, locale_data.keywords.find("kn"sv)->value, locale_data.keyword_aliases.find("kn"sv)->value);
-    generate_available_values(generator, "get_available_collation_types"sv, locale_data.keywords.find("co"sv)->value, locale_data.keyword_aliases.find("co"sv)->value,
+    generate_available_values(generator, "get_available_collation_case_orderings"sv, cldr.keywords.find("kf"sv)->value, cldr.keyword_aliases.find("kf"sv)->value);
+    generate_available_values(generator, "get_available_collation_numeric_orderings"sv, cldr.keywords.find("kn"sv)->value, cldr.keyword_aliases.find("kn"sv)->value);
+    generate_available_values(generator, "get_available_collation_types"sv, cldr.keywords.find("co"sv)->value, cldr.keyword_aliases.find("co"sv)->value,
         [](auto collation) {
             // FIXME: Remove this filter when we support all collation types.
             return collation == "default"sv;
         });
-    generate_available_values(generator, "get_available_hour_cycles"sv, locale_data.keywords.find("hc"sv)->value);
-    generate_available_values(generator, "get_available_number_systems"sv, locale_data.keywords.find("nu"sv)->value);
-    generate_available_values(generator, "get_available_currencies"sv, locale_data.currencies);
+    generate_available_values(generator, "get_available_hour_cycles"sv, cldr.keywords.find("hc"sv)->value);
+    generate_available_values(generator, "get_available_number_systems"sv, cldr.keywords.find("nu"sv)->value);
+    generate_available_values(generator, "get_available_currencies"sv, cldr.currencies);
 
     generator.append(R"~~~(
 Span<StringView const> get_available_keyword_values(StringView key)
@@ -1183,17 +1183,17 @@ Span<StringView const> get_available_keyword_values(StringView key)
 }
 )~~~");
 
-    locale_data.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
-    locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
-    locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
-    locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
-    locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
-    locale_data.unique_calendar_lists.generate(generator, s_string_index_type, "s_calendar_lists"sv);
-    locale_data.unique_date_field_lists.generate(generator, s_string_index_type, "s_date_field_lists"sv);
-    locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
-    locale_data.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
-    locale_data.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
-    locale_data.unique_text_layouts.generate(generator, "TextLayout"sv, "s_text_layouts"sv, 30);
+    cldr.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
+    cldr.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
+    cldr.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
+    cldr.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
+    cldr.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
+    cldr.unique_calendar_lists.generate(generator, s_string_index_type, "s_calendar_lists"sv);
+    cldr.unique_date_field_lists.generate(generator, s_string_index_type, "s_date_field_lists"sv);
+    cldr.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
+    cldr.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
+    cldr.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
+    cldr.unique_text_layouts.generate(generator, "TextLayout"sv, "s_text_layouts"sv, 30);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -1236,27 +1236,27 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto locales = locale_data.locales.keys();
+    auto locales = cldr.locales.keys();
     quick_sort(locales);
 
-    append_mapping(locales, locale_data.locales, s_display_pattern_index_type, "s_locale_display_patterns"sv, [&](auto const& locale) { return locale.display_patterns; });
-    append_mapping(locales, locale_data.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
-    append_mapping(locales, locale_data.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
-    append_mapping(locales, locale_data.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
-    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_long_currencies"sv, [&](auto const& locale) { return locale.long_currencies; });
-    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
-    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
-    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
-    append_mapping(locales, locale_data.locales, s_calendar_list_index_type, "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
-    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
-    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
-    append_mapping(locales, locale_data.locales, s_date_field_list_index_type, "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
-    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_calendar_keywords"sv, [&](auto const& locale) { return locale.calendar_keywords; });
-    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_collation_case_keywords"sv, [&](auto const& locale) { return locale.collation_case_keywords; });
-    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
-    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
-    append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
-    append_mapping(locales, locale_data.locales, s_text_layout_index_type, "s_locale_text_layouts"sv, [&](auto const& locale) { return locale.text_layout; });
+    append_mapping(locales, cldr.locales, s_display_pattern_index_type, "s_locale_display_patterns"sv, [&](auto const& locale) { return locale.display_patterns; });
+    append_mapping(locales, cldr.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
+    append_mapping(locales, cldr.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
+    append_mapping(locales, cldr.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
+    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_long_currencies"sv, [&](auto const& locale) { return locale.long_currencies; });
+    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
+    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
+    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
+    append_mapping(locales, cldr.locales, s_calendar_list_index_type, "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
+    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
+    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
+    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
+    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_calendar_keywords"sv, [&](auto const& locale) { return locale.calendar_keywords; });
+    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_collation_case_keywords"sv, [&](auto const& locale) { return locale.collation_case_keywords; });
+    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
+    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
+    append_mapping(locales, cldr.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
+    append_mapping(locales, cldr.locales, s_text_layout_index_type, "s_locale_text_layouts"sv, [&](auto const& locale) { return locale.text_layout; });
 
     generator.append(R"~~~(
 
@@ -1314,8 +1314,8 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
 )~~~");
 
         quick_sort(mappings, [&](auto const& lhs, auto const& rhs) {
-            auto const& lhs_language = locale_data.unique_strings.get(lhs.key.language);
-            auto const& rhs_language = locale_data.unique_strings.get(rhs.key.language);
+            auto const& lhs_language = cldr.unique_strings.get(lhs.key.language);
+            auto const& rhs_language = cldr.unique_strings.get(rhs.key.language);
 
             // Sort the keys such that "und" language tags are at the end, as those are less specific.
             if (lhs_language.starts_with("und"sv) && !rhs_language.starts_with("und"sv))
@@ -1346,8 +1346,8 @@ static constexpr Array<LanguageMapping, @size@> s_@name@ { {
         generator.append("} };\n");
     };
 
-    append_complex_mapping("complex_alias"sv, locale_data.complex_mappings);
-    append_complex_mapping("likely_subtags"sv, locale_data.likely_subtags);
+    append_complex_mapping("complex_alias"sv, cldr.complex_mappings);
+    append_complex_mapping("likely_subtags"sv, cldr.likely_subtags);
 
     generator.append(R"~~~(
 static LanguageMapping const* resolve_likely_subtag(LanguageID const& language_id)
@@ -1498,39 +1498,39 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), options);
     };
 
-    append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys(), locale_data.locale_aliases);
+    append_from_string("Locale"sv, "locale"sv, cldr.locales.keys(), cldr.locale_aliases);
 
-    append_from_string("Language"sv, "language"sv, locale_data.languages);
+    append_from_string("Language"sv, "language"sv, cldr.languages);
     append_mapping_search("language"sv, "language"sv, "s_languages"sv, "s_language_lists"sv);
-    append_alias_search("language"sv, locale_data.language_aliases);
+    append_alias_search("language"sv, cldr.language_aliases);
 
-    append_from_string("Territory"sv, "territory"sv, locale_data.territories);
+    append_from_string("Territory"sv, "territory"sv, cldr.territories);
     append_mapping_search("territory"sv, "territory"sv, "s_territories"sv, "s_territory_lists"sv);
-    append_alias_search("territory"sv, locale_data.territory_aliases);
+    append_alias_search("territory"sv, cldr.territory_aliases);
 
-    append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
+    append_from_string("ScriptTag"sv, "script_tag"sv, cldr.scripts);
     append_mapping_search("script"sv, "script_tag"sv, "s_scripts"sv, "s_script_lists"sv);
-    append_alias_search("script_tag"sv, locale_data.script_aliases);
+    append_alias_search("script_tag"sv, cldr.script_aliases);
 
-    append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
+    append_from_string("Currency"sv, "currency"sv, cldr.currencies);
     append_mapping_search("long_currency"sv, "currency"sv, "s_long_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv, "s_currency_lists"sv);
     append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
 
-    append_from_string("DateField"sv, "date_field"sv, locale_data.date_fields, locale_data.date_field_aliases);
+    append_from_string("DateField"sv, "date_field"sv, cldr.date_fields, cldr.date_field_aliases);
     append_mapping_search("long_date_field"sv, "date_field"sv, "s_long_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("short_date_field"sv, "date_field"sv, "s_short_date_fields"sv, "s_date_field_lists"sv);
     append_mapping_search("narrow_date_field"sv, "date_field"sv, "s_narrow_date_fields"sv, "s_date_field_lists"sv);
 
-    append_from_string("Key"sv, "key"sv, locale_data.keywords.keys());
+    append_from_string("Key"sv, "key"sv, cldr.keywords.keys());
 
-    for (auto const& keyword : locale_data.keywords) {
-        auto const& keyword_name = locale_data.keyword_names.find(keyword.key)->value;
+    for (auto const& keyword : cldr.keywords) {
+        auto const& keyword_name = cldr.keyword_names.find(keyword.key)->value;
         auto enum_name = String::formatted("Keyword{}", format_identifier({}, keyword_name));
         auto enum_snake = String::formatted("keyword_{}", keyword.key);
 
-        if (auto aliases = locale_data.keyword_aliases.find(keyword.key); aliases != locale_data.keyword_aliases.end())
+        if (auto aliases = cldr.keyword_aliases.find(keyword.key); aliases != cldr.keyword_aliases.end())
             append_from_string(enum_name, enum_snake, keyword.value, aliases->value);
         else
             append_from_string(enum_name, enum_snake, keyword.value);
@@ -1538,13 +1538,13 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     append_mapping_search("calendar"sv, "keyword_ca"sv, "s_calendars"sv, "s_calendar_lists"sv);
 
-    append_alias_search("variant"sv, locale_data.variant_aliases);
-    append_alias_search("subdivision"sv, locale_data.subdivision_aliases);
+    append_alias_search("variant"sv, cldr.variant_aliases);
+    append_alias_search("subdivision"sv, cldr.subdivision_aliases);
 
-    append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
+    append_from_string("ListPatternType"sv, "list_pattern_type"sv, cldr.list_pattern_types);
 
-    append_from_string("CharacterOrder"sv, "character_order"sv, locale_data.character_orders);
-    generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, locale_data.character_orders);
+    append_from_string("CharacterOrder"sv, "character_order"sv, cldr.character_orders);
+    generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, cldr.character_orders);
 
     generator.append(R"~~~(
 static Span<@string_index_type@ const> find_keyword_indices(StringView locale, StringView key)
@@ -1801,11 +1801,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
 
-    UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(bcp47_path, core_path, locale_names_path, misc_path, numbers_path, dates_path, locale_data));
+    CLDR cldr;
+    TRY(parse_all_locales(bcp47_path, core_path, locale_names_path, misc_path, numbers_path, dates_path, cldr));
 
-    TRY(generate_unicode_locale_header(*generated_header_file, locale_data));
-    TRY(generate_unicode_locale_implementation(*generated_implementation_file, locale_data));
+    TRY(generate_unicode_locale_header(*generated_header_file, cldr));
+    TRY(generate_unicode_locale_implementation(*generated_implementation_file, cldr));
 
     return 0;
 }
