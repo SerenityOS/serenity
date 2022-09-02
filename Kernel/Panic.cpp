@@ -6,7 +6,9 @@
 
 #include <AK/Format.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/x86/IO.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/common/QEMUShutdown.h>
+#endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
@@ -16,11 +18,11 @@ namespace Kernel {
 
 [[noreturn]] static void __shutdown()
 {
-    // Note: This will invoke QEMU Shutdown, but for other platforms (or emulators),
-    // this has no effect on the system, so we still need to halt afterwards.
-    // We also try the Bochs/Old QEMU shutdown method, if the first didn't work.
-    IO::out16(0x604, 0x2000);
-    IO::out16(0xb004, 0x2000);
+#if ARCH(I386) || ARCH(X86_64)
+    qemu_shutdown();
+#endif
+    // Note: If we failed to invoke platform shutdown, we need to halt afterwards
+    // to ensure no further execution on any CPU still happens.
     Processor::halt();
 }
 
