@@ -7,7 +7,7 @@
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/CMOS.h>
 
-namespace CMOS {
+namespace Kernel::CMOS {
 
 u8 read(u8 index)
 {
