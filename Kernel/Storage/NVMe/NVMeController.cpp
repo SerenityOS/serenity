@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NVMeController.h"
-#include "AK/Format.h"
+#include <AK/Format.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/x86/IO.h>
@@ -17,6 +16,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {

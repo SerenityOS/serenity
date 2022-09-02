@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NVMeInterruptQueue.h"
-#include "Kernel/Devices/BlockDevice.h"
-#include "NVMeDefinitions.h"
+#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Storage/NVMe/NVMeDefinitions.h>
+#include <Kernel/Storage/NVMe/NVMeInterruptQueue.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
