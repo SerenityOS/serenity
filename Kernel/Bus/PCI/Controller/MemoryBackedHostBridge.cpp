@@ -17,7 +17,7 @@ NonnullOwnPtr<MemoryBackedHostBridge> MemoryBackedHostBridge::must_create(Domain
 }
 
 MemoryBackedHostBridge::MemoryBackedHostBridge(PCI::Domain const& domain, PhysicalAddress start_address)
-    : HostBridge(domain)
+    : HostController(domain)
     , m_start_address(start_address)
 {
 }
