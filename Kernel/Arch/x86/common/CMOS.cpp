@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/CMOS.h>
+#include <Kernel/Arch/x86/common/CMOS.h>
 
 namespace Kernel::CMOS {
 

@@ -7,8 +7,8 @@
 #include <AK/Format.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/CMOS.h>
-#include <Kernel/RTC.h>
+#include <Kernel/Arch/x86/common/CMOS.h>
+#include <Kernel/Arch/x86/common/RTC.h>
 
 namespace Kernel::RTC {
 

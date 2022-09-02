@@ -40,7 +40,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
-    CMOS.cpp
     CommandLine.cpp
     Coredump.cpp
     Credentials.cpp
@@ -226,7 +225,6 @@ set(KERNEL_SOURCES
     ProcessSpecificExposed.cpp
     ProcessGroup.cpp
     ProcessProcFSTraits.cpp
-    RTC.cpp
     Random.cpp
     Scheduler.cpp
     StdLib.cpp
@@ -333,8 +331,10 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         Arch/Processor.cpp
 
+        Arch/x86/common/CMOS.cpp
         Arch/x86/common/Delay.cpp
         Arch/x86/common/I8042Reboot.cpp
+        Arch/x86/common/RTC.cpp
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Shutdown.cpp
