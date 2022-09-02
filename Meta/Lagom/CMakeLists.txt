@@ -727,7 +727,8 @@ if (BUILD_LAGOM)
 
         # Unicode
         file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
-        foreach(source ${LIBUNICODE_TEST_SOURCES})
+        file(GLOB LIBLOCALE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibLocale/*.cpp")
+        foreach(source ${LIBUNICODE_TEST_SOURCES} ${LIBLOCALE_TEST_SOURCES})
             lagom_test(${source} LIBS LibUnicode)
         endforeach()
 
