@@ -208,7 +208,7 @@ UNMAP_AFTER_INIT bool E1000ENetworkAdapter::initialize()
 
     enable_bus_mastering(pci_address());
 
-    size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), 0);
+    size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), PCI::HeaderType0BaseRegister::BAR0);
     auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), Memory::page_round_up(mmio_base_size).release_value_but_fixme_should_propagate_errors(), "E1000e MMIO"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
     if (region_or_error.is_error())
         return false;
