@@ -144,6 +144,11 @@ static inline void internal_dbgputch(char ch)
 #endif
 }
 
+extern "C" void dbgputchar(char ch)
+{
+    internal_dbgputch(ch);
+}
+
 extern "C" void dbgputstr(char const* characters, size_t length)
 {
     if (!characters)
