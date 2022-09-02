@@ -164,6 +164,7 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-11 \
             -DCMAKE_CXX_COMPILER=g++-11 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DDUMP_REGIONS_ON_CRASH=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
