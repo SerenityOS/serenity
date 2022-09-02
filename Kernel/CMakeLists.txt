@@ -25,7 +25,6 @@ set(KERNEL_SOURCES
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
-    Bus/PCI/Initializer.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp
@@ -341,6 +340,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/common/Shutdown.cpp
 
         Arch/x86/PCI/Controller/HostBridge.cpp
+        Arch/x86/PCI/Initializer.cpp
     )
 
     set(KERNEL_SOURCES
