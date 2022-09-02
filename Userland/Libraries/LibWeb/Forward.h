@@ -479,7 +479,6 @@ class WorkerNavigatorWrapper;
 class Wrappable;
 class Wrapper;
 class XMLHttpRequestPrototype;
-class XMLSerializerWrapper;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;
 enum class EndingType;
