@@ -10,7 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -23,12 +23,25 @@
 
 namespace Web::HTML {
 
-CanvasRenderingContext2D::CanvasRenderingContext2D(HTMLCanvasElement& element)
-    : m_element(JS::make_handle(element))
+JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(HTML::Window& window, HTMLCanvasElement& element)
 {
+    return *window.heap().allocate<CanvasRenderingContext2D>(window.realm(), window, element);
+}
+
+CanvasRenderingContext2D::CanvasRenderingContext2D(HTML::Window& window, HTMLCanvasElement& element)
+    : PlatformObject(window.realm())
+    , m_element(element)
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>("CanvasRenderingContext2D"));
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
+
+void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_element.ptr());
+}
 
 HTMLCanvasElement& CanvasRenderingContext2D::canvas_element()
 {
@@ -306,11 +319,7 @@ void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
 
 RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
 {
-    if (!wrapper()) {
-        dbgln("Hmm! Attempted to create ImageData for wrapper-less CRC2D.");
-        return {};
-    }
-    return ImageData::create_with_size(wrapper()->vm(), width, height);
+    return ImageData::create_with_size(vm(), width, height);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
@@ -326,7 +335,7 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
-    auto image_data = ImageData::create_with_size(wrapper()->vm(), width, height);
+    auto image_data = ImageData::create_with_size(vm(), width, height);
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
     if (!canvas_element().bitmap())

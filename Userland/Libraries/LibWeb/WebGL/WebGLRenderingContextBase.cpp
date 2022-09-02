@@ -7,12 +7,14 @@
 #include <AK/Debug.h>
 #include <LibGL/GLContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {
 
-WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-    : m_canvas_element(canvas_element)
+WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+    : PlatformObject(window.realm())
+    , m_canvas_element(canvas_element)
     , m_context(move(context))
     , m_context_creation_parameters(move(context_creation_parameters))
     , m_actual_context_parameters(move(actual_context_parameters))
@@ -20,6 +22,12 @@ WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::HTMLCanvasElement& ca
 }
 
 WebGLRenderingContextBase::~WebGLRenderingContextBase() = default;
+
+void WebGLRenderingContextBase::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_canvas_element.ptr());
+}
 
 #define RETURN_WITH_WEBGL_ERROR_IF(condition, error)                         \
     if (condition) {                                                         \
