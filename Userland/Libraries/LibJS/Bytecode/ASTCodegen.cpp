@@ -1959,6 +1959,13 @@ Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode(Bytecod
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> SpreadExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    // NOTE: All users of this should handle the behaviour of this on their own,
+    //       assuming it returns an Array-like object
+    return m_target->generate_bytecode(generator);
+}
+
 Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::ResolveThisBinding>();
