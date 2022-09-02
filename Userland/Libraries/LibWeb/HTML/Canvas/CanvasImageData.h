@@ -15,8 +15,8 @@ class CanvasImageData {
 public:
     virtual ~CanvasImageData() = default;
 
-    virtual RefPtr<ImageData> create_image_data(int width, int height) const = 0;
-    virtual DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const = 0;
+    virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const = 0;
+    virtual DOM::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const = 0;
     virtual void put_image_data(ImageData const&, float x, float y) = 0;
 
 protected:
