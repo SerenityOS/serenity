@@ -249,6 +249,8 @@ void AbstractButton::paint_text(Painter& painter, Gfx::IntRect const& rect, Gfx:
 void AbstractButton::change_event(Event& event)
 {
     if (event.type() == Event::Type::EnabledChange) {
+        if (m_auto_repeat_timer->is_active())
+            m_auto_repeat_timer->stop();
         if (!is_enabled()) {
             bool was_being_pressed = m_being_pressed;
             m_being_pressed = false;
