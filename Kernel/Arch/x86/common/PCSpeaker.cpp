@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Devices/PCSpeaker.h>
+#include <Kernel/Arch/x86/common/PCSpeaker.h>
 #include <Kernel/Time/PIT.h>
 
 void PCSpeaker::tone_on(int frequency)

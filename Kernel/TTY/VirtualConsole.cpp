@@ -8,11 +8,13 @@
 
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Delay.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/common/PCSpeaker.h>
+#endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Sections.h>
@@ -327,9 +329,11 @@ void VirtualConsole::beep()
 {
     if (!kernel_command_line().is_pc_speaker_enabled())
         return;
+#if ARCH(I386) || ARCH(X86_64)
     PCSpeaker::tone_on(440);
     microseconds_delay(10000);
     PCSpeaker::tone_off();
+#endif
 }
 
 void VirtualConsole::set_window_title(StringView)
