@@ -52,7 +52,7 @@ struct OtherExtension {
     String value {};
 };
 
-using Extension = Variant<LocaleExtension, TransformedExtension, OtherExtension>;
+using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
     String to_string() const;
