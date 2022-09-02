@@ -9,7 +9,7 @@
 #include <AK/Array.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
-#include <LibUnicode/DateTimeFormat.h>
+#include <LibLocale/DateTimeFormat.h>
 
 TEST_CASE(time_zone_name)
 {

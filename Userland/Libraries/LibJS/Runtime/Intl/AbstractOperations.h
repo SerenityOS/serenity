@@ -15,7 +15,7 @@
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibUnicode/Forward.h>
+#include <LibLocale/Forward.h>
 
 namespace JS::Intl {
 

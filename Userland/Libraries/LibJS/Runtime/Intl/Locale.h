@@ -13,7 +13,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibUnicode/Forward.h>
+#include <LibLocale/Forward.h>
 
 namespace JS::Intl {
 

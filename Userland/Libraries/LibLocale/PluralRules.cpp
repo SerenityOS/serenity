@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/PluralRules.h>
 
 namespace Locale {
 

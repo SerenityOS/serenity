@@ -10,8 +10,8 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibUnicode/Forward.h>
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/Forward.h>
+#include <LibLocale/PluralRules.h>
 
 namespace Locale {
 

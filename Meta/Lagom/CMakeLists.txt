@@ -504,8 +504,9 @@ if (BUILD_LAGOM)
     include(unicode_data)
     include(locale_data)
     file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
+    file(GLOB LIBLOCALE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibLocale/*.cpp")
     lagom_lib(Unicode unicode
-        SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES} ${LOCALE_DATA_SOURCES}
+        SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES} ${LIBLOCALE_SOURCES} ${LOCALE_DATA_SOURCES}
     )
     target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
     target_compile_options(LibUnicode PRIVATE -Wno-parentheses-equality)

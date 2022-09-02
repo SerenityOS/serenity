@@ -8,9 +8,9 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Locale.h>
+#include <LibLocale/DateTimeFormat.h>
+#include <LibLocale/Locale.h>
 #include <LibTimeZone/TimeZone.h>
-#include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 

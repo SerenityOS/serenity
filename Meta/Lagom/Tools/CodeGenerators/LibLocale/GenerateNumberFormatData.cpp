@@ -27,9 +27,9 @@
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/NumberFormat.h>
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/NumberFormat.h>
+#include <LibLocale/PluralRules.h>
 #include <math.h>
 
 using StringIndexType = u16;
@@ -806,11 +806,11 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibLocale/Locale.h>
 #include <LibLocale/LocaleData.h>
+#include <LibLocale/NumberFormat.h>
 #include <LibLocale/NumberFormatData.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/NumberFormat.h>
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/PluralRules.h>
 
 namespace Locale {
 )~~~");

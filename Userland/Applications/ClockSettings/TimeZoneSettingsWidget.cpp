@@ -17,9 +17,9 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
 #include <LibGfx/Palette.h>
+#include <LibLocale/DateTimeFormat.h>
+#include <LibLocale/Locale.h>
 #include <LibTimeZone/TimeZone.h>
-#include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/Locale.h>
 #include <math.h>
 #include <spawn.h>
 #include <unistd.h>

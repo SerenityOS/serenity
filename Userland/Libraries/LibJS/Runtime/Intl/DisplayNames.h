@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 

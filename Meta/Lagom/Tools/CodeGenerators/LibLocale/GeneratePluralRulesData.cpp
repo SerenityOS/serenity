@@ -17,7 +17,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/PluralRules.h>
 
 using StringIndexType = u16;
 
@@ -460,10 +460,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 
     generator.append(R"~~~(
 #include <AK/Array.h>
+#include <LibLocale/Locale.h>
 #include <LibLocale/LocaleData.h>
+#include <LibLocale/PluralRules.h>
 #include <LibLocale/PluralRulesData.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/PluralRules.h>
 #include <math.h>
 
 namespace Locale {

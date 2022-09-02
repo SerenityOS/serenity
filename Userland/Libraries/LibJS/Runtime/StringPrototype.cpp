@@ -26,8 +26,8 @@
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibLocale/Locale.h>
 #include <LibUnicode/CharacterTypes.h>
-#include <LibUnicode/Locale.h>
 #include <string.h>
 
 namespace JS {

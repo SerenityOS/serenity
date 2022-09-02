@@ -6,9 +6,9 @@
 
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
-#include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/NumberFormat.h>
+#include <LibLocale/DateTimeFormat.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/NumberFormat.h>
 #include <stdlib.h>
 
 namespace Locale {

@@ -15,7 +15,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibUnicode/DateTimeFormat.h>
+#include <LibLocale/DateTimeFormat.h>
 
 namespace JS::Intl {
 

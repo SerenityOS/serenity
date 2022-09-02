@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 TEST_CASE(is_unicode_language_subtag)
 {

@@ -11,8 +11,8 @@
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
-#include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/DateTimeFormat.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 
