@@ -19,7 +19,7 @@ public:
 
     virtual void fill_text(String const&, float x, float y, Optional<double> max_width) = 0;
     virtual void stroke_text(String const&, float x, float y, Optional<double> max_width) = 0;
-    virtual RefPtr<TextMetrics> measure_text(String const& text) = 0;
+    virtual JS::NonnullGCPtr<TextMetrics> measure_text(String const& text) = 0;
 
 protected:
     CanvasText() = default;

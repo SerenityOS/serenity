@@ -470,7 +470,6 @@ class StorageWrapper;
 class SubtleCryptoWrapper;
 class TextDecoderWrapper;
 class TextEncoderWrapper;
-class TextMetricsWrapper;
 class URLSearchParamsIteratorWrapper;
 class URLSearchParamsWrapper;
 class URLWrapper;
