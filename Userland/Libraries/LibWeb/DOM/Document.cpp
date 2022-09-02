@@ -281,7 +281,6 @@ Document::Document(HTML::Window& window, const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
     , m_window(window)
-    , m_history(HTML::History::create(*this))
 {
     set_prototype(&window.ensure_web_prototype<Bindings::DocumentPrototype>("Document"));
 
@@ -315,6 +314,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_current_script.ptr());
     visitor.visit(m_associated_inert_template_document.ptr());
     visitor.visit(m_pending_parsing_blocking_script.ptr());
+    visitor.visit(m_history.ptr());
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
@@ -1810,6 +1810,13 @@ CSS::StyleSheetList& Document::style_sheets()
 CSS::StyleSheetList const& Document::style_sheets() const
 {
     return const_cast<Document*>(this)->style_sheets();
+}
+
+JS::NonnullGCPtr<HTML::History> Document::history()
+{
+    if (!m_history)
+        m_history = HTML::History::create(window(), *this);
+    return *m_history;
 }
 
 }

@@ -298,7 +298,7 @@ public:
     bool is_fully_active() const;
     bool is_active() const;
 
-    NonnullRefPtr<HTML::History> history() const { return m_history; }
+    JS::NonnullGCPtr<HTML::History> history();
 
     Bindings::LocationObject* location();
 
@@ -433,7 +433,7 @@ private:
     // https://html.spec.whatwg.org/multipage/semantics.html#script-blocking-style-sheet-counter
     u32 m_script_blocking_style_sheet_counter { 0 };
 
-    NonnullRefPtr<HTML::History> m_history;
+    JS::GCPtr<HTML::History> m_history;
 
     size_t m_number_of_things_delaying_the_load_event { 0 };
 
