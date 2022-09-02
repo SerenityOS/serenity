@@ -21,10 +21,10 @@ public:
 
     virtual Gfx::Path& get_path() override;
 
-    NonnullRefPtr<SVGAnimatedLength> cx() const;
-    NonnullRefPtr<SVGAnimatedLength> cy() const;
-    NonnullRefPtr<SVGAnimatedLength> rx() const;
-    NonnullRefPtr<SVGAnimatedLength> ry() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> cx() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> cy() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> rx() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> ry() const;
 
 private:
     SVGEllipseElement(DOM::Document&, DOM::QualifiedName);

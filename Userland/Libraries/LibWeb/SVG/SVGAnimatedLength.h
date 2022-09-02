@@ -6,32 +6,31 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/SVG/SVGLength.h>
 
 namespace Web::SVG {
 
 // https://www.w3.org/TR/SVG11/types.html#InterfaceSVGAnimatedLength
-class SVGAnimatedLength
-    : public RefCounted<SVGAnimatedLength>
-    , public Bindings::Wrappable
-    , public Weakable<SVGAnimatedLength> {
+class SVGAnimatedLength final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(SVGAnimatedLength, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::SVGAnimatedLengthWrapper;
+    static JS::NonnullGCPtr<SVGAnimatedLength> create(HTML::Window&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
+    virtual ~SVGAnimatedLength() override;
 
-    static NonnullRefPtr<SVGAnimatedLength> create(NonnullRefPtr<SVGLength> base_val, NonnullRefPtr<SVGLength> anim_val);
-    virtual ~SVGAnimatedLength() = default;
-
-    NonnullRefPtr<SVGLength> const& base_val() const { return m_base_val; }
-    NonnullRefPtr<SVGLength> const& anim_val() const { return m_anim_val; }
+    JS::NonnullGCPtr<SVGLength> base_val() const { return m_base_val; }
+    JS::NonnullGCPtr<SVGLength> anim_val() const { return m_anim_val; }
 
 private:
-    SVGAnimatedLength(NonnullRefPtr<SVGLength> base_val, NonnullRefPtr<SVGLength> anim_val);
+    SVGAnimatedLength(HTML::Window&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
 
-    NonnullRefPtr<SVGLength> m_base_val;
-    NonnullRefPtr<SVGLength> m_anim_val;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<SVGLength> m_base_val;
+    JS::NonnullGCPtr<SVGLength> m_anim_val;
 };
 
 }
+
+WRAPPER_HACK(SVGAnimatedLength, Web::SVG)

@@ -473,8 +473,6 @@ class ResizeObserverWrapper;
 class SelectionWrapper;
 class StorageWrapper;
 class SubtleCryptoWrapper;
-class SVGAnimatedLengthWrapper;
-class SVGLengthWrapper;
 class TextDecoderWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;

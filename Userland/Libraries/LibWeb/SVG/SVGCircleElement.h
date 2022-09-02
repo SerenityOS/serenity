@@ -21,9 +21,9 @@ public:
 
     virtual Gfx::Path& get_path() override;
 
-    NonnullRefPtr<SVGAnimatedLength> cx() const;
-    NonnullRefPtr<SVGAnimatedLength> cy() const;
-    NonnullRefPtr<SVGAnimatedLength> r() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> cx() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> cy() const;
+    JS::NonnullGCPtr<SVGAnimatedLength> r() const;
 
 private:
     SVGCircleElement(DOM::Document&, DOM::QualifiedName);
