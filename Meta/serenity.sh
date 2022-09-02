@@ -262,7 +262,7 @@ build_target() {
     fi
 
     # Get either the environment MAKEJOBS or all processors via CMake
-    [ -z "$MAKEJOBS" ] && MAKEJOBS=$(cmake -P "$SERENITY_SOURCE_DIR/Meta/CMake/processor-count.cmake" 2>&1)
+    [ -z "$MAKEJOBS" ] && MAKEJOBS=$(cmake -P "$SERENITY_SOURCE_DIR/Meta/CMake/processor-count.cmake")
 
     # With zero args, we are doing a standard "build"
     # With multiple args, we are doing an install/image/run
