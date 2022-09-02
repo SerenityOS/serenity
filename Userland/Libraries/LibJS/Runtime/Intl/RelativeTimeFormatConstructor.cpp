@@ -14,7 +14,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 

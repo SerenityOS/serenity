@@ -24,8 +24,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Stream.h>
+#include <LibLocale/DateTimeFormat.h>
 #include <LibTimeZone/TimeZone.h>
-#include <LibUnicode/DateTimeFormat.h>
 
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
@@ -1768,11 +1768,11 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <LibLocale/LocaleData.h>
+#include <LibLocale/DateTimeFormat.h>
 #include <LibLocale/DateTimeFormatData.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/LocaleData.h>
 #include <LibTimeZone/TimeZone.h>
-#include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/Locale.h>
 
 namespace Locale {
 )~~~");

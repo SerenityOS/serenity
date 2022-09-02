@@ -11,7 +11,7 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/Locale.h>
 #include <LibJS/Runtime/Intl/LocaleConstructor.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 

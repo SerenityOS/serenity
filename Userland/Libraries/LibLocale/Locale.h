@@ -12,7 +12,7 @@
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibUnicode/Forward.h>
+#include <LibLocale/Forward.h>
 
 namespace Locale {
 

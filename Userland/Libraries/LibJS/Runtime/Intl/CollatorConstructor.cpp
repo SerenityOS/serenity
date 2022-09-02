@@ -10,7 +10,7 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/Collator.h>
 #include <LibJS/Runtime/Intl/CollatorConstructor.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 

@@ -23,7 +23,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 template<class T>
 inline constexpr bool StorageTypeIsList = false;

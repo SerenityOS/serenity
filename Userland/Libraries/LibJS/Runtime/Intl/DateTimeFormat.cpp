@@ -15,8 +15,8 @@
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Utf16String.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/NumberFormat.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/NumberFormat.h>
 #include <math.h>
 
 namespace JS::Intl {

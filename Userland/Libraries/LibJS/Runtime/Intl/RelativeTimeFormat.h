@@ -12,8 +12,8 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/RelativeTimeFormat.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/RelativeTimeFormat.h>
 
 namespace JS::Intl {
 

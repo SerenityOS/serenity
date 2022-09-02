@@ -9,7 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <LibUnicode/Forward.h>
+#include <LibLocale/Forward.h>
 
 namespace Locale {
 

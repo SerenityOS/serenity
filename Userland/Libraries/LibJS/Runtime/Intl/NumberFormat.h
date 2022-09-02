@@ -12,8 +12,8 @@
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/MathematicalValue.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/NumberFormat.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/NumberFormat.h>
 
 namespace JS::Intl {
 

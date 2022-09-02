@@ -3,11 +3,11 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/unicode_data.cmake)
 set(SOURCES
     CharacterTypes.cpp
     CurrencyCode.cpp
-    DateTimeFormat.cpp
-    Locale.cpp
-    NumberFormat.cpp
-    PluralRules.cpp
-    RelativeTimeFormat.cpp
+    ../LibLocale/DateTimeFormat.cpp
+    ../LibLocale/Locale.cpp
+    ../LibLocale/NumberFormat.cpp
+    ../LibLocale/PluralRules.cpp
+    ../LibLocale/RelativeTimeFormat.cpp
     ${UNICODE_DATA_SOURCES}
 )
 

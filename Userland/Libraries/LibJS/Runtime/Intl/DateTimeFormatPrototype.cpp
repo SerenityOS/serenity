@@ -9,7 +9,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatFunction.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatPrototype.h>
-#include <LibUnicode/DateTimeFormat.h>
+#include <LibLocale/DateTimeFormat.h>
 
 namespace JS::Intl {
 

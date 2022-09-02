@@ -9,8 +9,8 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibUnicode/Forward.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Forward.h>
+#include <LibLocale/Locale.h>
 
 namespace Locale {
 

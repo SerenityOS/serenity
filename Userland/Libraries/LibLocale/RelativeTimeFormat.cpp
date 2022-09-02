@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibUnicode/RelativeTimeFormat.h>
+#include <LibLocale/RelativeTimeFormat.h>
 
 namespace Locale {
 

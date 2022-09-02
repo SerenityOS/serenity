@@ -17,8 +17,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Stream.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/RelativeTimeFormat.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/RelativeTimeFormat.h>
 
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
@@ -178,7 +178,7 @@ static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& 
     generator.append(R"~~~(
 #pragma once
 
-#include <LibUnicode/Forward.h>
+#include <LibLocale/Forward.h>
 
 namespace Locale {
 )~~~");
@@ -202,10 +202,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Array.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibLocale/Locale.h>
+#include <LibLocale/PluralRules.h>
+#include <LibLocale/RelativeTimeFormat.h>
 #include <LibLocale/RelativeTimeFormatData.h>
-#include <LibUnicode/Locale.h>
-#include <LibUnicode/PluralRules.h>
-#include <LibUnicode/RelativeTimeFormat.h>
 
 namespace Locale {
 )~~~");

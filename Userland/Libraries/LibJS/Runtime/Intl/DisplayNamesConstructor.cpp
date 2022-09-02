@@ -11,7 +11,7 @@
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
-#include <LibUnicode/Locale.h>
+#include <LibLocale/Locale.h>
 
 namespace JS::Intl {
 

@@ -11,7 +11,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibUnicode/PluralRules.h>
+#include <LibLocale/PluralRules.h>
 
 namespace JS::Intl {
 
