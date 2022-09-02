@@ -5,7 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <AK/Platform.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/common/I8042Reboot.h>
+#    include <Kernel/Arch/x86/common/Shutdown.h>
+#endif
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -76,8 +80,9 @@ void PowerStateSwitchNode::reboot()
     dbgln("attempting reboot via ACPI");
     if (ACPI::is_enabled())
         ACPI::Parser::the()->try_acpi_reboot();
-    dbgln("attempting reboot via KB Controller...");
-    IO::out8(0x64, 0xFE);
+#if ARCH(I386) || ARCH(X86_64)
+    i8042_reboot();
+#endif
     dbgln("reboot attempts failed, applications will stop responding.");
     dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
     Processor::halt();
@@ -94,12 +99,10 @@ void PowerStateSwitchNode::poweroff()
     dbgln("syncing mounted filesystems...");
     FileSystem::sync();
     dbgln("attempting system shutdown...");
-    // QEMU Shutdown
-    IO::out16(0x604, 0x2000);
-    // If we're here, the shutdown failed. Try VirtualBox shutdown.
-    IO::out16(0x4004, 0x3400);
-    // VirtualBox shutdown failed. Try Bochs/Old QEMU shutdown.
-    IO::out16(0xb004, 0x2000);
+#if ARCH(I386) || ARCH(X86_64)
+    qemu_shutdown();
+    virtualbox_shutdown();
+#endif
     dbgln("shutdown attempts failed, applications will stop responding.");
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
     Processor::halt();
