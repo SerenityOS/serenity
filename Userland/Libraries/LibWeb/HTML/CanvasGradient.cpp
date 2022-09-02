@@ -5,12 +5,14 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasGradient.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-NonnullRefPtr<CanvasGradient> CanvasGradient::create_radial(double x0, double y0, double r0, double x1, double y1, double r1)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(HTML::Window& window, double x0, double y0, double r0, double x1, double y1, double r1)
 {
     (void)x0;
     (void)y0;
@@ -18,29 +20,31 @@ NonnullRefPtr<CanvasGradient> CanvasGradient::create_radial(double x0, double y0
     (void)x1;
     (void)y1;
     (void)r1;
-    return adopt_ref(*new CanvasGradient(Type::Radial));
+    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Radial);
 }
 
-NonnullRefPtr<CanvasGradient> CanvasGradient::create_linear(double x0, double y0, double x1, double y1)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(HTML::Window& window, double x0, double y0, double x1, double y1)
 {
     (void)x0;
     (void)y0;
     (void)x1;
     (void)y1;
-    return adopt_ref(*new CanvasGradient(Type::Linear));
+    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Linear);
 }
 
-NonnullRefPtr<CanvasGradient> CanvasGradient::create_conic(double start_angle, double x, double y)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(HTML::Window& window, double start_angle, double x, double y)
 {
     (void)start_angle;
     (void)x;
     (void)y;
-    return adopt_ref(*new CanvasGradient(Type::Conic));
+    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Conic);
 }
 
-CanvasGradient::CanvasGradient(Type type)
-    : m_type(type)
+CanvasGradient::CanvasGradient(HTML::Window& window, Type type)
+    : PlatformObject(window.realm())
+    , m_type(type)
 {
+    set_prototype(&window.ensure_web_prototype<Bindings::CanvasGradientPrototype>("CanvasGradient"));
 }
 
 CanvasGradient::~CanvasGradient() = default;

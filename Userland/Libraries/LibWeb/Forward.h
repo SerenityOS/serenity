@@ -449,7 +449,6 @@ class URLSearchParamsIterator;
 
 namespace Web::Bindings {
 class BlobWrapper;
-class CanvasGradientWrapper;
 class CryptoWrapper;
 class DOMExceptionWrapper;
 class DOMPointWrapper;
