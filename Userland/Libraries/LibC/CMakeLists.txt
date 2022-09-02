@@ -107,27 +107,27 @@ add_library(crt0 STATIC crt0.cpp)
 target_link_libraries(crt0 PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
+    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 add_library(crt0_shared STATIC crt0_shared.cpp)
 target_link_libraries(crt0_shared PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0_shared
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
+    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
 )
 
 add_library(crti STATIC ${CRTI_SOURCE})
 target_link_libraries(crti PRIVATE NoCoverage)
 add_custom_command(
     TARGET crti
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
+    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
 )
 
 add_library(crtn STATIC ${CRTN_SOURCE})
 target_link_libraries(crtn PRIVATE NoCoverage)
 add_custom_command(
     TARGET crtn
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
+    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
 )
 
 set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
@@ -136,7 +136,7 @@ add_library(ssp STATIC ssp.cpp)
 target_link_libraries(ssp PRIVATE NoCoverage)
 add_custom_command(
     TARGET ssp
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
+    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
 

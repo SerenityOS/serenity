@@ -672,8 +672,8 @@ endif()
 
 add_custom_command(
         TARGET Kernel POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-        COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+        COMMAND "${CMAKE_COMMAND}" -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+        COMMAND "${CMAKE_COMMAND}" -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
         COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
         COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
         COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
