@@ -282,8 +282,8 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
         if (!descriptor.is_generic_descriptor() && (descriptor.is_accessor_descriptor() != current->is_accessor_descriptor()))
             return false;
 
-        // d. If IsAccessorDescriptor(Desc) is true, then
-        if (descriptor.is_accessor_descriptor()) {
+        // d. If IsAccessorDescriptor(current) is true, then
+        if (current->is_accessor_descriptor()) {
             // i. If Desc has a [[Get]] field and SameValue(Desc.[[Get]], current.[[Get]]) is false, return false.
             if (descriptor.get.has_value() && *descriptor.get != *current->get)
                 return false;
@@ -293,8 +293,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
                 return false;
         }
         // e. Else if current.[[Writable]] is false, then
-        // FIXME: `current` is not guaranteed to be a data descriptor at this point and may not have a [[Writable]] field (see https://github.com/tc39/ecma262/issues/2761)
-        else if (current->is_data_descriptor() && !*current->writable) {
+        else if (!*current->writable) {
             // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is true, return false.
             if (descriptor.writable.has_value() && *descriptor.writable)
                 return false;
