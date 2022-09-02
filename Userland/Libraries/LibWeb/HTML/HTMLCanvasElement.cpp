@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibWeb/Bindings/HTMLCanvasElementPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
@@ -21,9 +22,24 @@ static constexpr auto max_canvas_area = 16384 * 16384;
 HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    set_prototype(&document.window().ensure_web_prototype<Bindings::HTMLCanvasElementPrototype>("HTMLCanvasElement"));
 }
 
 HTMLCanvasElement::~HTMLCanvasElement() = default;
+
+void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    m_context.visit(
+        [&](JS::NonnullGCPtr<CanvasRenderingContext2D>& context) {
+            visitor.visit(context.ptr());
+        },
+        [&](JS::NonnullGCPtr<WebGL::WebGLRenderingContext>& context) {
+            visitor.visit(context.ptr());
+        },
+        [](Empty) {
+        });
+}
 
 unsigned HTMLCanvasElement::width() const
 {
@@ -38,10 +54,10 @@ unsigned HTMLCanvasElement::height() const
 void HTMLCanvasElement::reset_context_to_default_state()
 {
     m_context.visit(
-        [](NonnullRefPtr<CanvasRenderingContext2D>& context) {
+        [](JS::NonnullGCPtr<CanvasRenderingContext2D>& context) {
             context->reset_to_default_state();
         },
-        [](NonnullRefPtr<WebGL::WebGLRenderingContext>&) {
+        [](JS::NonnullGCPtr<WebGL::WebGLRenderingContext>&) {
             TODO();
         },
         [](Empty) {
@@ -71,22 +87,22 @@ RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::St
 HTMLCanvasElement::HasOrCreatedContext HTMLCanvasElement::create_2d_context()
 {
     if (!m_context.has<Empty>())
-        return m_context.has<NonnullRefPtr<CanvasRenderingContext2D>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
+        return m_context.has<JS::NonnullGCPtr<CanvasRenderingContext2D>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
 
-    m_context = CanvasRenderingContext2D::create(*this);
+    m_context = CanvasRenderingContext2D::create(window(), *this);
     return HasOrCreatedContext::Yes;
 }
 
 JS::ThrowCompletionOr<HTMLCanvasElement::HasOrCreatedContext> HTMLCanvasElement::create_webgl_context(JS::Value options)
 {
     if (!m_context.has<Empty>())
-        return m_context.has<NonnullRefPtr<WebGL::WebGLRenderingContext>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
+        return m_context.has<JS::NonnullGCPtr<WebGL::WebGLRenderingContext>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
 
-    auto maybe_context = TRY(WebGL::WebGLRenderingContext::create(*this, options));
+    auto maybe_context = TRY(WebGL::WebGLRenderingContext::create(window(), *this, options));
     if (!maybe_context)
         return HasOrCreatedContext::No;
 
-    m_context = maybe_context.release_nonnull();
+    m_context = JS::NonnullGCPtr<WebGL::WebGLRenderingContext>(*maybe_context);
     return HasOrCreatedContext::Yes;
 }
 
@@ -104,7 +120,7 @@ JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::ge
     // NOTE: See the spec for the full table.
     if (type == "2d"sv) {
         if (create_2d_context() == HasOrCreatedContext::Yes)
-            return m_context;
+            return JS::make_handle(*m_context.get<JS::NonnullGCPtr<HTML::CanvasRenderingContext2D>>());
 
         return Empty {};
     }
@@ -112,7 +128,7 @@ JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::ge
     // NOTE: The WebGL spec says "experimental-webgl" is also acceptable and must be equivalent to "webgl". Other engines accept this, so we do too.
     if (type.is_one_of("webgl"sv, "experimental-webgl"sv)) {
         if (TRY(create_webgl_context(options)) == HasOrCreatedContext::Yes)
-            return m_context;
+            return JS::make_handle(*m_context.get<JS::NonnullGCPtr<WebGL::WebGLRenderingContext>>());
 
         return Empty {};
     }
@@ -168,10 +184,10 @@ String HTMLCanvasElement::to_data_url(String const& type, [[maybe_unused]] Optio
 void HTMLCanvasElement::present()
 {
     m_context.visit(
-        [](NonnullRefPtr<CanvasRenderingContext2D>&) {
+        [](JS::NonnullGCPtr<CanvasRenderingContext2D>&) {
             // Do nothing, CRC2D writes directly to the canvas bitmap.
         },
-        [](NonnullRefPtr<WebGL::WebGLRenderingContext>& context) {
+        [](JS::NonnullGCPtr<WebGL::WebGLRenderingContext>& context) {
             context->present();
         },
         [](Empty) {

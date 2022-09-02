@@ -6,26 +6,22 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {
 
-class WebGLRenderingContext
-    : public WebGLRenderingContextBase
-    , public Bindings::Wrappable {
+class WebGLRenderingContext final : public WebGLRenderingContextBase {
+    WEB_PLATFORM_OBJECT(WebGLRenderingContext, WebGLRenderingContextBase);
+
 public:
-    using WrapperType = Bindings::WebGLRenderingContextWrapper;
+    static JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> create(HTML::Window&, HTML::HTMLCanvasElement& canvas_element, JS::Value options);
 
-    static JS::ThrowCompletionOr<RefPtr<WebGLRenderingContext>> create(HTML::HTMLCanvasElement& canvas_element, JS::Value options);
-
-    virtual ~WebGLRenderingContext() override = default;
+    virtual ~WebGLRenderingContext() override;
 
 private:
-    WebGLRenderingContext(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-        : WebGLRenderingContextBase(canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
-    {
-    }
+    WebGLRenderingContext(HTML::Window&, HTML::HTMLCanvasElement&, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
 };
 
 }
+
+WRAPPER_HACK(WebGLRenderingContext, Web::WebGL)

@@ -151,6 +151,10 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "MutationRecord"sv)
         return true;
+    if (type.name == "CanvasRenderingContext2D"sv)
+        return true;
+    if (type.name == "WebGLRenderingContext"sv)
+        return true;
 
     return false;
 }

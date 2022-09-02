@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/WebGLRenderingContextPrototype.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebGL/WebGLContextEvent.h>
 #include <LibWeb/WebGL/WebGLRenderingContext.h>
 
@@ -30,7 +32,7 @@ static void fire_webgl_context_creation_error(HTML::HTMLCanvasElement& canvas_el
     fire_webgl_context_event(canvas_element, "webglcontextcreationerror"sv);
 }
 
-JS::ThrowCompletionOr<RefPtr<WebGLRenderingContext>> WebGLRenderingContext::create(HTML::HTMLCanvasElement& canvas_element, JS::Value options)
+JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::create(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, JS::Value options)
 {
     // We should be coming here from getContext being called on a wrapped <canvas> element.
     auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.vm(), options));
@@ -38,20 +40,29 @@ JS::ThrowCompletionOr<RefPtr<WebGLRenderingContext>> WebGLRenderingContext::crea
     bool created_bitmap = canvas_element.create_bitmap(/* minimum_width= */ 1, /* minimum_height= */ 1);
     if (!created_bitmap) {
         fire_webgl_context_creation_error(canvas_element);
-        return RefPtr<WebGLRenderingContext> { nullptr };
+        return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
 
 #ifndef __serenity__
     // FIXME: Make WebGL work on other platforms.
+    (void)window;
     (void)context_attributes;
     dbgln("FIXME: WebGL not supported on the current platform");
     fire_webgl_context_creation_error(canvas_element);
-    return RefPtr<WebGLRenderingContext> { nullptr };
+    return JS::GCPtr<WebGLRenderingContext> { nullptr };
 #else
     // FIXME: LibGL currently doesn't propagate context creation errors.
     auto context = GL::create_context(*canvas_element.bitmap());
-    return adopt_ref(*new WebGLRenderingContext(canvas_element, move(context), context_attributes, context_attributes));
+    return window.heap().allocate<WebGLRenderingContext>(window.realm(), window, canvas_element, move(context), context_attributes, context_attributes);
 #endif
 }
+
+WebGLRenderingContext::WebGLRenderingContext(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+    : WebGLRenderingContextBase(window, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>("WebGLRenderingContext"));
+}
+
+WebGLRenderingContext::~WebGLRenderingContext() = default;
 
 }

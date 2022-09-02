@@ -15,9 +15,9 @@
 
 namespace Web::WebGL {
 
-class WebGLRenderingContextBase
-    : public RefCounted<WebGLRenderingContextBase>
-    , public Weakable<WebGLRenderingContextBase> {
+class WebGLRenderingContextBase : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(WebGLRenderingContextBase, Bindings::PlatformObject);
+
 public:
     virtual ~WebGLRenderingContextBase();
 
@@ -62,10 +62,12 @@ public:
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 protected:
-    WebGLRenderingContextBase(HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
+    WebGLRenderingContextBase(HTML::Window&, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters);
 
 private:
-    JS::Handle<HTML::HTMLCanvasElement> m_canvas_element;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::NonnullGCPtr<HTML::HTMLCanvasElement> m_canvas_element;
 
     NonnullOwnPtr<GL::GLContext> m_context;
 

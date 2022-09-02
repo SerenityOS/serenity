@@ -17,7 +17,7 @@ class HTMLCanvasElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLCanvasElement, HTMLElement);
 
 public:
-    using RenderingContext = Variant<NonnullRefPtr<CanvasRenderingContext2D>, NonnullRefPtr<WebGL::WebGLRenderingContext>, Empty>;
+    using RenderingContext = Variant<JS::Handle<CanvasRenderingContext2D>, JS::Handle<WebGL::WebGLRenderingContext>, Empty>;
 
     virtual ~HTMLCanvasElement() override;
 
@@ -40,6 +40,8 @@ public:
 private:
     HTMLCanvasElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     enum class HasOrCreatedContext {
@@ -52,7 +54,8 @@ private:
     void reset_context_to_default_state();
 
     RefPtr<Gfx::Bitmap> m_bitmap;
-    RenderingContext m_context;
+
+    Variant<JS::NonnullGCPtr<HTML::CanvasRenderingContext2D>, JS::NonnullGCPtr<WebGL::WebGLRenderingContext>, Empty> m_context;
 };
 
 }
