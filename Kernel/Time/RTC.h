@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/Arch/x86/common/RTC.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/RTC.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {

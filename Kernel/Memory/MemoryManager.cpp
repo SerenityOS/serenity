@@ -14,7 +14,6 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/BootInfo.h>
-#include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
