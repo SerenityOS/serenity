@@ -16,6 +16,7 @@
 #include "Tools/MoveTool.h"
 #include "Tools/PenTool.h"
 #include "Tools/PickerTool.h"
+#include "Tools/PolygonalSelectTool.h"
 #include "Tools/RectangleSelectTool.h"
 #include "Tools/RectangleTool.h"
 #include "Tools/SprayTool.h"
@@ -83,6 +84,7 @@ void ToolboxWidget::setup_tools()
     add_tool("zoom"sv, { 0, Key_Z }, make<ZoomTool>());
     add_tool("rectangle-select"sv, { 0, Key_R }, make<RectangleSelectTool>());
     add_tool("wand-select"sv, { 0, Key_W }, make<WandSelectTool>());
+    add_tool("polygonal-select"sv, { Mod_Shift, Key_P }, make<PolygonalSelectTool>());
     add_tool("guides"sv, { 0, Key_G }, make<GuideTool>());
     add_tool("clone"sv, { 0, Key_C }, make<CloneTool>());
 }

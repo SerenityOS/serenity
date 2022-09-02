@@ -62,6 +62,7 @@ set(SOURCES
     Tools/MoveTool.cpp
     Tools/PenTool.cpp
     Tools/PickerTool.cpp
+    Tools/PolygonalSelectTool.cpp
     Tools/RectangleSelectTool.cpp
     Tools/RectangleTool.cpp
     Tools/SprayTool.cpp
