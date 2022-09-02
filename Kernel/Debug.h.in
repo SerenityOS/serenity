@@ -55,6 +55,10 @@
 #cmakedefine01 CONTIGUOUS_VMOBJECT_DEBUG
 #endif
 
+#ifndef DUMP_REGIONS_ON_CRASH
+#cmakedefine01 DUMP_REGIONS_ON_CRASH
+#endif
+
 #ifndef E1000_DEBUG
 #cmakedefine01 E1000_DEBUG
 #endif
