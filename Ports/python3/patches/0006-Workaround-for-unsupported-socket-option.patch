@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Humberto Alves <hjalves@live.com>
+Date: Fri, 2 Sep 2022 03:31:42 +0100
+Subject: [PATCH] Workaround for unsupported socket option
+
+This is a workaround for ignoring the result of `setsockopt` call when
+given `TCP_NODELAY` as an argument. This TCP socket option is used in
+many applications (like pip and requests) for optimization purposes.
+For now, it can be safely ignored until it's supported in the kernel.
+---
+ Modules/socketmodule.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Modules/socketmodule.c b/Modules/socketmodule.c
+index 0109d97..484e651 100644
+--- a/Modules/socketmodule.c
++++ b/Modules/socketmodule.c
+@@ -3003,6 +3003,8 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
+     PyBuffer_Release(&optval);
+ 
+ done:
++    if (res < 0 && level == IPPROTO_TCP && optname == TCP_NODELAY && errno == ENOPROTOOPT)
++        res = 0;
+     if (res < 0) {
+         return s->errorhandler();
+     }

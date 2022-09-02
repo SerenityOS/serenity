@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Humberto Alves <hjalves@live.com>
+Date: Thu, 1 Sep 2022 20:25:11 +0100
+Subject: [PATCH] Tweak `setup.py` sysroot detection
+
+When crosscompiling, the Python installer expects the C compiler to
+be invoked with a `--sysroot` command line option, which then is used
+to find additional subdirectories containing headers and libraries.
+
+Because there is no such option present, this is a workaround to use
+the environment variable `SERENITY_INSTALL_ROOT` as a fake `--sysroot`
+in the detection code.
+---
+ setup.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/setup.py b/setup.py
+index acd7b05..6554b1c 100644
+--- a/setup.py
++++ b/setup.py
+@@ -163,6 +163,8 @@ def sysroot_paths(make_vars, subdirs):
+     for var_name in make_vars:
+         var = sysconfig.get_config_var(var_name)
+         if var is not None:
++            if serenity_install_root := os.environ.get('SERENITY_INSTALL_ROOT'):
++                var += f' --sysroot={serenity_install_root}'
+             m = re.search(r'--sysroot=([^"]\S*|"[^"]+")', var)
+             if m is not None:
+                 sysroot = m.group(1).strip('"')

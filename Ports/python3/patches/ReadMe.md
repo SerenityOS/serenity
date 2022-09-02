@@ -36,3 +36,24 @@ Make some tweaks to Python's `setup.py`:
   build the `_curses` module. This is by default included for a bunch of
   extensions, but not `_curses`.
 
+## `0005-Tweak-setup.py-sysroot-detection.patch`
+
+Tweak `setup.py` sysroot detection
+
+When crosscompiling, the Python installer expects the C compiler to
+be invoked with a `--sysroot` command line option, which then is used
+to find additional subdirectories containing headers and libraries.
+
+Because there is no such option present, this is a workaround to use
+the environment variable `SERENITY_INSTALL_ROOT` as a fake `--sysroot`
+in the detection code.
+
+## `0006-Workaround-for-unsupported-socket-option.patch`
+
+Workaround for unsupported socket option
+
+This is a workaround for ignoring the result of `setsockopt` call when
+given `TCP_NODELAY` as an argument. This TCP socket option is used in
+many applications (like pip and requests) for optimization purposes.
+For now, it can be safely ignored until it's supported in the kernel.
+
