@@ -317,13 +317,13 @@ void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
     return fill_internal(transformed_path, fill_rule);
 }
 
-RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
+JS::GCPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
 {
-    return ImageData::create_with_size(vm(), width, height);
+    return ImageData::create_with_size(global_object(), width, height);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
-DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int x, int y, int width, int height) const
+DOM::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int x, int y, int width, int height) const
 {
     // 1. If either the sw or sh arguments are zero, then throw an "IndexSizeError" DOMException.
     if (width == 0 || height == 0)
@@ -335,7 +335,7 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
-    auto image_data = ImageData::create_with_size(vm(), width, height);
+    auto image_data = ImageData::create_with_size(global_object(), width, height);
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
     if (!canvas_element().bitmap())

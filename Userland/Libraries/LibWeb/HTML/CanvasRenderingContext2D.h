@@ -70,8 +70,8 @@ public:
     virtual void fill(String const& fill_rule) override;
     virtual void fill(Path2D& path, String const& fill_rule) override;
 
-    virtual RefPtr<ImageData> create_image_data(int width, int height) const override;
-    virtual DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
+    virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const override;
+    virtual DOM::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
     virtual void put_image_data(ImageData const&, float x, float y) override;
 
     virtual void reset_to_default_state() override;

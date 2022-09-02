@@ -461,7 +461,6 @@ class FileWrapper;
 class HeadersWrapper;
 class HeadersIteratorWrapper;
 class IdleDeadlineWrapper;
-class ImageDataWrapper;
 class IntersectionObserverWrapper;
 class LocationObject;
 class OptionConstructor;

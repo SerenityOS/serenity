@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,20 +7,17 @@
 #pragma once
 
 #include <LibGfx/Forward.h>
-#include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
 
-class ImageData
-    : public RefCounted<ImageData>
-    , public Bindings::Wrappable {
+class ImageData final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(ImageData, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::ImageDataWrapper;
+    static JS::GCPtr<ImageData> create_with_size(HTML::Window&, int width, int height);
 
-    static RefPtr<ImageData> create_with_size(JS::VM&, int width, int height);
-
-    ~ImageData();
+    virtual ~ImageData() override;
 
     unsigned width() const;
     unsigned height() const;
@@ -32,10 +29,14 @@ public:
     const JS::Uint8ClampedArray* data() const;
 
 private:
-    explicit ImageData(NonnullRefPtr<Gfx::Bitmap>, JS::Handle<JS::Uint8ClampedArray>);
+    explicit ImageData(HTML::Window&, NonnullRefPtr<Gfx::Bitmap>, JS::NonnullGCPtr<JS::Uint8ClampedArray>);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
-    JS::Handle<JS::Uint8ClampedArray> m_data;
+    JS::NonnullGCPtr<JS::Uint8ClampedArray> m_data;
 };
 
 }
+
+WRAPPER_HACK(ImageData, Web::HTML)
