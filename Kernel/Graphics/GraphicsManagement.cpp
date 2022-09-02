@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
@@ -46,7 +47,7 @@ void GraphicsManagement::disable_vga_emulation_access_permanently()
     IO::out8(0x3c4, 1);
     u8 sr1 = IO::in8(0x3c5);
     IO::out8(0x3c5, sr1 | 1 << 5);
-    IO::delay(1000);
+    microseconds_delay(1000);
     m_vga_access_is_disabled = true;
 }
 

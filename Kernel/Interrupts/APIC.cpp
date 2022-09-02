@@ -8,7 +8,7 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>
@@ -186,7 +186,7 @@ void APIC::set_siv(u32 offset, u8 interrupt)
 void APIC::wait_for_pending_icr()
 {
     while ((read_register(APIC_REG_ICR_LOW) & APIC_ICR_DELIVERY_PENDING) != 0) {
-        IO::delay(200);
+        microseconds_delay(200);
     }
 }
 
@@ -409,13 +409,13 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // INIT
     write_icr({ 0, 0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf });
 
-    IO::delay(10 * 1000);
+    microseconds_delay(10 * 1000);
 
     for (int i = 0; i < 2; i++) {
         // SIPI
         write_icr({ 0x08, 0, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf }); // start execution at P8000
 
-        IO::delay(200);
+        microseconds_delay(200);
     }
 
     // Now wait until the ap_cpu_init_pending variable dropped to 0, which means all APs are initialized and no longer need these special mappings
@@ -423,7 +423,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
         dbgln_if(APIC_DEBUG, "APIC: Waiting for {} AP(s) to finish initialization...", aps_to_enable);
         do {
             // Wait a little bit
-            IO::delay(200);
+            microseconds_delay(200);
         } while (m_apic_ap_count.load(AK::MemoryOrder::memory_order_consume) != aps_to_enable);
     }
 
@@ -537,7 +537,7 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
     // we don't want APs to trigger IPIs (e.g. through MM) while the BSP
     // is unable to process them
     while (!m_apic_ap_continue.load(AK::MemoryOrder::memory_order_consume)) {
-        IO::delay(200);
+        microseconds_delay(200);
     }
 
     dbgln_if(APIC_DEBUG, "APIC: CPU #{} continues, all others are initialized", cpu);

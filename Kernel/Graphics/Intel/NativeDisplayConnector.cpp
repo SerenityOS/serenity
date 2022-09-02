@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -371,7 +371,7 @@ bool IntelNativeDisplayConnector::gmbus_wait_for(IntelGraphics::GMBusStatus desi
         default:
             VERIFY_NOT_REACHED();
         }
-        IO::delay(1000);
+        microseconds_delay(1000);
         milliseconds_passed++;
     }
 }
@@ -544,7 +544,7 @@ void IntelNativeDisplayConnector::set_display_timings(Graphics::Modesetting cons
     dbgln_if(INTEL_GRAPHICS_DEBUG, "sourceSize - {}, {}", (modesetting.vertical.active - 1), (modesetting.horizontal.active - 1));
     write_to_register(IntelGraphics::RegisterIndex::PipeASource, (modesetting.vertical.active - 1) | (modesetting.horizontal.active - 1) << 16);
 
-    IO::delay(200);
+    microseconds_delay(200);
 }
 
 bool IntelNativeDisplayConnector::wait_for_enabled_pipe_a(size_t milliseconds_timeout) const
@@ -553,7 +553,7 @@ bool IntelNativeDisplayConnector::wait_for_enabled_pipe_a(size_t milliseconds_ti
     while (current_time < milliseconds_timeout) {
         if (pipe_a_enabled())
             return true;
-        IO::delay(1000);
+        microseconds_delay(1000);
         current_time++;
     }
     return false;
@@ -564,7 +564,7 @@ bool IntelNativeDisplayConnector::wait_for_disabled_pipe_a(size_t milliseconds_t
     while (current_time < milliseconds_timeout) {
         if (!pipe_a_enabled())
             return true;
-        IO::delay(1000);
+        microseconds_delay(1000);
         current_time++;
     }
     return false;
@@ -576,7 +576,7 @@ bool IntelNativeDisplayConnector::wait_for_disabled_pipe_b(size_t milliseconds_t
     while (current_time < milliseconds_timeout) {
         if (!pipe_b_enabled())
             return true;
-        IO::delay(1000);
+        microseconds_delay(1000);
         current_time++;
     }
     return false;
@@ -662,14 +662,14 @@ void IntelNativeDisplayConnector::enable_dpll_without_vga(IntelGraphics::PLLSett
 
     set_dpll_registers(settings);
 
-    IO::delay(200);
+    microseconds_delay(200);
 
     write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, (6 << 9) | (settings.p1) << 16 | (1 << 26) | (1 << 28) | (1 << 31));
     write_to_register(IntelGraphics::RegisterIndex::DPLLMultiplierA, (dac_multiplier - 1) | ((dac_multiplier - 1) << 8));
 
     // The specification says we should wait (at least) about 150 microseconds
     // after enabling the DPLL to allow the clock to stabilize
-    IO::delay(200);
+    microseconds_delay(200);
     VERIFY(read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & (1 << 31));
 }
 
