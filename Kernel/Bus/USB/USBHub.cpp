@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>

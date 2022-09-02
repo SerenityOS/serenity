@@ -7,7 +7,6 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Try.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
