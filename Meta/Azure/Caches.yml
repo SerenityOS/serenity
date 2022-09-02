@@ -81,7 +81,7 @@ steps:
       inputs:
         key: '"unicode_locale" | Meta/CMake/unicode_data.cmake | "$(timestamp)"'
         restoreKeys: |
-            "unicode_locale" | Meta/CMake/unicode_data.cmake
+            "unicode_locale" | Meta/CMake/locale_data.cmake
         path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
       displayName: 'UnicodeLocale Cache'
 

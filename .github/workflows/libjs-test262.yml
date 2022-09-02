@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/CLDR
-          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+          key: UnicodeData-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
       - name: Build libjs-test262-runner and test-js
         working-directory: libjs-test262
