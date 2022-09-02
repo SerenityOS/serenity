@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Arch/x86/common/QEMUShutdown.h>
+#include <Kernel/Arch/x86/common/Shutdown.h>
 
 namespace Kernel {
 
@@ -16,6 +16,11 @@ void qemu_shutdown()
     // We also try the Bochs/Old QEMU shutdown method, if the first didn't work.
     IO::out16(0x604, 0x2000);
     IO::out16(0xb004, 0x2000);
+}
+
+void virtualbox_shutdown()
+{
+    IO::out16(0x4004, 0x3400);
 }
 
 }

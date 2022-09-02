@@ -9,5 +9,6 @@
 namespace Kernel {
 
 void qemu_shutdown();
+void virtualbox_shutdown();
 
 }

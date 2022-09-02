@@ -7,7 +7,7 @@
 #include <AK/Format.h>
 #include <Kernel/Arch/Processor.h>
 #if ARCH(I386) || ARCH(X86_64)
-#    include <Kernel/Arch/x86/common/QEMUShutdown.h>
+#    include <Kernel/Arch/x86/common/Shutdown.h>
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/KSyms.h>
@@ -20,6 +20,7 @@ namespace Kernel {
 {
 #if ARCH(I386) || ARCH(X86_64)
     qemu_shutdown();
+    virtualbox_shutdown();
 #endif
     // Note: If we failed to invoke platform shutdown, we need to halt afterwards
     // to ensure no further execution on any CPU still happens.
