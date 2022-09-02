@@ -109,6 +109,7 @@ struct UnicodeData {
     u32 largest_casing_transform_size { 0 };
     u32 largest_special_casing_size { 0 };
     Vector<String> conditions;
+    Vector<String> locales;
 
     Vector<CodePointData> code_point_data;
 
@@ -232,8 +233,13 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
                 casing.condition = conditions[0];
             }
 
-            if (!casing.locale.is_empty())
+            if (!casing.locale.is_empty()) {
                 casing.locale = String::formatted("{:c}{}", to_ascii_uppercase(casing.locale[0]), casing.locale.substring_view(1));
+
+                if (!unicode_data.locales.contains_slow(casing.locale))
+                    unicode_data.locales.append(casing.locale);
+            }
+
             casing.condition = casing.condition.replace("_"sv, ""sv, ReplaceMode::All);
 
             if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
@@ -686,12 +692,12 @@ enum class @name@ : @underlying@ {)~~~");
 #pragma once
 
 #include <AK/Types.h>
-#include <LibLocale/LocaleData.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
 )~~~");
 
+    generate_enum("Locale"sv, "None"sv, unicode_data.locales);
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
@@ -714,9 +720,11 @@ struct SpecialCasing {
     u32 titlecase_mapping[@casing_transform_size@];
     u32 titlecase_mapping_size { 0 };
 
-    Locale::Locale locale { Locale::Locale::None };
+    Locale locale { Locale::None };
     Condition condition { Condition::None };
 };
+
+Optional<Locale> locale_from_string(StringView locale);
 
 }
 )~~~");
@@ -780,7 +788,7 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { 
         append_list_and_size(casing.titlecase_mapping, format);
 
         generator.set("locale", casing.locale.is_empty() ? "None" : casing.locale);
-        generator.append(", Locale::Locale::@locale@");
+        generator.append(", Locale::@locale@");
 
         generator.set("condition", casing.condition.is_empty() ? "None" : casing.condition);
         generator.append(", Condition::@condition@");
@@ -1096,17 +1104,28 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 )~~~");
     };
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, PropList const& prop_list, Vector<Alias> const& aliases) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& prop_list, Vector<Alias> const& aliases) {
         HashValueMap<StringView> hashes;
         hashes.ensure_capacity(prop_list.size() + aliases.size());
 
-        for (auto const& prop : prop_list)
-            hashes.set(prop.key.hash(), prop.key);
+        ValueFromStringOptions options {};
+
+        for (auto const& prop : prop_list) {
+            if constexpr (IsSame<RemoveCVReference<decltype(prop)>, String>) {
+                hashes.set(CaseInsensitiveStringViewTraits::hash(prop), prop);
+                options.sensitivity = CaseSensitivity::CaseInsensitive;
+            } else {
+                hashes.set(prop.key.hash(), prop.key);
+            }
+        }
+
         for (auto const& alias : aliases)
             hashes.set(alias.alias.hash(), alias.alias);
 
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes), options);
     };
+
+    append_from_string("Locale"sv, "locale"sv, unicode_data.locales, {});
 
     append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
     append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases);
