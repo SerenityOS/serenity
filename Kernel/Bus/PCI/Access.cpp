@@ -7,9 +7,10 @@
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
 #include <AK/HashTable.h>
-#include <Kernel/Arch/x86/IO.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/PCI/Controller/HostBridge.h>
+#endif
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Controller/HostBridge.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Debug.h>
@@ -104,6 +105,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
     return true;
 }
 
+#if ARCH(I386) || ARCH(X86_64)
 UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 {
     VERIFY(!Access::is_initialized());
@@ -114,6 +116,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
     dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
     return true;
 }
+#endif
 
 ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController> controller, Function<void(DeviceIdentifier const&)> callback)
 {

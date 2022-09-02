@@ -8,12 +8,12 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Vector.h>
-#include <Kernel/Bus/PCI/Controller/HostBridge.h>
+#include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
 
-class MemoryBackedHostBridge : public HostBridge {
+class MemoryBackedHostBridge : public HostController {
 public:
     static NonnullOwnPtr<MemoryBackedHostBridge> must_create(Domain const&, PhysicalAddress);
 

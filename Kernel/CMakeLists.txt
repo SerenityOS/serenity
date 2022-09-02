@@ -19,7 +19,7 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
-    Bus/PCI/Controller/HostBridge.cpp
+    Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
     Bus/PCI/Access.cpp
@@ -339,6 +339,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Shutdown.cpp
+
+        Arch/x86/PCI/Controller/HostBridge.cpp
     )
 
     set(KERNEL_SOURCES
