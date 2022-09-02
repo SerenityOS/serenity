@@ -78,7 +78,7 @@ public:
 
     JS::NonnullGCPtr<HTMLCanvasElement> canvas_for_binding() const;
 
-    virtual RefPtr<TextMetrics> measure_text(String const& text) override;
+    virtual JS::NonnullGCPtr<TextMetrics> measure_text(String const& text) override;
 
     virtual void clip() override;
 

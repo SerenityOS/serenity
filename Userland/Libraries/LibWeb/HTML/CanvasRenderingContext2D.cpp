@@ -396,7 +396,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext
-RefPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String const& text)
+JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String const& text)
 {
     // The measureText(text) method steps are to run the text preparation
     // algorithm, passing it text and the object implementing the CanvasText
@@ -404,7 +404,7 @@ RefPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String const& text)
     // TextMetrics object with members behaving as described in the following
     // list:
     auto prepared_text = prepare_text(text);
-    auto metrics = TextMetrics::create();
+    auto metrics = TextMetrics::create(global_object());
     // FIXME: Use the font that was used to create the glyphs in prepared_text.
     auto& font = Gfx::FontDatabase::default_font();
 
