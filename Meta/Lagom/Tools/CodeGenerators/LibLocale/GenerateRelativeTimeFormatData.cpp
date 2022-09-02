@@ -202,10 +202,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Array.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibLocale/RelativeTimeFormatData.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/PluralRules.h>
 #include <LibUnicode/RelativeTimeFormat.h>
-#include <LibUnicode/RelativeTimeFormatData.h>
 
 namespace Unicode {
 )~~~");
