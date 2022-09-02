@@ -23,6 +23,7 @@ static bool test_pci_io();
 
 UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 {
+#if ARCH(I386) || ARCH(X86_64)
     auto boot_determined = kernel_command_line().pci_access_level();
     if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG"sv).has_value())
         return PCIAccessLevel::IOAddressing;
@@ -32,6 +33,7 @@ UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 
     if (!g_pci_access_io_probe_failed)
         return PCIAccessLevel::IOAddressing;
+#endif
 
     PANIC("No PCI bus access method detected!");
 }
@@ -44,17 +46,21 @@ UNMAP_AFTER_INIT void initialize()
         return;
     switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
+        // FIXME: There are other arch-specific methods to find the memory range
+        // for accessing the PCI configuration space.
         auto mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
         VERIFY(mcfg.has_value());
         auto success = Access::initialize_for_multiple_pci_domains(mcfg.value());
         VERIFY(success);
         break;
     }
+#if ARCH(I386) || ARCH(X86_64)
     case PCIAccessLevel::IOAddressing: {
         auto success = Access::initialize_for_one_pci_domain();
         VERIFY(success);
         break;
     }
+#endif
     default:
         VERIFY_NOT_REACHED();
     }

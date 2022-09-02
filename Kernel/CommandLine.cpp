@@ -149,8 +149,10 @@ UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
     auto value = lookup("pci"sv).value_or("ecam"sv);
     if (value == "ecam"sv)
         return PCIAccessLevel::MemoryAddressing;
+#if ARCH(I386) || ARCH(X86_64)
     if (value == "io"sv)
         return PCIAccessLevel::IOAddressing;
+#endif
     if (value == "none"sv)
         return PCIAccessLevel::None;
     PANIC("Unknown PCI ECAM setting: {}", value);
