@@ -23,5 +23,4 @@ set(SOURCES
 )
 
 serenity_app(FontEditor ICON app-font-editor)
-target_link_libraries(FontEditor LibGUI LibDesktop LibGfx LibMain)
-link_with_unicode_data(FontEditor)
+target_link_libraries(FontEditor LibGUI LibDesktop LibGfx LibMain LibUnicode)

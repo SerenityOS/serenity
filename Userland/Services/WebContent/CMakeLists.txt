@@ -19,4 +19,4 @@ set(SOURCES
 
 serenity_bin(WebContent)
 target_link_libraries(WebContent LibCore LibIPC LibGfx LibWebView LibWeb LibMain)
-link_with_unicode_data(WebContent)
+link_with_locale_data(WebContent)

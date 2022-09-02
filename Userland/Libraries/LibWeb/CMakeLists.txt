@@ -407,7 +407,7 @@ serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
 target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML)
-link_with_unicode_data(LibWeb)
+link_with_locale_data(LibWeb)
 
 generate_js_wrappers(LibWeb)
 

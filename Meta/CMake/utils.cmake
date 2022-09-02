@@ -166,9 +166,9 @@ function(embed_resource target section file)
     target_sources("${target}" PRIVATE "${asm_file}")
 endfunction()
 
-function(link_with_unicode_data target)
+function(link_with_locale_data target)
     if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
-        target_link_libraries("${target}" LibUnicodeData)
+        target_link_libraries("${target}" LibLocaleData)
     endif()
 endfunction()
 
