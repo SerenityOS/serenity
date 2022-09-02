@@ -9,7 +9,7 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>
 
-namespace RTC {
+namespace Kernel::RTC {
 
 static time_t s_boot_time;
 

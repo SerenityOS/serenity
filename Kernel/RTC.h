@@ -8,7 +8,7 @@
 
 #include <Kernel/UnixTypes.h>
 
-namespace RTC {
+namespace Kernel::RTC {
 
 void initialize();
 time_t now();
