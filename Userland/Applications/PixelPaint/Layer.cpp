@@ -142,7 +142,7 @@ void Layer::erase_selection(Selection const& selection)
         for (int x = translated_to_layer_space.left(); x < translated_to_layer_space.left() + translated_to_layer_space.width(); ++x) {
 
             // Selection is still in pre-translated coordinates, account for this by adding the layer's relative location
-            if (selection.is_selected(x + location().x(), y + location().y())) {
+            if (content_bitmap().rect().contains(x, y) && selection.is_selected(x + location().x(), y + location().y())) {
                 content_bitmap().set_pixel(x, y, Color::Transparent);
             }
         }
