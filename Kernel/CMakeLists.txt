@@ -335,6 +335,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
+        Arch/x86/common/QEMUShutdown.cpp
     )
 
     set(KERNEL_SOURCES
