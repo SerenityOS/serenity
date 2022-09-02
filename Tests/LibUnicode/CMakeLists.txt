@@ -6,5 +6,4 @@ foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibUnicode LIBS LibUnicode)
 
     get_filename_component(target "${source}" NAME_WLE)
-    link_with_locale_data("${target}")
 endforeach()

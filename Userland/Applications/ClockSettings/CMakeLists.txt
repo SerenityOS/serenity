@@ -18,5 +18,5 @@ set(SOURCES
 )
 
 serenity_app(ClockSettings ICON app-analog-clock) # FIXME: Create a ClockSettings icon.
-target_link_libraries(ClockSettings LibGUI LibMain LibUnicode)
+target_link_libraries(ClockSettings LibGUI LibMain LibLocale)
 link_with_locale_data(ClockSettings)
