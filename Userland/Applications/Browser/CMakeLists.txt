@@ -34,4 +34,4 @@ set(SOURCES
 
 serenity_app(Browser ICON app-browser)
 target_link_libraries(Browser LibWebView LibWeb LibProtocol LibGUI LibDesktop LibConfig LibMain)
-link_with_unicode_data(Browser)
+link_with_locale_data(Browser)

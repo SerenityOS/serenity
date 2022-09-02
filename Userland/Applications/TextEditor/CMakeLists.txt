@@ -16,4 +16,3 @@ set(SOURCES
 
 serenity_app(TextEditor ICON app-text-editor)
 target_link_libraries(TextEditor LibWebView LibWeb LibMarkdown LibGUI LibShell LibRegex LibDesktop LibCpp LibJS LibSQL LibFileSystemAccessClient LibConfig LibMain)
-link_with_unicode_data(TextEditor)
