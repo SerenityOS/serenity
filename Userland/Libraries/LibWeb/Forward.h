@@ -463,7 +463,6 @@ class IdleDeadlineWrapper;
 class IntersectionObserverWrapper;
 class LocationObject;
 class OptionConstructor;
-class Path2DWrapper;
 class RangePrototype;
 class ResizeObserverWrapper;
 class SelectionWrapper;
