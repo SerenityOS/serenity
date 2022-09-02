@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Storage/NVMe/NVMeDefinitions.h>
 #include <Kernel/Storage/NVMe/NVMePollQueue.h>
@@ -20,7 +20,7 @@ void NVMePollQueue::submit_sqe(NVMeSubmission& sub)
     NVMeQueue::submit_sqe(sub);
     SpinlockLocker lock_cq(m_cq_lock);
     while (!process_cq()) {
-        IO::delay(1);
+        microseconds_delay(1);
     }
 }
 

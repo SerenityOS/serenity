@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
@@ -71,7 +72,7 @@ UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<HIDMana
                 break;
             }
             // Note: Wait 500 microseconds in case the controller couldn't respond
-            IO::delay(500);
+            microseconds_delay(500);
         }
         if (!successful_self_test) {
             dbgln("I8042: Trying to probe for existence of controller failed");
@@ -246,7 +247,7 @@ ErrorOr<void> I8042Controller::drain_output_buffer()
             return {};
         IO::in8(I8042Port::Buffer);
 
-        IO::delay(100);
+        microseconds_delay(100);
     }
     return Error::from_errno(EBUSY);
 }
@@ -332,14 +333,14 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
     for (int attempt = 0; attempt < 1000; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
-            IO::delay(1000);
+            microseconds_delay(1000);
             continue;
         }
         if (device == HIDDevice::Type::Unknown)
             return {};
         if ((status & I8042StatusFlag::SecondPS2PortOutputBuffer) == second_port_flag)
             return {};
-        IO::delay(1000);
+        microseconds_delay(1000);
     }
     return Error::from_errno(EBUSY);
 }
@@ -351,7 +352,7 @@ ErrorOr<void> I8042Controller::prepare_for_output()
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::InputBuffer))
             return {};
-        IO::delay(1000);
+        microseconds_delay(1000);
     }
     return Error::from_errno(EBUSY);
 }

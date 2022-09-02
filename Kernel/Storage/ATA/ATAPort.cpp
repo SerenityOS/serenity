@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/ATAPort.h>
 #include <Kernel/Storage/ATA/Definitions.h>
@@ -499,7 +499,7 @@ ErrorOr<void> ATAPort::execute_polled_command(TransactionDirection direction, LB
                 break;
             }
 
-            IO::delay(1000);
+            microseconds_delay(1000);
             milliseconds_elapsed++;
         }
         if (milliseconds_elapsed > completion_timeout_in_milliseconds) {

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -291,7 +292,7 @@ void AC97::AC97Channel::reset()
     control_register.out(AudioControlRegisterFlag::ResetRegisters);
 
     while ((control_register.in<u8>() & AudioControlRegisterFlag::ResetRegisters) > 0)
-        IO::delay(50);
+        microseconds_delay(50);
 
     m_dma_running.with([](auto& dma_running) {
         dma_running = false;

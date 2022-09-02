@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>
 
@@ -43,7 +44,7 @@ static bool try_to_read_registers(unsigned& year, unsigned& month, unsigned& day
             update_in_progress_ended_successfully = true;
             break;
         }
-        IO::delay(1000);
+        microseconds_delay(1000);
         time_passed_in_milliseconds++;
     }
 

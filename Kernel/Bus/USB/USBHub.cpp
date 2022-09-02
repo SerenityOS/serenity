@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
@@ -83,7 +84,7 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
     }
 
     // Wait for the ports to power up. power_on_to_power_good_time is in units of 2 ms and we want in us, so multiply by 2000.
-    IO::delay(descriptor.power_on_to_power_good_time * 2000);
+    microseconds_delay(descriptor.power_on_to_power_good_time * 2000);
 
     memcpy(&m_hub_descriptor, &descriptor, sizeof(USBHubDescriptor));
 
@@ -171,7 +172,7 @@ void Hub::check_for_port_updates()
 
                 // FIXME: Timeout
                 while (debounce_timer < debounce_interval) {
-                    IO::delay(debounce_disconnect_check_interval);
+                    microseconds_delay(debounce_disconnect_check_interval);
                     debounce_timer += debounce_disconnect_check_interval;
 
                     if (auto result = get_port_status(port_number, port_status); result.is_error()) {
@@ -203,7 +204,7 @@ void Hub::check_for_port_updates()
                     // Wait at least 10 ms for the port to reset.
                     // This is T DRST in the USB 2.0 Specification Page 186 Table 7-13.
                     constexpr u16 reset_delay = 10 * 1000;
-                    IO::delay(reset_delay);
+                    microseconds_delay(reset_delay);
 
                     if (auto result = get_port_status(port_number, port_status); result.is_error()) {
                         dbgln("USB Hub: Error occurred when getting status while resetting port {}: {}.", port_number, result.error());
@@ -224,7 +225,7 @@ void Hub::check_for_port_updates()
                 // Wait 10 ms for the port to recover.
                 // This is T RSTRCY in the USB 2.0 Specification Page 188 Table 7-14.
                 constexpr u16 reset_recovery_delay = 10 * 1000;
-                IO::delay(reset_recovery_delay);
+                microseconds_delay(reset_recovery_delay);
 
                 dbgln_if(USB_DEBUG, "USB Hub: Reset complete!");
 

@@ -7,9 +7,8 @@
 
 #include <AK/Format.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/SafeMem.h>
-#include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Device.h>
@@ -77,7 +76,7 @@ bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
 
     u32 expected_rdy = expected_ready_bit_value ? 1 : 0;
     while (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {
-        IO::delay(one_ms_io_delay);
+        microseconds_delay(one_ms_io_delay);
 
         if (--wait_iterations == 0) {
             if (((m_controller_regs->csts >> CSTS_RDY_BIT) & 0x1) != expected_rdy) {

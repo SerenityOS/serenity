@@ -8,6 +8,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Library/LockRefPtr.h>
@@ -42,7 +43,7 @@ bool AHCIController::reset()
                 return false;
             if (!(hba().control_regs.ghc & 1))
                 break;
-            IO::delay(1000);
+            microseconds_delay(1000);
             retry++;
         }
         // Note: Turn on AHCI HBA and Global HBA Interrupts.

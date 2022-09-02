@@ -6,6 +6,7 @@
  */
 
 #include <AK/Platform.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
@@ -633,7 +634,7 @@ void UHCIController::reset_port(u8 port)
     // Wait at least 50 ms for the port to reset.
     // This is T DRSTR in the USB 2.0 Specification Page 186 Table 7-13.
     constexpr u16 reset_delay = 50 * 1000;
-    IO::delay(reset_delay);
+    microseconds_delay(reset_delay);
 
     port_data &= ~UHCI_PORTSC_PORT_RESET;
     if (port == 0)
@@ -644,7 +645,7 @@ void UHCIController::reset_port(u8 port)
     // Wait 10 ms for the port to recover.
     // This is T RSTRCY in the USB 2.0 Specification Page 188 Table 7-14.
     constexpr u16 reset_recovery_delay = 10 * 1000;
-    IO::delay(reset_recovery_delay);
+    microseconds_delay(reset_recovery_delay);
 
     port_data = port == 0 ? read_portsc1() : read_portsc2();
     port_data |= UHCI_PORTSC_PORT_ENABLED;

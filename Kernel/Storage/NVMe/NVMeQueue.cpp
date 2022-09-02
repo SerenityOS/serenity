@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/NVMe/NVMeInterruptQueue.h>
@@ -126,7 +126,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
                 index = m_qdepth - 1;
         }
         cqe_cid = m_cqe_array[index].command_id;
-        IO::delay(1);
+        microseconds_delay(1);
     } while (cid != cqe_cid);
 
     auto status = CQ_STATUS_FIELD(m_cqe_array[m_cq_head].status);

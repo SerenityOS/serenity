@@ -7,6 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -44,13 +45,13 @@ StringView IDEChannel::channel_type_string() const
 
 bool IDEChannel::select_device_and_wait_until_not_busy(DeviceType device_type, size_t milliseconds_timeout)
 {
-    IO::delay(20);
+    microseconds_delay(20);
     u8 slave = device_type == DeviceType::Slave;
     m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4)); // First, we need to select the drive itself
-    IO::delay(20);
+    microseconds_delay(20);
     size_t time_elapsed = 0;
     while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
-        IO::delay(1000);
+        microseconds_delay(1000);
         time_elapsed++;
     }
     return time_elapsed <= milliseconds_timeout;
@@ -63,10 +64,10 @@ ErrorOr<void> IDEChannel::port_phy_reset()
     // reset the channel
     u8 device_control = m_io_group.control_base().in<u8>();
     // Wait 30 milliseconds
-    IO::delay(30000);
+    microseconds_delay(30000);
     m_io_group.control_base().out<u8>(device_control | (1 << 2));
     // Wait 30 milliseconds
-    IO::delay(30000);
+    microseconds_delay(30000);
     m_io_group.control_base().out<u8>(device_control);
     // Wait up to 30 seconds before failing
     if (!select_device_and_wait_until_not_busy(DeviceType::Master, 30000)) {
@@ -220,7 +221,7 @@ ErrorOr<void> IDEChannel::wait_if_busy_until_timeout(size_t timeout_in_milliseco
 {
     size_t time_elapsed = 0;
     while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= timeout_in_milliseconds) {
-        IO::delay(1000);
+        microseconds_delay(1000);
         time_elapsed++;
     }
     if (time_elapsed <= timeout_in_milliseconds)
@@ -249,7 +250,7 @@ ErrorOr<void> IDEChannel::load_taskfile_into_registers(ATAPort::TaskFile const& 
     // Note: Preserve the selected drive, always use LBA addressing
     auto driver_register = ((m_io_group.io_base().offset(ATA_REG_HDDEVSEL).in<u8>() & (1 << 4)) | (head | (1 << 5) | (1 << 6)));
     m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(driver_register);
-    IO::delay(50);
+    microseconds_delay(50);
 
     if (lba_mode == LBAMode::FortyEightBit) {
         m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>((task_file.count >> 8) & 0xFF);
@@ -272,7 +273,7 @@ ErrorOr<void> IDEChannel::load_taskfile_into_registers(ATAPort::TaskFile const& 
         auto status = m_io_group.control_base().in<u8>();
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
             break;
-        IO::delay(1000);
+        microseconds_delay(1000);
         time_elapsed++;
     }
     m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(task_file.command);
@@ -284,9 +285,9 @@ ErrorOr<void> IDEChannel::device_select(size_t device_index)
     VERIFY(m_lock.is_locked());
     if (device_index > 1)
         return Error::from_errno(EINVAL);
-    IO::delay(20);
+    microseconds_delay(20);
     m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((device_index) << 4));
-    IO::delay(20);
+    microseconds_delay(20);
     return {};
 }
 
