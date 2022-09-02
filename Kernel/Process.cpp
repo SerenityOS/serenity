@@ -412,7 +412,9 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
         protected_data.termination_signal = signal;
     });
     set_should_generate_coredump(!out_of_memory);
-    address_space().with([](auto& space) { space->dump_regions(); });
+    if constexpr (DUMP_REGIONS_ON_CRASH) {
+        address_space().with([](auto& space) { space->dump_regions(); });
+    }
     VERIFY(is_user_process());
     die();
     // We can not return from here, as there is nowhere
