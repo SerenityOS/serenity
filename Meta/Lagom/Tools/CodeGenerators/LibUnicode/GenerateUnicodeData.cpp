@@ -714,7 +714,7 @@ struct SpecialCasing {
     u32 titlecase_mapping[@casing_transform_size@];
     u32 titlecase_mapping_size { 0 };
 
-    Locale locale { Locale::None };
+    Locale::Locale locale { Locale::Locale::None };
     Condition condition { Condition::None };
 };
 
@@ -780,7 +780,7 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { 
         append_list_and_size(casing.titlecase_mapping, format);
 
         generator.set("locale", casing.locale.is_empty() ? "None" : casing.locale);
-        generator.append(", Locale::@locale@");
+        generator.append(", Locale::Locale::@locale@");
 
         generator.set("condition", casing.condition.is_empty() ? "None" : casing.condition);
         generator.append(", Condition::@condition@");

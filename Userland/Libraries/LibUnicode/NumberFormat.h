@@ -13,7 +13,7 @@
 #include <LibUnicode/Forward.h>
 #include <LibUnicode/PluralRules.h>
 
-namespace Unicode {
+namespace Locale {
 
 struct NumberGroupings {
     u8 minimum_grouping_digits { 0 };

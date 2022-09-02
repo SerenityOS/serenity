@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 
     // 4. Return ! ResolvePlural(pr, n).
     auto plurality = resolve_plural(*plural_rules, number);
-    return js_string(vm, Unicode::plural_category_to_string(plurality));
+    return js_string(vm, ::Locale::plural_category_to_string(plurality));
 }
 
 // 1.4.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 
     // 6. Return ? ResolvePluralRange(pr, x, y).
     auto plurality = TRY(resolve_plural_range(vm, *plural_rules, x, y));
-    return js_string(vm, Unicode::plural_category_to_string(plurality));
+    return js_string(vm, ::Locale::plural_category_to_string(plurality));
 }
 
 // 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
@@ -106,10 +106,10 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(plural_rules->max_significant_digits())));
 
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
-    auto available_categories = Unicode::available_plural_categories(plural_rules->locale(), plural_rules->type());
+    auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());
 
-    auto* plural_categories = Array::create_from<Unicode::PluralCategory>(realm, available_categories, [&](auto category) {
-        return js_string(vm, Unicode::plural_category_to_string(category));
+    auto* plural_categories = Array::create_from<::Locale::PluralCategory>(realm, available_categories, [&](auto category) {
+        return js_string(vm, ::Locale::plural_category_to_string(category));
     });
 
     // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).

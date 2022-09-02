@@ -14,7 +14,7 @@
 
 namespace JS::Intl {
 
-Locale* Locale::create(Realm& realm, Unicode::LocaleID const& locale_id)
+Locale* Locale::create(Realm& realm, ::Locale::LocaleID const& locale_id)
 {
     return realm.heap().allocate<Locale>(realm, locale_id, *realm.intrinsics().intl_locale_prototype());
 }
@@ -25,16 +25,16 @@ Locale::Locale(Object& prototype)
 {
 }
 
-Locale::Locale(Unicode::LocaleID const& locale_id, Object& prototype)
+Locale::Locale(::Locale::LocaleID const& locale_id, Object& prototype)
     : Object(prototype)
 {
     set_locale(locale_id.to_string());
 
     for (auto const& extension : locale_id.extensions) {
-        if (!extension.has<Unicode::LocaleExtension>())
+        if (!extension.has<::Locale::LocaleExtension>())
             continue;
 
-        for (auto const& keyword : extension.get<Unicode::LocaleExtension>().keywords) {
+        for (auto const& keyword : extension.get<::Locale::LocaleExtension>().keywords) {
             if (keyword.key == "ca"sv) {
                 set_calendar(keyword.value);
             } else if (keyword.key == "co"sv) {
@@ -81,10 +81,10 @@ Array* calendars_of_locale(VM& vm, Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical calendar identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = Unicode::get_keywords_for_locale(locale, "ca"sv);
+    auto list = ::Locale::get_keywords_for_locale(locale, "ca"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -100,10 +100,10 @@ Array* collations_of_locale(VM& vm, Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
-    auto list = Unicode::get_keywords_for_locale(locale, "co"sv);
+    auto list = ::Locale::get_keywords_for_locale(locale, "co"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -119,10 +119,10 @@ Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique hour cycle identifiers, which must be lower case String values indicating either the 12-hour format ("h11", "h12") or the 24-hour format ("h23", "h24"), sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = Unicode::get_keywords_for_locale(locale, "hc"sv);
+    auto list = ::Locale::get_keywords_for_locale(locale, "hc"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -138,10 +138,10 @@ Array* numbering_systems_of_locale(VM& vm, Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical numbering system identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for formatting numeric values in locale.
-    auto list = Unicode::get_keywords_for_locale(locale, "nu"sv);
+    auto list = ::Locale::get_keywords_for_locale(locale, "nu"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -174,36 +174,36 @@ StringView character_direction_of_locale(Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 2. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 3. If the default general ordering of characters (characterOrder) within a line in locale is right-to-left, return "rtl".
     // NOTE: LibUnicode handles both LTR and RTL character orders in this call, not just RTL. We then fallback to LTR
     //       below if LibUnicode doesn't conclusively know the character order for this locale.
-    if (auto character_order = Unicode::character_order_for_locale(locale); character_order.has_value())
-        return Unicode::character_order_to_string(*character_order);
+    if (auto character_order = ::Locale::character_order_for_locale(locale); character_order.has_value())
+        return ::Locale::character_order_to_string(*character_order);
 
     // 4. Return "ltr".
     return "ltr"sv;
 }
 
-static u8 weekday_to_integer(Optional<Unicode::Weekday> weekday, Unicode::Weekday falllback)
+static u8 weekday_to_integer(Optional<::Locale::Weekday> weekday, ::Locale::Weekday falllback)
 {
     // NOTE: This fallback will be used if LibUnicode data generation is disabled. Its value should
     //       be that of the default region ("001") in the CLDR.
     switch (weekday.value_or(falllback)) {
-    case Unicode::Weekday::Monday:
+    case ::Locale::Weekday::Monday:
         return 1;
-    case Unicode::Weekday::Tuesday:
+    case ::Locale::Weekday::Tuesday:
         return 2;
-    case Unicode::Weekday::Wednesday:
+    case ::Locale::Weekday::Wednesday:
         return 3;
-    case Unicode::Weekday::Thursday:
+    case ::Locale::Weekday::Thursday:
         return 4;
-    case Unicode::Weekday::Friday:
+    case ::Locale::Weekday::Friday:
         return 5;
-    case Unicode::Weekday::Saturday:
+    case ::Locale::Weekday::Saturday:
         return 6;
-    case Unicode::Weekday::Sunday:
+    case ::Locale::Weekday::Sunday:
         return 7;
     }
 
@@ -212,8 +212,8 @@ static u8 weekday_to_integer(Optional<Unicode::Weekday> weekday, Unicode::Weekda
 
 static Vector<u8> weekend_of_locale(StringView locale)
 {
-    auto weekend_start = weekday_to_integer(Unicode::get_locale_weekend_start(locale), Unicode::Weekday::Saturday);
-    auto weekend_end = weekday_to_integer(Unicode::get_locale_weekend_end(locale), Unicode::Weekday::Sunday);
+    auto weekend_start = weekday_to_integer(::Locale::get_locale_weekend_start(locale), ::Locale::Weekday::Saturday);
+    auto weekend_end = weekday_to_integer(::Locale::get_locale_weekend_end(locale), ::Locale::Weekday::Sunday);
 
     // There currently aren't any regions in the CLDR which wrap around from Sunday (7) to Monday (1).
     // If this changes, this logic will need to be updated to handle that.
@@ -235,12 +235,12 @@ WeekInfo week_info_of_locale(Locale const& locale_object)
     auto const& locale = locale_object.locale();
 
     // 2. Assert: locale matches the unicode_locale_id production.
-    VERIFY(Unicode::parse_unicode_locale_id(locale).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 3. Return a record whose fields are defined by Table 1, with values based on locale.
     WeekInfo week_info {};
-    week_info.minimal_days = Unicode::get_locale_minimum_days(locale).value_or(1);
-    week_info.first_day = weekday_to_integer(Unicode::get_locale_first_day(locale), Unicode::Weekday::Monday);
+    week_info.minimal_days = ::Locale::get_locale_minimum_days(locale).value_or(1);
+    week_info.first_day = weekday_to_integer(::Locale::get_locale_first_day(locale), ::Locale::Weekday::Monday);
     week_info.weekend = weekend_of_locale(locale);
 
     return week_info;

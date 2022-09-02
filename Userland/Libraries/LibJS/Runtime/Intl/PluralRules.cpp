@@ -18,7 +18,7 @@ PluralRules::PluralRules(Object& prototype)
 }
 
 // 16.5.1 GetOperands ( s ), https://tc39.es/ecma402/#sec-getoperands
-Unicode::PluralOperands get_operands(String const& string)
+::Locale::PluralOperands get_operands(String const& string)
 {
     // 1.Let n be ! ToNumber(s).
     char* end { nullptr };
@@ -77,7 +77,7 @@ Unicode::PluralOperands get_operands(String const& string)
     auto significant_fraction = significant_fraction_slice.is_empty() ? 0u : significant_fraction_slice.template to_uint<u64>().value();
 
     // 12. Return a new Record { [[Number]]: abs(n), [[IntegerDigits]]: i, [[FractionDigits]]: f, [[NumberOfFractionDigits]]: fracDigitCount, [[FractionDigitsWithoutTrailing]]: significantFrac, [[NumberOfFractionDigitsWithoutTrailing]]: significantFracDigitCount }.
-    return Unicode::PluralOperands {
+    return ::Locale::PluralOperands {
         .number = fabs(number),
         .integer_digits = integer,
         .fraction_digits = fraction,
@@ -88,19 +88,19 @@ Unicode::PluralOperands get_operands(String const& string)
 }
 
 // 16.5.2 PluralRuleSelect ( locale, type, n, operands ), https://tc39.es/ecma402/#sec-pluralruleselect
-Unicode::PluralCategory plural_rule_select(StringView locale, Unicode::PluralForm type, Value, Unicode::PluralOperands operands)
+::Locale::PluralCategory plural_rule_select(StringView locale, ::Locale::PluralForm type, Value, ::Locale::PluralOperands operands)
 {
-    return Unicode::determine_plural_category(locale, type, move(operands));
+    return ::Locale::determine_plural_category(locale, type, move(operands));
 }
 
 // 16.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/ecma402/#sec-resolveplural
-Unicode::PluralCategory resolve_plural(PluralRules const& plural_rules, Value number)
+::Locale::PluralCategory resolve_plural(PluralRules const& plural_rules, Value number)
 {
     return resolve_plural(plural_rules, plural_rules.type(), number);
 }
 
 // Non-standard overload of ResolvePlural to allow using the AO without an Intl.PluralRules object.
-Unicode::PluralCategory resolve_plural(NumberFormatBase const& number_format, Unicode::PluralForm type, Value number)
+::Locale::PluralCategory resolve_plural(NumberFormatBase const& number_format, ::Locale::PluralForm type, Value number)
 {
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
@@ -109,7 +109,7 @@ Unicode::PluralCategory resolve_plural(NumberFormatBase const& number_format, Un
     // 4. If n is not a finite Number, then
     if (!number.is_finite_number()) {
         // a. Return "other".
-        return Unicode::PluralCategory::Other;
+        return ::Locale::PluralCategory::Other;
     }
 
     // 5. Let locale be pluralRules.[[Locale]].
@@ -131,13 +131,13 @@ Unicode::PluralCategory resolve_plural(NumberFormatBase const& number_format, Un
 }
 
 // 1.1.5 PluralRuleSelectRange ( locale, type, xp, yp ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-pluralruleselectrange
-Unicode::PluralCategory plural_rule_select_range(StringView locale, Unicode::PluralForm, Unicode::PluralCategory start, Unicode::PluralCategory end)
+::Locale::PluralCategory plural_rule_select_range(StringView locale, ::Locale::PluralForm, ::Locale::PluralCategory start, ::Locale::PluralCategory end)
 {
-    return Unicode::determine_plural_range(locale, start, end);
+    return ::Locale::determine_plural_range(locale, start, end);
 }
 
 // 1.1.6 ResolvePluralRange ( pluralRules, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolvepluralrange
-ThrowCompletionOr<Unicode::PluralCategory> resolve_plural_range(VM& vm, PluralRules const& plural_rules, Value start, Value end)
+ThrowCompletionOr<::Locale::PluralCategory> resolve_plural_range(VM& vm, PluralRules const& plural_rules, Value start, Value end)
 {
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.

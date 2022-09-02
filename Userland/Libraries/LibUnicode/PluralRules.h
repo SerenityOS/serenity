@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 
-namespace Unicode {
+namespace Locale {
 
 enum class PluralForm {
     Cardinal,

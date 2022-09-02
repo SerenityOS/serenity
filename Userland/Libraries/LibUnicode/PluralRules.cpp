@@ -6,7 +6,7 @@
 
 #include <LibUnicode/PluralRules.h>
 
-namespace Unicode {
+namespace Locale {
 
 PluralForm plural_form_from_string(StringView plural_form)
 {

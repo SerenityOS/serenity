@@ -54,38 +54,38 @@ StringView RelativeTimeFormat::numeric_string() const
 }
 
 // 17.5.1 SingularRelativeTimeUnit ( unit ), https://tc39.es/ecma402/#sec-singularrelativetimeunit
-ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(VM& vm, StringView unit)
+ThrowCompletionOr<::Locale::TimeUnit> singular_relative_time_unit(VM& vm, StringView unit)
 {
     // 1. Assert: Type(unit) is String.
 
     // 2. If unit is "seconds", return "second".
     if (unit == "seconds"sv)
-        return Unicode::TimeUnit::Second;
+        return ::Locale::TimeUnit::Second;
     // 3. If unit is "minutes", return "minute".
     if (unit == "minutes"sv)
-        return Unicode::TimeUnit::Minute;
+        return ::Locale::TimeUnit::Minute;
     // 4. If unit is "hours", return "hour".
     if (unit == "hours"sv)
-        return Unicode::TimeUnit::Hour;
+        return ::Locale::TimeUnit::Hour;
     // 5. If unit is "days", return "day".
     if (unit == "days"sv)
-        return Unicode::TimeUnit::Day;
+        return ::Locale::TimeUnit::Day;
     // 6. If unit is "weeks", return "week".
     if (unit == "weeks"sv)
-        return Unicode::TimeUnit::Week;
+        return ::Locale::TimeUnit::Week;
     // 7. If unit is "months", return "month".
     if (unit == "months"sv)
-        return Unicode::TimeUnit::Month;
+        return ::Locale::TimeUnit::Month;
     // 8. If unit is "quarters", return "quarter".
     if (unit == "quarters"sv)
-        return Unicode::TimeUnit::Quarter;
+        return ::Locale::TimeUnit::Quarter;
     // 9. If unit is "years", return "year".
     if (unit == "years"sv)
-        return Unicode::TimeUnit::Year;
+        return ::Locale::TimeUnit::Year;
 
     // 10. If unit is not one of "second", "minute", "hour", "day", "week", "month", "quarter", or "year", throw a RangeError exception.
     // 11. Return unit.
-    if (auto time_unit = Unicode::time_unit_from_string(unit); time_unit.has_value())
+    if (auto time_unit = ::Locale::time_unit_from_string(unit); time_unit.has_value())
         return *time_unit;
     return vm.throw_completion<RangeError>(ErrorType::IntlInvalidUnit, unit);
 }
@@ -124,13 +124,13 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         //     a. Let entry be the string-concatenation of unit and "-narrow".
         // 12. Else,
         //     a. Let entry be unit.
-        auto patterns = Unicode::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, style);
+        auto patterns = ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, style);
 
         // 13. If fields doesn't have a field [[<entry>]], then
         if (patterns.is_empty()) {
             // a. Let entry be unit.
             // NOTE: In the CLDR, the lack of "short" or "narrow" in the key implies "long".
-            patterns = Unicode::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, Unicode::Style::Long);
+            patterns = ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, ::Locale::Style::Long);
         }
 
         // 14. Let patterns be fields.[[<entry>]].
@@ -185,7 +185,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         return Vector<PatternPartitionWithUnit> {};
 
     // 23. Return ! MakePartsList(pattern, unit, fv).
-    return make_parts_list(pattern->pattern, Unicode::time_unit_to_string(time_unit), move(value_partitions));
+    return make_parts_list(pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions));
 }
 
 // 17.5.3 MakePartsList ( pattern, unit, parts ), https://tc39.es/ecma402/#sec-makepartslist

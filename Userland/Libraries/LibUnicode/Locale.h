@@ -14,7 +14,7 @@
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
-namespace Unicode {
+namespace Locale {
 
 struct LanguageID {
     String to_string() const;
@@ -206,7 +206,7 @@ void resolve_complex_language_aliases(LanguageID& language_id);
 Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
 Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
 
-Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& language_id);
+Optional<String> resolve_most_likely_territory(LanguageID const& language_id);
 String resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
 
 }

@@ -11,18 +11,18 @@
 #include <LibUnicode/NumberFormat.h>
 #include <stdlib.h>
 
-namespace Unicode {
+namespace Locale {
 
 HourCycle hour_cycle_from_string(StringView hour_cycle)
 {
     if (hour_cycle == "h11"sv)
-        return Unicode::HourCycle::H11;
+        return HourCycle::H11;
     else if (hour_cycle == "h12"sv)
-        return Unicode::HourCycle::H12;
+        return HourCycle::H12;
     else if (hour_cycle == "h23"sv)
-        return Unicode::HourCycle::H23;
+        return HourCycle::H23;
     else if (hour_cycle == "h24"sv)
-        return Unicode::HourCycle::H24;
+        return HourCycle::H24;
     VERIFY_NOT_REACHED();
 }
 
@@ -125,12 +125,12 @@ static auto find_regional_values_for_locale(StringView locale, GetRegionalValues
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
-Vector<Unicode::HourCycle> get_locale_hour_cycles(StringView locale)
+Vector<HourCycle> get_locale_hour_cycles(StringView locale)
 {
     return find_regional_values_for_locale(locale, get_regional_hour_cycles);
 }
 
-Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
+Optional<HourCycle> get_default_regional_hour_cycle(StringView locale)
 {
     if (auto hour_cycles = get_locale_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles.first();

@@ -6,7 +6,7 @@
 
 #include <LibUnicode/RelativeTimeFormat.h>
 
-namespace Unicode {
+namespace Locale {
 
 Optional<TimeUnit> time_unit_from_string(StringView time_unit)
 {

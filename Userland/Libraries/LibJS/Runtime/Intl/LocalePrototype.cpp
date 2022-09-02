@@ -61,11 +61,11 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     auto* locale_object = TRY(typed_this_object(vm));
 
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
     VERIFY(locale.has_value());
 
     // 3. Let maximal be the result of the Add Likely Subtags algorithm applied to loc.[[Locale]]. If an error is signaled, set maximal to loc.[[Locale]].
-    if (auto maximal = Unicode::add_likely_subtags(locale->language_id); maximal.has_value())
+    if (auto maximal = ::Locale::add_likely_subtags(locale->language_id); maximal.has_value())
         locale->language_id = maximal.release_value();
 
     // 4. Return ! Construct(%Locale%, maximal).
@@ -81,11 +81,11 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
     auto* locale_object = TRY(typed_this_object(vm));
 
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
     VERIFY(locale.has_value());
 
     // 3. Let minimal be the result of the Remove Likely Subtags algorithm applied to loc.[[Locale]]. If an error is signaled, set minimal to loc.[[Locale]].
-    if (auto minimal = Unicode::remove_likely_subtags(locale->language_id); minimal.has_value())
+    if (auto minimal = ::Locale::remove_likely_subtags(locale->language_id); minimal.has_value())
         locale->language_id = minimal.release_value();
 
     // 4. Return ! Construct(%Locale%, minimal).
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
     VERIFY(locale.has_value());
 
     // 4. Return the substring of locale corresponding to the unicode_language_id production.
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::language)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
 
     // 4. Assert: locale matches the unicode_locale_id production.
     VERIFY(locale.has_value());
@@ -177,7 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::script)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
 
     // 4. Assert: locale matches the unicode_locale_id production.
     VERIFY(locale.has_value());
@@ -198,7 +198,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
 
     // 4. Assert: locale matches the unicode_locale_id production.
     VERIFY(locale.has_value());
@@ -238,7 +238,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
     auto* locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
-    auto locale = Unicode::parse_unicode_locale_id(locale_object->locale());
+    auto locale = ::Locale::parse_unicode_locale_id(locale_object->locale());
 
     // 4. If the unicode_language_id production of locale does not contain the ["-" unicode_region_subtag] sequence, return undefined.
     if (!locale.has_value() || !locale->language_id.region.has_value())

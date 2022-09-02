@@ -12,7 +12,7 @@
 #include <LibUnicode/Forward.h>
 #include <LibUnicode/Locale.h>
 
-namespace Unicode {
+namespace Locale {
 
 // These are just the subset of fields in the CLDR required for ECMA-402.
 enum class TimeUnit {

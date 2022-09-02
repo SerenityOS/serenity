@@ -95,7 +95,7 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
 // 13.5.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
 Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list)
 {
-    auto list_patterns = Unicode::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
+    auto list_patterns = ::Locale::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
     if (!list_patterns.has_value())
         return {};
 

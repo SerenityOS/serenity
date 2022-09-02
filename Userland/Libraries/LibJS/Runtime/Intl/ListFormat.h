@@ -37,16 +37,16 @@ public:
     void set_type(StringView type);
     StringView type_string() const;
 
-    Unicode::Style style() const { return m_style; }
-    void set_style(StringView style) { m_style = Unicode::style_from_string(style); }
-    StringView style_string() const { return Unicode::style_to_string(m_style); }
+    ::Locale::Style style() const { return m_style; }
+    void set_style(StringView style) { m_style = ::Locale::style_from_string(style); }
+    StringView style_string() const { return ::Locale::style_to_string(m_style); }
 
 private:
     explicit ListFormat(Object& prototype);
 
-    String m_locale;                                 // [[Locale]]
-    Type m_type { Type::Invalid };                   // [[Type]]
-    Unicode::Style m_style { Unicode::Style::Long }; // [[Style]]
+    String m_locale;                                   // [[Locale]]
+    Type m_type { Type::Invalid };                     // [[Type]]
+    ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
 };
 
 using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;

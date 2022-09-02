@@ -33,9 +33,9 @@ public:
         Numeric,
         TwoDigit
     };
-    static_assert(to_underlying(ValueStyle::Long) == to_underlying(Unicode::Style::Long));
-    static_assert(to_underlying(ValueStyle::Short) == to_underlying(Unicode::Style::Short));
-    static_assert(to_underlying(ValueStyle::Narrow) == to_underlying(Unicode::Style::Narrow));
+    static_assert(to_underlying(ValueStyle::Long) == to_underlying(::Locale::Style::Long));
+    static_assert(to_underlying(ValueStyle::Short) == to_underlying(::Locale::Style::Short));
+    static_assert(to_underlying(ValueStyle::Narrow) == to_underlying(::Locale::Style::Narrow));
 
     enum class Display {
         Auto,

@@ -79,13 +79,13 @@ struct PatternPartitionWithSource : public PatternPartition {
 
 using StringOrBoolean = Variant<StringView, bool>;
 
-Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale);
-String canonicalize_unicode_locale_id(Unicode::LocaleID& locale);
+Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView locale);
+String canonicalize_unicode_locale_id(::Locale::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
 bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM&, Value locales);
 Optional<String> best_available_locale(StringView locale);
-String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale_id, Unicode::LocaleExtension extension);
+String insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
 Vector<String> lookup_supported_locales(Vector<String> const& requested_locales);
 Vector<String> best_fit_supported_locales(Vector<String> const& requested_locales);

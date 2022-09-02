@@ -293,7 +293,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
 // FIXME: LibUnicode currently only exposes unit patterns converted to an ECMA402 NumberFormat-specific format,
 //  since DurationFormat only needs a tiny subset of it, it's much easier to just convert it to the expected format
 //  here, but at some point we should split the the NumberFormat exporter to export both formats of the data.
-static String convert_number_format_pattern_to_duration_format_template(Unicode::NumberFormat const& number_format)
+static String convert_number_format_pattern_to_duration_format_template(::Locale::NumberFormat const& number_format)
 {
     auto result = number_format.zero_format.replace("{number}"sv, "{0}"sv, ReplaceMode::FirstOnly);
 
@@ -446,7 +446,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                     // c. If nextValue is not 0 or nextDisplay is not "auto", then
                     if (next_value != 0.0 || next_display != DurationFormat::Display::Auto) {
                         // i. Let separator be dataLocaleData.[[formats]].[[digital]].[[separator]].
-                        auto separator = Unicode::get_number_system_symbol(data_locale, duration_format.numbering_system(), Unicode::NumericSymbol::TimeSeparator).value_or(":"sv);
+                        auto separator = ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
                         result.append({ "literal"sv, separator });
@@ -464,7 +464,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 // 3. Let prv be ! ResolvePlural(pr, 𝔽(value)).
                 auto plurality = resolve_plural(*plural_rules, Value(value));
 
-                auto formats = Unicode::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<Unicode::Style>(style));
+                auto formats = ::Locale::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<::Locale::Style>(style));
                 auto pattern = formats.find_if([&](auto& p) { return p.plurality == plurality; });
                 if (pattern == formats.end())
                     continue;
@@ -505,7 +505,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         list_style = DurationFormat::Style::Narrow;
     }
 
-    auto unicode_list_style = Unicode::style_to_string(static_cast<Unicode::Style>(list_style));
+    auto unicode_list_style = ::Locale::style_to_string(static_cast<::Locale::Style>(list_style));
 
     // 8. Perform ! CreateDataPropertyOrThrow(lfOpts, "style", listStyle).
     MUST(list_format_options->create_data_property_or_throw(vm.names.style, js_string(vm, unicode_list_style)));

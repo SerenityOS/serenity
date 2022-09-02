@@ -810,7 +810,7 @@ static void print_intl_date_time_format(JS::Intl::DateTimeFormat& date_time_form
         if constexpr (IsIntegral<ValueType>) {
             print_value(JS::Value(*option), seen_objects);
         } else {
-            auto name = Unicode::calendar_pattern_style_to_string(*option);
+            auto name = Locale::calendar_pattern_style_to_string(*option);
             print_value(js_string(date_time_format.vm(), name), seen_objects);
         }
 

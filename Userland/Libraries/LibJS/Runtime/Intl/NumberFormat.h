@@ -205,9 +205,9 @@ public:
     void set_unit(String unit) { m_unit = move(unit); }
 
     bool has_unit_display() const { return m_unit_display.has_value(); }
-    Unicode::Style unit_display() const { return *m_unit_display; }
-    StringView unit_display_string() const { return Unicode::style_to_string(*m_unit_display); }
-    void set_unit_display(StringView unit_display) { m_unit_display = Unicode::style_from_string(unit_display); }
+    ::Locale::Style unit_display() const { return *m_unit_display; }
+    StringView unit_display_string() const { return ::Locale::style_to_string(*m_unit_display); }
+    void set_unit_display(StringView unit_display) { m_unit_display = ::Locale::style_from_string(unit_display); }
 
     UseGrouping use_grouping() const { return m_use_grouping; }
     Value use_grouping_to_value(VM&) const;
@@ -230,8 +230,8 @@ public:
     void set_bound_format(NativeFunction* bound_format) { m_bound_format = bound_format; }
 
     bool has_compact_format() const { return m_compact_format.has_value(); }
-    void set_compact_format(Unicode::NumberFormat compact_format) { m_compact_format = compact_format; }
-    Unicode::NumberFormat compact_format() const { return *m_compact_format; }
+    void set_compact_format(::Locale::NumberFormat compact_format) { m_compact_format = compact_format; }
+    ::Locale::NumberFormat compact_format() const { return *m_compact_format; }
 
 private:
     explicit NumberFormat(Object& prototype);
@@ -246,7 +246,7 @@ private:
     Optional<CurrencyDisplay> m_currency_display {};     // [[CurrencyDisplay]]
     Optional<CurrencySign> m_currency_sign {};           // [[CurrencySign]]
     Optional<String> m_unit {};                          // [[Unit]]
-    Optional<Unicode::Style> m_unit_display {};          // [[UnitDisplay]]
+    Optional<::Locale::Style> m_unit_display {};         // [[UnitDisplay]]
     UseGrouping m_use_grouping { false };                // [[UseGrouping]]
     Notation m_notation { Notation::Invalid };           // [[Notation]]
     Optional<CompactDisplay> m_compact_display {};       // [[CompactDisplay]]
@@ -257,7 +257,7 @@ private:
     Optional<StringView> m_resolved_currency_display;
 
     // Non-standard. Stores the resolved compact number format based on [[Locale]], [[Notation], [[Style]], and [[CompactDisplay]].
-    Optional<Unicode::NumberFormat> m_compact_format;
+    Optional<::Locale::NumberFormat> m_compact_format;
 };
 
 struct FormatResult {
@@ -283,7 +283,7 @@ String format_numeric(VM&, NumberFormat&, MathematicalValue number);
 Array* format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
 RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-Optional<Variant<StringView, String>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, Unicode::NumberFormat& found_pattern);
+Optional<Variant<StringView, String>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat&, int exponent);
 int compute_exponent(NumberFormat&, MathematicalValue number);
 int compute_exponent_for_magnitude(NumberFormat&, int magnitude);
