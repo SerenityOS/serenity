@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/XMLSerializerPrototype.h>
 #include <LibWeb/DOM/CDATASection.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
@@ -20,7 +21,17 @@
 
 namespace Web::DOMParsing {
 
-XMLSerializer::XMLSerializer() = default;
+JS::NonnullGCPtr<XMLSerializer> XMLSerializer::create_with_global_object(HTML::Window& window)
+{
+    return *window.heap().allocate<XMLSerializer>(window.realm(), window);
+}
+
+XMLSerializer::XMLSerializer(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.ensure_web_prototype<Bindings::XMLSerializerPrototype>("XMLSerializer"));
+}
+
 XMLSerializer::~XMLSerializer() = default;
 
 // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring
