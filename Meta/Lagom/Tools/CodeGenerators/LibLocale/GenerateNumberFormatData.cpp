@@ -806,10 +806,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibLocale/LocaleData.h>
+#include <LibLocale/NumberFormatData.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/LocaleData.h>
 #include <LibUnicode/NumberFormat.h>
-#include <LibUnicode/NumberFormatData.h>
 #include <LibUnicode/PluralRules.h>
 
 namespace Unicode {

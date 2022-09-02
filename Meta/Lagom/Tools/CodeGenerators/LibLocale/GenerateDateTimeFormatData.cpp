@@ -1768,11 +1768,11 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <LibLocale/LocaleData.h>
+#include <LibLocale/DateTimeFormatData.h>
 #include <LibTimeZone/TimeZone.h>
 #include <LibUnicode/DateTimeFormat.h>
-#include <LibUnicode/DateTimeFormatData.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/LocaleData.h>
 
 namespace Unicode {
 )~~~");

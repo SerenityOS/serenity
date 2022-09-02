@@ -40,24 +40,24 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_NUMBERS_SOURCE}/**" "${CLDR_NUMBERS_PATH}")
     extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_UNITS_SOURCE}/**" "${CLDR_UNITS_PATH}")
 
-    set(DATE_TIME_FORMAT_DATA_HEADER LibUnicode/DateTimeFormatData.h)
-    set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION LibUnicode/DateTimeFormatData.cpp)
+    set(DATE_TIME_FORMAT_DATA_HEADER LibLocale/DateTimeFormatData.h)
+    set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION LibLocale/DateTimeFormatData.cpp)
 
-    set(LOCALE_DATA_HEADER LibUnicode/LocaleData.h)
-    set(LOCALE_DATA_IMPLEMENTATION LibUnicode/LocaleData.cpp)
+    set(LOCALE_DATA_HEADER LibLocale/LocaleData.h)
+    set(LOCALE_DATA_IMPLEMENTATION LibLocale/LocaleData.cpp)
 
-    set(NUMBER_FORMAT_DATA_HEADER LibUnicode/NumberFormatData.h)
-    set(NUMBER_FORMAT_DATA_IMPLEMENTATION LibUnicode/NumberFormatData.cpp)
+    set(NUMBER_FORMAT_DATA_HEADER LibLocale/NumberFormatData.h)
+    set(NUMBER_FORMAT_DATA_IMPLEMENTATION LibLocale/NumberFormatData.cpp)
 
-    set(PLURAL_RULES_DATA_HEADER LibUnicode/PluralRulesData.h)
-    set(PLURAL_RULES_DATA_IMPLEMENTATION LibUnicode/PluralRulesData.cpp)
+    set(PLURAL_RULES_DATA_HEADER LibLocale/PluralRulesData.h)
+    set(PLURAL_RULES_DATA_IMPLEMENTATION LibLocale/PluralRulesData.cpp)
 
-    set(RELATIVE_TIME_FORMAT_DATA_HEADER LibUnicode/RelativeTimeFormatData.h)
-    set(RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION LibUnicode/RelativeTimeFormatData.cpp)
+    set(RELATIVE_TIME_FORMAT_DATA_HEADER LibLocale/RelativeTimeFormatData.h)
+    set(RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION LibLocale/RelativeTimeFormatData.cpp)
 
-    set(LOCALE_META_TARGET_PREFIX LibUnicode_)
+    set(LOCALE_META_TARGET_PREFIX LibLocale_)
 
-    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
+    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibLocale") # Serenity build.
         set(DATE_TIME_FORMAT_DATA_HEADER DateTimeFormatData.h)
         set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION DateTimeFormatData.cpp)
 

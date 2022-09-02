@@ -460,10 +460,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 
     generator.append(R"~~~(
 #include <AK/Array.h>
+#include <LibLocale/LocaleData.h>
+#include <LibLocale/PluralRulesData.h>
 #include <LibUnicode/Locale.h>
-#include <LibUnicode/LocaleData.h>
 #include <LibUnicode/PluralRules.h>
-#include <LibUnicode/PluralRulesData.h>
 #include <math.h>
 
 namespace Unicode {
