@@ -20,7 +20,6 @@
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibUnicode/Locale.h>
 
 namespace JS::Temporal {
 
