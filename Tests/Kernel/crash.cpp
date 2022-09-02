@@ -8,7 +8,9 @@
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <Kernel/Arch/x86/IO.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/IO.h>
+#endif
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>
 #include <LibTest/CrashTest.h>
@@ -45,7 +47,9 @@ int main(int argc, char** argv)
     bool do_legitimate_syscall = false;
     bool do_execute_non_executable_memory = false;
     bool do_trigger_user_mode_instruction_prevention = false;
+#if ARCH(I386) || ARCH(X86_64)
     bool do_use_io_instruction = false;
+#endif
     bool do_pledge_violation = false;
     bool do_failing_assertion = false;
     bool do_deref_null_refptr = false;
@@ -70,7 +74,9 @@ int main(int argc, char** argv)
     args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside msyscall)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
+#if ARCH(I386) || ARCH(X86_64)
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
+#endif
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
     args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
@@ -266,6 +272,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
+#if ARCH(I386) || ARCH(X86_64)
     if (do_use_io_instruction || do_all_crash_types) {
         any_failures |= !Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
@@ -273,6 +280,7 @@ int main(int argc, char** argv)
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
+#endif
 
     if (do_pledge_violation || do_all_crash_types) {
         any_failures |= !Crash("Violate pledge()'d promises", [] {
