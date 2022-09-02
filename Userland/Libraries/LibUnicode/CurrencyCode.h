@@ -18,6 +18,5 @@ struct CurrencyCode {
 };
 
 Optional<CurrencyCode> get_currency_code(StringView currency);
-Span<StringView const> get_available_currencies();
 
 }

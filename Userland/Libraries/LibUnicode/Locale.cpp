@@ -771,6 +771,7 @@ Span<StringView const> __attribute__((weak)) get_available_calendars() { return 
 Span<StringView const> __attribute__((weak)) get_available_collation_case_orderings() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_collation_numeric_orderings() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_collation_types() { return {}; }
+Span<StringView const> __attribute__((weak)) get_available_currencies() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_hour_cycles() { return {}; }
 Span<StringView const> __attribute__((weak)) get_available_number_systems() { return {}; }
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }

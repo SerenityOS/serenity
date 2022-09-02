@@ -150,6 +150,7 @@ Span<StringView const> get_available_calendars();
 Span<StringView const> get_available_collation_case_orderings();
 Span<StringView const> get_available_collation_numeric_orderings();
 Span<StringView const> get_available_collation_types();
+Span<StringView const> get_available_currencies();
 Span<StringView const> get_available_hour_cycles();
 Span<StringView const> get_available_number_systems();
 
