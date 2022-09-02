@@ -332,6 +332,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/Processor.cpp
 
         Arch/x86/common/CMOS.cpp
+        Arch/x86/common/DebugOutput.cpp
         Arch/x86/common/Delay.cpp
         Arch/x86/common/I8042Reboot.cpp
         Arch/x86/common/RTC.cpp
@@ -437,6 +438,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(RPI_SOURCES
+        Arch/aarch64/RPi/DebugOutput.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/InterruptController.cpp

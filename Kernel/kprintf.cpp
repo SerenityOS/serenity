@@ -7,7 +7,10 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/DebugOutput.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/common/BochsDebugOutput.h>
+#endif
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/PCISerialDevice.h>
@@ -43,39 +46,20 @@ static void serial_putch(char ch)
     if (PCISerialDevice::is_available())
         return PCISerialDevice::the().put_char(ch);
 
-    static bool serial_ready = false;
-    static bool was_cr = false;
-
-    if (!serial_ready) {
-        IO::out8(0x3F8 + 1, 0x00);
-        IO::out8(0x3F8 + 3, 0x80);
-        IO::out8(0x3F8 + 0, 0x02);
-        IO::out8(0x3F8 + 1, 0x00);
-        IO::out8(0x3F8 + 3, 0x03);
-        IO::out8(0x3F8 + 2, 0xC7);
-        IO::out8(0x3F8 + 4, 0x0B);
-
-        serial_ready = true;
-    }
-
-    while ((IO::in8(0x3F8 + 5) & 0x20) == 0)
-        ;
-
-    if (ch == '\n' && !was_cr)
-        IO::out8(0x3F8, '\r');
-
-    IO::out8(0x3F8, ch);
-
-    was_cr = ch == '\r';
+    debug_output(ch);
 }
 
 static void critical_console_out(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
+
+#if ARCH(I386) || ARCH(X86_64)
     // No need to output things to the real ConsoleDevice as no one is likely
     // to read it (because we are in a fatal situation, so only print things and halt)
-    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
+    bochs_debug_output(ch);
+#endif
+
     // We emit chars directly to the string. this is necessary in few cases,
     // especially when we want to avoid any memory allocations...
     if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
@@ -95,7 +79,9 @@ static void console_out(char ch)
     if (DeviceManagement::the().is_console_device_attached()) {
         DeviceManagement::the().console_device().put_char(ch);
     } else {
-        IO::out8(IO::BOCHS_DEBUG_PORT, ch);
+#if ARCH(I386) || ARCH(X86_64)
+        bochs_debug_output(ch);
+#endif
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
@@ -153,7 +139,9 @@ static inline void internal_dbgputch(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
-    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
+#if ARCH(I386) || ARCH(X86_64)
+    bochs_debug_output(ch);
+#endif
 }
 
 extern "C" void dbgputstr(char const* characters, size_t length)
