@@ -299,19 +299,6 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
     return DurationUnitOptions { .style = move(style), .display = display.as_string().string() };
 }
 
-// FIXME: LibUnicode currently only exposes unit patterns converted to an ECMA402 NumberFormat-specific format,
-//  since DurationFormat only needs a tiny subset of it, it's much easier to just convert it to the expected format
-//  here, but at some point we should split the NumberFormat exporter to export both formats of the data.
-static String convert_number_format_pattern_to_duration_format_template(::Locale::NumberFormat const& number_format)
-{
-    auto result = number_format.zero_format.replace("{number}"sv, "{0}"sv, ReplaceMode::FirstOnly);
-
-    for (size_t i = 0; i < number_format.identifiers.size(); ++i)
-        result = result.replace(String::formatted("{{unitIdentifier:{}}}", i), number_format.identifiers[i], ReplaceMode::FirstOnly);
-
-    return result;
-}
-
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
 Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
@@ -339,19 +326,22 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
         // d. Let unit be the Unit value.
         auto unit = duration_instances_component.unit;
 
-        // e. Let style be durationFormat.[[<styleSlot>]].
+        // e. Let numberFormatUnit be the NumberFormat Unit value.
+        auto number_format_unit = duration_instances_component.number_format_unit;
+
+        // f. Let style be durationFormat.[[<styleSlot>]].
         auto style = (duration_format.*style_slot)();
 
-        // f. Let display be durationFormat.[[<displaySlot>]].
+        // g. Let display be durationFormat.[[<displaySlot>]].
         auto display = (duration_format.*display_slot)();
 
-        // g. Let value be duration.[[<valueSlot>]].
+        // h. Let value be duration.[[<valueSlot>]].
         auto value = duration.*value_slot;
 
-        // h. Let nfOpts be ! OrdinaryObjectCreate(null).
+        // i. Let nfOpts be ! OrdinaryObjectCreate(null).
         auto* number_format_options = Object::create(realm, nullptr);
 
-        // i. If unit is "seconds", "milliseconds", or "microseconds", then
+        // j. If unit is "seconds", "milliseconds", or "microseconds", then
         if (unit.is_one_of("seconds"sv, "milliseconds"sv, "microseconds"sv)) {
             DurationFormat::ValueStyle next_style;
 
@@ -400,31 +390,31 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
             }
         }
 
-        // j. If style is "2-digit", then
+        // k. If style is "2-digit", then
         if (style == DurationFormat::ValueStyle::TwoDigit) {
             // i. Perform ! CreateDataPropertyOrThrow(nfOpts, "minimumIntegerDigits", 2𝔽).
             MUST(number_format_options->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(2)));
         }
 
-        // k. If value is not 0 or display is not "auto", then
+        // l. If value is not 0 or display is not "auto", then
         if (value != 0.0 || display != DurationFormat::Display::Auto) {
-            // i. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
-            auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
-
-            // ii. Let dataLocale be durationFormat.[[DataLocale]].
-            auto const& data_locale = duration_format.data_locale();
-
-            // iii. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
-
-            // iv. If style is "2-digit" or "numeric", then
+            // i. If style is "2-digit" or "numeric", then
             if (style == DurationFormat::ValueStyle::TwoDigit || style == DurationFormat::ValueStyle::Numeric) {
-                // 1. Let num be ! FormatNumeric(nf, 𝔽(value)).
+                // 1. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
+                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
+
+                // 2. Let dataLocale be durationFormat.[[DataLocale]].
+                auto const& data_locale = duration_format.data_locale();
+
+                // 3. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
+
+                // 4. Let num be ! FormatNumeric(nf, 𝔽(value)).
                 auto number = format_numeric(vm, *number_format, MathematicalValue(value));
 
-                // 2. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
+                // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
                 result.append({ unit, number });
 
-                // 3. If unit is "hours" or "minutes", then
+                // 6. If unit is "hours" or "minutes", then
                 if (unit.is_one_of("hours"sv, "minutes"sv)) {
                     double next_value = 0.0;
                     DurationFormat::Display next_display;
@@ -462,27 +452,23 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                     }
                 }
             }
-            // v. Else,
+            // ii. Else,
             else {
-                // 1. Let num be ! PartitionNumberPattern(nf, 𝔽(value)).
-                auto number = partition_number_pattern(vm, *number_format, MathematicalValue(value));
+                // 1. Perform ! CreateDataPropertyOrThrow(nfOpts, "style", "unit").
+                MUST(number_format_options->create_data_property_or_throw(vm.names.style, js_string(vm, "unit"sv)));
 
-                // 2. Let pr be ! Construct(%PluralRules%, « durationFormat.[[Locale]] »).
-                auto* plural_rules = static_cast<PluralRules*>(MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), js_string(vm, duration_format.locale()))));
+                // 2. Perform ! CreateDataPropertyOrThrow(nfOpts, "unit", numberFormatUnit).
+                MUST(number_format_options->create_data_property_or_throw(vm.names.unit, js_string(vm, number_format_unit)));
 
-                // 3. Let prv be ! ResolvePlural(pr, 𝔽(value)).
-                auto plurality = resolve_plural(*plural_rules, Value(value));
+                // 3. Perform ! CreateDataPropertyOrThrow(nfOpts, "unitDisplay", style).
+                auto unicode_style = ::Locale::style_to_string(static_cast<::Locale::Style>(style));
+                MUST(number_format_options->create_data_property_or_throw(vm.names.unitDisplay, js_string(vm, unicode_style)));
 
-                auto formats = ::Locale::get_unit_formats(data_locale, duration_instances_component.unit_singular, static_cast<::Locale::Style>(style));
-                auto pattern = formats.find_if([&](auto& p) { return p.plurality == plurality; });
-                if (pattern == formats.end())
-                    continue;
+                // 4. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
+                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), js_string(vm, duration_format.locale()), number_format_options)));
 
-                // 4. Let template be dataLocaleData.[[formats]].[[<style>]].[[<unit>]].[[<prv>]].
-                auto template_ = convert_number_format_pattern_to_duration_format_template(*pattern);
-
-                // 5. Let parts be ! MakePartsList(template, unit, num).
-                auto parts = make_parts_list(template_, unit, move(number));
+                // 5. Let parts be ! PartitionNumberPattern(nf, 𝔽(value)).
+                auto parts = partition_number_pattern(vm, *number_format, MathematicalValue(value));
 
                 // 6. Let concat be an empty String.
                 StringBuilder concat;

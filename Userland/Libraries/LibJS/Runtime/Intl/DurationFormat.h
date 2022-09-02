@@ -194,7 +194,7 @@ struct DurationInstanceComponent {
     DurationFormat::Display (DurationFormat::*get_display_slot)() const;
     void (DurationFormat::*set_display_slot)(StringView);
     StringView unit;
-    StringView unit_singular;
+    StringView number_format_unit;
     Span<StringView const> values;
     StringView digital_default;
 };
