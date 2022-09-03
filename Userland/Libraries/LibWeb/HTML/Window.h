@@ -169,6 +169,8 @@ public:
     JS::Object* web_prototype(String const& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
     JS::NativeFunction* web_constructor(String const& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
 
+    JS::Object& cached_web_prototype(String const& class_name);
+
     template<typename T>
     JS::Object& ensure_web_prototype(String const& class_name)
     {
