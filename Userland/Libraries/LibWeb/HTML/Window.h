@@ -147,7 +147,7 @@ private:
     HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;
 
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
-    NonnullRefPtr<Crypto::Crypto> m_crypto;
+    RefPtr<Crypto::Crypto> m_crypto;
     JS::GCPtr<CSS::Screen> m_screen;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;

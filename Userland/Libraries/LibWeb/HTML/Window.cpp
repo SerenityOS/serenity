@@ -92,7 +92,6 @@ JS::NonnullGCPtr<Window> Window::create_with_document(DOM::Document& document)
 
 Window::Window(JS::Realm& realm)
     : DOM::EventTarget(realm)
-    , m_crypto(Crypto::Crypto::create())
 {
     // FIXME: Should this be WindowPrototype?
 }
@@ -100,7 +99,6 @@ Window::Window(JS::Realm& realm)
 Window::Window(DOM::Document& document)
     : DOM::EventTarget(document.shape().realm())
     , m_associated_document(document)
-    , m_crypto(Crypto::Crypto::create())
 {
 }
 
@@ -765,6 +763,8 @@ void Window::initialize(JS::Realm& realm)
     ADD_WINDOW_OBJECT_INTERFACES;
 
     Object::set_prototype(&ensure_web_prototype<Bindings::WindowPrototype>("Window"));
+
+    m_crypto = Crypto::Crypto::create(*this);
 
     // FIXME: These should be native accessors, not properties
     define_direct_property("window", this, JS::Attribute::Enumerable);

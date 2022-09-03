@@ -14,9 +14,14 @@
 
 namespace Web::Crypto {
 
-Crypto::Crypto()
-    : m_subtle(SubtleCrypto::create())
+Crypto::Crypto(HTML::Window& window)
+    : m_subtle(*SubtleCrypto::create(window))
 {
+}
+
+JS::NonnullGCPtr<SubtleCrypto> Crypto::subtle() const
+{
+    return *m_subtle;
 }
 
 // https://w3c.github.io/webcrypto/#dfn-Crypto-method-getRandomValues

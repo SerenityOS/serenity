@@ -2,7 +2,7 @@
 # It is defined here so that there is no need to go to the Meta directory when adding new idl files
 
 libweb_js_wrapper(Crypto/Crypto)
-libweb_js_wrapper(Crypto/SubtleCrypto)
+libweb_js_wrapper(Crypto/SubtleCrypto NO_INSTANCE)
 libweb_js_wrapper(CSS/CSSConditionRule NO_INSTANCE)
 libweb_js_wrapper(CSS/CSSFontFaceRule NO_INSTANCE)
 libweb_js_wrapper(CSS/CSSGroupingRule NO_INSTANCE)
