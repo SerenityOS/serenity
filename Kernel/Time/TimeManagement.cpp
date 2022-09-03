@@ -8,10 +8,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Arch/x86/common/RTC.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Interrupts/APIC.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>

@@ -9,11 +9,11 @@
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86/InterruptManagement.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
+#include <Kernel/Arch/x86/common/Interrupts/IOAPIC.h>
+#include <Kernel/Arch/x86/common/Interrupts/PIC.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
-#include <Kernel/Interrupts/APIC.h>
-#include <Kernel/Interrupts/IOAPIC.h>
-#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>

@@ -11,9 +11,9 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>

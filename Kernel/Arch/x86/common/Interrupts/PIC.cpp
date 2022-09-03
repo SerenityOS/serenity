@@ -8,8 +8,8 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/x86/common/Interrupts/PIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
