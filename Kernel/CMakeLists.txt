@@ -62,13 +62,9 @@ set(KERNEL_SOURCES
     Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
     Devices/ZeroDevice.cpp
-    Devices/HID/I8042Controller.cpp
     Devices/HID/HIDManagement.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/MouseDevice.cpp
-    Devices/HID/PS2KeyboardDevice.cpp
-    Devices/HID/PS2MouseDevice.cpp
-    Devices/HID/VMWareMouseDevice.cpp
     GlobalProcessExposed.cpp
     Graphics/Bochs/DisplayConnector.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
@@ -339,6 +335,10 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86/Hypervisor/VMWareBackdoor.cpp
 
+        Arch/x86/ISABus/HID/PS2KeyboardDevice.cpp
+        Arch/x86/ISABus/HID/PS2MouseDevice.cpp
+        Arch/x86/ISABus/HID/VMWareMouseDevice.cpp
+        Arch/x86/ISABus/I8042Controller.cpp
         Arch/x86/ISABus/IDEController.cpp
         Arch/x86/PCI/Controller/HostBridge.cpp
         Arch/x86/PCI/Initializer.cpp

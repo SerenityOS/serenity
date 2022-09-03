@@ -6,10 +6,10 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Devices/HID/I8042Controller.h>
-#include <Kernel/Devices/HID/PS2KeyboardDevice.h>
-#include <Kernel/Devices/HID/PS2MouseDevice.h>
-#include <Kernel/Devices/HID/VMWareMouseDevice.h>
+#include <Kernel/Arch/x86/ISABus/HID/PS2KeyboardDevice.h>
+#include <Kernel/Arch/x86/ISABus/HID/PS2MouseDevice.h>
+#include <Kernel/Arch/x86/ISABus/HID/VMWareMouseDevice.h>
+#include <Kernel/Arch/x86/ISABus/I8042Controller.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
