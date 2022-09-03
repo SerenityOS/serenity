@@ -66,7 +66,6 @@ set(KERNEL_SOURCES
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/MouseDevice.cpp
     GlobalProcessExposed.cpp
-    Graphics/Bochs/DisplayConnector.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp
@@ -333,6 +332,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Shutdown.cpp
 
+        Arch/x86/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86/Hypervisor/VMWareBackdoor.cpp
 
         Arch/x86/ISABus/HID/PS2KeyboardDevice.cpp

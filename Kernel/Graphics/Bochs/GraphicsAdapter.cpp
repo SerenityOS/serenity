@@ -7,11 +7,13 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Try.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
-#include <Kernel/Graphics/Bochs/DisplayConnector.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Bochs/QEMUDisplayConnector.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
@@ -40,6 +42,10 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
     // Note: Bochs (the real bochs graphics adapter in the Bochs emulator) uses revision ID of 0x0
     // and doesn't support memory-mapped IO registers.
+
+    // Note: In non x86-builds, we should never encounter VirtualBox hardware nor Pure Bochs VBE graphics,
+    // so just assume we can use the QEMU BochsVBE-compatible graphics adapter only.
+#if ARCH(I386) || ARCH(X86_64)
     bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
     auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), PCI::HeaderType0BaseRegister::BAR0);
     if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
@@ -49,6 +55,11 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
         VERIFY(registers_mapping.region);
         m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, move(registers_mapping));
     }
+#else
+    auto registers_mapping = TRY(Memory::map_typed_writable<BochsDisplayMMIORegisters volatile>(PhysicalAddress(PCI::get_BAR2(pci_device_identifier.address()) & 0xfffffff0)));
+    VERIFY(registers_mapping.region);
+    m_display_connector = QEMUDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, move(registers_mapping));
+#endif
 
     // Note: According to Gerd Hoffmann - "The linux driver simply does
     // the unblank unconditionally. With bochs-display this is not needed but
