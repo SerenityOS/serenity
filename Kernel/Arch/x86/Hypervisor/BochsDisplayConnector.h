@@ -26,9 +26,9 @@ public:
 
     static NonnullLockRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
 
-    virtual IndexID index_id() const;
+private:
+    IndexID index_id() const;
 
-protected:
     ErrorOr<void> create_attached_framebuffer_console();
 
     BochsDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
