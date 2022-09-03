@@ -18,15 +18,15 @@ namespace Kernel::USB {
 
 ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
 {
-    auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
-    auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(pipe))));
+    auto default_pipe = TRY(ControlPipe::try_create_pipe(controller, Pipe::Direction::Bidirectional, 0, 8, 0));
+    auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(default_pipe))));
     auto sysfs_node = TRY(SysFSUSBDeviceInformation::create(*device));
     device->m_sysfs_device_info_node = move(sysfs_node);
     TRY(device->enumerate_device());
     return device;
 }
 
-Device::Device(USBController const& controller, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(USBController const& controller, u8 port, DeviceSpeed speed, NonnullOwnPtr<ControlPipe> default_pipe)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(0)
@@ -35,7 +35,7 @@ Device::Device(USBController const& controller, u8 port, DeviceSpeed speed, Nonn
 {
 }
 
-Device::Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<ControlPipe> default_pipe)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(address)
@@ -44,7 +44,7 @@ Device::Device(NonnullLockRefPtr<USBController> controller, u8 address, u8 port,
 {
 }
 
-Device::Device(Device const& device, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe)
     : m_device_port(device.port())
     , m_device_speed(device.speed())
     , m_address(device.address())
