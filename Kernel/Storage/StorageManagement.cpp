@@ -6,9 +6,13 @@
  */
 
 #include <AK/IterationDecision.h>
+#include <AK/Platform.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/ISABus/IDEController.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
@@ -19,7 +23,6 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
-#include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
 #include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
@@ -429,9 +432,11 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     VERIFY(s_storage_device_minor_number == 0);
     m_boot_argument = root_device;
     if (PCI::Access::is_disabled()) {
+#if ARCH(I386) || ARCH(X86_64)
         // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
         // to probe and use
         m_controllers.append(ISAIDEController::initialize());
+#endif
     } else {
         enumerate_pci_controllers(force_pio, poll);
     }

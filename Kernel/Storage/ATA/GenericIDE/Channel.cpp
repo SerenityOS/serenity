@@ -86,10 +86,12 @@ ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PCIIDE
 {
     return allocate_resources(force_pio);
 }
+#if ARCH(I386) || ARCH(X86_64)
 ErrorOr<void> IDEChannel::allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>)
 {
     return allocate_resources(false);
 }
+#endif
 
 UNMAP_AFTER_INIT ErrorOr<void> IDEChannel::allocate_resources(bool force_pio)
 {
