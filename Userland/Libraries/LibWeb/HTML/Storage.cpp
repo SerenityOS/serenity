@@ -6,15 +6,20 @@
 
 #include <AK/String.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-NonnullRefPtr<Storage> Storage::create()
+JS::NonnullGCPtr<Storage> Storage::create(HTML::Window& window)
 {
-    return adopt_ref(*new Storage);
+    return *window.heap().allocate<Storage>(window.realm(), window);
 }
 
-Storage::Storage() = default;
+Storage::Storage(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("Storage"));
+}
 
 Storage::~Storage() = default;
 

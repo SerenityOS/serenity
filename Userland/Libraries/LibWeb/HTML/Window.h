@@ -100,8 +100,8 @@ public:
 
     Selection::Selection* get_selection_impl();
 
-    RefPtr<HTML::Storage> local_storage();
-    RefPtr<HTML::Storage> session_storage();
+    JS::NonnullGCPtr<HTML::Storage> local_storage();
+    JS::NonnullGCPtr<HTML::Storage> session_storage();
 
     Window* parent();
 

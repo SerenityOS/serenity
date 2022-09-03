@@ -25,7 +25,6 @@
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/SelectionWrapper.h>
-#include <LibWeb/Bindings/StorageWrapper.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/CSS/MediaQueryList.h>
@@ -564,25 +563,27 @@ Selection::Selection* Window::get_selection_impl()
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
-RefPtr<HTML::Storage> Window::local_storage()
+JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
     // FIXME: Implement according to spec.
 
-    static HashMap<Origin, NonnullRefPtr<HTML::Storage>> local_storage_per_origin;
-    return local_storage_per_origin.ensure(associated_document().origin(), [] {
-        return HTML::Storage::create();
+    static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
+    auto storage = local_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
+        return *HTML::Storage::create(*this);
     });
+    return *storage;
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-sessionstorage
-RefPtr<HTML::Storage> Window::session_storage()
+JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
 {
     // FIXME: Implement according to spec.
 
-    static HashMap<Origin, NonnullRefPtr<HTML::Storage>> session_storage_per_origin;
-    return session_storage_per_origin.ensure(associated_document().origin(), [] {
-        return HTML::Storage::create();
+    static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
+    auto storage = session_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
+        return *HTML::Storage::create(*this);
     });
+    return *storage;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
@@ -1408,18 +1409,14 @@ JS_DEFINE_NATIVE_FUNCTION(Window::origin_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    // FIXME: localStorage may throw. We have to deal with that here.
-    return wrap(realm, *impl->local_storage());
+    return impl->local_storage();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::session_storage_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    // FIXME: sessionStorage may throw. We have to deal with that here.
-    return wrap(realm, *impl->session_storage());
+    return impl->session_storage();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::name_getter)
