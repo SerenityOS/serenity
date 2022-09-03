@@ -90,7 +90,6 @@ set(KERNEL_SOURCES
     Storage/ATA/AHCI/InterruptHandler.cpp
     Storage/ATA/GenericIDE/Controller.cpp
     Storage/ATA/GenericIDE/Channel.cpp
-    Storage/ATA/GenericIDE/PCIController.cpp
     Storage/ATA/ATAController.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
@@ -341,6 +340,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/ISABus/I8042Controller.cpp
         Arch/x86/ISABus/IDEController.cpp
         Arch/x86/PCI/Controller/HostBridge.cpp
+        Arch/x86/PCI/IDELegacyModeController.cpp
         Arch/x86/PCI/Initializer.cpp
     )
 

@@ -12,6 +12,7 @@
 #include <AK/UUID.h>
 #if ARCH(I386) || ARCH(X86_64)
 #    include <Kernel/Arch/x86/ISABus/IDEController.h>
+#    include <Kernel/Arch/x86/PCI/IDELegacyModeController.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -23,7 +24,6 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
-#include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
@@ -103,10 +103,12 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                 }
             }
 
+#if ARCH(I386) || ARCH(X86_64)
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
             if (subclass_code == SubclassID::IDEController && kernel_command_line().is_ide_enabled()) {
-                m_controllers.append(PCIIDEController::initialize(device_identifier, force_pio));
+                m_controllers.append(PCIIDELegacyModeController::initialize(device_identifier, force_pio));
             }
+#endif
 
             if (subclass_code == SubclassID::SATAController
                 && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {

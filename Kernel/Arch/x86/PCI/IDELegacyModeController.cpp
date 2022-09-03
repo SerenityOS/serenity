@@ -6,22 +6,22 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/x86/PCI/IDELegacyModeController.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
-#include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<PCIIDEController> PCIIDEController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT NonnullLockRefPtr<PCIIDELegacyModeController> PCIIDELegacyModeController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
 {
-    return adopt_lock_ref(*new PCIIDEController(device_identifier, force_pio));
+    return adopt_lock_ref(*new PCIIDELegacyModeController(device_identifier, force_pio));
 }
 
-UNMAP_AFTER_INIT PCIIDEController::PCIIDEController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT PCIIDELegacyModeController::PCIIDELegacyModeController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
     : PCI::Device(device_identifier.address())
     , m_prog_if(device_identifier.prog_if())
     , m_interrupt_line(device_identifier.interrupt_line())
@@ -33,22 +33,22 @@ UNMAP_AFTER_INIT PCIIDEController::PCIIDEController(PCI::DeviceIdentifier const&
     initialize(force_pio);
 }
 
-bool PCIIDEController::is_pci_native_mode_enabled() const
+bool PCIIDELegacyModeController::is_pci_native_mode_enabled() const
 {
     return (m_prog_if.value() & 0x05) != 0;
 }
 
-bool PCIIDEController::is_pci_native_mode_enabled_on_primary_channel() const
+bool PCIIDELegacyModeController::is_pci_native_mode_enabled_on_primary_channel() const
 {
     return (m_prog_if.value() & 0x1) == 0x1;
 }
 
-bool PCIIDEController::is_pci_native_mode_enabled_on_secondary_channel() const
+bool PCIIDELegacyModeController::is_pci_native_mode_enabled_on_secondary_channel() const
 {
     return (m_prog_if.value() & 0x4) == 0x4;
 }
 
-bool PCIIDEController::is_bus_master_capable() const
+bool PCIIDELegacyModeController::is_bus_master_capable() const
 {
     return m_prog_if.value() & (1 << 7);
 }
@@ -78,7 +78,7 @@ static char const* detect_controller_type(u8 programming_value)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT void PCIIDEController::initialize(bool force_pio)
+UNMAP_AFTER_INIT void PCIIDELegacyModeController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
     dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
