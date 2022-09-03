@@ -135,6 +135,8 @@ set(SOURCES
     FileAPI/Blob.cpp
     FileAPI/File.cpp
     FontCache.cpp
+    Geometry/DOMPoint.cpp
+    Geometry/DOMPointReadOnly.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp

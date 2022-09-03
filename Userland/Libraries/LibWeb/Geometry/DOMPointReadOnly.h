@@ -6,29 +6,20 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <LibGfx/Point.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry/#dompointreadonly
-class DOMPointReadOnly
-    : public RefCounted<DOMPointReadOnly>
-    , public Bindings::Wrappable {
+class DOMPointReadOnly : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMPointReadOnly, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::DOMPointReadOnlyWrapper;
+    static JS::NonnullGCPtr<DOMPointReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0);
 
-    static NonnullRefPtr<DOMPointReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0)
-    {
-        return DOMPointReadOnly::create(x, y, z, w);
-    }
-
-    static NonnullRefPtr<DOMPointReadOnly> create(double x = 0, double y = 0, double z = 0, double w = 0)
-    {
-        return adopt_ref(*new DOMPointReadOnly(x, y, z, w));
-    }
+    virtual ~DOMPointReadOnly() override;
 
     double x() const { return m_x; }
     double y() const { return m_y; }
@@ -36,13 +27,7 @@ public:
     double w() const { return m_w; }
 
 protected:
-    DOMPointReadOnly(double x, double y, double z, double w)
-        : m_x(x)
-        , m_y(y)
-        , m_z(z)
-        , m_w(w)
-    {
-    }
+    DOMPointReadOnly(HTML::Window&, double x, double y, double z, double w);
 
     double m_x;
     double m_y;
@@ -51,3 +36,5 @@ protected:
 };
 
 }
+
+WRAPPER_HACK(DOMPointReadOnly, Web::Geometry)

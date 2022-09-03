@@ -21,7 +21,7 @@ public:
     virtual Gfx::Path& get_path() = 0;
 
     float get_total_length();
-    NonnullRefPtr<Geometry::DOMPoint> get_point_at_length(float distance);
+    JS::NonnullGCPtr<Geometry::DOMPoint> get_point_at_length(float distance);
 
 protected:
     SVGGeometryElement(DOM::Document& document, DOM::QualifiedName qualified_name);
