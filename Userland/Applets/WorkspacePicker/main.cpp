@@ -42,7 +42,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_tray_icon = [&] {
         if (!window->is_visible()) {
             window->show();
-            window->make_window_manager(WindowServer::WMEventMask::WorkspaceChanges);
+
+            GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
+                WindowServer::WMEventMask::WorkspaceChanges);
+            GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window->window_id());
         }
     };
 

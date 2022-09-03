@@ -74,11 +74,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    window->make_window_manager(
+    GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
         | WindowServer::WMEventMask::WindowIconChanges
         | WindowServer::WMEventMask::WorkspaceChanges);
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window.window_id());
 
     return app->exec();
 }

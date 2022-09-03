@@ -324,12 +324,6 @@ void Window::set_window_mode(WindowMode mode)
     m_window_mode = mode;
 }
 
-void Window::make_window_manager(unsigned event_mask)
-{
-    GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(event_mask);
-    GUI::ConnectionToWindowManagerServer::the().async_set_manager_window(m_window_id);
-}
-
 bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& right) const
 {
     if (left.has<Gfx::StandardCursor>() != right.has<Gfx::StandardCursor>())

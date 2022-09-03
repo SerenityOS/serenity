@@ -22,7 +22,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Keymap");
     window->resize(16, 16);
     window->show();
-    window->make_window_manager(WindowServer::WMEventMask::KeymapChanged);
+
+    GUI::ConnectionToWindowManagerServer::the().async_set_event_mask(
+        WindowServer::WMEventMask::KeymapChanged);
+    GUI::ConnectionToWindowManagerServer::the().async_set_window_manager(window->window_id());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath getkeymap proc exec"));
 
