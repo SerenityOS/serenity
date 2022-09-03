@@ -123,6 +123,16 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
 
 Window::~Window() = default;
 
+JS::Object& Window::cached_web_prototype(String const& class_name)
+{
+    auto it = m_prototypes.find(class_name);
+    if (it == m_prototypes.end()) {
+        dbgln("Missing prototype: {}", class_name);
+    }
+    VERIFY(it != m_prototypes.end());
+    return *it->value;
+}
+
 HighResolutionTime::Performance& Window::performance()
 {
     if (!m_performance)
