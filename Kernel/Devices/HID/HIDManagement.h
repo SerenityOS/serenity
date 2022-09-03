@@ -61,7 +61,9 @@ private:
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
+#if ARCH(I386) || ARCH(X86_64)
     LockRefPtr<I8042Controller> m_i8042_controller;
+#endif
     NonnullLockRefPtrVector<HIDDevice> m_hid_devices;
     Spinlock m_client_lock { LockRank::None };
 };

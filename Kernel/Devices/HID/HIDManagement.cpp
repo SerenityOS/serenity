@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <AK/Singleton.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/ISABus/I8042Controller.h>
+#endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Devices/HID/I8042Controller.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Sections.h>
 
@@ -119,6 +122,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // set to emulate PS/2, we should not initialize the PS/2 controller.
     if (kernel_command_line().disable_ps2_controller())
         return {};
+#if ARCH(I386) || ARCH(X86_64)
     m_i8042_controller = I8042Controller::initialize();
 
     // Note: If ACPI is disabled or doesn't indicate that we have an i8042, we
@@ -140,6 +144,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
 
     if (m_i8042_controller->keyboard())
         m_hid_devices.append(m_i8042_controller->keyboard().release_nonnull());
+#endif
     return {};
 }
 

@@ -8,7 +8,7 @@
 
 #include <AK/CircularQueue.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/Devices/HID/I8042Controller.h>
+#include <Kernel/Arch/x86/ISABus/I8042Controller.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>

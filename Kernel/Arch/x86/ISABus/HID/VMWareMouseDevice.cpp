@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/Arch/x86/Hypervisor/VMWareBackdoor.h>
+#include <Kernel/Arch/x86/ISABus/HID/VMWareMouseDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/HID/VMWareMouseDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
