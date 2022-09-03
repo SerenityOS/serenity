@@ -11,25 +11,14 @@
 namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry/#DOMRect
-class DOMRect final
-    : public DOMRectReadOnly {
+class DOMRect final : public DOMRectReadOnly {
+    WEB_PLATFORM_OBJECT(DOMRect, DOMRectReadOnly);
+
 public:
-    using WrapperType = Bindings::DOMRectWrapper;
+    static JS::NonnullGCPtr<DOMRect> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0);
+    static JS::NonnullGCPtr<DOMRect> create(HTML::Window&, Gfx::FloatRect const&);
 
-    static NonnullRefPtr<DOMRect> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0)
-    {
-        return DOMRect::create(x, y, width, height);
-    }
-
-    static NonnullRefPtr<DOMRect> create(double x = 0, double y = 0, double width = 0, double height = 0)
-    {
-        return adopt_ref(*new DOMRect(x, y, width, height));
-    }
-
-    static NonnullRefPtr<DOMRect> create(Gfx::FloatRect const& rect)
-    {
-        return adopt_ref(*new DOMRect(rect.x(), rect.y(), rect.width(), rect.height()));
-    }
+    virtual ~DOMRect() override;
 
     double x() const { return m_rect.x(); }
     double y() const { return m_rect.y(); }
@@ -42,9 +31,9 @@ public:
     void set_height(double height) { m_rect.set_height(height); }
 
 private:
-    DOMRect(float x, float y, float width, float height)
-        : DOMRectReadOnly(x, y, width, height)
-    {
-    }
+    DOMRect(HTML::Window&, double x, double y, double width, double height);
 };
+
 }
+
+WRAPPER_HACK(DOMRect, Web::Geometry)
