@@ -16,8 +16,19 @@ cleanup() {
 }
 
 if [ "$(id -u)" != 0 ]; then
-    sudo -E -- "$0" "$@" || die "this script needs to run as root"
-    exit 0
+    set +e
+    ${SUDO} -E -- sh -c "\"$0\" $* || exit 42"
+    case $? in
+        1)
+            die "this script needs to run as root"
+            ;;
+        42)
+            exit 1
+            ;;
+        *)
+            exit 0
+            ;;
+    esac
 else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
