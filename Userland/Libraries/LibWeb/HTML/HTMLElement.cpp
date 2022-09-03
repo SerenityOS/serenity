@@ -30,12 +30,17 @@ namespace Web::HTML {
 
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
-    , m_dataset(DOMStringMap::create(*this))
 {
     set_prototype(&window().cached_web_prototype("HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;
+
+void HTMLElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    m_dataset = DOMStringMap::create(*this);
+}
 
 void HTMLElement::visit_edges(Cell::Visitor& visitor)
 {

@@ -52,6 +52,8 @@ public:
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void initialize(JS::Realm&) override;
+
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
@@ -69,7 +71,7 @@ private:
     };
     ContentEditableState content_editable_state() const;
 
-    JS::NonnullGCPtr<DOMStringMap> m_dataset;
+    JS::GCPtr<DOMStringMap> m_dataset;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
     bool m_locked_for_focus { false };
