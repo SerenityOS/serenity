@@ -37,6 +37,14 @@ static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint
     image.selection().merge(selection_mask, merge_mode);
 }
 
+void WandSelectTool::on_keydown(GUI::KeyEvent& key_event)
+{
+    Tool::on_keydown(key_event);
+    if (key_event.key() == KeyCode::Key_Escape) {
+        m_editor->image().selection().clear();
+    }
+}
+
 void WandSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     if (!layer)

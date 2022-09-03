@@ -22,6 +22,7 @@ public:
     virtual ~WandSelectTool() = default;
 
     virtual void on_mousedown(Layer*, MouseEvent& event) override;
+    virtual void on_keydown(GUI::KeyEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
