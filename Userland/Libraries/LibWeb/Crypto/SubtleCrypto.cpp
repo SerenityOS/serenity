@@ -10,11 +10,23 @@
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/DOM/DOMException.h>
 
 namespace Web::Crypto {
+
+JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(HTML::Window& window)
+{
+    return *window.heap().allocate<SubtleCrypto>(window.realm(), window);
+}
+
+SubtleCrypto::SubtleCrypto(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("SubtleCrypto"));
+}
+
+SubtleCrypto::~SubtleCrypto() = default;
 
 JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {

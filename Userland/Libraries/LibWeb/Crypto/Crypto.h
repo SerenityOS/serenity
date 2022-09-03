@@ -19,20 +19,20 @@ class Crypto : public Bindings::Wrappable
 public:
     using WrapperType = Bindings::CryptoWrapper;
 
-    static NonnullRefPtr<Crypto> create()
+    static NonnullRefPtr<Crypto> create(HTML::Window& window)
     {
-        return adopt_ref(*new Crypto());
+        return adopt_ref(*new Crypto(window));
     }
 
-    NonnullRefPtr<SubtleCrypto> subtle() const { return m_subtle; }
+    JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
     DOM::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
     String random_uuid() const;
 
 private:
-    Crypto();
+    explicit Crypto(HTML::Window&);
 
-    NonnullRefPtr<SubtleCrypto> m_subtle;
+    JS::Handle<SubtleCrypto> m_subtle;
 };
 
 }
