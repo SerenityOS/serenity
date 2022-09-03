@@ -161,14 +161,14 @@ static bool is_either(char* str, int offset, char lower, char upper)
 }
 
 template<typename Callback>
-inline int generate_unique_filename(char* pattern, Callback callback)
+inline int generate_unique_filename(char* pattern, size_t suffix_length, Callback callback)
 {
     size_t length = strlen(pattern);
 
-    if (length < 6 || memcmp(pattern + length - 6, "XXXXXX", 6))
+    if (length < 6 + suffix_length || memcmp(pattern + length - 6 - suffix_length, "XXXXXX", 6))
         return EINVAL;
 
-    size_t start = length - 6;
+    size_t start = length - 6 - suffix_length;
 
     constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -828,7 +828,7 @@ int system(char const* command)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mktemp.html
 char* mktemp(char* pattern)
 {
-    auto error = generate_unique_filename(pattern, [&] {
+    auto error = generate_unique_filename(pattern, 0, [&] {
         struct stat st;
         int rc = lstat(pattern, &st);
         if (rc < 0 && errno == ENOENT)
@@ -845,8 +845,15 @@ char* mktemp(char* pattern)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkstemp.html
 int mkstemp(char* pattern)
 {
+    return mkstemps(pattern, 0);
+}
+
+// https://man7.org/linux/man-pages/man3/mkstemps.3.html
+int mkstemps(char* pattern, int suffix_length)
+{
+    VERIFY(suffix_length >= 0);
     int fd = -1;
-    auto error = generate_unique_filename(pattern, [&] {
+    auto error = generate_unique_filename(pattern, static_cast<size_t>(suffix_length), [&] {
         fd = open(pattern, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR); // I'm using the flags I saw glibc using.
         if (fd >= 0)
             return IterationDecision::Break;
@@ -862,7 +869,7 @@ int mkstemp(char* pattern)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdtemp.html
 char* mkdtemp(char* pattern)
 {
-    auto error = generate_unique_filename(pattern, [&] {
+    auto error = generate_unique_filename(pattern, 0, [&] {
         if (mkdir(pattern, 0700) == 0)
             return IterationDecision::Break;
         return IterationDecision::Continue;
