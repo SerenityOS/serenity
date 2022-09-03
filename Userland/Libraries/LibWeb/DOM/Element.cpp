@@ -561,7 +561,7 @@ bool Element::serializes_as_void() const
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect
-NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
+JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
     // // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<Document&>(document()).update_layout();
@@ -569,22 +569,22 @@ NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     // FIXME: Support inline layout nodes as well.
     auto* paint_box = this->paint_box();
     if (!paint_box)
-        return Geometry::DOMRect::create(0, 0, 0, 0);
+        return Geometry::DOMRect::create_with_global_object(window(), 0, 0, 0, 0);
 
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+    return Geometry::DOMRect::create(window(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
-NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
+JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 {
-    NonnullRefPtrVector<Geometry::DOMRect> rects;
+    Vector<JS::Handle<Geometry::DOMRect>> rects;
 
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
     if (!layout_node() || !layout_node()->is_box())
-        return Geometry::DOMRectList::create(move(rects));
+        return Geometry::DOMRectList::create(window(), move(rects));
 
     // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
     // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
@@ -597,8 +597,8 @@ NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
     // - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes are left in the final list.
 
     auto bounding_rect = get_bounding_client_rect();
-    rects.append(bounding_rect);
-    return Geometry::DOMRectList::create(move(rects));
+    rects.append(*bounding_rect);
+    return Geometry::DOMRectList::create(window(), move(rects));
 }
 
 int Element::client_top() const

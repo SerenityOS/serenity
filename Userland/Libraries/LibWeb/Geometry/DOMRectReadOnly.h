@@ -6,29 +6,20 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry/#domrectreadonly
-class DOMRectReadOnly
-    : public RefCounted<DOMRectReadOnly>
-    , public Bindings::Wrappable {
+class DOMRectReadOnly : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMRectReadOnly, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::DOMRectReadOnlyWrapper;
+    static JS::NonnullGCPtr<DOMRectReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0);
 
-    static NonnullRefPtr<DOMRectReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0)
-    {
-        return DOMRectReadOnly::create(x, y, width, height);
-    }
-
-    static NonnullRefPtr<DOMRectReadOnly> create(double x = 0, double y = 0, double width = 0, double height = 0)
-    {
-        return adopt_ref(*new DOMRectReadOnly(x, y, width, height));
-    }
+    virtual ~DOMRectReadOnly() override;
 
     double x() const { return m_rect.x(); }
     double y() const { return m_rect.y(); }
@@ -41,11 +32,10 @@ public:
     double left() const { return min(x(), x() + width()); }
 
 protected:
-    DOMRectReadOnly(float x, float y, float width, float height)
-        : m_rect(x, y, width, height)
-    {
-    }
+    DOMRectReadOnly(HTML::Window&, double x, double y, double width, double height);
 
     Gfx::FloatRect m_rect;
 };
 }
+
+WRAPPER_HACK(DOMRectReadOnly, Web::Geometry)

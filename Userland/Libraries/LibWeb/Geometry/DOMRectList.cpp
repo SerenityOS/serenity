@@ -4,15 +4,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectList.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Geometry {
 
-DOMRectList::DOMRectList(NonnullRefPtrVector<DOMRect>&& rects)
-    : m_rects(move(rects))
+JS::NonnullGCPtr<DOMRectList> DOMRectList::create(HTML::Window& window, Vector<JS::Handle<DOMRect>> rect_handles)
+{
+    Vector<JS::NonnullGCPtr<DOMRect>> rects;
+    for (auto& rect : rect_handles)
+        rects.append(*rect);
+    return *window.heap().allocate<DOMRectList>(window.realm(), window, move(rects));
+}
+
+DOMRectList::DOMRectList(HTML::Window& window, Vector<JS::NonnullGCPtr<DOMRect>> rects)
+    : Bindings::LegacyPlatformObject(window.cached_web_prototype("DOMRectList"))
+    , m_rects(move(rects))
 {
 }
+
+DOMRectList::~DOMRectList() = default;
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length
 u32 DOMRectList::length() const
@@ -28,12 +41,20 @@ DOMRect const* DOMRectList::item(u32 index) const
     // Otherwise, the DOMRect object at index must be returned. Indices are zero-based.
     if (index >= m_rects.size())
         return nullptr;
-    return &m_rects[index];
+    return m_rects[index];
 }
 
 bool DOMRectList::is_supported_property_index(u32 index) const
 {
     return index < m_rects.size();
+}
+
+JS::Value DOMRectList::item_value(size_t index) const
+{
+    if (index >= m_rects.size())
+        return JS::js_undefined();
+
+    return m_rects[index].ptr();
 }
 
 }

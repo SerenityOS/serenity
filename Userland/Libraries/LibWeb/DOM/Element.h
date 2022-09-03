@@ -125,8 +125,8 @@ public:
     bool is_void_element() const;
     bool serializes_as_void() const;
 
-    NonnullRefPtr<Geometry::DOMRect> get_bounding_client_rect() const;
-    NonnullRefPtr<Geometry::DOMRectList> get_client_rects() const;
+    JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
+    JS::NonnullGCPtr<Geometry::DOMRectList> get_client_rects() const;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
 

@@ -137,7 +137,9 @@ set(SOURCES
     FontCache.cpp
     Geometry/DOMPoint.cpp
     Geometry/DOMPointReadOnly.cpp
+    Geometry/DOMRect.cpp
     Geometry/DOMRectList.cpp
+    Geometry/DOMRectReadOnly.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextContainer.cpp
