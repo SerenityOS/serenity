@@ -466,7 +466,6 @@ class OptionConstructor;
 class RangePrototype;
 class ResizeObserverWrapper;
 class SelectionWrapper;
-class StorageWrapper;
 class SubtleCryptoWrapper;
 class TextDecoderWrapper;
 class TextEncoderWrapper;
