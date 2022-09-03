@@ -38,6 +38,7 @@ public:
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
 
+    ErrorOr<void> add_new_layer_from_selection();
     Tool* active_tool() { return m_active_tool; }
     void set_active_tool(Tool*);
     void update_tool_cursor();
