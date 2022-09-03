@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -425,6 +426,30 @@ void ImageEditor::set_active_layer(Layer* layer)
         if (on_active_layer_change)
             on_active_layer_change({});
     }
+}
+
+ErrorOr<void> ImageEditor::add_new_layer_from_selection()
+{
+    auto current_layer_selection = image().selection();
+    if (current_layer_selection.is_empty())
+        return Error::from_string_literal("There is no active selection to create layer from.");
+
+    // save offsets of selection so we know where to place the new layer
+    auto selection_offset = current_layer_selection.bounding_rect().location();
+
+    auto selection_bitmap = active_layer()->try_copy_bitmap(current_layer_selection);
+    if (selection_bitmap.is_null())
+        return Error::from_string_literal("Unable to create bitmap from selection.");
+
+    auto layer_or_error = PixelPaint::Layer::try_create_with_bitmap(image(), selection_bitmap.release_nonnull(), "New Layer"sv);
+    if (layer_or_error.is_error())
+        return Error::from_string_literal("Unable to create layer from selection.");
+
+    auto new_layer = layer_or_error.release_value();
+    new_layer->set_location(selection_offset);
+    image().add_layer(new_layer);
+    layers_did_change();
+    return {};
 }
 
 void ImageEditor::set_active_tool(Tool* tool)
