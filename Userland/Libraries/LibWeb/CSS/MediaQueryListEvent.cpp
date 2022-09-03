@@ -25,7 +25,7 @@ MediaQueryListEvent::MediaQueryListEvent(HTML::Window& window_object, FlyString 
     , m_media(event_init.media)
     , m_matches(event_init.matches)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::MediaQueryListEventPrototype>("MediaQueryListEvent"));
+    set_prototype(&window_object.cached_web_prototype("MediaQueryListEvent"));
 }
 
 MediaQueryListEvent::~MediaQueryListEvent() = default;

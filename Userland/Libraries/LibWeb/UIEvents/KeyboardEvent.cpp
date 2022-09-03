@@ -5,7 +5,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <LibWeb/Bindings/KeyboardEventPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 
@@ -129,7 +128,7 @@ KeyboardEvent::KeyboardEvent(HTML::Window& window_object, FlyString const& event
     , m_key_code(event_init.key_code)
     , m_char_code(event_init.char_code)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::KeyboardEventPrototype>("KeyboardEvent"));
+    set_prototype(&window_object.cached_web_prototype("KeyboardEvent"));
 }
 
 KeyboardEvent::~KeyboardEvent() = default;

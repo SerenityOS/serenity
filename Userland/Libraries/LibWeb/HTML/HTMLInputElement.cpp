@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLInputElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -25,7 +24,7 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_value(String::empty())
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLInputElementPrototype>("HTMLInputElement"));
+    set_prototype(&window().cached_web_prototype("HTMLInputElement"));
 
     activation_behavior = [this](auto&) {
         // The activation behavior for input elements are these steps:

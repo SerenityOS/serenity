@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/Path2DPrototype.h>
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -19,7 +18,7 @@ JS::NonnullGCPtr<Path2D> Path2D::create_with_global_object(HTML::Window& window,
 Path2D::Path2D(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
     : PlatformObject(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::Path2DPrototype>("Path2D"));
+    set_prototype(&window.cached_web_prototype("Path2D"));
 
     // 1. Let output be a new Path2D object.
     // 2. If path is not given, then return output.

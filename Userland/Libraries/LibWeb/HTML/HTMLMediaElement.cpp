@@ -13,7 +13,7 @@ namespace Web::HTML {
 HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLMediaElementPrototype>("HTMLMediaElement"));
+    set_prototype(&window().cached_web_prototype("HTMLMediaElement"));
 }
 
 HTMLMediaElement::~HTMLMediaElement() = default;

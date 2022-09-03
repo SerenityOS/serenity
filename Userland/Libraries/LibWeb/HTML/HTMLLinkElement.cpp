@@ -9,7 +9,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/URL.h>
-#include <LibWeb/Bindings/HTMLLinkElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
@@ -22,7 +21,7 @@ namespace Web::HTML {
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLLinkElementPrototype>("HTMLLinkElement"));
+    set_prototype(&window().cached_web_prototype("HTMLLinkElement"));
 }
 
 HTMLLinkElement::~HTMLLinkElement() = default;

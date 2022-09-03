@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/DocumentTypePrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 
@@ -18,7 +17,7 @@ JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
 DocumentType::DocumentType(Document& document)
     : Node(document, NodeType::DOCUMENT_TYPE_NODE)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::DocumentTypePrototype>("DocumentType"));
+    set_prototype(&window().cached_web_prototype("DocumentType"));
 }
 
 }

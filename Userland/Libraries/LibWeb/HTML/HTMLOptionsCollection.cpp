@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLOptionsCollectionPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
@@ -22,7 +21,7 @@ JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::Paren
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
     : DOM::HTMLCollection(root, move(filter))
 {
-    set_prototype(&root.window().ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>("HTMLOptionsCollection"));
+    set_prototype(&root.window().cached_web_prototype("HTMLOptionsCollection"));
 }
 
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;

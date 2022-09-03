@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLAnchorElementPrototype.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -13,7 +12,7 @@ namespace Web::HTML {
 HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>("HTMLAnchorElement"));
+    set_prototype(&window().cached_web_prototype("HTMLAnchorElement"));
 
     activation_behavior = [this](auto const& event) {
         run_activation_behavior(event);

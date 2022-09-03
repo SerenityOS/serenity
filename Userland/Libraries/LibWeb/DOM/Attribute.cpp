@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/AttributePrototype.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -24,7 +23,7 @@ Attribute::Attribute(Document& document, FlyString local_name, String value, Ele
     , m_value(move(value))
     , m_owner_element(owner_element)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::AttributePrototype>("Attribute"));
+    set_prototype(&window().cached_web_prototype("Attribute"));
 }
 
 void Attribute::visit_edges(Cell::Visitor& visitor)

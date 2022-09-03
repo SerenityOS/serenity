@@ -8,7 +8,6 @@
 
 #include <AK/Debug.h>
 #include <AK/URL.h>
-#include <LibWeb/Bindings/CSSImportRulePrototype.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
@@ -28,7 +27,7 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     , m_url(move(url))
     , m_document(document)
 {
-    set_prototype(&document.window().ensure_web_prototype<Bindings::CSSImportRulePrototype>("CSSImportRule"));
+    set_prototype(&document.window().cached_web_prototype("CSSImportRule"));
 
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());

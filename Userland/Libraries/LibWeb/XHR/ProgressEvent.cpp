@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/ProgressEventPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/XHR/ProgressEvent.h>
 
@@ -26,7 +25,7 @@ ProgressEvent::ProgressEvent(HTML::Window& window_object, FlyString const& event
     , m_loaded(event_init.loaded)
     , m_total(event_init.total)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::ProgressEventPrototype>("ProgressEvent"));
+    set_prototype(&window_object.cached_web_prototype("ProgressEvent"));
 }
 
 ProgressEvent::~ProgressEvent() = default;

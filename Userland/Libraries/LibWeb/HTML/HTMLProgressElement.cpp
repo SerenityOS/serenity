@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLProgressElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
@@ -19,7 +18,7 @@ namespace Web::HTML {
 HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLProgressElementPrototype>("HTMLProgressElement"));
+    set_prototype(&window().cached_web_prototype("HTMLProgressElement"));
 }
 
 HTMLProgressElement::~HTMLProgressElement() = default;

@@ -5,7 +5,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <LibWeb/Bindings/DOMStringMapPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/DOMStringMap.h>
@@ -20,7 +19,7 @@ JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
-    : PlatformObject(element.document().window().ensure_web_prototype<Bindings::DOMStringMapPrototype>("DOMStringMap"))
+    : PlatformObject(element.window().cached_web_prototype("DOMStringMap"))
     , m_associated_element(element)
 {
 }

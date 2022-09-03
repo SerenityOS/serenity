@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/Bindings/HTMLImageElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -23,7 +22,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLImageElementPrototype>("HTMLImageElement"));
+    set_prototype(&window().cached_web_prototype("HTMLImageElement"));
 
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);

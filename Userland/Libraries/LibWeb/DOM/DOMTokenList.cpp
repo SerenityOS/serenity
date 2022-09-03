@@ -7,7 +7,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/Bindings/DOMTokenListPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
@@ -62,7 +61,7 @@ DOMTokenList* DOMTokenList::create(Element const& associated_element, FlyString 
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
 DOMTokenList::DOMTokenList(Element const& associated_element, FlyString associated_attribute)
-    : Bindings::LegacyPlatformObject(associated_element.document().window().ensure_web_prototype<Bindings::DOMTokenListPrototype>("DOMTokenList"))
+    : Bindings::LegacyPlatformObject(associated_element.window().cached_web_prototype("DOMTokenList"))
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {

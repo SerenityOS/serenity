@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLTemplateElementPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
@@ -14,7 +13,7 @@ namespace Web::HTML {
 HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTemplateElementPrototype>("HTMLTemplateElement"));
+    set_prototype(&window().cached_web_prototype("HTMLTemplateElement"));
 
     m_content = heap().allocate<DOM::DocumentFragment>(realm(), appropriate_template_contents_owner_document(document));
     m_content->set_host(this);

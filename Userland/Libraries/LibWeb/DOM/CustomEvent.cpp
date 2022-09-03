@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CustomEventPrototype.h>
 #include <LibWeb/DOM/CustomEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -24,14 +23,14 @@ CustomEvent* CustomEvent::create_with_global_object(HTML::Window& window_object,
 CustomEvent::CustomEvent(HTML::Window& window_object, FlyString const& event_name)
     : Event(window_object, event_name)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CustomEventPrototype>("CustomEvent"));
+    set_prototype(&window_object.cached_web_prototype("CustomEvent"));
 }
 
 CustomEvent::CustomEvent(HTML::Window& window_object, FlyString const& event_name, CustomEventInit const& event_init)
     : Event(window_object, event_name, event_init)
     , m_detail(event_init.detail)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CustomEventPrototype>("CustomEvent"));
+    set_prototype(&window_object.cached_web_prototype("CustomEvent"));
 }
 
 CustomEvent::~CustomEvent() = default;

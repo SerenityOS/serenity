@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MessagePortPrototype.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -22,7 +21,7 @@ JS::NonnullGCPtr<MessagePort> MessagePort::create(HTML::Window& window)
 MessagePort::MessagePort(HTML::Window& window)
     : DOM::EventTarget(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::MessagePortPrototype>("MessagePort"));
+    set_prototype(&window.cached_web_prototype("MessagePort"));
 }
 
 MessagePort::~MessagePort() = default;

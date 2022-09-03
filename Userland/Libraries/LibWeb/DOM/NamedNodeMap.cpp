@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/NamedNodeMapPrototype.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
@@ -20,7 +19,7 @@ JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(element.document().window().ensure_web_prototype<Bindings::NamedNodeMapPrototype>("NamedNodeMap"))
+    : Bindings::LegacyPlatformObject(element.window().cached_web_prototype("NamedNodeMap"))
     , m_element(element)
 {
 }

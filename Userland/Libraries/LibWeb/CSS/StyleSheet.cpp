@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/StyleSheetPrototype.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
@@ -14,7 +13,7 @@
 namespace Web::CSS {
 
 StyleSheet::StyleSheet(HTML::Window& window_object)
-    : PlatformObject(window_object.ensure_web_prototype<Bindings::StyleSheetPrototype>("StyleSheet"))
+    : PlatformObject(window_object.cached_web_prototype("StyleSheet"))
 {
 }
 

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSSupportsRulePrototype.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/Window.h>
@@ -20,7 +19,7 @@ CSSSupportsRule::CSSSupportsRule(HTML::Window& window_object, NonnullRefPtr<Supp
     : CSSConditionRule(window_object, rules)
     , m_supports(move(supports))
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSSupportsRulePrototype>("CSSSupportsRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSSupportsRule"));
 }
 
 String CSSSupportsRule::condition_text() const

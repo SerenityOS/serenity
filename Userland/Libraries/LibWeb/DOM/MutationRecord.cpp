@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MutationRecordPrototype.h>
 #include <LibWeb/DOM/MutationRecord.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeList.h>
@@ -30,7 +29,7 @@ MutationRecord::MutationRecord(HTML::Window& window, FlyString const& type, Node
     , m_attribute_namespace(attribute_namespace)
     , m_old_value(old_value)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::MutationRecordPrototype>("MutationRecord"));
+    set_prototype(&window.cached_web_prototype("MutationRecord"));
 }
 
 MutationRecord::~MutationRecord() = default;

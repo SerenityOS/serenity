@@ -8,7 +8,6 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WorkerPrototype.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Worker.h>
@@ -28,7 +27,7 @@ Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Do
     , m_interpreter_scope(*m_interpreter)
     , m_implicit_port(MessagePort::create(document.window()))
 {
-    set_prototype(&document.window().ensure_web_prototype<Bindings::WorkerPrototype>("Worker"));
+    set_prototype(&document.window().cached_web_prototype("Worker"));
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/FocusEventPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
@@ -18,7 +17,7 @@ FocusEvent* FocusEvent::create_with_global_object(HTML::Window& window_object, F
 FocusEvent::FocusEvent(HTML::Window& window_object, FlyString const& event_name, FocusEventInit const& event_init)
     : UIEvent(window_object, event_name)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::FocusEventPrototype>("FocusEvent"));
+    set_prototype(&window_object.cached_web_prototype("FocusEvent"));
     set_related_target(const_cast<DOM::EventTarget*>(event_init.related_target.ptr()));
 }
 

@@ -8,7 +8,6 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -66,7 +65,7 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
     : EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::WebSocketPrototype>("WebSocket"));
+    set_prototype(&window.cached_web_prototype("WebSocket"));
 
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
     auto origin_string = m_window->associated_document().origin().serialize();

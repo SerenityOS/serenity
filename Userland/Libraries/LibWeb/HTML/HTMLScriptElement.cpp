@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/HTMLScriptElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -23,7 +22,7 @@ namespace Web::HTML {
 HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLScriptElementPrototype>("HTMLScriptElement"));
+    set_prototype(&window().cached_web_prototype("HTMLScriptElement"));
 }
 
 HTMLScriptElement::~HTMLScriptElement() = default;

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/WebGLContextEventPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebGL/WebGLContextEvent.h>
 
@@ -24,7 +23,7 @@ WebGLContextEvent::WebGLContextEvent(HTML::Window& window_object, FlyString cons
     : DOM::Event(window_object, type, event_init)
     , m_status_message(event_init.status_message)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::WebGLContextEventPrototype>("WebGLContextEvent"));
+    set_prototype(&window_object.cached_web_prototype("WebGLContextEvent"));
 }
 
 WebGLContextEvent::~WebGLContextEvent() = default;

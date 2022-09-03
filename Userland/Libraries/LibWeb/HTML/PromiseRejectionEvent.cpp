@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/PromiseRejectionEventPrototype.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -25,7 +24,7 @@ PromiseRejectionEvent::PromiseRejectionEvent(HTML::Window& window_object, FlyStr
     , m_promise(const_cast<JS::Promise*>(event_init.promise.cell()))
     , m_reason(event_init.reason)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::PromiseRejectionEventPrototype>("PromiseRejectionEvent"));
+    set_prototype(&window_object.cached_web_prototype("PromiseRejectionEvent"));
 }
 
 PromiseRejectionEvent::~PromiseRejectionEvent() = default;

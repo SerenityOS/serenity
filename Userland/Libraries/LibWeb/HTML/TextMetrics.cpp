@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/TextMetricsPrototype.h>
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -18,7 +17,7 @@ JS::NonnullGCPtr<TextMetrics> TextMetrics::create(HTML::Window& window)
 TextMetrics::TextMetrics(HTML::Window& window)
     : PlatformObject(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::TextMetricsPrototype>("TextMetrics"));
+    set_prototype(&window.cached_web_prototype("TextMetrics"));
 }
 
 TextMetrics::~TextMetrics() = default;

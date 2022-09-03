@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/SVGGeometryElementPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/SVG/SVGGeometryElement.h>
@@ -14,7 +13,7 @@ namespace Web::SVG {
 SVGGeometryElement::SVGGeometryElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::SVGGeometryElementPrototype>("SVGGeometryElement"));
+    set_prototype(&window().cached_web_prototype("SVGGeometryElement"));
 }
 
 RefPtr<Layout::Node> SVGGeometryElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

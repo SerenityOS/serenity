@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSGroupingRulePrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/CSSGroupingRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
@@ -17,7 +16,7 @@ CSSGroupingRule::CSSGroupingRule(HTML::Window& window_object, CSSRuleList& rules
     : CSSRule(window_object)
     , m_rules(rules)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSGroupingRulePrototype>("CSSGroupingRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSGroupingRule"));
     for (auto& rule : m_rules)
         rule.set_parent_rule(this);
 }

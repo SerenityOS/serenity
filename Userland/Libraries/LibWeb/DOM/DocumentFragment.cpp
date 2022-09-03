@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/DocumentFragmentPrototype.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -13,7 +12,7 @@ namespace Web::DOM {
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::DocumentFragmentPrototype>("DocumentFragment"));
+    set_prototype(&window().cached_web_prototype("DocumentFragment"));
 }
 
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)

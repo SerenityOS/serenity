@@ -10,7 +10,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -32,7 +31,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(HTML::Window& window, HTMLCan
     : PlatformObject(window.realm())
     , m_element(element)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>("CanvasRenderingContext2D"));
+    set_prototype(&window.cached_web_prototype("CanvasRenderingContext2D"));
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;

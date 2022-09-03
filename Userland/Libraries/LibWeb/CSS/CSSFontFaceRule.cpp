@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -20,7 +19,7 @@ CSSFontFaceRule::CSSFontFaceRule(HTML::Window& window_object, FontFace&& font_fa
     : CSSRule(window_object)
     , m_font_face(move(font_face))
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSFontFaceRulePrototype>("CSSFontFaceRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSFontFaceRule"));
 }
 
 CSSStyleDeclaration* CSSFontFaceRule::style()

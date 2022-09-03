@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLFrameSetElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/Window.h>
@@ -14,7 +13,7 @@ namespace Web::HTML {
 HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>("HTMLFrameSetElement"));
+    set_prototype(&window().cached_web_prototype("HTMLFrameSetElement"));
 }
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;

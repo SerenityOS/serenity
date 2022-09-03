@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/SubmitEventPrototype.h>
 #include <LibWeb/HTML/SubmitEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -24,7 +23,7 @@ SubmitEvent::SubmitEvent(HTML::Window& window_object, FlyString const& event_nam
     : DOM::Event(window_object, event_name, event_init)
     , m_submitter(event_init.submitter)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::SubmitEventPrototype>("SubmitEvent"));
+    set_prototype(&window_object.cached_web_prototype("SubmitEvent"));
 }
 
 SubmitEvent::~SubmitEvent() = default;

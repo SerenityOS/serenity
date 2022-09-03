@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CloseEventPrototype.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -26,7 +25,7 @@ CloseEvent::CloseEvent(HTML::Window& window_object, FlyString const& event_name,
     , m_code(event_init.code)
     , m_reason(event_init.reason)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CloseEventPrototype>("CloseEvent"));
+    set_prototype(&window_object.cached_web_prototype("CloseEvent"));
 }
 
 CloseEvent::~CloseEvent() = default;

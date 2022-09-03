@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/SVGLengthPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/SVGLength.h>
 
@@ -20,7 +19,7 @@ SVGLength::SVGLength(HTML::Window& window, u8 unit_type, float value)
     , m_unit_type(unit_type)
     , m_value(value)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::SVGLengthPrototype>("SVGLength"));
+    set_prototype(&window.cached_web_prototype("SVGLength"));
 }
 
 SVGLength::~SVGLength() = default;

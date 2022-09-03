@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/WebGLRenderingContextPrototype.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -60,7 +59,7 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
 WebGLRenderingContext::WebGLRenderingContext(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
     : WebGLRenderingContextBase(window, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>("WebGLRenderingContext"));
+    set_prototype(&window.cached_web_prototype("WebGLRenderingContext"));
 }
 
 WebGLRenderingContext::~WebGLRenderingContext() = default;

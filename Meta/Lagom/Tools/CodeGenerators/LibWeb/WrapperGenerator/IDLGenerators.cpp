@@ -2077,7 +2077,7 @@ namespace Web::Bindings {
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
-    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
+    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("@name@"))
     , m_impl(impl)
 {
 }
@@ -2087,7 +2087,7 @@ namespace Web::Bindings {
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
     : @wrapper_base_class@(realm, impl)
 {
-    set_prototype(&verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"));
+    set_prototype(&verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("@name@"));
 }
 )~~~");
     }
@@ -3775,7 +3775,7 @@ namespace Web::Bindings {
 }
 
 @wrapper_class@::@wrapper_class@(JS::Realm& realm, @fully_qualified_name@& impl)
-    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<@prototype_class@>("@name@"))
+    : Wrapper(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("@name@"))
     , m_impl(impl)
 {
 }

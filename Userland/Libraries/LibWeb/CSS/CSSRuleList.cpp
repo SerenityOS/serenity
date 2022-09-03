@@ -5,7 +5,6 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibWeb/Bindings/CSSRuleListPrototype.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRule.h>
@@ -25,7 +24,7 @@ CSSRuleList* CSSRuleList::create(HTML::Window& window_object, JS::MarkedVector<C
 }
 
 CSSRuleList::CSSRuleList(HTML::Window& window_object)
-    : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::CSSRuleListPrototype>("CSSRuleList"))
+    : Bindings::LegacyPlatformObject(window_object.cached_web_prototype("CSSRuleList"))
 {
 }
 

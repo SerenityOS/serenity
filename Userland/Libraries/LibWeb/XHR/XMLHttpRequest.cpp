@@ -51,7 +51,7 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
     , m_window(window)
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::XMLHttpRequestPrototype>("XMLHttpRequest"));
+    set_prototype(&window.cached_web_prototype("XMLHttpRequest"));
 }
 
 XMLHttpRequest::~XMLHttpRequest() = default;

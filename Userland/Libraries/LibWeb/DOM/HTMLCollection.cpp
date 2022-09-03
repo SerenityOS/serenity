@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLCollectionPrototype.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -20,7 +19,7 @@ JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Functi
 }
 
 HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter)
-    : LegacyPlatformObject(root.window().ensure_web_prototype<Bindings::HTMLCollectionPrototype>("HTMLCollection"))
+    : LegacyPlatformObject(root.window().cached_web_prototype("HTMLCollection"))
     , m_root(root)
     , m_filter(move(filter))
 {

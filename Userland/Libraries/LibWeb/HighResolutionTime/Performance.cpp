@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -18,7 +17,7 @@ Performance::Performance(HTML::Window& window)
     : DOM::EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::PerformancePrototype>("Performance"));
+    set_prototype(&window.cached_web_prototype("Performance"));
     m_timer.start();
 }
 

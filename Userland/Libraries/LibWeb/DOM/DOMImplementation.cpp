@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/DOMImplementationPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/Document.h>
@@ -25,7 +24,7 @@ JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document
 }
 
 DOMImplementation::DOMImplementation(Document& document)
-    : PlatformObject(document.window().ensure_web_prototype<Bindings::DOMImplementationPrototype>("DOMImplementation"))
+    : PlatformObject(document.window().cached_web_prototype("DOMImplementation"))
     , m_document(document)
 {
 }

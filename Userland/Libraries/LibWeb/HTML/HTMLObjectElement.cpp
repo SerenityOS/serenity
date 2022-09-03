@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/Bindings/HTMLObjectElementPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -20,7 +19,7 @@ namespace Web::HTML {
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLObjectElementPrototype>("HTMLObjectElement"));
+    set_prototype(&window().cached_web_prototype("HTMLObjectElement"));
 }
 
 HTMLObjectElement::~HTMLObjectElement() = default;
