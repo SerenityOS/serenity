@@ -43,6 +43,7 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
 void CSSImportRule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_document);
     visitor.visit(m_style_sheet);
 }
 
