@@ -50,9 +50,9 @@ private:
     virtual void resource_did_load() override;
 
     AK::URL m_url;
-    WeakPtr<DOM::Document> m_document;
+    JS::GCPtr<DOM::Document> m_document;
+    JS::GCPtr<CSSStyleSheet> m_style_sheet;
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
-    CSSStyleSheet* m_style_sheet { nullptr };
 };
 
 template<>
