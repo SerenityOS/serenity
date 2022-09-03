@@ -12,18 +12,12 @@ namespace Web::Geometry {
 
 // https://drafts.fxtf.org/geometry/#DOMPoint
 class DOMPoint final : public DOMPointReadOnly {
+    WEB_PLATFORM_OBJECT(DOMPoint, DOMPointReadOnly);
+
 public:
-    using WrapperType = Bindings::DOMPointWrapper;
+    static JS::NonnullGCPtr<DOMPoint> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0);
 
-    static NonnullRefPtr<DOMPoint> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0)
-    {
-        return DOMPoint::create(x, y, z, w);
-    }
-
-    static NonnullRefPtr<DOMPoint> create(double x = 0, double y = 0, double z = 0, double w = 0)
-    {
-        return adopt_ref(*new DOMPoint(x, y, z, w));
-    }
+    virtual ~DOMPoint() override;
 
     double x() const { return m_x; }
     double y() const { return m_y; }
@@ -36,9 +30,9 @@ public:
     void set_w(double w) { m_w = w; }
 
 private:
-    DOMPoint(float x, float y, float z, float w)
-        : DOMPointReadOnly(x, y, z, w)
-    {
-    }
+    DOMPoint(HTML::Window&, double x, double y, double z, double w);
 };
+
 }
+
+WRAPPER_HACK(DOMPoint, Web::Geometry)

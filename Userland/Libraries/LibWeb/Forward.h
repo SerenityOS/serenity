@@ -451,8 +451,6 @@ namespace Web::Bindings {
 class BlobWrapper;
 class CryptoWrapper;
 class DOMExceptionWrapper;
-class DOMPointWrapper;
-class DOMPointReadOnlyWrapper;
 class DOMRectListWrapper;
 class DOMRectReadOnlyWrapper;
 class DOMRectWrapper;

@@ -26,10 +26,10 @@ float SVGGeometryElement::get_total_length()
     return 0;
 }
 
-NonnullRefPtr<Geometry::DOMPoint> SVGGeometryElement::get_point_at_length(float distance)
+JS::NonnullGCPtr<Geometry::DOMPoint> SVGGeometryElement::get_point_at_length(float distance)
 {
     (void)distance;
-    return Geometry::DOMPoint::create(0, 0, 0, 0);
+    return Geometry::DOMPoint::create_with_global_object(window(), 0, 0, 0, 0);
 }
 
 }
