@@ -8,7 +8,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -48,8 +47,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     , m_qualified_name(move(qualified_name))
     , m_attributes(NamedNodeMap::create(*this))
 {
-    set_prototype(&document.window().ensure_web_prototype<Bindings::ElementPrototype>("Element"));
-
+    set_prototype(&window().cached_web_prototype("Element"));
     make_html_uppercased_qualified_name();
 }
 

@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSConditionRulePrototype.h>
 #include <LibWeb/CSS/CSSConditionRule.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -14,7 +13,7 @@ namespace Web::CSS {
 CSSConditionRule::CSSConditionRule(HTML::Window& window_object, CSSRuleList& rules)
     : CSSGroupingRule(window_object, rules)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSConditionRulePrototype>("CSSConditionRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSConditionRule"));
 }
 
 void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const

@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSMediaRulePrototype.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -20,7 +19,7 @@ CSSMediaRule::CSSMediaRule(HTML::Window& window_object, MediaList& media, CSSRul
     : CSSConditionRule(window_object, rules)
     , m_media(media)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSMediaRulePrototype>("CSSMediaRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSMediaRule"));
 }
 
 void CSSMediaRule::visit_edges(Cell::Visitor& visitor)

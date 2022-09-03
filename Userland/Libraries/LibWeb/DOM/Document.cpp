@@ -14,7 +14,6 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/DocumentPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
@@ -283,7 +282,7 @@ Document::Document(HTML::Window& window, const AK::URL& url)
     , m_url(url)
     , m_window(window)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::DocumentPrototype>("Document"));
+    set_prototype(&window.cached_web_prototype("Document"));
 
     HTML::main_thread_event_loop().register_document({}, *this);
 

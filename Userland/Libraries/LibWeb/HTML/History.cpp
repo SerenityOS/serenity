@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HistoryPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/History.h>
 
@@ -19,7 +18,7 @@ History::History(HTML::Window& window, DOM::Document& document)
     : PlatformObject(window.realm())
     , m_associated_document(document)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::HistoryPrototype>("History"));
+    set_prototype(&window.cached_web_prototype("History"));
 }
 
 History::~History() = default;

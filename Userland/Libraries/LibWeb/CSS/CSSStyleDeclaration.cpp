@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
@@ -14,7 +13,7 @@
 namespace Web::CSS {
 
 CSSStyleDeclaration::CSSStyleDeclaration(HTML::Window& window_object)
-    : PlatformObject(window_object.ensure_web_prototype<Bindings::CSSStyleDeclarationPrototype>("CSSStyleDeclaration"))
+    : PlatformObject(window_object.cached_web_prototype("CSSStyleDeclaration"))
 {
 }
 

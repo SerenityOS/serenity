@@ -7,7 +7,6 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibWeb/Bindings/HTMLElementPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
@@ -33,7 +32,7 @@ HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_n
     : Element(document, move(qualified_name))
     , m_dataset(DOMStringMap::create(*this))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLElementPrototype>("HTMLElement"));
+    set_prototype(&window().cached_web_prototype("HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;

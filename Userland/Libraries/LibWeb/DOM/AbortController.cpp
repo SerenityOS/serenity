@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/AbortControllerPrototype.h>
 #include <LibWeb/DOM/AbortController.h>
 #include <LibWeb/DOM/AbortSignal.h>
 
@@ -21,7 +20,7 @@ AbortController::AbortController(HTML::Window& window, JS::NonnullGCPtr<AbortSig
     : PlatformObject(window.realm())
     , m_signal(move(signal))
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::AbortControllerPrototype>("AbortController"));
+    set_prototype(&window.cached_web_prototype("AbortController"));
 }
 
 AbortController::~AbortController() = default;

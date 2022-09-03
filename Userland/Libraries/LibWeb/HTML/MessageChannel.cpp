@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MessageChannelPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/MessageChannel.h>
 #include <LibWeb/HTML/MessagePort.h>
@@ -20,7 +19,7 @@ JS::NonnullGCPtr<MessageChannel> MessageChannel::create_with_global_object(HTML:
 MessageChannel::MessageChannel(HTML::Window& window)
     : PlatformObject(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::MessageChannelPrototype>("MessageChannel"));
+    set_prototype(&window.cached_web_prototype("MessageChannel"));
 
     // 1. Set this's port 1 to a new MessagePort in this's relevant Realm.
     m_port1 = MessagePort::create(window);

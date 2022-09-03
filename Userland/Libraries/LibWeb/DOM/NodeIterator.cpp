@@ -6,7 +6,6 @@
 
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/NodeIteratorPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeIterator.h>
@@ -14,7 +13,7 @@
 namespace Web::DOM {
 
 NodeIterator::NodeIterator(Node& root)
-    : PlatformObject(root.document().window().ensure_web_prototype<Bindings::NodeIteratorPrototype>("NodeIterator"))
+    : PlatformObject(root.window().cached_web_prototype("NodeIterator"))
     , m_root(root)
     , m_reference({ root })
 {

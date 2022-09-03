@@ -21,7 +21,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::create_with_global_obje
 DOMParser::DOMParser(HTML::Window& window)
     : PlatformObject(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::DOMParserPrototype>("DOMParser"));
+    set_prototype(&window.cached_web_prototype("DOMParser"));
 }
 
 DOMParser::~DOMParser() = default;

@@ -6,7 +6,6 @@
 
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/TreeWalkerPrototype.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -17,7 +16,7 @@
 namespace Web::DOM {
 
 TreeWalker::TreeWalker(Node& root)
-    : PlatformObject(root.document().window().ensure_web_prototype<Bindings::TreeWalkerPrototype>("TreeWalker"))
+    : PlatformObject(root.window().cached_web_prototype("TreeWalker"))
     , m_root(root)
     , m_current(root)
 {

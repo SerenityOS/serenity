@@ -8,7 +8,6 @@
 #include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
-#include <LibWeb/Bindings/HTMLCanvasElementPrototype.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
@@ -22,7 +21,7 @@ static constexpr auto max_canvas_area = 16384 * 16384;
 HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&document.window().ensure_web_prototype<Bindings::HTMLCanvasElementPrototype>("HTMLCanvasElement"));
+    set_prototype(&document.window().cached_web_prototype("HTMLCanvasElement"));
 }
 
 HTMLCanvasElement::~HTMLCanvasElement() = default;

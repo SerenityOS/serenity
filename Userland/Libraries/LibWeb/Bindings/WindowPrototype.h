@@ -20,7 +20,7 @@ class WindowPrototype final : public JS::Object {
 
 public:
     explicit WindowPrototype(JS::Realm& realm)
-        : JS::Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<EventTargetPrototype>("EventTarget"))
+        : JS::Object(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("EventTarget"))
     {
     }
 };

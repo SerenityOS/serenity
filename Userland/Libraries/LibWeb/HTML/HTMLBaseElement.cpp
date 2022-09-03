@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLBaseElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
 
@@ -13,7 +12,7 @@ namespace Web::HTML {
 HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLBaseElementPrototype>("HTMLBaseElement"));
+    set_prototype(&window().cached_web_prototype("HTMLBaseElement"));
 }
 
 HTMLBaseElement::~HTMLBaseElement() = default;

@@ -6,7 +6,6 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -22,7 +21,7 @@ MouseEvent::MouseEvent(HTML::Window& window_object, FlyString const& event_name,
     , m_client_y(event_init.client_y)
     , m_button(event_init.button)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::MouseEventPrototype>("MouseEvent"));
+    set_prototype(&window_object.cached_web_prototype("MouseEvent"));
     set_event_characteristics();
 }
 

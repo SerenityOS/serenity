@@ -7,7 +7,6 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibWeb/Bindings/EventPrototype.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -25,15 +24,15 @@ JS::NonnullGCPtr<Event> Event::create_with_global_object(HTML::Window& window_ob
     return create(window_object, event_name, event_init);
 }
 
-Event::Event(HTML::Window& window_object, FlyString const& type)
-    : PlatformObject(window_object.ensure_web_prototype<Bindings::EventPrototype>("Event"))
+Event::Event(HTML::Window& window, FlyString const& type)
+    : PlatformObject(window.cached_web_prototype("Event"))
     , m_type(type)
     , m_initialized(true)
 {
 }
 
-Event::Event(HTML::Window& window_object, FlyString const& type, EventInit const& event_init)
-    : PlatformObject(window_object.ensure_web_prototype<Bindings::EventPrototype>("Event"))
+Event::Event(HTML::Window& window, FlyString const& type, EventInit const& event_init)
+    : PlatformObject(window.cached_web_prototype("Event"))
     , m_type(type)
     , m_bubbles(event_init.bubbles)
     , m_cancelable(event_init.cancelable)

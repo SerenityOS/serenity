@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -50,13 +49,13 @@ JS::NonnullGCPtr<Range> Range::create_with_global_object(HTML::Window& window)
 Range::Range(Document& document)
     : Range(document, 0, document, 0)
 {
-    set_prototype(&document.window().ensure_web_prototype<Bindings::RangePrototype>("Range"));
+    set_prototype(&document.window().cached_web_prototype("Range"));
 }
 
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&start_container.document().window().ensure_web_prototype<Bindings::RangePrototype>("Range"));
+    set_prototype(&start_container.window().cached_web_prototype("Range"));
     live_ranges().set(this);
 }
 

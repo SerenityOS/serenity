@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLTitleElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/Page/Page.h>
@@ -14,7 +13,7 @@ namespace Web::HTML {
 HTMLTitleElement::HTMLTitleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTitleElementPrototype>("HTMLTitleElement"));
+    set_prototype(&window().cached_web_prototype("HTMLTitleElement"));
 }
 
 HTMLTitleElement::~HTMLTitleElement() = default;

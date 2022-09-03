@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLStyleElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
@@ -15,7 +14,7 @@ namespace Web::HTML {
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLStyleElementPrototype>("HTMLStyleElement"));
+    set_prototype(&window().cached_web_prototype("HTMLStyleElement"));
 }
 
 HTMLStyleElement::~HTMLStyleElement() = default;

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -16,13 +15,13 @@ namespace Web::DOM {
 Text::Text(Document& document, String const& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::TextPrototype>("Text"));
+    set_prototype(&window().cached_web_prototype("Text"));
 }
 
 Text::Text(Document& document, NodeType type, String const& data)
     : CharacterData(document, type, data)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::TextPrototype>("Text"));
+    set_prototype(&window().cached_web_prototype("Text"));
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)

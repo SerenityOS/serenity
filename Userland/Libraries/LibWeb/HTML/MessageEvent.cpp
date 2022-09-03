@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -26,7 +25,7 @@ MessageEvent::MessageEvent(HTML::Window& window_object, FlyString const& event_n
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::MessageEventPrototype>("MessageEvent"));
+    set_prototype(&window_object.cached_web_prototype("MessageEvent"));
 }
 
 MessageEvent::~MessageEvent() = default;

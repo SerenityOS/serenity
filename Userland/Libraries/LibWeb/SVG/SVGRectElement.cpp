@@ -4,20 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SVGRectElement.h"
-#include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
 #include <LibWeb/SVG/SVGLength.h>
+#include <LibWeb/SVG/SVGRectElement.h>
 
 namespace Web::SVG {
 
 SVGRectElement::SVGRectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::SVGRectElementPrototype>("SVGRectElement"));
+    set_prototype(&window().cached_web_prototype("SVGRectElement"));
 }
 
 void SVGRectElement::parse_attribute(FlyString const& name, String const& value)

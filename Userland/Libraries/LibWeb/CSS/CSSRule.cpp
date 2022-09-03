@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSRulePrototype.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/HTML/Window.h>
@@ -14,7 +13,7 @@
 namespace Web::CSS {
 
 CSSRule::CSSRule(HTML::Window& window_object)
-    : PlatformObject(window_object.ensure_web_prototype<Bindings::CSSRulePrototype>("CSSRule"))
+    : PlatformObject(window_object.cached_web_prototype("CSSRule"))
 {
 }
 

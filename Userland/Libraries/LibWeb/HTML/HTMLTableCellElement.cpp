@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLTableCellElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -15,7 +14,7 @@ namespace Web::HTML {
 HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>("HTMLTableCellElement"));
+    set_prototype(&window().cached_web_prototype("HTMLTableCellElement"));
 }
 
 HTMLTableCellElement::~HTMLTableCellElement() = default;

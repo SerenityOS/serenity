@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/SVGAnimatedLengthPrototype.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
 
@@ -20,7 +19,7 @@ SVGAnimatedLength::SVGAnimatedLength(HTML::Window& window, JS::NonnullGCPtr<SVGL
     , m_base_val(move(base_val))
     , m_anim_val(move(anim_val))
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::SVGAnimatedLengthPrototype>("SVGAnimatedLength"));
+    set_prototype(&window.cached_web_prototype("SVGAnimatedLength"));
 
     // The object referenced by animVal will always be distinct from the one referenced by baseVal, even when the attribute is not animated.
     VERIFY(m_base_val.ptr() != m_anim_val.ptr());

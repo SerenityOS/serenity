@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/XMLSerializerPrototype.h>
 #include <LibWeb/DOM/CDATASection.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
@@ -29,7 +28,7 @@ JS::NonnullGCPtr<XMLSerializer> XMLSerializer::create_with_global_object(HTML::W
 XMLSerializer::XMLSerializer(HTML::Window& window)
     : PlatformObject(window.realm())
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::XMLSerializerPrototype>("XMLSerializer"));
+    set_prototype(&window.cached_web_prototype("XMLSerializer"));
 }
 
 XMLSerializer::~XMLSerializer() = default;

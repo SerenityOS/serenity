@@ -5,7 +5,6 @@
  */
 
 #include <AK/QuickSort.h>
-#include <LibWeb/Bindings/CanvasGradientPrototype.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/HTML/Window.h>
@@ -44,7 +43,7 @@ CanvasGradient::CanvasGradient(HTML::Window& window, Type type)
     : PlatformObject(window.realm())
     , m_type(type)
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::CanvasGradientPrototype>("CanvasGradient"));
+    set_prototype(&window.cached_web_prototype("CanvasGradient"));
 }
 
 CanvasGradient::~CanvasGradient() = default;

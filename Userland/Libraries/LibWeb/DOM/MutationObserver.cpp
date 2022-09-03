@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/MutationObserverPrototype.h>
 #include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/Window.h>
@@ -22,7 +21,7 @@ MutationObserver::MutationObserver(HTML::Window& window, JS::GCPtr<Bindings::Cal
     : PlatformObject(window.realm())
     , m_callback(move(callback))
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::MutationObserverPrototype>("MutationObserver"));
+    set_prototype(&window.cached_web_prototype("MutationObserver"));
 
     // 1. Set this’s callback to callback.
 

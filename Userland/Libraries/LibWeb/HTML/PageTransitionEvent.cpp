@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/PageTransitionEventPrototype.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -24,7 +23,7 @@ PageTransitionEvent::PageTransitionEvent(HTML::Window& window_object, FlyString 
     : DOM::Event(window_object, event_name, event_init)
     , m_persisted(event_init.persisted)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::PageTransitionEventPrototype>("PageTransitionEvent"));
+    set_prototype(&window_object.cached_web_prototype("PageTransitionEvent"));
 }
 
 PageTransitionEvent::~PageTransitionEvent() = default;

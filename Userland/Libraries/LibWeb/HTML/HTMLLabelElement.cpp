@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLLabelElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLabelElement.h>
 #include <LibWeb/Layout/Label.h>
@@ -14,7 +13,7 @@ namespace Web::HTML {
 HTMLLabelElement::HTMLLabelElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLLabelElementPrototype>("HTMLLabelElement"));
+    set_prototype(&window().cached_web_prototype("HTMLLabelElement"));
 }
 
 HTMLLabelElement::~HTMLLabelElement() = default;

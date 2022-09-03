@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/Window.h>
@@ -18,7 +17,7 @@ MediaList* MediaList::create(HTML::Window& window_object, NonnullRefPtrVector<Me
 }
 
 MediaList::MediaList(HTML::Window& window_object, NonnullRefPtrVector<MediaQuery>&& media)
-    : Bindings::LegacyPlatformObject(window_object.ensure_web_prototype<Bindings::MediaListPrototype>("MediaList"))
+    : Bindings::LegacyPlatformObject(window_object.cached_web_prototype("MediaList"))
     , m_media(move(media))
 {
 }

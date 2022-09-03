@@ -5,7 +5,6 @@
  */
 
 #include <AK/Utf16View.h>
-#include <LibWeb/Bindings/SVGTextContentElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/SVG/SVGTextContentElement.h>
 
@@ -14,7 +13,7 @@ namespace Web::SVG {
 SVGTextContentElement::SVGTextContentElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::SVGTextContentElementPrototype>("SVGTextContentElement"));
+    set_prototype(&window().cached_web_prototype("SVGTextContentElement"));
 }
 
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars

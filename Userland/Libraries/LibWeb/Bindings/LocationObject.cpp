@@ -23,7 +23,7 @@ namespace Web::Bindings {
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
 LocationObject::LocationObject(JS::Realm& realm)
-    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<LocationPrototype>("Location"))
+    : Object(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("Location"))
     , m_default_properties(heap())
 {
 }

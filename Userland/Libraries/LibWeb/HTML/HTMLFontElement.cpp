@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLFontElementPrototype.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/HTML/HTMLFontElement.h>
@@ -15,7 +14,7 @@ namespace Web::HTML {
 HTMLFontElement::HTMLFontElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLFontElementPrototype>("HTMLFontElement"));
+    set_prototype(&window().cached_web_prototype("HTMLFontElement"));
 }
 
 HTMLFontElement::~HTMLFontElement() = default;

@@ -6,7 +6,6 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -38,7 +37,7 @@ ImageData::ImageData(HTML::Window& window, NonnullRefPtr<Gfx::Bitmap> bitmap, JS
     , m_bitmap(move(bitmap))
     , m_data(move(data))
 {
-    set_prototype(&window.ensure_web_prototype<Bindings::ImageDataPrototype>("ImageData"));
+    set_prototype(&window.cached_web_prototype("ImageData"));
 }
 
 ImageData::~ImageData() = default;

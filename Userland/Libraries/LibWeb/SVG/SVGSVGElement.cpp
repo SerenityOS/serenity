@@ -6,7 +6,6 @@
  */
 
 #include <LibGfx/Painter.h>
-#include <LibWeb/Bindings/SVGSVGElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -21,7 +20,7 @@ namespace Web::SVG {
 SVGSVGElement::SVGSVGElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, qualified_name)
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::SVGSVGElementPrototype>("SVGSVGElement"));
+    set_prototype(&window().cached_web_prototype("SVGSVGElement"));
 }
 
 RefPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

@@ -6,7 +6,6 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibWeb/Bindings/StaticRangePrototype.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -18,7 +17,7 @@ namespace Web::DOM {
 StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&start_container.document().window().ensure_web_prototype<Bindings::StaticRangePrototype>("StaticRange"));
+    set_prototype(&start_container.document().window().cached_web_prototype("StaticRange"));
 }
 
 StaticRange::~StaticRange() = default;

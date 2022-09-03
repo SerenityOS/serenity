@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLSelectElementPrototype.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
@@ -17,7 +16,7 @@ namespace Web::HTML {
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLSelectElementPrototype>("HTMLSelectElement"));
+    set_prototype(&window().cached_web_prototype("HTMLSelectElement"));
 }
 
 HTMLSelectElement::~HTMLSelectElement() = default;

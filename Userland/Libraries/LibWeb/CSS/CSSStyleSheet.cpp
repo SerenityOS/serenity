@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleSheetList.h>
@@ -22,7 +21,7 @@ CSSStyleSheet::CSSStyleSheet(HTML::Window& window_object, CSSRuleList& rules, Op
     : StyleSheet(window_object)
     , m_rules(&rules)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleSheetPrototype>("CSSStyleSheet"));
+    set_prototype(&window_object.cached_web_prototype("CSSStyleSheet"));
 
     if (location.has_value())
         set_location(location->to_string());

@@ -36,7 +36,7 @@ StyleSheetList* StyleSheetList::create(DOM::Document& document)
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(document.window().ensure_web_prototype<Bindings::StyleSheetListPrototype>("StyleSheetList"))
+    : Bindings::LegacyPlatformObject(document.window().cached_web_prototype("StyleSheetList"))
     , m_document(document)
 {
 }

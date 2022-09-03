@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HTMLTableRowElementPrototype.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
@@ -17,7 +16,7 @@ namespace Web::HTML {
 HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>("HTMLTableRowElement"));
+    set_prototype(&window().cached_web_prototype("HTMLTableRowElement"));
 }
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;

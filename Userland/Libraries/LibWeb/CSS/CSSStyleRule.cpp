@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/CSSStyleRulePrototype.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/Window.h>
@@ -21,7 +20,7 @@ CSSStyleRule::CSSStyleRule(HTML::Window& window_object, NonnullRefPtrVector<Sele
     , m_selectors(move(selectors))
     , m_declaration(declaration)
 {
-    set_prototype(&window_object.ensure_web_prototype<Bindings::CSSStyleRulePrototype>("CSSStyleRule"));
+    set_prototype(&window_object.cached_web_prototype("CSSStyleRule"));
 }
 
 void CSSStyleRule::visit_edges(Cell::Visitor& visitor)

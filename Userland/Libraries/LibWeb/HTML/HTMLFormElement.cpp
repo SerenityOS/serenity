@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibWeb/Bindings/HTMLFormElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -26,7 +25,7 @@ namespace Web::HTML {
 HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLFormElementPrototype>("HTMLFormElement"));
+    set_prototype(&window().cached_web_prototype("HTMLFormElement"));
 }
 
 HTMLFormElement::~HTMLFormElement() = default;

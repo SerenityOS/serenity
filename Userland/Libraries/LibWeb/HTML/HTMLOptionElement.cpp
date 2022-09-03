@@ -6,7 +6,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
@@ -20,7 +19,7 @@ namespace Web::HTML {
 HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().ensure_web_prototype<Bindings::HTMLOptionElementPrototype>("HTMLOptionElement"));
+    set_prototype(&window().cached_web_prototype("HTMLOptionElement"));
 }
 
 HTMLOptionElement::~HTMLOptionElement() = default;
