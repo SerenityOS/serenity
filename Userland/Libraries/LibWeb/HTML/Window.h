@@ -33,7 +33,6 @@ class Window final
 
 public:
     static JS::NonnullGCPtr<Window> create(JS::Realm&);
-    static JS::NonnullGCPtr<Window> create_with_document(DOM::Document&);
 
     ~Window();
 
@@ -119,7 +118,6 @@ public:
 
 private:
     explicit Window(JS::Realm&);
-    explicit Window(DOM::Document&);
     virtual void initialize(JS::Realm&) override;
 
     virtual void visit_edges(Cell::Visitor&) override;

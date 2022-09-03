@@ -85,20 +85,8 @@ JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
     return *realm.heap().allocate<Window>(realm, realm);
 }
 
-JS::NonnullGCPtr<Window> Window::create_with_document(DOM::Document& document)
-{
-    return *document.heap().allocate<Window>(document.shape().realm(), document);
-}
-
 Window::Window(JS::Realm& realm)
     : DOM::EventTarget(realm)
-{
-    // FIXME: Should this be WindowPrototype?
-}
-
-Window::Window(DOM::Document& document)
-    : DOM::EventTarget(document.shape().realm())
-    , m_associated_document(document)
 {
 }
 
