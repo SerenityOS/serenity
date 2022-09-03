@@ -309,13 +309,14 @@ set(KERNEL_SOURCES
     UserOrKernelBuffer.cpp
     WaitQueue.cpp
     WorkQueue.cpp
-    init.cpp
     kprintf.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        Arch/x86/init.cpp
+
         Arch/Processor.cpp
 
         Arch/x86/common/Interrupts/APIC.cpp
