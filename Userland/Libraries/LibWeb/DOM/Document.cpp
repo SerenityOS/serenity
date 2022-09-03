@@ -1399,7 +1399,7 @@ void Document::completely_finish_loading()
     // FIXME: 2. Set document's completely loaded time to the current time.
 
     // 3. Let container be document's browsing context's container.
-    auto* container = browsing_context()->container();
+    auto container = JS::make_handle(browsing_context()->container());
 
     // If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
     if (container && is<HTML::HTMLIFrameElement>(*container)) {
