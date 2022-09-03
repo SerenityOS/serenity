@@ -1410,8 +1410,8 @@ void Document::completely_finish_loading()
     }
     // Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
-        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container, this]() mutable {
-            container->dispatch_event(*DOM::Event::create(window(), HTML::EventNames::load));
+        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
+            container->dispatch_event(*DOM::Event::create(container->window(), HTML::EventNames::load));
         });
     }
 }
