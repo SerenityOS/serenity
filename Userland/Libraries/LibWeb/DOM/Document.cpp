@@ -188,7 +188,8 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
         // 8. If browsingContext is not a top-level browsing context, then:
         if (!browsing_context->is_top_level()) {
             // 1. Let parentEnvironment be browsingContext's container's relevant settings object.
-            auto& parent_environment = browsing_context->container()->document().relevant_settings_object();
+            VERIFY(browsing_context->container());
+            auto& parent_environment = HTML::relevant_settings_object(*browsing_context->container());
 
             // 2. Set topLevelCreationURL to parentEnvironment's top-level creation URL.
             top_level_creation_url = parent_environment.top_level_creation_url;
