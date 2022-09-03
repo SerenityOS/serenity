@@ -58,6 +58,7 @@ double atof(char const*);
 int system(char const* command);
 char* mktemp(char*);
 int mkstemp(char*);
+int mkstemps(char*, int);
 char* mkdtemp(char*);
 void* bsearch(void const* key, void const* base, size_t nmemb, size_t size, int (*compar)(void const*, void const*));
 int mblen(char const*, size_t);
