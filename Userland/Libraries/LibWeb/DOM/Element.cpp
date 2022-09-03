@@ -45,13 +45,18 @@ namespace Web::DOM {
 Element::Element(Document& document, DOM::QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
-    , m_attributes(NamedNodeMap::create(*this))
 {
     set_prototype(&window().cached_web_prototype("Element"));
     make_html_uppercased_qualified_name();
 }
 
 Element::~Element() = default;
+
+void Element::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    m_attributes = NamedNodeMap::create(*this);
+}
 
 void Element::visit_edges(Cell::Visitor& visitor)
 {
