@@ -32,7 +32,6 @@ class Element
     WEB_PLATFORM_OBJECT(Element, ParentNode);
 
 public:
-    Element(Document&, DOM::QualifiedName);
     virtual ~Element() override;
 
     String const& qualified_name() const { return m_qualified_name.as_string(); }
@@ -142,6 +141,9 @@ public:
     void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
 
 protected:
+    Element(Document&, DOM::QualifiedName);
+    virtual void initialize(JS::Realm&) override;
+
     virtual void children_changed() override;
 
     virtual void visit_edges(Cell::Visitor&) override;
@@ -152,7 +154,7 @@ private:
     QualifiedName m_qualified_name;
     String m_html_uppercased_qualified_name;
 
-    JS::NonnullGCPtr<NamedNodeMap> m_attributes;
+    JS::GCPtr<NamedNodeMap> m_attributes;
     JS::GCPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
     JS::GCPtr<DOMTokenList> m_class_list;
     JS::GCPtr<ShadowRoot> m_shadow_root;
