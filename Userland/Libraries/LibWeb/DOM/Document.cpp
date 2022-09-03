@@ -1471,7 +1471,18 @@ bool Document::is_fully_active() const
 {
     // A Document d is said to be fully active when d's browsing context is non-null, d's browsing context's active document is d,
     // and either d's browsing context is a top-level browsing context, or d's browsing context's container document is fully active.
-    return browsing_context() && browsing_context()->active_document() == this && (browsing_context()->is_top_level() || browsing_context()->container_document()->is_fully_active());
+    auto* browsing_context = this->browsing_context();
+    if (!browsing_context)
+        return false;
+    if (browsing_context->active_document() != this)
+        return false;
+    if (browsing_context->is_top_level())
+        return true;
+    if (auto* browsing_context_container_document = browsing_context->container_document()) {
+        if (browsing_context_container_document->is_fully_active())
+            return true;
+    }
+    return false;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#active-document
