@@ -50,9 +50,8 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    WeakPtr<DOM::Element> m_owner_node;
-
-    CSSStyleSheet* m_parent_style_sheet { nullptr };
+    JS::GCPtr<DOM::Element> m_owner_node;
+    JS::GCPtr<CSSStyleSheet> m_parent_style_sheet;
 
     String m_location;
     String m_title;
