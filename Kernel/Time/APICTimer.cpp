@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/APICTimer.h>

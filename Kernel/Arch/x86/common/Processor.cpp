@@ -12,7 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
-#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>

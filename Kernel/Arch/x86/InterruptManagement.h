@@ -11,9 +11,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/IRQController.h>
+#include <Kernel/Arch/x86/common/Interrupts/IOAPIC.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel {

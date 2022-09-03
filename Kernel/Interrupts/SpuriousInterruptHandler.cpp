@@ -6,7 +6,6 @@
 
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/x86/Interrupts.h>
-#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Sections.h>
 

@@ -9,8 +9,8 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/x86/common/Interrupts/PIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
