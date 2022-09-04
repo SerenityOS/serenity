@@ -21,7 +21,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    bool print_verbose;
+    bool print_verbose = false;
     bool flag_show_numerical = false;
     Core::ArgsParser args;
     args.set_general_help("List USB devices.");
