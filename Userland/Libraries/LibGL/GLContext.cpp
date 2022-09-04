@@ -6,9 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/Debug.h>
-#include <AK/Format.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
 #include <LibGL/Image.h>
@@ -17,7 +15,6 @@
 #include <LibGPU/ImageDataLayout.h>
 #include <LibGPU/ImageFormat.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Vector3.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 
