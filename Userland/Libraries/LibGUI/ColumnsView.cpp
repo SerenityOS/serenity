@@ -206,7 +206,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position) const
+Optional<ColumnsView::Column> ColumnsView::column_at_event_position(Gfx::IntPoint const& a_position) const
 {
     if (!model())
         return {};
@@ -215,7 +215,7 @@ ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position)
 
     int column_x = 0;
 
-    for (auto& column : m_columns) {
+    for (auto const& column : m_columns) {
         if (position.x() < column_x)
             break;
         if (position.x() > column_x + column.width) {
@@ -223,12 +223,7 @@ ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position)
             continue;
         }
 
-        int row = position.y() / item_height();
-        int row_count = model()->row_count(column.parent_index);
-        if (row >= row_count)
-            return {};
-
-        return model()->index(row, m_model_column, column.parent_index);
+        return column;
     }
 
     return {};
@@ -248,6 +243,25 @@ void ColumnsView::select_range(ModelIndex const& index)
     }
 }
 
+ModelIndex ColumnsView::index_at_event_position_in_column(Gfx::IntPoint const& position, Column const& column) const
+{
+    int row = position.y() / item_height();
+    int row_count = model()->row_count(column.parent_index);
+    if (row >= row_count)
+        return {};
+
+    return model()->index(row, m_model_column, column.parent_index);
+}
+
+ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& position) const
+{
+    auto const& column = column_at_event_position(position);
+    if (!column.has_value())
+        return {};
+
+    return index_at_event_position_in_column(position, *column);
+}
+
 void ColumnsView::mousedown_event(MouseEvent& event)
 {
     AbstractView::mousedown_event(event);
@@ -258,7 +272,11 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Primary)
         return;
 
-    auto index = index_at_event_position(event.position());
+    auto column = column_at_event_position(event.position());
+    if (!column.has_value())
+        return;
+
+    auto index = index_at_event_position_in_column(event.position(), *column);
     if (index.is_valid() && !(event.modifiers() & Mod_Ctrl)) {
         if (model()->row_count(index))
             push_column(index);

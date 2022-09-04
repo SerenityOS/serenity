@@ -48,6 +48,9 @@ private:
         // TODO: per-column vertical scroll?
     };
 
+    Optional<Column> column_at_event_position(Gfx::IntPoint const&) const;
+    ModelIndex index_at_event_position_in_column(Gfx::IntPoint const&, Column const&) const;
+
     Vector<Column> m_columns;
     int m_model_column { 0 };
 };
