@@ -26,7 +26,4 @@ public:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::UIEvents::FocusEvent& object) { return &object; }
-using FocusEventWrapper = Web::UIEvents::FocusEvent;
-}
+WRAPPER_HACK(FocusEvent, Web::UIEvents)

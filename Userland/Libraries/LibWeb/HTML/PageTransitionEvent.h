@@ -33,7 +33,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::PageTransitionEvent& object) { return &object; }
-using PageTransitionEventWrapper = Web::HTML::PageTransitionEvent;
-}
+WRAPPER_HACK(PageTransitionEvent, Web::HTML)

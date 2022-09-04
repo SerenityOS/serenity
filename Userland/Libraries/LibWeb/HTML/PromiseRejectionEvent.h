@@ -42,7 +42,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::PromiseRejectionEvent& object) { return &object; }
-using PromiseRejectionEventWrapper = Web::HTML::PromiseRejectionEvent;
-}
+WRAPPER_HACK(PromiseRejectionEvent, Web::HTML)

@@ -34,7 +34,4 @@ private:
 };
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::CSS::MediaQueryListEvent& object) { return &object; }
-using MediaQueryListEventWrapper = Web::CSS::MediaQueryListEvent;
-}
+WRAPPER_HACK(MediaQueryListEvent, Web::CSS)

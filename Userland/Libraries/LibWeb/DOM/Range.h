@@ -97,7 +97,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::Range& object) { return &object; }
-using RangeWrapper = Web::DOM::Range;
-}
+WRAPPER_HACK(Range, Web::DOM)

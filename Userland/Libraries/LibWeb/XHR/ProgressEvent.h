@@ -42,7 +42,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::XHR::ProgressEvent& object) { return &object; }
-using ProgressEventWrapper = Web::XHR::ProgressEvent;
-}
+WRAPPER_HACK(ProgressEvent, Web::XHR)

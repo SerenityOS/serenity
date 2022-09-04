@@ -47,7 +47,4 @@ protected:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::AbstractRange& object) { return &object; }
-using AbstractRangeWrapper = Web::DOM::AbstractRange;
-}
+WRAPPER_HACK(AbstractRange, Web::DOM)

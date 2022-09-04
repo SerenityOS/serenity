@@ -40,7 +40,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::CloseEvent& object) { return &object; }
-using CloseEventWrapper = Web::HTML::CloseEvent;
-}
+WRAPPER_HACK(CloseEvent, Web::HTML)

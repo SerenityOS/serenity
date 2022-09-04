@@ -32,7 +32,4 @@ public:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::StaticRange& object) { return &object; }
-using StaticRangeWrapper = Web::DOM::StaticRange;
-}
+WRAPPER_HACK(StaticRange, Web::DOM)
