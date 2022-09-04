@@ -249,7 +249,7 @@ void GLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* params)
         break;
     case GL_POSITION:
         light_state.position = { params[0], params[1], params[2], params[3] };
-        light_state.position = m_model_view_matrix * light_state.position;
+        light_state.position = model_view_matrix() * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
         RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
@@ -277,7 +277,7 @@ void GLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* params)
     }
     case GL_SPOT_DIRECTION: {
         FloatVector4 direction_vector = { params[0], params[1], params[2], 0.f };
-        direction_vector = m_model_view_matrix * direction_vector;
+        direction_vector = model_view_matrix() * direction_vector;
         light_state.spotlight_direction = direction_vector.xyz();
         break;
     }
@@ -313,7 +313,7 @@ void GLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* params)
         break;
     case GL_POSITION:
         light_state.position = to_float_vector(params[0], params[1], params[2], params[3]);
-        light_state.position = m_model_view_matrix * light_state.position;
+        light_state.position = model_view_matrix() * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
         RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
@@ -341,7 +341,7 @@ void GLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* params)
     }
     case GL_SPOT_DIRECTION: {
         auto direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
-        direction_vector = m_model_view_matrix * direction_vector;
+        direction_vector = model_view_matrix() * direction_vector;
         light_state.spotlight_direction = direction_vector.xyz();
         break;
     }

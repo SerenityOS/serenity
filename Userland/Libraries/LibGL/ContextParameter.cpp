@@ -276,25 +276,29 @@ void GLContext::gl_disable(GLenum capability)
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(false);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_2D:
         m_active_texture_unit->set_texture_2d_enabled(false);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_3D:
         m_active_texture_unit->set_texture_3d_enabled(false);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_CUBE_MAP:
         m_active_texture_unit->set_texture_cube_map_enabled(false);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_GEN_Q:
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
     case GL_TEXTURE_GEN_T:
         texture_coordinate_generation(m_active_texture_unit_index, capability).enabled = false;
-        m_texcoord_generation_dirty = true;
+        m_texture_units_dirty = true;
         break;
     default:
         dbgln_if(GL_DEBUG, "gl_disable({:#x}): unknown parameter", capability);
@@ -426,25 +430,29 @@ void GLContext::gl_enable(GLenum capability)
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(true);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_2D:
         m_active_texture_unit->set_texture_2d_enabled(true);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_3D:
         m_active_texture_unit->set_texture_3d_enabled(true);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_CUBE_MAP:
         m_active_texture_unit->set_texture_cube_map_enabled(true);
         m_sampler_config_is_dirty = true;
+        m_texture_units_dirty = true;
         break;
     case GL_TEXTURE_GEN_Q:
     case GL_TEXTURE_GEN_R:
     case GL_TEXTURE_GEN_S:
     case GL_TEXTURE_GEN_T:
         texture_coordinate_generation(m_active_texture_unit_index, capability).enabled = true;
-        m_texcoord_generation_dirty = true;
+        m_texture_units_dirty = true;
         break;
     default:
         dbgln_if(GL_DEBUG, "gl_enable({:#x}): unknown parameter", capability);
@@ -522,10 +530,10 @@ void GLContext::get_floating_point(GLenum pname, T* params)
     };
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
-        flatten_and_assign_matrix(m_model_view_matrix);
+        flatten_and_assign_matrix(model_view_matrix());
         return;
     case GL_PROJECTION_MATRIX:
-        flatten_and_assign_matrix(m_projection_matrix);
+        flatten_and_assign_matrix(projection_matrix());
         return;
     }
 

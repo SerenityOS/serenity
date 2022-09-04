@@ -18,6 +18,6 @@ using StencilType = u8;
 
 // FIXME: This constant was originally introduced in LibSoftGPU and is currently used in the Vertex struct.
 //        Once we refactor the interface this should move back into LibSoftGPU.
-static constexpr int NUM_SAMPLERS = 2;
+static constexpr int NUM_TEXTURE_UNITS = 2;
 
 }

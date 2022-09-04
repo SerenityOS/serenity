@@ -19,6 +19,11 @@ void GLContext::gl_active_texture(GLenum texture)
 
     m_active_texture_unit_index = texture - GL_TEXTURE0;
     m_active_texture_unit = &m_texture_units.at(m_active_texture_unit_index);
+
+    if (m_current_matrix_mode == GL_TEXTURE) {
+        m_current_matrix_stack = &m_active_texture_unit->texture_matrix_stack();
+        m_current_matrix = &m_current_matrix_stack->last();
+    }
 }
 
 void GLContext::gl_bind_texture(GLenum target, GLuint texture)
@@ -471,7 +476,7 @@ void GLContext::gl_tex_gen(GLenum coord, GLenum pname, GLint param)
 
     GLenum const capability = GL_TEXTURE_GEN_S + (coord - GL_S);
     texture_coordinate_generation(m_active_texture_unit_index, capability).generation_mode = param;
-    m_texcoord_generation_dirty = true;
+    m_texture_units_dirty = true;
 }
 
 void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params)
@@ -506,7 +511,7 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
         texture_coordinate_generation(m_active_texture_unit_index, capability).object_plane_coefficients = { params[0], params[1], params[2], params[3] };
         break;
     case GL_EYE_PLANE: {
-        auto const& inverse_model_view = m_model_view_matrix.inverse();
+        auto const& inverse_model_view = model_view_matrix().inverse();
         auto input_coefficients = FloatVector4 { params[0], params[1], params[2], params[3] };
 
         // Note: we are allowed to store transformed coefficients here, according to the documentation on
@@ -522,7 +527,7 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
         VERIFY_NOT_REACHED();
     }
 
-    m_texcoord_generation_dirty = true;
+    m_texture_units_dirty = true;
 }
 
 void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data)
@@ -909,39 +914,41 @@ void GLContext::sync_device_sampler_config()
     }
 }
 
-void GLContext::sync_device_texcoord_config()
+void GLContext::sync_device_texture_units()
 {
-    if (!m_texcoord_generation_dirty)
+    if (!m_texture_units_dirty)
         return;
-    m_texcoord_generation_dirty = false;
+    m_texture_units_dirty = false;
 
-    auto options = m_rasterizer->options();
+    for (GPU::TextureUnitIndex i = 0; i < m_device_info.num_texture_units; ++i) {
+        GPU::TextureUnitConfiguration texture_unit_configuration;
+        texture_unit_configuration.enabled = m_texture_units[i].texture_2d_enabled();
+        texture_unit_configuration.transformation_matrix = m_texture_units[i].texture_matrix();
 
-    for (size_t i = 0; i < m_device_info.num_texture_units; ++i) {
-
+        // Tex coord generation
         u8 enabled_coordinates = GPU::TexCoordGenerationCoordinate::None;
         for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
             auto const context_coordinate_config = texture_coordinate_generation(i, capability);
             if (!context_coordinate_config.enabled)
                 continue;
 
-            GPU::TexCoordGenerationConfig* texcoord_generation_config;
+            GPU::TexCoordGeneration* texcoord_generation;
             switch (capability) {
             case GL_TEXTURE_GEN_S:
                 enabled_coordinates |= GPU::TexCoordGenerationCoordinate::S;
-                texcoord_generation_config = &options.texcoord_generation_config[i][0];
+                texcoord_generation = &texture_unit_configuration.tex_coord_generation[0];
                 break;
             case GL_TEXTURE_GEN_T:
                 enabled_coordinates |= GPU::TexCoordGenerationCoordinate::T;
-                texcoord_generation_config = &options.texcoord_generation_config[i][1];
+                texcoord_generation = &texture_unit_configuration.tex_coord_generation[1];
                 break;
             case GL_TEXTURE_GEN_R:
                 enabled_coordinates |= GPU::TexCoordGenerationCoordinate::R;
-                texcoord_generation_config = &options.texcoord_generation_config[i][2];
+                texcoord_generation = &texture_unit_configuration.tex_coord_generation[2];
                 break;
             case GL_TEXTURE_GEN_Q:
                 enabled_coordinates |= GPU::TexCoordGenerationCoordinate::Q;
-                texcoord_generation_config = &options.texcoord_generation_config[i][3];
+                texcoord_generation = &texture_unit_configuration.tex_coord_generation[3];
                 break;
             default:
                 VERIFY_NOT_REACHED();
@@ -949,28 +956,30 @@ void GLContext::sync_device_texcoord_config()
 
             switch (context_coordinate_config.generation_mode) {
             case GL_OBJECT_LINEAR:
-                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ObjectLinear;
-                texcoord_generation_config->coefficients = context_coordinate_config.object_plane_coefficients;
+                texcoord_generation->mode = GPU::TexCoordGenerationMode::ObjectLinear;
+                texcoord_generation->coefficients = context_coordinate_config.object_plane_coefficients;
                 break;
             case GL_EYE_LINEAR:
-                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::EyeLinear;
-                texcoord_generation_config->coefficients = context_coordinate_config.eye_plane_coefficients;
+                texcoord_generation->mode = GPU::TexCoordGenerationMode::EyeLinear;
+                texcoord_generation->coefficients = context_coordinate_config.eye_plane_coefficients;
                 break;
             case GL_SPHERE_MAP:
-                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::SphereMap;
+                texcoord_generation->mode = GPU::TexCoordGenerationMode::SphereMap;
                 break;
             case GL_REFLECTION_MAP:
-                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ReflectionMap;
+                texcoord_generation->mode = GPU::TexCoordGenerationMode::ReflectionMap;
                 break;
             case GL_NORMAL_MAP:
-                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::NormalMap;
+                texcoord_generation->mode = GPU::TexCoordGenerationMode::NormalMap;
                 break;
+            default:
+                VERIFY_NOT_REACHED();
             }
         }
-        options.texcoord_generation_enabled_coordinates[i] = enabled_coordinates;
-    }
+        texture_unit_configuration.tex_coord_generation_enabled = enabled_coordinates;
 
-    m_rasterizer->set_options(options);
+        m_rasterizer->set_texture_unit_configuration(i, texture_unit_configuration);
+    }
 }
 
 }

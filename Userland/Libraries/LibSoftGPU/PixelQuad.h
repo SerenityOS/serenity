@@ -25,7 +25,7 @@ struct PixelQuad final {
     Vector3<f32x4> barycentrics;
     f32x4 depth;
     Vector4<f32x4> vertex_color;
-    Array<Vector4<f32x4>, GPU::NUM_SAMPLERS> texture_coordinates;
+    Array<Vector4<f32x4>, GPU::NUM_TEXTURE_UNITS> texture_coordinates;
     Vector4<f32x4> out_color;
     f32x4 fog_depth;
     i32x4 mask;

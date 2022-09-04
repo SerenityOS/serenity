@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibGPU/Config.h>
 #include <LibGPU/Enums.h>
 
 namespace GPU {

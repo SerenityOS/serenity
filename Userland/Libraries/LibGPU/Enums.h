@@ -120,7 +120,7 @@ enum StencilTestFunction {
     NotEqual,
 };
 
-enum TexCoordGenerationCoordinate {
+enum TexCoordGenerationCoordinate : u8 {
     None = 0x0,
     S = 0x1,
     T = 0x2,

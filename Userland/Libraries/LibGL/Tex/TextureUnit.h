@@ -8,7 +8,9 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/Vector.h>
 #include <LibGL/Tex/Texture2D.h>
+#include <LibGfx/Matrix4x4.h>
 
 namespace GL {
 
@@ -49,6 +51,9 @@ public:
     bool texture_cube_map_enabled() const { return m_texture_cube_map_enabled; };
     void set_texture_cube_map_enabled(bool texture_cube_map_enabled) { m_texture_cube_map_enabled = texture_cube_map_enabled; }
 
+    FloatMatrix4x4& texture_matrix() { return m_texture_matrix_stack.last(); }
+    Vector<FloatMatrix4x4>& texture_matrix_stack() { return m_texture_matrix_stack; }
+
 private:
     GLenum m_alpha_combinator { GL_MODULATE };
     Array<GLenum, 3> m_alpha_operand { GL_SRC_ALPHA, GL_SRC_ALPHA, GL_SRC_ALPHA };
@@ -69,6 +74,9 @@ private:
     bool m_texture_2d_enabled { false };
     bool m_texture_3d_enabled { false };
     bool m_texture_cube_map_enabled { false };
+
+    // Matrix stack for this unit
+    Vector<FloatMatrix4x4> m_texture_matrix_stack { FloatMatrix4x4::identity() };
 };
 
 }
