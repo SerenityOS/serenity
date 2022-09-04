@@ -9,8 +9,30 @@
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Encoding/TextDecoder.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Encoding {
+
+DOM::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::create_with_global_object(HTML::Window& window, FlyString encoding)
+{
+    auto decoder = TextCodec::decoder_for(encoding);
+    if (!decoder)
+        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, String::formatted("Invalid encoding {}", encoding) };
+
+    return JS::NonnullGCPtr(*window.heap().allocate<TextDecoder>(window.realm(), window, *decoder, move(encoding), false, false));
+}
+
+// https://encoding.spec.whatwg.org/#dom-textdecoder
+TextDecoder::TextDecoder(HTML::Window& window, TextCodec::Decoder& decoder, FlyString encoding, bool fatal, bool ignore_bom)
+    : PlatformObject(window.realm())
+    , m_decoder(decoder)
+    , m_encoding(move(encoding))
+    , m_fatal(fatal)
+    , m_ignore_bom(ignore_bom)
+{
+}
+
+TextDecoder::~TextDecoder() = default;
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
 DOM::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
