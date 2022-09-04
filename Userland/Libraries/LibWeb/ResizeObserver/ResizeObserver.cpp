@@ -5,17 +5,26 @@
  */
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/ResizeObserver/ResizeObserver.h>
 
 namespace Web::ResizeObserver {
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-resizeobserver
-NonnullRefPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window&, Bindings::CallbackType* callback)
+JS::NonnullGCPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window& window, Bindings::CallbackType* callback)
 {
     // FIXME: Implement
     (void)callback;
-    return adopt_ref(*new ResizeObserver);
+    return *window.heap().allocate<ResizeObserver>(window.realm(), window);
 }
+
+ResizeObserver::ResizeObserver(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("ResizeObserver"));
+}
+
+ResizeObserver::~ResizeObserver() = default;
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-observe
 void ResizeObserver::observe(DOM::Element& target, ResizeObserverOptions options)
