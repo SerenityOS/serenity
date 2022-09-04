@@ -1518,7 +1518,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 
         if (impl_is_wrapper(sequence_generic_type.parameters.first())) {
             scoped_generator.append(R"~~~(
-            auto* wrapped_element@recursion_depth@ = wrap(realm, *element@recursion_depth@);
+            auto* wrapped_element@recursion_depth@ = &(*element@recursion_depth@);
 )~~~");
         } else {
             generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), interface, String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
@@ -1669,11 +1669,11 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
-    @result_expression@ wrap(realm, const_cast<@type@&>(*@value@));
+    @result_expression@ &const_cast<@type@&>(*@value@);
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    @result_expression@ wrap(realm, const_cast<@type@&>(@value@));
+    @result_expression@ &const_cast<@type@&>(@value@);
 )~~~");
         }
     }
@@ -2064,7 +2064,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
         }
         generator.append(R"~~~(
-    return wrap(realm, *impl);
+    return &(*impl);
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.
@@ -2635,10 +2635,9 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
         iterator_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
-    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
+    return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue).ptr();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
@@ -2665,18 +2664,16 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
-    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Key));
+    return @iterator_name@::create(*impl, Object::PropertyKind::Key).ptr();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 
-    return wrap(realm, @iterator_name@::create(*impl, Object::PropertyKind::Value));
+    return @iterator_name@::create(*impl, Object::PropertyKind::Value).ptr();
 }
 )~~~");
     }
