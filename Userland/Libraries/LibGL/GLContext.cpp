@@ -935,6 +935,9 @@ void GLContext::build_extension_string()
         extensions.append("GL_EXT_texture_env_add"sv);
     }
 
+    if (m_device_info.max_texture_lod_bias > 0.f)
+        extensions.append("GL_EXT_texture_lod_bias"sv);
+
     m_extensions = String::join(' ', extensions);
 }
 

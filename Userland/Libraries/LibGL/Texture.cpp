@@ -243,27 +243,152 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_env, target, pname, param);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: We currently only support a subset of possible target values. Implement the rest!
-    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_ENV, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_ENV && target != GL_TEXTURE_FILTER_CONTROL, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_FILTER_CONTROL && pname != GL_TEXTURE_LOD_BIAS, GL_INVALID_ENUM);
 
-    // FIXME: We currently only support a subset of possible pname values. Implement the rest!
-    RETURN_WITH_ERROR_IF(pname != GL_TEXTURE_ENV_MODE, GL_INVALID_ENUM);
-
-    auto param_enum = static_cast<GLenum>(param);
-
-    switch (param_enum) {
-    case GL_MODULATE:
-    case GL_REPLACE:
-    case GL_DECAL:
-    case GL_ADD:
-        m_active_texture_unit->set_env_mode(param_enum);
-        m_sampler_config_is_dirty = true;
+    switch (target) {
+    case GL_TEXTURE_ENV:
+        switch (pname) {
+        case GL_ALPHA_SCALE:
+            RETURN_WITH_ERROR_IF(param != 1.f && param != 2.f && param != 4.f, GL_INVALID_VALUE);
+            m_active_texture_unit->set_alpha_scale(param);
+            break;
+        case GL_COMBINE_ALPHA: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_ADD:
+            case GL_ADD_SIGNED:
+            case GL_INTERPOLATE:
+            case GL_MODULATE:
+            case GL_REPLACE:
+            case GL_SUBTRACT:
+                m_active_texture_unit->set_alpha_combinator(param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_COMBINE_RGB: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_ADD:
+            case GL_ADD_SIGNED:
+            case GL_DOT3_RGB:
+            case GL_DOT3_RGBA:
+            case GL_INTERPOLATE:
+            case GL_MODULATE:
+            case GL_REPLACE:
+            case GL_SUBTRACT:
+                m_active_texture_unit->set_rgb_combinator(param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_OPERAND0_ALPHA:
+        case GL_OPERAND1_ALPHA:
+        case GL_OPERAND2_ALPHA: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_ONE_MINUS_SRC_ALPHA:
+            case GL_SRC_ALPHA:
+                m_active_texture_unit->set_alpha_operand(pname - GL_OPERAND0_ALPHA, param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_OPERAND0_RGB:
+        case GL_OPERAND1_RGB:
+        case GL_OPERAND2_RGB: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_ONE_MINUS_SRC_ALPHA:
+            case GL_ONE_MINUS_SRC_COLOR:
+            case GL_SRC_ALPHA:
+            case GL_SRC_COLOR:
+                m_active_texture_unit->set_rgb_operand(pname - GL_OPERAND0_RGB, param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_RGB_SCALE:
+            RETURN_WITH_ERROR_IF(param != 1.f && param != 2.f && param != 4.f, GL_INVALID_VALUE);
+            m_active_texture_unit->set_rgb_scale(param);
+            break;
+        case GL_SRC0_ALPHA:
+        case GL_SRC1_ALPHA:
+        case GL_SRC2_ALPHA: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_CONSTANT:
+            case GL_PREVIOUS:
+            case GL_PRIMARY_COLOR:
+            case GL_TEXTURE:
+            case GL_TEXTURE0 ... GL_TEXTURE31:
+                m_active_texture_unit->set_alpha_source(pname - GL_SRC0_ALPHA, param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_SRC0_RGB:
+        case GL_SRC1_RGB:
+        case GL_SRC2_RGB: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_CONSTANT:
+            case GL_PREVIOUS:
+            case GL_PRIMARY_COLOR:
+            case GL_TEXTURE:
+            case GL_TEXTURE0 ... GL_TEXTURE31:
+                m_active_texture_unit->set_rgb_source(pname - GL_SRC0_RGB, param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        case GL_TEXTURE_ENV_MODE: {
+            auto param_enum = static_cast<GLenum>(param);
+            switch (param_enum) {
+            case GL_ADD:
+            case GL_BLEND:
+            case GL_COMBINE:
+            case GL_DECAL:
+            case GL_MODULATE:
+            case GL_REPLACE:
+                m_active_texture_unit->set_env_mode(param_enum);
+                break;
+            default:
+                RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+            }
+            break;
+        }
+        default:
+            RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        }
+        break;
+    case GL_TEXTURE_FILTER_CONTROL:
+        switch (pname) {
+        case GL_TEXTURE_LOD_BIAS:
+            m_active_texture_unit->set_level_of_detail_bias(param);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
         break;
     default:
-        // FIXME: We currently only support a subset of possible param values. Implement the rest!
-        dbgln_if(GL_DEBUG, "gl_tex_env({:#x}, {:#x}, {}): param unimplemented", target, pname, param);
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        VERIFY_NOT_REACHED();
     }
+
+    m_sampler_config_is_dirty = true;
 }
 
 void GLContext::gl_tex_gen(GLenum coord, GLenum pname, GLint param)
@@ -537,6 +662,7 @@ void GLContext::sync_device_sampler_config()
         auto texture_2d = texture_unit.texture_2d_target_texture();
         VERIFY(!texture_2d.is_null());
         config.bound_image = texture_2d->device_image();
+        config.level_of_detail_bias = texture_unit.level_of_detail_bias();
 
         auto const& sampler = texture_2d->sampler();
 
@@ -620,21 +746,96 @@ void GLContext::sync_device_sampler_config()
             VERIFY_NOT_REACHED();
         }
 
-        switch (texture_unit.env_mode()) {
-        case GL_MODULATE:
-            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Modulate;
-            break;
-        case GL_REPLACE:
-            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Replace;
-            break;
-        case GL_DECAL:
-            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Decal;
-            break;
-        case GL_ADD:
-            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Add;
-            break;
-        default:
-            VERIFY_NOT_REACHED();
+        auto& fixed_function_env = config.fixed_function_texture_environment;
+
+        auto get_env_mode = [](GLenum mode) {
+            switch (mode) {
+            case GL_ADD:
+                return GPU::TextureEnvMode::Add;
+            case GL_BLEND:
+                return GPU::TextureEnvMode::Blend;
+            case GL_COMBINE:
+                return GPU::TextureEnvMode::Combine;
+            case GL_DECAL:
+                return GPU::TextureEnvMode::Decal;
+            case GL_MODULATE:
+                return GPU::TextureEnvMode::Modulate;
+            case GL_REPLACE:
+                return GPU::TextureEnvMode::Replace;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+        fixed_function_env.env_mode = get_env_mode(texture_unit.env_mode());
+
+        fixed_function_env.alpha_scale = texture_unit.alpha_scale();
+        fixed_function_env.rgb_scale = texture_unit.rgb_scale();
+
+        auto get_combinator = [](GLenum combinator) {
+            switch (combinator) {
+            case GL_ADD:
+                return GPU::TextureCombinator::Add;
+            case GL_ADD_SIGNED:
+                return GPU::TextureCombinator::AddSigned;
+            case GL_DOT3_RGB:
+                return GPU::TextureCombinator::Dot3RGB;
+            case GL_DOT3_RGBA:
+                return GPU::TextureCombinator::Dot3RGBA;
+            case GL_INTERPOLATE:
+                return GPU::TextureCombinator::Interpolate;
+            case GL_MODULATE:
+                return GPU::TextureCombinator::Modulate;
+            case GL_REPLACE:
+                return GPU::TextureCombinator::Replace;
+            case GL_SUBTRACT:
+                return GPU::TextureCombinator::Subtract;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+        fixed_function_env.alpha_combinator = get_combinator(texture_unit.alpha_combinator());
+        fixed_function_env.rgb_combinator = get_combinator(texture_unit.rgb_combinator());
+
+        auto get_operand = [](GLenum operand) {
+            switch (operand) {
+            case GL_ONE_MINUS_SRC_ALPHA:
+                return GPU::TextureOperand::OneMinusSourceAlpha;
+            case GL_ONE_MINUS_SRC_COLOR:
+                return GPU::TextureOperand::OneMinusSourceColor;
+            case GL_SRC_ALPHA:
+                return GPU::TextureOperand::SourceAlpha;
+            case GL_SRC_COLOR:
+                return GPU::TextureOperand::SourceColor;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+        auto get_source = [](GLenum source) {
+            switch (source) {
+            case GL_CONSTANT:
+                return GPU::TextureSource::Constant;
+            case GL_PREVIOUS:
+                return GPU::TextureSource::Previous;
+            case GL_PRIMARY_COLOR:
+                return GPU::TextureSource::PrimaryColor;
+            case GL_TEXTURE:
+                return GPU::TextureSource::Texture;
+            case GL_TEXTURE0 ... GL_TEXTURE31:
+                return GPU::TextureSource::TextureStage;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        };
+        for (size_t j = 0; j < 3; ++j) {
+            fixed_function_env.alpha_operand[j] = get_operand(texture_unit.alpha_operand(j));
+            fixed_function_env.alpha_source[j] = get_source(texture_unit.alpha_source(j));
+            if (fixed_function_env.alpha_source[j] == GPU::TextureSource::TextureStage)
+                fixed_function_env.alpha_source_texture_stage = texture_unit.alpha_source(j) - GL_TEXTURE0;
+
+            fixed_function_env.rgb_operand[j] = get_operand(texture_unit.rgb_operand(j));
+            fixed_function_env.rgb_source[j] = get_source(texture_unit.rgb_source(j));
+            if (fixed_function_env.rgb_source[j] == GPU::TextureSource::TextureStage)
+                fixed_function_env.rgb_source_texture_stage = texture_unit.rgb_source(j) - GL_TEXTURE0;
         }
 
         config.border_color = sampler.border_color();

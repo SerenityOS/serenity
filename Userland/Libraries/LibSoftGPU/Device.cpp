@@ -813,6 +813,7 @@ GPU::DeviceInfo Device::info() const
         .num_texture_units = GPU::NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
         .max_clip_planes = MAX_CLIP_PLANES,
+        .max_texture_lod_bias = MAX_TEXTURE_LOD_BIAS,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
         .supports_texture_env_add = true,
@@ -1187,40 +1188,124 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
 
 ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 {
-    quad.out_color = quad.vertex_color;
+    Array<Vector4<f32x4>, GPU::NUM_SAMPLERS> texture_stage_texel;
 
+    auto current_color = quad.vertex_color;
     for (size_t i : m_enabled_texture_units) {
-        // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
         auto const& sampler = m_samplers[i];
 
         auto texel = sampler.sample_2d(quad.texture_coordinates[i].xy());
+        texture_stage_texel[i] = texel;
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
-        // FIXME: Implement more blend modes
-        switch (sampler.config().fixed_function_texture_env_mode) {
-        case GPU::TextureEnvMode::Modulate:
-            quad.out_color = quad.out_color * texel;
+        // FIXME: implement support for GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_INTENSITY and GL_RGB internal formats
+        auto& fixed_function_env = sampler.config().fixed_function_texture_environment;
+        switch (fixed_function_env.env_mode) {
+        case GPU::TextureEnvMode::Add:
+            current_color.set_x(current_color.x() + texel.x());
+            current_color.set_y(current_color.y() + texel.y());
+            current_color.set_z(current_color.z() + texel.z());
+            current_color.set_w(current_color.w() * texel.w());
             break;
-        case GPU::TextureEnvMode::Replace:
-            quad.out_color = texel;
+        case GPU::TextureEnvMode::Blend: {
+            auto blend_color = expand4(fixed_function_env.color);
+            current_color.set_x(mix(current_color.x(), blend_color.x(), texel.x()));
+            current_color.set_y(mix(current_color.y(), blend_color.y(), texel.y()));
+            current_color.set_z(mix(current_color.z(), blend_color.z(), texel.z()));
+            current_color.set_w(current_color.w() * texel.w());
             break;
+        }
+        case GPU::TextureEnvMode::Combine: {
+            auto get_source_color = [&](GPU::TextureSource source, u8 texture_stage) {
+                switch (source) {
+                case GPU::TextureSource::Constant:
+                    return expand4(fixed_function_env.color);
+                case GPU::TextureSource::Previous:
+                    return current_color;
+                case GPU::TextureSource::PrimaryColor:
+                    return quad.vertex_color;
+                case GPU::TextureSource::Texture:
+                    return texel;
+                case GPU::TextureSource::TextureStage:
+                    return texture_stage_texel[texture_stage];
+                }
+                VERIFY_NOT_REACHED();
+            };
+            auto get_argument_value = [](GPU::TextureOperand operand, auto value) {
+                switch (operand) {
+                case GPU::TextureOperand::OneMinusSourceAlpha:
+                case GPU::TextureOperand::OneMinusSourceColor:
+                    return expand4(FloatVector4 { 1.f, 1.f, 1.f, 1.f }) - value;
+                case GPU::TextureOperand::SourceAlpha:
+                case GPU::TextureOperand::SourceColor:
+                    return value;
+                }
+                VERIFY_NOT_REACHED();
+            };
+            auto calculate_combinator = [](GPU::TextureCombinator combinator, auto arg0, auto arg1, auto arg2) {
+                switch (combinator) {
+                case GPU::TextureCombinator::Add:
+                    return arg0 + arg1;
+                case GPU::TextureCombinator::AddSigned:
+                    return arg0 + arg1 - expand4(FloatVector4 { .5f, .5f, .5f, .5f });
+                case GPU::TextureCombinator::Dot3RGB:
+                case GPU::TextureCombinator::Dot3RGBA: {
+                    auto scalar = 4.f * ((arg0.x() - .5f) * (arg1.x() - .5f) + (arg0.y() - 0.5f) * (arg1.y() - 0.5f) + (arg0.z() - 0.5f) * (arg1.z() - 0.5f));
+                    return Vector4<f32x4> { scalar, scalar, scalar, scalar };
+                }
+                case GPU::TextureCombinator::Interpolate:
+                    return mix(arg0, arg1, arg2);
+                case GPU::TextureCombinator::Modulate:
+                    return arg0 * arg1;
+                case GPU::TextureCombinator::Replace:
+                    return arg0;
+                case GPU::TextureCombinator::Subtract:
+                    return arg0 - arg1;
+                }
+                VERIFY_NOT_REACHED();
+            };
+            auto calculate_color = [&](GPU::TextureCombinator combinator, auto& operands, auto& sources, u8 texture_stage) {
+                auto arg0 = get_argument_value(operands[0], get_source_color(sources[0], texture_stage));
+                auto arg1 = get_argument_value(operands[1], get_source_color(sources[1], texture_stage));
+                auto arg2 = get_argument_value(operands[2], get_source_color(sources[2], texture_stage));
+                return calculate_combinator(combinator, arg0, arg1, arg2);
+            };
+
+            auto rgb_color = calculate_color(
+                fixed_function_env.rgb_combinator,
+                fixed_function_env.rgb_operand,
+                fixed_function_env.rgb_source,
+                fixed_function_env.rgb_source_texture_stage);
+            auto alpha_color = calculate_color(
+                fixed_function_env.alpha_combinator,
+                fixed_function_env.alpha_operand,
+                fixed_function_env.alpha_source,
+                fixed_function_env.alpha_source_texture_stage);
+
+            current_color.set_x(rgb_color.x() * fixed_function_env.rgb_scale);
+            current_color.set_y(rgb_color.y() * fixed_function_env.rgb_scale);
+            current_color.set_z(rgb_color.z() * fixed_function_env.rgb_scale);
+            current_color.set_w(alpha_color.w() * fixed_function_env.alpha_scale);
+
+            current_color.clamp(expand4(0.f), expand4(1.f));
+            break;
+        }
         case GPU::TextureEnvMode::Decal: {
             auto dst_alpha = texel.w();
-            quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), dst_alpha));
-            quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), dst_alpha));
-            quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), dst_alpha));
+            current_color.set_x(mix(current_color.x(), texel.x(), dst_alpha));
+            current_color.set_y(mix(current_color.y(), texel.y(), dst_alpha));
+            current_color.set_z(mix(current_color.z(), texel.z(), dst_alpha));
             break;
         }
-        case GPU::TextureEnvMode::Add:
-            quad.out_color.set_x(quad.out_color.x() + texel.x());
-            quad.out_color.set_y(quad.out_color.y() + texel.y());
-            quad.out_color.set_z(quad.out_color.z() + texel.z());
-            quad.out_color.set_w(quad.out_color.w() * texel.w()); // FIXME: If texture format is `GL_INTENSITY` alpha components must be added (https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glTexEnv.xml)
+        case GPU::TextureEnvMode::Modulate:
+            current_color = current_color * texel;
             break;
-        default:
-            VERIFY_NOT_REACHED();
+        case GPU::TextureEnvMode::Replace:
+            current_color = texel;
+            break;
         }
     }
+    quad.out_color = current_color;
 
     // Calculate fog
     // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
