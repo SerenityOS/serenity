@@ -8,15 +8,29 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Crypto {
 
-Crypto::Crypto(HTML::Window& window)
-    : m_subtle(*SubtleCrypto::create(window))
+JS::NonnullGCPtr<Crypto> Crypto::create(HTML::Window& window)
 {
+    return *window.heap().allocate<Crypto>(window.realm(), window);
+}
+
+Crypto::Crypto(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("Crypto"));
+}
+
+Crypto::~Crypto() = default;
+
+void Crypto::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    m_subtle = SubtleCrypto::create(global_object());
 }
 
 JS::NonnullGCPtr<SubtleCrypto> Crypto::subtle() const

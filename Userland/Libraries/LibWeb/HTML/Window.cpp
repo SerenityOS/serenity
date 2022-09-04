@@ -15,7 +15,6 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
-#include <LibWeb/Bindings/CryptoWrapper.h>
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
@@ -98,6 +97,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_performance.ptr());
     visitor.visit(m_screen.ptr());
     visitor.visit(m_location_object);
+    visitor.visit(m_crypto);
     for (auto& it : m_prototypes)
         visitor.visit(it.value);
     for (auto& it : m_constructors)
