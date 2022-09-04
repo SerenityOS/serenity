@@ -72,6 +72,8 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = MODELVIEW_MATRIX_STACK_LIMIT } };
     case GL_MAX_PROJECTION_STACK_DEPTH:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = PROJECTION_MATRIX_STACK_LIMIT } };
+    case GL_MAX_TEXTURE_LOD_BIAS:
+        return ContextParameter { .type = GL_DOUBLE, .value = { .double_value = static_cast<GLdouble>(m_device_info.max_texture_lod_bias) } };
     case GL_MAX_TEXTURE_SIZE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 4096 } };
     case GL_MAX_TEXTURE_STACK_DEPTH:

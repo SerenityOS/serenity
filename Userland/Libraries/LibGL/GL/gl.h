@@ -144,6 +144,7 @@ extern "C" {
 #define GL_MAP2_VERTEX_4 0x0DB8
 #define GL_NORMAL_ARRAY 0x8075
 #define GL_NORMAL_ARRAY_TYPE 0x807E
+#define GL_MAX_TEXTURE_LOD_BIAS 0x84FD
 
 // Blend factors
 #define GL_ZERO 0
@@ -485,6 +486,8 @@ extern "C" {
 #define GL_Q 0x2003
 
 // Texture Environment and Parameters
+#define GL_ADD 0x0104
+#define GL_ALPHA_SCALE 0x0D1C
 #define GL_MODULATE 0x2100
 #define GL_TEXTURE_ENV_MODE 0x2200
 #define GL_DECAL 0x2101
@@ -501,9 +504,41 @@ extern "C" {
 #define GL_TEXTURE_WRAP_T 0x2803
 #define GL_CLAMP 0x2900
 #define GL_REPEAT 0x2901
-#define GL_MIRRORED_REPEAT 0x8370
 #define GL_CLAMP_TO_BORDER 0x812D
 #define GL_CLAMP_TO_EDGE 0x812F
+#define GL_MIRRORED_REPEAT 0x8370
+#define GL_SUBTRACT 0x84E7
+#define GL_TEXTURE_FILTER_CONTROL 0x8500
+#define GL_TEXTURE_LOD_BIAS 0x8501
+#define GL_COMBINE 0x8570
+#define GL_COMBINE_RGB 0x8571
+#define GL_COMBINE_ALPHA 0x8572
+#define GL_RGB_SCALE 0x8573
+#define GL_ADD_SIGNED 0x8574
+#define GL_INTERPOLATE 0x8575
+#define GL_CONSTANT 0x8576
+#define GL_PRIMARY_COLOR 0x8577
+#define GL_PREVIOUS 0x8578
+#define GL_SRC0_RGB 0x8580
+#define GL_SOURCE0_RGB 0x8580
+#define GL_SRC1_RGB 0x8581
+#define GL_SOURCE1_RGB 0x8581
+#define GL_SRC2_RGB 0x8582
+#define GL_SOURCE2_RGB 0x8582
+#define GL_SRC0_ALPHA 0x8588
+#define GL_SOURCE0_ALPHA 0x8588
+#define GL_SRC1_ALPHA 0x8589
+#define GL_SOURCE1_ALPHA 0x8589
+#define GL_SRC2_ALPHA 0x858A
+#define GL_SOURCE2_ALPHA 0x858A
+#define GL_OPERAND0_RGB 0x8590
+#define GL_OPERAND1_RGB 0x8591
+#define GL_OPERAND2_RGB 0x8592
+#define GL_OPERAND0_ALPHA 0x8598
+#define GL_OPERAND1_ALPHA 0x8599
+#define GL_OPERAND2_ALPHA 0x859A
+#define GL_DOT3_RGB 0x86AE
+#define GL_DOT3_RGBA 0x86AF
 
 // Texture gen modes
 #define GL_EYE_LINEAR 0x2400
@@ -537,8 +572,6 @@ extern "C" {
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6
 #define GL_PROJECTION_MATRIX 0x0BA7
-
-#define GL_ADD 0x0104
 
 // User clipping planes
 #define GL_MAX_CLIP_PLANES 0x0D32
