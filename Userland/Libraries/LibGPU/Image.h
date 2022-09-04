@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,13 @@ public:
     }
 
     virtual ~Image() { }
+
+    virtual u32 width_at_level(u32 level) const = 0;
+    virtual u32 height_at_level(u32 level) const = 0;
+    virtual u32 depth_at_level(u32 level) const = 0;
+    virtual u32 number_of_levels() const = 0;
+
+    virtual void regenerate_mipmaps() = 0;
 
     virtual void write_texels(u32 level, Vector3<i32> const& output_offset, void const* input_data, ImageDataLayout const&) = 0;
     virtual void read_texels(u32 level, Vector3<i32> const& input_offset, void* output_data, ImageDataLayout const&) const = 0;

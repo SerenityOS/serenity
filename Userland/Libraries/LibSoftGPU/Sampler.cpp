@@ -117,8 +117,8 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     // FIXME: Static casting from u32 to float could silently truncate here.
     // u16 should be plenty enough for texture dimensions and would allow textures of up to 65536x65536x65536 pixels.
     auto texel_coordinates = uv;
-    texel_coordinates.set_x(texel_coordinates.x() * static_cast<float>(image.level_width(base_level)));
-    texel_coordinates.set_y(texel_coordinates.y() * static_cast<float>(image.level_height(base_level)));
+    texel_coordinates.set_x(texel_coordinates.x() * static_cast<float>(image.width_at_level(base_level)));
+    texel_coordinates.set_y(texel_coordinates.y() * static_cast<float>(image.height_at_level(base_level)));
     auto dtdx = ddx(texel_coordinates);
     auto dtdy = ddy(texel_coordinates);
     auto scale_factor = max(dtdx.dot(dtdx), dtdy.dot(dtdy));
@@ -138,7 +138,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     auto texture_lod_bias = AK::clamp(m_config.level_of_detail_bias, -MAX_TEXTURE_LOD_BIAS, MAX_TEXTURE_LOD_BIAS);
     // FIXME: Instead of clamping to num_levels - 1, actually make the max mipmap level configurable with glTexParameteri(GL_TEXTURE_MAX_LEVEL, max_level)
     auto min_level = expand4(static_cast<float>(base_level));
-    auto max_level = expand4(static_cast<float>(image.num_levels()) - 1.f);
+    auto max_level = expand4(static_cast<float>(image.number_of_levels()) - 1.f);
     auto lambda_xy = log2_approximate(scale_factor) * .5f + texture_lod_bias;
     auto level = clamp(lambda_xy, min_level, max_level);
 
@@ -157,16 +157,16 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     auto const& image = *static_ptr_cast<Image>(m_config.bound_image);
 
     u32x4 const width = {
-        image.level_width(level[0]),
-        image.level_width(level[1]),
-        image.level_width(level[2]),
-        image.level_width(level[3]),
+        image.width_at_level(level[0]),
+        image.width_at_level(level[1]),
+        image.width_at_level(level[2]),
+        image.width_at_level(level[3]),
     };
     u32x4 const height = {
-        image.level_height(level[0]),
-        image.level_height(level[1]),
-        image.level_height(level[2]),
-        image.level_height(level[3]),
+        image.height_at_level(level[0]),
+        image.height_at_level(level[1]),
+        image.height_at_level(level[2]),
+        image.height_at_level(level[3]),
     };
 
     auto f_width = to_f32x4(width);

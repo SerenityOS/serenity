@@ -582,10 +582,11 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
 
     // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
-    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_MIN_FILTER
-                             || pname == GL_TEXTURE_MAG_FILTER
-                             || pname == GL_TEXTURE_WRAP_S
-                             || pname == GL_TEXTURE_WRAP_T),
+    RETURN_WITH_ERROR_IF(pname != GL_GENERATE_MIPMAP
+            && pname != GL_TEXTURE_MIN_FILTER
+            && pname != GL_TEXTURE_MAG_FILTER
+            && pname != GL_TEXTURE_WRAP_S
+            && pname != GL_TEXTURE_WRAP_T,
         GL_INVALID_ENUM);
 
     // We assume GL_TEXTURE_2D (see above)
@@ -593,6 +594,10 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     VERIFY(!texture_2d.is_null());
 
     switch (pname) {
+    case GL_GENERATE_MIPMAP:
+        RETURN_WITH_ERROR_IF(param != GL_TRUE && param != GL_FALSE, GL_INVALID_ENUM);
+        texture_2d->set_generate_mipmaps(param == GL_TRUE);
+        break;
     case GL_TEXTURE_MIN_FILTER:
         RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
                                  || param == GL_LINEAR
@@ -652,7 +657,7 @@ void GLContext::gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* p
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
 
     // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
-    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_BORDER_COLOR), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(pname != GL_TEXTURE_BORDER_COLOR, GL_INVALID_ENUM);
 
     // We assume GL_TEXTURE_2D (see above)
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
