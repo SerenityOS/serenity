@@ -116,10 +116,10 @@ void Menu::realize_if_needed(RefPtr<Action> const& default_action)
         realize_menu(default_action);
 }
 
-void Menu::popup(Gfx::IntPoint const& screen_position, RefPtr<Action> const& default_action)
+void Menu::popup(Gfx::IntPoint const& screen_position, RefPtr<Action> const& default_action, Gfx::IntRect const& button_rect)
 {
     realize_if_needed(default_action);
-    ConnectionToWindowServer::the().async_popup_menu(m_menu_id, screen_position);
+    ConnectionToWindowServer::the().async_popup_menu(m_menu_id, screen_position, button_rect);
 }
 
 void Menu::dismiss()

@@ -597,6 +597,27 @@ void Menu::redraw_if_theme_changed()
         redraw();
 }
 
+void Menu::open_button_menu(Gfx::IntPoint const& position, Gfx::IntRect const& button_rect)
+{
+    if (is_empty())
+        return;
+
+    auto& screen = Screen::closest_to_location(position);
+    auto& window = ensure_menu_window(position);
+    Gfx::IntPoint adjusted_pos = position;
+
+    if (window.rect().right() > screen.width())
+        adjusted_pos = adjusted_pos.translated(-(window.rect().right() - screen.width()) - 1, 0);
+
+    if (window.rect().bottom() > screen.height())
+        adjusted_pos = adjusted_pos.translated(0, -window.rect().height() - button_rect.height() + 1);
+
+    window.set_rect(adjusted_pos.x(), adjusted_pos.y(), window.rect().width(), window.rect().height());
+    window.move_to(adjusted_pos);
+    MenuManager::the().open_menu(*this, true);
+    WindowManager::the().did_popup_a_menu({});
+}
+
 void Menu::popup(Gfx::IntPoint const& position)
 {
     do_popup(position, true);

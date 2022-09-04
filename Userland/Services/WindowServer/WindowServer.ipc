@@ -100,7 +100,7 @@ endpoint WindowServer
     set_fullscreen(i32 window_id, bool fullscreen) =|
     set_frameless(i32 window_id, bool frameless) =|
     set_forced_shadow(i32 window_id, bool shadow) =|
-    popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
+    popup_menu(i32 menu_id, Gfx::IntPoint screen_position, Gfx::IntRect button_rect) =|
     dismiss_menu(i32 menu_id) =|
 
     set_wallpaper(Gfx::ShareableBitmap wallpaper_bitmap) => (bool success)

@@ -145,7 +145,7 @@ void ConnectionFromClient::add_menu_item(i32 menu_id, i32 identifier, i32 submen
     menu.add_item(move(menu_item));
 }
 
-void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_position)
+void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_position, Gfx::IntRect const& button_rect)
 {
     auto position = screen_position;
     auto it = m_menus.find(menu_id);
@@ -154,7 +154,10 @@ void ConnectionFromClient::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_p
         return;
     }
     auto& menu = *(*it).value;
-    menu.popup(position);
+    if (!button_rect.is_null())
+        menu.open_button_menu(position, button_rect);
+    else
+        menu.popup(position);
 }
 
 void ConnectionFromClient::dismiss_menu(i32 menu_id)

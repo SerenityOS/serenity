@@ -138,7 +138,7 @@ private:
     virtual void show_screen_numbers(bool) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;
-    virtual void popup_menu(i32, Gfx::IntPoint const&) override;
+    virtual void popup_menu(i32, Gfx::IntPoint const&, Gfx::IntRect const&) override;
     virtual void dismiss_menu(i32) override;
     virtual void set_window_icon_bitmap(i32, Gfx::ShareableBitmap const&) override;
     virtual Messages::WindowServer::StartDragResponse start_drag(String const&, HashMap<String, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;

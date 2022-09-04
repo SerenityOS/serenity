@@ -159,7 +159,7 @@ Optional<UISize> Toolbar::calculated_min_size() const
 ErrorOr<void> Toolbar::create_overflow_objects()
 {
     m_overflow_action = Action::create("Overflow Menu", { Mod_Ctrl | Mod_Shift, Key_O }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/overflow-menu.png"sv)), [&](auto&) {
-        m_overflow_menu->popup(m_overflow_button->screen_relative_rect().bottom_left());
+        m_overflow_menu->popup(m_overflow_button->screen_relative_rect().bottom_left(), {}, m_overflow_button->rect());
     });
     m_overflow_action->set_status_tip("Show hidden toolbar actions");
     m_overflow_action->set_enabled(false);
@@ -168,7 +168,6 @@ ErrorOr<void> Toolbar::create_overflow_objects()
 
     m_overflow_button = TRY(try_add_action(*m_overflow_action));
     m_overflow_button->set_visible(false);
-    m_overflow_button->set_menu_position(Button::MenuPosition::BottomLeft);
 
     return {};
 }
