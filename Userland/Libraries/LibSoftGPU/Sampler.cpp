@@ -26,7 +26,6 @@ using AK::SIMD::maskbits;
 using AK::SIMD::to_f32x4;
 using AK::SIMD::to_i32x4;
 using AK::SIMD::to_u32x4;
-using AK::SIMD::truncate_int_range;
 
 static f32x4 wrap_repeat(f32x4 value)
 {
