@@ -130,7 +130,7 @@ ErrorOr<void> UHCIController::reset()
 
 UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
 {
-    m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
+    m_queue_head_pool = TRY(USBDMAPool<QueueHead>::try_create("Queue Head Pool"sv));
 
     // Used as a sentinel value to loop back to the beginning of the list
     m_schedule_begin_anchor = allocate_queue_head();
@@ -145,7 +145,7 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
     m_bulk_qh_anchor = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
-    m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
+    m_transfer_descriptor_pool = TRY(USBDMAPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
     m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
 
@@ -248,12 +248,12 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
 
 QueueHead* UHCIController::allocate_queue_head()
 {
-    return m_queue_head_pool->try_take_free_descriptor();
+    return m_queue_head_pool->try_take_free_buffer();
 }
 
 TransferDescriptor* UHCIController::allocate_transfer_descriptor()
 {
-    return m_transfer_descriptor_pool->try_take_free_descriptor();
+    return m_transfer_descriptor_pool->try_take_free_buffer();
 }
 
 ErrorOr<void> UHCIController::stop()

@@ -11,10 +11,10 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
+#include <Kernel/Bus/USB/USBDMAPool.h>
 #include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -98,8 +98,8 @@ private:
     Spinlock m_schedule_lock;
 
     OwnPtr<UHCIRootHub> m_root_hub;
-    OwnPtr<UHCIDescriptorPool<QueueHead>> m_queue_head_pool;
-    OwnPtr<UHCIDescriptorPool<TransferDescriptor>> m_transfer_descriptor_pool;
+    OwnPtr<USBDMAPool<QueueHead>> m_queue_head_pool;
+    OwnPtr<USBDMAPool<TransferDescriptor>> m_transfer_descriptor_pool;
     Vector<TransferDescriptor*> m_iso_td_list;
 
     QueueHead* m_schedule_begin_anchor;
