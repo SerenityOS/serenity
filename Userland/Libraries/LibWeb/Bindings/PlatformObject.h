@@ -24,13 +24,9 @@ namespace Web::Bindings {
         return *this;                           \
     }
 
-#define WRAPPER_HACK(class_, namespace_)                            \
-    namespace Web::Bindings {                                       \
-    inline JS::Object* wrap(JS::Realm&, namespace_::class_& object) \
-    {                                                               \
-        return &object;                                             \
-    }                                                               \
-    using class_##Wrapper = namespace_::class_;                     \
+#define WRAPPER_HACK(class_, namespace_)        \
+    namespace Web::Bindings {                   \
+    using class_##Wrapper = namespace_::class_; \
     }
 
 // https://webidl.spec.whatwg.org/#dfn-platform-object
