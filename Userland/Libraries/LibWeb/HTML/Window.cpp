@@ -23,7 +23,6 @@
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
-#include <LibWeb/Bindings/SelectionWrapper.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/CSS/MediaQueryList.h>
