@@ -11,7 +11,6 @@
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/CallbackType.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/MutationRecord.h>
 

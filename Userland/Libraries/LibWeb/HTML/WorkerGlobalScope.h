@@ -9,7 +9,6 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>

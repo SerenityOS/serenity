@@ -12,7 +12,6 @@
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 

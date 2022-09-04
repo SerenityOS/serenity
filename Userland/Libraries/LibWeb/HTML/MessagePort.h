@@ -8,7 +8,6 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 

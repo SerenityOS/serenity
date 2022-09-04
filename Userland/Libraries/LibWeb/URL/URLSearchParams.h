@@ -8,7 +8,6 @@
 
 #include <AK/URL.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::URL {
