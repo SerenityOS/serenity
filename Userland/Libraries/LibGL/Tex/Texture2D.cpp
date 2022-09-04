@@ -13,9 +13,7 @@ namespace GL {
 
 void Texture2D::download_texture_data(GLuint lod, GPU::ImageDataLayout output_layout, GLvoid* pixels)
 {
-    if (device_image().is_null())
-        return;
-
+    VERIFY(!device_image().is_null());
     device_image()->read_texels(0, lod, { 0, 0, 0 }, pixels, output_layout);
 }
 
@@ -42,8 +40,7 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GPU::ImageDataLayout input_
     // FIXME: We currently depend on the first glTexImage2D call to attach an image to mipmap level 0, which initializes the GPU image
     // Ideally we would create separate GPU images for each level and merge them into a final image
     // once used for rendering for the first time.
-    if (device_image().is_null())
-        return;
+    VERIFY(!device_image().is_null());
 
     device_image()->write_texels(0, lod, output_offset, pixels, input_layout);
 }
