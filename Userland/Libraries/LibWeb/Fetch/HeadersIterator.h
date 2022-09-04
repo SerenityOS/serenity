@@ -6,32 +6,25 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Headers.h>
 
 namespace Web::Fetch {
 
-class HeadersIterator
-    : public Bindings::Wrappable
-    , public RefCounted<HeadersIterator> {
-public:
-    using WrapperType = Bindings::HeadersIteratorWrapper;
+class HeadersIterator final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(HeadersIterator, Bindings::PlatformObject);
 
-    static NonnullRefPtr<HeadersIterator> create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
-    {
-        return adopt_ref(*new HeadersIterator(headers, iteration_kind));
-    }
+public:
+    static JS::NonnullGCPtr<HeadersIterator> create(Headers const&, JS::Object::PropertyKind iteration_kind);
+
+    virtual ~HeadersIterator() override;
 
     JS::ThrowCompletionOr<JS::Object*> next();
 
-    void visit_edges(JS::Cell::Visitor&);
-
 private:
-    HeadersIterator(Headers const& headers, JS::Object::PropertyKind iteration_kind)
-        : m_headers(headers)
-        , m_iteration_kind(iteration_kind)
-    {
-    }
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
+    HeadersIterator(Headers const&, JS::Object::PropertyKind iteration_kind);
 
     Headers const& m_headers;
     JS::Object::PropertyKind m_iteration_kind;
@@ -40,8 +33,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-
-HeadersIteratorWrapper* wrap(JS::Realm&, Fetch::HeadersIterator&);
-
-}
+WRAPPER_HACK(HeadersIterator, Web::Fetch)

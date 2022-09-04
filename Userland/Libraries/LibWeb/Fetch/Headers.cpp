@@ -4,17 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/HeadersWrapper.h>
 #include <LibWeb/Fetch/Headers.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#dom-headers
-DOM::ExceptionOr<NonnullRefPtr<Headers>> Headers::create(Optional<HeadersInit> const& init)
+DOM::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init)
 {
     // The new Headers(init) constructor steps are:
-
-    auto headers = adopt_ref(*new Headers());
+    auto* headers = window.heap().allocate<Headers>(window.realm(), window);
 
     // 1. Set this’s guard to "none".
     headers->m_guard = Guard::None;
@@ -23,8 +22,16 @@ DOM::ExceptionOr<NonnullRefPtr<Headers>> Headers::create(Optional<HeadersInit> c
     if (init.has_value())
         TRY(headers->fill(*init));
 
-    return headers;
+    return JS::NonnullGCPtr(*headers);
 }
+
+Headers::Headers(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("Headers"));
+}
+
+Headers::~Headers() = default;
 
 // https://fetch.spec.whatwg.org/#dom-headers-append
 DOM::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
@@ -158,13 +165,11 @@ DOM::ExceptionOr<void> Headers::set(String const& name_string, String const& val
 // https://webidl.spec.whatwg.org/#es-iterable, Step 4
 JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 {
-    auto& vm = wrapper()->vm();
-
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
         auto headers_or_error = m_header_list.sort_and_combine();
         if (headers_or_error.is_error())
-            return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
+            return vm().throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
         return headers_or_error.release_value();
     };
 

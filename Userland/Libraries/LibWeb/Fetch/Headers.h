@@ -7,11 +7,10 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 
@@ -20,12 +19,10 @@ namespace Web::Fetch {
 using HeadersInit = Variant<Vector<Vector<String>>, OrderedHashMap<String, String>>;
 
 // https://fetch.spec.whatwg.org/#headers-class
-class Headers
-    : public Bindings::Wrappable
-    , public RefCounted<Headers> {
-public:
-    using WrapperType = Bindings::HeadersWrapper;
+class Headers final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(Headers, Bindings::PlatformObject);
 
+public:
     enum class Guard {
         Immutable,
         Request,
@@ -34,12 +31,9 @@ public:
         None,
     };
 
-    static DOM::ExceptionOr<NonnullRefPtr<Headers>> create(Optional<HeadersInit> const&);
+    static DOM::ExceptionOr<JS::NonnullGCPtr<Headers>> create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init);
 
-    static DOM::ExceptionOr<NonnullRefPtr<Headers>> create_with_global_object(HTML::Window&, Optional<HeadersInit> const& init)
-    {
-        return create(init);
-    }
+    virtual ~Headers() override;
 
     DOM::ExceptionOr<void> append(Infrastructure::Header);
     DOM::ExceptionOr<void> append(String const& name, String const& value);
@@ -54,7 +48,7 @@ public:
 private:
     friend class HeadersIterator;
 
-    Headers() = default;
+    explicit Headers(HTML::Window&);
 
     DOM::ExceptionOr<void> fill(HeadersInit const&);
     void remove_privileged_no_cors_headers();
@@ -70,8 +64,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-
-HeadersWrapper* wrap(JS::Realm&, Fetch::Headers&);
-
-}
+WRAPPER_HACK(Headers, Web::Fetch)
