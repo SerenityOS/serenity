@@ -653,6 +653,8 @@ GLAPI void glTexCoord3fv(GLfloat const* v);
 GLAPI void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
 GLAPI void glTexCoord4fv(GLfloat const* v);
 GLAPI void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t);
+GLAPI void glMultiTexCoord2fvARB(GLenum target, GLfloat const* v);
+GLAPI void glMultiTexCoord2fv(GLenum target, GLfloat const* v);
 GLAPI void glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t);
 GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
