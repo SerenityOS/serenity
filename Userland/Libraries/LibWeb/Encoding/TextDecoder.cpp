@@ -7,7 +7,6 @@
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Encoding/TextDecoder.h>
 #include <LibWeb/HTML/Window.h>
 

@@ -6,7 +6,6 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Encoding/TextEncoder.h>
 #include <LibWeb/HTML/Window.h>
 

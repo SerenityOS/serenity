@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/BrowsingContext.h>
