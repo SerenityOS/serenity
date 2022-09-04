@@ -50,7 +50,7 @@ DOM::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value, Str
 
     // 2. If document is not fully active, then throw a "SecurityError" DOMException.
     if (!m_associated_document->is_fully_active())
-        return DOM::SecurityError::create("Cannot perform pushState or replaceState on a document that isn't fully active.");
+        return DOM::SecurityError::create(global_object(), "Cannot perform pushState or replaceState on a document that isn't fully active.");
 
     // 3. Optionally, return. (For example, the user agent might disallow calls to these methods that are invoked on a timer,
     //    or from event listeners that are not triggered in response to a clear user action, or that are invoked in rapid succession.)

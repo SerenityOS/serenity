@@ -29,6 +29,7 @@ JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(HTML
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(HTML::Window& window, HTMLCanvasElement& element)
     : PlatformObject(window.realm())
+    , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
     , m_element(element)
 {
     set_prototype(&window.cached_web_prototype("CanvasRenderingContext2D"));
@@ -326,11 +327,11 @@ DOM::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_data(
 {
     // 1. If either the sw or sh arguments are zero, then throw an "IndexSizeError" DOMException.
     if (width == 0 || height == 0)
-        return DOM::IndexSizeError::create("Width and height must not be zero");
+        return DOM::IndexSizeError::create(global_object(), "Width and height must not be zero");
 
     // 2. If the CanvasRenderingContext2D's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
     if (!m_origin_clean)
-        return DOM::SecurityError::create("CanvasRenderingContext2D is not origin-clean");
+        return DOM::SecurityError::create(global_object(), "CanvasRenderingContext2D is not origin-clean");
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
@@ -548,7 +549,7 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
         [](JS::Handle<HTMLCanvasElement> const& canvas_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // If image has either a horizontal dimension or a vertical dimension equal to zero, then throw an "InvalidStateError" DOMException.
             if (canvas_element->width() == 0 || canvas_element->height() == 0)
-                return DOM::InvalidStateError::create("Canvas width or height is zero");
+                return DOM::InvalidStateError::create(canvas_element->global_object(), "Canvas width or height is zero");
             return Optional<CanvasImageSourceUsability> {};
         }));
     if (usability.has_value())

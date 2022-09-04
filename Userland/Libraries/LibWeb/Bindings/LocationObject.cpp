@@ -12,7 +12,6 @@
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -308,8 +307,6 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
 // 7.10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://html.spec.whatwg.org/multipage/history.html#location-defineownproperty
 JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::PropertyKey const& property_key, JS::PropertyDescriptor const& descriptor)
 {
-    auto& vm = this->vm();
-
     // 1. If IsPlatformObjectSameOrigin(this) is true, then:
     if (is_platform_object_same_origin(*this)) {
         // 1. If the value of the [[DefaultProperties]] internal slot of this contains P, then return false.
@@ -318,7 +315,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
     }
 
     // 2. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't define property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(global_object(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
@@ -350,14 +347,12 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_set(JS::PropertyKey const& 
 // 7.10.5.9 [[Delete]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-delete
 JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey const& property_key)
 {
-    auto& vm = this->vm();
-
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinaryDelete(this, P).
     if (is_platform_object_same_origin(*this))
         return JS::Object::internal_delete(property_key);
 
     // 2. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(global_object(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-ownpropertykeys

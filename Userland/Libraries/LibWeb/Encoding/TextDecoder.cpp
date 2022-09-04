@@ -41,7 +41,7 @@ DOM::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input
 
     auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*input.cell());
     if (data_buffer_or_error.is_error())
-        return DOM::OperationError::create("Failed to copy bytes from ArrayBuffer");
+        return DOM::OperationError::create(global_object(), "Failed to copy bytes from ArrayBuffer");
     auto& data_buffer = data_buffer_or_error.value();
     return m_decoder.to_utf8({ data_buffer.data(), data_buffer.size() });
 }

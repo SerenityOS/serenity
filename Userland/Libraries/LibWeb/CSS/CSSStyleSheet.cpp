@@ -50,7 +50,7 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
 
     // 4. If parsed rule is a syntax error, return parsed rule.
     if (!parsed_rule)
-        return DOM::SyntaxError::create("Unable to parse CSS rule.");
+        return DOM::SyntaxError::create(global_object(), "Unable to parse CSS rule.");
 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 

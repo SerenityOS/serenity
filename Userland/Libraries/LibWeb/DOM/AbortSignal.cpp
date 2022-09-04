@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
-#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -45,7 +43,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     if (!reason.is_undefined())
         m_abort_reason = reason;
     else
-        m_abort_reason = wrap(realm(), AbortError::create("Aborted without reason"));
+        m_abort_reason = wrap(realm(), AbortError::create(global_object(), "Aborted without reason"));
 
     // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)

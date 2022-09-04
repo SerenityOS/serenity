@@ -7,6 +7,7 @@
 
 #include <AK/ExtraMathConstants.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
@@ -38,17 +39,17 @@ void CanvasPath::bezier_curve_to(double cp1x, double cp1y, double cp2x, double c
 DOM::ExceptionOr<void> CanvasPath::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
 {
     if (radius < 0)
-        return DOM::IndexSizeError::create(String::formatted("The radius provided ({}) is negative.", radius));
+        return DOM::IndexSizeError::create(m_self.global_object(), String::formatted("The radius provided ({}) is negative.", radius));
     return ellipse(x, y, radius, radius, 0, start_angle, end_angle, counter_clockwise);
 }
 
 DOM::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise)
 {
     if (radius_x < 0)
-        return DOM::IndexSizeError::create(String::formatted("The major-axis radius provided ({}) is negative.", radius_x));
+        return DOM::IndexSizeError::create(m_self.global_object(), String::formatted("The major-axis radius provided ({}) is negative.", radius_x));
 
     if (radius_y < 0)
-        return DOM::IndexSizeError::create(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y));
+        return DOM::IndexSizeError::create(m_self.global_object(), String::formatted("The minor-axis radius provided ({}) is negative.", radius_y));
 
     if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
         || (counter_clockwise && (start_angle - end_angle) >= tau)) {

@@ -7,20 +7,19 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::DOM {
 
-#define TRY_OR_RETURN_OOM(expression)                             \
-    ({                                                            \
-        auto _temporary_result = (expression);                    \
-        if (_temporary_result.is_error()) {                       \
-            VERIFY(_temporary_result.error().code() == ENOMEM);   \
-            return DOM::UnknownError::create("Out of memory."sv); \
-        }                                                         \
-        _temporary_result.release_value();                        \
+#define TRY_OR_RETURN_OOM(global_object, expression)                             \
+    ({                                                                           \
+        auto _temporary_result = (expression);                                   \
+        if (_temporary_result.is_error()) {                                      \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                  \
+            return DOM::UnknownError::create(global_object, "Out of memory."sv); \
+        }                                                                        \
+        _temporary_result.release_value();                                       \
     })
 
 // The following have a legacy code value but *don't* produce it as
@@ -99,48 +98,52 @@ static u16 get_legacy_code_for_name(FlyString const& name)
 }
 
 // https://webidl.spec.whatwg.org/#idl-DOMException
-class DOMException final
-    : public RefCounted<DOMException>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::DOMExceptionWrapper;
+class DOMException final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(DOMException, Bindings::PlatformObject);
 
-    static NonnullRefPtr<DOMException> create(FlyString const& name, FlyString const& message)
-    {
-        return adopt_ref(*new DOMException(name, message));
-    }
+public:
+    static JS::NonnullGCPtr<DOMException> create(JS::Object& global_object, FlyString const& name, FlyString const& message);
 
     // JS constructor has message first, name second
-    static NonnullRefPtr<DOMException> create_with_global_object(HTML::Window&, FlyString const& message, FlyString const& name)
-    {
-        return adopt_ref(*new DOMException(name, message));
-    }
+    // FIXME: This is a completely pointless footgun, let's use the same order for both factories.
+    static JS::NonnullGCPtr<DOMException> create_with_global_object(JS::Object& global_object, FlyString const& message, FlyString const& name);
+
+    static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message);
+
+    virtual ~DOMException() override;
 
     FlyString const& name() const { return m_name; }
     FlyString const& message() const { return m_message; }
     u16 code() const { return get_legacy_code_for_name(m_name); }
 
 protected:
-    DOMException(FlyString const& name, FlyString const& message)
-        : m_name(name)
-        , m_message(message)
-    {
-    }
+    DOMException(HTML::Window&, FlyString const& name, FlyString const& message);
 
 private:
     FlyString m_name;
     FlyString m_message;
 };
 
-#define __ENUMERATE(ErrorName)                                              \
-    class ErrorName final {                                                 \
-    public:                                                                 \
-        static NonnullRefPtr<DOMException> create(FlyString const& message) \
-        {                                                                   \
-            return DOMException::create(#ErrorName, message);               \
-        }                                                                   \
+#define __ENUMERATE(ErrorName)                                                                            \
+    class ErrorName final {                                                                               \
+    public:                                                                                               \
+        static JS::NonnullGCPtr<DOMException> create(JS::Object& global_object, FlyString const& message) \
+        {                                                                                                 \
+            return DOMException::create(global_object, #ErrorName, message);                              \
+        }                                                                                                 \
     };
 ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 #undef __ENUMERATE
+
+}
+
+WRAPPER_HACK(DOMException, Web::DOM)
+
+namespace Web {
+
+inline JS::Completion throw_completion(JS::NonnullGCPtr<DOM::DOMException> exception)
+{
+    return JS::throw_completion(JS::Value(static_cast<JS::Object*>(exception.ptr())));
+}
 
 }

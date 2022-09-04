@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
@@ -19,7 +20,7 @@ ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView selector_t
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return DOM::SyntaxError::create("Failed to parse selector");
+        return DOM::SyntaxError::create(global_object(), "Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
@@ -42,7 +43,7 @@ ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(StringVie
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return DOM::SyntaxError::create("Failed to parse selector");
+        return DOM::SyntaxError::create(global_object(), "Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 

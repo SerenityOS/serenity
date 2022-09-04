@@ -228,10 +228,10 @@ ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
 {
     // 1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if (event.dispatched())
-        return DOM::InvalidStateError::create("The event is already being dispatched.");
+        return DOM::InvalidStateError::create(global_object(), "The event is already being dispatched.");
 
     if (!event.initialized())
-        return DOM::InvalidStateError::create("Cannot dispatch an uninitialized event.");
+        return DOM::InvalidStateError::create(global_object(), "Cannot dispatch an uninitialized event.");
 
     // 2. Initialize event’s isTrusted attribute to false.
     event.set_is_trusted(false);

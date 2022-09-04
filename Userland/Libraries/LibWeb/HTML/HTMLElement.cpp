@@ -104,7 +104,7 @@ DOM::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_e
         set_attribute(HTML::AttributeNames::contenteditable, "false");
         return {};
     }
-    return DOM::SyntaxError::create("Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
+    return DOM::SyntaxError::create(global_object(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
 }
 
 void HTMLElement::set_inner_text(StringView text)

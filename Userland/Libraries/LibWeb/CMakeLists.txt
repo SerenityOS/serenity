@@ -82,6 +82,7 @@ set(SOURCES
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
     DOM/DOMEventListener.cpp
+    DOM/DOMException.cpp
     DOM/DOMImplementation.cpp
     DOM/DOMTokenList.cpp
     DOM/DOMTokenList.idl

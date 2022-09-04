@@ -8,7 +8,6 @@
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/Window.h>
@@ -145,7 +144,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, Opti
     ByteBuffer byte_buffer {};
     // 2. Let bytes be the result of processing blob parts given blobParts and options.
     if (blob_parts.has_value()) {
-        byte_buffer = TRY_OR_RETURN_OOM(process_blob_parts(blob_parts.value(), options));
+        byte_buffer = TRY_OR_RETURN_OOM(window, process_blob_parts(blob_parts.value(), options));
     }
 
     auto type = String::empty();
@@ -233,7 +232,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Option
     // a. S refers to span consecutive bytes from this, beginning with the byte at byte-order position relativeStart.
     // b. S.size = span.
     // c. S.type = relativeContentType.
-    auto byte_buffer = TRY_OR_RETURN_OOM(m_byte_buffer.slice(relative_start, span));
+    auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_byte_buffer.slice(relative_start, span));
     return JS::NonnullGCPtr(*heap().allocate<Blob>(realm(), global_object(), move(byte_buffer), move(relative_content_type)));
 }
 

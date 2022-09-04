@@ -11,7 +11,6 @@
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/WindowProxy.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/CrossOrigin/Reporting.h>
@@ -91,7 +90,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
                 return Optional<JS::PropertyDescriptor> {};
 
             // 2. Throw a "SecurityError" DOMException.
-            return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't access property '{}' on cross-origin object", property_key)));
+            return throw_completion(DOM::SecurityError::create(window(), String::formatted("Can't access property '{}' on cross-origin object", property_key)));
         }
 
         // 6. Return PropertyDescriptor{ [[Value]]: value, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: true }.
@@ -127,8 +126,6 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
 // 7.4.6 [[DefineOwnProperty]] ( P, Desc ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-defineownproperty
 JS::ThrowCompletionOr<bool> WindowProxy::internal_define_own_property(JS::PropertyKey const& property_key, JS::PropertyDescriptor const& descriptor)
 {
-    auto& vm = this->vm();
-
     // 1. Let W be the value of the [[Window]] internal slot of this.
 
     // 2. If IsPlatformObjectSameOrigin(W) is true, then:
@@ -143,7 +140,7 @@ JS::ThrowCompletionOr<bool> WindowProxy::internal_define_own_property(JS::Proper
     }
 
     // 3. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't define property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(window(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
 }
 
 // 7.4.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-get
@@ -194,8 +191,6 @@ JS::ThrowCompletionOr<bool> WindowProxy::internal_set(JS::PropertyKey const& pro
 // 7.4.9 [[Delete]] ( P ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-delete
 JS::ThrowCompletionOr<bool> WindowProxy::internal_delete(JS::PropertyKey const& property_key)
 {
-    auto& vm = this->vm();
-
     // 1. Let W be the value of the [[Window]] internal slot of this.
 
     // 2. If IsPlatformObjectSameOrigin(W) is true, then:
@@ -218,7 +213,7 @@ JS::ThrowCompletionOr<bool> WindowProxy::internal_delete(JS::PropertyKey const& 
     }
 
     // 3. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(window(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
 }
 
 // 7.4.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-ownpropertykeys

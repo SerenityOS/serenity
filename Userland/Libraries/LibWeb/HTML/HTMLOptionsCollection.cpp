@@ -40,11 +40,11 @@ DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement el
 
     // 1. If element is an ancestor of the select element on which the HTMLOptionsCollection is rooted, then throw a "HierarchyRequestError" DOMException.
     if (resolved_element->is_ancestor_of(root()))
-        return DOM::HierarchyRequestError::create("The provided element is an ancestor of the root select element.");
+        return DOM::HierarchyRequestError::create(global_object(), "The provided element is an ancestor of the root select element.");
 
     // 2. If before is an element, but that element isn't a descendant of the select element on which the HTMLOptionsCollection is rooted, then throw a "NotFoundError" DOMException.
     if (before_element && !before_element->is_descendant_of(root()))
-        return DOM::NotFoundError::create("The 'before' element is not a descendant of the root select element.");
+        return DOM::NotFoundError::create(global_object(), "The 'before' element is not a descendant of the root select element.");
 
     // 3. If element and before are the same element, then return.
     if (before_element && (resolved_element.ptr() == before_element.ptr()))

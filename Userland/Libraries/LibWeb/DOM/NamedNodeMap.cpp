@@ -93,7 +93,7 @@ ExceptionOr<Attribute const*> NamedNodeMap::remove_named_item(StringView qualifi
 
     // 2. If attr is null, then throw a "NotFoundError" DOMException.
     if (!attribute)
-        return NotFoundError::create(String::formatted("Attribute with name '{}' not found", qualified_name));
+        return NotFoundError::create(global_object(), String::formatted("Attribute with name '{}' not found", qualified_name));
 
     // 3. Return attr.
     return nullptr;
@@ -137,7 +137,7 @@ ExceptionOr<Attribute const*> NamedNodeMap::set_attribute(Attribute& attribute)
 {
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
     if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &associated_element()))
-        return InUseAttributeError::create("Attribute must not already be in use"sv);
+        return InUseAttributeError::create(global_object(), "Attribute must not already be in use"sv);
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
     // FIXME: When getNamedItemNS is implemented, use that instead.

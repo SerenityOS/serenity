@@ -328,7 +328,7 @@ public:
         FlyString prefix;
         FlyString tag_name;
     };
-    static ExceptionOr<PrefixAndTagName> validate_qualified_name(String const& qualified_name);
+    static ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Object& global_object, String const& qualified_name);
 
     JS::NonnullGCPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
     JS::NonnullGCPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
