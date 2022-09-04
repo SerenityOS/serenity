@@ -448,10 +448,8 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
-class BlobWrapper;
 class CryptoWrapper;
 class DOMExceptionWrapper;
-class FileWrapper;
 class HeadersWrapper;
 class HeadersIteratorWrapper;
 class IdleDeadlineWrapper;

@@ -159,6 +159,10 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "Storage"sv)
         return true;
+    if (type.name == "File"sv)
+        return true;
+    if (type.name == "Blob"sv)
+        return true;
 
     return false;
 }

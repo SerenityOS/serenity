@@ -16,7 +16,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/BlobWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -133,9 +132,9 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto blob_part = TRY_OR_RETURN_OOM(try_make_ref_counted<FileAPI::Blob>(m_received_bytes, get_final_mime_type().type()));
-        auto blob = TRY(FileAPI::Blob::create(Vector<FileAPI::BlobPart> { move(blob_part) }));
-        m_response_object = JS::Value(wrap(realm(), *blob));
+        auto blob_part = TRY(FileAPI::Blob::create(global_object(), m_received_bytes, get_final_mime_type().type()));
+        auto blob = TRY(FileAPI::Blob::create(global_object(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
+        m_response_object = JS::Value(blob.ptr());
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
@@ -286,7 +285,7 @@ static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestB
     // 6. Switch on object.
     // FIXME: Still need to support BufferSource and FormData
     TRY(body_init.visit(
-        [&](NonnullRefPtr<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+        [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
             // FIXME: Set action to this step: read object.
             // Set source to object.
             source = blob;
@@ -493,7 +492,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 request.set_body(buffer);
                 return {};
             },
-            [&](NonnullRefPtr<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+            [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
                 auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
                 request.set_body(byte_buffer);
                 return {};
