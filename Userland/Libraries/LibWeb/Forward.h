@@ -453,7 +453,6 @@ class LocationObject;
 class OptionConstructor;
 class RangePrototype;
 class WindowProxy;
-class WorkerNavigatorWrapper;
 class Wrappable;
 class Wrapper;
 class XMLHttpRequestPrototype;

@@ -22,11 +22,17 @@ namespace Web::HTML {
 
 WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
     : DOM::EventTarget(realm)
-    , m_navigator(make_ref_counted<WorkerNavigator>())
+
 {
 }
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
+
+void WorkerGlobalScope::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    m_navigator = WorkerNavigator::create(*this);
+}
 
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
 {
@@ -69,7 +75,7 @@ JS::NonnullGCPtr<WorkerLocation> WorkerGlobalScope::location() const
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-navigator
-NonnullRefPtr<WorkerNavigator const> WorkerGlobalScope::navigator() const
+JS::NonnullGCPtr<WorkerNavigator> WorkerGlobalScope::navigator() const
 {
     // The navigator attribute of the WorkerGlobalScope interface must return an instance of the WorkerNavigator interface,
     // which represents the identity and state of the user agent (the client).

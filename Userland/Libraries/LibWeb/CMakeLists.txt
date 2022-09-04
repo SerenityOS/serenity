@@ -266,6 +266,7 @@ set(SOURCES
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
+    HTML/WorkerNavigator.cpp
     HighResolutionTime/Performance.cpp
     ImageDecoding.cpp
     Infra/ByteSequences.cpp

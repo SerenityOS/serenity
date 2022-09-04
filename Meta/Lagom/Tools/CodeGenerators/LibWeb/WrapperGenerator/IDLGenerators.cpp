@@ -3275,7 +3275,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
-#include <LibWeb/Bindings/WorkerNavigatorWrapper.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/IDLEventListener.h>
