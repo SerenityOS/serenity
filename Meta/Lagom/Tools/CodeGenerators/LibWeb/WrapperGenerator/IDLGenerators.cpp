@@ -163,6 +163,10 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "Blob"sv)
         return true;
+    if (type.name == "URL"sv)
+        return true;
+    if (type.name == "URLSearchParams"sv)
+        return true;
 
     return false;
 }

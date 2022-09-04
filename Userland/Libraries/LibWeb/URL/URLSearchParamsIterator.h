@@ -6,41 +6,31 @@
 
 #pragma once
 
-#include "URLSearchParams.h"
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/URL/URLSearchParams.h>
 
 namespace Web::URL {
 
-class URLSearchParamsIterator : public Bindings::Wrappable
-    , public RefCounted<URLSearchParamsIterator> {
-public:
-    using WrapperType = Bindings::URLSearchParamsIteratorWrapper;
+class URLSearchParamsIterator : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(URLSearchParamsIterator, Bindings::PlatformObject);
 
-    static NonnullRefPtr<URLSearchParamsIterator> create(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
-    {
-        return adopt_ref(*new URLSearchParamsIterator(url_search_params, iteration_kind));
-    }
+public:
+    static JS::NonnullGCPtr<URLSearchParamsIterator> create(URLSearchParams const&, JS::Object::PropertyKind iteration_kind);
+
+    virtual ~URLSearchParamsIterator() override;
 
     JS::Object* next();
 
-    void visit_edges(JS::Cell::Visitor&);
-
 private:
-    explicit URLSearchParamsIterator(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
-        : m_url_search_params(url_search_params)
-        , m_iteration_kind(iteration_kind)
-    {
-    }
+    URLSearchParamsIterator(URLSearchParams const&, JS::Object::PropertyKind iteration_kind);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     URLSearchParams const& m_url_search_params;
     JS::Object::PropertyKind m_iteration_kind;
     size_t m_index { 0 };
 };
-}
-
-namespace Web::Bindings {
-
-URLSearchParamsIteratorWrapper* wrap(JS::Realm&, URL::URLSearchParamsIterator&);
 
 }
+
+WRAPPER_HACK(URLSearchParamsIterator, Web::URL)

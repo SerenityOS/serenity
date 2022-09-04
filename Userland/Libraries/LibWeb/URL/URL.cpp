@@ -6,11 +6,17 @@
  */
 
 #include <AK/URLParser.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/URL/URL.h>
 
 namespace Web::URL {
 
-DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(HTML::Window& window_object, String const& url, String const& base)
+JS::NonnullGCPtr<URL> URL::create(HTML::Window& window, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+{
+    return *window.heap().allocate<URL>(window.realm(), window, move(url), move(query));
+}
+
+DOM::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Window& window, String const& url, String const& base)
 {
     // 1. Let parsedBase be null.
     Optional<AK::URL> parsed_base;
@@ -35,13 +41,29 @@ DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(HTML::Window
     auto& query = parsed_url.query().is_null() ? String::empty() : parsed_url.query();
     // 6. Set this’s URL to parsedURL.
     // 7. Set this’s query object to a new URLSearchParams object.
-    auto query_object = MUST(URLSearchParams::create_with_global_object(window_object, query));
+    auto query_object = MUST(URLSearchParams::create_with_global_object(window, query));
     // 8. Initialize this’s query object with query.
-    auto result_url = URL::create(move(parsed_url), move(query_object));
+    auto result_url = URL::create(window, move(parsed_url), move(query_object));
     // 9. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
 
     return result_url;
+}
+
+URL::URL(HTML::Window& window, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+    : PlatformObject(window.realm())
+    , m_url(move(url))
+    , m_query(move(query))
+{
+    set_prototype(&window.cached_web_prototype("URL"));
+}
+
+URL::~URL() = default;
+
+void URL::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_query.ptr());
 }
 
 String URL::href() const
