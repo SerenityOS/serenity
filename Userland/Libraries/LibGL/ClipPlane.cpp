@@ -22,7 +22,7 @@ void GLContext::gl_clip_plane(GLenum plane, GLdouble const* equation)
     auto plane_idx = static_cast<size_t>(plane) - GL_CLIP_PLANE0;
 
     auto eqn = FloatVector4(equation[0], equation[1], equation[2], equation[3]);
-    m_clip_plane_attributes.eye_clip_plane[plane_idx] = m_model_view_matrix * eqn;
+    m_clip_plane_attributes.eye_clip_plane[plane_idx] = model_view_matrix() * eqn;
     m_clip_planes_dirty = true;
 }
 

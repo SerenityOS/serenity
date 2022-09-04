@@ -45,7 +45,7 @@ void GLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
         0, 0, c, d,
         0, 0, -1, 0
     };
-    *m_current_matrix = *m_current_matrix * frustum;
+    update_current_matrix(*m_current_matrix * frustum);
 }
 
 void GLContext::gl_load_identity()
@@ -53,7 +53,7 @@ void GLContext::gl_load_identity()
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_load_identity);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    *m_current_matrix = FloatMatrix4x4::identity();
+    update_current_matrix(FloatMatrix4x4::identity());
 }
 
 void GLContext::gl_load_matrix(FloatMatrix4x4 const& matrix)
@@ -61,7 +61,7 @@ void GLContext::gl_load_matrix(FloatMatrix4x4 const& matrix)
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_load_matrix, matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    *m_current_matrix = matrix;
+    update_current_matrix(matrix);
 }
 
 void GLContext::gl_matrix_mode(GLenum mode)
@@ -73,20 +73,18 @@ void GLContext::gl_matrix_mode(GLenum mode)
     m_current_matrix_mode = mode;
     switch (mode) {
     case GL_MODELVIEW:
-        m_current_matrix = &m_model_view_matrix;
         m_current_matrix_stack = &m_model_view_matrix_stack;
         break;
     case GL_PROJECTION:
-        m_current_matrix = &m_projection_matrix;
         m_current_matrix_stack = &m_projection_matrix_stack;
         break;
     case GL_TEXTURE:
-        m_current_matrix = &m_texture_matrix;
-        m_current_matrix_stack = &m_texture_matrix_stack;
+        m_current_matrix_stack = &m_active_texture_unit->texture_matrix_stack();
         break;
     default:
         VERIFY_NOT_REACHED();
     }
+    m_current_matrix = &m_current_matrix_stack->last();
 }
 
 void GLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
@@ -94,7 +92,7 @@ void GLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_mult_matrix, matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    *m_current_matrix = *m_current_matrix * matrix;
+    update_current_matrix(*m_current_matrix * matrix);
 }
 
 void GLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -117,25 +115,27 @@ void GLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdoubl
         0, 0, static_cast<float>(-2 / fn), static_cast<float>(tz),
         0, 0, 0, 1
     };
-    *m_current_matrix = *m_current_matrix * projection;
+    update_current_matrix(*m_current_matrix * projection);
 }
 
 void GLContext::gl_pop_matrix()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_pop_matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF((*m_current_matrix_stack).is_empty(), GL_STACK_UNDERFLOW);
+    RETURN_WITH_ERROR_IF(m_current_matrix_stack->size() <= 1, GL_STACK_UNDERFLOW);
 
-    *m_current_matrix = (*m_current_matrix_stack).take_last();
+    m_current_matrix_stack->take_last();
+    m_current_matrix = &m_current_matrix_stack->last();
 }
 
 void GLContext::gl_push_matrix()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_push_matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF((*m_current_matrix_stack).size() >= matrix_stack_limit(m_current_matrix_mode), GL_STACK_OVERFLOW);
+    RETURN_WITH_ERROR_IF(m_current_matrix_stack->size() >= matrix_stack_limit(m_current_matrix_mode), GL_STACK_OVERFLOW);
 
-    (*m_current_matrix_stack).append(*m_current_matrix);
+    m_current_matrix_stack->append(*m_current_matrix);
+    m_current_matrix = &m_current_matrix_stack->last();
 }
 
 void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
@@ -147,7 +147,7 @@ void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
     if (axis.length() > 0.f)
         axis.normalize();
     auto rotation_mat = Gfx::rotation_matrix(axis, angle * static_cast<float>(M_PI * 2 / 360));
-    *m_current_matrix = *m_current_matrix * rotation_mat;
+    update_current_matrix(*m_current_matrix * rotation_mat);
 }
 
 void GLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
@@ -156,7 +156,7 @@ void GLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto scale_matrix = Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-    *m_current_matrix = *m_current_matrix * scale_matrix;
+    update_current_matrix(*m_current_matrix * scale_matrix);
 }
 
 void GLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
@@ -165,7 +165,7 @@ void GLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto translation_matrix = Gfx::translation_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-    *m_current_matrix = *m_current_matrix * translation_matrix;
+    update_current_matrix(*m_current_matrix * translation_matrix);
 }
 
 }

@@ -20,7 +20,7 @@ struct Vertex {
     FloatVector4 clip_coordinates;
     FloatVector4 window_coordinates;
     FloatVector4 color;
-    Array<FloatVector4, GPU::NUM_SAMPLERS> tex_coords;
+    Array<FloatVector4, GPU::NUM_TEXTURE_UNITS> tex_coords;
     FloatVector3 normal;
 };
 

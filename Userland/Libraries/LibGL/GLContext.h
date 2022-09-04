@@ -217,7 +217,7 @@ public:
 private:
     void sync_device_config();
     void sync_device_sampler_config();
-    void sync_device_texcoord_config();
+    void sync_device_texture_units();
     void sync_light_state();
     void sync_stencil_configuration();
     void sync_clip_planes();
@@ -256,16 +256,22 @@ private:
 
     GLenum m_current_draw_mode;
     GLenum m_current_matrix_mode { GL_MODELVIEW };
-    FloatMatrix4x4 m_projection_matrix { FloatMatrix4x4::identity() };
-    FloatMatrix4x4 m_model_view_matrix { FloatMatrix4x4::identity() };
-    FloatMatrix4x4 m_texture_matrix { FloatMatrix4x4::identity() };
-    FloatMatrix4x4* m_current_matrix { &m_model_view_matrix };
 
-    Vector<FloatMatrix4x4> m_projection_matrix_stack;
-    Vector<FloatMatrix4x4> m_model_view_matrix_stack;
-    // FIXME: implement multi-texturing: the texture matrix stack should live inside a texture unit
-    Vector<FloatMatrix4x4> m_texture_matrix_stack;
+    FloatMatrix4x4& projection_matrix() { return m_projection_matrix_stack.last(); }
+    FloatMatrix4x4& model_view_matrix() { return m_model_view_matrix_stack.last(); }
+
+    Vector<FloatMatrix4x4> m_projection_matrix_stack { FloatMatrix4x4::identity() };
+    Vector<FloatMatrix4x4> m_model_view_matrix_stack { FloatMatrix4x4::identity() };
     Vector<FloatMatrix4x4>* m_current_matrix_stack { &m_model_view_matrix_stack };
+    FloatMatrix4x4* m_current_matrix { &m_current_matrix_stack->last() };
+
+    ALWAYS_INLINE void update_current_matrix(FloatMatrix4x4 const& new_matrix)
+    {
+        *m_current_matrix = new_matrix;
+
+        if (m_current_matrix_mode == GL_TEXTURE)
+            m_texture_units_dirty = true;
+    }
 
     Gfx::IntRect m_viewport;
 
@@ -353,6 +359,7 @@ private:
     Vector<TextureUnit> m_texture_units;
     TextureUnit* m_active_texture_unit;
     size_t m_active_texture_unit_index { 0 };
+    bool m_texture_units_dirty { true };
 
     // Texture coordinate generation state
     struct TextureCoordinateGeneration {
@@ -362,8 +369,6 @@ private:
         FloatVector4 eye_plane_coefficients { 0.0f, 0.0f, 0.0f, 0.0f };
     };
     Vector<Array<TextureCoordinateGeneration, 4>> m_texture_coordinate_generation;
-    bool m_texcoord_generation_dirty { true };
-
     ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
     {
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
