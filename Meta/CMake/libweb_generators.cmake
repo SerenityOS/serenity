@@ -106,7 +106,6 @@ function (generate_js_wrappers target)
 
     function(libweb_js_wrapper class)
         cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")
-        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "NO_INSTANCE" "" "")
         get_filename_component(basename "${class}" NAME)
         set(BINDINGS_SOURCES
             "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}Constructor.h"
@@ -120,32 +119,9 @@ function (generate_js_wrappers target)
             prototype-header
             prototype-implementation
         )
-        if(NOT LIBWEB_WRAPPER_NO_INSTANCE)
-            set(BINDINGS_SOURCES
-                ${BINDINGS_SOURCES}
-                "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}Wrapper.h"
-                "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}Wrapper.cpp"
-            )
-
-            set(BINDINGS_TYPES
-                ${BINDINGS_TYPES}
-                header
-                implementation
-            )
-        endif()
 
         # FIXME: Instead of requiring a manual declaration of iterable wrappers, we should ask WrapperGenerator if it's iterable
         if(LIBWEB_WRAPPER_ITERABLE)
-            if(NOT LIBWEB_WRAPPER_NO_INSTANCE)
-                list(APPEND BINDINGS_SOURCES
-                    "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.h"
-                    "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.cpp"
-                )
-                list(APPEND BINDINGS_TYPES
-                    iterator-header
-                    iterator-implementation
-                )
-            endif()
             list(APPEND BINDINGS_SOURCES
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.h"
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.cpp"
