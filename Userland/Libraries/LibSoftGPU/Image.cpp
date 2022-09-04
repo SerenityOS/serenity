@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/Size.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/PixelConverter.h>
 
@@ -42,14 +45,14 @@ Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, 
         depth = max(depth / 2, 1);
     }
 
-    m_num_levels = level + 1;
+    m_number_of_levels = level + 1;
 }
 
 GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) const
 {
-    auto const width = level_width(level);
-    auto const height = level_height(level);
-    auto const depth = level_depth(level);
+    auto const width = width_at_level(level);
+    auto const height = height_at_level(level);
+    auto const depth = depth_at_level(level);
 
     // FIXME: we are directly writing to FloatVector4s. We should probably find a better way to do this
     return {
@@ -76,7 +79,7 @@ GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) co
 
 void Image::write_texels(u32 level, Vector3<i32> const& output_offset, void const* input_data, GPU::ImageDataLayout const& input_layout)
 {
-    VERIFY(level < num_levels());
+    VERIFY(level < number_of_levels());
 
     auto output_layout = image_data_layout(level, output_offset);
     auto texel_data = texel_pointer(level, 0, 0, 0);
@@ -98,7 +101,7 @@ void Image::write_texels(u32 level, Vector3<i32> const& output_offset, void cons
 
 void Image::read_texels(u32 level, Vector3<i32> const& input_offset, void* output_data, GPU::ImageDataLayout const& output_layout) const
 {
-    VERIFY(level < num_levels());
+    VERIFY(level < number_of_levels());
 
     auto input_layout = image_data_layout(level, input_offset);
 
@@ -114,14 +117,14 @@ void Image::copy_texels(GPU::Image const& source, u32 source_level, Vector3<u32>
 
     auto const& src_image = static_cast<Image const&>(source);
 
-    VERIFY(source_level < src_image.num_levels());
-    VERIFY(source_offset.x() + size.x() <= src_image.level_width(source_level));
-    VERIFY(source_offset.y() + size.y() <= src_image.level_height(source_level));
-    VERIFY(source_offset.z() + size.z() <= src_image.level_depth(source_level));
-    VERIFY(destination_level < num_levels());
-    VERIFY(destination_offset.x() + size.x() <= level_width(destination_level));
-    VERIFY(destination_offset.y() + size.y() <= level_height(destination_level));
-    VERIFY(destination_offset.z() + size.z() <= level_depth(destination_level));
+    VERIFY(source_level < src_image.number_of_levels());
+    VERIFY(source_offset.x() + size.x() <= src_image.width_at_level(source_level));
+    VERIFY(source_offset.y() + size.y() <= src_image.height_at_level(source_level));
+    VERIFY(source_offset.z() + size.z() <= src_image.depth_at_level(source_level));
+    VERIFY(destination_level < number_of_levels());
+    VERIFY(destination_offset.x() + size.x() <= width_at_level(destination_level));
+    VERIFY(destination_offset.y() + size.y() <= height_at_level(destination_level));
+    VERIFY(destination_offset.z() + size.z() <= depth_at_level(destination_level));
 
     for (u32 z = 0; z < size.z(); ++z) {
         for (u32 y = 0; y < size.y(); ++y) {
@@ -130,6 +133,81 @@ void Image::copy_texels(GPU::Image const& source, u32 source_level, Vector3<u32>
                 set_texel(destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
             }
         }
+    }
+}
+
+static GPU::ImageDataLayout image_data_layout_for_bitmap(Gfx::Bitmap& bitmap)
+{
+    VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888);
+    return GPU::ImageDataLayout {
+        .pixel_type = {
+            .format = GPU::PixelFormat::BGRA,
+            .bits = GPU::PixelComponentBits::B8_8_8_8,
+            .data_type = GPU::PixelDataType::UnsignedInt,
+            .components_order = GPU::ComponentsOrder::Reversed,
+        },
+        .dimensions = {
+            .width = static_cast<u32>(bitmap.width()),
+            .height = static_cast<u32>(bitmap.height()),
+            .depth = 1,
+        },
+        .selection = {
+            .width = static_cast<u32>(bitmap.width()),
+            .height = static_cast<u32>(bitmap.height()),
+            .depth = 1,
+        },
+    };
+}
+
+void Image::regenerate_mipmaps()
+{
+    // FIXME: currently this only works for 2D Images
+    VERIFY(depth_at_level(0) == 1);
+
+    auto empty_bitmap_for_level = [&](u32 level) -> NonnullRefPtr<Gfx::Bitmap> {
+        Gfx::IntSize size = { width_at_level(level), height_at_level(level) };
+        return MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
+    };
+    auto copy_image_into_bitmap = [&](u32 level) -> NonnullRefPtr<Gfx::Bitmap> {
+        auto bitmap = empty_bitmap_for_level(level);
+
+        auto input_layout = image_data_layout(level, { 0, 0, 0 });
+        auto const* input_data = texel_pointer(level, 0, 0, 0);
+
+        auto output_layout = image_data_layout_for_bitmap(bitmap);
+        auto* output_data = bitmap->scanline(0);
+
+        PixelConverter converter { input_layout, output_layout };
+        MUST(converter.convert(input_data, output_data, {}));
+        return bitmap;
+    };
+    auto copy_bitmap_into_level = [&](NonnullRefPtr<Gfx::Bitmap> bitmap, u32 level) {
+        VERIFY(level >= 1);
+
+        auto input_layout = image_data_layout_for_bitmap(bitmap);
+        auto const* input_data = bitmap->scanline(0);
+
+        auto output_layout = image_data_layout(level, { 0, 0, 0 });
+        auto* output_data = texel_pointer(level, 0, 0, 0);
+
+        PixelConverter converter { input_layout, output_layout };
+        MUST(converter.convert(input_data, output_data, {}));
+    };
+
+    // For levels 1..number_of_levels-1, we generate downscaled versions of the level above
+    for (u32 level = 1; level < m_number_of_levels; ++level) {
+        auto higher_level_bitmap = copy_image_into_bitmap(level - 1);
+        auto current_level_bitmap = empty_bitmap_for_level(level);
+
+        Gfx::Painter current_level_painter { current_level_bitmap };
+        current_level_painter.draw_scaled_bitmap(
+            current_level_bitmap->rect(),
+            higher_level_bitmap,
+            higher_level_bitmap->rect(),
+            1.f,
+            Gfx::Painter::ScalingMode::BilinearBlend);
+
+        copy_bitmap_into_level(current_level_bitmap, level);
     }
 }
 

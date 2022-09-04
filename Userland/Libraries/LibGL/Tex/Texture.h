@@ -21,6 +21,7 @@ public:
     virtual bool is_texture_3d() const { return false; }
     virtual bool is_cube_map() const { return false; }
 
+    RefPtr<GPU::Image> device_image() const { return m_device_image; }
     RefPtr<GPU::Image> device_image() { return m_device_image; }
     void set_device_image(RefPtr<GPU::Image> image) { m_device_image = image; }
 

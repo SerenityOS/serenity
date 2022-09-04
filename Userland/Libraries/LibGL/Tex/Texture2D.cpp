@@ -19,20 +19,15 @@ void Texture2D::download_texture_data(GLuint lod, GPU::ImageDataLayout output_la
 
 void Texture2D::upload_texture_data(GLuint lod, GLenum internal_format, GPU::ImageDataLayout input_layout, GLvoid const* pixels)
 {
-    // NOTE: Some target, format, and internal formats are currently unsupported.
-    // Considering we control this library, and `gl.h` itself, we don't need to add any
-    // checks here to see if we support them; the program will simply fail to compile..
-
-    auto& mip = m_mipmaps[lod];
     m_internal_format = internal_format;
-    mip.set_width(input_layout.selection.width);
-    mip.set_height(input_layout.selection.height);
 
     // No pixel data was supplied; leave the texture memory uninitialized.
     if (pixels == nullptr)
         return;
 
     replace_sub_texture_data(lod, input_layout, { 0, 0, 0 }, pixels);
+    if (lod == 0 && m_generate_mipmaps)
+        device_image()->regenerate_mipmaps();
 }
 
 void Texture2D::replace_sub_texture_data(GLuint lod, GPU::ImageDataLayout input_layout, Vector3<i32> const& output_offset, GLvoid const* pixels)
@@ -42,7 +37,18 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GPU::ImageDataLayout input_
     // once used for rendering for the first time.
     VERIFY(!device_image().is_null());
 
-    device_image()->write_texels(0, lod, output_offset, pixels, input_layout);
+    device_image()->write_texels(lod, output_offset, pixels, input_layout);
+    if (lod == 0 && m_generate_mipmaps)
+        device_image()->regenerate_mipmaps();
+}
+
+void Texture2D::set_generate_mipmaps(bool generate_mipmaps)
+{
+    if (m_generate_mipmaps == generate_mipmaps)
+        return;
+    m_generate_mipmaps = generate_mipmaps;
+    if (generate_mipmaps && !device_image().is_null())
+        device_image()->regenerate_mipmaps();
 }
 
 }
