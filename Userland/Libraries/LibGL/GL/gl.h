@@ -170,7 +170,7 @@ extern "C" {
 #define GL_FRONT_AND_BACK 0x0408
 
 // Error codes
-#define GL_NO_ERROR 0x0000
+#define GL_NO_ERROR 0
 #define GL_INVALID_ENUM 0x0500
 #define GL_INVALID_VALUE 0x0501
 #define GL_INVALID_OPERATION 0x0502
