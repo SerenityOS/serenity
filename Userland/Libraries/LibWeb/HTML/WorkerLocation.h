@@ -6,23 +6,18 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/workers.html#worker-locations
-class WorkerLocation
-    : public RefCounted<WorkerLocation>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::WorkerLocationWrapper;
+class WorkerLocation : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(WorkerLocation, Bindings::PlatformObject);
 
-    static NonnullRefPtr<WorkerLocation> create(WorkerGlobalScope& global_scope)
-    {
-        return adopt_ref(*new WorkerLocation(global_scope));
-    }
+public:
+    static JS::NonnullGCPtr<WorkerLocation> create(WorkerGlobalScope&);
+
+    virtual ~WorkerLocation() override;
 
     String href() const;
     String origin() const;
@@ -35,9 +30,13 @@ public:
     String hash() const;
 
 private:
-    WorkerLocation(WorkerGlobalScope&);
+    explicit WorkerLocation(WorkerGlobalScope&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     WorkerGlobalScope& m_global_scope;
 };
 
 }
+
+WRAPPER_HACK(WorkerLocation, Web::HTML)

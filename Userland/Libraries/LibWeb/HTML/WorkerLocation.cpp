@@ -117,8 +117,18 @@ String WorkerLocation::hash() const
 }
 
 WorkerLocation::WorkerLocation(WorkerGlobalScope& global_scope)
-    : m_global_scope(global_scope)
+    : PlatformObject(global_scope.realm())
+    , m_global_scope(global_scope)
 {
+    // FIXME: Set prototype once we can get to worker scope prototypes.
+}
+
+WorkerLocation::~WorkerLocation() = default;
+
+void WorkerLocation::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_global_scope);
 }
 
 }

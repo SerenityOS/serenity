@@ -41,7 +41,7 @@ public:
     // https://html.spec.whatwg.org/multipage/workers.html#dom-workerglobalscope-self
     JS::NonnullGCPtr<WorkerGlobalScope> self() const { return *this; }
 
-    NonnullRefPtr<WorkerLocation const> location() const;
+    JS::NonnullGCPtr<WorkerLocation> location() const;
     NonnullRefPtr<WorkerNavigator const> navigator() const;
     DOM::ExceptionOr<void> import_scripts(Vector<String> urls);
 
@@ -68,13 +68,15 @@ public:
 
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
-    void set_location(NonnullRefPtr<WorkerLocation> loc) { m_location = move(loc); }
+    void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
 
 protected:
     explicit WorkerGlobalScope(JS::Realm&);
 
 private:
-    RefPtr<WorkerLocation> m_location;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    JS::GCPtr<WorkerLocation> m_location;
 
     // FIXME: Implement WorkerNavigator according to the spec
     NonnullRefPtr<WorkerNavigator> m_navigator;
