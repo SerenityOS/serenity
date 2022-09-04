@@ -269,21 +269,6 @@ static String make_input_acceptable_cpp(String const& input)
     return input.replace("-"sv, "_"sv, ReplaceMode::All);
 }
 
-static void generate_include_for_wrapper(auto& generator, auto& wrapper_name)
-{
-    auto wrapper_generator = generator.fork();
-    wrapper_generator.set("wrapper_class", wrapper_name);
-    // FIXME: These may or may not exist, because REASONS.
-    wrapper_generator.append(R"~~~(
-#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
-#   include <LibWeb/Bindings/@wrapper_class@.h>
-#endif
-#if __has_include(<LibWeb/Bindings/@wrapper_class@Factory.h>)
-#   include <LibWeb/Bindings/@wrapper_class@Factory.h>
-#endif
-)~~~");
-}
-
 static void generate_include_for_iterator(auto& generator, auto& iterator_path, auto& iterator_name)
 {
     auto iterator_generator = generator.fork();
@@ -294,15 +279,6 @@ static void generate_include_for_iterator(auto& generator, auto& iterator_path, 
 //#if __has_include(<LibWeb/@iterator_class.path@.h>)
 #   include <LibWeb/@iterator_class.path@.h>
 //#endif
-#if __has_include(<LibWeb/@iterator_class.path@Factory.h>)
-#   include <LibWeb/@iterator_class.path@Factory.h>
-#endif
-#if __has_include(<LibWeb/Bindings/@iterator_class.name@Wrapper.h>)
-#   include <LibWeb/Bindings/@iterator_class.name@Wrapper.h>
-#endif
-#if __has_include(<LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>)
-#   include <LibWeb/Bindings/@iterator_class.name@WrapperFactory.h>
-#endif
 )~~~");
 }
 
@@ -353,9 +329,6 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
             auto iterator_path = String::formatted("{}Iterator", interface->fully_qualified_name.replace("::"sv, "/"sv, ReplaceMode::All));
             generate_include_for_iterator(generator, iterator_path, iterator_name);
         }
-
-        if (interface->wrapper_class != "Wrapper")
-            generate_include_for_wrapper(generator, interface->wrapper_class);
     }
 }
 
@@ -1970,9 +1943,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
-#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
-#include <LibWeb/Bindings/@wrapper_class@.h>
-#endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/Window.h>
 #if __has_include(<LibWeb/Crypto/@name@.h>)
@@ -2309,9 +2279,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
-#if __has_include(<LibWeb/Bindings/@wrapper_class@.h>)
-#include <LibWeb/Bindings/@wrapper_class@.h>
-#endif
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/DOM/Element.h>
