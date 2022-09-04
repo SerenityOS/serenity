@@ -105,7 +105,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(String const&
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
 ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
-    TRY(Document::validate_qualified_name(qualified_name));
+    TRY(Document::validate_qualified_name(global_object(), qualified_name));
     auto document_type = DocumentType::create(document());
     document_type->set_name(qualified_name);
     document_type->set_public_id(public_id);

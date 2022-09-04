@@ -17,6 +17,7 @@ JS::NonnullGCPtr<Path2D> Path2D::create_with_global_object(HTML::Window& window,
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
 Path2D::Path2D(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
     : PlatformObject(window.realm())
+    , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
 {
     set_prototype(&window.cached_web_prototype("Path2D"));
 

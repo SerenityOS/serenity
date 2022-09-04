@@ -520,14 +520,14 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
 DOM::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView, StringView)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
-    return DOM::NoModificationAllowedError::create("Cannot modify properties in result of getComputedStyle()");
+    return DOM::NoModificationAllowedError::create(global_object(), "Cannot modify properties in result of getComputedStyle()");
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
 DOM::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
-    return DOM::NoModificationAllowedError::create("Cannot remove properties from result of getComputedStyle()");
+    return DOM::NoModificationAllowedError::create(global_object(), "Cannot remove properties from result of getComputedStyle()");
 }
 
 String ResolvedCSSStyleDeclaration::serialized() const

@@ -49,7 +49,7 @@ public:
     {
     }
 
-    ExceptionOr(NonnullRefPtr<DOMException> exception)
+    ExceptionOr(JS::NonnullGCPtr<DOMException> exception)
         : m_exception(move(exception))
     {
     }
@@ -59,8 +59,8 @@ public:
     {
     }
 
-    ExceptionOr(Variant<SimpleException, NonnullRefPtr<DOMException>> exception)
-        : m_exception(move(exception).template downcast<Empty, SimpleException, NonnullRefPtr<DOMException>>())
+    ExceptionOr(Variant<SimpleException, JS::NonnullGCPtr<DOMException>> exception)
+        : m_exception(move(exception).template downcast<Empty, SimpleException, JS::NonnullGCPtr<DOMException>>())
     {
     }
 
@@ -78,9 +78,9 @@ public:
         return m_result.release_value();
     }
 
-    Variant<SimpleException, NonnullRefPtr<DOMException>> exception() const
+    Variant<SimpleException, JS::NonnullGCPtr<DOMException>> exception() const
     {
-        return m_exception.template downcast<SimpleException, NonnullRefPtr<DOMException>>();
+        return m_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOMException>>();
     }
 
     bool is_exception() const
@@ -90,12 +90,12 @@ public:
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return is_exception(); }
-    Variant<SimpleException, NonnullRefPtr<DOMException>> release_error() { return exception(); }
+    Variant<SimpleException, JS::NonnullGCPtr<DOMException>> release_error() { return exception(); }
 
 private:
     Optional<ValueType> m_result;
     // https://webidl.spec.whatwg.org/#idl-exceptions
-    Variant<Empty, SimpleException, NonnullRefPtr<DOMException>> m_exception {};
+    Variant<Empty, SimpleException, JS::NonnullGCPtr<DOMException>> m_exception {};
 };
 
 template<>

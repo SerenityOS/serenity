@@ -14,7 +14,6 @@
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -79,7 +78,7 @@ JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS:
         return JS::PropertyDescriptor { .value = JS::js_undefined(), .writable = false, .enumerable = false, .configurable = true };
 
     // 2. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't access property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(vm.current_realm()->global_object(), String::formatted("Can't access property '{}' on cross-origin object", property_key)));
 }
 
 // 7.2.3.3 IsPlatformObjectSameOrigin ( O ), https://html.spec.whatwg.org/multipage/browsers.html#isplatformobjectsameorigin-(-o-)
@@ -197,7 +196,7 @@ JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::VM& vm, JS::Object const& 
 
     // 6. If getter is undefined, then throw a "SecurityError" DOMException.
     if (!getter.has_value())
-        return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't get property '{}' on cross-origin object", property_key)));
+        return throw_completion(DOM::SecurityError::create(vm.current_realm()->global_object(), String::formatted("Can't get property '{}' on cross-origin object", property_key)));
 
     // 7. Return ? Call(getter, Receiver).
     return JS::call(vm, *getter, receiver);
@@ -223,7 +222,7 @@ JS::ThrowCompletionOr<bool> cross_origin_set(JS::VM& vm, JS::Object& object, JS:
     }
 
     // 4. Throw a "SecurityError" DOMException.
-    return vm.throw_completion<DOMExceptionWrapper>(DOM::SecurityError::create(String::formatted("Can't set property '{}' on cross-origin object", property_key)));
+    return throw_completion(DOM::SecurityError::create(vm.current_realm()->global_object(), String::formatted("Can't set property '{}' on cross-origin object", property_key)));
 }
 
 // 7.2.3.7 CrossOriginOwnPropertyKeys ( O ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginownpropertykeys-(-o-)

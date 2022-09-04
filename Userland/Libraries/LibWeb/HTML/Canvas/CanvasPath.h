@@ -30,9 +30,13 @@ public:
     Gfx::Path const& path() const { return m_path; }
 
 protected:
-    CanvasPath() = default;
+    explicit CanvasPath(Bindings::PlatformObject& self)
+        : m_self(self)
+    {
+    }
 
 private:
+    Bindings::PlatformObject& m_self;
     Gfx::Path m_path;
 };
 

@@ -170,7 +170,7 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name);
+ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name);
 
 }
 

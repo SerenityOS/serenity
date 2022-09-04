@@ -87,7 +87,7 @@ ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& va
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
     if (name.is_empty())
-        return InvalidCharacterError::create("Attribute name must not be empty");
+        return InvalidCharacterError::create(global_object(), "Attribute name must not be empty");
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
@@ -118,14 +118,14 @@ ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& va
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name)
+ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
         namespace_ = {};
 
     // 2. Validate qualifiedName.
-    TRY(Document::validate_qualified_name(qualified_name));
+    TRY(Document::validate_qualified_name(global_object, qualified_name));
 
     // 3. Let prefix be null.
     FlyString prefix = {};
@@ -142,19 +142,19 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
     if (!prefix.is_null() && namespace_.is_null())
-        return NamespaceError::create("Prefix is non-null and namespace is null.");
+        return NamespaceError::create(global_object, "Prefix is non-null and namespace is null.");
 
     // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
     if (prefix == "xml"sv && namespace_ != Namespace::XML)
-        return NamespaceError::create("Prefix is 'xml' and namespace is not the XML namespace.");
+        return NamespaceError::create(global_object, "Prefix is 'xml' and namespace is not the XML namespace.");
 
     // 8. If either qualifiedName or prefix is "xmlns" and namespace is not the XMLNS namespace, then throw a "NamespaceError" DOMException.
     if ((qualified_name == "xmlns"sv || prefix == "xmlns"sv) && namespace_ != Namespace::XMLNS)
-        return NamespaceError::create("Either qualifiedName or prefix is 'xmlns' and namespace is not the XMLNS namespace.");
+        return NamespaceError::create(global_object, "Either qualifiedName or prefix is 'xmlns' and namespace is not the XMLNS namespace.");
 
     // 9. If namespace is the XMLNS namespace and neither qualifiedName nor prefix is "xmlns", then throw a "NamespaceError" DOMException.
     if (namespace_ == Namespace::XMLNS && !(qualified_name == "xmlns"sv || prefix == "xmlns"sv))
-        return NamespaceError::create("Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
+        return NamespaceError::create(global_object, "Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
 
     // 10. Return namespace, prefix, and localName.
     return QualifiedName { local_name, prefix, namespace_ };
@@ -164,7 +164,7 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
 ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(global_object(), namespace_, qualified_name));
 
     // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
 
@@ -195,7 +195,7 @@ DOM::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
     if (name.is_empty())
-        return InvalidCharacterError::create("Attribute name must not be empty");
+        return InvalidCharacterError::create(global_object(), "Attribute name must not be empty");
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
@@ -439,7 +439,7 @@ DOM::ExceptionOr<bool> Element::matches(StringView selectors) const
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
-        return DOM::SyntaxError::create("Failed to parse selector");
+        return DOM::SyntaxError::create(global_object(), "Failed to parse selector");
 
     auto sel = maybe_selectors.value();
     for (auto& s : sel) {
@@ -454,7 +454,7 @@ DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) con
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
-        return DOM::SyntaxError::create("Failed to parse selector");
+        return DOM::SyntaxError::create(global_object(), "Failed to parse selector");
 
     auto matches_selectors = [](CSS::SelectorList const& selector_list, Element const* element) {
         for (auto& selector : selector_list) {

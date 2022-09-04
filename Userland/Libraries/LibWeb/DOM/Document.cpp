@@ -349,11 +349,11 @@ ExceptionOr<void> Document::run_the_document_write_steps(String input)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
     if (m_type == Type::XML)
-        return DOM::InvalidStateError::create("write() called on XML document.");
+        return DOM::InvalidStateError::create(global_object(), "write() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return DOM::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // 3. If document's active parser was aborted is true, then return.
     if (m_active_parser_was_aborted)
@@ -384,18 +384,18 @@ ExceptionOr<Document*> Document::open(String const&, String const&)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
-        return DOM::InvalidStateError::create("open() called on XML document.");
+        return DOM::InvalidStateError::create(global_object(), "open() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return DOM::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // FIXME: 3. Let entryDocument be the entry global object's associated Document.
     auto& entry_document = *this;
 
     // 4. If document's origin is not same origin to entryDocument's origin, then throw a "SecurityError" DOMException.
     if (origin() != entry_document.origin())
-        return DOM::SecurityError::create("Document.origin() not the same as entryDocument's.");
+        return DOM::SecurityError::create(global_object(), "Document.origin() not the same as entryDocument's.");
 
     // 5. If document has an active parser whose script nesting level is greater than 0, then return document.
     if (m_parser && m_parser->script_nesting_level() > 0)
@@ -455,11 +455,11 @@ ExceptionOr<void> Document::close()
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
-        return DOM::InvalidStateError::create("close() called on XML document.");
+        return DOM::InvalidStateError::create(global_object(), "close() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return DOM::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // 3. If there is no script-created parser associated with the document, then return.
     if (!m_parser)
@@ -563,7 +563,7 @@ HTML::HTMLElement* Document::body()
 ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 {
     if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body))
-        return DOM::HierarchyRequestError::create("Invalid document body element, must be 'body' or 'frameset'");
+        return DOM::HierarchyRequestError::create(global_object(), "Invalid document body element, must be 'body' or 'frameset'");
 
     auto* existing_body = body();
     if (existing_body) {
@@ -573,7 +573,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 
     auto* document_element = this->document_element();
     if (!document_element)
-        return DOM::HierarchyRequestError::create("Missing document element");
+        return DOM::HierarchyRequestError::create(global_object(), "Missing document element");
 
     (void)TRY(document_element->append_child(*new_body));
     return {};
@@ -1073,7 +1073,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& tag_name)
 {
     if (!is_valid_name(tag_name))
-        return DOM::InvalidCharacterError::create("Invalid character in tag name.");
+        return DOM::InvalidCharacterError::create(global_object(), "Invalid character in tag name.");
 
     // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
     return DOM::create_element(*this, tag_name, Namespace::HTML);
@@ -1085,7 +1085,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String cons
 DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(global_object(), namespace_, qualified_name));
 
     // FIXME: 2. Let is be null.
     // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
@@ -1166,7 +1166,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& i
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
     if (!event) {
-        return DOM::NotSupportedError::create("No constructor for interface found");
+        return DOM::NotSupportedError::create(global_object(), "No constructor for interface found");
     }
 
     // FIXME: 4. If the interface indicated by constructor is not exposed on the relevant global object of this, then throw a "NotSupportedError" DOMException.
@@ -1226,7 +1226,7 @@ ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCPtr<Node>
 {
     // 1. If node is a document or shadow root, then throw a "NotSupportedError" DOMException.
     if (is<Document>(*node) || is<ShadowRoot>(*node))
-        return DOM::NotSupportedError::create("Cannot import a document or shadow root.");
+        return DOM::NotSupportedError::create(global_object(), "Cannot import a document or shadow root.");
 
     // 2. Return a clone of node, with this and the clone children flag set if deep is true.
     return node->clone_node(this, deep);
@@ -1273,10 +1273,10 @@ void Document::adopt_node(Node& node)
 ExceptionOr<JS::NonnullGCPtr<Node>> Document::adopt_node_binding(JS::NonnullGCPtr<Node> node)
 {
     if (is<Document>(*node))
-        return DOM::NotSupportedError::create("Cannot adopt a document into a document");
+        return DOM::NotSupportedError::create(global_object(), "Cannot adopt a document into a document");
 
     if (is<ShadowRoot>(*node))
-        return DOM::HierarchyRequestError::create("Cannot adopt a shadow root into a document");
+        return DOM::HierarchyRequestError::create(global_object(), "Cannot adopt a shadow root into a document");
 
     if (is<DocumentFragment>(*node) && verify_cast<DocumentFragment>(*node).host())
         return node;
@@ -1665,14 +1665,14 @@ bool Document::is_valid_name(String const& name)
 }
 
 // https://dom.spec.whatwg.org/#validate
-ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String const& qualified_name)
+ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Object& global_object, String const& qualified_name)
 {
     if (qualified_name.is_empty())
-        return InvalidCharacterError::create("Empty string is not a valid qualified name.");
+        return InvalidCharacterError::create(global_object, "Empty string is not a valid qualified name.");
 
     Utf8View utf8view { qualified_name };
     if (!utf8view.validate())
-        return InvalidCharacterError::create("Invalid qualified name.");
+        return InvalidCharacterError::create(global_object, "Invalid qualified name.");
 
     Optional<size_t> colon_offset;
 
@@ -1682,19 +1682,19 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
         auto code_point = *it;
         if (code_point == ':') {
             if (colon_offset.has_value())
-                return InvalidCharacterError::create("More than one colon (:) in qualified name.");
+                return InvalidCharacterError::create(global_object, "More than one colon (:) in qualified name.");
             colon_offset = utf8view.byte_offset_of(it);
             at_start_of_name = true;
             continue;
         }
         if (at_start_of_name) {
             if (!is_valid_name_start_character(code_point))
-                return InvalidCharacterError::create("Invalid start of qualified name.");
+                return InvalidCharacterError::create(global_object, "Invalid start of qualified name.");
             at_start_of_name = false;
             continue;
         }
         if (!is_valid_name_character(code_point))
-            return InvalidCharacterError::create("Invalid character in qualified name.");
+            return InvalidCharacterError::create(global_object, "Invalid character in qualified name.");
     }
 
     if (!colon_offset.has_value())
@@ -1704,10 +1704,10 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
         };
 
     if (*colon_offset == 0)
-        return InvalidCharacterError::create("Qualified name can't start with colon (:).");
+        return InvalidCharacterError::create(global_object, "Qualified name can't start with colon (:).");
 
     if (*colon_offset >= (qualified_name.length() - 1))
-        return InvalidCharacterError::create("Qualified name can't end with colon (:).");
+        return InvalidCharacterError::create(global_object, "Qualified name can't end with colon (:).");
 
     return Document::PrefixAndTagName {
         .prefix = qualified_name.substring_view(0, *colon_offset),

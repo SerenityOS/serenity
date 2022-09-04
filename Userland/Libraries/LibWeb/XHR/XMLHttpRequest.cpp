@@ -84,7 +84,7 @@ DOM::ExceptionOr<String> XMLHttpRequest::response_text() const
 {
     // 1. If this’s response type is not the empty string or "text", then throw an "InvalidStateError" DOMException.
     if (m_response_type != Bindings::XMLHttpRequestResponseType::Empty && m_response_type != Bindings::XMLHttpRequestResponseType::Text)
-        return DOM::InvalidStateError::create("XHR responseText can only be used for responseType \"\" or \"text\"");
+        return DOM::InvalidStateError::create(global_object(), "XHR responseText can only be used for responseType \"\" or \"text\"");
 
     // 2. If this’s state is not loading or done, then return the empty string.
     if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
@@ -334,20 +334,20 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_str
 
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
-        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
+        return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
     // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
     if (m_send)
-        return DOM::InvalidStateError::create("XHR send() flag is already set");
+        return DOM::InvalidStateError::create(global_object(), "XHR send() flag is already set");
 
     // 3. Normalize value.
     value = MUST(Fetch::Infrastructure::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_header_name(name))
-        return DOM::SyntaxError::create("Header name contains invalid characters.");
+        return DOM::SyntaxError::create(global_object(), "Header name contains invalid characters.");
     if (!Fetch::Infrastructure::is_header_value(value))
-        return DOM::SyntaxError::create("Header value contains invalid characters.");
+        return DOM::SyntaxError::create(global_object(), "Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
     if (Fetch::Infrastructure::is_forbidden_header_name(name))
@@ -385,15 +385,15 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 
     // 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
     if (settings_object.responsible_document() && !settings_object.responsible_document()->is_active())
-        return DOM::InvalidStateError::create("Invalid state: Responsible document is not fully active.");
+        return DOM::InvalidStateError::create(global_object(), "Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_method(method))
-        return DOM::SyntaxError::create("An invalid or illegal string was specified.");
+        return DOM::SyntaxError::create(global_object(), "An invalid or illegal string was specified.");
 
     // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
     if (Fetch::Infrastructure::is_forbidden_method(method))
-        return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
+        return DOM::SecurityError::create(global_object(), "Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     // 5. Normalize method.
     method = MUST(Fetch::Infrastructure::normalize_method(method));
@@ -403,7 +403,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
-        return DOM::SyntaxError::create("Invalid URL");
+        return DOM::SyntaxError::create(global_object(), "Invalid URL");
 
     // 8. If the async argument is omitted, set async to true, and set username and password to null.
     // NOTE: This is handled in the overload lacking the async argument.
@@ -456,16 +456,16 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> body)
 {
     if (m_ready_state != ReadyState::Opened)
-        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
+        return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
     if (m_send)
-        return DOM::InvalidStateError::create("XHR send() flag is already set");
+        return DOM::InvalidStateError::create(global_object(), "XHR send() flag is already set");
 
     // If this’s request method is `GET` or `HEAD`, then set body to null.
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(global_object(), extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
@@ -487,19 +487,12 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
     if (body_with_type.has_value()) {
-        TRY_OR_RETURN_OOM(body_with_type->body.source().visit(
-            [&](ByteBuffer const& buffer) -> ErrorOr<void> {
+        TRY_OR_RETURN_OOM(global_object(), body_with_type->body.source().visit([&](ByteBuffer const& buffer) -> ErrorOr<void> {
                 request.set_body(buffer);
-                return {};
-            },
-            [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+                return {}; }, [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
                 auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
                 request.set_body(byte_buffer);
-                return {};
-            },
-            [](auto&) -> ErrorOr<void> {
-                return {};
-            }));
+                return {}; }, [](auto&) -> ErrorOr<void> { return {}; }));
         if (body_with_type->type.has_value())
             request.set_header("Content-Type", String { body_with_type->type->span() });
     }
@@ -611,7 +604,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 {
     // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
     if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
-        return DOM::InvalidStateError::create("Cannot override MIME type when state is Loading or Done.");
+        return DOM::InvalidStateError::create(global_object(), "Cannot override MIME type when state is Loading or Done.");
 
     // 2. Set this’s override MIME type to the result of parsing mime.
     m_override_mime_type = MimeSniff::MimeType::from_string(mime);
@@ -629,7 +622,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
     // 1. If the current global object is a Window object and this’s synchronous flag is set,
     //    then throw an "InvalidAccessError" DOMException.
     if (is<HTML::Window>(HTML::current_global_object()) && m_synchronous)
-        return DOM::InvalidAccessError::create("Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
+        return DOM::InvalidAccessError::create(global_object(), "Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
 
     // 2. Set this’s timeout to the given value.
     m_timeout = timeout;

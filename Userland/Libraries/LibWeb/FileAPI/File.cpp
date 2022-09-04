@@ -23,7 +23,7 @@ File::~File() = default;
 DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
-    auto bytes = TRY_OR_RETURN_OOM(process_blob_parts(file_bits, static_cast<Optional<BlobPropertyBag> const&>(*options)));
+    auto bytes = TRY_OR_RETURN_OOM(window, process_blob_parts(file_bits, static_cast<Optional<BlobPropertyBag> const&>(*options)));
 
     // 2. Let n be the fileName argument to the constructor.
     //    NOTE: Underlying OS filesystems use differing conventions for file name; with constructed files, mandating UTF-16 lessens ambiquity when file names are converted to byte sequences.

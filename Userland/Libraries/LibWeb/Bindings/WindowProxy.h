@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 
@@ -30,8 +31,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    HTML::Window& window() { return *m_window; }
-    HTML::Window const& window() const { return *m_window; }
+    HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
 
     // NOTE: Someone will have to replace the wrapped window object as well:
     // "When the browsing context is navigated, the Window object wrapped by the browsing context's associated WindowProxy object is changed."

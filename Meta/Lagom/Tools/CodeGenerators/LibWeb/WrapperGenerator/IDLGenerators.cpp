@@ -167,6 +167,8 @@ static bool impl_is_wrapper(Type const& type)
         return true;
     if (type.name == "URLSearchParams"sv)
         return true;
+    if (type.name == "DOMException"sv)
+        return true;
 
     return false;
 }

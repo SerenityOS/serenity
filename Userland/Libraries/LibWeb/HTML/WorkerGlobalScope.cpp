@@ -14,6 +14,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
@@ -129,7 +130,7 @@ DOM::ExceptionOr<String> WorkerGlobalScope::btoa(String const& data) const
     byte_string.ensure_capacity(data.length());
     for (u32 code_point : Utf8View(data)) {
         if (code_point > 0xff)
-            return DOM::InvalidCharacterError::create("Data contains characters outside the range U+0000 and U+00FF");
+            return DOM::InvalidCharacterError::create(global_object(), "Data contains characters outside the range U+0000 and U+00FF");
         byte_string.append(code_point);
     }
 
@@ -149,7 +150,7 @@ DOM::ExceptionOr<String> WorkerGlobalScope::atob(String const& data) const
 
     // 2. If decodedData is failure, then throw an "InvalidCharacterError" DOMException.
     if (decoded_data.is_error())
-        return DOM::InvalidCharacterError::create("Input string is not valid base64 data");
+        return DOM::InvalidCharacterError::create(global_object(), "Input string is not valid base64 data");
 
     // 3. Return decodedData.
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.

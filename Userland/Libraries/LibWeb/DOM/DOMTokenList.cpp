@@ -234,9 +234,9 @@ void DOMTokenList::set_value(String value)
 ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
 {
     if (token.is_empty())
-        return SyntaxError::create("Non-empty DOM tokens are not allowed");
+        return SyntaxError::create(global_object(), "Non-empty DOM tokens are not allowed");
     if (any_of(token, is_ascii_space))
-        return InvalidCharacterError::create("DOM tokens containing ASCII whitespace are not allowed");
+        return InvalidCharacterError::create(global_object(), "DOM tokens containing ASCII whitespace are not allowed");
     return {};
 }
 

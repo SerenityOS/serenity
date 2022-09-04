@@ -11,6 +11,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Variant.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/FileAPI/Blob.h>
 
 namespace Web::Fetch::Infrastructure {

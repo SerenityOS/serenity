@@ -9,7 +9,6 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::Bindings {
@@ -74,8 +73,8 @@ ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& vm, auto&&
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](NonnullRefPtr<DOM::DOMException> exception) {
-            return vm.template throw_completion<DOMExceptionWrapper>(move(exception));
+        [&](JS::NonnullGCPtr<DOM::DOMException> const& exception) {
+            return throw_completion(exception);
         });
 }
 
