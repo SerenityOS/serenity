@@ -18,7 +18,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#concept-body
 class Body final {
 public:
-    using SourceType = Variant<Empty, ByteBuffer, NonnullRefPtr<FileAPI::Blob>>;
+    using SourceType = Variant<Empty, ByteBuffer, JS::Handle<FileAPI::Blob>>;
 
     struct ReadableStreamDummy { };
 

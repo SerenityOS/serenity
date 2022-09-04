@@ -7,11 +7,18 @@
 #include <AK/GenericLexer.h>
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::FileAPI {
+
+DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, ByteBuffer byte_buffer, String type)
+{
+    return JS::NonnullGCPtr(*window.heap().allocate<Blob>(window.realm(), window, move(byte_buffer), move(type)));
+}
 
 // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
 ErrorOr<String> convert_line_endings_to_native(String const& string)
@@ -88,7 +95,7 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
                 return bytes.try_append(data_buffer.bytes());
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.
-            [&](NonnullRefPtr<Blob> const& blob) -> ErrorOr<void> {
+            [&](JS::Handle<Blob> const& blob) -> ErrorOr<void> {
                 return bytes.try_append(blob->bytes());
             }));
     }
@@ -105,25 +112,35 @@ bool is_basic_latin(StringView view)
     return true;
 }
 
-Blob::Blob(ByteBuffer byte_buffer, String type)
-    : m_byte_buffer(move(byte_buffer))
-    , m_type(move(type))
+Blob::Blob(HTML::Window& window)
+    : PlatformObject(window.realm())
 {
+    set_prototype(&window.cached_web_prototype("Blob"));
 }
 
-Blob::Blob(ByteBuffer byte_buffer)
-    : m_byte_buffer(move(byte_buffer))
+Blob::Blob(HTML::Window& window, ByteBuffer byte_buffer, String type)
+    : PlatformObject(window.realm())
+    , m_byte_buffer(move(byte_buffer))
+    , m_type(move(type))
 {
+    set_prototype(&window.cached_web_prototype("Blob"));
+}
+
+Blob::Blob(HTML::Window& window, ByteBuffer byte_buffer)
+    : PlatformObject(window.realm())
+    , m_byte_buffer(move(byte_buffer))
+{
+    set_prototype(&window.cached_web_prototype("Blob"));
 }
 
 Blob::~Blob() = default;
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
-DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size set to 0, and with type set to the empty string.
     if (!blob_parts.has_value() && !options.has_value())
-        return adopt_ref(*new Blob());
+        return JS::NonnullGCPtr(*window.heap().allocate<Blob>(window.realm(), window));
 
     ByteBuffer byte_buffer {};
     // 2. Let bytes be the result of processing blob parts given blobParts and options.
@@ -148,16 +165,16 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create(Optional<Vector<BlobPart>> co
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
-    return adopt_ref(*new Blob(move(byte_buffer), move(type)));
+    return JS::NonnullGCPtr(*window.heap().allocate<Blob>(window.realm(), window, move(byte_buffer), move(type)));
 }
 
-DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::create_with_global_object(HTML::Window&, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create_with_global_object(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
-    return Blob::create(blob_parts, options);
+    return Blob::create(window, blob_parts, options);
 }
 
 // https://w3c.github.io/FileAPI/#dfn-slice
-DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
+DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
 {
     // 1. The optional start parameter is a value for the start point of a slice() call, and must be treated as a byte-order position, with the zeroth position representing the first byte.
     //    User agents must process slice() with start normalized according to the following:
@@ -217,22 +234,19 @@ DOM::ExceptionOr<NonnullRefPtr<Blob>> Blob::slice(Optional<i64> start, Optional<
     // b. S.size = span.
     // c. S.type = relativeContentType.
     auto byte_buffer = TRY_OR_RETURN_OOM(m_byte_buffer.slice(relative_start, span));
-    return adopt_ref(*new Blob(move(byte_buffer), move(relative_content_type)));
+    return JS::NonnullGCPtr(*heap().allocate<Blob>(realm(), global_object(), move(byte_buffer), move(relative_content_type)));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text
 JS::Promise* Blob::text()
 {
-    auto& vm = wrapper()->vm();
-    auto& realm = *vm.current_realm();
-
     // FIXME: 1. Let stream be the result of calling get stream on this.
     // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
 
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader
-    auto* promise = JS::Promise::create(realm);
-    auto* result = JS::js_string(vm, String { m_byte_buffer.bytes() });
+    auto* promise = JS::Promise::create(realm());
+    auto* result = JS::js_string(vm(), String { m_byte_buffer.bytes() });
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
     promise->fulfill(result);
@@ -242,16 +256,13 @@ JS::Promise* Blob::text()
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
 JS::Promise* Blob::array_buffer()
 {
-    auto& vm = wrapper()->vm();
-    auto& realm = *vm.current_realm();
-
     // FIXME: 1. Let stream be the result of calling get stream on this.
     // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
 
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader.
-    auto* promise = JS::Promise::create(realm);
-    auto buffer_result = JS::ArrayBuffer::create(realm, m_byte_buffer.size());
+    auto* promise = JS::Promise::create(realm());
+    auto buffer_result = JS::ArrayBuffer::create(realm(), m_byte_buffer.size());
     if (buffer_result.is_error()) {
         promise->reject(buffer_result.release_error().value().release_value());
         return promise;

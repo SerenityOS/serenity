@@ -5,18 +5,22 @@
  */
 
 #include <LibWeb/FileAPI/File.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::FileAPI {
 
-File::File(ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
-    : Blob(move(byte_buffer), move(type))
+File::File(HTML::Window& window, ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
+    : Blob(window, move(byte_buffer), move(type))
     , m_name(move(file_name))
     , m_last_modified(last_modified)
 {
+    set_prototype(&window.cached_web_prototype("File"));
 }
 
+File::~File() = default;
+
 // https://w3c.github.io/FileAPI/#ref-for-dom-file-file
-DOM::ExceptionOr<NonnullRefPtr<File>> File::create(Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
     auto bytes = TRY_OR_RETURN_OOM(process_blob_parts(file_bits, static_cast<Optional<BlobPropertyBag> const&>(*options)));
@@ -53,12 +57,12 @@ DOM::ExceptionOr<NonnullRefPtr<File>> File::create(Vector<BlobPart> const& file_
     //    4. F.name is set to n.
     //    5. F.type is set to t.
     //    6. F.lastModified is set to d.
-    return adopt_ref(*new File(move(bytes), move(name), move(type), last_modified));
+    return JS::NonnullGCPtr(*window.heap().allocate<File>(window.realm(), window, move(bytes), move(name), move(type), last_modified));
 }
 
-DOM::ExceptionOr<NonnullRefPtr<File>> File::create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create_with_global_object(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
-    return create(file_bits, file_name, options);
+    return create(window, file_bits, file_name, options);
 }
 
 }
