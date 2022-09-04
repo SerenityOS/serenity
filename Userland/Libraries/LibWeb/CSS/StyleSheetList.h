@@ -6,12 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 

@@ -17,7 +17,6 @@ set(SOURCES
     Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
     Bindings/WindowProxy.cpp
-    Bindings/Wrappable.cpp
     Bindings/Wrapper.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
