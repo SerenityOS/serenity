@@ -23,9 +23,18 @@ namespace Web::Bindings {
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
 LocationObject::LocationObject(JS::Realm& realm)
-    : Object(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("Location"))
-    , m_default_properties(heap())
+    : PlatformObject(realm)
 {
+    set_prototype(&verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("Location"));
+}
+
+LocationObject::~LocationObject() = default;
+
+void LocationObject::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& property : m_default_properties)
+        visitor.visit(property);
 }
 
 void LocationObject::initialize(JS::Realm& realm)
