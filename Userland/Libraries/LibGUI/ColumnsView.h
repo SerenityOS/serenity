@@ -34,8 +34,11 @@ private:
     int text_padding() const { return 2; }
 
     virtual void model_did_update(unsigned flags) override;
+    virtual void second_paint_event(PaintEvent&) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent& event) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
 
     virtual void select_range(ModelIndex const&) override;
 
@@ -50,6 +53,11 @@ private:
 
     Optional<Column> column_at_event_position(Gfx::IntPoint const&) const;
     ModelIndex index_at_event_position_in_column(Gfx::IntPoint const&, Column const&) const;
+
+    bool m_rubber_banding { false };
+    int m_rubber_band_origin { 0 };
+    Column m_rubber_band_origin_column;
+    int m_rubber_band_current { 0 };
 
     Vector<Column> m_columns;
     int m_model_column { 0 };
