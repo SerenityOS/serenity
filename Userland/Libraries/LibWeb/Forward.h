@@ -450,8 +450,6 @@ class URLSearchParamsIterator;
 namespace Web::Bindings {
 class CryptoWrapper;
 class DOMExceptionWrapper;
-class HeadersWrapper;
-class HeadersIteratorWrapper;
 class IdleDeadlineWrapper;
 class IntersectionObserverWrapper;
 class LocationObject;
