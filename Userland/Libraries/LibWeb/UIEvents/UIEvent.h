@@ -49,7 +49,4 @@ protected:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::UIEvents::UIEvent& object) { return &object; }
-using UIEventWrapper = Web::UIEvents::UIEvent;
-}
+WRAPPER_HACK(UIEvent, Web::UIEvents)

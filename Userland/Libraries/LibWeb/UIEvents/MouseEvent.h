@@ -57,7 +57,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::UIEvents::MouseEvent& object) { return &object; }
-using MouseEventWrapper = Web::UIEvents::MouseEvent;
-}
+WRAPPER_HACK(MouseEvent, Web::UIEvents)

@@ -71,7 +71,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::UIEvents::KeyboardEvent& object) { return &object; }
-using KeyboardEventWrapper = Web::UIEvents::KeyboardEvent;
-}
+WRAPPER_HACK(KeyboardEvent, Web::UIEvents)

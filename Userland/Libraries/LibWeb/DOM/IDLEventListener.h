@@ -43,7 +43,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::IDLEventListener& object) { return &object; }
-using EventListenerWrapper = Web::DOM::IDLEventListener;
-}
+WRAPPER_HACK(IDLEventListener, Web::DOM)

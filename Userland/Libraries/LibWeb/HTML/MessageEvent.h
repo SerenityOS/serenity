@@ -41,7 +41,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::MessageEvent& object) { return &object; }
-using MessageEventWrapper = Web::HTML::MessageEvent;
-}
+WRAPPER_HACK(MessageEvent, Web::HTML)

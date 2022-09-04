@@ -58,7 +58,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::HTML::ErrorEvent& object) { return &object; }
-using ErrorEventWrapper = Web::HTML::ErrorEvent;
-}
+WRAPPER_HACK(ErrorEvent, Web::HTML)

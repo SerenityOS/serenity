@@ -34,7 +34,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::WebGL::WebGLContextEvent& object) { return &object; }
-using WebGLContextEventWrapper = Web::WebGL::WebGLContextEvent;
-}
+WRAPPER_HACK(WebGLContextEvent, Web::WebGL)

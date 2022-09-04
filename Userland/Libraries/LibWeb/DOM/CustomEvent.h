@@ -42,7 +42,4 @@ private:
 
 }
 
-namespace Web::Bindings {
-inline JS::Object* wrap(JS::Realm&, Web::DOM::CustomEvent& object) { return &object; }
-using CustomEventWrapper = Web::DOM::CustomEvent;
-}
+WRAPPER_HACK(CustomEvent, Web::DOM)
