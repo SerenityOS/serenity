@@ -213,7 +213,7 @@ void AbstractButton::keydown_event(KeyEvent& event)
             new_checked_index = this_index == 0 ? exclusive_siblings.size() - 1 : this_index - 1;
         else
             new_checked_index = this_index == exclusive_siblings.size() - 1 ? 0 : this_index + 1;
-        exclusive_siblings[new_checked_index].set_checked(true);
+        exclusive_siblings[new_checked_index].click();
         return;
     }
     Widget::keydown_event(event);
