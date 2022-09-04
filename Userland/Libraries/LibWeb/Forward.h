@@ -462,7 +462,6 @@ class RangePrototype;
 class ResizeObserverWrapper;
 class SelectionWrapper;
 class TextDecoderWrapper;
-class TextEncoderWrapper;
 class URLSearchParamsIteratorWrapper;
 class URLSearchParamsWrapper;
 class URLWrapper;

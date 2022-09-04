@@ -16,21 +16,13 @@
 namespace Web::Encoding {
 
 // https://encoding.spec.whatwg.org/#textencoder
-class TextEncoder
-    : public RefCounted<TextEncoder>
-    , public Bindings::Wrappable {
+class TextEncoder final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(TextEncoder, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::TextEncoderWrapper;
+    static JS::NonnullGCPtr<TextEncoder> create_with_global_object(HTML::Window&);
 
-    static NonnullRefPtr<TextEncoder> create()
-    {
-        return adopt_ref(*new TextEncoder());
-    }
-
-    static NonnullRefPtr<TextEncoder> create_with_global_object(HTML::Window&)
-    {
-        return TextEncoder::create();
-    }
+    virtual ~TextEncoder() override;
 
     JS::Uint8Array* encode(String const& input) const;
 
@@ -38,7 +30,9 @@ public:
 
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
-    TextEncoder() = default;
+    explicit TextEncoder(HTML::Window&);
 };
 
 }
+
+WRAPPER_HACK(TextEncoder, Web::Encoding)

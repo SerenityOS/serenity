@@ -8,15 +8,26 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Encoding/TextEncoder.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::Encoding {
+
+JS::NonnullGCPtr<TextEncoder> TextEncoder::create_with_global_object(HTML::Window& window)
+{
+    return *window.heap().allocate<TextEncoder>(window.realm(), window);
+}
+
+TextEncoder::TextEncoder(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("TextEncoder"));
+}
+
+TextEncoder::~TextEncoder() = default;
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode
 JS::Uint8Array* TextEncoder::encode(String const& input) const
 {
-    auto& vm = wrapper()->vm();
-    auto& realm = *vm.current_realm();
-
     // NOTE: The AK::String returned from PrimitiveString::string() is always UTF-8, regardless of the internal string type, so most of these steps are no-ops.
 
     // 1. Convert input to an I/O queue of scalar values.
@@ -29,8 +40,8 @@ JS::Uint8Array* TextEncoder::encode(String const& input) const
 
     auto byte_buffer = input.to_byte_buffer();
     auto array_length = byte_buffer.size();
-    auto* array_buffer = JS::ArrayBuffer::create(realm, move(byte_buffer));
-    return JS::Uint8Array::create(realm, array_length, *array_buffer);
+    auto* array_buffer = JS::ArrayBuffer::create(realm(), move(byte_buffer));
+    return JS::Uint8Array::create(realm(), array_length, *array_buffer);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encoding
