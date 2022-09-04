@@ -47,7 +47,7 @@ public:
     virtual void clear_color(FloatVector4 const&) = 0;
     virtual void clear_depth(DepthType) = 0;
     virtual void clear_stencil(StencilType) = 0;
-    virtual void blit_color_buffer_to(Gfx::Bitmap& target) = 0;
+    virtual void blit_from_color_buffer(Gfx::Bitmap& target) = 0;
     virtual void blit_from_color_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) = 0;
     virtual void blit_from_depth_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) = 0;
     virtual void blit_to_color_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) = 0;
