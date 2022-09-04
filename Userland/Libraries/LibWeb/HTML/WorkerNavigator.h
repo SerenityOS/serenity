@@ -6,18 +6,23 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
 
 // FIXME: Add Mixin APIs from https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
-class WorkerNavigator
-    : public RefCounted<WorkerNavigator>
-    , public Bindings::Wrappable {
+class WorkerNavigator : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(WorkerNavigator, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::WorkerNavigatorWrapper;
+    static JS::NonnullGCPtr<WorkerNavigator> create(WorkerGlobalScope&);
+
+    virtual ~WorkerNavigator() override;
+
+private:
+    explicit WorkerNavigator(WorkerGlobalScope&);
 };
 
 }
+
+WRAPPER_HACK(WorkerNavigator, Web::HTML)

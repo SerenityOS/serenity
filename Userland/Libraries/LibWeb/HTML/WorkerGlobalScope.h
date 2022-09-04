@@ -42,7 +42,7 @@ public:
     JS::NonnullGCPtr<WorkerGlobalScope> self() const { return *this; }
 
     JS::NonnullGCPtr<WorkerLocation> location() const;
-    NonnullRefPtr<WorkerNavigator const> navigator() const;
+    JS::NonnullGCPtr<WorkerNavigator> navigator() const;
     DOM::ExceptionOr<void> import_scripts(Vector<String> urls);
 
 #undef __ENUMERATE
@@ -74,12 +74,14 @@ protected:
     explicit WorkerGlobalScope(JS::Realm&);
 
 private:
+    virtual void initialize(JS::Realm&) override;
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<WorkerLocation> m_location;
 
     // FIXME: Implement WorkerNavigator according to the spec
-    NonnullRefPtr<WorkerNavigator> m_navigator;
+    JS::GCPtr<WorkerNavigator> m_navigator;
 
     // FIXME: Add all these internal slots
 
