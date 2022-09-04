@@ -689,9 +689,7 @@ u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
     auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        auto& realm = callback->callback.shape().realm();
-        auto* wrapped_deadline = Bindings::wrap(realm, *deadline);
-        return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, JS::Value(wrapped_deadline));
+        return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, deadline.ptr());
     };
     window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
     // 5. Return handle and then continue running this algorithm asynchronously.
@@ -1101,16 +1099,14 @@ JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::document_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    return wrap(realm, impl->associated_document());
+    return &impl->associated_document();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::performance_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    return wrap(realm, impl->performance());
+    return &impl->performance();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::performance_setter)
@@ -1132,18 +1128,16 @@ JS_DEFINE_NATIVE_FUNCTION(Window::performance_setter)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    return wrap(realm, impl->screen());
+    return &impl->screen();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::event_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
     if (!impl->current_event())
         return JS::js_undefined();
-    return wrap(realm, const_cast<DOM::Event&>(*impl->current_event()));
+    return impl->current_event();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::event_setter)
@@ -1166,9 +1160,8 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::crypto_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    return wrap(realm, impl->crypto());
+    return &impl->crypto();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::inner_width_getter)
@@ -1191,23 +1184,18 @@ JS_DEFINE_NATIVE_FUNCTION(Window::device_pixel_ratio_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::get_computed_style)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
     auto* object = TRY(vm.argument(0).to_object(vm));
     if (!is<DOM::Element>(object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "DOM element");
 
-    return wrap(realm, *impl->get_computed_style_impl(*static_cast<DOM::Element*>(object)));
+    return impl->get_computed_style_impl(*static_cast<DOM::Element*>(object));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    auto* selection = impl->get_selection_impl();
-    if (!selection)
-        return JS::js_null();
-    return wrap(realm, *selection);
+    return impl->get_selection_impl();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::match_media)
@@ -1346,9 +1334,8 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
 
 JS_DEFINE_NATIVE_FUNCTION(Window::history_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
-    return wrap(realm, impl->associated_document().history());
+    return impl->associated_document().history();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_left_getter)
