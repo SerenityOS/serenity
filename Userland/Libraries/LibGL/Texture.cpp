@@ -405,8 +405,7 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
 
     // We assume GL_TEXTURE_2D (see above)
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
-    if (texture_2d.is_null())
-        return;
+    VERIFY(!texture_2d.is_null());
 
     switch (pname) {
     case GL_TEXTURE_MIN_FILTER:
@@ -495,7 +494,8 @@ void GLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, G
 
     // A 2D texture array must have been defined by a previous glTexImage2D operation
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
-    RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
+    VERIFY(!texture_2d.is_null());
+    RETURN_WITH_ERROR_IF(texture_2d->device_image().is_null(), GL_INVALID_OPERATION);
 
     auto pixel_type_or_error = get_validated_pixel_type(target, texture_2d->internal_format(), format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
@@ -529,19 +529,13 @@ void GLContext::sync_device_sampler_config()
 
     for (unsigned i = 0; i < m_texture_units.size(); ++i) {
         auto const& texture_unit = m_texture_units[i];
-
         if (!texture_unit.texture_2d_enabled())
             continue;
 
         GPU::SamplerConfig config;
 
         auto texture_2d = texture_unit.texture_2d_target_texture();
-        if (texture_2d.is_null()) {
-            config.bound_image = nullptr;
-            m_rasterizer->set_sampler_config(i, config);
-            continue;
-        }
-
+        VERIFY(!texture_2d.is_null());
         config.bound_image = texture_2d->device_image();
 
         auto const& sampler = texture_2d->sampler();
