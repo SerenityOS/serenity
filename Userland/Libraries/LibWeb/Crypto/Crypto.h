@@ -6,23 +6,19 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::Crypto {
 
-class Crypto : public Bindings::Wrappable
-    , public RefCounted<Crypto>
-    , public Weakable<Crypto> {
-public:
-    using WrapperType = Bindings::CryptoWrapper;
+class Crypto : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(Crypto, Bindings::PlatformObject);
 
-    static NonnullRefPtr<Crypto> create(HTML::Window& window)
-    {
-        return adopt_ref(*new Crypto(window));
-    }
+public:
+    static JS::NonnullGCPtr<Crypto> create(HTML::Window&);
+
+    virtual ~Crypto() override;
 
     JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
@@ -31,14 +27,11 @@ public:
 
 private:
     explicit Crypto(HTML::Window&);
+    virtual void initialize(JS::Realm&) override;
 
-    JS::Handle<SubtleCrypto> m_subtle;
+    JS::GCPtr<SubtleCrypto> m_subtle;
 };
 
 }
 
-namespace Web::Bindings {
-
-CryptoWrapper* wrap(JS::Realm&, Crypto::Crypto&);
-
-}
+WRAPPER_HACK(Crypto, Web::Crypto)
