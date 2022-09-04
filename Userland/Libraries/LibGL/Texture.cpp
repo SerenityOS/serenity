@@ -82,21 +82,82 @@ void GLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internal
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_image_2d, target, level, internalformat, x, y, width, height, border);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_copy_tex_image_2d({:#x}, {}, {:#x}, {}, {}, {}, {}, {})",
-        target, level, internalformat, x, y, width, height, border);
+    RETURN_WITH_ERROR_IF(internalformat == GL_NONE, GL_INVALID_ENUM);
+    auto pixel_type_or_error = get_validated_pixel_type(target, internalformat, GL_NONE, GL_NONE);
+    RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
+
+    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    if (!m_device_info.supports_npot_textures)
+        RETURN_WITH_ERROR_IF(!is_power_of_two(width) || !is_power_of_two(height), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
+
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    VERIFY(!texture_2d.is_null());
+
+    auto internal_pixel_format = pixel_format_for_internal_format(internalformat);
+    if (level == 0) {
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, 999, 1));
+        m_sampler_config_is_dirty = true;
+    }
+
+    auto pixel_type = pixel_type_or_error.release_value();
+    if (pixel_type.format == GPU::PixelFormat::DepthComponent) {
+        m_rasterizer->blit_from_depth_buffer(
+            *texture_2d->device_image(),
+            level,
+            { static_cast<u32>(width), static_cast<u32>(height) },
+            { x, y },
+            { 0, 0, 0 });
+    } else if (pixel_type.format == GPU::PixelFormat::StencilIndex) {
+        dbgln("{}: GL_STENCIL_INDEX is not yet supported", __FUNCTION__);
+    } else {
+        m_rasterizer->blit_from_color_buffer(
+            *texture_2d->device_image(),
+            level,
+            { static_cast<u32>(width), static_cast<u32>(height) },
+            { x, y },
+            { 0, 0, 0 });
+    }
 }
 
 void GLContext::gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_sub_image_2d, target, level, xoffset, yoffset, x, y, width, height);
-    RETURN_WITH_ERROR_IF(!(target == GL_TEXTURE_2D || target == GL_TEXTURE_1D_ARRAY), GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(level < 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: implement
-    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_copy_tex_sub_image_2d({:#x}, {}, {}, {}, {}, {}, {}, {})",
-        target, level, xoffset, yoffset, x, y, width, height);
+    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    VERIFY(!texture_2d.is_null());
+    RETURN_WITH_ERROR_IF(texture_2d->device_image().is_null(), GL_INVALID_OPERATION);
+
+    m_rasterizer->blit_from_color_buffer(
+        *texture_2d->device_image(),
+        level,
+        { static_cast<u32>(width), static_cast<u32>(height) },
+        { x, y },
+        { xoffset, yoffset, 0 });
+
+    // FIXME: use GPU::PixelFormat for Texture2D's internal format
+    if (texture_2d->internal_format() == GL_DEPTH_COMPONENT) {
+        m_rasterizer->blit_from_depth_buffer(
+            *texture_2d->device_image(),
+            level,
+            { static_cast<u32>(width), static_cast<u32>(height) },
+            { x, y },
+            { 0, 0, 0 });
+    } else if (texture_2d->internal_format() == GL_STENCIL_INDEX) {
+        dbgln("{}: GL_STENCIL_INDEX is not yet supported", __FUNCTION__);
+    } else {
+        m_rasterizer->blit_from_color_buffer(
+            *texture_2d->device_image(),
+            level,
+            { static_cast<u32>(width), static_cast<u32>(height) },
+            { x, y },
+            { 0, 0, 0 });
+    }
 }
 
 void GLContext::gl_delete_textures(GLsizei n, GLuint const* textures)
@@ -146,6 +207,7 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
 void GLContext::gl_get_tex_image(GLenum target, GLint level, GLenum format, GLenum type, void* pixels)
 {
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(target, GL_NONE, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
@@ -467,16 +529,14 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
+    RETURN_WITH_ERROR_IF(internal_format == GL_NONE || format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(target, internal_format, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
-    // Check if width and height are a power of 2
-    if (!m_device_info.supports_npot_textures) {
-        RETURN_WITH_ERROR_IF(!is_power_of_two(width), GL_INVALID_VALUE);
-        RETURN_WITH_ERROR_IF(!is_power_of_two(height), GL_INVALID_VALUE);
-    }
+    if (!m_device_info.supports_npot_textures)
+        RETURN_WITH_ERROR_IF(!is_power_of_two(width) || !is_power_of_two(height), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
@@ -622,6 +682,7 @@ void GLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, G
     VERIFY(!texture_2d.is_null());
     RETURN_WITH_ERROR_IF(texture_2d->device_image().is_null(), GL_INVALID_OPERATION);
 
+    RETURN_WITH_ERROR_IF(format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(target, texture_2d->internal_format(), format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 

@@ -1466,6 +1466,21 @@ void Device::blit_from_color_buffer(Gfx::Bitmap& target)
         draw_statistics_overlay(target);
 }
 
+void Device::blit_from_color_buffer(NonnullRefPtr<GPU::Image> image, u32 level, Vector2<u32> input_size, Vector2<i32> input_offset, Vector3<i32> output_offset)
+{
+    auto input_layout = color_buffer_data_layout(input_size, input_offset);
+    auto const* input_data = m_frame_buffer->color_buffer()->scanline(0);
+
+    auto const& softgpu_image = reinterpret_cast<Image*>(image.ptr());
+    auto output_layout = softgpu_image->image_data_layout(level, output_offset);
+    auto* output_data = softgpu_image->texel_pointer(0, level, 0, 0, 0);
+
+    PixelConverter converter { input_layout, output_layout };
+    auto conversion_result = converter.convert(input_data, output_data, {});
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
+}
+
 void Device::blit_from_color_buffer(void* output_data, Vector2<i32> input_offset, GPU::ImageDataLayout const& output_layout)
 {
     auto const& output_selection = output_layout.selection;
@@ -1485,6 +1500,21 @@ void Device::blit_from_depth_buffer(void* output_data, Vector2<i32> input_offset
 
     PixelConverter converter { input_layout, output_layout };
     auto const* input_data = m_frame_buffer->depth_buffer()->scanline(0);
+    auto conversion_result = converter.convert(input_data, output_data, {});
+    if (conversion_result.is_error())
+        dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
+}
+
+void Device::blit_from_depth_buffer(NonnullRefPtr<GPU::Image> image, u32 level, Vector2<u32> input_size, Vector2<i32> input_offset, Vector3<i32> output_offset)
+{
+    auto input_layout = depth_buffer_data_layout(input_size, input_offset);
+    auto const* input_data = m_frame_buffer->depth_buffer()->scanline(0);
+
+    auto const& softgpu_image = reinterpret_cast<Image*>(image.ptr());
+    auto output_layout = softgpu_image->image_data_layout(level, output_offset);
+    auto* output_data = softgpu_image->texel_pointer(0, level, 0, 0, 0);
+
+    PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());

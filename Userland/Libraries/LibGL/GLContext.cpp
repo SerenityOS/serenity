@@ -496,6 +496,7 @@ void GLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
 
+    RETURN_WITH_ERROR_IF(format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(GL_NONE, GL_NONE, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
@@ -561,6 +562,7 @@ void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLe
     //        target and data is not evenly divisible into the number of bytes needed to store in memory a datum
     //        indicated by type.
 
+    RETURN_WITH_ERROR_IF(format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(GL_NONE, GL_NONE, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
