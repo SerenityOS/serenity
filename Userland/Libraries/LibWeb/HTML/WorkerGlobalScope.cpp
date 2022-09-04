@@ -28,6 +28,12 @@ WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
+void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_location);
+}
+
 // https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries
 DOM::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)
 {
@@ -56,7 +62,7 @@ DOM::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerglobalscope-location
-NonnullRefPtr<WorkerLocation const> WorkerGlobalScope::location() const
+JS::NonnullGCPtr<WorkerLocation> WorkerGlobalScope::location() const
 {
     // The location attribute must return the WorkerLocation object whose associated WorkerGlobalScope object is the WorkerGlobalScope object.
     return *m_location;

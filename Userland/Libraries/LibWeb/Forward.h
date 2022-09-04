@@ -453,7 +453,6 @@ class LocationObject;
 class OptionConstructor;
 class RangePrototype;
 class WindowProxy;
-class WorkerLocationWrapper;
 class WorkerNavigatorWrapper;
 class Wrappable;
 class Wrapper;
