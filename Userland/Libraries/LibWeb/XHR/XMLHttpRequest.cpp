@@ -301,7 +301,7 @@ static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestB
             source = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
-        [&](NonnullRefPtr<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
+        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_string().to_byte_buffer();
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.

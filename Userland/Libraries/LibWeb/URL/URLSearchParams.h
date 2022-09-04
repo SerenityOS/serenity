@@ -20,17 +20,14 @@ struct QueryParam {
 String url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
 Vector<QueryParam> url_decode(StringView);
 
-class URLSearchParams : public Bindings::Wrappable
-    , public RefCounted<URLSearchParams> {
+class URLSearchParams : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(URLSearchParams, Bindings::PlatformObject);
+
 public:
-    using WrapperType = Bindings::URLSearchParamsWrapper;
+    static JS::NonnullGCPtr<URLSearchParams> create(HTML::Window&, Vector<QueryParam> list);
+    static DOM::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
 
-    static NonnullRefPtr<URLSearchParams> create(Vector<QueryParam> list)
-    {
-        return adopt_ref(*new URLSearchParams(move(list)));
-    }
-
-    static DOM::ExceptionOr<NonnullRefPtr<URLSearchParams>> create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
+    virtual ~URLSearchParams() override;
 
     void append(String const& name, String const& value);
     void delete_(String const& name);
@@ -50,19 +47,16 @@ private:
     friend class URL;
     friend class URLSearchParamsIterator;
 
-    explicit URLSearchParams(Vector<QueryParam> list)
-        : m_list(move(list)) {};
+    URLSearchParams(HTML::Window&, Vector<QueryParam> list);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     void update();
 
     Vector<QueryParam> m_list;
-    WeakPtr<URL> m_url;
+    JS::GCPtr<URL> m_url;
 };
 
 }
 
-namespace Web::Bindings {
-
-URLSearchParamsWrapper* wrap(JS::Realm&, URL::URLSearchParams&);
-
-}
+WRAPPER_HACK(URLSearchParams, Web::URL)
