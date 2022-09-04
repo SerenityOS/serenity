@@ -8,10 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
@@ -29,7 +26,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
-#include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector4.h>
@@ -48,8 +44,10 @@ public:
     virtual void clear_depth(DepthType) = 0;
     virtual void clear_stencil(StencilType) = 0;
     virtual void blit_from_color_buffer(Gfx::Bitmap& target) = 0;
+    virtual void blit_from_color_buffer(NonnullRefPtr<Image>, u32 level, Vector2<u32> input_size, Vector2<i32> input_offset, Vector3<i32> output_offset) = 0;
     virtual void blit_from_color_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) = 0;
     virtual void blit_from_depth_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) = 0;
+    virtual void blit_from_depth_buffer(NonnullRefPtr<Image>, u32 level, Vector2<u32> input_size, Vector2<i32> input_offset, Vector3<i32> output_offset) = 0;
     virtual void blit_to_color_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) = 0;
     virtual void blit_to_depth_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) = 0;
     virtual void set_options(RasterizerOptions const&) = 0;

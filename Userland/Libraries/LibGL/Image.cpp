@@ -95,10 +95,14 @@ ErrorOr<GPU::PixelType> get_validated_pixel_type(GLenum target, GLenum internal_
         && internal_format != GL_SRGB8_ALPHA8)
         return Error::from_errno(GL_INVALID_ENUM);
 
-    if ((format < GL_COLOR_INDEX || format > GL_LUMINANCE_ALPHA) && format != GL_BGR && format != GL_BGRA)
+    if (format != GL_NONE
+        && (format < GL_COLOR_INDEX || format > GL_LUMINANCE_ALPHA)
+        && format != GL_BGR
+        && format != GL_BGRA)
         return Error::from_errno(GL_INVALID_ENUM);
 
-    if (type != GL_BITMAP
+    if (type != GL_NONE
+        && type != GL_BITMAP
         && (type < GL_BYTE || type > GL_FLOAT)
         && type != GL_HALF_FLOAT
         && (type < GL_UNSIGNED_BYTE_3_3_2 || type > GL_UNSIGNED_INT_10_10_10_2)
