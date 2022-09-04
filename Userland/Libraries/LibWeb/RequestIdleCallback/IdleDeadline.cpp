@@ -6,18 +6,21 @@
  */
 
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 
 namespace Web::RequestIdleCallback {
 
-NonnullRefPtr<IdleDeadline> IdleDeadline::create(bool did_timeout)
+JS::NonnullGCPtr<IdleDeadline> IdleDeadline::create(HTML::Window& window, bool did_timeout)
 {
-    return adopt_ref(*new IdleDeadline(did_timeout));
+    return *window.heap().allocate<IdleDeadline>(window.realm(), window, did_timeout);
 }
 
-IdleDeadline::IdleDeadline(bool did_timeout)
-    : m_did_timeout(did_timeout)
+IdleDeadline::IdleDeadline(HTML::Window& window, bool did_timeout)
+    : PlatformObject(window.realm())
+    , m_did_timeout(did_timeout)
 {
+    set_prototype(&window.cached_web_prototype("IdleDeadline"));
 }
 
 IdleDeadline::~IdleDeadline() = default;

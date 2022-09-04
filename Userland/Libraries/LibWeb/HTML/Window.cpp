@@ -19,7 +19,6 @@
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
-#include <LibWeb/Bindings/IdleDeadlineWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
@@ -63,18 +62,18 @@ void run_animation_frame_callbacks(DOM::Document& document, double)
 
 class IdleCallback : public RefCounted<IdleCallback> {
 public:
-    explicit IdleCallback(Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
+    explicit IdleCallback(Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
         : m_handler(move(handler))
         , m_handle(handle)
     {
     }
     ~IdleCallback() = default;
 
-    JS::Completion invoke(NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) { return m_handler(move(deadline)); }
+    JS::Completion invoke(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) { return m_handler(deadline); }
     u32 handle() const { return m_handle; }
 
 private:
-    Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> m_handler;
+    Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> m_handler;
     u32 m_handle { 0 };
 };
 
@@ -666,7 +665,7 @@ void Window::invoke_idle_callbacks()
         // 1. Pop the top callback from window's list of runnable idle callbacks.
         auto callback = m_runnable_idle_callbacks.take_first();
         // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
-        auto deadline_arg = RequestIdleCallback::IdleDeadline::create();
+        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(*this);
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
@@ -689,7 +688,7 @@ u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
     // 3. Let handle be the current value of window's idle callback identifier.
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
-    auto handler = [callback = JS::make_handle(callback)](NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
+    auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
         auto& realm = callback->callback.shape().realm();
         auto* wrapped_deadline = Bindings::wrap(realm, *deadline);
         return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, JS::Value(wrapped_deadline));
