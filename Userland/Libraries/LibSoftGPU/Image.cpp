@@ -10,11 +10,10 @@
 
 namespace SoftGPU {
 
-Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels, u32 layers)
+Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels)
     : GPU::Image(ownership_token)
-    , m_num_layers(layers)
     , m_pixel_format(pixel_format)
-    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
+    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<FloatVector4>>>::must_create_but_fixme_should_propagate_errors(max_levels))
 {
     VERIFY(pixel_format == GPU::PixelFormat::Alpha
         || pixel_format == GPU::PixelFormat::Intensity
@@ -26,7 +25,6 @@ Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, 
     VERIFY(height > 0);
     VERIFY(depth > 0);
     VERIFY(max_levels > 0);
-    VERIFY(layers > 0);
 
     m_width_is_power_of_two = is_power_of_two(width);
     m_height_is_power_of_two = is_power_of_two(height);
@@ -34,8 +32,7 @@ Image::Image(void const* ownership_token, GPU::PixelFormat const& pixel_format, 
 
     u32 level;
     for (level = 0; level < max_levels; ++level) {
-        for (u32 layer = 0; layer < layers; ++layer)
-            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width, height, depth));
+        m_mipmap_buffers[level] = MUST(Typed3DBuffer<FloatVector4>::try_create(width, height, depth));
 
         if (width <= 1 && height <= 1 && depth <= 1)
             break;
@@ -77,13 +74,12 @@ GPU::ImageDataLayout Image::image_data_layout(u32 level, Vector3<i32> offset) co
     };
 }
 
-void Image::write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset, void const* input_data, GPU::ImageDataLayout const& input_layout)
+void Image::write_texels(u32 level, Vector3<i32> const& output_offset, void const* input_data, GPU::ImageDataLayout const& input_layout)
 {
-    VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
 
     auto output_layout = image_data_layout(level, output_offset);
-    auto texel_data = texel_pointer(layer, level, 0, 0, 0);
+    auto texel_data = texel_pointer(level, 0, 0, 0);
 
     PixelConverter converter { input_layout, output_layout };
     ErrorOr<void> conversion_result;
@@ -100,31 +96,28 @@ void Image::write_texels(u32 layer, u32 level, Vector3<i32> const& output_offset
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
-void Image::read_texels(u32 layer, u32 level, Vector3<i32> const& input_offset, void* output_data, GPU::ImageDataLayout const& output_layout) const
+void Image::read_texels(u32 level, Vector3<i32> const& input_offset, void* output_data, GPU::ImageDataLayout const& output_layout) const
 {
-    VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
 
     auto input_layout = image_data_layout(level, input_offset);
 
     PixelConverter converter { input_layout, output_layout };
-    auto conversion_result = converter.convert(texel_pointer(layer, level, 0, 0, 0), output_data, {});
+    auto conversion_result = converter.convert(texel_pointer(level, 0, 0, 0), output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
 }
 
-void Image::copy_texels(GPU::Image const& source, u32 source_layer, u32 source_level, Vector3<u32> const& source_offset, Vector3<u32> const& size, u32 destination_layer, u32 destination_level, Vector3<u32> const& destination_offset)
+void Image::copy_texels(GPU::Image const& source, u32 source_level, Vector3<u32> const& source_offset, Vector3<u32> const& size, u32 destination_level, Vector3<u32> const& destination_offset)
 {
     VERIFY(source.has_same_ownership_token(*this));
 
     auto const& src_image = static_cast<Image const&>(source);
 
-    VERIFY(source_layer < src_image.num_layers());
     VERIFY(source_level < src_image.num_levels());
     VERIFY(source_offset.x() + size.x() <= src_image.level_width(source_level));
     VERIFY(source_offset.y() + size.y() <= src_image.level_height(source_level));
     VERIFY(source_offset.z() + size.z() <= src_image.level_depth(source_level));
-    VERIFY(destination_layer < num_layers());
     VERIFY(destination_level < num_levels());
     VERIFY(destination_offset.x() + size.x() <= level_width(destination_level));
     VERIFY(destination_offset.y() + size.y() <= level_height(destination_level));
@@ -133,8 +126,8 @@ void Image::copy_texels(GPU::Image const& source, u32 source_layer, u32 source_l
     for (u32 z = 0; z < size.z(); ++z) {
         for (u32 y = 0; y < size.y(); ++y) {
             for (u32 x = 0; x < size.x(); ++x) {
-                auto color = src_image.texel(source_layer, source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
-                set_texel(destination_layer, destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
+                auto color = src_image.texel(source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
+                set_texel(destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
             }
         }
     }

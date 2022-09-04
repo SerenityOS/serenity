@@ -97,7 +97,7 @@ void GLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internal
 
     auto internal_pixel_format = pixel_format_for_internal_format(internalformat);
     if (level == 0) {
-        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, Texture2D::LOG2_MAX_TEXTURE_SIZE));
         m_sampler_config_is_dirty = true;
     }
 
@@ -550,7 +550,7 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
         auto internal_pixel_format = pixel_format_for_internal_format(internal_format);
-        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, Texture2D::LOG2_MAX_TEXTURE_SIZE));
         m_sampler_config_is_dirty = true;
     }
 

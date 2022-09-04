@@ -1473,7 +1473,7 @@ void Device::blit_from_color_buffer(NonnullRefPtr<GPU::Image> image, u32 level, 
 
     auto const& softgpu_image = reinterpret_cast<Image*>(image.ptr());
     auto output_layout = softgpu_image->image_data_layout(level, output_offset);
-    auto* output_data = softgpu_image->texel_pointer(0, level, 0, 0, 0);
+    auto* output_data = softgpu_image->texel_pointer(level, 0, 0, 0);
 
     PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(input_data, output_data, {});
@@ -1512,7 +1512,7 @@ void Device::blit_from_depth_buffer(NonnullRefPtr<GPU::Image> image, u32 level, 
 
     auto const& softgpu_image = reinterpret_cast<Image*>(image.ptr());
     auto output_layout = softgpu_image->image_data_layout(level, output_offset);
-    auto* output_data = softgpu_image->texel_pointer(0, level, 0, 0, 0);
+    auto* output_data = softgpu_image->texel_pointer(level, 0, 0, 0);
 
     PixelConverter converter { input_layout, output_layout };
     auto conversion_result = converter.convert(input_data, output_data, {});
@@ -1629,15 +1629,14 @@ void Device::set_light_model_params(GPU::LightModelParameters const& lighting_mo
     m_lighting_model = lighting_model;
 }
 
-NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 levels, u32 layers)
+NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_format, u32 width, u32 height, u32 depth, u32 max_levels)
 {
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);
-    VERIFY(levels > 0);
-    VERIFY(layers > 0);
+    VERIFY(max_levels > 0);
 
-    return adopt_ref(*new Image(this, pixel_format, width, height, depth, levels, layers));
+    return adopt_ref(*new Image(this, pixel_format, width, height, depth, max_levels));
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)

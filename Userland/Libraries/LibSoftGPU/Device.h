@@ -64,7 +64,7 @@ public:
     virtual GPU::RasterizerOptions options() const override { return m_options; }
     virtual GPU::LightModelParameters light_model() const override { return m_lighting_model; }
 
-    virtual NonnullRefPtr<GPU::Image> create_image(GPU::PixelFormat const&, u32 width, u32 height, u32 depth, u32 levels, u32 layers) override;
+    virtual NonnullRefPtr<GPU::Image> create_image(GPU::PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels) override;
 
     virtual void set_sampler_config(unsigned, GPU::SamplerConfig const&) override;
     virtual void set_light_state(unsigned, GPU::Light const&) override;
