@@ -32,6 +32,18 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_color_material_face) } };
     case GL_COLOR_MATERIAL_MODE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_color_material_mode) } };
+    case GL_CURRENT_COLOR:
+        return ContextParameter {
+            .type = GL_DOUBLE,
+            .count = 4,
+            .value = {
+                .double_list = {
+                    static_cast<double>(m_current_vertex_color.x()),
+                    static_cast<double>(m_current_vertex_color.y()),
+                    static_cast<double>(m_current_vertex_color.z()),
+                    static_cast<double>(m_current_vertex_color.w()),
+                } }
+        };
     case GL_CULL_FACE:
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = m_cull_faces } };
     case GL_DEPTH_BITS:
