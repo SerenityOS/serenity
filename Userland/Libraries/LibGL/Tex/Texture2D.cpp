@@ -14,7 +14,7 @@ namespace GL {
 void Texture2D::download_texture_data(GLuint lod, GPU::ImageDataLayout output_layout, GLvoid* pixels)
 {
     VERIFY(!device_image().is_null());
-    device_image()->read_texels(0, lod, { 0, 0, 0 }, pixels, output_layout);
+    device_image()->read_texels(lod, { 0, 0, 0 }, pixels, output_layout);
 }
 
 void Texture2D::upload_texture_data(GLuint lod, GLenum internal_format, GPU::ImageDataLayout input_layout, GLvoid const* pixels)
