@@ -27,6 +27,18 @@ public:
         ++m_ref_count;
     }
 
+    bool try_ref()
+    {
+        if (m_in_removed_last_ref)
+            return false;
+        if constexpr (!IsBaseOf<DOM::Node, T>) {
+            if (m_ref_count == 0)
+                return false;
+        }
+        ++m_ref_count;
+        return true;
+    }
+
     void unref()
     {
         VERIFY(!m_in_removed_last_ref);

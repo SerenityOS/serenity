@@ -17,7 +17,7 @@
 
 namespace AK {
 
-template<typename T>
+template<typename T, typename WeakLinkType>
 class WeakPtr;
 
 template<typename T>

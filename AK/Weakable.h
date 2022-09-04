@@ -15,13 +15,13 @@ namespace AK {
 
 template<typename T>
 class Weakable;
-template<typename T>
+template<typename T, typename WeakLinkType>
 class WeakPtr;
 
 class WeakLink : public RefCounted<WeakLink> {
     template<typename T>
     friend class Weakable;
-    template<typename T>
+    template<typename T, typename WeakLinkType>
     friend class WeakPtr;
 
 public:

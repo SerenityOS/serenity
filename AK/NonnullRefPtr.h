@@ -41,7 +41,7 @@ class [[nodiscard]] NonnullRefPtr {
     friend class RefPtr;
     template<typename U>
     friend class NonnullRefPtr;
-    template<typename U>
+    template<typename U, typename WeakLinkType>
     friend class WeakPtr;
 
 public:

@@ -135,7 +135,9 @@ class RefPtr;
 template<typename T>
 class OwnPtr;
 
-template<typename T>
+class WeakLink;
+
+template<typename T, typename WeakLinkType = WeakLink>
 class WeakPtr;
 
 template<typename T, size_t inline_capacity = 0>

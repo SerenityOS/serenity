@@ -6,14 +6,18 @@
 
 #pragma once
 
+#include "AK/StdLibExtraDetails.h"
+#include <AK/AtomicWeakable.h>
 #include <AK/Weakable.h>
 
 namespace AK {
 
-template<typename T>
+template<typename T, typename WeakLinkType>
 class [[nodiscard]] WeakPtr {
     template<typename U>
     friend class Weakable;
+    template<typename U>
+    friend class AtomicWeakable;
 
 public:
     WeakPtr() = default;
@@ -112,8 +116,11 @@ public:
     }
 
     [[nodiscard]] RefPtr<T> strong_ref() const
+        requires(IsBaseOf<RefCountedBase, T>)
     {
-        return RefPtr<T> { ptr() };
+        if (m_link)
+            return m_link->template strong_ref<T>();
+        return nullptr;
     }
 
     T* ptr() const { return unsafe_ptr(); }
@@ -142,7 +149,11 @@ private:
     {
     }
 
-    RefPtr<WeakLink> m_link;
+    RefPtr<WeakLinkType> m_link;
+};
+
+template<typename T>
+class AtomicWeakPtr : public WeakPtr<T, AtomicWeakLink> {
 };
 
 template<typename T>
@@ -151,6 +162,16 @@ inline ErrorOr<WeakPtr<U>> Weakable<T>::try_make_weak_ptr() const
 {
     if (!m_link)
         m_link = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WeakLink(const_cast<T&>(static_cast<T const&>(*this)))));
+
+    return WeakPtr<U>(m_link);
+}
+
+template<typename T>
+template<typename U>
+inline ErrorOr<WeakPtr<U, AtomicWeakLink>> AtomicWeakable<T>::try_make_weak_ptr() const
+{
+    if (!m_link)
+        m_link = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AtomicWeakLink(const_cast<T&>(static_cast<T const&>(*this)))));
 
     return WeakPtr<U>(m_link);
 }
