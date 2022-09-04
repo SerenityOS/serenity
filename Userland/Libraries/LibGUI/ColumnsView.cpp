@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -55,6 +56,29 @@ void ColumnsView::select_all()
             selection().add(index);
         }
     }
+}
+
+void ColumnsView::second_paint_event(PaintEvent& event)
+{
+    if (!m_rubber_banding)
+        return;
+
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(widget_inner_rect());
+    painter.translate(frame_thickness(), frame_thickness());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+
+    int column_x = 0;
+    for (auto const& column : m_columns) {
+        if (m_rubber_band_origin_column.parent_index == column.parent_index)
+            break;
+        column_x += column.width + 1;
+    }
+
+    auto rubber_band_rect = Gfx::IntRect::from_two_points({ column_x, m_rubber_band_origin }, { column_x + m_rubber_band_origin_column.width, m_rubber_band_current });
+    painter.fill_rect(rubber_band_rect, palette().rubber_band_fill());
+    painter.draw_rect(rubber_band_rect, palette().rubber_band_border());
 }
 
 void ColumnsView::paint_event(PaintEvent& event)
@@ -280,6 +304,54 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     if (index.is_valid() && !(event.modifiers() & Mod_Ctrl)) {
         if (model()->row_count(index))
             push_column(index);
+        return;
+    }
+
+    if (selection_mode() == SelectionMode::MultiSelection) {
+        m_rubber_banding = true;
+        m_rubber_band_origin_column = *column;
+        m_rubber_band_origin = event.position().y();
+        m_rubber_band_current = event.position().y();
+    }
+}
+
+void ColumnsView::mousemove_event(MouseEvent& event)
+{
+    if (m_rubber_banding) {
+        m_rubber_band_current = AK::clamp(event.position().y(), 0, widget_inner_rect().height());
+
+        auto parent = m_rubber_band_origin_column.parent_index;
+        int row_count = model()->row_count(parent);
+
+        clear_selection();
+
+        set_suppress_update_on_selection_change(true);
+
+        for (int row = 0; row < row_count; row++) {
+            auto index = model()->index(row, m_model_column, parent);
+            VERIFY(index.is_valid());
+
+            int row_top = row * item_height();
+            int row_bottom = row * item_height() + item_height();
+
+            if ((m_rubber_band_origin > row_top && m_rubber_band_current < row_top) || (m_rubber_band_origin > row_bottom && m_rubber_band_current < row_bottom)) {
+                add_selection(index);
+            }
+        }
+
+        set_suppress_update_on_selection_change(false);
+
+        update();
+    }
+
+    AbstractView::mousemove_event(event);
+}
+
+void ColumnsView::mouseup_event(MouseEvent& event)
+{
+    if (m_rubber_banding && event.button() == MouseButton::Primary) {
+        m_rubber_banding = false;
+        update();
     }
 }
 
