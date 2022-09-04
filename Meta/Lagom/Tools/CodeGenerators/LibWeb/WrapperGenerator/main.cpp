@@ -21,12 +21,8 @@ void generate_constructor_header(IDL::Interface const&);
 void generate_constructor_implementation(IDL::Interface const&);
 void generate_prototype_header(IDL::Interface const&);
 void generate_prototype_implementation(IDL::Interface const&);
-void generate_header(IDL::Interface const&);
-void generate_implementation(IDL::Interface const&);
 void generate_iterator_prototype_header(IDL::Interface const&);
 void generate_iterator_prototype_implementation(IDL::Interface const&);
-void generate_iterator_header(IDL::Interface const&);
-void generate_iterator_implementation(IDL::Interface const&);
 }
 
 int main(int argc, char** argv)
@@ -34,24 +30,16 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     StringView path;
     StringView import_base_path;
-    bool header_mode = false;
-    bool implementation_mode = false;
     bool constructor_header_mode = false;
     bool constructor_implementation_mode = false;
     bool prototype_header_mode = false;
     bool prototype_implementation_mode = false;
-    bool iterator_header_mode = false;
-    bool iterator_implementation_mode = false;
     bool iterator_prototype_header_mode = false;
     bool iterator_prototype_implementation_mode = false;
-    args_parser.add_option(header_mode, "Generate the wrapper .h file", "header", 'H');
-    args_parser.add_option(implementation_mode, "Generate the wrapper .cpp file", "implementation", 'I');
     args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
     args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
     args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
     args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
-    args_parser.add_option(iterator_header_mode, "Generate the iterator wrapper .h file", "iterator-header", 0);
-    args_parser.add_option(iterator_implementation_mode, "Generate the iterator wrapper .cpp file", "iterator-implementation", 0);
     args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
     args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
     args_parser.add_option(Core::ArgsParser::Option {
@@ -158,12 +146,6 @@ int main(int argc, char** argv)
         }
     }
 
-    if (header_mode)
-        IDL::generate_header(interface);
-
-    if (implementation_mode)
-        IDL::generate_implementation(interface);
-
     if (constructor_header_mode)
         IDL::generate_constructor_header(interface);
 
@@ -175,12 +157,6 @@ int main(int argc, char** argv)
 
     if (prototype_implementation_mode)
         IDL::generate_prototype_implementation(interface);
-
-    if (iterator_header_mode)
-        IDL::generate_iterator_header(interface);
-
-    if (iterator_implementation_mode)
-        IDL::generate_iterator_implementation(interface);
 
     if (iterator_prototype_header_mode)
         IDL::generate_iterator_prototype_header(interface);
