@@ -146,7 +146,6 @@ Statusbar::Segment::Segment()
     set_focus_policy(GUI::FocusPolicy::NoFocus);
     set_button_style(Gfx::ButtonStyle::Tray);
     set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    set_menu_position(GUI::Button::MenuPosition::TopRight);
 }
 
 void Statusbar::Segment::paint_event(PaintEvent& event)
