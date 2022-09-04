@@ -5,19 +5,28 @@
  */
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 
 namespace Web::IntersectionObserver {
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-intersectionobserver
-NonnullRefPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(HTML::Window&, Bindings::CallbackType* callback, IntersectionObserverInit const& options)
+JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(HTML::Window& window, Bindings::CallbackType* callback, IntersectionObserverInit const& options)
 {
     // FIXME: Implement
     (void)callback;
     (void)options;
 
-    return adopt_ref(*new IntersectionObserver);
+    return *window.heap().allocate<IntersectionObserver>(window.realm(), window);
 }
+
+IntersectionObserver::IntersectionObserver(HTML::Window& window)
+    : PlatformObject(window.realm())
+{
+    set_prototype(&window.cached_web_prototype("IntersectionObserver"));
+}
+
+IntersectionObserver::~IntersectionObserver() = default;
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-observe
 void IntersectionObserver::observe(DOM::Element& target)

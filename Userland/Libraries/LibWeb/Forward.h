@@ -449,7 +449,6 @@ class URLSearchParamsIterator;
 
 namespace Web::Bindings {
 class DOMExceptionWrapper;
-class IntersectionObserverWrapper;
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;
