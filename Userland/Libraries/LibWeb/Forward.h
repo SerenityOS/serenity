@@ -455,7 +455,6 @@ class LocationObject;
 class OptionConstructor;
 class RangePrototype;
 class ResizeObserverWrapper;
-class SelectionWrapper;
 class URLSearchParamsIteratorWrapper;
 class URLSearchParamsWrapper;
 class URLWrapper;

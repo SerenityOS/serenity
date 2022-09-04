@@ -6,19 +6,17 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::Selection {
 
-class Selection
-    : public RefCounted<Selection>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::SelectionWrapper;
+class Selection final : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(Selection, Bindings::PlatformObject);
 
-    static NonnullRefPtr<Selection> create();
+public:
+    static JS::NonnullGCPtr<Selection> create(HTML::Window&);
+
+    virtual ~Selection() override;
 
     DOM::Node* anchor_node();
     unsigned anchor_offset();
@@ -43,6 +41,11 @@ public:
     bool contains_node(DOM::Node&, bool allow_partial_containment) const;
 
     String to_string() const;
+
+private:
+    explicit Selection(HTML::Window&);
 };
 
 }
+
+WRAPPER_HACK(Selection, Web::Selection)
