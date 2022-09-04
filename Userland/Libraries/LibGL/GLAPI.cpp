@@ -631,14 +631,24 @@ void glMatrixMode(GLenum mode)
     g_gl_context->gl_matrix_mode(mode);
 }
 
-void glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t)
-{
-    g_gl_context->gl_multi_tex_coord(target, s, t, 0.0f, 1.0f);
-}
-
 void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
 {
     glMultiTexCoord2f(target, s, t);
+}
+
+void glMultiTexCoord2fvARB(GLenum target, GLfloat const* v)
+{
+    glMultiTexCoord2fv(target, v);
+}
+
+void glMultiTexCoord2fv(GLenum target, GLfloat const* v)
+{
+    g_gl_context->gl_multi_tex_coord(target, v[0], v[1], 0.f, 1.f);
+}
+
+void glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t)
+{
+    g_gl_context->gl_multi_tex_coord(target, s, t, 0.f, 1.f);
 }
 
 void glMultMatrixd(GLdouble const* matrix)
