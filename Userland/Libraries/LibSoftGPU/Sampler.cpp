@@ -37,13 +37,13 @@ static f32x4 wrap_repeat(f32x4 value)
     return clamp(value, expand4(0.0f), expand4(1.0f));
 }
 
-static f32x4 wrap_clamp_to_edge(f32x4 value, u32x4 num_texels)
+static f32x4 wrap_clamp_to_edge(f32x4 value, f32x4 num_texels)
 {
-    f32x4 const clamp_limit = 1.f / to_f32x4(2 * num_texels);
-    return clamp(value, clamp_limit, 1.0f - clamp_limit);
+    f32x4 const clamp_limit = .5f / num_texels;
+    return clamp(value, clamp_limit, 1.f - clamp_limit);
 }
 
-static f32x4 wrap_mirrored_repeat(f32x4 value, u32x4 num_texels)
+static f32x4 wrap_mirrored_repeat(f32x4 value, f32x4 num_texels)
 {
     f32x4 integer = floor_int_range(value);
     f32x4 frac = value - integer;
@@ -51,7 +51,7 @@ static f32x4 wrap_mirrored_repeat(f32x4 value, u32x4 num_texels)
     return wrap_clamp_to_edge(is_odd ? 1 - frac : frac, num_texels);
 }
 
-static f32x4 wrap(f32x4 value, GPU::TextureWrapMode mode, u32x4 num_texels)
+static f32x4 wrap(f32x4 value, GPU::TextureWrapMode mode, f32x4 num_texels)
 {
     switch (mode) {
     case GPU::TextureWrapMode::Repeat:
@@ -167,14 +167,14 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
         image.level_height(level[3]),
     };
 
+    auto f_width = to_f32x4(width);
+    auto f_height = to_f32x4(height);
+
     u32x4 width_mask = width - 1;
     u32x4 height_mask = height - 1;
 
-    f32x4 s = wrap(uv.x(), m_config.texture_wrap_u, width);
-    f32x4 t = wrap(uv.y(), m_config.texture_wrap_v, height);
-
-    f32x4 u = s * to_f32x4(width);
-    f32x4 v = t * to_f32x4(height);
+    f32x4 u = wrap(uv.x(), m_config.texture_wrap_u, f_width) * f_width;
+    f32x4 v = wrap(uv.y(), m_config.texture_wrap_v, f_height) * f_height;
 
     if (filter == GPU::TextureFilter::Nearest) {
         u32x4 i = to_u32x4(u);
