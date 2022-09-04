@@ -6,10 +6,7 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/Forward.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::ResizeObserver {
 
@@ -18,17 +15,22 @@ struct ResizeObserverOptions {
 };
 
 // https://drafts.csswg.org/resize-observer/#resize-observer-interface
-class ResizeObserver
-    : public RefCounted<ResizeObserver>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::ResizeObserverWrapper;
+class ResizeObserver : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(ResizeObserver, Bindings::PlatformObject);
 
-    static NonnullRefPtr<ResizeObserver> create_with_global_object(HTML::Window&, Bindings::CallbackType* callback);
+public:
+    static JS::NonnullGCPtr<ResizeObserver> create_with_global_object(HTML::Window&, Bindings::CallbackType* callback);
+
+    virtual ~ResizeObserver() override;
 
     void observe(DOM::Element& target, ResizeObserverOptions);
     void unobserve(DOM::Element& target);
     void disconnect();
+
+private:
+    explicit ResizeObserver(HTML::Window&);
 };
 
 }
+
+WRAPPER_HACK(ResizeObserver, Web::ResizeObserver)

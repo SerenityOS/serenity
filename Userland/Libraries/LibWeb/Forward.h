@@ -453,7 +453,6 @@ class IntersectionObserverWrapper;
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;
-class ResizeObserverWrapper;
 class URLSearchParamsIteratorWrapper;
 class URLSearchParamsWrapper;
 class URLWrapper;
