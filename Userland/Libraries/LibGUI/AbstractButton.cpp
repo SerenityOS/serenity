@@ -134,7 +134,8 @@ void AbstractButton::mouseup_event(MouseEvent& event)
         bool was_being_pressed = m_being_pressed;
         m_being_pressed = false;
         m_pressed_mouse_button = MouseButton::None;
-        repaint();
+        if (!is_checkable() || is_checked())
+            repaint();
         if (was_being_pressed && !was_auto_repeating) {
             switch (event.button()) {
             case MouseButton::Primary:
