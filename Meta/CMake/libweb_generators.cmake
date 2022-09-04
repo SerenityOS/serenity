@@ -136,15 +136,21 @@ function (generate_js_wrappers target)
 
         # FIXME: Instead of requiring a manual declaration of iterable wrappers, we should ask WrapperGenerator if it's iterable
         if(LIBWEB_WRAPPER_ITERABLE)
+            if(NOT LIBWEB_WRAPPER_NO_INSTANCE)
+                list(APPEND BINDINGS_SOURCES
+                    "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.h"
+                    "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.cpp"
+                )
+                list(APPEND BINDINGS_TYPES
+                    iterator-header
+                    iterator-implementation
+                )
+            endif()
             list(APPEND BINDINGS_SOURCES
-                "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.h"
-                "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorWrapper.cpp"
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.h"
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.cpp"
             )
             list(APPEND BINDINGS_TYPES
-                iterator-header
-                iterator-implementation
                 iterator-prototype-header
                 iterator-prototype-implementation
             )
