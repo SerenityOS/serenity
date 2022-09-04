@@ -52,9 +52,9 @@ public:
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
     virtual void clear_stencil(GPU::StencilType) override;
+    virtual void blit_from_color_buffer(Gfx::Bitmap& target) override;
     virtual void blit_from_color_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) override;
     virtual void blit_from_depth_buffer(void*, Vector2<i32> offset, GPU::ImageDataLayout const&) override;
-    virtual void blit_color_buffer_to(Gfx::Bitmap& target) override;
     virtual void blit_to_color_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) override;
     virtual void blit_to_depth_buffer_at_raster_position(void const*, GPU::ImageDataLayout const&) override;
     virtual void set_options(GPU::RasterizerOptions const&) override;

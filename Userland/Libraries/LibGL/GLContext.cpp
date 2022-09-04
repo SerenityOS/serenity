@@ -905,7 +905,7 @@ void GLContext::gl_point_size(GLfloat size)
 
 void GLContext::present()
 {
-    m_rasterizer->blit_color_buffer_to(*m_frontbuffer);
+    m_rasterizer->blit_from_color_buffer(*m_frontbuffer);
 }
 
 void GLContext::sync_device_config()

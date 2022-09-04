@@ -1458,6 +1458,14 @@ GPU::ImageDataLayout Device::depth_buffer_data_layout(Vector2<u32> size, Vector2
     };
 }
 
+void Device::blit_from_color_buffer(Gfx::Bitmap& target)
+{
+    m_frame_buffer->color_buffer()->blit_flipped_to_bitmap(target, m_frame_buffer->rect());
+
+    if constexpr (ENABLE_STATISTICS_OVERLAY)
+        draw_statistics_overlay(target);
+}
+
 void Device::blit_from_color_buffer(void* output_data, Vector2<i32> input_offset, GPU::ImageDataLayout const& output_layout)
 {
     auto const& output_selection = output_layout.selection;
@@ -1519,14 +1527,6 @@ void Device::blit_to_depth_buffer_at_raster_position(void const* input_data, GPU
     auto conversion_result = converter.convert(input_data, output_data, {});
     if (conversion_result.is_error())
         dbgln("Pixel conversion failed: {}", conversion_result.error().string_literal());
-}
-
-void Device::blit_color_buffer_to(Gfx::Bitmap& target)
-{
-    m_frame_buffer->color_buffer()->blit_flipped_to_bitmap(target, m_frame_buffer->rect());
-
-    if constexpr (ENABLE_STATISTICS_OVERLAY)
-        draw_statistics_overlay(target);
 }
 
 void Device::draw_statistics_overlay(Gfx::Bitmap& target)
