@@ -244,6 +244,10 @@ bool EnvironmentSettingsObject::is_scripting_enabled() const
     // The user agent supports scripting.
     // NOTE: This is always true in LibWeb :^)
 
+    // FIXME: Do the right thing for workers.
+    if (!is<HTML::Window>(m_realm_execution_context->realm->global_object()))
+        return true;
+
     // The user has not disabled scripting for settings at this time. (User agents may provide users with the option to disable scripting globally, or in a finer-grained manner, e.g., on a per-origin basis, down to the level of individual environment settings objects.)
     auto document = const_cast<EnvironmentSettingsObject&>(*this).responsible_document();
     VERIFY(document);
