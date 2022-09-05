@@ -23,7 +23,6 @@ Userland/
 Userland/Services/
 Userland/Libraries/
 Userland/Libraries/LibC/
-Userland/Libraries/LibM/
 Userland/Libraries/LibSystem/
 Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0
 Build/i686/
