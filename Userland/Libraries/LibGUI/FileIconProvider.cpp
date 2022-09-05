@@ -31,6 +31,8 @@ static Icon s_inaccessible_directory_icon;
 static Icon s_desktop_directory_icon;
 static Icon s_home_directory_icon;
 static Icon s_home_directory_open_icon;
+static Icon s_git_directory_icon;
+static Icon s_git_directory_open_icon;
 static Icon s_file_icon;
 static Icon s_symlink_icon;
 static Icon s_socket_icon;
@@ -77,6 +79,8 @@ static void initialize_if_needed()
     s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible"sv);
     s_home_directory_icon = Icon::default_icon("home-directory"sv);
     s_home_directory_open_icon = Icon::default_icon("home-directory-open"sv);
+    s_git_directory_icon = Icon::default_icon("git-directory"sv);
+    s_git_directory_open_icon = Icon::default_icon("git-directory-open"sv);
     s_desktop_directory_icon = Icon::default_icon("desktop"sv);
     s_file_icon = Icon::default_icon("filetype-unknown"sv);
     s_symlink_icon = Icon::default_icon("filetype-symlink"sv);
@@ -121,6 +125,18 @@ Icon FileIconProvider::home_directory_open_icon()
 {
     initialize_if_needed();
     return s_home_directory_open_icon;
+}
+
+Icon FileIconProvider::git_directory_icon()
+{
+    initialize_if_needed();
+    return s_git_directory_icon;
+}
+
+Icon FileIconProvider::git_directory_open_icon()
+{
+    initialize_if_needed();
+    return s_git_directory_open_icon;
 }
 
 Icon FileIconProvider::filetype_image_icon()
@@ -229,6 +245,8 @@ Icon FileIconProvider::icon_for_path(String const& path, mode_t mode)
             return s_desktop_directory_icon;
         if (access(path.characters(), R_OK | X_OK) < 0)
             return s_inaccessible_directory_icon;
+        if (path.ends_with(".git"sv))
+            return s_git_directory_icon;
         return s_directory_icon;
     }
     if (S_ISLNK(mode)) {
