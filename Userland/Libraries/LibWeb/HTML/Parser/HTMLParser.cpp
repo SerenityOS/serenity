@@ -3369,7 +3369,7 @@ DOM::Document& HTMLParser::document()
 
 Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
-    auto temp_document = DOM::Document::create(Bindings::main_thread_internal_window_object());
+    auto temp_document = DOM::Document::create(context_element.window());
     auto parser = HTMLParser::create(*temp_document, markup, "utf-8");
     parser->m_context_element = JS::make_handle(context_element);
     parser->m_parsing_fragment = true;
