@@ -518,7 +518,7 @@ void HexEditor::update_status()
 void HexEditor::did_change()
 {
     if (on_change)
-        on_change();
+        on_change(m_document->is_dirty());
 }
 
 void HexEditor::paint_event(GUI::PaintEvent& event)

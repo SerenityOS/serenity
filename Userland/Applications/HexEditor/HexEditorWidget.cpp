@@ -79,8 +79,8 @@ HexEditorWidget::HexEditorWidget()
         m_selecting_from_inspector = false;
     };
 
-    m_editor->on_change = [this] {
-        window()->set_modified(true);
+    m_editor->on_change = [this](bool is_document_dirty) {
+        window()->set_modified(is_document_dirty);
     };
 
     m_search_results->set_activates_on_selection(true);

@@ -59,7 +59,7 @@ public:
     Vector<Match> find_all(ByteBuffer& needle, size_t start = 0);
     Vector<Match> find_all_strings(size_t min_length = 4);
     Function<void(size_t, EditMode, size_t, size_t)> on_status_change; // position, edit mode, selection start, selection end
-    Function<void()> on_change;
+    Function<void(bool is_document_dirty)> on_change;
 
 protected:
     HexEditor();
