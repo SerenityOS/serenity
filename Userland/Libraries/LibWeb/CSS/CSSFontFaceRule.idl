@@ -1,7 +1,7 @@
 #import <CSS/CSSRule.idl>
 #import <CSS/CSSStyleDeclaration.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface CSSFontFaceRule : CSSRule {
     readonly attribute CSSStyleDeclaration style;
 };

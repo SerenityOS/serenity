@@ -1,7 +1,7 @@
 #import <DOM/Event.idl>
 #import <HTML/HTMLElement.idl>
 
-[NoInstanceWrapper]
+[]
 interface SubmitEvent : Event {
     constructor(DOMString type, optional SubmitEventInit eventInitDict = {});
 

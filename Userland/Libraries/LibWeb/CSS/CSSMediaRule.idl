@@ -1,7 +1,7 @@
 #import <CSS/CSSConditionRule.idl>
 #import <CSS/MediaList.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface CSSMediaRule : CSSConditionRule {
     [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
 };

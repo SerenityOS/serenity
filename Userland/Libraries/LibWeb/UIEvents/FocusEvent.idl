@@ -1,6 +1,6 @@
 #import <UIEvents/UIEvent.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface FocusEvent : UIEvent {
 
     constructor(DOMString type, optional FocusEventInit eventInitDict = {});

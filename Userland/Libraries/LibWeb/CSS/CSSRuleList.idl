@@ -1,6 +1,6 @@
 #import <CSS/CSSRule.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface CSSRuleList {
 
     getter CSSRule? item(unsigned long index);

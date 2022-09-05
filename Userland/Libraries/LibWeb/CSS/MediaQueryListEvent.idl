@@ -1,6 +1,6 @@
 #import <DOM/Event.idl>
 
-[NoInstanceWrapper]
+[]
 interface MediaQueryListEvent : Event {
     constructor(CSSOMString type, optional MediaQueryListEventInit eventInitDict = {});
 

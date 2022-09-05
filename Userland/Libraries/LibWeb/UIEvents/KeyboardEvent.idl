@@ -1,6 +1,6 @@
 #import <UIEvents/EventModifier.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface KeyboardEvent : UIEvent {
 
     constructor(DOMString type, optional KeyboardEventInit eventInitDict = {});
