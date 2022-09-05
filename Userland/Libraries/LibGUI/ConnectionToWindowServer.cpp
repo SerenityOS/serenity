@@ -164,7 +164,7 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
     }
 
     // NOTE: Application-global shortcuts are ignored while a blocking modal window is up.
-    if (!window.is_blocking()) {
+    if (!window.is_blocking() && !window.is_capturing_input()) {
         if (auto* action = Application::the()->action_for_shortcut(shortcut)) {
             dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {} {} (enabled: {}, shortcut: {}, alt-shortcut: {})", action, action->text(), action->is_enabled(), action->shortcut().to_string(), action->alternate_shortcut().to_string());
             return action;
@@ -214,7 +214,7 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
     // FIXME: This shortcut should be configurable.
     if (accepts_command_palette && !m_in_command_palette && modifiers == (Mod_Ctrl | Mod_Shift) && key == Key_A) {
         auto command_palette = CommandPalette::construct(*window);
-        command_palette->set_window_mode(GUI::WindowMode::Passive);
+        command_palette->set_window_mode(GUI::WindowMode::CaptureInput);
         TemporaryChange change { m_in_command_palette, true };
         if (command_palette->exec() != GUI::Dialog::ExecResult::OK)
             return;
