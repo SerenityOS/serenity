@@ -128,8 +128,7 @@ void EventTarget::add_event_listener(FlyString const& type, IDLEventListener* ca
     // 2. Add an event listener with this and an event listener whose type is type, callback is callback, capture is capture, passive is passive,
     //    once is once, and signal is signal.
 
-    // FIXME: Don't use main_thread_internal_window_object() when EventTarget can find its own heap.
-    auto* event_listener = Bindings::main_thread_internal_window_object().heap().allocate_without_realm<DOMEventListener>();
+    auto* event_listener = heap().allocate_without_realm<DOMEventListener>();
     event_listener->type = type;
     event_listener->callback = callback;
     event_listener->signal = move(flattened_options.signal);
@@ -499,7 +498,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, Bindings::C
     //  3. Set eventHandler's value to the given value.
     if (event_handler_iterator == handler_map.end()) {
         // NOTE: See the optimization comment in get_current_value_of_event_handler about why this is done.
-        auto* new_event_handler = Bindings::main_thread_internal_window_object().heap().allocate_without_realm<HTML::EventHandler>(*value);
+        auto* new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(*value);
 
         //  4. Activate an event handler given eventTarget and name.
         // Optimization: We pass in the event handler here instead of having activate_event_handler do another hash map lookup just to get the same object.
@@ -716,7 +715,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     // NOTE: See the optimization comments in set_event_handler_attribute.
 
     if (event_handler_iterator == handler_map.end()) {
-        auto* new_event_handler = Bindings::main_thread_internal_window_object().heap().allocate_without_realm<HTML::EventHandler>(value);
+        auto* new_event_handler = heap().allocate_without_realm<HTML::EventHandler>(value);
 
         //  6. Activate an event handler given eventTarget and name.
         event_target->activate_event_handler(local_name, *new_event_handler);
