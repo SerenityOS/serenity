@@ -12,9 +12,19 @@
 namespace JS {
 
 Module::Module(Realm& realm, String filename)
-    : m_realm(make_handle(&realm))
+    : m_realm(realm)
     , m_filename(move(filename))
 {
+}
+
+Module::~Module() = default;
+
+void Module::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_realm);
+    visitor.visit(m_environment);
+    visitor.visit(m_namespace);
 }
 
 // 16.2.1.5.1.1 InnerModuleLinking ( module, stack, index ), https://tc39.es/ecma262/#sec-InnerModuleLinking
@@ -54,7 +64,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
     // FIXME: How do we check this without breaking encapsulation?
 
     // 2. Let namespace be module.[[Namespace]].
-    auto* namespace_ = m_namespace.is_null() ? nullptr : m_namespace.cell();
+    auto* namespace_ = m_namespace.ptr();
 
     // 3. If namespace is empty, then
     if (!namespace_) {
@@ -76,7 +86,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
 
         // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
         namespace_ = module_namespace_create(vm, unambiguous_names);
-        VERIFY(!m_namespace.is_null());
+        VERIFY(m_namespace);
         // Note: This set the local variable 'namespace' and not the member variable which is done by ModuleNamespaceCreate
     }
 
@@ -90,7 +100,7 @@ Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_na
     auto& realm = this->realm();
 
     // 1. Assert: module.[[Namespace]] is empty.
-    VERIFY(m_namespace.is_null());
+    VERIFY(!m_namespace);
 
     // 2. Let internalSlotsList be the internal slots listed in Table 34.
     // 3. Let M be MakeBasicObject(internalSlotsList).

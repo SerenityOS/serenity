@@ -303,6 +303,12 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
         if (auto* property_key_ptr = field.name.get_pointer<PropertyKey>(); property_key_ptr && property_key_ptr->is_symbol())
             visitor.visit(property_key_ptr->as_symbol());
     }
+
+    m_script_or_module.visit(
+        [](Empty) {},
+        [&](auto& script_or_module) {
+            visitor.visit(script_or_module.ptr());
+        });
 }
 
 // 10.2.7 MakeMethod ( F, homeObject ), https://tc39.es/ecma262/#sec-makemethod

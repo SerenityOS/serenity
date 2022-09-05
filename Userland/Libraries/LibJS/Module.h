@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Realm.h>
 
@@ -55,18 +55,18 @@ struct ResolvedBinding {
 };
 
 // 16.2.1.4 Abstract Module Records, https://tc39.es/ecma262/#sec-abstract-module-records
-class Module
-    : public RefCounted<Module>
-    , public Weakable<Module> {
-public:
-    virtual ~Module() = default;
+class Module : public Cell {
+    JS_CELL(Module, Cell);
 
-    Realm& realm() { return *m_realm.cell(); }
-    Realm const& realm() const { return *m_realm.cell(); }
+public:
+    virtual ~Module() override;
+
+    Realm& realm() { return *m_realm; }
+    Realm const& realm() const { return *m_realm; }
 
     StringView filename() const { return m_filename; }
 
-    Environment* environment() { return m_environment.cell(); }
+    Environment* environment() { return m_environment; }
 
     ThrowCompletionOr<Object*> get_module_namespace(VM& vm);
 
@@ -82,9 +82,11 @@ public:
 protected:
     Module(Realm&, String filename);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     void set_environment(Environment* environment)
     {
-        m_environment = make_handle(environment);
+        m_environment = environment;
     }
 
 private:
@@ -95,9 +97,9 @@ private:
     // destroy the VM but keep the modules this should not happen. Because VM
     // stores modules with a RefPtr we cannot just store the VM as that leads to
     // cycles.
-    Handle<Realm> m_realm;             // [[Realm]]
-    Handle<Environment> m_environment; // [[Environment]]
-    Handle<Object> m_namespace;        // [[Namespace]]
+    GCPtr<Realm> m_realm;             // [[Realm]]
+    GCPtr<Environment> m_environment; // [[Environment]]
+    GCPtr<Object> m_namespace;        // [[Namespace]]
 
     // Needed for potential lookups of modules.
     String m_filename;

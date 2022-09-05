@@ -86,7 +86,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
     module_context.realm = &realm();
 
     // 5. Set the ScriptOrModule of moduleContext to module.
-    module_context.script_or_module = this->make_weak_ptr();
+    module_context.script_or_module = NonnullGCPtr<Module>(*this);
 
     // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     module_context.variable_environment = environment();
@@ -129,7 +129,7 @@ ThrowCompletionOr<void> SyntheticModule::set_synthetic_module_export(FlyString c
 }
 
 // 1.3 CreateDefaultExportSyntheticModule ( defaultExport ), https://tc39.es/proposal-json-modules/#sec-create-default-export-synthetic-module
-NonnullRefPtr<SyntheticModule> SyntheticModule::create_default_export_synthetic_module(Value default_export, Realm& realm, StringView filename)
+NonnullGCPtr<SyntheticModule> SyntheticModule::create_default_export_synthetic_module(Value default_export, Realm& realm, StringView filename)
 {
     // Note: Has some changes from PR: https://github.com/tc39/proposal-json-modules/pull/13.
     // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
@@ -139,11 +139,11 @@ NonnullRefPtr<SyntheticModule> SyntheticModule::create_default_export_synthetic_
     };
 
     // 2. Return CreateSyntheticModule("default", closure, realm)
-    return adopt_ref(*new SyntheticModule({ "default" }, move(closure), realm, filename));
+    return *realm.heap().allocate_without_realm<SyntheticModule>(Vector<FlyString> { "default" }, move(closure), realm, filename);
 }
 
 // 1.4 ParseJSONModule ( source ), https://tc39.es/proposal-json-modules/#sec-parse-json-module
-ThrowCompletionOr<NonnullRefPtr<Module>> parse_json_module(StringView source_text, Realm& realm, StringView filename)
+ThrowCompletionOr<NonnullGCPtr<Module>> parse_json_module(StringView source_text, Realm& realm, StringView filename)
 {
     auto& vm = realm.vm();
 
