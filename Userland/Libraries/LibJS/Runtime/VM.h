@@ -220,7 +220,7 @@ public:
 
     ScriptOrModule get_active_script_or_module() const;
 
-    Function<ThrowCompletionOr<NonnullRefPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
+    Function<ThrowCompletionOr<NonnullGCPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
     Function<void(ScriptOrModule, ModuleRequest, PromiseCapability)> host_import_module_dynamically;
     Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability, Promise*)> host_finish_dynamic_import;
 
@@ -245,7 +245,7 @@ private:
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment);
 
-    ThrowCompletionOr<NonnullRefPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
+    ThrowCompletionOr<NonnullGCPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
     ThrowCompletionOr<void> link_and_eval_module(Module& module);
 
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability promise_capability);
@@ -275,7 +275,7 @@ private:
         ScriptOrModule referencing_script_or_module;
         String filename;
         String type;
-        NonnullRefPtr<Module> module;
+        Handle<Module> module;
         bool has_once_started_linking { false };
     };
 

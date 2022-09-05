@@ -3262,10 +3262,10 @@ Completion MetaProperty::execute(Interpreter& interpreter) const
         auto script_or_module = interpreter.vm().get_active_script_or_module();
 
         // 2. Assert: module is a Source Text Module Record.
-        VERIFY(script_or_module.has<WeakPtr<Module>>());
-        VERIFY(script_or_module.get<WeakPtr<Module>>());
-        VERIFY(is<SourceTextModule>(*script_or_module.get<WeakPtr<Module>>()));
-        auto& module = static_cast<SourceTextModule&>(*script_or_module.get<WeakPtr<Module>>());
+        VERIFY(script_or_module.has<NonnullGCPtr<Module>>());
+        VERIFY(script_or_module.get<NonnullGCPtr<Module>>());
+        VERIFY(is<SourceTextModule>(*script_or_module.get<NonnullGCPtr<Module>>()));
+        auto& module = static_cast<SourceTextModule&>(*script_or_module.get<NonnullGCPtr<Module>>());
 
         // 3. Let importMeta be module.[[ImportMeta]].
         auto* import_meta = module.import_meta();

@@ -25,6 +25,8 @@ enum class ModuleStatus {
 
 // 16.2.1.5 Cyclic Module Records, https://tc39.es/ecma262/#sec-cyclic-module-records
 class CyclicModule : public Module {
+    JS_CELL(CyclicModule, Module);
+
 public:
     // Note: Do not call these methods directly unless you are HostResolveImportedModule.
     //       Badges cannot be used because other hosts must be able to call this (and it is called recursively)
@@ -33,6 +35,8 @@ public:
 
 protected:
     CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
@@ -50,7 +54,7 @@ protected:
     Optional<u32> m_dfs_index;                          // [[DFSIndex]]
     Optional<u32> m_dfs_ancestor_index;                 // [[DFSAncestorIndex]]
     Vector<ModuleRequest> m_requested_modules;          // [[RequestedModules]]
-    CyclicModule* m_cycle_root;                         // [[CycleRoot]]
+    CyclicModule* m_cycle_root { nullptr };             // [[CycleRoot]]
     bool m_has_top_level_await { false };               // [[HasTLA]]
     bool m_async_evaluation { false };                  // [[AsyncEvaluation]]
     Optional<PromiseCapability> m_top_level_capability; // [[TopLevelCapability]]

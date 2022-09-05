@@ -231,7 +231,7 @@ inline ByteBuffer load_entire_file(StringView path)
     return buffer_or_error.release_value();
 }
 
-inline AK::Result<NonnullRefPtr<JS::Script>, ParserError> parse_script(StringView path, JS::Realm& realm)
+inline AK::Result<JS::NonnullGCPtr<JS::Script>, ParserError> parse_script(StringView path, JS::Realm& realm)
 {
     auto contents = load_entire_file(path);
     auto script_or_errors = JS::Script::parse(contents, realm, path);
@@ -244,7 +244,7 @@ inline AK::Result<NonnullRefPtr<JS::Script>, ParserError> parse_script(StringVie
     return script_or_errors.release_value();
 }
 
-inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module(StringView path, JS::Realm& realm)
+inline AK::Result<JS::NonnullGCPtr<JS::SourceTextModule>, ParserError> parse_module(StringView path, JS::Realm& realm)
 {
     auto contents = load_entire_file(path);
     auto script_or_errors = JS::SourceTextModule::parse(contents, realm, path);

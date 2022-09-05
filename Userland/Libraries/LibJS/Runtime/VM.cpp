@@ -205,6 +205,11 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             roots.set(execution_context->lexical_environment);
             roots.set(execution_context->variable_environment);
             roots.set(execution_context->private_environment);
+            execution_context->script_or_module.visit(
+                [](Empty) {},
+                [&](auto& script_or_module) {
+                    roots.set(script_or_module.ptr());
+                });
         }
     };
 
@@ -800,7 +805,7 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
             dbgln("Warning: Using multiple modules as entry point can lead to unexpected results");
 
         m_loaded_modules.empend(
-            module.make_weak_ptr(),
+            NonnullGCPtr(module),
             module.filename(),
             String {}, // Null type
             module,
@@ -865,7 +870,7 @@ static String resolve_module_filename(StringView filename, StringView module_typ
 }
 
 // 16.2.1.7 HostResolveImportedModule ( referencingScriptOrModule, specifier ), https://tc39.es/ecma262/#sec-hostresolveimportedmodule
-ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request)
+ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request)
 {
     // An implementation of HostResolveImportedModule must conform to the following requirements:
     //  - If it completes normally, the [[Value]] slot of the completion must contain an instance of a concrete subclass of Module Record.
@@ -912,9 +917,9 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         },
         [&](auto& script_or_module) {
             if constexpr (IsSame<Script*, decltype(script_or_module)>) {
-                return String::formatted("Script @ {}", script_or_module);
+                return String::formatted("Script @ {}", script_or_module.ptr());
             }
-            return String::formatted("Module @ {}", script_or_module);
+            return String::formatted("Module @ {}", script_or_module.ptr());
         });
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}, {})", referencing_module_string, filename);
@@ -924,7 +929,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     auto* loaded_module_or_end = get_stored_module(referencing_script_or_module, filename, module_type);
     if (loaded_module_or_end != nullptr) {
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] resolve_imported_module({}) already loaded at {}", filename, loaded_module_or_end->module.ptr());
-        return loaded_module_or_end->module;
+        return NonnullGCPtr(*loaded_module_or_end->module);
     }
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
@@ -939,7 +944,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
     auto file_content = file_or_error.value()->read_all();
     StringView content_view { file_content.data(), file_content.size() };
 
-    auto module = TRY([&]() -> ThrowCompletionOr<NonnullRefPtr<Module>> {
+    auto module = TRY([&]() -> ThrowCompletionOr<NonnullGCPtr<Module>> {
         // If assertions has an entry entry such that entry.[[Key]] is "type", let type be entry.[[Value]]. The following requirements apply:
         // If type is "json", then this algorithm must either invoke ParseJSONModule and return the resulting Completion Record, or throw an exception.
         if (module_type == "json"sv) {
@@ -965,7 +970,7 @@ ThrowCompletionOr<NonnullRefPtr<Module>> VM::resolve_imported_module(ScriptOrMod
         referencing_script_or_module,
         filename,
         module_type,
-        module,
+        *module,
         false);
 
     return module;

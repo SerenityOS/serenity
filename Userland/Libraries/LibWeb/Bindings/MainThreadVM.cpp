@@ -35,12 +35,12 @@ HTML::ClassicScript* active_script()
         return nullptr;
 
     // 3. Return record.[[HostDefined]].
-    if (record.has<WeakPtr<JS::Module>>()) {
+    if (record.has<JS::NonnullGCPtr<JS::Module>>()) {
         // FIXME: We don't currently have a module script.
         TODO();
     }
 
-    auto js_script = record.get<WeakPtr<JS::Script>>();
+    auto js_script = record.get<JS::NonnullGCPtr<JS::Script>>();
     VERIFY(js_script);
     VERIFY(js_script->host_defined());
     return verify_cast<HTML::ClassicScript>(js_script->host_defined());
@@ -76,10 +76,10 @@ JS::VM& main_thread_vm()
             //    The running script is the script in the [[HostDefined]] field in the ScriptOrModule component of the running JavaScript execution context.
             HTML::Script* script { nullptr };
             vm->running_execution_context().script_or_module.visit(
-                [&script](WeakPtr<JS::Script>& js_script) {
+                [&script](JS::NonnullGCPtr<JS::Script>& js_script) {
                     script = verify_cast<HTML::ClassicScript>(js_script->host_defined());
                 },
-                [](WeakPtr<JS::Module>&) {
+                [](JS::NonnullGCPtr<JS::Module>&) {
                     TODO();
                 },
                 [](Empty) {
@@ -240,8 +240,7 @@ JS::VM& main_thread_vm()
                     //        Since this requires pushing an execution context onto the stack, it also requires a global object. The only thing we can get a global object from in this case is the script or module.
                     //        To do this, we must assume script or module is not Empty. We must also assume that it is a Script Record for now as we don't currently run modules.
                     //        Do note that the JS spec gives _no_ guarantee that the execution context stack has something on it if HostEnqueuePromiseJob was called with a null realm: https://tc39.es/ecma262/#job-preparedtoevaluatecode
-                    VERIFY(script_or_module.has<WeakPtr<JS::Script>>());
-                    auto script_record = script_or_module.get<WeakPtr<JS::Script>>();
+                    VERIFY(script_or_module.has<JS::NonnullGCPtr<JS::Script>>());
                     dummy_execution_context = JS::ExecutionContext { vm->heap() };
                     dummy_execution_context->script_or_module = script_or_module;
                     vm->push_execution_context(dummy_execution_context.value());
@@ -285,7 +284,7 @@ JS::VM& main_thread_vm()
                 script_execution_context->function = nullptr;
                 script_execution_context->realm = &script->settings_object().realm();
                 VERIFY(script->script_record());
-                script_execution_context->script_or_module = script->script_record()->make_weak_ptr();
+                script_execution_context->script_or_module = JS::NonnullGCPtr<JS::Script>(*script->script_record());
             }
 
             // 5. Return the JobCallback Record { [[Callback]]: callable, [[HostDefined]]: { [[IncumbentSettings]]: incumbent settings, [[ActiveScriptContext]]: script execution context } }.
@@ -298,7 +297,7 @@ JS::VM& main_thread_vm()
         // FIXME: Implement 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
         // FIXME: Implement 8.1.5.5.4 HostGetSupportedImportAssertions(), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetsupportedimportassertions
 
-        vm->host_resolve_imported_module = [](JS::ScriptOrModule, JS::ModuleRequest const&) -> JS::ThrowCompletionOr<NonnullRefPtr<JS::Module>> {
+        vm->host_resolve_imported_module = [](JS::ScriptOrModule, JS::ModuleRequest const&) -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
             return vm->throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Modules in the browser");
         };
 

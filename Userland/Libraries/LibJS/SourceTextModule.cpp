@@ -113,8 +113,14 @@ SourceTextModule::SourceTextModule(Realm& realm, StringView filename, bool has_t
 {
 }
 
+void SourceTextModule::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_import_meta);
+}
+
 // 16.2.1.6.1 ParseModule ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parsemodule
-Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename)
+Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename)
 {
     // 1. Let body be ParseText(sourceText, Module).
     auto parser = Parser(Lexer(source_text, filename), Program::Type::Module);
@@ -239,7 +245,17 @@ Result<NonnullRefPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule:
     //          [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries,
     //          [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: empty, [[DFSAncestorIndex]]: empty }.
     // FIXME: Add HostDefined
-    return adopt_ref(*new SourceTextModule(realm, filename, async, move(body), move(requested_modules), move(import_entries), move(local_export_entries), move(indirect_export_entries), move(star_export_entries), move(default_export)));
+    return NonnullGCPtr(*realm.heap().allocate_without_realm<SourceTextModule>(
+        realm,
+        filename,
+        async,
+        move(body),
+        move(requested_modules),
+        move(import_entries),
+        move(local_export_entries),
+        move(indirect_export_entries),
+        move(star_export_entries),
+        move(default_export)));
 }
 
 // 16.2.1.6.2 GetExportedNames ( [ exportStarSet ] ), https://tc39.es/ecma262/#sec-getexportednames
@@ -285,7 +301,7 @@ ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm
     // 7. For each ExportEntry Record e of module.[[StarExportEntries]], do
     for (auto& entry : m_star_export_entries) {
         // a. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto requested_module = TRY(vm.host_resolve_imported_module(this->make_weak_ptr(), entry.module_request()));
+        auto requested_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), entry.module_request()));
 
         // b. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
         auto star_names = TRY(requested_module->get_exported_names(vm, export_star_set));
@@ -339,7 +355,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // 7. For each ImportEntry Record in of module.[[ImportEntries]], do
     for (auto& import_entry : m_import_entries) {
         // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
-        auto imported_module = MUST(vm.host_resolve_imported_module(this->make_weak_ptr(), import_entry.module_request()));
+        auto imported_module = MUST(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), import_entry.module_request()));
         // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
 
         // c. If in.[[ImportName]] is namespace-object, then
@@ -393,7 +409,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     m_execution_context.realm = &realm();
 
     // 12. Set the ScriptOrModule of moduleContext to module.
-    m_execution_context.script_or_module = this->make_weak_ptr();
+    m_execution_context.script_or_module = NonnullGCPtr<Module>(*this);
 
     // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     m_execution_context.variable_environment = environment;
@@ -544,7 +560,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
             continue;
 
         // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto imported_module = TRY(vm.host_resolve_imported_module(this->make_weak_ptr(), entry.module_request()));
+        auto imported_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), entry.module_request()));
 
         // ii. If e.[[ImportName]] is all, then
         if (entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequestAll) {
@@ -584,7 +600,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
     // 8. For each ExportEntry Record e of module.[[StarExportEntries]], do
     for (auto& entry : m_star_export_entries) {
         // a. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        auto imported_module = TRY(vm.host_resolve_imported_module(this->make_weak_ptr(), entry.module_request()));
+        auto imported_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), entry.module_request()));
 
         // b. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
         auto resolution = TRY(imported_module->resolve_export(vm, export_name, resolve_set));
@@ -646,7 +662,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<Promis
     module_context.realm = &realm();
 
     // 4. Set the ScriptOrModule of moduleContext to module.
-    module_context.script_or_module = this->make_weak_ptr();
+    module_context.script_or_module = NonnullGCPtr<Module>(*this);
 
     // 5. Assert: module has been linked and declarations in its module environment have been instantiated.
     VERIFY(m_status != ModuleStatus::Unlinked && m_status != ModuleStatus::Linking && environment());
