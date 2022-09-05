@@ -31,7 +31,6 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Rect.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -182,14 +181,14 @@ public:
     void initialize_js_console()
     {
         auto* document = page().top_level_browsing_context().active_document();
-        auto interpreter = document->interpreter().make_weak_ptr();
-        if (m_interpreter.ptr() == interpreter.ptr())
+        auto realm = document->realm().make_weak_ptr();
+        if (m_realm && m_realm.ptr() == realm.ptr())
             return;
 
-        m_interpreter = interpreter;
+        m_realm = realm;
 
-        auto& console_object = *interpreter->realm().intrinsics().console_object();
-        m_console_client = make<Ladybird::ConsoleClient>(console_object.console(), interpreter, m_view);
+        auto& console_object = *document->realm().intrinsics().console_object();
+        m_console_client = make<Ladybird::ConsoleClient>(console_object.console(), *realm, m_view);
         console_object.console().set_client(*m_console_client.ptr());
     }
 
@@ -336,7 +335,7 @@ public:
     Browser::CookieJar m_cookie_jar;
 
     OwnPtr<Ladybird::ConsoleClient> m_console_client;
-    WeakPtr<JS::Interpreter> m_interpreter;
+    WeakPtr<JS::Realm> m_realm;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_viewport_rect { 0, 0, 800, 600 };
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };

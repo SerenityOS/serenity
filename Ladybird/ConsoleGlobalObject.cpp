@@ -7,15 +7,12 @@
 
 #include "ConsoleGlobalObject.h"
 #include <LibJS/Runtime/Completion.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Ladybird {
 
-ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::Bindings::WindowObject& parent_object)
+ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::HTML::Window& parent_object)
     : JS::GlobalObject(realm)
     , m_window_object(&parent_object)
 {
@@ -98,7 +95,6 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> ConsoleGlobalObject::internal
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
-    auto& realm = *vm.current_realm();
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<ConsoleGlobalObject>(this_object))
@@ -110,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
     if (!inspected_node)
         return JS::js_undefined();
 
-    return Web::Bindings::wrap(realm, *inspected_node);
+    return &*inspected_node;
 }
 
 }

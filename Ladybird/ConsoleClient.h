@@ -23,7 +23,7 @@ namespace Ladybird {
 
 class ConsoleClient final : public JS::ConsoleClient {
 public:
-    ConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, WebView&);
+    ConsoleClient(JS::Console&, JS::Realm&, WebView&);
 
     void handle_input(String const& js_source);
     void send_messages(i32 start_index);
@@ -54,6 +54,8 @@ private:
         String data;
     };
     Vector<ConsoleOutput> m_message_log;
+
+    WeakPtr<JS::Realm> m_realm;
 };
 
 }
