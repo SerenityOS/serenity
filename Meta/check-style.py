@@ -37,9 +37,6 @@ PRAGMA_ONCE_CHECK_EXCLUDES = {
 # We make sure that there's a blank line before and after pragma once
 GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
 
-# We check that "#include <LibM/math.h>" is not being used
-LIBM_MATH_H_INCLUDE_STRING = '#include <LibM/math.h>'
-
 GIT_LS_FILES = ['git', 'ls-files', '--', '*.cpp', '*.h', ':!:Base', ':!:Kernel/FileSystem/ext2_fs.h']
 
 
@@ -48,7 +45,6 @@ def run():
     assert len(files) > 1000
 
     errors_license = []
-    errors_libm_math_h = []
     errors_pragma_once_bad = []
     errors_pragma_once_missing = []
 
@@ -58,8 +54,6 @@ def run():
         if not any(filename.startswith(forbidden_prefix) for forbidden_prefix in LICENSE_HEADER_CHECK_EXCLUDES):
             if not GOOD_LICENSE_HEADER_PATTERN.search(file_content):
                 errors_license.append(filename)
-        if LIBM_MATH_H_INCLUDE_STRING in file_content:
-            errors_libm_math_h.append(filename)
         if filename.endswith('.h'):
             if any(filename.startswith(forbidden_prefix) for forbidden_prefix in PRAGMA_ONCE_CHECK_EXCLUDES):
                 # File was excluded
@@ -80,10 +74,8 @@ def run():
         print("Files without #pragma once:", " ".join(errors_pragma_once_missing))
     if errors_pragma_once_bad:
         print("Files with a bad #pragma once:", " ".join(errors_pragma_once_bad))
-    if errors_libm_math_h:
-        print("Files including LibM/math.h (include just 'math.h' instead):", " ".join(errors_libm_math_h))
 
-    if errors_license or errors_pragma_once_missing or errors_pragma_once_bad or errors_libm_math_h:
+    if errors_license or errors_pragma_once_missing or errors_pragma_once_bad:
         sys.exit(1)
 
 
