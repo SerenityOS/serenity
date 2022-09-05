@@ -22,6 +22,7 @@ set(LIBC_SOURCES
     link.cpp
     locale.cpp
     malloc.cpp
+    math.cpp
     mntent.cpp
     net.cpp
     netdb.cpp

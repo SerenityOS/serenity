@@ -1,10 +1,4 @@
-set(SOURCES
-    math.cpp
-    ../LibC/ssp.cpp
-)
-
-set_source_files_properties (../LibC/ssp.cpp PROPERTIES COMPILE_FLAGS
-    "-fno-stack-protector")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib")
-serenity_libc(LibM m)
+# Provide a dummy target and a linker script that tells everything to link against LibC instead.
+add_library(LibM INTERFACE)
+target_link_libraries(LibM INTERFACE LibC)
+file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libm.so" "INPUT(libc.so)")
