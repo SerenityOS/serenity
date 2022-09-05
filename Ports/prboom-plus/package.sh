@@ -27,7 +27,6 @@ configure() {
 }
 
 build() {
-    run cp -v ../../prboom-plus.wad build/
     run make -C build "${makeopts[@]}"
 }
 
