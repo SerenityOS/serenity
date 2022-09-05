@@ -1,7 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/AbstractRange.idl>
 
-[Exposed=Window, NoInstanceWrapper]
+[Exposed=Window]
 interface Range : AbstractRange {
 
     constructor();
