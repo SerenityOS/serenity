@@ -153,7 +153,7 @@ endif()
 
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
-add_dependencies(LibCStaticWithoutDeps LibM LibSystem LibUBSanitizer)
+add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
 
 add_custom_target(LibCStatic
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibCStaticWithoutDeps>
@@ -179,13 +179,9 @@ add_dependencies(LibC crti crt0 crt0_shared crtn)
 target_link_libraries(LibC ssp system LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
-add_dependencies(LibC LibM LibSystem LibCStatic)
+add_dependencies(LibC LibSystem LibCStatic)
 
 # Provide a linker script instead of various other libraries that tells everything to link against LibC.
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libdl.so" "INPUT(libc.so)")
-
-# Provide a dummy target and a linker script for LibM that tells everything to link against LibC instead.
-add_library(LibM INTERFACE)
-target_link_libraries(LibM INTERFACE LibC)
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libm.so" "INPUT(libc.so)")
