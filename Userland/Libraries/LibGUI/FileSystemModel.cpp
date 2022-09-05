@@ -615,6 +615,11 @@ Icon FileSystemModel::icon_for(Node const& node) const
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
         }
+        if (node.full_path().ends_with(".git"sv)) {
+            if (node.is_selected())
+                return FileIconProvider::git_directory_open_icon();
+            return FileIconProvider::git_directory_icon();
+        }
         if (node.full_path() == Core::StandardPaths::desktop_directory())
             return FileIconProvider::desktop_directory_icon();
         if (node.is_selected() && node.is_accessible_directory)
