@@ -242,6 +242,7 @@ bool WindowFrame::has_shadow() const
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 {
     VERIFY(m_maximize_button);
+    set_dirty();
     m_maximize_button->set_icon(maximized ? s_restore_icon : s_maximize_icon);
 }
 
