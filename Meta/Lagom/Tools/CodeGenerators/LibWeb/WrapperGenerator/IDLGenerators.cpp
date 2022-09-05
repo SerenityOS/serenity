@@ -2494,10 +2494,10 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
         }
 
         generator.append(R"~~~(
-    if (!is<@wrapper_class@>(this_object))
+    if (!is<@fully_qualified_name@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
 
-    return &static_cast<@wrapper_class@*>(this_object)->impl();
+    return &static_cast<@fully_qualified_name@*>(this_object)->impl();
 }
 )~~~");
     }
@@ -2789,9 +2789,9 @@ void @prototype_class@::initialize(JS::Realm& realm)
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 {
     auto* this_object = TRY(vm.this_value().to_object(vm));
-    if (!is<@wrapper_class@>(this_object))
+    if (!is<@fully_qualified_name@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
-    return &static_cast<@wrapper_class@*>(this_object)->impl();
+    return &static_cast<@fully_qualified_name@*>(this_object)->impl();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
