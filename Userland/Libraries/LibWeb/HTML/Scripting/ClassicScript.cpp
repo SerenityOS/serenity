@@ -16,8 +16,10 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
+JS::NonnullGCPtr<ClassicScript> ClassicScript::create(String filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
 {
+    auto& vm = environment_settings_object.realm().vm();
+
     // 1. If muted errors was not provided, let it be false. (NOTE: This is taken care of by the default argument.)
 
     // 2. If muted errors is true, then set baseURL to about:blank.
@@ -29,7 +31,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
         source = ""sv;
 
     // 4. Let script be a new classic script that this algorithm will subsequently initialize.
-    auto script = adopt_ref(*new ClassicScript(move(base_url), move(filename), environment_settings_object));
+    auto script = vm.heap().allocate_without_realm<ClassicScript>(move(base_url), move(filename), environment_settings_object);
 
     // 5. Set script's settings object to settings. (NOTE: This was already done when constructing.)
 
@@ -45,7 +47,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 
     // 10. Let result be ParseScript(source, settings's Realm, script).
     auto parse_timer = Core::ElapsedTimer::start_new();
-    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename(), script.ptr(), source_line_number);
+    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename(), script, source_line_number);
     dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Parsed {} in {}ms", script->filename(), parse_timer.elapsed());
 
     // 11. If result is a list of errors, then:
@@ -58,14 +60,14 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
         script->m_error_to_rethrow = parse_error;
 
         // 2. Return script.
-        return script;
+        return JS::NonnullGCPtr(*script);
     }
 
     // 12. Set script's record to result.
-    script->m_script_record = result.release_value();
+    script->m_script_record = *result.release_value();
 
     // 13. Return script.
-    return script;
+    return JS::NonnullGCPtr(*script);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-classic-script
@@ -157,5 +159,16 @@ ClassicScript::ClassicScript(AK::URL base_url, String filename, EnvironmentSetti
 }
 
 ClassicScript::~ClassicScript() = default;
+
+void ClassicScript::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_script_record);
+}
+
+void ClassicScript::visit_host_defined_self(Cell::Visitor& visitor)
+{
+    visitor.visit(this);
+}
 
 }

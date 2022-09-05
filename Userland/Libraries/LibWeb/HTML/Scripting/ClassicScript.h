@@ -16,6 +16,8 @@ namespace Web::HTML {
 class ClassicScript final
     : public Script
     , public JS::Script::HostDefined {
+    JS_CELL(ClassicScript, Script);
+
 public:
     virtual ~ClassicScript() override;
 
@@ -23,7 +25,7 @@ public:
         No,
         Yes,
     };
-    static NonnullRefPtr<ClassicScript> create(String filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, size_t source_line_number = 1, MutedErrors = MutedErrors::No);
+    static JS::NonnullGCPtr<ClassicScript> create(String filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, size_t source_line_number = 1, MutedErrors = MutedErrors::No);
 
     JS::Script* script_record() { return m_script_record; }
     JS::Script const* script_record() const { return m_script_record; }
@@ -39,7 +41,10 @@ public:
 private:
     ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
 
-    RefPtr<JS::Script> m_script_record;
+    virtual void visit_edges(Cell::Visitor&) override;
+    virtual void visit_host_defined_self(Cell::Visitor&) override;
+
+    JS::GCPtr<JS::Script> m_script_record;
     MutedErrors m_muted_errors { MutedErrors::No };
     Optional<JS::Parser::Error> m_error_to_rethrow;
 };
