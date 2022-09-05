@@ -34,8 +34,6 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_document.ptr());
-    visitor.visit(m_worker_realm.ptr());
-    visitor.visit(m_worker_scope.ptr());
     visitor.visit(m_implicit_port.ptr());
     visitor.visit(m_outside_port.ptr());
 }
@@ -129,6 +127,11 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     auto& console_object = *realm_execution_context->realm->intrinsics().console_object();
     m_worker_realm = realm_execution_context->realm;
+
+    // FIXME: Remove this once we don't need a hack Window (for prototypes and constructors) in workers anymore.
+    m_worker_window = HTML::Window::create(*m_worker_realm);
+    m_worker_realm->set_global_object(m_worker_scope, nullptr);
+
     m_console = adopt_ref(*new WorkerDebugConsoleClient(console_object.console()));
     console_object.console().set_client(*m_console);
 
@@ -159,8 +162,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 MessageEventInit event_init {};
                 event_init.data = message;
                 event_init.origin = "<origin>";
-                // FIXME: The cast here is totally bogus, since workers don't have a Window object..
-                dispatch_event(*MessageEvent::create(verify_cast<HTML::Window>(*m_worker_scope), HTML::EventNames::message, event_init));
+                dispatch_event(*MessageEvent::create(*m_worker_window, HTML::EventNames::message, event_init));
             }));
 
             return JS::js_undefined();
@@ -172,7 +174,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    m_inner_settings = WorkerEnvironmentSettingsObject::setup(*m_document, move(realm_execution_context));
+    m_inner_settings = WorkerEnvironmentSettingsObject::setup(move(realm_execution_context));
 
     // 10. Set worker global scope's name to the value of options's name member.
     // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
@@ -257,8 +259,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             // FIXME: Global scope association
 
             // 16. Let inside port be a new MessagePort object in inside settings's Realm.
-            // FIXME: The cast here is totally bogus, since workers don't have a Window object..
-            auto inside_port = MessagePort::create(verify_cast<HTML::Window>(*m_worker_scope));
+            auto inside_port = MessagePort::create(*m_worker_window);
 
             // 17. Associate inside port with worker global scope.
             // FIXME: Global scope association

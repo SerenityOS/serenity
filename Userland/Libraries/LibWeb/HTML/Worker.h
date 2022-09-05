@@ -80,12 +80,17 @@ private:
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
     WeakPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
-    JS::GCPtr<JS::Realm> m_worker_realm;
     RefPtr<WorkerDebugConsoleClient> m_console;
-    JS::GCPtr<JS::Object> m_worker_scope;
 
     JS::NonnullGCPtr<MessagePort> m_implicit_port;
     JS::GCPtr<MessagePort> m_outside_port;
+
+    // NOTE: These are inside the worker VM.
+    JS::GCPtr<JS::Realm> m_worker_realm;
+    JS::GCPtr<JS::Object> m_worker_scope;
+    // FIXME: This is a mega-hack but necessary because HTML::Window holds all the prototypes and constructors.
+    //        There should be *no* Window object in a Worker context.
+    JS::GCPtr<HTML::Window> m_worker_window;
 
     void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const options);
 };
