@@ -68,7 +68,7 @@ set(EMOJI_TEST_URL "https://unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test
 set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
 set(EMOJI_GENERATOR_PATH "${SerenityOS_SOURCE_DIR}/Meta/generate-emoji-txt.sh")
 set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
-set(EMOJI_INSTALL_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji.txt")
+set(EMOJI_INSTALL_PATH "${CMAKE_BINARY_DIR}/Root/home/anon/Documents/emoji.txt")
 
 set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_VERSION}/cldr-${CLDR_VERSION}-json-modern.zip")
 set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
