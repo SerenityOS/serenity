@@ -6,16 +6,18 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/URL.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script
-class Script : public RefCounted<Script> {
+class Script : public JS::Cell {
+    JS_CELL(Script, JS::Cell);
+
 public:
-    virtual ~Script();
+    virtual ~Script() override;
 
     AK::URL const& base_url() const { return m_base_url; }
     String const& filename() const { return m_filename; }

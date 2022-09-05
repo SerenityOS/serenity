@@ -30,6 +30,7 @@ HTMLScriptElement::~HTMLScriptElement() = default;
 void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_script);
     visitor.visit(m_parser_document.ptr());
     visitor.visit(m_preparation_time_document.ptr());
 }

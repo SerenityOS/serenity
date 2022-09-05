@@ -77,7 +77,7 @@ private:
 
     Function<void()> m_script_ready_callback;
 
-    RefPtr<Script> m_script;
+    JS::GCPtr<Script> m_script;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
 

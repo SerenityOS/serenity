@@ -22,6 +22,8 @@ class Script final : public Cell {
 public:
     struct HostDefined {
         virtual ~HostDefined() = default;
+
+        virtual void visit_host_defined_self(Cell::Visitor&) = 0;
     };
 
     virtual ~Script() override;
