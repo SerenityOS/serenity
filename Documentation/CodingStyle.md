@@ -579,7 +579,7 @@ public:
 
 class Student : public Person {
 public:
-    virtual String description() final { ... }; // This is correct because it contains both the "override" and "final" keywords to indicate that the method is overridden and that no subclasses of "Student" can override "description".
+    virtual String description() final { ... }; // This is correct because it contains both the "virtual" and "final" keywords to indicate that the method is overridden and that no subclasses of "Student" can override "description".
 }
 
 ```
