@@ -12,23 +12,20 @@
 
 namespace Web::HTML {
 
-// FIXME: This is a bit ugly, this implementation is basically a 1:1 copy of what is in ESO
-//        just modified to use DOM::Document instead of HTML::Window since workers have no window
 class WorkerEnvironmentSettingsObject final
     : public EnvironmentSettingsObject
     , public Weakable<WorkerEnvironmentSettingsObject> {
 public:
-    WorkerEnvironmentSettingsObject(DOM::Document& document, NonnullOwnPtr<JS::ExecutionContext> execution_context)
+    WorkerEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context)
         : EnvironmentSettingsObject(move(execution_context))
-        , m_document(JS::make_handle(document))
     {
     }
 
-    static WeakPtr<WorkerEnvironmentSettingsObject> setup(DOM::Document& document, NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
+    static WeakPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
     {
         auto* realm = execution_context->realm;
         VERIFY(realm);
-        auto settings_object = adopt_own(*new WorkerEnvironmentSettingsObject(document, move(execution_context)));
+        auto settings_object = adopt_own(*new WorkerEnvironmentSettingsObject(move(execution_context)));
         settings_object->target_browsing_context = nullptr;
         realm->set_host_defined(move(settings_object));
 
@@ -37,14 +34,16 @@ public:
 
     virtual ~WorkerEnvironmentSettingsObject() override = default;
 
-    JS::GCPtr<DOM::Document> responsible_document() override { return m_document.ptr(); }
-    String api_url_character_encoding() override { return m_document->encoding_or_default(); }
-    AK::URL api_base_url() override { return m_document->url(); }
-    Origin origin() override { return m_document->origin(); }
+    JS::GCPtr<DOM::Document> responsible_document() override { return nullptr; }
+    String api_url_character_encoding() override { return m_api_url_character_encoding; }
+    AK::URL api_base_url() override { return m_url; }
+    Origin origin() override { return m_origin; }
     CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { TODO(); }
 
 private:
-    JS::Handle<DOM::Document> m_document;
+    String m_api_url_character_encoding;
+    AK::URL m_url;
+    HTML::Origin m_origin;
 };
 
 }
