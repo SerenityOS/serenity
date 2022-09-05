@@ -8,7 +8,13 @@
 
 void HexDocument::set(size_t position, u8 value)
 {
-    m_changes.set(position, value);
+    auto unchanged_value = get_unchanged(position);
+
+    if (value == unchanged_value) {
+        m_changes.remove(position);
+    } else {
+        m_changes.set(position, value);
+    }
 }
 
 bool HexDocument::is_dirty() const
@@ -29,6 +35,11 @@ HexDocument::Cell HexDocumentMemory::get(size_t position)
     } else {
         return Cell { m_buffer[position], false };
     }
+}
+
+u8 HexDocumentMemory::get_unchanged(size_t position)
+{
+    return m_buffer[position];
 }
 
 size_t HexDocumentMemory::size() const
@@ -108,12 +119,14 @@ HexDocument::Cell HexDocumentFile::get(size_t position)
         return Cell { tracked_change.value(), true };
     }
 
-    if (position < m_buffer_file_pos || position >= m_buffer_file_pos + m_buffer.size()) {
-        m_file->seek(position, Core::SeekMode::SetPosition);
-        m_file->read(m_buffer.data(), m_buffer.size());
-        m_buffer_file_pos = position;
-    }
+    ensure_position_in_buffer(position);
     return { m_buffer[position - m_buffer_file_pos], false };
+}
+
+u8 HexDocumentFile::get_unchanged(size_t position)
+{
+    ensure_position_in_buffer(position);
+    return m_buffer[position - m_buffer_file_pos];
 }
 
 size_t HexDocumentFile::size() const
@@ -151,4 +164,13 @@ void HexDocumentFile::set_file(NonnullRefPtr<Core::File> file)
 NonnullRefPtr<Core::File> HexDocumentFile::file() const
 {
     return m_file;
+}
+
+void HexDocumentFile::ensure_position_in_buffer(size_t position)
+{
+    if (position < m_buffer_file_pos || position >= m_buffer_file_pos + m_buffer.size()) {
+        m_file->seek(position, Core::SeekMode::SetPosition);
+        m_file->read(m_buffer.data(), m_buffer.size());
+        m_buffer_file_pos = position;
+    }
 }

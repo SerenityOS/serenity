@@ -24,6 +24,7 @@ public:
 
     virtual ~HexDocument() = default;
     virtual Cell get(size_t position) = 0;
+    virtual u8 get_unchanged(size_t position) = 0;
     virtual void set(size_t position, u8 value);
     virtual size_t size() const = 0;
     virtual Type type() const = 0;
@@ -40,6 +41,7 @@ public:
     virtual ~HexDocumentMemory() = default;
 
     Cell get(size_t position) override;
+    u8 get_unchanged(size_t position) override;
     size_t size() const override;
     Type type() const override;
     void clear_changes() override;
@@ -61,11 +63,14 @@ public:
     void write_to_file();
     bool write_to_file(NonnullRefPtr<Core::File> file);
     Cell get(size_t position) override;
+    u8 get_unchanged(size_t position) override;
     size_t size() const override;
     Type type() const override;
     void clear_changes() override;
 
 private:
+    void ensure_position_in_buffer(size_t position);
+
     NonnullRefPtr<Core::File> m_file;
     size_t m_file_size;
 
