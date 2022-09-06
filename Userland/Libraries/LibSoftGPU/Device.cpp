@@ -633,18 +633,6 @@ void Device::rasterize_point_antialiased(GPU::Vertex& point)
 
 void Device::rasterize_point(GPU::Vertex& point)
 {
-    // Divide texture coordinates R, S and T by Q
-    for (size_t i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i) {
-        auto& tex_coord = point.tex_coords[i];
-        auto one_over_w = 1 / tex_coord.w();
-        tex_coord = {
-            tex_coord.x() * one_over_w,
-            tex_coord.y() * one_over_w,
-            tex_coord.z() * one_over_w,
-            tex_coord.w(),
-        };
-    }
-
     if (m_options.point_smooth)
         rasterize_point_antialiased(point);
     else
@@ -1188,7 +1176,8 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             continue;
         auto const& sampler = m_samplers[i];
 
-        auto texel = sampler.sample_2d(quad.texture_coordinates[i].xy());
+        // OpenGL 2.0 ¶ 3.5.1 states (in a roundabout way) that texture coordinates must be divided by Q
+        auto texel = sampler.sample_2d(quad.texture_coordinates[i].xy() / quad.texture_coordinates[i].w());
         texture_stage_texel[i] = texel;
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
