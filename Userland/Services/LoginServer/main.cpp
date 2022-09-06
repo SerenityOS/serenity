@@ -6,6 +6,7 @@
 
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
@@ -18,8 +19,14 @@
 
 static void child_process(Core::Account const& account)
 {
-    if (auto result = account.create_user_temporary_directory_if_needed(); result.is_error()) {
-        dbgln("Failed to create temporary directory for user {}: {}", account.username(), result.error());
+    pid_t rc = setsid();
+    if (rc == -1) {
+        dbgln("failed to setsid: {}", strerror(errno));
+        exit(1);
+    }
+    auto result = Core::SessionManagement::create_session_temporary_directory_if_needed(account.uid(), account.gid());
+    if (result.is_error()) {
+        dbgln("Failed to create temporary directory for session: {}", result.error());
         exit(1);
     }
 
@@ -29,11 +36,6 @@ static void child_process(Core::Account const& account)
     }
 
     setenv("HOME", account.home_directory().characters(), true);
-    pid_t rc = setsid();
-    if (rc == -1) {
-        dbgln("failed to setsid: {}", strerror(errno));
-        exit(1);
-    }
     dbgln("login with sid={}", rc);
 
     execlp("/bin/SystemServer", "SystemServer", "--user", nullptr);
@@ -68,6 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/bin/SystemServer", "x"));
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

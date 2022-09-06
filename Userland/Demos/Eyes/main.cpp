@@ -36,12 +36,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(hide_window_frame, "Hide window frame", "hide-window", 'h');
     args_parser.parse(arguments);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if ((grid_rows > 0) ^ (grid_columns > 0)) {

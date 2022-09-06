@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("ClipboardHistory");

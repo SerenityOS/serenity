@@ -22,6 +22,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <LibCore/SessionManagement.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/MutexProtected.h>
 #include <errno.h>
@@ -361,7 +362,12 @@ EventLoop::~EventLoop()
 bool connect_to_inspector_server()
 {
 #ifdef __serenity__
-    auto inspector_server_path = Account::parse_path_with_uid("/tmp/user/%uid/portal/inspectables"sv);
+    auto maybe_path = SessionManagement::parse_path_with_sid("/tmp/session/%sid/portal/inspectables"sv);
+    if (maybe_path.is_error()) {
+        dbgln("connect_to_inspector_server: {}", maybe_path.error());
+        return false;
+    }
+    auto inspector_server_path = maybe_path.value();
     auto maybe_socket = Stream::LocalSocket::connect(inspector_server_path);
     if (maybe_socket.is_error()) {
         dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());

@@ -36,10 +36,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd proc"));
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-minesweeper"sv));

@@ -32,15 +32,12 @@ public:
         PasswdOnly
     };
 
-    static String parse_path_with_uid(StringView general_path, Optional<uid_t> force_uid = {});
     static ErrorOr<Account> self(Read options = Read::All);
     static ErrorOr<Account> from_name(StringView username, Read options = Read::All);
     static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);
 
     bool authenticate(SecretString const& password) const;
     ErrorOr<void> login() const;
-
-    ErrorOr<void> create_user_temporary_directory_if_needed() const;
 
     String username() const { return m_username; }
     String password_hash() const { return m_password_hash; }

@@ -36,7 +36,7 @@ auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRe
 class ConnectionToLaunchServer final
     : public IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/user/%uid/portal/launch"sv)
+    IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/session/%sid/portal/launch"sv)
 private:
     ConnectionToLaunchServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))

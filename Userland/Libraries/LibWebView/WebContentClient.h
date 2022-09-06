@@ -19,7 +19,7 @@ class OutOfProcessWebView;
 class WebContentClient final
     : public IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>
     , public WebContentClientEndpoint {
-    IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/user/%uid/portal/webcontent"sv);
+    IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/session/%sid/portal/webcontent"sv);
 
 public:
     Function<void()> on_web_content_process_crash;

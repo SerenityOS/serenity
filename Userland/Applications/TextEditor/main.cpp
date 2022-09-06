@@ -18,7 +18,7 @@ using namespace TextEditor;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -31,10 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(file_to_edit, "File to edit, with optional starting line and column number", "file[:line[:column]]", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-text-editor"sv);

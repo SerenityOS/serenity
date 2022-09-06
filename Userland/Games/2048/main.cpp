@@ -28,7 +28,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc"));
 
     srand(time(nullptr));
 
@@ -44,8 +44,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     size_t board_size = Config::read_i32("2048"sv, ""sv, "board_size"sv, 4);
