@@ -180,6 +180,7 @@ const TestSuite test_suites[] {
     { "%d %n", "1 a", 1, 2, { intarg0, intarg1 }, { to_value_t(1), to_value_t(2) } },
     { "%*d", "  42", 0, 0, {}, {} },
     { "%d%*1[:/]%d", "24/7", 2, 2, { intarg0, intarg1 }, { to_value_t(24), to_value_t(7) } },
+    { " %[^a]", " b", 1, 1, { charstararg0 }, { str_to_value_t("b") } },
 };
 
 bool g_any_failed = false;
