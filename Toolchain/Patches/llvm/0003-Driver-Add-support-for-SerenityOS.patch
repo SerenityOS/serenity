@@ -144,7 +144,7 @@ new file mode 100644
 index 000000000..6fc664a05
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,337 @@
+@@ -0,0 +1,336 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -301,7 +301,6 @@ index 000000000..6fc664a05
 +    TC.AddCXXStdlibLibArgs(Args, CmdArgs);
 +    if (OnlyLibstdcxxStatic)
 +      CmdArgs.push_back("-Bdynamic");
-+    CmdArgs.push_back("-lm");
 +    CmdArgs.push_back("--pop-state");
 +  }
 +

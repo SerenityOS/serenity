@@ -21,7 +21,7 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
 ---
  gcc/config.gcc             | 20 ++++++++++++++++
  gcc/config/i386/serenity.h |  7 ++++++
- gcc/config/serenity.h      | 47 ++++++++++++++++++++++++++++++++++++++
+ gcc/config/serenity.h      | 51 ++++++++++++++++++++++++++++++++++++++
  gcc/config/serenity.opt    | 35 ++++++++++++++++++++++++++++
  4 files changed, 109 insertions(+)
  create mode 100644 gcc/config/i386/serenity.h
@@ -84,7 +84,7 @@ new file mode 100644
 index 000000000..dc2f5361e
 --- /dev/null
 +++ b/gcc/config/serenity.h
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,51 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -121,6 +121,10 @@ index 000000000..dc2f5361e
 +
 +/* Use --as-needed -lgcc_s for eh support. */
 +#define USE_LD_AS_NEEDED 1
++
++/* We don't have a separate math library, it's included within libc. While we do have compatibility
++   linker scripts in place, just don't add it to the linker invocation to begin with. */
++#define MATH_LIBRARY ""
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
