@@ -365,7 +365,7 @@ private:
                     out(m_tty, "{}", m_filename);
                     break;
                 case 'l':
-                    out(m_tty, "{}", m_line);
+                    out(m_tty, "{}", m_line + 1);
                     break;
                 default:
                     out(m_tty, "?");
