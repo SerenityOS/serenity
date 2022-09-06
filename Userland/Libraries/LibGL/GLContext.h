@@ -339,7 +339,7 @@ private:
     bool m_client_side_vertex_array_enabled { false };
     bool m_client_side_color_array_enabled { false };
     Vector<bool> m_client_side_texture_coord_array_enabled;
-    size_t m_client_active_texture = 0;
+    size_t m_client_active_texture { 0 };
     bool m_client_side_normal_array_enabled { false };
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
