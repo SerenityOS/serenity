@@ -6,6 +6,11 @@
         margins: [4]
     }
 
+    @GUI::TextBox {
+        name: "search_box"
+        fixed_height: 22
+    }
+
     @GUI::ScrollableContainerWidget {
         name: "scrollable_container"
         content_widget: @GUI::Widget {
