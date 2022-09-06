@@ -20,6 +20,10 @@ private:
     virtual void event(Core::Event&) override;
     explicit EmojiInputDialog(Window* parent_window);
 
+    void update_displayed_emoji();
+
+    RefPtr<Widget> m_emojis_widget;
+    Vector<u32> m_code_points;
     String m_selected_emoji_text;
 };
 
