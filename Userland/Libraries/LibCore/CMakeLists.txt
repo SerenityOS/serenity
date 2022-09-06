@@ -26,6 +26,7 @@ set(SOURCES
     ProcessStatisticsReader.cpp
     Property.cpp
     SecretString.cpp
+    SessionManagement.cpp
     SOCKSProxyClient.cpp
     Stream.cpp
     StandardPaths.cpp
