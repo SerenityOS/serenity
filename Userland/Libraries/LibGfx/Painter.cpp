@@ -1154,7 +1154,8 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     bool has_opacity = opacity != 1.0f;
     i64 shift = (i64)1 << 32;
     i64 fractional_mask = (shift - (u64)1);
-    i64 half_pixel = (i64)1 << 31;
+    i64 bilinear_offset_x = (1ll << 31) * (src_rect.width() / dst_rect.width() - 1);
+    i64 bilinear_offset_y = (1ll << 31) * (src_rect.height() / dst_rect.height() - 1);
     i64 hscale = (src_rect.width() * shift) / dst_rect.width();
     i64 vscale = (src_rect.height() * shift) / dst_rect.height();
     i64 src_left = src_rect.left() * shift;
@@ -1175,13 +1176,16 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
             Color src_pixel;
             if constexpr (scaling_mode == Painter::ScalingMode::BilinearBlend) {
-                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
-                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto shifted_x = desired_x + bilinear_offset_x;
+                auto shifted_y = desired_y + bilinear_offset_y;
 
-                float x_ratio = (((desired_x + half_pixel) & fractional_mask) / (float)shift);
-                float y_ratio = (((desired_y + half_pixel) & fractional_mask) / (float)shift);
+                auto scaled_x0 = clamp(shifted_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_x1 = clamp((shifted_x >> 32) + 1, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y0 = clamp(shifted_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_y1 = clamp((shifted_y >> 32) + 1, clipped_src_rect.top(), clipped_src_rect.bottom());
+
+                float x_ratio = (shifted_x & fractional_mask) / static_cast<float>(shift);
+                float y_ratio = (shifted_y & fractional_mask) / static_cast<float>(shift);
 
                 auto top_left = get_pixel(source, scaled_x0, scaled_y0);
                 auto top_right = get_pixel(source, scaled_x1, scaled_y0);
