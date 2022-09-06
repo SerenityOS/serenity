@@ -742,6 +742,28 @@ BrowsingContext* BrowsingContext::choose_a_browsing_context(StringView name, boo
     return chosen;
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#document-tree-child-browsing-context
+size_t BrowsingContext::document_tree_child_browsing_context_count() const
+{
+    size_t count = 0;
+
+    // A browsing context child is a document-tree child browsing context of parent if child is a child browsing context and child's container is in a document tree.
+    for_each_child([this, &count](BrowsingContext const& child) {
+        if (child.is_child_of(*this) && child.container()->in_a_document_tree())
+            ++count;
+    });
+
+    return count;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#child-browsing-context
+bool BrowsingContext::is_child_of(BrowsingContext const& parent) const
+{
+    // A browsing context child is said to be a child browsing context of another browsing context parent,
+    // if child's container document is non-null and child's container document's browsing context is parent.
+    return container_document() && container_document()->browsing_context() == &parent;
+}
+
 // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
 bool BrowsingContext::still_on_its_initial_about_blank_document() const
 {

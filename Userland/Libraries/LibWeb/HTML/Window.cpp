@@ -794,6 +794,7 @@ void Window::initialize(JS::Realm& realm)
     define_native_accessor(realm, "pageXOffset", scroll_x_getter, {}, attr);
     define_native_accessor(realm, "scrollY", scroll_y_getter, {}, attr);
     define_native_accessor(realm, "pageYOffset", scroll_y_getter, {}, attr);
+    define_native_accessor(realm, "length", length_getter, {}, attr);
 
     define_native_function(realm, "scroll", scroll, 2, attr);
     define_native_function(realm, "scrollTo", scroll, 2, attr);
@@ -1072,6 +1073,29 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
 
     auto encoded = encode_base64(byte_string.span());
     return JS::js_string(vm, move(encoded));
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts
+JS::ThrowCompletionOr<size_t> Window::document_tree_child_browsing_context_count() const
+{
+    auto* impl = TRY(impl_from(vm()));
+
+    // 1. If W's browsing context is null, then return 0.
+    auto* this_browsing_context = impl->associated_document().browsing_context();
+    if (!this_browsing_context)
+        return 0;
+
+    // 2. Return the number of document-tree child browsing contexts of W's browsing context.
+    return this_browsing_context->document_tree_child_browsing_context_count();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-length
+JS_DEFINE_NATIVE_FUNCTION(Window::length_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    // The length getter steps are to return the number of document-tree child browsing contexts of this.
+    return TRY(impl->document_tree_child_browsing_context_count());
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-top

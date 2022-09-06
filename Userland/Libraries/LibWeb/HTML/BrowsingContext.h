@@ -80,6 +80,10 @@ public:
 
     BrowsingContext* choose_a_browsing_context(StringView name, bool noopener);
 
+    size_t document_tree_child_browsing_context_count() const;
+
+    bool is_child_of(BrowsingContext const&) const;
+
     HTML::BrowsingContextContainer* container() { return m_container; }
     HTML::BrowsingContextContainer const* container() const { return m_container; }
 
