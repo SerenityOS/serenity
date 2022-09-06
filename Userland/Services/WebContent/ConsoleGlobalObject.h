@@ -11,10 +11,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/HTML/Window.h>
 
-namespace Web::Bindings {
-class WindowObject;
-}
-
 namespace WebContent {
 
 class ConsoleGlobalObject final : public JS::GlobalObject {
