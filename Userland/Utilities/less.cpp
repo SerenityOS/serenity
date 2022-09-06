@@ -324,7 +324,7 @@ private:
     void read_enough_for_line(size_t line)
     {
         // This might read a bounded number of extra lines.
-        while (m_lines.size() < line + m_height - 1) {
+        while (m_lines.size() < line + m_height) {
             if (!read_line())
                 break;
         }
