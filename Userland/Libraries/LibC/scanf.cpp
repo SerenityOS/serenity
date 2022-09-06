@@ -62,8 +62,6 @@ template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<int, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
-        lexer.ignore_while(isspace);
-
         long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -116,8 +114,6 @@ template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<unsigned, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
-        lexer.ignore_while(isspace);
-
         unsigned long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -152,8 +148,6 @@ template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<long long, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
-        lexer.ignore_while(isspace);
-
         long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -188,8 +182,6 @@ template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<unsigned long long, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
-        lexer.ignore_while(isspace);
-
         unsigned long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -224,8 +216,6 @@ template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<float, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
-        lexer.ignore_while(isspace);
-
         double value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -299,7 +289,6 @@ struct ReadElement<char*, ReadKind::Normal> {
     ReadElement(StringView scan_set = {}, bool invert = false)
         : scan_set(scan_set.is_null() ? " \t\n\f\r"sv : scan_set)
         , invert(scan_set.is_null() ? true : invert)
-        , was_null(scan_set.is_null())
     {
     }
 
@@ -308,9 +297,6 @@ struct ReadElement<char*, ReadKind::Normal> {
         // FIXME: Implement wide strings and such.
         if (length_modifier != LengthModifier::Default)
             return false;
-
-        if (was_null)
-            input_lexer.ignore_while(isspace);
 
         auto str = input_lexer.consume_while([this](auto c) { return this->matches(c); });
         if (str.is_empty())
@@ -333,7 +319,6 @@ private:
 
     const StringView scan_set;
     bool invert { false };
-    bool was_null { false };
 };
 
 template<>
@@ -342,8 +327,6 @@ struct ReadElement<void*, ReadKind::Normal> {
     {
         if (length_modifier != LengthModifier::Default)
             return false;
-
-        input_lexer.ignore_while(isspace);
 
         auto str = input_lexer.consume_while([this](auto c) { return this->should_consume(c); });
 
@@ -395,10 +378,13 @@ extern "C" int vsscanf(char const* input, char const* format, va_list ap)
     __builtin_va_copy(copy, ap);
 
     while (!format_lexer.is_eof()) {
-        format_lexer.ignore_while(isspace);
+        if (format_lexer.next_is(isspace)) {
+            format_lexer.ignore_while(isspace);
+            input_lexer.ignore_while(isspace);
+        }
+
         if (!format_lexer.next_is('%')) {
         read_one_literal:;
-            input_lexer.ignore_while(isspace);
             if (format_lexer.is_eof())
                 break;
 
@@ -619,7 +605,6 @@ extern "C" int vsscanf(char const* input, char const* format, va_list ap)
                 ++elements_matched;
             break;
         case ConversionSpecifier::OutputNumberOfBytes: {
-            input_lexer.ignore_while(isspace);
             if (!suppress_assignment) {
                 auto* ptr = va_arg(copy, int*);
                 *ptr = input_lexer.tell();
