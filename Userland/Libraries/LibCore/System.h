@@ -141,6 +141,7 @@ ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
 ErrorOr<void> setpgid(pid_t pid, pid_t pgid);
 ErrorOr<pid_t> setsid();
+ErrorOr<pid_t> getsid(pid_t pid = 0);
 ErrorOr<void> drop_privileges();
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> link(StringView old_path, StringView new_path);
