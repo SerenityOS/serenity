@@ -52,6 +52,8 @@ public:
     HTML::BrowsingContext const* browsing_context() const;
     HTML::BrowsingContext* browsing_context();
 
+    JS::ThrowCompletionOr<size_t> document_tree_child_browsing_context_count() const;
+
     void alert_impl(String const&);
     bool confirm_impl(String const&);
     String prompt_impl(String const&, String const&);
@@ -201,6 +203,7 @@ public:
     Bindings::CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(length_getter);
     JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(document_getter);
