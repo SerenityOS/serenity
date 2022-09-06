@@ -6,6 +6,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <LibCore/DirIterator.h>
@@ -89,6 +90,9 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
 
 void EmojiInputDialog::update_displayed_emoji()
 {
+    ScopeGuard guard { [&] { m_emojis_widget->set_updates_enabled(true); } };
+    m_emojis_widget->set_updates_enabled(false);
+
     constexpr size_t columns = 18;
     size_t rows = ceil_div(m_emojis.size(), columns);
     size_t index = 0;
