@@ -63,8 +63,8 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
 
     auto& starting_day_combo = middle_container.add<GUI::SpinBox>();
     starting_day_combo.set_fixed_size(40, 20);
+    starting_day_combo.set_range(1, m_date_time.days_in_month());
     starting_day_combo.set_value(m_date_time.day());
-    starting_day_combo.set_min(1);
 
     auto& starting_year_combo = middle_container.add<GUI::SpinBox>();
     starting_year_combo.set_fixed_size(55, 20);
@@ -99,6 +99,16 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
         dbgln("TODO: Add event icon on specific tile");
         done(ExecResult::OK);
     };
+
+    auto update_starting_day_range = [&starting_day_combo, &starting_year_combo, &starting_month_combo]() {
+        auto year = starting_year_combo.value();
+        auto month = starting_month_combo.selected_index();
+
+        starting_day_combo.set_range(1, days_in_month(year, month + 1));
+    };
+
+    starting_year_combo.on_change = [&update_starting_day_range](auto) { update_starting_day_range(); };
+    starting_month_combo.on_change = [&update_starting_day_range](auto, auto) { update_starting_day_range(); };
 
     event_title_textbox.set_focus(true);
 }
