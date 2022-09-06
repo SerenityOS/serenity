@@ -96,6 +96,9 @@ void SpinBox::set_range(int min, int max, AllowCallback allow_callback)
             on_change(m_value);
     }
 
+    m_increment_button->set_enabled(m_value < m_max);
+    m_decrement_button->set_enabled(m_value > m_min);
+
     update();
 }
 
