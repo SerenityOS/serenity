@@ -90,6 +90,9 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             done(ExecResult::OK);
         };
 
+        if (name.has_value())
+            button->set_tooltip(name->to_titlecase());
+
         code_points.empend(code_point, move(name), move(button));
     }
 
