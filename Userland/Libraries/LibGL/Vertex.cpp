@@ -23,14 +23,14 @@ void GLContext::gl_array_element(GLint i)
         return;
 
     if (m_client_side_color_array_enabled) {
-        float color[4] { 0, 0, 0, 1 };
+        float color[4] { 0.f, 0.f, 0.f, 1.f };
         read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
         gl_color(color[0], color[1], color[2], color[3]);
     }
 
     for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
         if (m_client_side_texture_coord_array_enabled[t]) {
-            float tex_coords[4] { 0, 0, 0, 0 };
+            float tex_coords[4] { 0.f, 0.f, 0.f, 1.f };
             read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
             gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
         }
@@ -42,7 +42,7 @@ void GLContext::gl_array_element(GLint i)
         gl_normal(normal[0], normal[1], normal[2]);
     }
 
-    float vertex[4] { 0, 0, 0, 1 };
+    float vertex[4] { 0.f, 0.f, 0.f, 1.f };
     read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
     gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
 }
@@ -101,14 +101,14 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     gl_begin(mode);
     for (int i = first; i < last; i++) {
         if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
+            float color[4] { 0.f, 0.f, 0.f, 1.f };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
             gl_color(color[0], color[1], color[2], color[3]);
         }
 
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
-                float tex_coords[4] { 0, 0, 0, 0 };
+                float tex_coords[4] { 0.f, 0.f, 0.f, 1.f };
                 read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
                 gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
             }
@@ -120,7 +120,7 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
-        float vertex[4] { 0, 0, 0, 1 };
+        float vertex[4] { 0.f, 0.f, 0.f, 1.f };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
         gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
@@ -168,14 +168,14 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void c
         }
 
         if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
+            float color[4] { 0.f, 0.f, 0.f, 1.f };
             read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
             gl_color(color[0], color[1], color[2], color[3]);
         }
 
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
-                float tex_coords[4] { 0, 0, 0, 0 };
+                float tex_coords[4] { 0.f, 0.f, 0.f, 1.f };
                 read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
                 gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
             }
@@ -187,7 +187,7 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void c
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
-        float vertex[4] { 0, 0, 0, 1 };
+        float vertex[4] { 0.f, 0.f, 0.f, 1.f };
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
         gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
