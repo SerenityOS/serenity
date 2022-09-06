@@ -1582,7 +1582,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         }
 
         // If not, put the characters back.
-        back(escape_str.length());
+        back(escape_str.length() + (done() ? 0 : 1));
     }
 
     Vector<CompareTypeAndValuePair> escape_compares;
