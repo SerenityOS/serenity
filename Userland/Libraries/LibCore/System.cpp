@@ -747,6 +747,14 @@ ErrorOr<pid_t> setsid()
     return rc;
 }
 
+ErrorOr<pid_t> getsid(pid_t pid)
+{
+    int rc = ::getsid(pid);
+    if (rc < 0)
+        return Error::from_syscall("getsid"sv, -errno);
+    return rc;
+}
+
 ErrorOr<void> drop_privileges()
 {
     auto gid_result = setgid(getgid());
