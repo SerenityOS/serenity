@@ -26,7 +26,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     // For writing temporary files when exporting.
     TRY(Core::System::unveil("/tmp", "crw"));
     TRY(Core::System::unveil("/etc", "r"));

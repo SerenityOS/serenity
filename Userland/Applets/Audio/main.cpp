@@ -237,12 +237,13 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("AudioApplet");
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/audio", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());

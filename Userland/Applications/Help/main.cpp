@@ -28,14 +28,15 @@ static String parse_input(StringView input)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/usr/share/man", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     String start_page;

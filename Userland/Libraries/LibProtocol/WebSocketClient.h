@@ -18,7 +18,7 @@ class WebSocket;
 class WebSocketClient final
     : public IPC::ConnectionToServer<WebSocketClientEndpoint, WebSocketServerEndpoint>
     , public WebSocketClientEndpoint {
-    IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/user/%uid/portal/websocket"sv)
+    IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/session/%sid/portal/websocket"sv)
 
 public:
     RefPtr<WebSocket> connect(const URL&, String const& origin = {}, Vector<String> const& protocols = {}, Vector<String> const& extensions = {}, HashMap<String, String> const& request_headers = {});

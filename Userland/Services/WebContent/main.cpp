@@ -22,12 +22,13 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath proc"));
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/request", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/image", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/websocket", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);

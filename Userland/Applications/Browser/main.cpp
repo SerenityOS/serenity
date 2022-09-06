@@ -80,14 +80,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::seal_allowlist());
 
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/image", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/webcontent", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/request", "rw"));
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

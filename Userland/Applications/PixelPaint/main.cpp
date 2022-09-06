@@ -21,7 +21,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath"));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("PixelPaint");
@@ -31,10 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/image", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

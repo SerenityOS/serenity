@@ -13,6 +13,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/File.h>
+#include <LibCore/SessionManagement.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
@@ -322,17 +323,21 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
         // Need i here to iterate along with all other vectors.
         for (unsigned i = 0; i < socket_paths.size(); i++) {
-            auto const path = Core::Account::parse_path_with_uid(socket_paths.at(i), m_account.has_value() ? m_account.value().uid() : Optional<uid_t> {});
+            auto const path = Core::SessionManagement::parse_path_with_sid(socket_paths.at(i));
+            if (path.is_error()) {
+                // FIXME: better error handling for this case.
+                TODO();
+            }
 
             // Socket path (plus NUL) must fit into the structs sent to the Kernel.
-            VERIFY(path.length() < UNIX_PATH_MAX);
+            VERIFY(path.value().length() < UNIX_PATH_MAX);
 
             // This is done so that the last permission repeats for every other
             // socket. So you can define a single permission, and have it
             // be applied for every socket.
             mode_t permissions = strtol(socket_perms.at(min(socket_perms.size() - 1, (long unsigned)i)).characters(), nullptr, 8) & 0777;
 
-            m_sockets.empend(path, -1, permissions);
+            m_sockets.empend(path.value(), -1, permissions);
         }
     }
 

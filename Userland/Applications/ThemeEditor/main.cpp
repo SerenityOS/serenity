@@ -38,8 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!file_to_edit.is_empty())
         path = Core::File::absolute_path(file_to_edit);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix proc"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

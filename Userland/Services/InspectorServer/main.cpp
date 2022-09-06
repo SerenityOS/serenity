@@ -17,12 +17,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
 
-    TRY(Core::System::pledge("stdio unix accept"));
+    TRY(Core::System::pledge("stdio unix accept rpath proc"));
 
-    auto server = TRY(IPC::MultiServer<InspectorServer::ConnectionFromClient>::try_create("/tmp/user/%uid/portal/inspector"));
+    auto server = TRY(IPC::MultiServer<InspectorServer::ConnectionFromClient>::try_create("/tmp/session/%sid/portal/inspector"));
 
     auto inspectables_server = TRY(Core::LocalServer::try_create());
-    TRY(inspectables_server->take_over_from_system_server("/tmp/user/%uid/portal/inspectables"));
+    TRY(inspectables_server->take_over_from_system_server("/tmp/session/%sid/portal/inspectables"));
 
     inspectables_server->on_accept = [&](auto client_socket) {
         auto pid = client_socket->peer_pid().release_value_but_fixme_should_propagate_errors();

@@ -166,8 +166,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/notify", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/notify", "rw"));
     TRY(Core::System::unveil("/proc/net/adapters", "r"));
     TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));

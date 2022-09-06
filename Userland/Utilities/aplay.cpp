@@ -22,7 +22,7 @@ constexpr size_t LOAD_CHUNK_SIZE = 128 * KiB;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath sendfd unix thread"));
+    TRY(Core::System::pledge("stdio rpath sendfd unix thread proc"));
 
     StringView path {};
     bool should_loop = false;
@@ -34,8 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
     args_parser.parse(arguments);
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil(Core::File::absolute_path(path), "r"sv));
-    TRY(Core::System::unveil("/tmp/user/%uid/portal/audio", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop loop;
