@@ -17,6 +17,8 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ScrollableContainerWidget.h>
+#include <LibGUI/TextBox.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <stdlib.h>
 
 namespace GUI {
@@ -32,6 +34,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     resize(400, 300);
 
     auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
+    m_search_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("search_box"sv);
     m_emojis_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("emojis"sv);
     m_emojis = supported_emoji();
 
@@ -41,6 +44,10 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     on_active_window_change = [this](bool is_active_window) {
         if (!is_active_window)
             close();
+    };
+
+    m_search_box->on_change = [this]() {
+        update_displayed_emoji();
     };
 }
 
@@ -63,6 +70,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             continue;
 
         u32 code_point = strtoul(basename.to_string().characters() + 2, nullptr, 16);
+        auto name = Unicode::code_point_display_name(code_point);
 
         // FIXME: Also emit U+FE0F for single code point emojis, currently
         // they get shown as text glyphs if available.
@@ -82,7 +90,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             done(ExecResult::OK);
         };
 
-        code_points.empend(code_point, move(button));
+        code_points.empend(code_point, move(name), move(button));
     }
 
     return code_points;
@@ -93,20 +101,32 @@ void EmojiInputDialog::update_displayed_emoji()
     ScopeGuard guard { [&] { m_emojis_widget->set_updates_enabled(true); } };
     m_emojis_widget->set_updates_enabled(false);
 
+    m_emojis_widget->remove_all_children();
+
     constexpr size_t columns = 18;
     size_t rows = ceil_div(m_emojis.size(), columns);
     size_t index = 0;
 
     for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
+        horizontal_container.set_preferred_height(SpecialDimension::Fit);
+
         auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
         horizontal_layout.set_spacing(0);
+
         for (size_t column = 0; column < columns; ++column) {
-            if (index < m_emojis.size()) {
+            bool found_match = false;
+
+            while (!found_match && (index < m_emojis.size())) {
                 auto& emoji = m_emojis[index++];
-                horizontal_container.add_child(*emoji.button);
-            } else {
-                horizontal_container.add<Widget>();
+
+                if (emoji.name.has_value())
+                    found_match = emoji.name->contains(m_search_box->text(), CaseSensitivity::CaseInsensitive);
+                else
+                    found_match = m_search_box->text().is_empty();
+
+                if (found_match)
+                    horizontal_container.add_child(*emoji.button);
             }
         }
     }
