@@ -251,7 +251,7 @@ public:
     }
 
     Value(Object const* object)
-        : Value(object ? (OBJECT_TAG << TAG_SHIFT) : (NULL_TAG << TAG_SHIFT), reinterpret_cast<void const*>(object))
+        : Value(OBJECT_TAG << TAG_SHIFT, reinterpret_cast<void const*>(object))
     {
     }
 
@@ -401,7 +401,6 @@ public:
 private:
     Value(u64 tag, u64 val)
     {
-        VERIFY((tag & ~TAG_EXTRACTION) == 0);
         VERIFY(!(tag & val));
         m_value.encoded = tag | val;
     }
@@ -409,16 +408,24 @@ private:
     template<typename PointerType>
     Value(u64 tag, PointerType const* ptr)
     {
-        VERIFY((tag & ~TAG_EXTRACTION) == 0);
-        VERIFY((tag & TAG_EXTRACTION) != 0);
-        // Cell tag bit must be set or this is a nullptr
-        VERIFY((tag & 0x8000000000000000ul) == 0x8000000000000000ul || !ptr);
+        if (!ptr) {
+            // Make sure all nullptrs are null
+            m_value.tag = NULL_TAG;
+            return;
+        }
+
+        VERIFY((tag & 0x8000000000000000ul) == 0x8000000000000000ul);
 
         if constexpr (sizeof(PointerType*) < sizeof(u64)) {
             m_value.encoded = tag | reinterpret_cast<u32>(ptr);
         } else {
-            VERIFY(!(reinterpret_cast<u64>(ptr) & TAG_EXTRACTION));
-            m_value.encoded = tag | reinterpret_cast<u64>(ptr);
+            // NOTE: Pointers in x86-64 use just 48 bits however are supposed to be
+            //       sign extended up from the 47th bit.
+            //       This means that all bits above the 47th should be the same as
+            //       the 47th. When storing a pointer we thus drop the top 16 bits as
+            //       we can recover it when extracting the pointer again.
+            //       See also: Value::extract_pointer.
+            m_value.encoded = tag | (reinterpret_cast<u64>(ptr) & 0x0000ffffffffffffULL);
         }
     }
 
