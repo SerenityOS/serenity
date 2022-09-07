@@ -351,6 +351,10 @@ struct BorderRadiiData;
 struct LinearGradientData;
 }
 
+namespace Web::Platform {
+class Timer;
+}
+
 namespace Web::RequestIdleCallback {
 class IdleDeadline;
 }

@@ -22,7 +22,7 @@ private:
 
     void blink();
 
-    NonnullRefPtr<Core::Timer> m_timer;
+    NonnullRefPtr<Platform::Timer> m_timer;
 };
 
 }

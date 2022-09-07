@@ -8,7 +8,9 @@
 
 #include <AK/Badge.h>
 #include <AK/IDAllocator.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
+#include <AK/TypeCasts.h>
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>

@@ -5,18 +5,18 @@
  */
 
 #include <AK/Debug.h>
-#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/ImageLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web {
 
 ImageLoader::ImageLoader(DOM::Element& owner_element)
     : m_owner_element(owner_element)
-    , m_timer(Core::Timer::construct())
+    , m_timer(Platform::Timer::create())
 {
 }
 

@@ -10,7 +10,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibCore/Timer.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -67,6 +66,7 @@
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
@@ -286,11 +286,11 @@ Document::Document(HTML::Window& window, const AK::URL& url)
 
     HTML::main_thread_event_loop().register_document({}, *this);
 
-    m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
+    m_style_update_timer = Platform::Timer::create_single_shot(0, [this] {
         update_style();
     });
 
-    m_layout_update_timer = Core::Timer::create_single_shot(0, [this] {
+    m_layout_update_timer = Platform::Timer::create_single_shot(0, [this] {
         force_layout();
     });
 }

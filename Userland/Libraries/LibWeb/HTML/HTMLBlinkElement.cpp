@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Timer.h>
 #include <LibWeb/HTML/HTMLBlinkElement.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
 HTMLBlinkElement::HTMLBlinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_timer(Core::Timer::construct())
+    , m_timer(Platform::Timer::create())
 {
     m_timer->set_interval(500);
     m_timer->on_timeout = [this] { blink(); };

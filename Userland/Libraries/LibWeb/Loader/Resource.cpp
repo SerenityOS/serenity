@@ -6,12 +6,12 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web {
 
@@ -168,7 +168,7 @@ void ResourceClient::set_resource(Resource* resource)
         // This ensures that these callbacks always happen in a consistent way, instead of being invoked
         // synchronously in some cases, and asynchronously in others.
         if (resource->is_loaded() || resource->is_failed()) {
-            Core::deferred_invoke([this, strong_resource = NonnullRefPtr { *m_resource }] {
+            Platform::EventLoopPlugin::the().deferred_invoke([this, strong_resource = NonnullRefPtr { *m_resource }] {
                 if (m_resource != strong_resource.ptr())
                     return;
 

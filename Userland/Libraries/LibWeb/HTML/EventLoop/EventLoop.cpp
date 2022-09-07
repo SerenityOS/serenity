@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/EventLoop.h>
-#include <LibCore/Timer.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
@@ -15,6 +13,8 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
@@ -29,7 +29,7 @@ EventLoop::~EventLoop() = default;
 void EventLoop::schedule()
 {
     if (!m_system_event_loop_timer) {
-        m_system_event_loop_timer = Core::Timer::create_single_shot(0, [this] {
+        m_system_event_loop_timer = Platform::Timer::create_single_shot(0, [this] {
             process();
         });
     }
@@ -74,13 +74,7 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
     //       NOTE: This is achieved by returning from the function.
 
     //    1. Wait until the condition goal is met.
-    Core::EventLoop loop;
-    loop.spin_until([&]() -> bool {
-        if (goal_condition())
-            return true;
-
-        return goal_condition();
-    });
+    Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
 
     // 7. Stop task, allowing whatever algorithm that invoked it to resume.
     // NOTE: This is achieved by returning from the function.

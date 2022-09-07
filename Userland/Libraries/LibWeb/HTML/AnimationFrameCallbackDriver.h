@@ -8,8 +8,8 @@
 
 #include <AK/Function.h>
 #include <AK/IDAllocator.h>
-#include <LibCore/Timer.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
@@ -18,7 +18,7 @@ struct AnimationFrameCallbackDriver {
 
     AnimationFrameCallbackDriver()
     {
-        m_timer = Core::Timer::create_single_shot(16, [] {
+        m_timer = Platform::Timer::create_single_shot(16, [] {
             HTML::main_thread_event_loop().schedule();
         });
     }
@@ -57,7 +57,7 @@ struct AnimationFrameCallbackDriver {
 private:
     HashMap<i32, Callback> m_callbacks;
     IDAllocator m_id_allocator;
-    RefPtr<Core::Timer> m_timer;
+    RefPtr<Platform::Timer> m_timer;
 };
 
 }

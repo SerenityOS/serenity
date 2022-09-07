@@ -229,7 +229,7 @@ BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* con
     , m_event_handler({}, *this)
     , m_container(container)
 {
-    m_cursor_blink_timer = Core::Timer::construct(500, [this] {
+    m_cursor_blink_timer = Platform::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
             return;
         if (m_cursor_position.node() && m_cursor_position.node()->layout_node()) {

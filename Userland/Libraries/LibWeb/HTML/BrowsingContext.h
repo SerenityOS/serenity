@@ -10,7 +10,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -20,6 +19,7 @@
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
+#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web::HTML {
@@ -148,7 +148,7 @@ private:
     Gfx::IntPoint m_viewport_scroll_offset;
 
     DOM::Position m_cursor_position;
-    RefPtr<Core::Timer> m_cursor_blink_timer;
+    RefPtr<Platform::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
 
     HashTable<ViewportClient*> m_viewport_clients;

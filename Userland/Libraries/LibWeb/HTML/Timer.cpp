@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Timer.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
@@ -20,7 +20,7 @@ Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id
     , m_callback(move(callback))
     , m_id(id)
 {
-    m_timer = Core::Timer::create_single_shot(milliseconds, [this] {
+    m_timer = Platform::Timer::create_single_shot(milliseconds, [this] {
         m_callback();
     });
 }

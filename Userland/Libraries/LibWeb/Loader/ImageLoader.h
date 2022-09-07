@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibCore/Timer.h>
 #include <LibWeb/Loader/ImageResource.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web {
 
@@ -60,7 +60,7 @@ private:
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     LoadingState m_loading_state { LoadingState::Loading };
-    NonnullRefPtr<Core::Timer> m_timer;
+    NonnullRefPtr<Platform::Timer> m_timer;
     size_t m_redirects_count { 0 };
 };
 

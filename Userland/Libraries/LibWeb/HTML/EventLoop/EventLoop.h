@@ -84,7 +84,7 @@ private:
 
     JS::VM* m_vm { nullptr };
 
-    RefPtr<Core::Timer> m_system_event_loop_timer;
+    RefPtr<Platform::Timer> m_system_event_loop_timer;
 
     // https://html.spec.whatwg.org/#performing-a-microtask-checkpoint
     bool m_performing_a_microtask_checkpoint { false };

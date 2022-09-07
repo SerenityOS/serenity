@@ -9,14 +9,14 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCore/Timer.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/Platform/Timer.h>
 
 #ifdef __serenity__
 #    include <serenity.h>
@@ -179,7 +179,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         HashMap<String, String, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
-        deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
+        Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
             success_callback(String::empty().to_byte_buffer(), response_headers, {});
         });
         return;
@@ -206,7 +206,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         }
 
         log_success(request);
-        deferred_invoke([data = move(data), success_callback = move(success_callback)] {
+        Platform::EventLoopPlugin::the().deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});
         });
         return;
@@ -284,7 +284,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         }
 
         if (timeout.has_value() && timeout.value() > 0) {
-            auto timer = Core::Timer::create_single_shot(timeout.value(), nullptr);
+            auto timer = Platform::Timer::create_single_shot(timeout.value(), nullptr);
             timer->on_timeout = [timer, protocol_request, timeout_callback = move(timeout_callback)]() mutable {
                 protocol_request->stop();
                 if (timeout_callback)
@@ -312,7 +312,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             }
             log_success(request);
             success_callback(payload, response_headers, status_code);
-            deferred_invoke([this, &protocol_request] {
+            Platform::EventLoopPlugin::the().deferred_invoke([this, &protocol_request] {
                 m_active_requests.remove(protocol_request);
             });
         };
