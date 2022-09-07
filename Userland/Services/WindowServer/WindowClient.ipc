@@ -20,6 +20,7 @@ endpoint WindowClient
     window_activated(i32 window_id) =|
     window_deactivated(i32 window_id) =|
     window_state_changed(i32 window_id, bool minimized, bool maximized, bool occluded) =|
+    window_input_preempted(i32 window_id, i32 preemptor) =|
     window_close_request(i32 window_id) =|
     window_resized(i32 window_id, Gfx::IntRect new_rect) =|
 

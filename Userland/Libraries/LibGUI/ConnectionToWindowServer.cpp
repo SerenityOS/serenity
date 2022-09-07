@@ -401,6 +401,12 @@ void ConnectionToWindowServer::window_state_changed(i32 window_id, bool minimize
         window->notify_state_changed({}, minimized, maximized, occluded);
 }
 
+void ConnectionToWindowServer::window_input_preempted(i32 window_id, i32 preemptor)
+{
+    if (auto* window = Window::from_window_id(window_id))
+        window->notify_input_preempted({}, static_cast<InputPreemptor>(preemptor));
+}
+
 void ConnectionToWindowServer::display_link_notification()
 {
     if (m_display_link_notification_pending)

@@ -117,6 +117,7 @@ ComboBox::ComboBox()
         }
         m_open_button->set_enabled(true);
     };
+    m_list_window->on_input_preemption = [this](auto) { close(); };
 
     m_list_view = m_list_window->set_main_widget<ListView>();
     m_list_view->horizontal_scrollbar().set_visible(false);

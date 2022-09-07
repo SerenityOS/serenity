@@ -11,5 +11,6 @@
 namespace GUI {
 
 using WindowMode = WindowServer::WindowMode;
+using InputPreemptor = WindowServer::InputPreemptor;
 
 }

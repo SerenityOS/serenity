@@ -87,6 +87,7 @@ public:
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
+    void notify_input_preempted(Window&, InputPreemptor = InputPreemptor::Other);
 
     Gfx::IntRect tiled_window_rect(Window const&, WindowTileType tile_type = WindowTileType::Maximized, bool relative_to_window_screen = false) const;
 

@@ -227,6 +227,11 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
         if (!is_active_window)
             close();
     };
+
+    on_input_preemption = [this](InputPreemptor preemptor) {
+        if (preemptor != InputPreemptor::ContextMenu)
+            close();
+    };
 }
 
 void CommandPalette::collect_actions(GUI::Window& parent_window)
