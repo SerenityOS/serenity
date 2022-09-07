@@ -6,6 +6,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
@@ -70,7 +71,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             continue;
 
         u32 code_point = strtoul(basename.to_string().characters() + 2, nullptr, 16);
-        auto name = Unicode::code_point_display_name(code_point);
+        auto emoji = Unicode::find_emoji_for_code_points({ code_point });
 
         // FIXME: Also emit U+FE0F for single code point emojis, currently
         // they get shown as text glyphs if available.
@@ -90,11 +91,21 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             done(ExecResult::OK);
         };
 
-        if (name.has_value())
-            button->set_tooltip(name->to_titlecase());
+        if (emoji.has_value())
+            button->set_tooltip(emoji->name);
 
-        code_points.empend(code_point, move(name), move(button));
+        code_points.empend(code_point, move(button), move(emoji));
     }
+
+    quick_sort(code_points, [](auto const& lhs, auto const& rhs) {
+        if (lhs.emoji.has_value() && rhs.emoji.has_value())
+            return lhs.emoji->display_order < rhs.emoji->display_order;
+        if (lhs.emoji.has_value())
+            return true;
+        if (rhs.emoji.has_value())
+            return false;
+        return lhs.code_point < rhs.code_point;
+    });
 
     return code_points;
 }
@@ -123,8 +134,8 @@ void EmojiInputDialog::update_displayed_emoji()
             while (!found_match && (index < m_emojis.size())) {
                 auto& emoji = m_emojis[index++];
 
-                if (emoji.name.has_value())
-                    found_match = emoji.name->contains(m_search_box->text(), CaseSensitivity::CaseInsensitive);
+                if (emoji.emoji.has_value())
+                    found_match = emoji.emoji->name.contains(m_search_box->text(), CaseSensitivity::CaseInsensitive);
                 else
                     found_match = m_search_box->text().is_empty();
 
