@@ -1482,6 +1482,9 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
     if (m_bitmap)
         return;
 
+    if (resource())
+        return;
+
     m_document = &document;
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
