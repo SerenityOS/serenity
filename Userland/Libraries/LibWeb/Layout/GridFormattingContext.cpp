@@ -368,6 +368,45 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
 
         // FIXME: 4.2. For dense packing:
     }
+
+    // https://drafts.csswg.org/css-grid/#overview-sizing
+    // 2.3. Sizing the Grid
+    // Once the grid items have been placed, the sizes of the grid tracks (rows and columns) are
+    // calculated, accounting for the sizes of their contents and/or available space as specified in
+    // the grid definition.
+
+    // https://drafts.csswg.org/css-grid/#layout-algorithm
+    // 12. Grid Sizing
+    // This section defines the grid sizing algorithm, which determines the size of all grid tracks and,
+    // by extension, the entire grid.
+
+    // Each track has specified minimum and maximum sizing functions (which may be the same). Each
+    // sizing function is either:
+
+    // - A fixed sizing function (<length> or resolvable <percentage>).
+    // - An intrinsic sizing function (min-content, max-content, auto, fit-content()).
+    // - A flexible sizing function (<flex>).
+
+    // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
+
+    struct GridTrack {
+        CSS::GridTrackSize min_track_sizing_function;
+        CSS::GridTrackSize max_track_sizing_function;
+        float base_size { 0 };
+        float growth_limit { 0 };
+    };
+    Vector<GridTrack> grid_rows;
+    Vector<GridTrack> grid_columns;
+
+    for (auto& column_size : box.computed_values().grid_template_columns())
+        grid_columns.append({ column_size, column_size });
+    for (auto& row_size : box.computed_values().grid_template_rows())
+        grid_rows.append({ row_size, row_size });
+
+    for (int column_index = grid_columns.size(); column_index < static_cast<int>(occupation_grid[0].size()); column_index++)
+        grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+    for (int row_index = grid_rows.size(); row_index < static_cast<int>(occupation_grid.size()); row_index++)
+        grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
 }
 
 }
