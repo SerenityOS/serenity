@@ -635,7 +635,7 @@ void Menu::do_popup(Gfx::IntPoint const& position, bool make_input, bool as_subm
     redraw_if_theme_changed();
 
     constexpr auto margin = 10;
-    Gfx::IntPoint adjusted_pos = position;
+    Gfx::IntPoint adjusted_pos = m_unadjusted_position = position;
 
     if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
         // Vertically translate the window by its full width, i.e. flip it at its vertical axis.

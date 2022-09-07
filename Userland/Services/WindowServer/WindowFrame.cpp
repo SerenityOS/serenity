@@ -892,6 +892,7 @@ void WindowFrame::open_menubar_menu(Menu& menu)
     auto menubar_rect = this->menubar_rect();
     MenuManager::the().close_everyone();
     auto position = menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location());
+    menu.set_unadjusted_position(position);
     auto& window = menu.ensure_menu_window(position);
     auto window_rect = window.rect();
     auto& screen = Screen::closest_to_rect(window_rect);
