@@ -11,6 +11,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <LibCore/DirIterator.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/EmojiInputDialog.h>
@@ -19,13 +21,32 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/TextBox.h>
-#include <LibUnicode/CharacterTypes.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGfx/Bitmap.h>
 #include <stdlib.h>
 
 namespace GUI {
 
+struct EmojiCateogry {
+    Unicode::EmojiGroup group;
+    StringView emoji;
+};
+
+static constexpr auto s_emoji_groups = Array {
+    EmojiCateogry { Unicode::EmojiGroup::SmileysAndEmotion, "/res/emoji/U+1F600.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::PeopleAndBody, "/res/emoji/U+1FAF3.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::AnimalsAndNature, "/res/emoji/U+1F33B.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::FoodAndDrink, "/res/emoji/U+1F355.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::TravelAndPlaces, "/res/emoji/U+1F3D6.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::Activities, "/res/emoji/U+1F3B3.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::Objects, "/res/emoji/U+1F4E6.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::Symbols, "/res/emoji/U+2764.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::Flags, "/res/emoji/U+1F6A9.png"sv },
+};
+
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
+    , m_category_action_group(make<ActionGroup>())
 {
     auto& main_widget = set_main_widget<Frame>();
     if (!main_widget.load_from_gml(emoji_input_dialog_gml))
@@ -36,8 +57,33 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
     auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
     m_search_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("search_box"sv);
+    m_toolbar = main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar"sv);
     m_emojis_widget = main_widget.find_descendant_of_type_named<GUI::Widget>("emojis"sv);
     m_emojis = supported_emoji();
+
+    m_category_action_group->set_exclusive(true);
+    m_category_action_group->set_unchecking_allowed(true);
+
+    for (auto const& category : s_emoji_groups) {
+        auto name = Unicode::emoji_group_to_string(category.group);
+        auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
+        auto bitmap = Gfx::Bitmap::try_load_from_file(category.emoji).release_value_but_fixme_should_propagate_errors();
+
+        auto set_filter_action = Action::create_checkable(
+            tooltip, bitmap, [this, group = category.group](auto& action) {
+                if (action.is_checked())
+                    m_selected_category = group;
+                else
+                    m_selected_category = {};
+
+                m_search_box->set_text({}, AllowCallback::No);
+                update_displayed_emoji();
+            },
+            this);
+
+        m_category_action_group->add_action(*set_filter_action);
+        m_toolbar->add_action(*set_filter_action);
+    }
 
     scrollable_container.horizontal_scrollbar().set_visible(false);
     update_displayed_emoji();
@@ -133,6 +179,11 @@ void EmojiInputDialog::update_displayed_emoji()
 
             while (!found_match && (index < m_emojis.size())) {
                 auto& emoji = m_emojis[index++];
+
+                if (m_selected_category.has_value()) {
+                    if (!emoji.emoji.has_value() || emoji.emoji->group != m_selected_category)
+                        continue;
+                }
 
                 if (emoji.emoji.has_value())
                     found_match = emoji.emoji->name.contains(m_search_box->text(), CaseSensitivity::CaseInsensitive);

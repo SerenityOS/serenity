@@ -12,6 +12,17 @@
         fixed_height: 22
     }
 
+    @GUI::ToolbarContainer {
+        @GUI::Toolbar {
+            name: "toolbar"
+
+            @GUI::Label {
+                text: "Category: "
+                autosize: true
+            }
+        }
+    }
+
     @GUI::ScrollableContainerWidget {
         name: "scrollable_container"
         content_widget: @GUI::Widget {
