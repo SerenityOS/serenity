@@ -26,6 +26,8 @@ public:
     GridTrackSize(Percentage);
     GridTrackSize(float);
 
+    static GridTrackSize make_auto();
+
     Type type() const { return m_type; }
 
     bool is_length() const { return m_type == Type::Length; }
