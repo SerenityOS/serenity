@@ -22,13 +22,11 @@ class WebView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Core::EventLoop&);
+    explicit BrowserWindow();
 
     WebView& view() const { return m_current_tab->view(); }
 
     int tab_index(Tab*);
-
-    virtual void closeEvent(QCloseEvent*) override;
 
 public slots:
     void tab_title_changed(int index, QString const&);
@@ -44,6 +42,4 @@ private:
     QTabBar* m_tabs_bar { nullptr };
     NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
-
-    Core::EventLoop& m_event_loop;
 };

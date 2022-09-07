@@ -8,7 +8,6 @@
 #include "Settings.h"
 #include "WebView.h"
 #include <LibCore/ArgsParser.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibMain/Main.h>
 #include <QApplication>
@@ -29,22 +28,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     s_settings = new Browser::Settings();
 
-    Core::EventLoop event_loop;
-
     QApplication app(arguments.argc, arguments.argv);
-    BrowserWindow window(event_loop);
+    BrowserWindow window;
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();
-
-    auto qt_event_loop_driver = Core::Timer::create_repeating(50, [&] {
-        app.processEvents();
-    });
-    qt_event_loop_driver->start();
 
     if (!url.is_empty()) {
         window.view().load(url);
     }
 
-    return event_loop.exec();
+    return app.exec();
 }
