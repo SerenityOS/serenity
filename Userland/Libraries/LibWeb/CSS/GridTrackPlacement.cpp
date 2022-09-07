@@ -21,6 +21,7 @@ GridTrackPlacement::GridTrackPlacement(int position)
 }
 
 GridTrackPlacement::GridTrackPlacement()
+    : m_is_auto(true)
 {
 }
 
