@@ -626,7 +626,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 offset_from_edge = box_state.content_width() + box_state.margin_box_right();
         };
 
-        auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+        auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
         float y_in_root = box_in_root_rect.y();
         float y = box_state.offset.y();
 
@@ -649,7 +649,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             }
 
             if (fits_on_line) {
-                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
+                auto const previous_rect = border_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
                 if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
                     // This box touches another already floating box. Stack after others.
                     offset_from_edge = wanted_offset_from_edge;
@@ -747,7 +747,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
     for (auto const& floating_box : m_left_floats.current_boxes.in_reverse()) {
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
             space_used_by_floats.left = floating_box.offset_from_edge
                 + floating_box_state.content_width()
@@ -759,7 +759,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
     for (auto const& floating_box : m_right_floats.current_boxes.in_reverse()) {
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
             space_used_by_floats.right = floating_box.offset_from_edge
                 + floating_box_state.margin_box_left();

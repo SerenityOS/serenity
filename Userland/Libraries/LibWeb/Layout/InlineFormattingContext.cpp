@@ -52,7 +52,7 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 float InlineFormattingContext::leftmost_x_offset_at(float y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     float containing_block_x = m_containing_block_state.offset.x();
@@ -67,14 +67,13 @@ float InlineFormattingContext::available_space_for_line(float y) const
         return INFINITY;
 
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto& root_block = parent().root();
+    auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state);
     float y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
 
-    auto const& root_block_state = m_state.get(parent().root());
-
     space.left = max(space.left, m_containing_block_state.offset.x()) - m_containing_block_state.offset.x();
-    space.right = min(root_block_state.content_width() - space.right, m_containing_block_state.offset.x() + m_effective_containing_block_width);
+    space.right = min(m_containing_block_state.content_width() - space.right, m_containing_block_state.offset.x() + m_effective_containing_block_width);
 
     return space.right - space.left;
 }

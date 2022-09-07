@@ -107,6 +107,31 @@ Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
     return rect;
 }
 
+Gfx::FloatRect border_box_rect(Box const& box, LayoutState const& state)
+{
+    auto const& box_state = state.get(box);
+    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    rect.set_x(rect.x() - box_state.border_box_left());
+    rect.set_width(rect.width() + box_state.border_box_left() + box_state.border_box_right());
+    rect.set_y(rect.y() - box_state.border_box_top());
+    rect.set_height(rect.height() + box_state.border_box_top() + box_state.border_box_bottom());
+    return rect;
+}
+
+Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+{
+    auto rect = border_box_rect(box, state);
+    for (auto const* current = box.parent(); current; current = current->parent()) {
+        if (current == &ancestor_box)
+            break;
+        if (is<Box>(*current)) {
+            auto const& current_state = state.get(static_cast<Box const&>(*current));
+            rect.translate_by(current_state.offset);
+        }
+    }
+    return rect;
+}
+
 Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = margin_box_rect(box, state);
