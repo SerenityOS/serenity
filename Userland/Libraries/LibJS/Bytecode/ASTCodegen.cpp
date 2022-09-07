@@ -523,8 +523,6 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
 
 Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Vector<Bytecode::Register> argument_registers;
-
     if (m_is_synthetic == IsPartOfSyntheticConstructor::Yes) {
         // NOTE: This is the case where we have a fake constructor(...args) { super(...args); } which
         //       shouldn't call @@iterator of %Array.prototype%.
@@ -534,17 +532,24 @@ Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Gen
         // This generates a single argument, which will be implicitly passed in accumulator
         MUST(argument.value->generate_bytecode(generator));
     } else {
+        Vector<Bytecode::Register> argument_registers;
         argument_registers.ensure_capacity(m_arguments.size());
 
-        for (auto const& arg : m_arguments) {
-            TRY(arg.value->generate_bytecode(generator));
+        for (size_t i = 0; i < m_arguments.size(); ++i) {
             auto arg_reg = generator.allocate_register();
-            generator.emit<Bytecode::Op::Store>(arg_reg);
             argument_registers.unchecked_append(arg_reg);
         }
+        for (size_t i = 0; i < m_arguments.size(); ++i) {
+            TRY(m_arguments[i].value->generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Store>(argument_registers[i]);
+        }
+        if (!argument_registers.is_empty())
+            generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { argument_registers.first(), argument_registers.last() });
+        else
+            generator.emit<Bytecode::Op::NewArray>();
     }
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::SuperCall>(argument_registers.size(), m_is_synthetic == IsPartOfSyntheticConstructor::Yes, argument_registers);
+    generator.emit<Bytecode::Op::SuperCall>(m_is_synthetic == IsPartOfSyntheticConstructor::Yes);
 
     return {};
 }
@@ -1489,12 +1494,15 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     }
 
+    // FIXME: We only need to record the first and last register, due to packing everything in an array
     Vector<Bytecode::Register> argument_registers;
-    for (auto& arg : m_arguments) {
-        TRY(arg.value->generate_bytecode(generator));
+    for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto arg_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::Store>(arg_reg);
         argument_registers.append(arg_reg);
+    }
+    for (size_t i = 0; i < m_arguments.size(); ++i) {
+        TRY(m_arguments[i].value->generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Store>(argument_registers[i]);
     }
 
     Bytecode::Op::Call::CallType call_type;
@@ -1504,7 +1512,11 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         call_type = Bytecode::Op::Call::CallType::Call;
     }
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), call_type, callee_reg, this_reg, argument_registers);
+    if (!argument_registers.is_empty())
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { argument_registers.first(), argument_registers.last() });
+    else
+        generator.emit<Bytecode::Op::NewArray>();
+    generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg);
     return {};
 }
 
@@ -1676,6 +1688,8 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     auto tag_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(tag_reg);
 
+    // FIXME: We only need to record the first and last register,
+    //        due to packing everything in an array, same goes for argument_regs
     Vector<Bytecode::Register> string_regs;
     auto& expressions = m_template_literal->expressions();
     for (size_t i = 0; i < expressions.size(); ++i) {
@@ -1704,14 +1718,13 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 
     Vector<Bytecode::Register> argument_regs;
     argument_regs.append(strings_reg);
-    for (size_t i = 0; i < expressions.size(); ++i) {
-        if (i % 2 == 0)
-            continue;
+    for (size_t i = 1; i < expressions.size(); i += 2)
+        argument_regs.append(generator.allocate_register());
 
+    for (size_t i = 1; i < expressions.size(); i += 2) {
+        auto string_reg = argument_regs[1 + i / 2];
         TRY(expressions[i].generate_bytecode(generator));
-        auto string_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(string_reg);
-        argument_regs.append(string_reg);
     }
 
     Vector<Bytecode::Register> raw_string_regs;
@@ -1741,7 +1754,12 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(this_reg);
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_regs.size(), Bytecode::Op::Call::CallType::Call, tag_reg, this_reg, move(argument_regs));
+    if (!argument_regs.is_empty())
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { argument_regs.first(), argument_regs.last() });
+    else
+        generator.emit<Bytecode::Op::NewArray>();
+
+    generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, tag_reg, this_reg);
     return {};
 }
 
