@@ -78,6 +78,11 @@ void HTMLImageElement::parse_attribute(FlyString const& name, String const& valu
 
     if (name == HTML::AttributeNames::src && !value.is_empty())
         m_image_loader.load(document().parse_url(value));
+
+    if (name == HTML::AttributeNames::alt) {
+        if (layout_node())
+            verify_cast<Layout::ImageBox>(*layout_node()).dom_node_did_update_alt_text({});
+    }
 }
 
 RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

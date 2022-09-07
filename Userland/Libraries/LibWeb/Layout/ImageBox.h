@@ -29,6 +29,8 @@ public:
 
     auto const& image_loader() const { return m_image_loader; }
 
+    void dom_node_did_update_alt_text(Badge<HTML::HTMLImageElement>);
+
 private:
     // ^BrowsingContext::ViewportClient
     virtual void browsing_context_did_set_viewport_rect(Gfx::IntRect const&) final;
@@ -37,6 +39,8 @@ private:
     int preferred_height() const;
 
     ImageLoader const& m_image_loader;
+
+    Optional<float> m_cached_alt_text_width;
 };
 
 }
