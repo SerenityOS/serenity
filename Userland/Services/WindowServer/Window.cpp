@@ -443,9 +443,8 @@ void Window::event(Core::Event& event)
     }
 
     if (blocking_modal_window()) {
-        // We still want to handle the WindowDeactivated event below when a new modal is
-        // created to notify its parent window, despite it being "blocked by modal window".
-        if (event.type() != Event::WindowDeactivated)
+        // Allow windows to process their inactivity after being blocked
+        if (event.type() != Event::WindowDeactivated && event.type() != Event::WindowInputLeft)
             return;
     }
 
