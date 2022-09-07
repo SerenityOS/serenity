@@ -3,6 +3,7 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/unicode_data.cmake)
 set(SOURCES
     CharacterTypes.cpp
     CurrencyCode.cpp
+    Emoji.cpp
     ${UNICODE_DATA_SOURCES}
 )
 
