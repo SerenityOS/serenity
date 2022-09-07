@@ -30,6 +30,11 @@ GridTrackSize::GridTrackSize(float flexible_length)
 {
 }
 
+GridTrackSize GridTrackSize::make_auto()
+{
+    return GridTrackSize(CSS::Length::make_auto());
+}
+
 String GridTrackSize::to_string() const
 {
     switch (m_type) {
