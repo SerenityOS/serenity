@@ -49,6 +49,7 @@ set(SOURCES
     ConsoleClient.cpp
     ConsoleGlobalObject.cpp
     CookieJar.cpp
+    EventLoopPluginQt.cpp
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
@@ -56,6 +57,7 @@ set(SOURCES
     Settings.cpp
     SettingsDialog.cpp
     Tab.cpp
+    TimerQt.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES}
