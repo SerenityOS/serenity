@@ -799,6 +799,130 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     // max-width/height, then redo this step, treating the available grid space as equal to the grid
     // container’s inner size when it’s sized to its max-width/height.
     // FIXME: Do later as at the moment all growth limits are equal to base sizes.
+
+    // https://drafts.csswg.org/css-grid/#algo-flex-tracks
+    // 12.7. Expand Flexible Tracks
+    // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding
+    // the available space.
+
+    // First, find the grid’s used flex fraction:
+    auto column_flex_factor_sum = 0;
+    for (auto& grid_column : grid_columns) {
+        if (grid_column.min_track_sizing_function.is_flexible_length())
+            column_flex_factor_sum++;
+    }
+    // See 12.7.1.
+    // Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less
+    // than 1, set it to 1 instead.
+    if (column_flex_factor_sum < 1)
+        column_flex_factor_sum = 1;
+
+    // See 12.7.1.
+    float sized_column_widths = 0;
+    for (auto& grid_column : grid_columns) {
+        if (!grid_column.min_track_sizing_function.is_flexible_length())
+            sized_column_widths += grid_column.base_size;
+    }
+    // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
+    double free_horizontal_space = box_state.content_width() - sized_column_widths;
+
+    // If the free space is zero or if sizing the grid container under a min-content constraint:
+    // The used flex fraction is zero.
+    // FIXME: Add min-content constraint check.
+
+    // Otherwise, if the free space is a definite length:
+    // The used flex fraction is the result of finding the size of an fr using all of the grid tracks
+    // and a space to fill of the available grid space.
+    if (free_horizontal_space > 0) {
+        for (auto& grid_column : grid_columns) {
+            if (grid_column.min_track_sizing_function.is_flexible_length()) {
+                // See 12.7.1.
+                // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
+                auto hypothetical_fr_size = static_cast<double>(1.0 / column_flex_factor_sum) * free_horizontal_space;
+                // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
+                // greater than the track’s base size, set its base size to that product.
+                grid_column.base_size = max(grid_column.base_size, hypothetical_fr_size);
+            }
+        }
+    }
+
+    // First, find the grid’s used flex fraction:
+    auto row_flex_factor_sum = 0;
+    for (auto& grid_row : grid_rows) {
+        if (grid_row.min_track_sizing_function.is_flexible_length())
+            row_flex_factor_sum++;
+    }
+    // See 12.7.1.
+    // Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less
+    // than 1, set it to 1 instead.
+    if (row_flex_factor_sum < 1)
+        row_flex_factor_sum = 1;
+
+    // See 12.7.1.
+    float sized_row_heights = 0;
+    for (auto& grid_row : grid_rows) {
+        if (!grid_row.min_track_sizing_function.is_flexible_length())
+            sized_row_heights += grid_row.base_size;
+    }
+    // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
+    double free_vertical_space = box_state.content_height() - sized_row_heights;
+
+    // If the free space is zero or if sizing the grid container under a min-content constraint:
+    // The used flex fraction is zero.
+    // FIXME: Add min-content constraint check.
+
+    // Otherwise, if the free space is a definite length:
+    // The used flex fraction is the result of finding the size of an fr using all of the grid tracks
+    // and a space to fill of the available grid space.
+    if (free_vertical_space > 0) {
+        for (auto& grid_row : grid_rows) {
+            if (grid_row.min_track_sizing_function.is_flexible_length()) {
+                // See 12.7.1.
+                // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
+                auto hypothetical_fr_size = static_cast<double>(1.0 / row_flex_factor_sum) * free_vertical_space;
+                // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
+                // greater than the track’s base size, set its base size to that product.
+                grid_row.base_size = max(grid_row.base_size, hypothetical_fr_size);
+            }
+        }
+    }
+
+    // Otherwise, if the free space is an indefinite length:
+    // FIXME: No tracks will have indefinite length as per current implementation.
+
+    // The used flex fraction is the maximum of:
+    // For each flexible track, if the flexible track’s flex factor is greater than one, the result of
+    // dividing the track’s base size by its flex factor; otherwise, the track’s base size.
+
+    // For each grid item that crosses a flexible track, the result of finding the size of an fr using
+    // all the grid tracks that the item crosses and a space to fill of the item’s max-content
+    // contribution.
+
+    // If using this flex fraction would cause the grid to be smaller than the grid container’s
+    // min-width/height (or larger than the grid container’s max-width/height), then redo this step,
+    // treating the free space as definite and the available grid space as equal to the grid container’s
+    // inner size when it’s sized to its min-width/height (max-width/height).
+
+    // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
+    // greater than the track’s base size, set its base size to that product.
+
+    // https://drafts.csswg.org/css-grid/#algo-find-fr-size
+    // 12.7.1. Find the Size of an fr
+
+    // This algorithm finds the largest size that an fr unit can be without exceeding the target size.
+    // It must be called with a set of grid tracks and some quantity of space to fill.
+
+    // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
+
+    // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less
+    // than 1, set it to 1 instead.
+
+    // 3. Let the hypothetical fr size be the leftover space divided by the flex factor sum.
+
+    // FIXME: 4. If the product of the hypothetical fr size and a flexible track’s flex factor is less than the
+    // track’s base size, restart this algorithm treating all such tracks as inflexible.
+
+    // 5. Return the hypothetical fr size.
 }
 
 }
