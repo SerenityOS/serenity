@@ -369,6 +369,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
         // FIXME: 4.2. For dense packing:
     }
 
+    for (auto& positioned_box : positioned_boxes) {
+        (void)layout_inside(positioned_box.box, LayoutMode::Normal);
+    }
+
     // https://drafts.csswg.org/css-grid/#overview-sizing
     // 2.3. Sizing the Grid
     // Once the grid items have been placed, the sizes of the grid tracks (rows and columns) are
@@ -965,6 +969,29 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
         if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
             grid_row.base_size = max(grid_row.base_size, remaining_vertical_space / count_of_auto_max_row_tracks);
     }
+
+    // Do layout
+    auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
+        auto& child_box_state = m_state.get_mutable(child_box);
+        float x_start = 0;
+        float x_end = 0;
+        float y_start = 0;
+        float y_end = 0;
+        for (int i = 0; i < column_start; i++)
+            x_start += grid_columns[i].base_size;
+        for (int i = 0; i < column_end; i++)
+            x_end += grid_columns[i].base_size;
+        for (int i = 0; i < row_start; i++)
+            y_start += grid_rows[i].base_size;
+        for (int i = 0; i < row_end; i++)
+            y_end += grid_rows[i].base_size;
+        child_box_state.set_content_width(x_end - x_start);
+        child_box_state.set_content_height(y_end - y_start);
+        child_box_state.offset = { x_start, y_start };
+    };
+
+    for (auto& positioned_box : positioned_boxes)
+        layout_box(positioned_box.row, positioned_box.row + positioned_box.row_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
 }
 
 }
