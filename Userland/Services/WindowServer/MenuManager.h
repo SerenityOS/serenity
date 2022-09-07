@@ -58,7 +58,6 @@ private:
     void refresh();
 
     WeakPtr<Menu> m_current_menu;
-    WeakPtr<Window> m_previous_input_window;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
     int m_theme_index { 0 };

@@ -331,17 +331,14 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 
 void MenuManager::clear_current_menu()
 {
-    Menu* previous_current_menu = m_current_menu;
-    m_current_menu = nullptr;
-    if (previous_current_menu) {
-        // When closing the last menu, restore the previous active input window
+    if (m_current_menu) {
         auto& wm = WindowManager::the();
-        wm.restore_active_input_window(m_previous_input_window);
         if (auto* window = wm.window_with_active_menu()) {
             window->invalidate_menubar();
         }
         wm.set_window_with_active_menu(nullptr);
     }
+    m_current_menu = nullptr;
 }
 
 void MenuManager::set_current_menu(Menu* menu)
@@ -356,19 +353,17 @@ void MenuManager::set_current_menu(Menu* menu)
         return;
     }
 
-    Menu* previous_current_menu = m_current_menu;
     m_current_menu = menu;
 
     auto& wm = WindowManager::the();
-    if (!previous_current_menu) {
-        // When opening the first menu, store the current active input window
-        if (auto* active_input = wm.active_input_window())
-            m_previous_input_window = *active_input;
-        else
-            m_previous_input_window = nullptr;
+    if (auto* window = wm.active_input_window()) {
+        InputPreemptor preemptor { InputPreemptor::OtherMenu };
+        if (window->rect().contains(m_current_menu->unadjusted_position()))
+            preemptor = InputPreemptor::ContextMenu;
+        else if (!m_current_menu->rect_in_window_menubar().is_null())
+            preemptor = InputPreemptor::MenubarMenu;
+        wm.notify_input_preempted(*window, preemptor);
     }
-
-    wm.set_active_input_window(m_current_menu->menu_window());
 }
 
 Menu* MenuManager::previous_menu(Menu* current)

@@ -642,6 +642,12 @@ void WindowManager::notify_progress_changed(Window& window)
     tell_wms_window_state_changed(window);
 }
 
+void WindowManager::notify_input_preempted(Window& window, InputPreemptor preemptor)
+{
+    if (window.client())
+        window.client()->async_window_input_preempted(window.window_id(), (i32)preemptor);
+}
+
 void WindowManager::pick_new_active_window(Window* previous_active)
 {
     Window* desktop = nullptr;

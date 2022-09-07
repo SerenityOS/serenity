@@ -1110,6 +1110,12 @@ void Window::notify_state_changed(Badge<ConnectionToWindowServer>, bool minimize
     }
 }
 
+void Window::notify_input_preempted(Badge<ConnectionToWindowServer>, InputPreemptor preemptor)
+{
+    if (on_input_preemption)
+        on_input_preemption(preemptor);
+}
+
 Action* Window::action_for_shortcut(Shortcut const& shortcut)
 {
     Action* found_action = nullptr;
