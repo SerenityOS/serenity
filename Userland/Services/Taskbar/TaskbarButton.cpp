@@ -17,6 +17,7 @@
 TaskbarButton::TaskbarButton(WindowIdentifier const& identifier)
     : m_identifier(identifier)
 {
+    set_checkable(true);
 }
 
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
