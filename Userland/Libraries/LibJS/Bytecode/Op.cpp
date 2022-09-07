@@ -496,6 +496,33 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& inter
     return {};
 }
 
+// 13.3.8.1 https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
+static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& interpreter)
+{
+    // Note: Any spreading and actual evaluation is handled in preceding opcodes
+    // Note: The spec uses the concept of a list, while we create a temporary array
+    //       in the preceding opcodes, so we have to convert in a manner that is not
+    //       visible to the user
+    auto& vm = interpreter.vm();
+
+    MarkedVector<Value> argument_values { vm.heap() };
+    auto arguments = interpreter.accumulator();
+
+    auto& argument_array = arguments.as_array();
+    auto array_length = argument_array.indexed_properties().array_like_size();
+
+    argument_values.ensure_capacity(array_length);
+
+    for (size_t i = 0; i < array_length; ++i) {
+        if (auto maybe_value = argument_array.indexed_properties().get(i); maybe_value.has_value())
+            argument_values.append(maybe_value.release_value().value);
+        else
+            argument_values.append(js_undefined());
+    }
+
+    return argument_values;
+}
+
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -512,9 +539,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 
     auto this_value = interpreter.reg(m_this_value);
 
-    MarkedVector<Value> argument_values { vm.heap() };
-    for (size_t i = 0; i < m_argument_count; ++i)
-        argument_values.append(interpreter.reg(m_arguments[i]));
+    auto argument_values = argument_list_evaluation(interpreter);
 
     Value return_value;
     if (m_type == CallType::Call)
@@ -549,8 +574,7 @@ ThrowCompletionOr<void> SuperCall::execute_impl(Bytecode::Interpreter& interpret
         for (size_t i = 0; i < length; ++i)
             arg_list.append(array_value.get_without_side_effects(PropertyKey { i }));
     } else {
-        for (size_t i = 0; i < m_argument_count; ++i)
-            arg_list.append(interpreter.reg(m_arguments[i]));
+        arg_list = argument_list_evaluation(interpreter);
     }
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
@@ -1045,28 +1069,12 @@ String JumpUndefined::to_string_impl(Bytecode::Executable const&) const
 
 String Call::to_string_impl(Bytecode::Executable const&) const
 {
-    StringBuilder builder;
-    builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
-    if (m_argument_count != 0) {
-        builder.append(", arguments:["sv);
-        builder.join(", "sv, Span<Register const>(m_arguments, m_argument_count));
-        builder.append(']');
-    }
-    return builder.to_string();
+    return String::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
 }
 
 String SuperCall::to_string_impl(Bytecode::Executable const&) const
 {
-    StringBuilder builder;
-    builder.append("SuperCall"sv);
-    if (m_is_synthetic) {
-        builder.append(" arguments:[...acc]"sv);
-    } else if (m_argument_count != 0) {
-        builder.append(" arguments:["sv);
-        builder.join(", "sv, Span<Register const>(m_arguments, m_argument_count));
-        builder.append(']');
-    }
-    return builder.to_string();
+    return "SuperCall arguments:[...acc]"sv;
 }
 
 String NewFunction::to_string_impl(Bytecode::Executable const&) const
