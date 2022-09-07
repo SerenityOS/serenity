@@ -5329,6 +5329,15 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             params.append(Length::make_auto());
             continue;
         }
+        if (component_value.token().type() == Token::Type::Dimension) {
+            float numeric_value = component_value.token().dimension_value();
+            auto unit_string = component_value.token().dimension_unit();
+            if (unit_string.equals_ignoring_case("fr"sv) && numeric_value) {
+                params.append(GridTrackSize(numeric_value));
+                continue;
+            }
+        }
+
         auto dimension = parse_dimension(component_value);
         if (!dimension.has_value())
             return GridTrackSizeStyleValue::create({});
