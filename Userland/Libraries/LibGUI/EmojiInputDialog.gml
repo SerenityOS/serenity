@@ -8,6 +8,7 @@
 
     @GUI::TextBox {
         name: "search_box"
+        placeholder: "Search emoji"
         fixed_height: 22
     }
 
