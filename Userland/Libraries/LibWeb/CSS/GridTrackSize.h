@@ -24,7 +24,7 @@ public:
 
     GridTrackSize(Length);
     GridTrackSize(Percentage);
-    GridTrackSize(int);
+    GridTrackSize(float);
 
     Type type() const { return m_type; }
 
@@ -34,7 +34,7 @@ public:
 
     Length length() const { return m_length; }
     Percentage percentage() const { return m_percentage; }
-    int flexible_length() const { return m_flexible_length; }
+    float flexible_length() const { return m_flexible_length; }
 
     String to_string() const;
     bool operator==(GridTrackSize const& other) const
@@ -49,7 +49,7 @@ private:
     Type m_type;
     Length m_length { Length::make_px(0) };
     Percentage m_percentage { Percentage(0) };
-    int m_flexible_length { 0 };
+    float m_flexible_length { 0 };
 };
 
 }
