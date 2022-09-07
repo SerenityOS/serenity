@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web::Bindings {
 
@@ -411,6 +412,11 @@ NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Fu
 
     // 7. Return realm execution context.
     return realm_execution_context;
+}
+
+void WebEngineCustomData::spin_event_loop_until(Function<bool()> goal_condition)
+{
+    Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
 }
 
 }

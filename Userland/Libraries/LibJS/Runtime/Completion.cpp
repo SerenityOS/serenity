@@ -97,8 +97,11 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     //        by letting the event loop spin until our promise is no longer pending, and then synchronously
     //        running all queued promise jobs.
     // Note: This is not used by LibJS itself, and is performed for the embedder (i.e. LibWeb).
-    if (Core::EventLoop::has_been_instantiated())
-        Core::EventLoop::current().spin_until([&] { return success.has_value(); });
+    if (auto* custom_data = vm.custom_data()) {
+        custom_data->spin_event_loop_until([&] {
+            return success.has_value();
+        });
+    }
 
     // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
     // NOTE: Since we don't push any EC, this step is not performed.

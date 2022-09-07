@@ -34,6 +34,8 @@ class VM : public RefCounted<VM> {
 public:
     struct CustomData {
         virtual ~CustomData() = default;
+
+        virtual void spin_event_loop_until(Function<bool()> goal_condition) = 0;
     };
 
     static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
