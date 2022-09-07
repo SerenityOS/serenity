@@ -235,8 +235,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     }
 
     // 3. Determine the columns in the implicit grid.
+    // NOTE: "implicit grid" here is the same as the occupation_grid
 
     // 3.1. Start with the columns from the explicit grid.
+    // NOTE: Done in step 1.
 
     // 3.2. Among all the items with a definite column position (explicitly positioned items, items
     // positioned in the previous step, and items not yet positioned but with a definite column) add
@@ -248,8 +250,124 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     // 3.3. If the largest column span among all the items without a definite column position is larger
     // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
     // that column span.
+    // NOTE: Done in step 1, 2, and will be done in step 4.
 
     // 4. Position the remaining grid items.
     // For each grid item that hasn't been positioned by the previous steps, in order-modified document
     // order:
+    auto auto_placement_cursor_x = 0;
+    auto auto_placement_cursor_y = 0;
+    for (size_t i = 0; i < boxes_to_place.size(); i++) {
+        auto const& child_box = boxes_to_place[i];
+        // 4.1. For sparse packing:
+        // FIXME: no distinction made. See #4.2
+
+        // 4.1.1. If the item has a definite column position:
+        if (!child_box.computed_values().grid_column_start().is_auto()) {
+            int column_start = child_box.computed_values().grid_column_start().position();
+            int column_end = child_box.computed_values().grid_column_end().position();
+            int column_span = 1;
+
+            // https://drafts.csswg.org/css-grid/#grid-placement-int
+            // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+            // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
+            // instead counts in reverse, starting from the end edge of the explicit grid.
+            if (column_end < 0)
+                column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
+            // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+            // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
+            // of finding this position.
+
+            // FIXME: An <integer> value of zero makes the declaration invalid.
+
+            // https://drafts.csswg.org/css-grid/#grid-placement-errors
+            // 8.3.1. Grid Placement Conflict Handling
+            // If the placement for a grid item contains two lines, and the start line is further end-ward than
+            // the end line, swap the two lines. If the start line is equal to the end line, remove the end
+            // line.
+            if (!child_box.computed_values().grid_column_end().is_auto()) {
+                if (column_start > column_end) {
+                    auto temp = column_end;
+                    column_end = column_start;
+                    column_start = temp;
+                }
+                if (column_start != column_end)
+                    column_span = column_end - column_start;
+            }
+            // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+            // property.
+
+            // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
+
+            column_start -= 1;
+
+            // 4.1.1.1. Set the column position of the cursor to the grid item's column-start line. If this is
+            // less than the previous column position of the cursor, increment the row position by 1.
+            auto_placement_cursor_x = column_start;
+            if (column_start < auto_placement_cursor_x)
+                auto_placement_cursor_y++;
+
+            maybe_add_column_to_occupation_grid(auto_placement_cursor_x + 1, occupation_grid);
+            maybe_add_row_to_occupation_grid(auto_placement_cursor_y + 1, occupation_grid);
+
+            // 4.1.1.2. Increment the cursor's row position until a value is found where the grid item does not
+            // overlap any occupied grid cells (creating new rows in the implicit grid as necessary).
+            while (true) {
+                if (!occupation_grid[auto_placement_cursor_y][column_start]) {
+                    break;
+                }
+                auto_placement_cursor_y++;
+                maybe_add_row_to_occupation_grid(auto_placement_cursor_y + 1, occupation_grid);
+            }
+            // 4.1.1.3. Set the item's row-start line to the cursor's row position, and set the item's row-end
+            // line according to its span from that position.
+            set_occupied_cells(auto_placement_cursor_y, auto_placement_cursor_y + 1, column_start, column_start + column_span, occupation_grid);
+
+            positioned_boxes.append({ child_box, auto_placement_cursor_y, 1, column_start, column_span });
+        }
+        // 4.1.2. If the item has an automatic grid position in both axes:
+        else {
+            // 4.1.2.1. Increment the column position of the auto-placement cursor until either this item's grid
+            // area does not overlap any occupied grid cells, or the cursor's column position, plus the item's
+            // column span, overflow the number of columns in the implicit grid, as determined earlier in this
+            // algorithm.
+            auto column_start = 0;
+            auto column_span = 1;
+            auto row_start = 0;
+            auto row_span = 1;
+            auto found_unoccupied_cell = false;
+            for (int row_index = auto_placement_cursor_y; row_index < (int)occupation_grid.size(); row_index++) {
+                for (int column_index = auto_placement_cursor_x; column_index < (int)occupation_grid[0].size(); column_index++) {
+                    if (!occupation_grid[row_index][column_index]) {
+                        found_unoccupied_cell = true;
+                        column_start = column_index;
+                        row_start = row_index;
+                        goto finish;
+                    }
+                    auto_placement_cursor_x = 0;
+                }
+                auto_placement_cursor_x = 0;
+                auto_placement_cursor_y++;
+            }
+        finish:
+
+            // 4.1.2.2. If a non-overlapping position was found in the previous step, set the item's row-start
+            // and column-start lines to the cursor's position. Otherwise, increment the auto-placement cursor's
+            // row position (creating new rows in the implicit grid as necessary), set its column position to the
+            // start-most column line in the implicit grid, and return to the previous step.
+            if (!found_unoccupied_cell) {
+                row_start = (int)occupation_grid.size();
+                maybe_add_row_to_occupation_grid((int)occupation_grid.size() + 1, occupation_grid);
+            }
+
+            set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+            positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
+        }
+        boxes_to_place.remove(i);
+        i--;
+
+        // FIXME: 4.2. For dense packing:
+    }
+}
+
 }
