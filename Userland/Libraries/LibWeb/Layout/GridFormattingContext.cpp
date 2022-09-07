@@ -170,6 +170,69 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     }
 
     // 2. Process the items locked to a given row.
+    // FIXME: Do "dense" packing
+    for (size_t i = 0; i < boxes_to_place.size(); i++) {
+        auto const& child_box = boxes_to_place[i];
+        if (child_box.computed_values().grid_row_start().is_auto()
+            || child_box.computed_values().grid_row_end().is_auto())
+            continue;
+
+        int row_start = child_box.computed_values().grid_row_start().position();
+        int row_end = child_box.computed_values().grid_row_end().position();
+        int row_span = 1;
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-int
+        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
+        // instead counts in reverse, starting from the end edge of the explicit grid.
+        if (row_end < 0)
+            row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
+        // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+        // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
+        // of finding this position.
+
+        // FIXME: An <integer> value of zero makes the declaration invalid.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-errors
+        // 8.3.1. Grid Placement Conflict Handling
+        // If the placement for a grid item contains two lines, and the start line is further end-ward than
+        // the end line, swap the two lines. If the start line is equal to the end line, remove the end
+        // line.
+        if (row_start > row_end) {
+            auto temp = row_end;
+            row_end = row_start;
+            row_start = temp;
+        }
+        if (row_start != row_end)
+            row_span = row_end - row_start;
+        // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+        // property.
+
+        // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
+
+        row_start -= 1;
+        maybe_add_row_to_occupation_grid(row_start + row_span, occupation_grid);
+
+        int column_start = 0;
+        int column_span = 1;
+        bool found_available_column = false;
+        for (int column_index = column_start; column_index < (int)occupation_grid[0].size(); column_index++) {
+            if (!occupation_grid[0][column_index]) {
+                found_available_column = true;
+                column_start = column_index;
+                break;
+            }
+        }
+        if (!found_available_column) {
+            column_start = occupation_grid[0].size();
+            maybe_add_column_to_occupation_grid(column_start + column_span, occupation_grid);
+        }
+        set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+
+        positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
+        boxes_to_place.remove(i);
+        i--;
+    }
 
     // 3. Determine the columns in the implicit grid.
 
