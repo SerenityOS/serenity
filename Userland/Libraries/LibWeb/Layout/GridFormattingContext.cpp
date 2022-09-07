@@ -923,6 +923,48 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     // track’s base size, restart this algorithm treating all such tracks as inflexible.
 
     // 5. Return the hypothetical fr size.
+
+    // https://drafts.csswg.org/css-grid/#algo-stretch
+    // 12.8. Stretch auto Tracks
+
+    // When the content-distribution property of the grid container is normal or stretch in this axis,
+    // this step expands tracks that have an auto max track sizing function by dividing any remaining
+    // positive, definite free space equally amongst them. If the free space is indefinite, but the grid
+    // container has a definite min-width/height, use that size to calculate the free space for this
+    // step instead.
+    float used_horizontal_space = 0;
+    for (auto& grid_column : grid_columns) {
+        if (!(grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto()))
+            used_horizontal_space += grid_column.base_size;
+    }
+
+    float remaining_horizontal_space = box_state.content_width() - used_horizontal_space;
+    auto count_of_auto_max_column_tracks = 0;
+    for (auto& grid_column : grid_columns) {
+        if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
+            count_of_auto_max_column_tracks++;
+    }
+    for (auto& grid_column : grid_columns) {
+        if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
+            grid_column.base_size = max(grid_column.base_size, remaining_horizontal_space / count_of_auto_max_column_tracks);
+    }
+
+    float used_vertical_space = 0;
+    for (auto& grid_row : grid_rows) {
+        if (!(grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto()))
+            used_vertical_space += grid_row.base_size;
+    }
+
+    float remaining_vertical_space = box_state.content_height() - used_vertical_space;
+    auto count_of_auto_max_row_tracks = 0;
+    for (auto& grid_row : grid_rows) {
+        if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
+            count_of_auto_max_row_tracks++;
+    }
+    for (auto& grid_row : grid_rows) {
+        if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
+            grid_row.base_size = max(grid_row.base_size, remaining_vertical_space / count_of_auto_max_row_tracks);
+    }
 }
 
 }
