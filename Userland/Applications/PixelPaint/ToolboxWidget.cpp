@@ -12,6 +12,7 @@
 #include "Tools/EllipseTool.h"
 #include "Tools/EraseTool.h"
 #include "Tools/GuideTool.h"
+#include "Tools/LassoSelectTool.h"
 #include "Tools/LineTool.h"
 #include "Tools/MoveTool.h"
 #include "Tools/PenTool.h"
@@ -85,6 +86,7 @@ void ToolboxWidget::setup_tools()
     add_tool("rectangle-select"sv, { 0, Key_R }, make<RectangleSelectTool>());
     add_tool("wand-select"sv, { 0, Key_W }, make<WandSelectTool>());
     add_tool("polygonal-select"sv, { Mod_Shift, Key_P }, make<PolygonalSelectTool>());
+    add_tool("lasso-select"sv, { 0, Key_L }, make<LassoSelectTool>());
     add_tool("guides"sv, { 0, Key_G }, make<GuideTool>());
     add_tool("clone"sv, { 0, Key_C }, make<CloneTool>());
 }
