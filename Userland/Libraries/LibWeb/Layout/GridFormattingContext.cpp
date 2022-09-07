@@ -407,6 +407,124 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
         grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
     for (int row_index = grid_rows.size(); row_index < static_cast<int>(occupation_grid.size()); row_index++)
         grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+
+    // https://drafts.csswg.org/css-grid/#algo-overview
+    // 12.1. Grid Sizing Algorithm
+    // FIXME: Deals with subgrids, min-content, and justify-content.. not implemented yet
+
+    // https://drafts.csswg.org/css-grid/#algo-track-sizing
+    // 12.3. Track Sizing Algorithm
+
+    // The remainder of this section is the track sizing algorithm, which calculates from the min and
+    // max track sizing functions the used track size. Each track has a base size, a <length> which
+    // grows throughout the algorithm and which will eventually be the track’s final size, and a growth
+    // limit, a <length> which provides a desired maximum size for the base size. There are 5 steps:
+
+    // 1. Initialize Track Sizes
+    // 2. Resolve Intrinsic Track Sizes
+    // 3. Maximize Tracks
+    // 4. Expand Flexible Tracks
+    // 5. [[#algo-stretch|Expand Stretched auto Tracks]]
+
+    // https://drafts.csswg.org/css-grid/#algo-init
+    // 12.4. Initialize Track Sizes
+
+    // Initialize each track’s base size and growth limit.
+    for (auto& grid_column : grid_columns) {
+        // For each track, if the track’s min track sizing function is:
+        switch (grid_column.min_track_sizing_function.type()) {
+        // - A fixed sizing function
+        // Resolve to an absolute length and use that size as the track’s initial base size.
+        // Indefinite lengths cannot occur, as they’re treated as auto.
+        case CSS::GridTrackSize::Type::Length:
+            if (!grid_column.min_track_sizing_function.length().is_auto())
+                grid_column.base_size = grid_column.min_track_sizing_function.length().to_px(box);
+            break;
+        case CSS::GridTrackSize::Type::Percentage:
+            grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * box_state.content_width();
+            break;
+        // - An intrinsic sizing function
+        // Use an initial base size of zero.
+        case CSS::GridTrackSize::Type::FlexibleLength:
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        // For each track, if the track’s max track sizing function is:
+        switch (grid_column.max_track_sizing_function.type()) {
+        // - A fixed sizing function
+        // Resolve to an absolute length and use that size as the track’s initial growth limit.
+        case CSS::GridTrackSize::Type::Length:
+            if (!grid_column.max_track_sizing_function.length().is_auto())
+                grid_column.growth_limit = grid_column.max_track_sizing_function.length().to_px(box);
+            else
+                // - An intrinsic sizing function
+                // Use an initial growth limit of infinity.
+                grid_column.growth_limit = -1;
+            break;
+        case CSS::GridTrackSize::Type::Percentage:
+            grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * box_state.content_width();
+            break;
+        // - A flexible sizing function
+        // Use an initial growth limit of infinity.
+        case CSS::GridTrackSize::Type::FlexibleLength:
+            grid_column.growth_limit = -1;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    // Initialize each track’s base size and growth limit.
+    for (auto& grid_row : grid_rows) {
+        // For each track, if the track’s min track sizing function is:
+        switch (grid_row.min_track_sizing_function.type()) {
+        // - A fixed sizing function
+        // Resolve to an absolute length and use that size as the track’s initial base size.
+        // Indefinite lengths cannot occur, as they’re treated as auto.
+        case CSS::GridTrackSize::Type::Length:
+            if (!grid_row.min_track_sizing_function.length().is_auto())
+                grid_row.base_size = grid_row.min_track_sizing_function.length().to_px(box);
+            break;
+        case CSS::GridTrackSize::Type::Percentage:
+            grid_row.base_size = grid_row.min_track_sizing_function.percentage().as_fraction() * box_state.content_height();
+            break;
+        // - An intrinsic sizing function
+        // Use an initial base size of zero.
+        case CSS::GridTrackSize::Type::FlexibleLength:
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        // For each track, if the track’s max track sizing function is:
+        switch (grid_row.max_track_sizing_function.type()) {
+        // - A fixed sizing function
+        // Resolve to an absolute length and use that size as the track’s initial growth limit.
+        case CSS::GridTrackSize::Type::Length:
+            if (!grid_row.max_track_sizing_function.length().is_auto())
+                grid_row.growth_limit = grid_row.max_track_sizing_function.length().to_px(box);
+            else
+                // - An intrinsic sizing function
+                // Use an initial growth limit of infinity.
+                grid_row.growth_limit = -1;
+            break;
+        case CSS::GridTrackSize::Type::Percentage:
+            grid_row.growth_limit = grid_row.max_track_sizing_function.percentage().as_fraction() * box_state.content_height();
+            break;
+        // - A flexible sizing function
+        // Use an initial growth limit of infinity.
+        case CSS::GridTrackSize::Type::FlexibleLength:
+            grid_row.growth_limit = -1;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    // FIXME: In all cases, if the growth limit is less than the base size, increase the growth limit to match
+    // the base size.
 }
 
 }
