@@ -369,8 +369,14 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
         // FIXME: 4.2. For dense packing:
     }
 
+    auto& box_state = m_state.get_mutable(box);
     for (auto& positioned_box : positioned_boxes) {
+        auto& child_box_state = m_state.get_mutable(positioned_box.box);
+        if (child_box_state.content_height() > positioned_box.computed_height)
+            positioned_box.computed_height = child_box_state.content_height();
         (void)layout_inside(positioned_box.box, LayoutMode::Normal);
+        if (child_box_state.content_height() > positioned_box.computed_height)
+            positioned_box.computed_height = child_box_state.content_height();
     }
 
     // https://drafts.csswg.org/css-grid/#overview-sizing
@@ -992,6 +998,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
 
     for (auto& positioned_box : positioned_boxes)
         layout_box(positioned_box.row, positioned_box.row + positioned_box.row_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
+
+    float total_y = 0;
+    for (auto& grid_row : grid_rows)
+        total_y += grid_row.base_size;
+    box_state.set_content_height(total_y);
 }
 
 }
