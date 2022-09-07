@@ -38,6 +38,14 @@ public:
     Percentage percentage() const { return m_percentage; }
     float flexible_length() const { return m_flexible_length; }
 
+    // https://drafts.csswg.org/css-grid/#layout-algorithm
+    // Intrinsic sizing function - min-content, max-content, auto, fit-content()
+    // FIXME: Add missing properties once implemented.
+    bool is_intrinsic_track_sizing() const
+    {
+        return (m_type == Type::Length && m_length.is_auto());
+    }
+
     String to_string() const;
     bool operator==(GridTrackSize const& other) const
     {
