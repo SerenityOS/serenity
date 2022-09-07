@@ -286,7 +286,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(LayoutState
                 continue;
 
             // FIXME: Handle margin collapsing.
-            return max(0, child_box_state.offset.y() + child_box_state.content_height() + child_box_state.margin_box_bottom());
+            return max(0.0f, child_box_state.offset.y() + child_box_state.content_height() + child_box_state.margin_box_bottom());
         }
     }
 
@@ -354,7 +354,7 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(L
         return IterationDecision::Continue;
     });
 
-    return max(0, bottom.value_or(0) - top.value_or(0));
+    return max(0.0f, bottom.value_or(0) - top.value_or(0));
 }
 
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
