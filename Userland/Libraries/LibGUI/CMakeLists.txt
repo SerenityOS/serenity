@@ -1,3 +1,4 @@
+compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
 compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
@@ -35,7 +36,8 @@ set(SOURCES
     DisplayLink.cpp
     DragOperation.cpp
     EditingEngine.cpp
-    EmojiInputDialog.cpp
+    EmojiInput.cpp
+    EmojiInputDialogGML.h
     Event.cpp
     FileIconProvider.cpp
     FilePicker.cpp

@@ -15,7 +15,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/EmojiInputDialog.h>
+#include <LibGUI/EmojiInput.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
@@ -194,9 +194,9 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
 
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->accepts_emoji_input();
     if (focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
-        auto emoji_input_dialog = EmojiInputDialog::construct(window);
+        auto emoji_input_dialog = EmojiInput::construct(window);
         emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
-        if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
+        if (emoji_input_dialog->exec() != EmojiInput::ExecResult::OK)
             return;
         key_event->m_key = Key_Invalid;
         key_event->m_modifiers = 0;
