@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Dialog.h>
+#include <LibUnicode/Emoji.h>
 
 namespace GUI {
 
@@ -15,8 +16,8 @@ class EmojiInputDialog final : public Dialog {
 
     struct Emoji {
         u32 code_point { 0 };
-        Optional<String> name;
         RefPtr<Button> button;
+        Optional<Unicode::Emoji> emoji;
     };
 
 public:
