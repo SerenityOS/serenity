@@ -1019,7 +1019,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // FIXME: 2. If the union type includes a nullable type and V is null or undefined, then return the IDL value null.
         if (union_type.includes_nullable_type()) {
-            TODO();
+            dbgln("FIXME: 2. If the union type includes a nullable type and V is null or undefined, then return the IDL value null.");
         } else if (dictionary_type) {
             // 4. If V is null or undefined, then
             //    4.1 If types includes a dictionary type, then return the result of converting V to that dictionary type.

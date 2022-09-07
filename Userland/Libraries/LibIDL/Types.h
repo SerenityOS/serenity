@@ -71,21 +71,7 @@ public:
 
     Kind kind() const { return m_kind; }
 
-    String const& name() const { return m_name; }
-
-    bool is_nullable() const { return m_nullable; }
-    void set_nullable(bool value) { m_nullable = value; }
-
-    bool is_string() const { return m_name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-integer-type
-    bool is_integer() const { return m_name.is_one_of("byte", "octet", "short", "unsigned short", "long", "unsigned long", "long long", "unsigned long long"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-numeric-type
-    bool is_numeric() const { return is_integer() || m_name.is_one_of("float", "unrestricted float", "double", "unrestricted double"); }
-
-    // https://webidl.spec.whatwg.org/#dfn-primitive-type
-    bool is_primitive() const { return is_numeric() || m_name.is_one_of("bigint", "boolean"); }
+    bool is_plain() const { return m_kind == Kind::Plain; }
 
     bool is_parameterized() const { return m_kind == Kind::Parameterized; }
     ParameterizedType const& as_parameterized() const;
@@ -94,6 +80,61 @@ public:
     bool is_union() const { return m_kind == Kind::Union; }
     UnionType const& as_union() const;
     UnionType& as_union();
+
+    String const& name() const { return m_name; }
+
+    bool is_nullable() const { return m_nullable; }
+    void set_nullable(bool value) { m_nullable = value; }
+
+    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
+    bool includes_nullable_type() const;
+
+    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
+    bool includes_undefined() const;
+
+    Type const& innermost_type() const
+    {
+        // From step 4 of https://webidl.spec.whatwg.org/#dfn-distinguishable
+        // "Consider the two "innermost" types derived by taking each type’s inner type if it is an annotated type, and then taking its inner type inner type if the result is a nullable type."
+        // FIXME: Annotated types.
+        VERIFY(!is_union());
+        return *this;
+    }
+
+    // https://webidl.spec.whatwg.org/#idl-any
+    bool is_any() const { return is_plain() && m_name == "any"; }
+
+    // https://webidl.spec.whatwg.org/#idl-undefined
+    bool is_undefined() const { return is_plain() && m_name == "undefined"; }
+
+    // https://webidl.spec.whatwg.org/#idl-boolean
+    bool is_boolean() const { return is_plain() && m_name == "boolean"; }
+
+    // https://webidl.spec.whatwg.org/#idl-bigint
+    bool is_bigint() const { return is_plain() && m_name == "bigint"; }
+
+    // https://webidl.spec.whatwg.org/#idl-object
+    bool is_object() const { return is_plain() && m_name == "object"; }
+
+    // https://webidl.spec.whatwg.org/#idl-symbol
+    bool is_symbol() const { return is_plain() && m_name == "symbol"; }
+
+    bool is_string() const { return is_plain() && m_name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
+
+    // https://webidl.spec.whatwg.org/#dfn-integer-type
+    bool is_integer() const { return is_plain() && m_name.is_one_of("byte", "octet", "short", "unsigned short", "long", "unsigned long", "long long", "unsigned long long"); }
+
+    // https://webidl.spec.whatwg.org/#dfn-numeric-type
+    bool is_numeric() const { return is_plain() && (is_integer() || m_name.is_one_of("float", "unrestricted float", "double", "unrestricted double")); }
+
+    // https://webidl.spec.whatwg.org/#dfn-primitive-type
+    bool is_primitive() const { return is_plain() && (is_numeric() || is_boolean() || m_name == "bigint"); }
+
+    // https://webidl.spec.whatwg.org/#idl-sequence
+    bool is_sequence() const { return is_parameterized() && m_name == "sequence"; }
+
+    // https://webidl.spec.whatwg.org/#dfn-distinguishable
+    bool is_distinguishable_from(Type const& other) const;
 
 private:
     Kind m_kind;
@@ -347,27 +388,6 @@ public:
 
         // 4. Return n.
         return num_nullable_member_types;
-    }
-
-    // https://webidl.spec.whatwg.org/#dfn-includes-a-nullable-type
-    bool includes_nullable_type() const
-    {
-        // -> the type is a union type and its number of nullable member types is 1.
-        return number_of_nullable_member_types() == 1;
-    }
-
-    // -> https://webidl.spec.whatwg.org/#dfn-includes-undefined
-    bool includes_undefined() const
-    {
-        // -> the type is a union type and one of its member types includes undefined.
-        for (auto& type : m_member_types) {
-            if (type.is_union() && type.as_union().includes_undefined())
-                return true;
-
-            if (type.name() == "undefined"sv)
-                return true;
-        }
-        return false;
     }
 
 private:
