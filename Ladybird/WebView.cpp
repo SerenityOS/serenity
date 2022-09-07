@@ -10,6 +10,7 @@
 #include "WebView.h"
 #include "ConsoleClient.h"
 #include "CookieJar.h"
+#include "EventLoopPluginQt.h"
 #include "RequestManagerQt.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -47,6 +48,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
@@ -819,6 +821,8 @@ static void platform_init()
 
 void initialize_web_engine()
 {
+    Web::Platform::EventLoopPlugin::install(*new Ladybird::EventLoopPluginQt);
+
     Web::ImageDecoding::Decoder::initialize(HeadlessImageDecoderClient::create());
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());

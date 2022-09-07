@@ -10,7 +10,6 @@
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "WebView.h"
-#include <LibCore/EventLoop.h>
 #include <QAction>
 #include <QDialog>
 #include <QPlainTextEdit>
@@ -18,8 +17,7 @@
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
-    : m_event_loop(event_loop)
+BrowserWindow::BrowserWindow()
 {
     m_tabs_container = new QTabWidget;
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -256,14 +254,4 @@ void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
     m_tabs_container->setTabIcon(index, icon);
     setWindowIcon(icon);
-}
-
-void BrowserWindow::closeEvent(QCloseEvent* event)
-{
-    QWidget::closeEvent(event);
-
-    // FIXME: Ladybird only supports one window at the moment. When we support
-    //        multiple windows, we'll only want to fire off the quit event when
-    //        all of the browser windows have closed.
-    m_event_loop.quit(0);
 }
