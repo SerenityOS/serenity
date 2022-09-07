@@ -53,6 +53,10 @@ private:
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
+
+    RefPtr<GUI::Action> m_undo_action;
+    RefPtr<GUI::Action> m_redo_action;
+
     RefPtr<GUI::Action> m_find_action;
     RefPtr<GUI::Action> m_goto_offset_action;
     RefPtr<GUI::Action> m_layout_toolbar_action;
