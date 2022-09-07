@@ -35,12 +35,54 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
         return false;
     };
 
+    auto maybe_add_column_to_occupation_grid = [](int needed_number_of_columns, Vector<Vector<bool>>& occupation_grid) -> void {
+        int current_column_count = (int)occupation_grid[0].size();
+        if (needed_number_of_columns <= current_column_count)
+            return;
+        for (auto& occupation_grid_row : occupation_grid)
+            for (int idx = 0; idx < (needed_number_of_columns + 1) - current_column_count; idx++)
+                occupation_grid_row.append(false);
+    };
+
+    auto maybe_add_row_to_occupation_grid = [](int needed_number_of_rows, Vector<Vector<bool>>& occupation_grid) -> void {
+        if (needed_number_of_rows <= (int)occupation_grid.size())
+            return;
+
+        Vector<bool> new_occupation_grid_row;
+        for (int idx = 0; idx < (int)occupation_grid[0].size(); idx++)
+            new_occupation_grid_row.append(false);
+
+        for (int idx = 0; idx < needed_number_of_rows - (int)occupation_grid.size(); idx++)
+            occupation_grid.append(new_occupation_grid_row);
+    };
+
+    auto set_occupied_cells = [](int row_start, int row_end, int column_start, int column_end, Vector<Vector<bool>>& occupation_grid) -> void {
+        for (int row_index = 0; row_index < (int)occupation_grid.size(); row_index++) {
+            if (row_index >= row_start && row_index < row_end) {
+                for (int column_index = 0; column_index < (int)occupation_grid[0].size(); column_index++) {
+                    if (column_index >= column_start && column_index < column_end) {
+                        occupation_grid[row_index][column_index] = true;
+                    }
+                }
+            }
+        }
+    };
+
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
     // The contents of the grid container are organized into individual grid items (analogous to
     // flex items), which are then assigned to predefined areas in the grid. They can be explicitly
     // placed using coordinates through the grid-placement properties or implicitly placed into
     // empty areas using auto-placement.
+    struct PositionedBox {
+        Box const& box;
+        int row { 0 };
+        int row_span { 1 };
+        int column { 0 };
+        int column_span { 1 };
+        float computed_height { 0 };
+    };
+    Vector<PositionedBox> positioned_boxes;
 
     Vector<Vector<bool>> occupation_grid;
     Vector<bool> occupation_grid_row;
@@ -60,9 +102,72 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
 
-    // 0. Generate anonymous grid items
+    // FIXME: 0. Generate anonymous grid items
 
     // 1. Position anything that's not auto-positioned.
+    for (size_t i = 0; i < boxes_to_place.size(); i++) {
+        auto const& child_box = boxes_to_place[i];
+        if (child_box.computed_values().grid_row_start().is_auto()
+            || child_box.computed_values().grid_row_end().is_auto()
+            || child_box.computed_values().grid_column_start().is_auto()
+            || child_box.computed_values().grid_column_end().is_auto())
+            continue;
+
+        int row_start = child_box.computed_values().grid_row_start().position();
+        int row_end = child_box.computed_values().grid_row_end().position();
+        int column_start = child_box.computed_values().grid_column_start().position();
+        int column_end = child_box.computed_values().grid_column_end().position();
+        int row_span = 1;
+        int column_span = 1;
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-int
+        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
+        // instead counts in reverse, starting from the end edge of the explicit grid.
+        if (row_end < 0)
+            row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
+        if (column_end < 0)
+            column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
+        // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+        // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
+        // of finding this position.
+
+        // FIXME: An <integer> value of zero makes the declaration invalid.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-errors
+        // 8.3.1. Grid Placement Conflict Handling
+        // If the placement for a grid item contains two lines, and the start line is further end-ward than
+        // the end line, swap the two lines. If the start line is equal to the end line, remove the end
+        // line.
+        if (row_start > row_end) {
+            auto temp = row_end;
+            row_end = row_start;
+            row_start = temp;
+        }
+        if (column_start > column_end) {
+            auto temp = column_end;
+            column_end = column_start;
+            column_start = temp;
+        }
+        if (row_start != row_end)
+            row_span = row_end - row_start;
+        if (column_start != column_end)
+            column_span = column_end - column_start;
+        // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+        // property.
+
+        // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
+
+        row_start -= 1;
+        column_start -= 1;
+        positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
+
+        maybe_add_row_to_occupation_grid(row_start + row_span, occupation_grid);
+        maybe_add_column_to_occupation_grid(column_start + column_span, occupation_grid);
+        set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+        boxes_to_place.remove(i);
+        i--;
+    }
 
     // 2. Process the items locked to a given row.
 
