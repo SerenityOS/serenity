@@ -7,10 +7,15 @@
 #pragma once
 
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/File.h>
+#include <LibGUI/Command.h>
 
-class HexDocument {
+constexpr Time COMMAND_COMMIT_TIME = Time::from_milliseconds(400);
+
+class HexDocument : public Weakable<HexDocument> {
 public:
     enum class Type {
         Memory,
@@ -76,4 +81,27 @@ private:
 
     Array<u8, 2048> m_buffer;
     size_t m_buffer_file_pos;
+};
+
+class HexDocumentUndoCommand : public GUI::Command {
+public:
+    HexDocumentUndoCommand(WeakPtr<HexDocument> document, size_t position);
+
+    virtual void undo() override;
+    virtual void redo() override;
+    virtual String action_text() const override { return "Update cell"; }
+
+    virtual bool merge_with(GUI::Command const& other) override;
+
+    ErrorOr<void> try_add_changed_byte(u8 old_value, u8 new_value);
+    ErrorOr<void> try_add_changed_bytes(ByteBuffer old_values, ByteBuffer new_values);
+
+private:
+    bool commit_time_expired() const { return Time::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
+
+    Time m_timestamp = Time::now_monotonic();
+    WeakPtr<HexDocument> m_document;
+    size_t m_position;
+    ByteBuffer m_old;
+    ByteBuffer m_new;
 };

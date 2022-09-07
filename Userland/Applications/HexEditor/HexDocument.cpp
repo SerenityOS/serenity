@@ -174,3 +174,63 @@ void HexDocumentFile::ensure_position_in_buffer(size_t position)
         m_buffer_file_pos = position;
     }
 }
+
+HexDocumentUndoCommand::HexDocumentUndoCommand(WeakPtr<HexDocument> document, size_t position)
+    : m_document(move(document))
+    , m_position(position)
+{
+}
+
+void HexDocumentUndoCommand::undo()
+{
+    for (size_t i = 0; i < m_old.size(); i++)
+        m_document->set(m_position + i, m_old[i]);
+}
+
+void HexDocumentUndoCommand::redo()
+{
+    for (size_t i = 0; i < m_new.size(); i++)
+        m_document->set(m_position + i, m_new[i]);
+}
+
+bool HexDocumentUndoCommand::merge_with(GUI::Command const& other)
+{
+    if (!is<HexDocumentUndoCommand>(other) || commit_time_expired())
+        return false;
+
+    auto const& typed_other = static_cast<HexDocumentUndoCommand const&>(other);
+
+    size_t relative_start = typed_other.m_position - m_position;
+    size_t other_length = typed_other.m_old.size();
+    size_t length = m_old.size();
+
+    if (typed_other.m_position < m_position || m_position + length < typed_other.m_position)
+        return false;
+
+    m_old.resize(relative_start + other_length);
+    m_new.resize(relative_start + other_length);
+
+    for (size_t i = 0; i < other_length; i++) {
+        m_new[relative_start + i] = typed_other.m_new[i];
+
+        if (relative_start + i >= length)
+            m_old[relative_start + i] = typed_other.m_old[i];
+    }
+
+    m_timestamp = Time::now_monotonic();
+    return true;
+}
+
+ErrorOr<void> HexDocumentUndoCommand::try_add_changed_byte(u8 old_value, u8 new_value)
+{
+    TRY(m_old.try_append(old_value));
+    TRY(m_new.try_append(new_value));
+    return {};
+}
+
+ErrorOr<void> HexDocumentUndoCommand::try_add_changed_bytes(ByteBuffer old_values, ByteBuffer new_values)
+{
+    TRY(m_old.try_append(move(old_values)));
+    TRY(m_new.try_append(move(new_values)));
+    return {};
+}

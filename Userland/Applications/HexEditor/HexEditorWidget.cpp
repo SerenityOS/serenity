@@ -83,6 +83,11 @@ HexEditorWidget::HexEditorWidget()
         window()->set_modified(is_document_dirty);
     };
 
+    m_editor->undo_stack().on_state_change = [this] {
+        m_undo_action->set_enabled(m_editor->undo_stack().can_undo());
+        m_redo_action->set_enabled(m_editor->undo_stack().can_redo());
+    };
+
     m_search_results->set_activates_on_selection(true);
     m_search_results->on_activation = [this](const GUI::ModelIndex& index) {
         if (!index.is_valid())
@@ -150,6 +155,16 @@ HexEditorWidget::HexEditorWidget()
         set_path(file->filename());
         dbgln("Wrote document to {}", file->filename());
     });
+
+    m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
+        m_editor->undo();
+    });
+    m_undo_action->set_enabled(false);
+
+    m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
+        m_editor->redo();
+    });
+    m_redo_action->set_enabled(false);
 
     m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
@@ -242,6 +257,9 @@ HexEditorWidget::HexEditorWidget()
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
     m_toolbar->add_action(*m_save_action);
+    m_toolbar->add_separator();
+    m_toolbar->add_action(*m_undo_action);
+    m_toolbar->add_action(*m_redo_action);
     m_toolbar->add_separator();
     m_toolbar->add_action(*m_find_action);
     m_toolbar->add_action(*m_goto_offset_action);
@@ -378,6 +396,9 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     }));
 
     auto& edit_menu = window.add_menu("&Edit");
+    edit_menu.add_action(*m_undo_action);
+    edit_menu.add_action(*m_redo_action);
+    edit_menu.add_separator();
     edit_menu.add_action(GUI::CommonActions::make_select_all_action([this](auto&) {
         m_editor->select_all();
         m_editor->update();
