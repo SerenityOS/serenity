@@ -24,7 +24,7 @@ GridTrackSize::GridTrackSize(Percentage percentage)
 {
 }
 
-GridTrackSize::GridTrackSize(int flexible_length)
+GridTrackSize::GridTrackSize(float flexible_length)
     : m_type(Type::FlexibleLength)
     , m_flexible_length(flexible_length)
 {
