@@ -124,7 +124,7 @@ BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enable
 
     m_context_menu = GUI::Menu::construct();
     auto default_action = GUI::Action::create(
-        "&Open", [this](auto&) {
+        "&Open", g_icon_bag.go_to, [this](auto&) {
             if (on_bookmark_click)
                 on_bookmark_click(m_context_menu_url, OpenInNewTab::No);
         },
@@ -132,14 +132,14 @@ BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enable
     m_context_menu_default_action = default_action;
     m_context_menu->add_action(default_action);
     m_context_menu->add_action(GUI::Action::create(
-        "Open in New &Tab", [this](auto&) {
+        "Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
             if (on_bookmark_click)
                 on_bookmark_click(m_context_menu_url, OpenInNewTab::Yes);
         },
         this));
     m_context_menu->add_separator();
     m_context_menu->add_action(GUI::Action::create(
-        "&Edit...", [this](auto&) {
+        "&Edit...", g_icon_bag.rename, [this](auto&) {
             edit_bookmark(m_context_menu_url);
         },
         this));
