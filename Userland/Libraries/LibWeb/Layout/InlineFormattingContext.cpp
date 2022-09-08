@@ -52,7 +52,7 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 float InlineFormattingContext::leftmost_x_offset_at(float y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     float containing_block_x = m_containing_block_state.offset.x();
@@ -68,7 +68,7 @@ float InlineFormattingContext::available_space_for_line(float y) const
 
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto& root_block = parent().root();
-    auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state);
     float y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
 

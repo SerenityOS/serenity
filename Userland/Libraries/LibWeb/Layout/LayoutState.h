@@ -151,5 +151,7 @@ Gfx::FloatRect margin_box_rect(Box const&, LayoutState const&);
 Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
 Gfx::FloatRect border_box_rect(Box const&, LayoutState const&);
 Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
+Gfx::FloatRect content_box_rect(Box const&, LayoutState const&);
+Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
 
 }

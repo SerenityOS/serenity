@@ -626,7 +626,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 offset_from_edge = box_state.content_width() + box_state.margin_box_right();
         };
 
-        auto box_in_root_rect = border_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
         float y_in_root = box_in_root_rect.y();
         float y = box_state.offset.y();
 

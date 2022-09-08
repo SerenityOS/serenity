@@ -132,6 +132,26 @@ Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box 
     return rect;
 }
 
+Gfx::FloatRect content_box_rect(Box const& box, LayoutState const& state)
+{
+    auto const& box_state = state.get(box);
+    return Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+}
+
+Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+{
+    auto rect = content_box_rect(box, state);
+    for (auto const* current = box.parent(); current; current = current->parent()) {
+        if (current == &ancestor_box)
+            break;
+        if (is<Box>(*current)) {
+            auto const& current_state = state.get(static_cast<Box const&>(*current));
+            rect.translate_by(current_state.offset);
+        }
+    }
+    return rect;
+}
+
 Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = margin_box_rect(box, state);
