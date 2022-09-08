@@ -188,4 +188,35 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
     return table[to_underlying(this_distinguishability)][to_underlying(other_distinguishability)];
 }
 
+// https://webidl.spec.whatwg.org/#dfn-distinguishing-argument-index
+int EffectiveOverloadSet::distinguishing_argument_index()
+{
+    for (auto argument_index = 0u; argument_index < m_argument_count; ++argument_index) {
+        bool found_indistinguishable = false;
+
+        for (auto first_item_index = 0u; first_item_index < m_items.size(); ++first_item_index) {
+            for (auto second_item_index = first_item_index + 1; second_item_index < m_items.size(); ++second_item_index) {
+                if (!m_items[first_item_index].types[argument_index].is_distinguishable_from(m_items[second_item_index].types[argument_index])) {
+                    found_indistinguishable = true;
+                    break;
+                }
+            }
+            if (found_indistinguishable)
+                break;
+        }
+
+        if (!found_indistinguishable)
+            return argument_index;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+void EffectiveOverloadSet::remove_all_other_entries()
+{
+    m_items.remove_all_matching([this](auto const& item) {
+        return &item != m_last_matching_item;
+    });
+}
+
 }
