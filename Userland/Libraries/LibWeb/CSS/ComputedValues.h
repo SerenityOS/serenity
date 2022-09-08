@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 class InitialValues {
 public:
-    static float font_size() { return 10; }
+    static float font_size() { return 16; }
     static int font_weight() { return 400; }
     static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
     static CSS::Float float_() { return CSS::Float::None; }

@@ -855,7 +855,7 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
 
 float StyleComputer::root_element_font_size() const
 {
-    constexpr float default_root_element_font_size = 10;
+    constexpr float default_root_element_font_size = 16;
 
     auto const* root_element = m_document.first_child_of_type<HTML::HTMLHtmlElement>();
     if (!root_element)
@@ -921,7 +921,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
-    float font_size_in_px = 10;
+    float font_size_in_px = 16;
 
     if (font_size->is_identifier()) {
         switch (static_cast<IdentifierStyleValue const&>(*font_size).id()) {
@@ -930,7 +930,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         case CSS::ValueID::Small:
         case CSS::ValueID::Medium:
             // FIXME: Should be based on "user's default font size"
-            font_size_in_px = 10;
+            font_size_in_px = 16;
             break;
         case CSS::ValueID::Large:
         case CSS::ValueID::XLarge:
