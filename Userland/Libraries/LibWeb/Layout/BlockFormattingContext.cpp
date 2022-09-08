@@ -386,7 +386,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     block_container_state.set_content_height(content_height);
 }
 
-void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& content_height)
+void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, float& bottom_of_lowest_margin_box)
 {
     auto& box_state = m_state.get_mutable(box);
 
@@ -401,7 +401,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     if (box.is_floating()) {
         layout_floating_box(box, block_container, layout_mode);
-        content_height = max(content_height, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
+        bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
 
@@ -437,7 +437,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         layout_list_item_marker(static_cast<ListItemBox const&>(box));
     }
 
-    content_height = max(content_height, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
+    bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
@@ -460,7 +460,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 {
     VERIFY(!block_container.children_are_inline());
 
-    float content_height = 0;
+    float bottom_of_lowest_margin_box = 0;
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
@@ -471,7 +471,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     }
 
     block_container.for_each_child_of_type<Box>([&](Box& box) {
-        layout_block_level_box(box, block_container, layout_mode, content_height);
+        layout_block_level_box(box, block_container, layout_mode, bottom_of_lowest_margin_box);
         return IterationDecision::Continue;
     });
 
@@ -480,7 +480,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(greatest_child_width(block_container));
         if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
-            block_container_state.set_content_height(content_height);
+            block_container_state.set_content_height(bottom_of_lowest_margin_box);
     }
 }
 
