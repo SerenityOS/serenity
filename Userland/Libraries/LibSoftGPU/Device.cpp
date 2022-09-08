@@ -743,33 +743,13 @@ void Device::rasterize_triangle(Triangle& triangle)
     // Calculate depth offset to apply
     float depth_offset = 0.f;
     if (m_options.depth_offset_enabled) {
-        // Edge value deltas
-        auto edge_value_step_x = FloatVector3 {
-            static_cast<float>(v1.y() - v2.y()),
-            static_cast<float>(v2.y() - v0.y()),
-            static_cast<float>(v0.y() - v1.y()),
-        };
-        auto edge_value_step_y = FloatVector3 {
-            static_cast<float>(v2.x() - v1.x()),
-            static_cast<float>(v0.x() - v2.x()),
-            static_cast<float>(v1.x() - v0.x()),
-        };
-
-        // Barycentric deltas
-        auto barycentric_step_x = edge_value_step_x * one_over_area;
-        auto barycentric_step_y = edge_value_step_y * one_over_area;
-
-        // Depth delta vector and slope (magnitude)
-        auto depth_coordinates = FloatVector3 {
-            vertex0.window_coordinates.z(),
-            vertex1.window_coordinates.z(),
-            vertex2.window_coordinates.z(),
-        };
-        auto depth_step = FloatVector2 {
-            depth_coordinates.dot(barycentric_step_x),
-            depth_coordinates.dot(barycentric_step_y),
-        };
-        auto depth_max_slope = depth_step.length();
+        // OpenGL 2.0 § 3.5.5 allows us to approximate the maximum slope
+        auto delta_z = max(
+            max(
+                abs(vertex0.window_coordinates.z() - vertex1.window_coordinates.z()),
+                abs(vertex1.window_coordinates.z() - vertex2.window_coordinates.z())),
+            abs(vertex2.window_coordinates.z() - vertex0.window_coordinates.z()));
+        auto depth_max_slope = max(delta_z / render_bounds.width(), delta_z / render_bounds.height());
 
         // Calculate total depth offset
         depth_offset = depth_max_slope * m_options.depth_offset_factor + NumericLimits<float>::epsilon() * m_options.depth_offset_constant;
