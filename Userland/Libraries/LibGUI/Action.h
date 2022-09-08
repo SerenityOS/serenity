@@ -35,6 +35,7 @@ NonnullRefPtr<Action> make_paste_action(Function<void(Action&)>, Core::Object* p
 NonnullRefPtr<Action> make_delete_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>);
 NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::Object* parent = nullptr);
