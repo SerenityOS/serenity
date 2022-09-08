@@ -17,6 +17,7 @@
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/EditingEngine.h>
+#include <LibGUI/EmojiInputDialog.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -105,6 +106,7 @@ void TextEditor::create_actions()
             this);
     }
     m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
+    m_insert_emoji_action = CommonActions::make_insert_emoji_action([&](auto&) { insert_emoji(); }, this);
 }
 
 void TextEditor::set_text(StringView text, AllowCallback allow_callback)
@@ -769,6 +771,17 @@ void TextEditor::select_all()
     did_update_selection();
     set_cursor(start_of_document);
     update();
+}
+
+void TextEditor::insert_emoji()
+{
+    auto emoji_input_dialog = EmojiInputDialog::construct(window());
+    emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
+    if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
+        return;
+
+    auto emoji_code_point = emoji_input_dialog->selected_emoji_text();
+    insert_at_cursor_or_replace_selection(emoji_code_point);
 }
 
 void TextEditor::keydown_event(KeyEvent& event)
@@ -1667,12 +1680,14 @@ void TextEditor::set_mode(const Mode mode)
     case Editable:
         m_cut_action->set_enabled(has_selection() && !text_is_secret());
         m_paste_action->set_enabled(true);
+        m_insert_emoji_action->set_enabled(true);
         set_accepts_emoji_input(true);
         break;
     case DisplayOnly:
     case ReadOnly:
         m_cut_action->set_enabled(false);
         m_paste_action->set_enabled(false);
+        m_insert_emoji_action->set_enabled(false);
         set_accepts_emoji_input(false);
         break;
     default:
@@ -1717,6 +1732,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
         m_context_menu->add_action(paste_action());
         m_context_menu->add_separator();
         m_context_menu->add_action(select_all_action());
+        m_context_menu->add_action(insert_emoji_action());
         if (is_multi_line()) {
             m_context_menu->add_separator();
             m_context_menu->add_action(go_to_line_action());
