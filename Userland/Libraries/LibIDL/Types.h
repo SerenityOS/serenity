@@ -394,4 +394,63 @@ private:
     NonnullRefPtrVector<Type> m_member_types;
 };
 
+// https://webidl.spec.whatwg.org/#dfn-optionality-value
+enum class Optionality {
+    Required,
+    Optional,
+    Variadic,
+};
+
+// https://webidl.spec.whatwg.org/#dfn-effective-overload-set
+class EffectiveOverloadSet {
+public:
+    struct Item {
+        int callable_id;
+        NonnullRefPtrVector<Type> types;
+        Vector<Optionality> optionality_values;
+    };
+
+    EffectiveOverloadSet(Vector<Item> items)
+        : m_items(move(items))
+        , m_argument_count(m_items.is_empty() ? 0 : m_items.first().types.size())
+    {
+    }
+
+    Vector<Item>& items() { return m_items; }
+    Vector<Item> const& items() const { return m_items; }
+
+    Item const& only_item() const
+    {
+        VERIFY(m_items.size() == 1);
+        return m_items[0];
+    }
+
+    bool is_empty() const { return m_items.is_empty(); }
+    size_t size() const { return m_items.size(); }
+
+    int distinguishing_argument_index();
+
+    template<typename Matches>
+    bool has_overload_with_matching_argument_at_index(size_t index, Matches matches)
+    {
+        for (auto const& item : m_items) {
+            if (matches(item.types[index], item.optionality_values[index])) {
+                m_last_matching_item = &item;
+                return true;
+            }
+        }
+        m_last_matching_item = nullptr;
+        return false;
+    }
+
+    void remove_all_other_entries();
+
+private:
+    // FIXME: This should be an "ordered set".
+    Vector<Item> m_items;
+    size_t m_argument_count;
+
+    Item const* m_last_matching_item { nullptr };
+};
+
 }
