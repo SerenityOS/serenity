@@ -50,6 +50,7 @@ set(SOURCES
     ConsoleGlobalObject.cpp
     CookieJar.cpp
     EventLoopPluginQt.cpp
+    FontPluginQt.cpp
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
