@@ -56,9 +56,13 @@ public:
 
     void for_each_typeface(Function<void(Typeface const&)>);
 
+    void load_all_fonts_from_path(String const&);
+
 private:
     FontDatabase();
     ~FontDatabase() = default;
+
+    void load_fonts();
 
     RefPtr<Typeface> get_or_create_typeface(String const& family, String const& variant);
 

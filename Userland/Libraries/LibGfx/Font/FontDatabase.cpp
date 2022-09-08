@@ -6,8 +6,10 @@
 
 #include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/TrueType/Font.h>
@@ -120,39 +122,55 @@ struct FontDatabase::Private {
     Vector<RefPtr<Typeface>> typefaces;
 };
 
-FontDatabase::FontDatabase()
-    : m_private(make<Private>())
+void FontDatabase::load_all_fonts_from_path(String const& root)
 {
-    Core::DirIterator dir_iterator(s_default_fonts_lookup_path, Core::DirIterator::SkipDots);
-    if (dir_iterator.has_error()) {
-        warnln("DirIterator: {}", dir_iterator.error_string());
-        exit(1);
-    }
-    while (dir_iterator.has_next()) {
-        auto path = dir_iterator.next_full_path();
+    Queue<String> path_queue;
+    path_queue.enqueue(root);
 
-        if (path.ends_with(".font"sv)) {
-            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
-                auto font = font_or_error.release_value();
-                m_private->full_name_to_font_map.set(font->qualified_name(), *font);
-                auto typeface = get_or_create_typeface(font->family(), font->variant());
-                typeface->add_bitmap_font(font);
+    while (!path_queue.is_empty()) {
+        auto current_directory = path_queue.dequeue();
+        Core::DirIterator dir_iterator(current_directory, Core::DirIterator::SkipParentAndBaseDir);
+        if (dir_iterator.has_error()) {
+            dbgln("FontDatabase::load_fonts: {}", dir_iterator.error_string());
+            continue;
+        }
+        while (dir_iterator.has_next()) {
+            auto path = dir_iterator.next_full_path();
+
+            if (Core::File::is_directory(path)) {
+                path_queue.enqueue(path);
+                continue;
             }
-        } else if (path.ends_with(".ttf"sv)) {
-            // FIXME: What about .otf
-            if (auto font_or_error = TTF::Font::try_load_from_file(path); !font_or_error.is_error()) {
-                auto font = font_or_error.release_value();
-                auto typeface = get_or_create_typeface(font->family(), font->variant());
-                typeface->set_vector_font(move(font));
-            }
-        } else if (path.ends_with(".woff"sv)) {
-            if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
-                auto font = font_or_error.release_value();
-                auto typeface = get_or_create_typeface(font->family(), font->variant());
-                typeface->set_vector_font(move(font));
+
+            if (path.ends_with(".font"sv)) {
+                if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
+                    auto font = font_or_error.release_value();
+                    m_private->full_name_to_font_map.set(font->qualified_name(), *font);
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    typeface->add_bitmap_font(font);
+                }
+            } else if (path.ends_with(".ttf"sv)) {
+                // FIXME: What about .otf
+                if (auto font_or_error = TTF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                    auto font = font_or_error.release_value();
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    typeface->set_vector_font(move(font));
+                }
+            } else if (path.ends_with(".woff"sv)) {
+                if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                    auto font = font_or_error.release_value();
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    typeface->set_vector_font(move(font));
+                }
             }
         }
     }
+}
+
+FontDatabase::FontDatabase()
+    : m_private(make<Private>())
+{
+    load_all_fonts_from_path(s_default_fonts_lookup_path);
 }
 
 void FontDatabase::for_each_font(Function<void(Gfx::Font const&)> callback)
