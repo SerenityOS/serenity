@@ -18,6 +18,8 @@ Browser::Settings* s_settings;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    QApplication app(arguments.argc, arguments.argv);
+
     initialize_web_engine();
 
     String url;
@@ -28,7 +30,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     s_settings = new Browser::Settings();
 
-    QApplication app(arguments.argc, arguments.argv);
     BrowserWindow window;
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);

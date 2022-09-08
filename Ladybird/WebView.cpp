@@ -11,6 +11,7 @@
 #include "ConsoleClient.h"
 #include "CookieJar.h"
 #include "EventLoopPluginQt.h"
+#include "FontPluginQt.h"
 #include "RequestManagerQt.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -830,12 +831,8 @@ void initialize_web_engine()
     platform_init();
 
     Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-    dbgln("Set favicon path to {}", String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
-    Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("{}/res/fonts", s_serenity_resource_root));
-
-    Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
-    Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
+    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
 
     Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 }
