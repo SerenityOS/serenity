@@ -585,6 +585,7 @@ bool Node::is_inline_block() const
 NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = adopt_ref(*new BlockContainer(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::Flow));
     wrapper->m_font = m_font;
     wrapper->m_line_height = m_line_height;
     return wrapper;
