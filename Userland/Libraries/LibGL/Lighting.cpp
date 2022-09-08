@@ -510,8 +510,7 @@ void GLContext::sync_light_state()
         options.color_material_mode = GPU::ColorMaterialMode::Ambient;
         break;
     case GL_AMBIENT_AND_DIFFUSE:
-        options.color_material_mode = GPU::ColorMaterialMode::Ambient;
-        options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
+        options.color_material_mode = GPU::ColorMaterialMode::AmbientAndDiffuse;
         break;
     case GL_DIFFUSE:
         options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
