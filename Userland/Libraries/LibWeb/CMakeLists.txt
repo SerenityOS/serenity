@@ -352,6 +352,7 @@ set(SOURCES
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp
     Platform/EventLoopPlugin.cpp
+    Platform/FontPlugin.cpp
     Platform/Timer.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp

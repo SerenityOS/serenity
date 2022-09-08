@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "EventLoopPluginSerenity.h"
+#include "FontPluginSerenity.h"
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
@@ -31,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::Platform::EventLoopPlugin::install(*new WebContent::EventLoopPluginSerenity);
+    Web::Platform::FontPlugin::install(*new WebContent::FontPluginSerenity);
 
     Web::ImageDecoding::Decoder::initialize(WebView::ImageDecoderClientAdapter::create());
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));

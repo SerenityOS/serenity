@@ -27,6 +27,7 @@
 #include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Platform/FontPlugin.h>
 #include <stdio.h>
 
 namespace Web::CSS {
@@ -1029,28 +1030,39 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         return {};
     };
 
-    // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
-    // Currently, we cannot request the default font's name, or request it at a specific size and weight.
-    // So, hard-coded font names it is.
     auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font> {
+        Platform::GenericFont generic_font {};
         switch (font_id) {
         case ValueID::Monospace:
         case ValueID::UiMonospace:
+            generic_font = Platform::GenericFont::Monospace;
             monospace = true;
-            return find_font("Csilla");
+            break;
         case ValueID::Serif:
-            return find_font("Roman");
+            generic_font = Platform::GenericFont::Serif;
+            break;
         case ValueID::Fantasy:
-            return find_font("Comic Book");
+            generic_font = Platform::GenericFont::Fantasy;
+            break;
         case ValueID::SansSerif:
+            generic_font = Platform::GenericFont::SansSerif;
+            break;
         case ValueID::Cursive:
+            generic_font = Platform::GenericFont::Cursive;
+            break;
         case ValueID::UiSerif:
+            generic_font = Platform::GenericFont::UiSerif;
+            break;
         case ValueID::UiSansSerif:
+            generic_font = Platform::GenericFont::UiSansSerif;
+            break;
         case ValueID::UiRounded:
-            return find_font("Katica");
+            generic_font = Platform::GenericFont::UiRounded;
+            break;
         default:
             return {};
         }
+        return find_font(Platform::FontPlugin::the().generic_font_name(generic_font));
     };
 
     RefPtr<Gfx::Font> found_font;

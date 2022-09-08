@@ -11,6 +11,7 @@ set(SOURCES
     ConnectionFromClient.cpp
     ConsoleGlobalObject.cpp
     EventLoopPluginSerenity.cpp
+    FontPluginSerenity.cpp
     PageHost.cpp
     TimerSerenity.cpp
     WebContentClientEndpoint.h
