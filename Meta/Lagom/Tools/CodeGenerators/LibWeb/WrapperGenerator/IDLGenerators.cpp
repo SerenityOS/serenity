@@ -1784,46 +1784,170 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
 )~~~");
 }
 
-// FIXME: This is extremely ad-hoc, implement the WebIDL overload resolution algorithm instead
-static Optional<String> generate_arguments_match_check_for_count(Vector<IDL::Parameter> const& parameters, size_t argument_count)
+// https://webidl.spec.whatwg.org/#compute-the-effective-overload-set
+static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overload_set)
 {
-    Vector<String> conditions;
-    for (auto i = 0u; i < argument_count; ++i) {
-        auto const& parameter = parameters[i];
-        if (parameter.type->is_string() || parameter.type->is_primitive())
-            continue;
-        auto argument = String::formatted("arg{}", i);
-        StringBuilder condition;
-        condition.append('(');
-        if (parameter.type->is_nullable())
-            condition.appendff("{}.is_nullish() || ", argument);
-        else if (parameter.optional)
-            condition.appendff("{}.is_undefined() || ", argument);
-        condition.appendff("{}.is_object()", argument);
-        condition.append(')');
-        conditions.append(condition.build());
+    // 1. Let S be an ordered set.
+    Vector<EffectiveOverloadSet::Item> overloads;
+
+    // 2. Let F be an ordered set with items as follows, according to the kind of effective overload set:
+    // Note: This is determined by the caller of generate_overload_arbiter()
+
+    // 3. Let maxarg be the maximum number of arguments the operations, legacy factory functions, or
+    //    callback functions in F are declared to take. For variadic operations and legacy factory functions,
+    //    the argument on which the ellipsis appears counts as a single argument.
+    auto overloaded_functions = overload_set.value;
+    auto maximum_arguments = 0;
+    for (auto const& function : overloaded_functions)
+        maximum_arguments = max(maximum_arguments, static_cast<int>(function.parameters.size()));
+
+    // 4. Let max be max(maxarg, N).
+    // NOTE: We don't do this step. `N` is a runtime value, so we just use `maxarg` here instead.
+    //       Later, `generate_overload_arbiter()` produces individual overload sets for each possible N.
+
+    // 5. For each operation or extended attribute X in F:
+    auto overload_id = 0;
+    for (auto const& overload : overloaded_functions) {
+        // 1. Let arguments be the list of arguments X is declared to take.
+        auto const& arguments = overload.parameters;
+
+        // 2. Let n be the size of arguments.
+        int argument_count = (int)arguments.size();
+
+        // 3. Let types be a type list.
+        NonnullRefPtrVector<Type> types;
+
+        // 4. Let optionalityValues be an optionality list.
+        Vector<Optionality> optionality_values;
+
+        bool overload_is_variadic = false;
+
+        // 5. For each argument in arguments:
+        for (auto const& argument : arguments) {
+            // 1. Append the type of argument to types.
+            types.append(argument.type);
+
+            // 2. Append "variadic" to optionalityValues if argument is a final, variadic argument, "optional" if argument is optional, and "required" otherwise.
+            if (argument.variadic) {
+                optionality_values.append(Optionality::Variadic);
+                overload_is_variadic = true;
+            } else if (argument.optional) {
+                optionality_values.append(Optionality::Optional);
+            } else {
+                optionality_values.append(Optionality::Required);
+            }
+        }
+
+        // 6. Append the tuple (X, types, optionalityValues) to S.
+        overloads.empend(overload_id, types, optionality_values);
+
+        // 7. If X is declared to be variadic, then:
+        if (overload_is_variadic) {
+            // 1. For each i in the range n to max − 1, inclusive:
+            for (auto i = argument_count; i < maximum_arguments; ++i) {
+                // 1. Let t be a type list.
+                // 2. Let o be an optionality list.
+                // NOTE: We hold both of these in an Item instead.
+                EffectiveOverloadSet::Item item;
+                item.callable_id = overload_id;
+
+                // 3. For each j in the range 0 to n − 1, inclusive:
+                for (auto j = 0; j < argument_count; ++j) {
+                    // 1. Append types[j] to t.
+                    item.types.append(types[j]);
+
+                    // 2. Append optionalityValues[j] to o.
+                    item.optionality_values.append(optionality_values[j]);
+                }
+
+                // 4. For each j in the range n to i, inclusive:
+                for (auto j = argument_count; j <= i; ++j) {
+                    // 1. Append types[n − 1] to t.
+                    item.types.append(types[argument_count - 1]);
+
+                    // 2. Append "variadic" to o.
+                    item.optionality_values.append(Optionality::Variadic);
+                }
+
+                // 5. Append the tuple (X, t, o) to S.
+                overloads.append(move(item));
+            }
+        }
+
+        // 8. Let i be n − 1.
+        auto i = argument_count - 1;
+
+        // 9. While i ≥ 0:
+        while (i >= 0) {
+            // 1. If arguments[i] is not optional (i.e., it is not marked as "optional" and is not a final, variadic argument), then break.
+            if (!arguments[i].optional && !arguments[i].variadic)
+                break;
+
+            // 2. Let t be a type list.
+            // 3. Let o be an optionality list.
+            // NOTE: We hold both of these in an Item instead.
+            EffectiveOverloadSet::Item item;
+            item.callable_id = overload_id;
+
+            // 4. For each j in the range 0 to i − 1, inclusive:
+            for (auto j = 0; j < i; ++j) {
+                // 1. Append types[j] to t.
+                item.types.append(types[j]);
+
+                // 2. Append optionalityValues[j] to o.
+                item.optionality_values.append(optionality_values[j]);
+            }
+
+            // 5. Append the tuple (X, t, o) to S.
+            overloads.append(move(item));
+
+            // 6. Set i to i − 1.
+            --i;
+        }
+
+        overload_id++;
     }
-    if (conditions.is_empty())
-        return {};
-    return String::formatted("({})", String::join(" && "sv, conditions));
+
+    return EffectiveOverloadSet { move(overloads) };
 }
 
-static String generate_arguments_match_check(Function const& function)
+static String generate_constructor_for_idl_type(Type const& type)
 {
-    Vector<String> options;
-    for (size_t i = 0; i < function.parameters.size(); ++i) {
-        if (!function.parameters[i].optional && !function.parameters[i].variadic)
-            continue;
-        auto match_check = generate_arguments_match_check_for_count(function.parameters, i);
-        if (match_check.has_value())
-            options.append(match_check.release_value());
+    auto append_type_list = [](auto& builder, auto const& type_list) {
+        bool first = true;
+        for (auto const& child_type : type_list) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(", "sv);
+            }
+
+            builder.append(generate_constructor_for_idl_type(child_type));
+        }
+    };
+
+    switch (type.kind()) {
+    case Type::Kind::Plain:
+        return String::formatted("make_ref_counted<IDL::Type>(\"{}\", {})", type.name(), type.is_nullable());
+    case Type::Kind::Parameterized: {
+        auto const& parameterized_type = type.as_parameterized();
+        StringBuilder builder;
+        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        append_type_list(builder, parameterized_type.parameters());
+        builder.append("})"sv);
+        return builder.to_string();
     }
-    if (!function.parameters.is_empty() && !function.parameters.last().variadic) {
-        auto match_check = generate_arguments_match_check_for_count(function.parameters, function.parameters.size());
-        if (match_check.has_value())
-            options.append(match_check.release_value());
+    case Type::Kind::Union: {
+        auto const& union_type = type.as_union();
+        StringBuilder builder;
+        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        append_type_list(builder, union_type.member_types());
+        builder.append("})"sv);
+        return builder.to_string();
     }
-    return String::join(" || "sv, options);
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, String const& class_name)
@@ -1835,61 +1959,111 @@ static void generate_overload_arbiter(SourceGenerator& generator, auto const& ov
     function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
-    [[maybe_unused]] auto& realm = *vm.current_realm();
+    Optional<IDL::EffectiveOverloadSet> effective_overload_set;
 )~~~");
 
-    auto minimum_argument_count = get_shortest_function_length(overload_set.value);
-    generate_argument_count_check(function_generator, overload_set.key, minimum_argument_count);
+    auto all_possible_effective_overloads = compute_the_effective_overload_set(overload_set);
+    auto overloads_set = all_possible_effective_overloads.items();
+    auto maximum_argument_count = 0u;
+    for (auto const& overload : overloads_set)
+        maximum_argument_count = max(maximum_argument_count, overload.types.size());
+    function_generator.set("max_argument_count", String::number(maximum_argument_count));
+    function_generator.appendln("    switch (min(@max_argument_count@, vm.argument_count())) {");
 
-    auto overloaded_functions = overload_set.value;
-    quick_sort(overloaded_functions, [](auto const& a, auto const& b) { return a.shortest_length() < b.shortest_length(); });
-    auto fetched_arguments = 0u;
-    for (auto i = 0u; i < overloaded_functions.size(); ++i) {
-        auto const& overloaded_function = overloaded_functions[i];
-        auto argument_count = overloaded_function.parameters.size();
+    // Generate the effective overload set for each argument count.
+    // This skips part of the Overload Resolution Algorithm https://webidl.spec.whatwg.org/#es-overloads
+    // Namely, since that discards any overloads that don't have the exact number of arguments that were given,
+    // we simply only provide the overloads that do have that number of arguments.
+    for (auto argument_count = 0u; argument_count <= maximum_argument_count; ++argument_count) {
+        // FIXME: Calculate the distinguishing argument index now instead of at runtime.
 
-        function_generator.set("argument_count", String::number(argument_count));
-        auto arguments_match_check = generate_arguments_match_check(overloaded_function);
-        function_generator.set("arguments_match_check", arguments_match_check);
-        function_generator.set("overload_suffix", String::number(i));
+        auto effective_overload_count = 0;
+        for (auto const& overload : overloads_set) {
+            if (overload.types.size() == argument_count)
+                effective_overload_count++;
+        }
 
-        if (argument_count > fetched_arguments) {
-            for (auto j = fetched_arguments; j < argument_count; ++j) {
-                function_generator.set("argument.index", String::number(j));
-                function_generator.append(R"~~~(
-    [[maybe_unused]] auto arg@argument.index@ = vm.argument(@argument.index@);
+        if (effective_overload_count == 0)
+            continue;
+
+        function_generator.set("current_argument_count", String::number(argument_count));
+        function_generator.set("overload_count", String::number(effective_overload_count));
+        function_generator.appendln(R"~~~(
+    case @current_argument_count@: {
+        Vector<IDL::EffectiveOverloadSet::Item> overloads;
+        overloads.ensure_capacity(@overload_count@);
 )~~~");
+
+        for (auto& overload : overloads_set) {
+            if (overload.types.size() != argument_count)
+                continue;
+
+            StringBuilder types_builder;
+            types_builder.append("NonnullRefPtrVector<IDL::Type> { "sv);
+            StringBuilder optionality_builder;
+            optionality_builder.append("Vector<IDL::Optionality> { "sv);
+
+            for (auto i = 0u; i < overload.types.size(); ++i) {
+                if (i > 0) {
+                    types_builder.append(", "sv);
+                    optionality_builder.append(", "sv);
+                }
+
+                types_builder.append(generate_constructor_for_idl_type(overload.types[i]));
+
+                optionality_builder.append("IDL::Optionality::"sv);
+                switch (overload.optionality_values[i]) {
+                case Optionality::Required:
+                    optionality_builder.append("Required"sv);
+                    break;
+                case Optionality::Optional:
+                    optionality_builder.append("Optional"sv);
+                    break;
+                case Optionality::Variadic:
+                    optionality_builder.append("Variadic"sv);
+                    break;
+                }
             }
-            fetched_arguments = argument_count;
+
+            types_builder.append("}"sv);
+            optionality_builder.append("}"sv);
+
+            function_generator.set("overload.callable_id", String::number(overload.callable_id));
+            function_generator.set("overload.types", types_builder.to_string());
+            function_generator.set("overload.optionality_values", optionality_builder.to_string());
+
+            function_generator.appendln("        overloads.empend(@overload.callable_id@, @overload.types@, @overload.optionality_values@);");
         }
 
-        auto is_last = i == overloaded_functions.size() - 1;
-        if (!is_last) {
-            function_generator.append(R"~~~(
-    if (vm.argument_count() == @argument_count@) {
-)~~~");
-        }
-
-        if (arguments_match_check.is_empty()) {
-            function_generator.append(R"~~~(
-    return @function.name:snakecase@@overload_suffix@(vm);
-)~~~");
-        } else {
-            function_generator.append(R"~~~(
-    if (@arguments_match_check@)
-        return @function.name:snakecase@@overload_suffix@(vm);
-)~~~");
-        }
-
-        if (!is_last) {
-            function_generator.append(R"~~~(
+        function_generator.append(R"~~~(
+        effective_overload_set.emplace(move(overloads));
+        break;
     }
 )~~~");
-        }
     }
 
     function_generator.append(R"~~~(
-    return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
+    }
+
+    if (!effective_overload_set.has_value())
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
+
+    auto chosen_overload = TRY(resolve_overload(vm, effective_overload_set.value()));
+    switch (chosen_overload.callable_id) {
+)~~~");
+
+    for (auto i = 0u; i < overload_set.value.size(); ++i) {
+        function_generator.set("overload_id", String::number(i));
+        function_generator.append(R"~~~(
+    case @overload_id@:
+        return @function.name:snakecase@@overload_id@(vm);
+)~~~");
+    }
+
+    function_generator.append(R"~~~(
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 )~~~");
 }
@@ -2296,6 +2470,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 
     generator.append(R"~~~(
 #include <AK/Function.h>
+#include <LibIDL/Types.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Error.h>
@@ -2306,6 +2481,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/IDLOverloadResolution.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
