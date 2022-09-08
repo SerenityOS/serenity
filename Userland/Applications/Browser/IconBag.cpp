@@ -15,6 +15,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.filetype_html = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"sv));
     icon_bag.filetype_text = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-text.png"sv));
     icon_bag.filetype_javascript = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png"sv));
+    icon_bag.filetype_image = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-image.png"sv));
     icon_bag.bookmark_contour = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-contour.png"sv));
     icon_bag.bookmark_filled = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bookmark-filled.png"sv));
     icon_bag.inspector_object = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"sv));
@@ -24,6 +25,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.delete_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv));
     icon_bag.new_tab = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"sv));
     icon_bag.duplicate_tab = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/duplicate-tab.png"sv));
+    icon_bag.close_other_tabs = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-other-tabs.png"sv));
     icon_bag.code = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/code.png"sv));
     icon_bag.dom_tree = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/browser/dom-tree.png"sv));
     icon_bag.layout = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/layout.png"sv));
@@ -36,6 +38,10 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.trash_can = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/trash-can.png"sv));
     icon_bag.clear_cache = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/browser/clear-cache.png"sv));
     icon_bag.spoof = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/spoof.png"sv));
+    icon_bag.go_to = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv));
+    icon_bag.download = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/download.png"sv));
+    icon_bag.copy = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv));
+    icon_bag.rename = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/rename.png"sv));
 
     return icon_bag;
 }

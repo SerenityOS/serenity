@@ -247,20 +247,20 @@ Tab::Tab(BrowserWindow& window)
     };
 
     m_link_context_menu = GUI::Menu::construct();
-    auto link_default_action = GUI::Action::create("&Open", [this](auto&) {
+    auto link_default_action = GUI::Action::create("&Open", g_icon_bag.go_to, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "", 0);
     });
     m_link_context_menu->add_action(link_default_action);
     m_link_context_menu_default_action = link_default_action;
-    m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab", [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Copy URL", [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Copy URL", g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
         start_download(m_link_context_menu_url);
     }));
     m_link_context_menu->add_separator();
@@ -272,22 +272,22 @@ Tab::Tab(BrowserWindow& window)
     };
 
     m_image_context_menu = GUI::Menu::construct();
-    m_image_context_menu->add_action(GUI::Action::create("&Open Image", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Open Image", g_icon_bag.filetype_image, [this](auto&) {
         view().on_link_click(m_image_context_menu_url, "", 0);
     }));
-    m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab", g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_image_context_menu_url, "_blank", 0);
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Copy Image", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Copy Image", g_icon_bag.copy, [this](auto&) {
         if (m_image_context_menu_bitmap.is_valid())
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
-    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_string());
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
         start_download(m_image_context_menu_url);
     }));
     m_image_context_menu->add_separator();
@@ -386,7 +386,7 @@ Tab::Tab(BrowserWindow& window)
     m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", g_icon_bag.duplicate_tab, [this](auto&) {
         on_tab_open_request(url());
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", g_icon_bag.close_other_tabs, [this](auto&) {
         on_tab_close_other_request(*this);
     }));
 
