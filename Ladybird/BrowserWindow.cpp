@@ -23,6 +23,7 @@ BrowserWindow::BrowserWindow()
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
+    m_tabs_container->setDocumentMode(true);
 
     m_tabs_bar = m_tabs_container->findChild<QTabBar*>();
     m_tabs_bar->hide();
