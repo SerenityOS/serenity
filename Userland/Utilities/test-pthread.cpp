@@ -99,7 +99,8 @@ static ErrorOr<void> test_semaphore_as_lock()
 
     VERIFY(v.size() == threads_count * num_times);
     VERIFY(sem_trywait(&semaphore) == 0);
-    VERIFY(sem_trywait(&semaphore) == EAGAIN);
+    VERIFY(sem_trywait(&semaphore) == -1);
+    VERIFY(errno == EAGAIN);
 
     return {};
 }
@@ -128,7 +129,8 @@ static ErrorOr<void> test_semaphore_as_event()
     [[maybe_unused]] auto r1 = reader->join();
     [[maybe_unused]] auto r2 = writer->join();
 
-    VERIFY(sem_trywait(&semaphore) == EAGAIN);
+    VERIFY(sem_trywait(&semaphore) == -1);
+    VERIFY(errno == EAGAIN);
 
     return {};
 }
@@ -171,7 +173,8 @@ static ErrorOr<void> test_semaphore_nonbinary()
     for (size_t i = 0; i < num; i++) {
         VERIFY(sem_trywait(&semaphore) == 0);
     }
-    VERIFY(sem_trywait(&semaphore) == EAGAIN);
+    VERIFY(sem_trywait(&semaphore) == -1);
+    VERIFY(errno == EAGAIN);
 
     return {};
 }
