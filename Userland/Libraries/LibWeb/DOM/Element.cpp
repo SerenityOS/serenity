@@ -603,6 +603,9 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
 int Element::client_top() const
 {
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
     if (!layout_node() || !layout_node()->is_box())
         return 0;
@@ -616,6 +619,9 @@ int Element::client_top() const
 // https://drafts.csswg.org/cssom-view/#dom-element-clientleft
 int Element::client_left() const
 {
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
     if (!layout_node() || !layout_node()->is_box())
         return 0;
