@@ -151,6 +151,7 @@ public:
     void delete_from_line_start_to_cursor();
     void select_all();
     void insert_emoji();
+    void set_or_clear_emoji_input_callback();
     void select_current_line();
     virtual void undo();
     virtual void redo();

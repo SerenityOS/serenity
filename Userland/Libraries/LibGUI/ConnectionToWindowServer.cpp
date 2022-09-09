@@ -192,18 +192,14 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
             return;
     }
 
-    bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->accepts_emoji_input();
+    bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->on_emoji_input;
     if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
         auto emoji_input_dialog = EmojiInputDialog::construct(window);
         if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
             return;
-        key_event->m_key = Key_Invalid;
-        key_event->m_modifiers = 0;
 
-        Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text());
-        u32 emoji_code_point = *m_utf8_view.begin();
-
-        key_event->m_code_point = emoji_code_point;
+        window->focused_widget()->on_emoji_input(emoji_input_dialog->selected_emoji_text());
+        return;
     }
 
     bool accepts_command_palette = !window->blocks_command_palette();
