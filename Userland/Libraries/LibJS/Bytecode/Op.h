@@ -254,6 +254,24 @@ private:
     Register m_elements[];
 };
 
+class Append final : public Instruction {
+public:
+    Append(Register lhs, bool is_spread)
+        : Instruction(Type::Append)
+        , m_lhs(lhs)
+        , m_is_spread(is_spread)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    Register m_lhs;
+    bool m_is_spread = false;
+};
+
 class IteratorToArray final : public Instruction {
 public:
     IteratorToArray()
