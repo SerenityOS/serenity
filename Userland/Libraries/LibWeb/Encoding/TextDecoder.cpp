@@ -29,6 +29,7 @@ TextDecoder::TextDecoder(HTML::Window& window, TextCodec::Decoder& decoder, FlyS
     , m_fatal(fatal)
     , m_ignore_bom(ignore_bom)
 {
+    set_prototype(&window.cached_web_prototype("TextDecoder"));
 }
 
 TextDecoder::~TextDecoder() = default;
