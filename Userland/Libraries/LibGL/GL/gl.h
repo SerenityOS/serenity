@@ -743,6 +743,7 @@ GLAPI void glStencilMask(GLuint mask);
 GLAPI void glStencilMaskSeparate(GLenum face, GLuint mask);
 GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
 GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+GLAPI void glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz);
 GLAPI void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
 GLAPI void glNormal3fv(GLfloat const* v);
 GLAPI void glNormalPointer(GLenum type, GLsizei stride, void const* pointer);
