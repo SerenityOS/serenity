@@ -92,7 +92,7 @@
 
 namespace JS::Bytecode {
 
-class Instruction {
+class alignas(void*) Instruction {
 public:
     constexpr static bool IsTerminator = false;
 
