@@ -50,7 +50,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
 
     auto settings_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv));
 
-    m_context_menu->add_action(GUI::Action::create("&Settings",
+    m_context_menu->add_action(GUI::Action::create("Keyboard &Settings",
         settings_icon,
         [&](auto&) {
             GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings"sv);
