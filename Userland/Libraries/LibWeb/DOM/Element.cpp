@@ -629,12 +629,7 @@ int Element::client_left() const
 // https://drafts.csswg.org/cssom-view/#dom-element-clientwidth
 int Element::client_width() const
 {
-    // NOTE: Ensure that layout is up-to-date before looking at metrics.
-    const_cast<Document&>(document()).update_layout();
-
-    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!paint_box())
-        return 0;
+    // NOTE: We do step 2 before step 1 here since step 2 can exit early without needing to perform layout.
 
     // 2. If the element is the root element and the element’s node document is not in quirks mode,
     //    or if the element is the HTML body element and the element’s node document is in quirks mode,
@@ -644,6 +639,13 @@ int Element::client_width() const
         return document().browsing_context()->viewport_rect().width();
     }
 
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
+
     // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
     // ignoring any transforms that apply to the element and its ancestors.
     return paint_box()->absolute_padding_box_rect().width();
@@ -652,12 +654,7 @@ int Element::client_width() const
 // https://drafts.csswg.org/cssom-view/#dom-element-clientheight
 int Element::client_height() const
 {
-    // NOTE: Ensure that layout is up-to-date before looking at metrics.
-    const_cast<Document&>(document()).update_layout();
-
-    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!paint_box())
-        return 0;
+    // NOTE: We do step 2 before step 1 here since step 2 can exit early without needing to perform layout.
 
     // 2. If the element is the root element and the element’s node document is not in quirks mode,
     //    or if the element is the HTML body element and the element’s node document is in quirks mode,
@@ -666,6 +663,13 @@ int Element::client_height() const
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
         return document().browsing_context()->viewport_rect().height();
     }
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
 
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
