@@ -318,10 +318,13 @@ float BlockFormattingContext::compute_theoretical_height(LayoutState const& stat
     if (is<ReplacedBox>(box)) {
         height = compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
     } else {
-        if (box.computed_values().height().is_auto())
+        // NOTE: We treat percentage heights as "auto" if the containing block has indefinite height.
+        if (box.computed_values().height().is_auto()
+            || (box.computed_values().height().is_percentage() && !state.get(*box.containing_block()).has_definite_height())) {
             height = compute_auto_height_for_block_level_element(state, box);
-        else
+        } else {
             height = computed_values.height().resolved(box, containing_block_height).to_px(box);
+        }
     }
 
     auto specified_max_height = computed_values.max_height().resolved(box, containing_block_height).resolved(box);
