@@ -12,6 +12,7 @@
 
 #define ENUMERATE_BYTECODE_OPS(O)    \
     O(Add)                           \
+    O(Append)                        \
     O(BitwiseAnd)                    \
     O(BitwiseNot)                    \
     O(BitwiseOr)                     \

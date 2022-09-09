@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Find.h>
 #include <AK/Format.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
@@ -1085,34 +1086,50 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
 
 Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Vector<Bytecode::Register> element_regs;
-    for (auto& element : m_elements) {
-        if (element && is<SpreadExpression>(*element)) {
-            return Bytecode::CodeGenerationError {
-                this,
-                "Unimplemented element kind: SpreadExpression"sv,
-            };
-        }
-        element_regs.append(generator.allocate_register());
-    }
-    size_t i = 0;
-    for (auto& element : m_elements) {
-        if (element) {
-            TRY(element->generate_bytecode(generator));
-
-            if (is<SpreadExpression>(*element))
-                VERIFY_NOT_REACHED();
-        } else {
-            generator.emit<Bytecode::Op::LoadImmediate>(Value {});
-        }
-        auto& element_reg = element_regs[i++];
-        generator.emit<Bytecode::Op::Store>(element_reg);
-    }
-    if (element_regs.is_empty()) {
+    if (m_elements.is_empty()) {
         generator.emit<Bytecode::Op::NewArray>();
-    } else {
-        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { element_regs.first(), element_regs.last() });
+        return {};
     }
+
+    auto first_spread = find_if(m_elements.begin(), m_elements.end(), [](auto el) { return el && is<SpreadExpression>(*el); });
+
+    Bytecode::Register args_start_reg { 0 };
+    for (auto it = m_elements.begin(); it != first_spread; ++it) {
+        auto reg = generator.allocate_register();
+        if (args_start_reg.index() == 0)
+            args_start_reg = reg;
+    }
+    u32 i = 0;
+    for (auto it = m_elements.begin(); it != first_spread; ++it, ++i) {
+        Bytecode::Register reg { args_start_reg.index() + i };
+        if (!*it)
+            generator.emit<Bytecode::Op::LoadImmediate>(Value {});
+        else {
+            TRY((*it)->generate_bytecode(generator));
+        }
+        generator.emit<Bytecode::Op::Store>(reg);
+    }
+
+    if (first_spread.index() != 0)
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { args_start_reg, Bytecode::Register { args_start_reg.index() + static_cast<u32>(first_spread.index() - 1) } });
+    else
+        generator.emit<Bytecode::Op::NewArray>();
+
+    if (first_spread != m_elements.end()) {
+        auto array_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(array_reg);
+        for (auto it = first_spread; it != m_elements.end(); ++it) {
+            if (!*it) {
+                generator.emit<Bytecode::Op::LoadImmediate>(Value {});
+                generator.emit<Bytecode::Op::Append>(array_reg, false);
+            } else {
+                TRY((*it)->generate_bytecode(generator));
+                generator.emit<Bytecode::Op::Append>(array_reg, *it && is<SpreadExpression>(**it));
+            }
+        }
+        generator.emit<Bytecode::Op::Load>(array_reg);
+    }
+
     return {};
 }
 
@@ -2389,5 +2406,4 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
     VERIFY_NOT_REACHED();
 }
-
 }
