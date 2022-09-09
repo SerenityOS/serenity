@@ -663,13 +663,13 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             } else {
                 // We ran out of horizontal space on this "float line", and need to break.
                 float_to_edge();
-                float lowest_border_edge = 0;
+                float lowest_margin_edge = 0;
                 for (auto const& box : side_data.current_boxes) {
                     auto const& box_state = m_state.get(box.box);
-                    lowest_border_edge = max(lowest_border_edge, box_state.border_box_height());
+                    lowest_margin_edge = max(lowest_margin_edge, box_state.margin_box_height());
                 }
 
-                side_data.y_offset += lowest_border_edge;
+                side_data.y_offset += lowest_margin_edge;
 
                 // Also, forget all previous boxes floated to this side while since they're no longer relevant.
                 side_data.clear();
