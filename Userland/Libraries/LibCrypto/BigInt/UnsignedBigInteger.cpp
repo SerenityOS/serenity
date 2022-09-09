@@ -238,7 +238,7 @@ double UnsignedBigInteger::to_double(UnsignedBigInteger::RoundingMode rounding_m
     u8 bits_dropped_from_final_word = 0;
 
     if (bits_written < bits_to_read && last_word_index > 0) {
-        // Second word can always just cleanly be shifted upto the final bit of the first word
+        // Second word can always just cleanly be shifted up to the final bit of the first word
         // since the first has at most BIT_IN_WORD - 1, 31
         u64 next_word = m_words[last_word_index - 1];
         VERIFY((mantissa & (next_word << (bits_in_u64 - bits_written - BITS_IN_WORD))) == 0);

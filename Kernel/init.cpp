@@ -245,7 +245,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We must set up the AP boot environment before switching to a kernel process,
-        // as pages below address USER_RANGE_BASE are only accesible through the kernel
+        // as pages below address USER_RANGE_BASE are only accessible through the kernel
         // page directory.
         APIC::the().setup_ap_boot_environment();
     }

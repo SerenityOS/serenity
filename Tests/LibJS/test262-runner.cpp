@@ -502,7 +502,7 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
         //       has one.
         //       The third test is the same as the second, upper module is fine but
         //       import a module with SyntaxError, however here the phase is runtime.
-        //       In conclusion all the test which would cause the inital module to not
+        //       In conclusion all the test which would cause the initial module to not
         //       be evaluated !should! have '$DONOTEVALUATE();' at the top causing a
         //       Reference error, meaning we just ignore the phase in the SyntaxError case.
         return error.type == metadata.type;
@@ -587,7 +587,7 @@ int main(int argc, char** argv)
     }
 
     if (timeout <= 0) {
-        warnln("timeout must be atleast 1");
+        warnln("timeout must be at least 1");
         return 2;
     }
 

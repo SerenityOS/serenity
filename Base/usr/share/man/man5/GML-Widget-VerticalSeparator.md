@@ -1,6 +1,6 @@
 ## Name
 
-GML Vertical Seperator Widget
+GML Vertical Separator Widget
 
 ## Description
 

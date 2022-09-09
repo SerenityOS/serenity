@@ -100,7 +100,7 @@ private:
     // Note: This data member should be used with LUNAddress target_id and disk_id.
     // LUNs are agnostic system-wide addresses, so they are assigned without caring about the specific hardware interfaces.
     // This class member on the other side, is meant to be assigned *per hardware type*,
-    // which means in constrast to the LUNAddress controller_id struct member, we take the index of the hardware
+    // which means in contrast to the LUNAddress controller_id struct member, we take the index of the hardware
     // controller among its fellow controllers of the same hardware type in the system.
     u32 const m_hardware_relative_controller_id { 0 };
 

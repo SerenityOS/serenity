@@ -289,7 +289,7 @@ void AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, int t
 {
     // FIXME: Come up with an allocation-free version of this!
     // Using draw_line() for segments of an ellipse was attempted but gave really poor results :^(
-    // There probably is a way to adjust the fill of draw_ellipse_part() to do this, but gettting it rendering correctly is tricky.
+    // There probably is a way to adjust the fill of draw_ellipse_part() to do this, but getting it rendering correctly is tricky.
     // The outline of the steps required to paint it efficiently is:
     //     - Paint the outer ellipse without the fill (from the fill() lambda in draw_ellipse_part())
     //     - Paint the inner ellipse, but in the set_pixel() invert the alpha values

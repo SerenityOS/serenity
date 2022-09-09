@@ -2477,7 +2477,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         if (side_a.has_value() && !side_b.has_value()) {
             gradient_direction = *side_a;
         } else if (side_a.has_value() && side_b.has_value()) {
-            // Covert two sides to a corner
+            // Convert two sides to a corner
             if (to_underlying(*side_b) < to_underlying(*side_a))
                 swap(side_a, side_b);
             if (side_a == SideOrCorner::Top && side_b == SideOrCorner::Left)

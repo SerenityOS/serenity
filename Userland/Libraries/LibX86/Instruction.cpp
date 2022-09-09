@@ -2223,14 +2223,14 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         append_mnemonic_space();
         append_xmm();
         append(',');
-        append_mmrm32(); // FIXME: No Memmory
+        append_mmrm32(); // FIXME: No Memory
         break;
     case OP_mm1_xmm2m128:
     case OP_mm_xmm:
         append_mnemonic_space();
         append_mm();
         append(',');
-        append_xmmrm32(); // FIXME: No Memmory
+        append_xmmrm32(); // FIXME: No Memory
         break;
     case OP_xmm1_imm8:
         append_mnemonic_space();

@@ -1006,7 +1006,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 
         m_terminal_wrapper->clear_including_history();
 
-        // The debugger calls wait() on the debugee, so the TerminalWrapper can't do that.
+        // The debugger calls wait() on the debuggee, so the TerminalWrapper can't do that.
         auto ptm_res = m_terminal_wrapper->setup_master_pseudoterminal(TerminalWrapper::WaitForChildOnExit::No);
         if (ptm_res.is_error()) {
             perror("setup_master_pseudoterminal");

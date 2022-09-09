@@ -24,7 +24,7 @@ void SoftVPU::LDMXCSR(X86::Instruction const& insn)
     VERIFY((m_mxcsr.mxcsr & 0xFFFF'0000) == 0);
 
     // Just let the host's SSE (or if not available x87) handle the rounding for us
-    // We do not want to accedentally raise an FP-Exception on the host, so we
+    // We do not want to accidentally raise an FP-Exception on the host, so we
     // mask all exceptions
 #ifdef __SSE__
     AK::MXCSR temp = m_mxcsr;
@@ -99,7 +99,7 @@ void SoftVPU::MOVLPS_xmm1_xmm2m64(X86::Instruction const& insn)
         m_xmm[xmm1].puqw[0] = m_xmm[insn.modrm().rm()].puqw[1];
     } else {
         // FIXME: Shadows
-        // Note: Technically we are transfereing two packed floats not a quad word
+        // Note: Technically we are transferring two packed floats not a quad word
         m_xmm[xmm1].puqw[0] = insn.modrm().read64(m_cpu, insn).value();
     }
 }
@@ -108,7 +108,7 @@ void SoftVPU::MOVLPS_m64_xmm2(X86::Instruction const& insn)
     u8 xmm2 = insn.modrm().reg();
     // FIXME: This might not hold true for SSE2 or later
     VERIFY(!insn.modrm().is_register());
-    // Note: Technically we are transfereing two packed floats not a quad word
+    // Note: Technically we are transferring two packed floats not a quad word
     insn.modrm().write64(m_cpu, insn, ValueWithShadow<u64>::create_initialized(m_xmm[xmm2].puqw[0]));
 }
 
@@ -166,7 +166,7 @@ void SoftVPU::MOVHPS_xmm1_xmm2m64(X86::Instruction const& insn)
         m_xmm[xmm1].puqw[1] = m_xmm[insn.modrm().rm()].puqw[0];
     } else {
         // FIXME: Shadows
-        // Note: Technically we are transfereing two packed floats not a quad word
+        // Note: Technically we are transferring two packed floats not a quad word
         m_xmm[xmm1].puqw[1] = insn.modrm().read64(m_cpu, insn).value();
     }
 }
@@ -174,7 +174,7 @@ void SoftVPU::MOVHPS_m64_xmm2(X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     VERIFY(!insn.modrm().is_register());
-    // Note: Technically we are transfereing two packed floats not a quad word
+    // Note: Technically we are transferring two packed floats not a quad word
     insn.modrm().write64(m_cpu, insn, ValueWithShadow<u64>::create_initialized(m_xmm[xmm1].puqw[1]));
 }
 void SoftVPU::MOVAPS_xmm1_xmm2m128(X86::Instruction const& insn)
@@ -202,7 +202,7 @@ void SoftVPU::MOVAPS_xmm1m128_xmm2(X86::Instruction const& insn)
 
 void SoftVPU::CVTPI2PS_xmm1_mm2m64(X86::Instruction const& insn)
 {
-    // FIXME: Raise Precission
+    // FIXME: Raise Precision
     // FIXME: Honor Rounding control
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -218,7 +218,7 @@ void SoftVPU::CVTPI2PS_xmm1_mm2m64(X86::Instruction const& insn)
 }
 void SoftVPU::CVTSI2SS_xmm1_rm32(X86::Instruction const& insn)
 {
-    // FIXME: Raise Precission
+    // FIXME: Raise Precision
     // FIXME: Shadows
     // FIXME: Honor Rounding Control
     m_xmm[insn.modrm().reg()].ps[0] = (i32)insn.modrm().read32(m_cpu, insn).value();

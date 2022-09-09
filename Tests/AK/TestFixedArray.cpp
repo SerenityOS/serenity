@@ -51,7 +51,7 @@ TEST_CASE(move)
 TEST_CASE(no_allocation)
 {
     FixedArray<int> array = FixedArray<int>::must_create_but_fixme_should_propagate_errors(5);
-    EXPECT_NO_CRASH("Assigments", [&] {
+    EXPECT_NO_CRASH("Assignments", [&] {
         NoAllocationGuard guard;
         array[0] = 0;
         array[1] = 1;

@@ -106,7 +106,7 @@ describe("tagged template literal functionality", () => {
         expect(raw[1]).toBe("\\nbar");
     });
 
-    test("invalid escapes give undefined cooked values but can be accesed in raw form", () => {
+    test("invalid escapes give undefined cooked values but can be accessed in raw form", () => {
         let calls = 0;
         let lastValue = null;
         function noCookedButRaw(values) {

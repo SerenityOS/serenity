@@ -23,7 +23,7 @@ describe("normal behavior", () => {
         expect(new Intl.Locale("ar", { hourCycle: "h24" }).hourCycles).toEqual(["h24"]);
 
         // Invalid hourCycles also take precedence when specified in the locale string. Unlike other
-        // properties, Locale("en", { hourCycle: "ladybird" }) will explictly throw.
+        // properties, Locale("en", { hourCycle: "ladybird" }) will explicitly throw.
         expect(new Intl.Locale("en-u-hc-ladybird").hourCycles).toEqual(["ladybird"]);
     });
 });

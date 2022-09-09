@@ -15,7 +15,7 @@ namespace Kernel {
 struct TrapFrame {
     u64 x[31];     // Saved general purpose registers
     u64 spsr_el1;  // Save Processor Status Register, EL1
-    u64 elr_el1;   // Exception Link Reigster, EL1
+    u64 elr_el1;   // Exception Link Register, EL1
     u64 tpidr_el1; // EL0 thread ID
     u64 sp_el0;    // EL0 stack pointer
 };
