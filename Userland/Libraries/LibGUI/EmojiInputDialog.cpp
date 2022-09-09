@@ -129,7 +129,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     Vector<Emoji> code_points;
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
-        auto filename = dt.next_path();
+        auto filename = dt.next_full_path();
         auto lexical_path = LexicalPath(filename);
         if (lexical_path.extension() != "png")
             continue;
@@ -157,13 +157,16 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         // which is a key event with a single code point.
         StringBuilder builder;
         builder.append(Utf32View(&code_point, 1));
-        auto emoji_text = builder.to_string();
 
-        auto button = Button::construct(move(emoji_text));
+        auto bitmap = Gfx::Bitmap::try_load_from_file(filename).release_value_but_fixme_should_propagate_errors();
+        resize_bitmap_if_needed(bitmap);
+
+        auto button = Button::construct();
+        button->set_icon(bitmap);
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
-        button->on_click = [this, button = button](auto) {
-            m_selected_emoji_text = button->text();
+        button->on_click = [this, text = builder.to_string()](auto) {
+            m_selected_emoji_text = move(text);
             done(ExecResult::OK);
         };
 
