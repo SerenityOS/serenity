@@ -5,6 +5,7 @@
  */
 
 #include "GeneratorUtil.h"
+#include <AK/AnyOf.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
@@ -81,6 +82,57 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
         emoji.name = emoji_data.unique_strings.ensure(name.to_titlecase_string());
         emoji.code_points_name = String::join('_', code_points);
 
+        TRY(emoji_data.emojis.try_append(move(emoji)));
+    }
+
+    return {};
+}
+
+static ErrorOr<void> parse_emoji_serenity_data(Core::Stream::BufferedFile& file, EmojiData& emoji_data)
+{
+    static constexpr auto code_point_header = "U+"sv;
+
+    Array<u8, 1024> buffer;
+
+    auto display_order = static_cast<u32>(emoji_data.emojis.size()) + 1u;
+
+    while (TRY(file.can_read_line())) {
+        auto line = TRY(file.read_line(buffer));
+        if (line.is_empty())
+            continue;
+
+        auto index = line.find(code_point_header);
+        if (!index.has_value())
+            continue;
+
+        line = line.substring_view(*index);
+        StringBuilder builder;
+
+        Emoji emoji {};
+        emoji.group = Unicode::EmojiGroup::SerenityOS;
+        emoji.display_order = display_order++;
+
+        line.for_each_split_view(' ', false, [&](auto segment) {
+            if (segment.starts_with(code_point_header)) {
+                segment = segment.substring_view(code_point_header.length());
+
+                auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment);
+                VERIFY(code_point.has_value());
+
+                emoji.code_points.append(*code_point);
+            } else {
+                if (!builder.is_empty())
+                    builder.append(' ');
+                builder.append(segment);
+            }
+        });
+
+        auto name = builder.build();
+        if (!any_of(name, is_ascii_lower_alpha))
+            name = name.to_titlecase();
+
+        emoji.name = emoji_data.unique_strings.ensure(move(name));
+        emoji.code_points_name = String::join('_', emoji.code_points);
         TRY(emoji_data.emojis.try_append(move(emoji)));
     }
 
@@ -194,19 +246,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView generated_header_path;
     StringView generated_implementation_path;
     StringView emoji_test_path;
+    StringView emoji_serenity_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path");
+    args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path");
     args_parser.parse(arguments);
 
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
     auto emoji_test_file = TRY(open_file(emoji_test_path, Core::Stream::OpenMode::Read));
+    auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::Stream::OpenMode::Read));
 
     EmojiData emoji_data {};
     TRY(parse_emoji_test_data(*emoji_test_file, emoji_data));
+    TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
 
     TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
     TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));

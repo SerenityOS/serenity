@@ -13,6 +13,8 @@
 namespace Unicode {
 
 enum class EmojiGroup : u8 {
+    Unknown,
+
     SmileysAndEmotion,
     PeopleAndBody,
     Component,
@@ -23,11 +25,14 @@ enum class EmojiGroup : u8 {
     Objects,
     Symbols,
     Flags,
+
+    // Non-standard emoji added for SerenityOS:
+    SerenityOS,
 };
 
 struct Emoji {
     StringView name;
-    EmojiGroup group;
+    EmojiGroup group { EmojiGroup::Unknown };
     u32 display_order { 0 };
     Span<u32 const> code_points;
 };
@@ -43,6 +48,8 @@ Optional<Emoji> find_emoji_for_code_points(u32 const (&code_points)[Size])
 constexpr StringView emoji_group_to_string(EmojiGroup group)
 {
     switch (group) {
+    case EmojiGroup::Unknown:
+        return "Unknown"sv;
     case EmojiGroup::SmileysAndEmotion:
         return "Smileys & Emotion"sv;
     case EmojiGroup::PeopleAndBody:
@@ -63,6 +70,8 @@ constexpr StringView emoji_group_to_string(EmojiGroup group)
         return "Symbols"sv;
     case EmojiGroup::Flags:
         return "Flags"sv;
+    case EmojiGroup::SerenityOS:
+        return "SerenityOS"sv;
     }
 
     VERIFY_NOT_REACHED();
@@ -70,6 +79,8 @@ constexpr StringView emoji_group_to_string(EmojiGroup group)
 
 constexpr EmojiGroup emoji_group_from_string(StringView group)
 {
+    if (group == "Unknown"sv)
+        return EmojiGroup::Unknown;
     if (group == "Smileys & Emotion"sv)
         return EmojiGroup::SmileysAndEmotion;
     if (group == "People & Body"sv)
@@ -90,6 +101,8 @@ constexpr EmojiGroup emoji_group_from_string(StringView group)
         return EmojiGroup::Symbols;
     if (group == "Flags"sv)
         return EmojiGroup::Flags;
+    if (group == "SerenityOS"sv)
+        return EmojiGroup::SerenityOS;
 
     VERIFY_NOT_REACHED();
 }
