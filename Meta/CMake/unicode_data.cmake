@@ -63,6 +63,7 @@ set(EMOJI_TEST_URL "https://unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test
 set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
 set(EMOJI_GENERATOR_PATH "${SerenityOS_SOURCE_DIR}/Meta/generate-emoji-txt.sh")
 set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
+set(EMOJI_SERENITY_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji-serenity.txt")
 set(EMOJI_INSTALL_PATH "${CMAKE_BINARY_DIR}/Root/home/anon/Documents/emoji.txt")
 
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
@@ -123,7 +124,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_META_TARGET_PREFIX}"
         "${EMOJI_DATA_HEADER}"
         "${EMOJI_DATA_IMPLEMENTATION}"
-        arguments -e "${EMOJI_TEST_PATH}"
+        arguments -e "${EMOJI_TEST_PATH}" -s "${EMOJI_SERENITY_PATH}"
     )
 
     if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
