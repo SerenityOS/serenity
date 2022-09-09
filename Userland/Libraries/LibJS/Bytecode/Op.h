@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
@@ -990,9 +991,9 @@ ALWAYS_INLINE void Instruction::replace_references(BasicBlock const& from, Basic
 ALWAYS_INLINE size_t Instruction::length() const
 {
     if (type() == Type::NewArray)
-        return static_cast<Op::NewArray const&>(*this).length_impl();
+        return round_up_to_power_of_two(static_cast<Op::NewArray const&>(*this).length_impl(), alignof(void*));
     if (type() == Type::CopyObjectExcludingProperties)
-        return static_cast<Op::CopyObjectExcludingProperties const&>(*this).length_impl();
+        return round_up_to_power_of_two(static_cast<Op::CopyObjectExcludingProperties const&>(*this).length_impl(), alignof(void*));
 
 #define __BYTECODE_OP(op) \
     case Type::op:        \

@@ -65,12 +65,15 @@ public:
     OpType& emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
+
+        size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_register_slots * sizeof(Register), alignof(void*));
+
         // If the block doesn't have enough space, switch to another block
         if constexpr (!OpType::IsTerminator)
-            ensure_enough_space(sizeof(OpType) + extra_register_slots * sizeof(Register));
+            ensure_enough_space(size_to_allocate);
 
         void* slot = next_slot();
-        grow(sizeof(OpType) + extra_register_slots * sizeof(Register));
+        grow(size_to_allocate);
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
             m_current_basic_block->terminate({});
