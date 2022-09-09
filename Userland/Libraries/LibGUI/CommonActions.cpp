@@ -98,7 +98,7 @@ NonnullRefPtr<Action> make_paste_action(Function<void(Action&)> callback, Core::
 
 NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    auto action = Action::create("&Insert Emoji", { Mod_Ctrl | Mod_Alt, Key_Space }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/emoji.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    auto action = Action::create("&Insert Emoji...", { Mod_Ctrl | Mod_Alt, Key_Space }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/emoji.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
     action->set_status_tip("Open the Emoji Picker");
     return action;
 }
