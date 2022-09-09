@@ -12,6 +12,7 @@
 #include "History.h"
 #include "WebView.h"
 #include <QBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
 #include <QToolBar>
 #include <QWidget>
@@ -41,6 +42,10 @@ signals:
     void favicon_changed(int id, QIcon);
 
 private:
+    virtual void resizeEvent(QResizeEvent*) override;
+
+    void update_hover_label();
+
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
     QLineEdit* m_location_edit { nullptr };
@@ -48,6 +53,7 @@ private:
     QMainWindow* m_window { nullptr };
     Browser::History m_history;
     QString m_title;
+    QLabel* m_hover_label { nullptr };
 
     OwnPtr<QAction> m_back_action;
     OwnPtr<QAction> m_forward_action;
