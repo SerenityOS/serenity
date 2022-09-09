@@ -78,6 +78,7 @@ public:
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;
+    [[nodiscard]] StringView single_app_mode() const;
     [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;
     [[nodiscard]] HPETMode hpet_mode() const;
     [[nodiscard]] bool disable_physical_storage() const;

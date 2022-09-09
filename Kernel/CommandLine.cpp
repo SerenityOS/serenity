@@ -260,6 +260,11 @@ StringView CommandLine::system_mode() const
     return lookup("system_mode"sv).value_or("graphical"sv);
 }
 
+StringView CommandLine::single_app_mode() const
+{
+    return lookup("single_app"sv).value_or("no"sv);
+}
+
 PanicMode CommandLine::panic_mode(Validate should_validate) const
 {
     auto const panic_mode = lookup("panic"sv).value_or("halt"sv);
