@@ -12,7 +12,7 @@
 
 TEST_CASE(malloc_limits)
 {
-    EXPECT_NO_CRASH("Allocation of 0 size should succed at allocation and release", [] {
+    EXPECT_NO_CRASH("Allocation of 0 size should succeed at allocation and release", [] {
         errno = 0;
         void* ptr = malloc(0);
         EXPECT_EQ(errno, 0);

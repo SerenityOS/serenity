@@ -158,7 +158,7 @@ DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<DOM:
     // - The require well-formed flag
 
     // The XML serialization algorithm produces an XML serialization of an arbitrary DOM node node based on the node's interface type.
-    // Each referenced algorithm is to be passed the arguments as they were recieved by the caller and return their result to the caller.
+    // Each referenced algorithm is to be passed the arguments as they were received by the caller and return their result to the caller.
     // Re-throw any exceptions.
     // If node's interface is:
 

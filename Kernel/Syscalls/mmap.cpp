@@ -606,7 +606,7 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
         auto regions = TRY(space->find_regions_intersecting(Memory::VirtualRange { address.vaddr(), rounded_size }));
-        // All regions from address upto address+size shall be mapped
+        // All regions from address up to address+size shall be mapped
         if (regions.is_empty())
             return ENOMEM;
 

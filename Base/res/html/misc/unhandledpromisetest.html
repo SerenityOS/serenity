@@ -8,7 +8,7 @@
     Promise.reject(new Error('Success!'));
     window.timer = setTimeout(() => {
       const element = document.createElement('p');
-      element.innerText = 'Did not receieve unhandledrejection event in 100ms.';
+      element.innerText = 'Did not receive unhandledrejection event in 100ms.';
       element.style.color = 'red';
       document.body.appendChild(element);
     }, 100)

@@ -149,7 +149,7 @@ public:
                 return;
             filepath_string_index = registered_result.value();
         } else {
-            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"sv); // TODO: Performance, unecessary allocations.
+            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"sv); // TODO: Performance, unnecessary allocations.
             if (invalid_path_string.is_error())
                 return;
             auto registered_result = event_buffer->register_string(move(invalid_path_string.value()));

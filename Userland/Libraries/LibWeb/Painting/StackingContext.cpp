@@ -53,7 +53,7 @@ void StackingContext::sort()
 
 static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phase)
 {
-    // There are not a fully correct mapping since some stacking context phases are combind.
+    // There are not a fully correct mapping since some stacking context phases are combined.
     switch (phase) {
     case StackingContext::StackingContextPaintPhase::Floats:
     case StackingContext::StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced:

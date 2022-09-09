@@ -236,7 +236,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
 
-    // Crash any processes which have commited a promise violation during syscall handling.
+    // Crash any processes which have committed a promise violation during syscall handling.
     if (result.is_error() && result.error().code() == EPROMISEVIOLATION) {
         VERIFY(current_thread->is_promise_violation_pending());
         current_thread->set_promise_violation_pending(false);

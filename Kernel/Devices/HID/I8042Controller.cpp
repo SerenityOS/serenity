@@ -112,7 +112,7 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
 
         // Note: The default BIOS on the QEMU microvm machine type (qboot) doesn't
         // behave like SeaBIOS, which means it doesn't set first port scan code translation.
-        // Howerver we rely on compatbility feature of the i8042 to send scan codes of set 1.
+        // However we rely on compatibility feature of the i8042 to send scan codes of set 1.
         // To ensure that the controller is always outputting correct scan codes, set it
         // to scan code 2 (because SeaBIOS on regular QEMU machine does this for us) and enable
         // first port translation to ensure all scan codes are translated to scan code set 1.

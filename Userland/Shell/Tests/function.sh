@@ -16,7 +16,7 @@ fn(a) { echo $a }
 if not test "$(fn 1)" = 1 { fail cannot invoke "'fn 1'" with explicit names }
 if not test "$(fn 1 2)" = 1 { fail cannot invoke "'fn 1 2'" with explicit names and extra arguments }
 
-# FIXME: Reenable this when we have something akin to 'try'
+# FIXME: Re-enable this when we have something akin to 'try'
 #        or when not-enough-args isn't a hard failure.
 # Can it fail?
 # if fn 2>/dev/null {
