@@ -1,6 +1,5 @@
 @GUI::Frame {
-    shape: "Container"
-    shadow: "Raised"
+    shape: "Window"
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
