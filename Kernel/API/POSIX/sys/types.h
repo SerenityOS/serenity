@@ -67,7 +67,6 @@ typedef uint32_t pthread_once_t;
 
 typedef struct __pthread_mutex_t {
     uint32_t lock;
-    pthread_t owner;
     int level;
     int type;
 } pthread_mutex_t;

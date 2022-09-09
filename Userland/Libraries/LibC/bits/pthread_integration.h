@@ -26,14 +26,14 @@ void __pthread_key_destroy_for_current_thread(void);
 
 #define __PTHREAD_MUTEX_NORMAL 0
 #define __PTHREAD_MUTEX_RECURSIVE 1
-#define __PTHREAD_MUTEX_INITIALIZER     \
-    {                                   \
-        0, 0, 0, __PTHREAD_MUTEX_NORMAL \
+#define __PTHREAD_MUTEX_INITIALIZER  \
+    {                                \
+        0, 0, __PTHREAD_MUTEX_NORMAL \
     }
 
 #define __PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
     {                                            \
-        0, 0, 0, __PTHREAD_MUTEX_RECURSIVE       \
+        0, 0, __PTHREAD_MUTEX_RECURSIVE          \
     }
 
 __END_DECLS
