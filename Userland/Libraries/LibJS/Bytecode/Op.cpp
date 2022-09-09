@@ -184,10 +184,11 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 
 ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    // Note: This OpCode is used to construct array literals containing at least one spread element,
+    // Note: This OpCode is used to construct array literals and argument arrays for calls,
+    //       containing at least one spread element,
     //       Iterating over such a spread element to unpack it has to be visible by
     //       the user courtesy of
-    //       https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
+    //       (1) https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
     //          SpreadElement : ... AssignmentExpression
     //              1. Let spreadRef be ? Evaluation of AssignmentExpression.
     //              2. Let spreadObj be ? GetValue(spreadRef).
@@ -198,6 +199,26 @@ ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter)
     //                  c. Let nextValue be ? IteratorValue(next).
     //                  d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
     //                  e. Set nextIndex to nextIndex + 1.
+    //       (2) https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
+    //          ArgumentList : ... AssignmentExpression
+    //              1. Let list be a new empty List.
+    //              2. Let spreadRef be ? Evaluation of AssignmentExpression.
+    //              3. Let spreadObj be ? GetValue(spreadRef).
+    //              4. Let iteratorRecord be ? GetIterator(spreadObj).
+    //              5. Repeat,
+    //                  a. Let next be ? IteratorStep(iteratorRecord).
+    //                  b. If next is false, return list.
+    //                  c. Let nextArg be ? IteratorValue(next).
+    //                  d. Append nextArg to list.
+    //          ArgumentList : ArgumentList , ... AssignmentExpression
+    //             1. Let precedingArgs be ? ArgumentListEvaluation of ArgumentList.
+    //             2. Let spreadRef be ? Evaluation of AssignmentExpression.
+    //             3. Let iteratorRecord be ? GetIterator(? GetValue(spreadRef)).
+    //             4. Repeat,
+    //                 a. Let next be ? IteratorStep(iteratorRecord).
+    //                 b. If next is false, return precedingArgs.
+    //                 c. Let nextArg be ? IteratorValue(next).
+    //                 d. Append nextArg to precedingArgs.
 
     auto& vm = interpreter.vm();
 

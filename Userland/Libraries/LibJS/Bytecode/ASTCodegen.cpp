@@ -522,6 +522,48 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
     return {};
 }
 
+static Bytecode::CodeGenerationErrorOr<void> arguments_to_array_for_call(Bytecode::Generator& generator, Span<CallExpression::Argument const> arguments)
+{
+
+    if (arguments.is_empty()) {
+        generator.emit<Bytecode::Op::NewArray>();
+        return {};
+    }
+
+    auto first_spread = find_if(arguments.begin(), arguments.end(), [](auto el) { return el.is_spread; });
+
+    Bytecode::Register args_start_reg { 0 };
+    for (auto it = arguments.begin(); it != first_spread; ++it) {
+        auto reg = generator.allocate_register();
+        if (args_start_reg.index() == 0)
+            args_start_reg = reg;
+    }
+    u32 i = 0;
+    for (auto it = arguments.begin(); it != first_spread; ++it, ++i) {
+        VERIFY(it->is_spread == false);
+        Bytecode::Register reg { args_start_reg.index() + i };
+        TRY(it->value->generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Store>(reg);
+    }
+
+    if (first_spread.index() != 0)
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { args_start_reg, Bytecode::Register { args_start_reg.index() + static_cast<u32>(first_spread.index() - 1) } });
+    else
+        generator.emit<Bytecode::Op::NewArray>();
+
+    if (first_spread != arguments.end()) {
+        auto array_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(array_reg);
+        for (auto it = first_spread; it != arguments.end(); ++it) {
+            TRY(it->value->generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Append>(array_reg, it->is_spread);
+        }
+        generator.emit<Bytecode::Op::Load>(array_reg);
+    }
+
+    return {};
+}
+
 Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_is_synthetic == IsPartOfSyntheticConstructor::Yes) {
@@ -533,21 +575,7 @@ Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Gen
         // This generates a single argument, which will be implicitly passed in accumulator
         MUST(argument.value->generate_bytecode(generator));
     } else {
-        Vector<Bytecode::Register> argument_registers;
-        argument_registers.ensure_capacity(m_arguments.size());
-
-        for (size_t i = 0; i < m_arguments.size(); ++i) {
-            auto arg_reg = generator.allocate_register();
-            argument_registers.unchecked_append(arg_reg);
-        }
-        for (size_t i = 0; i < m_arguments.size(); ++i) {
-            TRY(m_arguments[i].value->generate_bytecode(generator));
-            generator.emit<Bytecode::Op::Store>(argument_registers[i]);
-        }
-        if (!argument_registers.is_empty())
-            generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { argument_registers.first(), argument_registers.last() });
-        else
-            generator.emit<Bytecode::Op::NewArray>();
+        TRY(arguments_to_array_for_call(generator, m_arguments));
     }
 
     generator.emit<Bytecode::Op::SuperCall>(m_is_synthetic == IsPartOfSyntheticConstructor::Yes);
@@ -1511,16 +1539,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     }
 
-    // FIXME: We only need to record the first and last register, due to packing everything in an array
-    Vector<Bytecode::Register> argument_registers;
-    for (size_t i = 0; i < m_arguments.size(); ++i) {
-        auto arg_reg = generator.allocate_register();
-        argument_registers.append(arg_reg);
-    }
-    for (size_t i = 0; i < m_arguments.size(); ++i) {
-        TRY(m_arguments[i].value->generate_bytecode(generator));
-        generator.emit<Bytecode::Op::Store>(argument_registers[i]);
-    }
+    TRY(arguments_to_array_for_call(generator, m_arguments));
 
     Bytecode::Op::Call::CallType call_type;
     if (is<NewExpression>(*this)) {
@@ -1529,10 +1548,6 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         call_type = Bytecode::Op::Call::CallType::Call;
     }
 
-    if (!argument_registers.is_empty())
-        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { argument_registers.first(), argument_registers.last() });
-    else
-        generator.emit<Bytecode::Op::NewArray>();
     generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg);
     return {};
 }
