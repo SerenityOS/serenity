@@ -817,6 +817,20 @@ private:
     }
 };
 
+class ProcFSSingleAppMode final : public ProcFSGlobalInformation {
+public:
+    static NonnullLockRefPtr<ProcFSSingleAppMode> must_create();
+
+private:
+    ProcFSSingleAppMode();
+    virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
+    {
+        TRY(builder.append(kernel_command_line().single_app_mode()));
+        TRY(builder.append('\n'));
+        return {};
+    }
+};
+
 class ProcFSProfile final : public ProcFSGlobalInformation {
 public:
     static NonnullLockRefPtr<ProcFSProfile> must_create();
@@ -904,6 +918,10 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSystemMode> ProcFSSystemMode::must_crea
 {
     return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSystemMode).release_nonnull();
 }
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSingleAppMode> ProcFSSingleAppMode::must_create()
+{
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSingleAppMode).release_nonnull();
+}
 UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSProfile> ProcFSProfile::must_create()
 {
     return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
@@ -966,6 +984,10 @@ UNMAP_AFTER_INIT ProcFSSystemMode::ProcFSSystemMode()
     : ProcFSGlobalInformation("system_mode"sv)
 {
 }
+UNMAP_AFTER_INIT ProcFSSingleAppMode::ProcFSSingleAppMode()
+    : ProcFSGlobalInformation("single_app"sv)
+{
+}
 UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
     : ProcFSGlobalInformation("profile"sv)
 {
@@ -1006,6 +1028,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::mus
     directory->m_components.append(ProcFSUptime::must_create());
     directory->m_components.append(ProcFSCommandLine::must_create());
     directory->m_components.append(ProcFSSystemMode::must_create());
+    directory->m_components.append(ProcFSSingleAppMode::must_create());
     directory->m_components.append(ProcFSProfile::must_create());
     directory->m_components.append(ProcFSKernelBase::must_create());
 
