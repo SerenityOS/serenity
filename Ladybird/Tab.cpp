@@ -30,6 +30,7 @@ Tab::Tab(QMainWindow* window)
     m_location_edit = new QLineEdit;
 
     m_hover_label = new QLabel(this);
+    m_hover_label->hide();
     m_hover_label->setFrameShape(QFrame::Shape::Box);
     m_hover_label->setAutoFillBackground(true);
 
