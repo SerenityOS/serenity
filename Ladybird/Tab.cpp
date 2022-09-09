@@ -10,8 +10,10 @@
 #include "History.h"
 #include "Settings.h"
 #include <QCoreApplication>
+#include <QFont>
+#include <QFontMetrics>
 #include <QPoint>
-#include <QToolTip>
+#include <QResizeEvent>
 
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
@@ -25,6 +27,10 @@ Tab::Tab(QMainWindow* window)
     m_view = new WebView;
     m_toolbar = new QToolBar;
     m_location_edit = new QLineEdit;
+
+    m_hover_label = new QLabel(this);
+    m_hover_label->setFrameShape(QFrame::Shape::Box);
+    m_hover_label->setAutoFillBackground(true);
 
     auto* focus_location_edit_action = new QAction("Edit Location");
     focus_location_edit_action->setShortcut(QKeySequence("Ctrl+L"));
@@ -52,11 +58,12 @@ Tab::Tab(QMainWindow* window)
     m_toolbar->addWidget(m_location_edit);
 
     QObject::connect(m_view, &WebView::linkHovered, [this](QString const& title) {
-        const QPoint* pos = new QPoint(0, size().height() - 15);
-        QToolTip::showText(*pos, title, this);
+        m_hover_label->setText(title);
+        update_hover_label();
+        m_hover_label->show();
     });
-    QObject::connect(m_view, &WebView::linkUnhovered, [] {
-        QToolTip::hideText();
+    QObject::connect(m_view, &WebView::linkUnhovered, [this] {
+        m_hover_label->hide();
     });
 
     QObject::connect(m_view, &WebView::loadStarted, [this](const URL& url) {
@@ -137,4 +144,18 @@ int Tab::tab_index()
 void Tab::debug_request(String const& request, String const& argument)
 {
     m_view->debug_request(request, argument);
+}
+
+void Tab::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    if (m_hover_label->isVisible())
+        update_hover_label();
+}
+
+void Tab::update_hover_label()
+{
+    m_hover_label->resize(QFontMetrics(m_hover_label->font()).boundingRect(m_hover_label->text()).adjusted(-4, -2, 4, 2).size());
+    m_hover_label->move(6, height() - m_hover_label->height() - 8);
+    m_hover_label->raise();
 }
