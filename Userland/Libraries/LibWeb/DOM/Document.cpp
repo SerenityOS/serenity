@@ -1582,7 +1582,7 @@ void Document::evaluate_media_rules()
 {
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        if (style_sheet.evaluate_media_queries(window()))
+        if (style_sheet->evaluate_media_queries(window()))
             any_media_queries_changed_match_state = true;
     }
 

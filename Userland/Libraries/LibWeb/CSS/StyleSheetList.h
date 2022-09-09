@@ -20,14 +20,14 @@ public:
     void add_sheet(CSSStyleSheet&);
     void remove_sheet(CSSStyleSheet&);
 
-    Vector<CSSStyleSheet&> const& sheets() const { return m_sheets; }
-    Vector<CSSStyleSheet&>& sheets() { return m_sheets; }
+    Vector<JS::NonnullGCPtr<CSSStyleSheet>> const& sheets() const { return m_sheets; }
+    Vector<JS::NonnullGCPtr<CSSStyleSheet>>& sheets() { return m_sheets; }
 
     CSSStyleSheet* item(size_t index) const
     {
         if (index >= m_sheets.size())
             return {};
-        return &const_cast<CSSStyleSheet&>(m_sheets[index]);
+        return const_cast<CSSStyleSheet*>(m_sheets[index].ptr());
     }
 
     size_t length() const { return m_sheets.size(); }
@@ -43,8 +43,10 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    void sort_sheets();
+
     DOM::Document& m_document;
-    Vector<CSSStyleSheet&> m_sheets;
+    Vector<JS::NonnullGCPtr<CSSStyleSheet>> m_sheets;
 };
 
 }

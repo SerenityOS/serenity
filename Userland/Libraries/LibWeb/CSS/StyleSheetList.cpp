@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibWeb/Bindings/StyleSheetListPrototype.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/Document.h>
@@ -15,6 +16,8 @@ void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
     sheet.set_style_sheet_list({}, this);
     m_sheets.append(sheet);
 
+    sort_sheets();
+
     m_document.style_computer().invalidate_rule_cache();
     m_document.style_computer().load_fonts_from_sheet(sheet);
     m_document.invalidate_style();
@@ -23,7 +26,9 @@ void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 {
     sheet.set_style_sheet_list({}, nullptr);
-    m_sheets.remove_first_matching([&](auto& entry) { return &entry == &sheet; });
+    m_sheets.remove_first_matching([&](auto& entry) { return entry.ptr() == &sheet; });
+
+    sort_sheets();
 
     m_document.style_computer().invalidate_rule_cache();
     m_document.invalidate_style();
@@ -45,8 +50,8 @@ void StyleSheetList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_document);
-    for (auto& sheet : m_sheets)
-        visitor.visit(&sheet);
+    for (auto sheet : m_sheets)
+        visitor.visit(sheet.ptr());
 }
 
 // https://www.w3.org/TR/cssom/#ref-for-dfn-supported-property-indices%E2%91%A1
@@ -65,7 +70,14 @@ JS::Value StyleSheetList::item_value(size_t index) const
     if (index >= m_sheets.size())
         return JS::js_undefined();
 
-    return &m_sheets[index];
+    return m_sheets[index].ptr();
+}
+
+void StyleSheetList::sort_sheets()
+{
+    quick_sort(m_sheets, [](JS::NonnullGCPtr<StyleSheet> a, JS::NonnullGCPtr<StyleSheet> b) {
+        return a->owner_node()->is_before(*b->owner_node());
+    });
 }
 
 }
