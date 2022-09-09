@@ -779,7 +779,6 @@ void TextEditor::insert_emoji()
         return;
 
     auto emoji_input_dialog = EmojiInputDialog::construct(window());
-    emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
     if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
         return;
 
