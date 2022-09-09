@@ -19,6 +19,7 @@ JS::NonnullGCPtr<AbortSignal> AbortSignal::create_with_global_object(HTML::Windo
 AbortSignal::AbortSignal(HTML::Window& window)
     : EventTarget(window.realm())
 {
+    set_prototype(&window.cached_web_prototype("AbortSignal"));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add
