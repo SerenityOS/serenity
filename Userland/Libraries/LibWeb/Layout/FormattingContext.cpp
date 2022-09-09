@@ -341,18 +341,13 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(L
     // In addition, if the element has any floating descendants
     // whose bottom margin edge is below the element's bottom content edge,
     // then the height is increased to include those edges.
-    root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-        if (!child_box.is_floating())
-            return IterationDecision::Continue;
+    for (auto* floating_box : state.get(root).floating_descendants()) {
+        auto const& floating_box_state = state.get(*floating_box);
+        float floating_box_bottom = floating_box_state.offset.y() + floating_box_state.content_height() + floating_box_state.margin_box_bottom();
 
-        auto const& child_box_state = state.get(child_box);
-        float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height() + child_box_state.margin_box_bottom();
-
-        if (!bottom.has_value() || child_box_bottom > bottom.value())
-            bottom = child_box_bottom;
-
-        return IterationDecision::Continue;
-    });
+        if (!bottom.has_value() || floating_box_bottom > bottom.value())
+            bottom = floating_box_bottom;
+    }
 
     return max(0.0f, bottom.value_or(0) - top.value_or(0));
 }

@@ -705,6 +705,8 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     } else if (box.computed_values().float_() == CSS::Float::Right) {
         float_box(FloatSide::Right, m_right_floats);
     }
+
+    m_state.get_mutable(root()).add_floating_descendant(box);
 }
 
 void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_item_box)
