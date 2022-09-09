@@ -32,6 +32,24 @@
 String g_system_mode = "graphical";
 NonnullRefPtrVector<Service> g_services;
 
+static AK::String determine_single_app_mode()
+{
+    auto f = Core::File::construct("/proc/single_app");
+    if (!f->open(Core::OpenMode::ReadOnly)) {
+        dbgln("Failed to read single_app: {}", f->error_string());
+        return "no";
+    }
+    const String single_app = String::copy(f->read_all(), Chomp);
+    if (f->error()) {
+        dbgln("Failed to read single_app: {}", f->error_string());
+        return "no";
+    }
+
+    dbgln("Read single_app: {}", single_app);
+
+    return single_app;
+}
+
 // NOTE: This handler ensures that the destructor of g_services is called.
 static void sigterm_handler(int)
 {
@@ -492,15 +510,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     event_loop.register_signal(SIGCHLD, sigchld_handler);
     event_loop.register_signal(SIGTERM, sigterm_handler);
 
+    // We need this variable to see if we need to start up the shell or not
+    auto single_app = determine_single_app_mode();
+
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
     auto config = (user)
         ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
         : TRY(Core::ConfigFile::open_for_system("SystemServer"));
     for (auto const& name : config->groups()) {
-        auto service = TRY(Service::try_create(*config, name));
-        if (service->is_enabled())
-            g_services.append(move(service));
+        if ((name == "Taskbar" and single_app != "no") or (name == "Desktop" and single_app != "no") or (name == "Terminal" and single_app != "no") or (name == "SingleAppDaemon" and single_app == "no")) {
+        } else {
+            auto service = TRY(Service::try_create(*config, name));
+            if (service->is_enabled())
+                g_services.append(move(service));
+        }
     }
 
     // After we've set them all up, activate them!
