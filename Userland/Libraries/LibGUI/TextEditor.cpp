@@ -52,7 +52,7 @@ TextEditor::TextEditor(Type type)
         { DisplayOnly, "DisplayOnly" });
 
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    set_accepts_emoji_input(true);
+    set_or_clear_emoji_input_callback();
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
@@ -775,7 +775,7 @@ void TextEditor::select_all()
 
 void TextEditor::insert_emoji()
 {
-    if (!accepts_emoji_input() || window()->blocks_emoji_input())
+    if (!on_emoji_input || window()->blocks_emoji_input())
         return;
 
     auto emoji_input_dialog = EmojiInputDialog::construct(window());
@@ -784,6 +784,25 @@ void TextEditor::insert_emoji()
 
     auto emoji_code_point = emoji_input_dialog->selected_emoji_text();
     insert_at_cursor_or_replace_selection(emoji_code_point);
+}
+
+void TextEditor::set_or_clear_emoji_input_callback()
+{
+    switch (m_mode) {
+    case Editable:
+        on_emoji_input = [this](auto emoji) {
+            insert_at_cursor_or_replace_selection(emoji);
+        };
+        break;
+
+    case DisplayOnly:
+    case ReadOnly:
+        on_emoji_input = {};
+        break;
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void TextEditor::keydown_event(KeyEvent& event)
@@ -1683,19 +1702,18 @@ void TextEditor::set_mode(const Mode mode)
         m_cut_action->set_enabled(has_selection() && !text_is_secret());
         m_paste_action->set_enabled(true);
         m_insert_emoji_action->set_enabled(true);
-        set_accepts_emoji_input(true);
         break;
     case DisplayOnly:
     case ReadOnly:
         m_cut_action->set_enabled(false);
         m_paste_action->set_enabled(false);
         m_insert_emoji_action->set_enabled(false);
-        set_accepts_emoji_input(false);
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
+    set_or_clear_emoji_input_callback();
     set_editing_cursor();
 }
 
@@ -1724,7 +1742,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
     if (is_displayonly())
         return;
 
-    m_insert_emoji_action->set_enabled(accepts_emoji_input() && !window()->blocks_emoji_input());
+    m_insert_emoji_action->set_enabled(on_emoji_input && !window()->blocks_emoji_input());
 
     if (!m_context_menu) {
         m_context_menu = Menu::construct();

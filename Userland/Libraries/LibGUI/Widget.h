@@ -337,8 +337,7 @@ public:
 
     Gfx::IntRect relative_non_grabbable_rect() const;
 
-    void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
-    bool accepts_emoji_input() const { return m_accepts_emoji_input; }
+    Function<void(StringView)> on_emoji_input;
 
     void set_accepts_command_palette(bool b) { m_accepts_command_palette = b; }
     bool accepts_command_palette() const { return m_accepts_command_palette; }
@@ -441,7 +440,6 @@ private:
     bool m_auto_focusable { true };
     bool m_enabled { true };
     bool m_updates_enabled { true };
-    bool m_accepts_emoji_input { false };
     bool m_accepts_command_palette { true };
     bool m_default_font { true };
 
