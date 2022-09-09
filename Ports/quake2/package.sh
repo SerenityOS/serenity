@@ -13,9 +13,9 @@ configopts=(
     "-DOPENGL_INCLUDE_DIR=${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
 )
 depends=('SDL2')
-launcher_name='QuakeII'
+launcher_name='Quake II'
 launcher_category='Games'
-launcher_command='quake2'
+launcher_command='/usr/local/bin/quake2'
 
 configure() {
     run cmake "${configopts[@]}"
