@@ -19,6 +19,7 @@ struct DeviceInfo final {
     float max_texture_lod_bias;
     u8 stencil_bits;
     bool supports_npot_textures;
+    bool supports_texture_clamp_to_edge;
     bool supports_texture_env_add;
 };
 

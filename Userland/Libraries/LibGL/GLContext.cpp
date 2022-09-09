@@ -926,6 +926,9 @@ void GLContext::build_extension_string()
     if (m_device_info.num_texture_units > 1)
         extensions.append("GL_ARB_multitexture"sv);
 
+    if (m_device_info.supports_texture_clamp_to_edge)
+        extensions.append("GL_EXT_texture_edge_clamp"sv);
+
     if (m_device_info.supports_texture_env_add) {
         extensions.append("GL_ARB_texture_env_add"sv);
         extensions.append("GL_EXT_texture_env_add"sv);
