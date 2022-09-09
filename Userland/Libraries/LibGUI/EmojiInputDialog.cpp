@@ -9,6 +9,7 @@
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <AK/Utf32View.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Action.h>
@@ -126,7 +127,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
 {
     constexpr int button_size = 20;
 
-    Vector<Emoji> code_points;
+    Vector<Emoji> emojis;
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto filename = dt.next_full_path();
@@ -136,27 +137,26 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         auto basename = lexical_path.basename();
         if (!basename.starts_with("U+"sv))
             continue;
-        // FIXME: Handle multi code point emojis.
-        if (basename.contains('_'))
-            continue;
 
-        u32 code_point = strtoul(basename.to_string().characters() + 2, nullptr, 16);
+        basename = basename.substring_view(0, basename.length() - lexical_path.extension().length() - 1);
 
-        auto emoji = Unicode::find_emoji_for_code_points({ code_point });
+        StringBuilder builder;
+        Vector<u32> code_points;
+
+        basename.for_each_split_view('_', false, [&](auto segment) {
+            auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment.substring_view(2));
+            VERIFY(code_point.has_value());
+
+            builder.append_code_point(*code_point);
+            code_points.append(*code_point);
+        });
+
+        auto emoji = Unicode::find_emoji_for_code_points(code_points);
         if (!emoji.has_value()) {
             emoji = Unicode::Emoji {};
             emoji->group = Unicode::EmojiGroup::Unknown;
             emoji->display_order = NumericLimits<u32>::max();
         }
-
-        // FIXME: Also emit U+FE0F for single code point emojis, currently
-        // they get shown as text glyphs if available.
-        // This will require buttons to don't calculate their length as 2,
-        // currently it just shows an ellipsis. It will also require some
-        // tweaking of the mechanism that is currently being used to insert
-        // which is a key event with a single code point.
-        StringBuilder builder;
-        builder.append(Utf32View(&code_point, 1));
 
         auto bitmap = Gfx::Bitmap::try_load_from_file(filename).release_value_but_fixme_should_propagate_errors();
         resize_bitmap_if_needed(bitmap);
@@ -173,14 +173,14 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         if (!emoji->name.is_empty())
             button->set_tooltip(emoji->name);
 
-        code_points.empend(move(button), emoji.release_value());
+        emojis.empend(move(button), emoji.release_value());
     }
 
-    quick_sort(code_points, [](auto const& lhs, auto const& rhs) {
+    quick_sort(emojis, [](auto const& lhs, auto const& rhs) {
         return lhs.emoji.display_order < rhs.emoji.display_order;
     });
 
-    return code_points;
+    return emojis;
 }
 
 void EmojiInputDialog::update_displayed_emoji()
