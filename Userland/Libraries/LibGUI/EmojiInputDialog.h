@@ -17,9 +17,8 @@ class EmojiInputDialog final : public Dialog {
     C_OBJECT(EmojiInputDialog);
 
     struct Emoji {
-        u32 code_point { 0 };
         RefPtr<Button> button;
-        Optional<Unicode::Emoji> emoji;
+        Unicode::Emoji emoji;
     };
 
 public:
