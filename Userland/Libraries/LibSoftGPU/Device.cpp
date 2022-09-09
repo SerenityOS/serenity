@@ -804,6 +804,7 @@ GPU::DeviceInfo Device::info() const
         .max_texture_lod_bias = MAX_TEXTURE_LOD_BIAS,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
+        .supports_texture_clamp_to_edge = true,
         .supports_texture_env_add = true,
     };
 }
