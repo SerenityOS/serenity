@@ -212,7 +212,6 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_insert_emoji_action = GUI::CommonActions::make_insert_emoji_action([&](auto&) {
         auto emoji_input_dialog = GUI::EmojiInputDialog::construct(window());
-        emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
         if (emoji_input_dialog->exec() != GUI::EmojiInputDialog::ExecResult::OK)
             return;
 
