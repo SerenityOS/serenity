@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,8 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {
 
@@ -68,6 +71,8 @@ private:
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
+    ErrorOr<size_t> do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write);
+
     struct Child {
         NonnullOwnPtr<KString> name;
         NonnullLockRefPtr<TmpFSInode> inode;
@@ -80,8 +85,32 @@ private:
     InodeMetadata m_metadata;
     LockWeakPtr<TmpFSInode> m_parent;
 
-    OwnPtr<KBuffer> m_content;
+    ErrorOr<void> ensure_allocated_blocks(size_t offset, size_t io_size);
+    ErrorOr<void> truncate_to_block_index(size_t block_index);
+    ErrorOr<size_t> read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const;
+    ErrorOr<size_t> write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer);
 
+    struct DataBlock {
+    public:
+        using List = Vector<OwnPtr<DataBlock>>;
+
+        static ErrorOr<NonnullOwnPtr<DataBlock>> create();
+
+        constexpr static size_t block_size = 128 * KiB;
+
+        Memory::AnonymousVMObject& vmobject() { return *m_content_buffer_vmobject; }
+        Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }
+
+    private:
+        explicit DataBlock(NonnullLockRefPtr<Memory::AnonymousVMObject> content_buffer_vmobject)
+            : m_content_buffer_vmobject(move(content_buffer_vmobject))
+        {
+        }
+
+        NonnullLockRefPtr<Memory::AnonymousVMObject> m_content_buffer_vmobject;
+    };
+
+    DataBlock::List m_blocks;
     Child::List m_children;
 };
 
