@@ -42,7 +42,21 @@ static constexpr auto s_emoji_groups = Array {
     EmojiCateogry { Unicode::EmojiGroup::Objects, "/res/emoji/U+1F4E6.png"sv },
     EmojiCateogry { Unicode::EmojiGroup::Symbols, "/res/emoji/U+2764.png"sv },
     EmojiCateogry { Unicode::EmojiGroup::Flags, "/res/emoji/U+1F6A9.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::SerenityOS, "/res/emoji/U+10CD0B.png"sv },
 };
+
+static void resize_bitmap_if_needed(NonnullRefPtr<Gfx::Bitmap>& bitmap)
+{
+    constexpr int max_icon_size = 12;
+
+    if ((bitmap->width() > max_icon_size) || (bitmap->height() > max_icon_size)) {
+        auto x_ratio = static_cast<float>(max_icon_size) / static_cast<float>(bitmap->width());
+        auto y_ratio = static_cast<float>(max_icon_size) / static_cast<float>(bitmap->height());
+        auto ratio = min(x_ratio, y_ratio);
+
+        bitmap = bitmap->scaled(ratio, ratio).release_value_but_fixme_should_propagate_errors();
+    }
+}
 
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
@@ -70,7 +84,9 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     for (auto const& category : s_emoji_groups) {
         auto name = Unicode::emoji_group_to_string(category.group);
         auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
+
         auto bitmap = Gfx::Bitmap::try_load_from_file(category.emoji).release_value_but_fixme_should_propagate_errors();
+        resize_bitmap_if_needed(bitmap);
 
         auto set_filter_action = Action::create_checkable(
             tooltip, bitmap, [this, group = category.group](auto& action) {
