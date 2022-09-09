@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -87,23 +88,62 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<TmpFSInode::DataBlock>> TmpFSInode::DataBlock::create()
+{
+    auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(DataBlock::block_size, AllocationStrategy::AllocateNow));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
+}
+
+ErrorOr<void> TmpFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
+{
+    VERIFY(m_inode_lock.is_locked());
+    size_t block_start_index = offset / DataBlock::block_size;
+    size_t block_last_index = ((offset + io_size) / DataBlock::block_size) + (((offset + io_size) % DataBlock::block_size) == 0 ? 0 : 1);
+    VERIFY(block_start_index <= block_last_index);
+
+    size_t original_size = m_blocks.size();
+    Vector<size_t> allocated_block_indices;
+    ArmedScopeGuard clean_allocated_blocks_on_failure([&] {
+        for (auto index : allocated_block_indices)
+            m_blocks[index].clear();
+        MUST(m_blocks.try_resize(original_size));
+    });
+
+    if (m_blocks.size() < (block_last_index))
+        TRY(m_blocks.try_resize(block_last_index));
+
+    for (size_t block_index = block_start_index; block_index < block_last_index; block_index++) {
+        if (!m_blocks[block_index]) {
+            TRY(allocated_block_indices.try_append(block_index));
+            m_blocks[block_index] = TRY(DataBlock::create());
+        }
+    }
+    clean_allocated_blocks_on_failure.disarm();
+    return {};
+}
+
+ErrorOr<size_t> TmpFSInode::read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const
+{
+    VERIFY(m_inode_lock.is_locked());
+    VERIFY(m_metadata.size >= 0);
+    if (static_cast<size_t>(m_metadata.size) < offset)
+        return 0;
+    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
+    return const_cast<TmpFSInode&>(*this).do_io_on_content_space(*mapping_region, offset, io_size, buffer, false);
+}
+
 ErrorOr<size_t> TmpFSInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
-    VERIFY(offset >= 0);
+    return read_bytes_from_content_space(offset, size, buffer);
+}
 
-    if (!m_content)
-        return 0;
-
-    if (offset >= m_metadata.size)
-        return 0;
-
-    if (static_cast<off_t>(size) > m_metadata.size - offset)
-        size = m_metadata.size - offset;
-
-    TRY(buffer.write(m_content->data() + offset, size));
-    return size;
+ErrorOr<size_t> TmpFSInode::write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer)
+{
+    VERIFY(m_inode_lock.is_locked());
+    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+    return do_io_on_content_space(*mapping_region, offset, io_size, const_cast<UserOrKernelBuffer&>(buffer), true);
 }
 
 ErrorOr<size_t> TmpFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
@@ -112,39 +152,85 @@ ErrorOr<size_t> TmpFSInode::write_bytes_locked(off_t offset, size_t size, UserOr
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
+    TRY(ensure_allocated_blocks(offset, size));
+    auto nwritten = TRY(write_bytes_to_content_space(offset, size, buffer));
+
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
     if (static_cast<off_t>(offset + size) > new_size)
         new_size = offset + size;
 
-    if (static_cast<u64>(new_size) > (NumericLimits<size_t>::max() / 2)) // on 32-bit, size_t might be 32 bits while off_t is 64 bits
-        return ENOMEM;                                                   // we won't be able to resize to this capacity
-
     if (new_size > old_size) {
-        if (m_content && static_cast<off_t>(m_content->capacity()) >= new_size) {
-            m_content->set_size(new_size);
-        } else {
-            // Grow the content buffer 2x the new size to accommodate repeating write() calls.
-            // Note that we're not actually committing physical memory to the buffer
-            // until it's needed. We only grow VM here.
-
-            // FIXME: Fix this so that no memcpy() is necessary, and we can just grow the
-            //        KBuffer and it will add physical pages as needed while keeping the
-            //        existing ones.
-            auto tmp = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, new_size * 2));
-            tmp->set_size(new_size);
-            if (m_content)
-                memcpy(tmp->data(), m_content->data(), old_size);
-            m_content = move(tmp);
-        }
         m_metadata.size = new_size;
         set_metadata_dirty(true);
     }
-
-    TRY(buffer.read(m_content->data() + offset, size)); // TODO: partial reads?
-
     did_modify_contents();
-    return size;
+    return nwritten;
+}
+
+ErrorOr<size_t> TmpFSInode::do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write)
+{
+    VERIFY(m_inode_lock.is_locked());
+    size_t remaining_bytes = 0;
+    if (!write) {
+        // Note: For read operations, only perform read until the last byte.
+        // If we are beyond the last byte, return 0 to indicate EOF.
+        remaining_bytes = min(io_size, m_metadata.size - offset);
+        if (remaining_bytes == 0)
+            return 0;
+    } else {
+        remaining_bytes = io_size;
+    }
+    VERIFY(remaining_bytes != 0);
+
+    UserOrKernelBuffer current_buffer = buffer.offset(0);
+    auto block_start_index = offset / DataBlock::block_size;
+    auto offset_in_block = offset % DataBlock::block_size;
+    u64 block_index = block_start_index;
+    size_t nio = 0;
+    while (remaining_bytes > 0) {
+        size_t current_io_size = min(DataBlock::block_size - offset_in_block, remaining_bytes);
+        auto& block = m_blocks[block_index];
+        if (!block && !write) {
+            // Note: If the block does not exist then it's just a gap in the file,
+            // so the buffer should be placed with zeroes in that section.
+            TRY(current_buffer.memset(0, 0, current_io_size));
+            remaining_bytes -= current_io_size;
+            current_buffer = current_buffer.offset(current_io_size);
+            nio += current_io_size;
+            block_index++;
+            // Note: Clear offset_in_block to zero to ensure that if we started from a middle of
+            // a block, then next writes are just going to happen from the start of each block until the end.
+            offset_in_block = 0;
+            continue;
+        } else if (!block) {
+            return Error::from_errno(EIO);
+        }
+
+        NonnullLockRefPtr<Memory::AnonymousVMObject> block_vmobject = block->vmobject();
+        mapping_region.set_vmobject(block_vmobject);
+        mapping_region.remap();
+        if (write)
+            TRY(current_buffer.read(mapping_region.vaddr().offset(offset_in_block).as_ptr(), 0, current_io_size));
+        else
+            TRY(current_buffer.write(mapping_region.vaddr().offset(offset_in_block).as_ptr(), 0, current_io_size));
+        current_buffer = current_buffer.offset(current_io_size);
+        nio += current_io_size;
+        remaining_bytes -= current_io_size;
+        block_index++;
+        // Note: Clear offset_in_block to zero to ensure that if we started from a middle of
+        // a block, then next writes are just going to happen from the start of each block until the end.
+        offset_in_block = 0;
+    }
+    VERIFY(nio <= io_size);
+    return nio;
+}
+
+ErrorOr<void> TmpFSInode::truncate_to_block_index(size_t block_index)
+{
+    VERIFY(m_inode_lock.is_locked());
+    TRY(m_blocks.try_resize(block_index));
+    return {};
 }
 
 ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::lookup(StringView name)
@@ -280,22 +366,18 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());
 
-    if (size == 0)
-        m_content.clear();
-    else if (!m_content) {
-        m_content = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, size));
-    } else if (static_cast<size_t>(size) < m_content->capacity()) {
-        size_t prev_size = m_metadata.size;
-        m_content->set_size(size);
-        if (prev_size < static_cast<size_t>(size))
-            memset(m_content->data() + prev_size, 0, size - prev_size);
-    } else {
-        size_t prev_size = m_metadata.size;
-        auto tmp = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, size));
-        memcpy(tmp->data(), m_content->data(), prev_size);
-        m_content = move(tmp);
-    }
+    u64 block_index = size / DataBlock::block_size + ((size % DataBlock::block_size == 0) ? 0 : 1);
+    TRY(truncate_to_block_index(block_index));
 
+    u64 last_possible_block_index = size / DataBlock::block_size;
+    if ((size % DataBlock::block_size != 0) && m_blocks[last_possible_block_index]) {
+        auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+        VERIFY(m_blocks[last_possible_block_index]);
+        NonnullLockRefPtr<Memory::AnonymousVMObject> block_vmobject = m_blocks[last_possible_block_index]->vmobject();
+        mapping_region->set_vmobject(block_vmobject);
+        mapping_region->remap();
+        memset(mapping_region->vaddr().offset(size % DataBlock::block_size).as_ptr(), 0, DataBlock::block_size - (size % DataBlock::block_size));
+    }
     m_metadata.size = size;
     set_metadata_dirty(true);
     return {};
