@@ -58,11 +58,6 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
         auto emoji_and_name_index = line.find('#', *status_index);
         VERIFY(emoji_and_name_index.has_value());
 
-        // FIXME: Should we keep non-fully-qualified emoji? TR #51 states this is implementation defined.
-        auto status = line.substring_view(*status_index + 1, *emoji_and_name_index - *status_index - 1).trim_whitespace();
-        if (status != "fully-qualified"sv)
-            continue;
-
         Emoji emoji {};
         emoji.group = group;
         emoji.display_order = display_order++;
