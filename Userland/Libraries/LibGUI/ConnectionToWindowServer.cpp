@@ -193,7 +193,7 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
     }
 
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->accepts_emoji_input();
-    if (focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
+    if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
         auto emoji_input_dialog = EmojiInputDialog::construct(window);
         emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
         if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
@@ -207,8 +207,8 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
         key_event->m_code_point = emoji_code_point;
     }
 
-    bool accepts_command_palette = true;
-    if (window->focused_widget())
+    bool accepts_command_palette = !window->blocks_command_palette();
+    if (accepts_command_palette && window->focused_widget())
         accepts_command_palette = window->focused_widget()->accepts_command_palette();
 
     // FIXME: This shortcut should be configurable.

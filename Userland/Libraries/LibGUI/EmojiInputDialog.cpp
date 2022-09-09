@@ -53,6 +53,8 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         VERIFY_NOT_REACHED();
 
     set_frameless(true);
+    set_blocks_command_palette(true);
+    set_blocks_emoji_input(true);
     resize(400, 300);
 
     auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);

@@ -225,6 +225,12 @@ public:
     Menubar& menubar() { return *m_menubar; }
     Menubar const& menubar() const { return *m_menubar; }
 
+    void set_blocks_command_palette(bool b) { m_blocks_command_palette = b; }
+    bool blocks_command_palette() const { return m_blocks_command_palette; }
+
+    void set_blocks_emoji_input(bool b) { m_blocks_emoji_input = b; }
+    bool blocks_emoji_input() const { return m_blocks_emoji_input; }
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
@@ -307,6 +313,8 @@ private:
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
     bool m_moved_by_client { false };
+    bool m_blocks_command_palette { false };
+    bool m_blocks_emoji_input { false };
 };
 
 }
