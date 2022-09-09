@@ -775,6 +775,9 @@ void TextEditor::select_all()
 
 void TextEditor::insert_emoji()
 {
+    if (!accepts_emoji_input() || window()->blocks_emoji_input())
+        return;
+
     auto emoji_input_dialog = EmojiInputDialog::construct(window());
     emoji_input_dialog->set_window_mode(GUI::WindowMode::Passive);
     if (emoji_input_dialog->exec() != EmojiInputDialog::ExecResult::OK)
@@ -1721,6 +1724,8 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
 {
     if (is_displayonly())
         return;
+
+    m_insert_emoji_action->set_enabled(accepts_emoji_input() && !window()->blocks_emoji_input());
 
     if (!m_context_menu) {
         m_context_menu = Menu::construct();
