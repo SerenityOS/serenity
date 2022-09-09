@@ -22,6 +22,7 @@ Tab::Tab(QMainWindow* window)
     : m_window(window)
 {
     m_layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom, this);
+    m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
     m_view = new WebView;
