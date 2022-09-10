@@ -2740,7 +2740,7 @@ auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_
     return result;
 }
 
-PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
+PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations_and_at_rules)
 {
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
     return PropertyOwningCSSStyleDeclaration::create(m_context.window_object(), move(properties), move(custom_properties));
@@ -5409,7 +5409,7 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
         return {};
     };
 
-    auto make_list = [](NonnullRefPtr<StyleValue> x_value, NonnullRefPtr<StyleValue> y_value) -> NonnullRefPtr<StyleValueList> {
+    auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
         NonnullRefPtrVector<StyleValue> values;
         values.append(x_value);
         values.append(y_value);
