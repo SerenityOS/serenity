@@ -41,12 +41,20 @@ protected:
     TableView();
 
     virtual void keydown_event(KeyEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
+    virtual void second_paint_event(PaintEvent&) override;
 
 private:
     GridStyle m_grid_style { GridStyle::None };
 
     bool m_highlight_key_column { true };
+
+    bool m_rubber_banding { false };
+    int m_rubber_band_origin { 0 };
+    int m_rubber_band_current { 0 };
 };
 
 }

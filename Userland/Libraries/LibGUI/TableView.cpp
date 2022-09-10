@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Glenford Williams <gw_dev@outlook.com>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -161,6 +162,25 @@ void TableView::paint_event(PaintEvent& event)
         painter.fill_rect(unpainted_rect, widget_background_color);
 }
 
+void TableView::second_paint_event(PaintEvent& event)
+{
+    if (!m_rubber_banding)
+        return;
+
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(widget_inner_rect());
+
+    // The rubber band rect always borders the widget inner to the left and right
+    auto rubber_band_left = widget_inner_rect().left();
+    auto rubber_band_right = widget_inner_rect().right() + 1;
+
+    auto rubber_band_rect = Gfx::IntRect::from_two_points({ rubber_band_left, m_rubber_band_origin }, { rubber_band_right, m_rubber_band_current });
+
+    painter.fill_rect(rubber_band_rect, palette().rubber_band_fill());
+    painter.draw_rect(rubber_band_rect, palette().rubber_band_border());
+}
+
 void TableView::keydown_event(KeyEvent& event)
 {
     if (!model())
@@ -194,6 +214,68 @@ void TableView::keydown_event(KeyEvent& event)
             }
         }
     }
+}
+
+void TableView::mousedown_event(MouseEvent& event)
+{
+    AbstractTableView::mousedown_event(event);
+
+    if (!model())
+        return;
+
+    if (event.button() != MouseButton::Primary)
+        return;
+
+    if (m_might_drag)
+        return;
+
+    if (selection_mode() == SelectionMode::MultiSelection) {
+        m_rubber_banding = true;
+        m_rubber_band_origin = event.position().y();
+        m_rubber_band_current = event.position().y();
+    }
+}
+
+void TableView::mouseup_event(MouseEvent& event)
+{
+    AbstractTableView::mouseup_event(event);
+
+    if (m_rubber_banding && event.button() == MouseButton::Primary) {
+        m_rubber_banding = false;
+        update();
+    }
+}
+
+void TableView::mousemove_event(MouseEvent& event)
+{
+    if (m_rubber_banding) {
+        // The rubber band rect cannot go outside the bounds of the rect enclosing all rows
+        m_rubber_band_current = clamp(event.position().y(), widget_inner_rect().top() + column_header().height(), widget_inner_rect().bottom() + 1);
+
+        int row_count = model()->row_count();
+
+        clear_selection();
+
+        set_suppress_update_on_selection_change(true);
+
+        for (int row = 0; row < row_count; ++row) {
+            auto index = model()->index(row);
+            VERIFY(index.is_valid());
+
+            int row_top = row * row_height() + column_header().height();
+            int row_bottom = row * row_height() + row_height() + column_header().height();
+
+            if ((m_rubber_band_origin > row_top && m_rubber_band_current < row_top) || (m_rubber_band_origin > row_bottom && m_rubber_band_current < row_bottom)) {
+                add_selection(index);
+            }
+        }
+
+        set_suppress_update_on_selection_change(false);
+
+        update();
+    }
+
+    AbstractTableView::mousemove_event(event);
 }
 
 void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
