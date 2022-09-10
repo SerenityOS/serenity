@@ -66,17 +66,25 @@ void ColumnsView::second_paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(widget_inner_rect());
-    painter.translate(frame_thickness(), frame_thickness());
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    int column_x = 0;
+    // Columns start rendering relative to the widget inner rect. We also account for horizontal scroll here.
+    int column_x = widget_inner_rect().left() - horizontal_scrollbar().value();
     for (auto const& column : m_columns) {
         if (m_rubber_band_origin_column.parent_index == column.parent_index)
             break;
         column_x += column.width + 1;
     }
 
-    auto rubber_band_rect = Gfx::IntRect::from_two_points({ column_x, m_rubber_band_origin }, { column_x + m_rubber_band_origin_column.width, m_rubber_band_current });
+    // After walking all columns to the current one we get its bounds relative to the widget inner rect and scroll position.
+    auto column_left = column_x;
+    auto column_right = column_x + m_rubber_band_origin_column.width;
+
+    // The rubber band rect always stays inside the widget inner rect, the vertical component is handled by mousemove
+    auto rubber_band_left = clamp(column_left, widget_inner_rect().left(), widget_inner_rect().right() + 1);
+    auto rubber_band_right = clamp(column_right, widget_inner_rect().left(), widget_inner_rect().right() + 1);
+
+    auto rubber_band_rect = Gfx::IntRect::from_two_points({ rubber_band_left, m_rubber_band_origin }, { rubber_band_right, m_rubber_band_current });
+
     painter.fill_rect(rubber_band_rect, palette().rubber_band_fill());
     painter.draw_rect(rubber_band_rect, palette().rubber_band_border());
 }
@@ -318,7 +326,7 @@ void ColumnsView::mousedown_event(MouseEvent& event)
 void ColumnsView::mousemove_event(MouseEvent& event)
 {
     if (m_rubber_banding) {
-        m_rubber_band_current = AK::clamp(event.position().y(), 0, widget_inner_rect().height());
+        m_rubber_band_current = clamp(event.position().y(), widget_inner_rect().top(), widget_inner_rect().bottom() + 1);
 
         auto parent = m_rubber_band_origin_column.parent_index;
         int row_count = model()->row_count(parent);
