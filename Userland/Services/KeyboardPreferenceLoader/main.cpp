@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
-    TRY(Core::System::unveil("/dev/keyboard0", "r"));
+    TRY(Core::System::unveil("/dev/input/keyboard/0", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini"));
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     }
 
     bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
-    auto keyboard_device = TRY(Core::File::open("/dev/keyboard0", Core::OpenMode::ReadOnly));
+    auto keyboard_device = TRY(Core::File::open("/dev/input/keyboard/0", Core::OpenMode::ReadOnly));
     TRY(Core::System::ioctl(keyboard_device->fd(), KEYBOARD_IOCTL_SET_NUM_LOCK, enable_num_lock));
 
     return 0;
