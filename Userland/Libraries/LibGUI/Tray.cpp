@@ -94,8 +94,12 @@ void Tray::paint_event(GUI::PaintEvent& event)
             text_rect.translate_by(1, 1);
         }
 
-        if (item.bitmap)
-            painter.blit(icon_rect.location(), *item.bitmap, item.bitmap->rect());
+        if (item.bitmap) {
+            if (is_hovered)
+                painter.blit_brightened(icon_rect.location(), *item.bitmap, item.bitmap->rect());
+            else
+                painter.blit(icon_rect.location(), *item.bitmap, item.bitmap->rect());
+        }
 
         auto const& font = is_checked ? this->font().bold_variant() : this->font();
         painter.draw_text(text_rect, item.text, font, Gfx::TextAlignment::CenterLeft, palette().color(Gfx::ColorRole::TrayText));
