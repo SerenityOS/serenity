@@ -479,4 +479,16 @@ void explicit_bzero(void* ptr, size_t size)
 {
     secure_zero(ptr, size);
 }
+
+void* (*volatile memset_ptr)(void*, int, size_t) = memset;
+
+// Not in POSIX yet, this was added in C23.
+// https://www.open-std.org/JTC1/SC22/WG14/www/docs/n2897.htm
+void* memset_explicit(void* dest_ptr, int c, size_t n)
+{
+    // Due to the function pointer being volatile, 
+    // the compiler doesn't optimize away the call.
+    return memset_ptr(dest_ptr, c, n);
+}
+
 }

@@ -32,6 +32,7 @@ void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 
 void* memset(void*, int, size_t);
 void explicit_bzero(void*, size_t) __attribute__((nonnull(1)));
+void* memset_explicit(void*, int, size_t);
 
 __attribute__((malloc)) char* strdup(char const*);
 __attribute__((malloc)) char* strndup(char const*, size_t);
