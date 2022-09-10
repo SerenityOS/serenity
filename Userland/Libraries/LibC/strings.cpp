@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
@@ -50,5 +51,23 @@ int strncasecmp(char const* s1, char const* s2, size_t n)
             break;
     } while (--n);
     return 0;
+}
+
+// https://pubs.opengroup.org/onlinepubs/009696799/functions/ffs.html
+int ffs(int i)
+{
+    return bit_scan_forward(i);
+}
+
+// https://linux.die.net/man/3/ffsl (GNU extension)
+int ffsl(long int i)
+{
+    return bit_scan_forward(i);
+}
+
+// https://linux.die.net/man/3/ffsll (GNU extension)
+int ffsll(long long int i)
+{
+    return bit_scan_forward(i);
 }
 }

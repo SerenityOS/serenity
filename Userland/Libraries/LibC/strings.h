@@ -15,5 +15,8 @@ int strcasecmp(char const*, char const*);
 int strncasecmp(char const*, char const*, size_t);
 void bzero(void*, size_t);
 void bcopy(void const*, void*, size_t);
+int ffs(int);
+int ffsl(long int);
+int ffsll(long long int);
 
 __END_DECLS
