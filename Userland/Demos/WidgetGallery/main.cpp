@@ -17,9 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix thread"));
     auto app = TRY(GUI::Application::try_create(arguments, Core::EventLoop::MakeInspectable::Yes));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/home/anon", "r"));
+    TRY(Core::System::unveil("/tmp/user/%uid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-widget-gallery"sv));
