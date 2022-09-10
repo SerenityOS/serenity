@@ -218,7 +218,7 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 0: {
-                    create_devtmpfs_char_device("/dev/mouse0", 0660, 10, 0);
+                    create_devtmpfs_char_device("/dev/input/mouse/0", 0660, 10, 0);
                     break;
                 }
                 case 183: {
@@ -235,7 +235,7 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 0: {
-                    create_devtmpfs_char_device("/dev/keyboard0", 0660, 85, 0);
+                    create_devtmpfs_char_device("/dev/input/keyboard/0", 0660, 85, 0);
                     break;
                 }
                 default:
@@ -375,6 +375,9 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::mount(-1, "/dev"sv, "dev"sv, 0));
 
     TRY(Core::System::mkdir("/dev/audio"sv, 0755));
+    TRY(Core::System::mkdir("/dev/input"sv, 0755));
+    TRY(Core::System::mkdir("/dev/input/keyboard"sv, 0755));
+    TRY(Core::System::mkdir("/dev/input/mouse"sv, 0755));
 
     TRY(Core::System::symlink("/proc/self/fd/0"sv, "/dev/stdin"sv));
     TRY(Core::System::symlink("/proc/self/fd/1"sv, "/dev/stdout"sv));
@@ -406,8 +409,8 @@ static ErrorOr<void> prepare_synthetic_filesystems()
         return result;
     };
 
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/keyboard0"sv, 0, phys_group.value().gr_gid)));
-    TRY(filter_chown_ENOENT(Core::System::chown("/dev/mouse0"sv, 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/input/keyboard/0"sv, 0, phys_group.value().gr_gid)));
+    TRY(filter_chown_ENOENT(Core::System::chown("/dev/input/mouse/0"sv, 0, phys_group.value().gr_gid)));
 
     auto tty_group = TRY(Core::System::getgrnam("tty"sv));
     VERIFY(tty_group.has_value());
