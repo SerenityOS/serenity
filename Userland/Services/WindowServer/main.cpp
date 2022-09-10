@@ -27,7 +27,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
-    TRY(Core::System::unveil("/dev", "rw"));
+    TRY(Core::System::unveil("/dev/tty", "rw"));
+    TRY(Core::System::unveil("/dev/gpu/", "rw"));
+    TRY(Core::System::unveil("/dev/input/", "rw"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/proc/keymap", "r"));
 
@@ -135,10 +137,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto mm = WindowServer::MenuManager::construct();
 
     TRY(Core::System::unveil("/tmp", ""));
-
-    // NOTE: Because we dynamically need to be able to open new /dev/gpu/connector*
-    // devices we can't really unveil all of /dev unless we have some
-    // other mechanism that can hand us file descriptors for these.
 
     TRY(Core::System::unveil(nullptr, nullptr));
 
