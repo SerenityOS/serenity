@@ -205,9 +205,10 @@ public:
         operator*=(inv_length);
     }
 
-    [[nodiscard]] constexpr T length() const
+    template<typename O = T>
+    [[nodiscard]] constexpr O length() const
     {
-        return AK::sqrt(dot(*this));
+        return AK::sqrt<O>(dot(*this));
     }
 
     [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
