@@ -856,7 +856,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 void Terminal::clear_in_line(u16 row, u16 first_column, u16 last_column)
 {
     VERIFY(row < rows());
-    active_buffer()[row].clear_range(first_column, last_column);
+    active_buffer()[row].clear_range(first_column, last_column, m_current_state.attribute);
 }
 #endif
 
