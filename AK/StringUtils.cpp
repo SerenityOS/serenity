@@ -59,6 +59,9 @@ bool matches(StringView str, StringView mask, CaseSensitivity case_sensitivity, 
         case '?':
             record_span(string_ptr - string_start, 1);
             break;
+        case '\\':
+            ++mask_ptr;
+            break;
         default:
             auto p = *mask_ptr;
             auto ch = *string_ptr;
