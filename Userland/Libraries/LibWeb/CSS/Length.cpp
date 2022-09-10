@@ -104,7 +104,7 @@ float Length::to_px(Layout::Node const& layout_node) const
 
     if (!layout_node.document().browsing_context())
         return 0;
-    auto viewport_rect = layout_node.document().browsing_context()->viewport_rect();
+    auto const& viewport_rect = layout_node.document().browsing_context()->viewport_rect();
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
