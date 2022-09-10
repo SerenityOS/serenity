@@ -14,6 +14,7 @@
 #include <Demos/WidgetGallery/SlidersTabGML.h>
 #include <Demos/WidgetGallery/WindowGML.h>
 #include <Demos/WidgetGallery/WizardsTabGML.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/FilePicker.h>
@@ -107,10 +108,10 @@ GalleryWidget::GalleryWidget()
     m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
-        if (!open_path.has_value())
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        if (response.is_error())
             return;
-        m_text_editor->set_text(open_path.value());
+        m_text_editor->set_text(response.release_value()->filename());
     };
 
     m_input_button = basics_tab->find_descendant_of_type_named<GUI::Button>("input_button");
