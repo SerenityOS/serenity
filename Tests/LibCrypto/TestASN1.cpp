@@ -57,10 +57,9 @@ TEST_CASE(test_utc_missing_z)
     // YYMMDDhhmm[ss]
     // We don't actually need to parse this correctly; rejecting these inputs is fine.
     // This test just makes sure that we don't crash.
-    // FIXME: This currently crashes
-    // (void)Crypto::ASN1::parse_utc_time("010101010101"sv);
-    // (void)Crypto::ASN1::parse_utc_time("010203040506"sv);
-    // (void)Crypto::ASN1::parse_utc_time("020406081012"sv);
-    // (void)Crypto::ASN1::parse_utc_time("0204060810"sv);
-    // (void)Crypto::ASN1::parse_utc_time("220911220000"sv);
+    (void)Crypto::ASN1::parse_utc_time("010101010101"sv);
+    (void)Crypto::ASN1::parse_utc_time("010203040506"sv);
+    (void)Crypto::ASN1::parse_utc_time("020406081012"sv);
+    (void)Crypto::ASN1::parse_utc_time("0204060810"sv);
+    (void)Crypto::ASN1::parse_utc_time("220911220000"sv);
 }

@@ -84,26 +84,25 @@ Optional<Core::DateTime> parse_utc_time(StringView time)
     auto minute = lexer.consume(2).to_uint();
     Optional<unsigned> seconds, offset_hours, offset_minutes;
     [[maybe_unused]] bool negative_offset = false;
-    if (!lexer.next_is('Z')) {
-        if (!lexer.next_is(is_any_of("+-"sv))) {
-            seconds = lexer.consume(2).to_uint();
-            if (!seconds.has_value()) {
-                return {};
-            }
-        }
 
-        if (lexer.next_is(is_any_of("+-"sv))) {
-            negative_offset = lexer.consume() == '-';
-            offset_hours = lexer.consume(2).to_uint();
-            offset_minutes = lexer.consume(2).to_uint();
-            if (!offset_hours.has_value() || !offset_minutes.has_value()) {
-                return {};
-            }
-        } else {
-            lexer.consume();
+    if (lexer.next_is(is_any_of("0123456789"sv))) {
+        seconds = lexer.consume(2).to_uint();
+        if (!seconds.has_value()) {
+            return {};
+        }
+    }
+
+    if (lexer.next_is('Z')) {
+        lexer.consume();
+    } else if (lexer.next_is(is_any_of("+-"sv))) {
+        negative_offset = lexer.consume() == '-';
+        offset_hours = lexer.consume(2).to_uint();
+        offset_minutes = lexer.consume(2).to_uint();
+        if (!offset_hours.has_value() || !offset_minutes.has_value()) {
+            return {};
         }
     } else {
-        lexer.consume();
+        return {};
     }
 
     if (!year_in_century.has_value() || !month.has_value() || !day.has_value() || !hour.has_value() || !minute.has_value()) {
