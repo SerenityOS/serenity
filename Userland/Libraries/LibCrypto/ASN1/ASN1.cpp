@@ -140,7 +140,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
             if (!minute.has_value()) {
                 return {};
             }
-            if (lexer.consume_specific('Z'))
+            if (lexer.is_eof() || lexer.consume_specific('Z'))
                 goto done_parsing;
         }
 
@@ -149,7 +149,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
             if (!seconds.has_value()) {
                 return {};
             }
-            if (lexer.consume_specific('Z'))
+            if (lexer.is_eof() || lexer.consume_specific('Z'))
                 goto done_parsing;
         }
 
@@ -158,7 +158,7 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
             if (!milliseconds.has_value()) {
                 return {};
             }
-            if (lexer.consume_specific('Z'))
+            if (lexer.is_eof() || lexer.consume_specific('Z'))
                 goto done_parsing;
         }
 
@@ -169,8 +169,11 @@ Optional<Core::DateTime> parse_generalized_time(StringView time)
             if (!offset_hours.has_value() || !offset_minutes.has_value()) {
                 return {};
             }
-        } else {
-            lexer.consume();
+        }
+
+        // Any character would be garbage.
+        if (!lexer.is_eof()) {
+            return {};
         }
     }
 
