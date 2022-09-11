@@ -172,61 +172,6 @@ static Result<JS::NonnullGCPtr<JS::Script>, TestError> parse_harness_files(JS::R
     return program_or_error.release_value().get<JS::NonnullGCPtr<JS::Script>>();
 }
 
-static Result<void, TestError> run_test(StringView source, StringView filepath, JS::Program::Type program_type, Vector<StringView> const& harness_files)
-{
-    if (s_parse_only) {
-        // Creating the vm and interpreter is heavy so we just parse directly here.
-        auto parser = JS::Parser(JS::Lexer(source, filepath), program_type);
-        auto program_or_error = parser.parse_program();
-        if (parser.has_errors()) {
-            return TestError {
-                NegativePhase::ParseOrEarly,
-                "SyntaxError",
-                parser.errors()[0].to_string(),
-                ""
-            };
-        }
-        return {};
-    }
-
-    auto vm = JS::VM::create();
-    vm->enable_default_host_import_module_dynamically_hook();
-    auto ast_interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*vm);
-    auto& realm = ast_interpreter->realm();
-
-    auto program_or_error = parse_program(realm, source, filepath, program_type);
-    if (program_or_error.is_error())
-        return program_or_error.release_error();
-
-    OwnPtr<JS::Bytecode::Interpreter> bytecode_interpreter = nullptr;
-    if (s_use_bytecode)
-        bytecode_interpreter = make<JS::Bytecode::Interpreter>(realm);
-
-    auto run_with_interpreter = [&](ScriptOrModuleProgram& program) {
-        if (s_use_bytecode)
-            return run_program(*bytecode_interpreter, program);
-        return run_program(*ast_interpreter, program);
-    };
-
-    for (auto& harness_file : harness_files) {
-        auto harness_program_or_error = parse_harness_files(realm, harness_file);
-        if (harness_program_or_error.is_error())
-            return harness_program_or_error.release_error();
-        ScriptOrModuleProgram harness_program { harness_program_or_error.release_value() };
-        auto result = run_with_interpreter(harness_program);
-        if (result.is_error()) {
-            return TestError {
-                NegativePhase::Harness,
-                result.error().type,
-                result.error().details,
-                harness_file
-            };
-        }
-    }
-
-    return run_with_interpreter(program_or_error.value());
-}
-
 enum class StrictMode {
     Both,
     NoStrict,
@@ -248,6 +193,64 @@ struct TestMetadata {
     NegativePhase phase { NegativePhase::ParseOrEarly };
     StringView type;
 };
+
+static Result<void, TestError> run_test(StringView source, StringView filepath, TestMetadata const& metadata)
+{
+    if (s_parse_only || (metadata.is_negative && metadata.phase == NegativePhase::ParseOrEarly && metadata.program_type != JS::Program::Type::Module)) {
+        // Creating the vm and interpreter is heavy so we just parse directly here.
+        // We can also skip if we know the test is supposed to fail during parse
+        // time. Unfortunately the phases of modules are not as clear and thus we
+        // only do this for scripts. See also the comment at the end of verify_test.
+        auto parser = JS::Parser(JS::Lexer(source, filepath), metadata.program_type);
+        auto program_or_error = parser.parse_program();
+        if (parser.has_errors()) {
+            return TestError {
+                NegativePhase::ParseOrEarly,
+                "SyntaxError",
+                parser.errors()[0].to_string(),
+                ""
+            };
+        }
+        return {};
+    }
+
+    auto vm = JS::VM::create();
+    vm->enable_default_host_import_module_dynamically_hook();
+    auto ast_interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*vm);
+    auto& realm = ast_interpreter->realm();
+
+    auto program_or_error = parse_program(realm, source, filepath, metadata.program_type);
+    if (program_or_error.is_error())
+        return program_or_error.release_error();
+
+    OwnPtr<JS::Bytecode::Interpreter> bytecode_interpreter = nullptr;
+    if (s_use_bytecode)
+        bytecode_interpreter = make<JS::Bytecode::Interpreter>(realm);
+
+    auto run_with_interpreter = [&](ScriptOrModuleProgram& program) {
+        if (s_use_bytecode)
+            return run_program(*bytecode_interpreter, program);
+        return run_program(*ast_interpreter, program);
+    };
+
+    for (auto& harness_file : metadata.harness_files) {
+        auto harness_program_or_error = parse_harness_files(realm, harness_file);
+        if (harness_program_or_error.is_error())
+            return harness_program_or_error.release_error();
+        ScriptOrModuleProgram harness_program { harness_program_or_error.release_value() };
+        auto result = run_with_interpreter(harness_program);
+        if (result.is_error()) {
+            return TestError {
+                NegativePhase::Harness,
+                result.error().type,
+                result.error().details,
+                harness_file
+            };
+        }
+    }
+
+    return run_with_interpreter(program_or_error.value());
+}
 
 static Result<TestMetadata, String> extract_metadata(StringView source)
 {
@@ -716,7 +719,7 @@ int main(int argc, char** argv)
             result_object.set("strict_mode", false);
 
             ARM_TIMER();
-            auto result = run_test(original_contents, path, metadata.program_type, metadata.harness_files);
+            auto result = run_test(original_contents, path, metadata);
             DISARM_TIMER();
 
             String first_output = collect_output();
@@ -739,7 +742,7 @@ int main(int argc, char** argv)
             result_object.set("strict_mode", true);
 
             ARM_TIMER();
-            auto result = run_test(with_strict, path, metadata.program_type, metadata.harness_files);
+            auto result = run_test(with_strict, path, metadata);
             DISARM_TIMER();
 
             String first_output = collect_output();
