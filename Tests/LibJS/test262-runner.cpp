@@ -23,8 +23,6 @@
 #include <LibJS/Script.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
-#include <time.h>
 #include <unistd.h>
 
 static String s_current_test = "";
@@ -505,20 +503,6 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
 
 static FILE* saved_stdout_fd;
 
-static void timer_handler(int signum)
-{
-    JsonObject timeout_result;
-    timeout_result.set("test", s_current_test);
-    timeout_result.set("timeout", true);
-    timeout_result.set("result", "timeout");
-    outln(saved_stdout_fd, "RESULT {}{}", timeout_result.to_string(), '\0');
-    // Make sure this message gets out and just die like the default action would be.
-    fflush(saved_stdout_fd);
-
-    signal(signum, SIG_DFL);
-    raise(signum);
-}
-
 void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
 {
     JsonObject assert_fail_result;
@@ -618,46 +602,11 @@ int main(int argc, char** argv)
         return value;
     };
 
-    if (signal(SIGVTALRM, timer_handler) == SIG_ERR) {
-        perror("signal");
-        return 1;
-    }
+#define ARM_TIMER() \
+    alarm(timeout)
 
-    timer_t timer_id;
-    struct sigevent timer_settings;
-    timer_settings.sigev_notify = SIGEV_SIGNAL;
-    timer_settings.sigev_signo = SIGVTALRM;
-    timer_settings.sigev_value.sival_ptr = &timer_id;
-
-    if (timer_create(CLOCK_PROCESS_CPUTIME_ID, &timer_settings, &timer_id) < 0) {
-        perror("timer_create");
-        return 1;
-    }
-    ScopeGuard destroy_timer = [timer_id] { timer_delete(timer_id); };
-
-    struct itimerspec timeout_timer;
-    timeout_timer.it_value.tv_sec = timeout;
-    timeout_timer.it_value.tv_nsec = 0;
-    timeout_timer.it_interval.tv_sec = 0;
-    timeout_timer.it_interval.tv_nsec = 0;
-
-    struct itimerspec disarm;
-    disarm.it_value.tv_sec = 0;
-    disarm.it_value.tv_nsec = 0;
-    disarm.it_interval.tv_sec = 0;
-    disarm.it_interval.tv_nsec = 0;
-
-#define ARM_TIMER()                                                \
-    if (timer_settime(timer_id, 0, &timeout_timer, nullptr) < 0) { \
-        perror("timer_settime");                                   \
-        return 1;                                                  \
-    }
-
-#define DISARM_TIMER()                                      \
-    if (timer_settime(timer_id, 0, &disarm, nullptr) < 0) { \
-        perror("timer_settime");                            \
-        return 1;                                           \
-    }
+#define DISARM_TIMER() \
+    alarm(0)
 
     auto stdin = Core::File::standard_input();
     size_t count = 0;
