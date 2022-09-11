@@ -8,8 +8,8 @@
 
 #include <AK/FixedArray.h>
 #include <AK/Vector.h>
-#include <LibGUI/Widget.h>
 #include <LibGL/GLContext.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Vector3.h>
 
 enum class Direction : u8 {
