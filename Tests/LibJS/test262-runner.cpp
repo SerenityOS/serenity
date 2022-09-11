@@ -502,20 +502,39 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
 }
 
 static FILE* saved_stdout_fd;
+static bool g_in_assert = false;
 
-void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
+[[noreturn]] static void handle_failed_assert(char const* assert_failed_message)
 {
-    JsonObject assert_fail_result;
-    assert_fail_result.set("test", s_current_test);
-    assert_fail_result.set("assert_fail", true);
-    assert_fail_result.set("result", "assert_fail");
-    assert_fail_result.set("output", String::formatted("{}:{}: {}: Assertion `{}' failed.", file, line, function, assertion));
-    outln(saved_stdout_fd, "RESULT {}{}", assert_fail_result.to_string(), '\0');
-    // (Attempt to) Ensure that messages are written before quitting.
-    fflush(saved_stdout_fd);
-    fflush(stderr);
-    abort();
+    if (!g_in_assert) {
+        // Just in case we trigger an assert while creating the JSON output just
+        // immediately stop if we are already in a failed assert.
+        g_in_assert = true;
+        JsonObject assert_fail_result;
+        assert_fail_result.set("test", s_current_test);
+        assert_fail_result.set("assert_fail", true);
+        assert_fail_result.set("result", "assert_fail");
+        assert_fail_result.set("output", assert_failed_message);
+        outln(saved_stdout_fd, "RESULT {}{}", assert_fail_result.to_string(), '\0');
+        // (Attempt to) Ensure that messages are written before quitting.
+        fflush(saved_stdout_fd);
+        fflush(stderr);
+    }
+    exit(12);
 }
+
+#ifdef __serenity__
+void __assertion_failed(char const* assertion)
+{
+    handle_failed_assert(assertion);
+}
+#else
+[[noreturn]] void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
+{
+    auto full_message = String::formatted("{}:{}: {}: Assertion `{}' failed.", file, line, function, assertion);
+    handle_failed_assert(full_message.characters());
+}
+#endif
 
 int main(int argc, char** argv)
 {
