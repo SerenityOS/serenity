@@ -29,6 +29,7 @@ public:
 
     float leftmost_x_offset_at(float y) const;
     float available_space_for_line(float y) const;
+    bool any_floats_intrude_at_y(float y) const;
 
     float effective_containing_block_width() const { return m_effective_containing_block_width; }
 

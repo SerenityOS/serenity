@@ -297,4 +297,12 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     }
 }
 
+bool InlineFormattingContext::any_floats_intrude_at_y(float y) const
+{
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    float y_in_root = box_in_root_rect.y() + y;
+    auto space = parent().space_used_by_floats(y_in_root);
+    return space.left > 0 || space.right > 0;
+}
+
 }

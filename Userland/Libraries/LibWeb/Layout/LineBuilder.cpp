@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/LineBuilder.h>
 #include <LibWeb/Layout/TextNode.h>
 
@@ -23,11 +24,15 @@ LineBuilder::~LineBuilder()
         update_last_line();
 }
 
-void LineBuilder::break_line()
+void LineBuilder::break_line(Optional<float> next_item_width)
 {
     update_last_line();
-    m_containing_block_state.line_boxes.append(LineBox());
-    begin_new_line(true);
+    do {
+        m_containing_block_state.line_boxes.append(LineBox());
+        begin_new_line(true);
+    } while (next_item_width.has_value()
+        && next_item_width.value() > m_available_width_for_current_line
+        && m_context.any_floats_intrude_at_y(m_current_y));
 }
 
 void LineBuilder::begin_new_line(bool increment_y)
@@ -68,11 +73,18 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
 
 bool LineBuilder::should_break(float next_item_width)
 {
-    auto const& line_boxes = m_containing_block_state.line_boxes;
-    if (line_boxes.is_empty() || line_boxes.last().is_empty())
+    if (!isfinite(m_available_width_for_current_line))
         return false;
-    auto current_line_width = line_boxes.last().width();
-    return (current_line_width + next_item_width) > m_available_width_for_current_line;
+
+    auto const& line_boxes = m_containing_block_state.line_boxes;
+    if (line_boxes.is_empty() || line_boxes.last().is_empty()) {
+        // If we don't have a single line box yet *and* there are no floats intruding
+        // at this Y coordinate, we don't need to break before inserting anything.
+        if (!m_context.any_floats_intrude_at_y(m_current_y))
+            return false;
+    }
+    auto current_line_width = ensure_last_line_box().width();
+    return roundf(current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
 static float box_baseline(LayoutState const& state, Box const& box)
@@ -255,7 +267,6 @@ void LineBuilder::adjust_last_line_after_inserting_floating_box(Badge<BlockForma
     if (float_ == CSS::Float::Left && !m_containing_block_state.line_boxes.is_empty()) {
         for (auto& fragment : m_containing_block_state.line_boxes.last().fragments())
             fragment.set_offset(fragment.offset().translated(space_used_by_float, 0));
-        m_containing_block_state.line_boxes.last().m_width += space_used_by_float;
     }
 
     m_available_width_for_current_line -= space_used_by_float;
