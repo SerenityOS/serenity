@@ -29,6 +29,7 @@ static String s_current_test = "";
 static bool s_use_bytecode = false;
 static bool s_parse_only = false;
 static String s_harness_file_directory;
+static bool s_automatic_harness_detection_mode = false;
 
 enum class NegativePhase {
     ParseOrEarly,
@@ -501,6 +502,18 @@ static bool verify_test(Result<void, TestError>& result, TestMetadata const& met
     return error.phase == metadata.phase && error.type == metadata.type;
 }
 
+static bool extract_harness_directory(String const& test_file_path)
+{
+    auto test_directory_index = test_file_path.find("test/"sv);
+    if (!test_directory_index.has_value()) {
+        warnln("Attempted to find harness directory from test file '{}', but did not find 'test/'", test_file_path);
+        return false;
+    }
+
+    s_harness_file_directory = String::formatted("{}harness/", test_file_path.substring_view(0, test_directory_index.value()));
+    return true;
+}
+
 static FILE* saved_stdout_fd;
 static bool g_in_assert = false;
 
@@ -551,11 +564,8 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (s_harness_file_directory.is_empty()) {
-        dbgln("You must specify the harness file directory via --harness-location");
-        return 2;
-    }
-
-    if (!s_harness_file_directory.ends_with('/')) {
+        s_automatic_harness_detection_mode = true;
+    } else if (!s_harness_file_directory.ends_with('/')) {
         s_harness_file_directory = String::formatted("{}/", s_harness_file_directory);
     }
 
@@ -637,6 +647,13 @@ int main(int argc, char** argv)
         }
 
         s_current_test = path;
+
+        if (s_automatic_harness_detection_mode) {
+            if (!extract_harness_directory(path))
+                return 4;
+            s_automatic_harness_detection_mode = false;
+            VERIFY(!s_harness_file_directory.is_empty());
+        }
 
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
