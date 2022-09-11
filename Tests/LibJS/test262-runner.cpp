@@ -584,7 +584,7 @@ int main(int argc, char** argv)
     }
 
     if (timeout <= 0) {
-        dbgln("timeout must be atleast 1");
+        warnln("timeout must be atleast 1");
         return 2;
     }
 
@@ -671,7 +671,7 @@ int main(int argc, char** argv)
 
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
-            dbgln("Could not open file: {}", path);
+            warnln("Could not open file: {}", path);
             return 3;
         }
 
