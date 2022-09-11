@@ -608,11 +608,11 @@ int main(int argc, char** argv)
 #define DISARM_TIMER() \
     alarm(0)
 
-    auto stdin = Core::File::standard_input();
+    auto standard_input = Core::File::standard_input();
     size_t count = 0;
 
-    while (!stdin->eof()) {
-        auto path = stdin->read_line();
+    while (!standard_input->eof()) {
+        auto path = standard_input->read_line();
         if (path.is_empty()) {
             continue;
         }
