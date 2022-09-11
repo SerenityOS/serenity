@@ -27,7 +27,7 @@ index e8612ba66..f0109f4b3 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 788460d65..566628935 100644
+index 2ae7c6dc4..bf173117b 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -112,7 +112,7 @@ typedef uint_t uint;

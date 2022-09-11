@@ -12,10 +12,10 @@ This patch should be removed when we implement proper TLS support.
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Clang.cpp b/clang/lib/Driver/ToolChains/Clang.cpp
-index f2f18e901..39d6c18fe 100644
+index 3704ed858..cc7b59809 100644
 --- a/clang/lib/Driver/ToolChains/Clang.cpp
 +++ b/clang/lib/Driver/ToolChains/Clang.cpp
-@@ -5872,7 +5872,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+@@ -6029,7 +6029,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
    Args.AddLastArg(CmdArgs, options::OPT_fvisibility_inlines_hidden_static_local_var,
                             options::OPT_fno_visibility_inlines_hidden_static_local_var);
    Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete_hidden);

@@ -9,20 +9,20 @@ Subject: [PATCH] [Triple] Add triple for SerenityOS
  2 files changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index 42277c013..b0378dd3a 100644
+index ba4584dc6..7249849e8 100644
 --- a/llvm/include/llvm/ADT/Triple.h
 +++ b/llvm/include/llvm/ADT/Triple.h
-@@ -205,7 +205,8 @@ public:
-     Hurd,       // GNU/Hurd
+@@ -219,7 +219,8 @@ public:
      WASI,       // Experimental WebAssembly OS
      Emscripten,
--    LastOSType = Emscripten
+     ShaderModel, // DirectX ShaderModel
+-    LastOSType = ShaderModel
 +    Serenity,
 +    LastOSType = Serenity
    };
    enum EnvironmentType {
      UnknownEnvironment,
-@@ -612,6 +613,11 @@ public:
+@@ -652,6 +653,11 @@ public:
      return getOS() == Triple::AIX;
    }
  
@@ -35,21 +35,21 @@ index 42277c013..b0378dd3a 100644
    bool isOSBinFormatELF() const {
      return getObjectFormat() == Triple::ELF;
 diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index a9afcc9db..aef8c7549 100644
+index 6696d158b..5292164d7 100644
 --- a/llvm/lib/Support/Triple.cpp
 +++ b/llvm/lib/Support/Triple.cpp
-@@ -224,6 +224,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
-   case PS4: return "ps4";
+@@ -234,6 +234,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+   case PS5: return "ps5";
    case RTEMS: return "rtems";
    case Solaris: return "solaris";
 +  case Serenity: return "serenity";
    case TvOS: return "tvos";
    case WASI: return "wasi";
    case WatchOS: return "watchos";
-@@ -548,6 +549,7 @@ static Triple::OSType parseOS(StringRef OSName) {
-     .StartsWith("hurd", Triple::Hurd)
+@@ -587,6 +588,7 @@ static Triple::OSType parseOS(StringRef OSName) {
      .StartsWith("wasi", Triple::WASI)
      .StartsWith("emscripten", Triple::Emscripten)
+     .StartsWith("shadermodel", Triple::ShaderModel)
 +    .StartsWith("serenity", Triple::Serenity)
      .Default(Triple::UnknownOS);
  }

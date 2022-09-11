@@ -4,16 +4,16 @@ Date: Thu, 14 Apr 2022 10:20:46 +0200
 Subject: [PATCH] [compiler-rt] Build crtbegin.o/crtend.o for SerenityOS
 
 ---
- compiler-rt/cmake/config-ix.cmake | 2 +-
+ compiler-rt/cmake/crt-config-ix.cmake | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index fc62d5ecc..7a47b7f71 100644
---- a/compiler-rt/cmake/config-ix.cmake
-+++ b/compiler-rt/cmake/config-ix.cmake
-@@ -696,7 +696,7 @@ endif()
- 
- # TODO: Add builtins support.
+diff --git a/compiler-rt/cmake/crt-config-ix.cmake b/compiler-rt/cmake/crt-config-ix.cmake
+index 78d1a0de1..c8622c458 100644
+--- a/compiler-rt/cmake/crt-config-ix.cmake
++++ b/compiler-rt/cmake/crt-config-ix.cmake
+@@ -43,7 +43,7 @@ if(NOT APPLE)
+   message(STATUS "Supported architectures for crt: ${CRT_SUPPORTED_ARCH}")
+ endif()
  
 -if (CRT_SUPPORTED_ARCH AND OS_NAME MATCHES "Linux" AND NOT LLVM_USE_SANITIZER)
 +if (CRT_SUPPORTED_ARCH AND OS_NAME MATCHES "Linux|SerenityOS" AND NOT LLVM_USE_SANITIZER)
