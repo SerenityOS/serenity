@@ -11,3 +11,12 @@ link_with_locale_data(test-bytecode-js)
 
 serenity_test(test-value-js.cpp LibJS LIBS LibJS)
 link_with_locale_data(test-value-js)
+
+serenity_component(
+    test262-runner
+    TARGETS test262-runner
+)
+add_executable(test262-runner test262-runner.cpp)
+target_link_libraries(test262-runner LibJS LibCore)
+link_with_locale_data(test262-runner)
+install(TARGETS test262-runner RUNTIME DESTINATION bin OPTIONAL)
