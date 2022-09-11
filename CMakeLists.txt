@@ -18,7 +18,7 @@ endif()
 
 # Check for toolchain mismatch, user might need to rebuild toolchain
 set(GCC_VERSION "12.2.0")
-set(LLVM_VERSION "14.0.1")
+set(LLVM_VERSION "15.0.0")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(EXPECTED_COMPILER_VERSION "${GCC_VERSION}")
 else()

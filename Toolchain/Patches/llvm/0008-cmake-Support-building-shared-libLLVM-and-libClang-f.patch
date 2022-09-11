@@ -16,10 +16,10 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/clang/tools/libclang/CMakeLists.txt b/clang/tools/libclang/CMakeLists.txt
-index 4e0647971..2e4aeeab3 100644
+index c6b3b44a7..d43e0b4c1 100644
 --- a/clang/tools/libclang/CMakeLists.txt
 +++ b/clang/tools/libclang/CMakeLists.txt
-@@ -80,7 +80,7 @@ if(MSVC)
+@@ -96,7 +96,7 @@ if(MSVC)
    set(LLVM_EXPORTED_SYMBOL_FILE)
  endif()
  

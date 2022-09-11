@@ -70,8 +70,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="14.0.1"
-LLVM_MD5SUM="47a50c31659488a6ae562475b41d2c32"
+LLVM_VERSION="15.0.0"
+LLVM_MD5SUM="d17f527916cb07400e336f9ba4a28903"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
