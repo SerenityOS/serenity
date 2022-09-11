@@ -46,6 +46,9 @@ public:
 
     void show_js_console();
 
+    Gfx::IntPoint to_content(Gfx::IntPoint) const;
+    Gfx::IntPoint to_widget(Gfx::IntPoint) const;
+
 signals:
     void linkHovered(QString, int timeout = 0);
     void linkUnhovered();
@@ -54,8 +57,6 @@ signals:
     void favicon_changed(QIcon);
 
 private:
-    Gfx::IntPoint to_content(Gfx::IntPoint) const;
-
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
