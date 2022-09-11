@@ -95,13 +95,13 @@ jobs:
           path: ${{ github.workspace }}/libjs-test262/Build/CLDR
           key: UnicodeData-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
-      - name: Build libjs-test262-runner and test-js
+      - name: Build test262-runner, test-js and test-wasm
         working-directory: libjs-test262
         run: |
           cd Build
           env PATH="/opt/wabt-1.0.27/bin:$PATH" \
               cmake -GNinja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} ..
-          ninja libjs-test262-runner test-js test-wasm
+          ninja test262-runner test-js test-wasm
 
       - name: Get previous results
         working-directory: libjs-test262
