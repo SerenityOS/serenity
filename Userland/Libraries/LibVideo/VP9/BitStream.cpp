@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,18 +58,20 @@ u16 BitStream::read_f16()
 }
 
 /* 9.2.1 */
-bool BitStream::init_bool(size_t bytes)
+ErrorOr<void> BitStream::init_bool(size_t bytes)
 {
     if (bytes < 1)
-        return false;
+        return Error::from_string_literal("No data when initializing boolean decoder");
     m_bool_value = read_f8();
     m_bool_range = 255;
     m_bool_max_bits = (8 * bytes) - 8;
-    return !read_bool(128);
+    if (!TRY(read_bool(128)))
+        return Error::from_string_literal("Boolean decoder marker was incorrect");
+    return {};
 }
 
 /* 9.2.2 */
-bool BitStream::read_bool(u8 probability)
+ErrorOr<bool> BitStream::read_bool(u8 probability)
 {
     auto split = 1u + (((m_bool_range - 1u) * probability) >> 8u);
     bool return_bool;
@@ -88,7 +91,7 @@ bool BitStream::read_bool(u8 probability)
             new_bit = read_bit();
             m_bool_max_bits--;
         } else {
-            new_bit = false;
+            return Error::from_string_literal("read_bool: Ran out of data while reading");
         }
         m_bool_range *= 2;
         m_bool_value = (m_bool_value << 1u) + new_bit;
@@ -98,21 +101,23 @@ bool BitStream::read_bool(u8 probability)
 }
 
 /* 9.2.3 */
-bool BitStream::exit_bool()
+ErrorOr<void> BitStream::exit_bool()
 {
     // FIXME: I'm not sure if this call to min is spec compliant, or if there is an issue elsewhere earlier in the parser.
     auto padding_element = read_f(min(m_bool_max_bits, (u64)bits_remaining()));
 
     // FIXME: It is a requirement of bitstream conformance that enough padding bits are inserted to ensure that the final coded byte of a frame is not equal to a superframe marker.
     //  A byte b is equal to a superframe marker if and only if (b & 0xe0)is equal to 0xc0, i.e. if the most significant 3 bits are equal to 0b110.
-    return padding_element == 0;
+    if (padding_element != 0)
+        return Error::from_string_literal("Padding element was non-zero on boolean decoder exit");
+    return {};
 }
 
-u8 BitStream::read_literal(size_t n)
+ErrorOr<u8> BitStream::read_literal(size_t n)
 {
     u8 return_value = 0;
     for (size_t i = 0; i < n; i++) {
-        return_value = (2 * return_value) + read_bool(128);
+        return_value = (2 * return_value) + TRY(read_bool(128));
     }
     return return_value;
 }

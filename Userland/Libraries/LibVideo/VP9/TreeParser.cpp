@@ -11,7 +11,7 @@
 namespace Video::VP9 {
 
 template<typename T>
-T TreeParser::parse_tree(SyntaxElementType type)
+ErrorOr<T> TreeParser::parse_tree(SyntaxElementType type)
 {
     auto tree_selection = select_tree(type);
     int value;
@@ -21,7 +21,7 @@ T TreeParser::parse_tree(SyntaxElementType type)
         auto tree = tree_selection.get_tree_value();
         int n = 0;
         do {
-            n = tree[n + m_decoder.m_bit_stream->read_bool(select_tree_probability(type, n >> 1))];
+            n = tree[n + TRY(m_decoder.m_bit_stream->read_bool(select_tree_probability(type, n >> 1)))];
         } while (n > 0);
         value = -n;
     }
@@ -29,17 +29,17 @@ T TreeParser::parse_tree(SyntaxElementType type)
     return static_cast<T>(value);
 }
 
-template int TreeParser::parse_tree(SyntaxElementType);
-template bool TreeParser::parse_tree(SyntaxElementType);
-template u8 TreeParser::parse_tree(SyntaxElementType);
-template u32 TreeParser::parse_tree(SyntaxElementType);
-template IntraMode TreeParser::parse_tree(SyntaxElementType);
-template TXSize TreeParser::parse_tree(SyntaxElementType);
-template InterpolationFilter TreeParser::parse_tree(SyntaxElementType);
-template ReferenceMode TreeParser::parse_tree(SyntaxElementType);
-template Token TreeParser::parse_tree(SyntaxElementType);
-template MvClass TreeParser::parse_tree(SyntaxElementType);
-template MvJoint TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<int> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<bool> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<u8> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<u32> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<IntraMode> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<TXSize> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<InterpolationFilter> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<ReferenceMode> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<Token> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<MvClass> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<MvJoint> TreeParser::parse_tree(SyntaxElementType);
 
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1

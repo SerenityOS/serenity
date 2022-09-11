@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
 
@@ -28,10 +30,10 @@ public:
     u16 read_f16();
 
     /* (9.2) */
-    bool init_bool(size_t bytes);
-    bool read_bool(u8 probability);
-    bool exit_bool();
-    u8 read_literal(size_t n);
+    ErrorOr<void> init_bool(size_t bytes);
+    ErrorOr<bool> read_bool(u8 probability);
+    ErrorOr<void> exit_bool();
+    ErrorOr<u8> read_literal(size_t n);
 
     /* (4.9.2) */
     i8 read_s(size_t n);
