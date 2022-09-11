@@ -63,6 +63,7 @@
 #include <QPainter>
 #include <QScrollBar>
 #include <QTextEdit>
+#include <QToolTip>
 #include <QVBoxLayout>
 
 AK::String akstring_from_qstring(QString const& qstring)
@@ -235,14 +236,18 @@ public:
     {
     }
 
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override
+    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, String const& tooltip) override
     {
-        m_view.setCursor(Qt::IBeamCursor);
+        auto widget_position = m_view.to_widget(content_position);
+        QToolTip::showText(
+            m_view.mapToGlobal(QPoint(widget_position.x(), widget_position.y())),
+            qstring_from_akstring(tooltip),
+            &m_view);
     }
 
     virtual void page_did_leave_tooltip_area() override
     {
-        m_view.setCursor(Qt::ArrowCursor);
+        QToolTip::hideText();
     }
 
     virtual void page_did_hover_link(AK::URL const& url) override
@@ -611,6 +616,11 @@ void WebView::keyReleaseEvent(QKeyEvent* event)
 Gfx::IntPoint WebView::to_content(Gfx::IntPoint viewport_position) const
 {
     return viewport_position.translated(horizontalScrollBar()->value(), verticalScrollBar()->value());
+}
+
+Gfx::IntPoint WebView::to_widget(Gfx::IntPoint content_position) const
+{
+    return content_position.translated(-horizontalScrollBar()->value(), -verticalScrollBar()->value());
 }
 
 void WebView::paintEvent(QPaintEvent* event)
