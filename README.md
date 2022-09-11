@@ -116,6 +116,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Benjamin Maxwell** - [MacDue](https://github.com/MacDue)
 * **Dennis Esternon** - [djwisdom](https://github.com/djwisdom)
 * **frhun** - [frhun](https://github.com/frhun)
+* **networkException** - [networkException](https://github.com/networkException)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
