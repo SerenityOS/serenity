@@ -507,7 +507,7 @@ ErrorOr<u8> Parser::decode_term_subexp()
     if (TRY(m_bit_stream->read_literal(1)) == 0)
         return TRY(m_bit_stream->read_literal(4)) + 16;
     if (TRY(m_bit_stream->read_literal(1)) == 0)
-        return TRY(m_bit_stream->read_literal(4)) + 32;
+        return TRY(m_bit_stream->read_literal(5)) + 32;
 
     auto v = TRY(m_bit_stream->read_literal(7));
     if (v < 65)
