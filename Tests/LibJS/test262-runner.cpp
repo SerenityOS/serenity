@@ -25,6 +25,11 @@
 #include <signal.h>
 #include <unistd.h>
 
+#ifndef AK_OS_MACOS
+// Only used to disable core dumps
+#    include <sys/prctl.h>
+#endif
+
 static String s_current_test = "";
 static bool s_use_bytecode = false;
 static bool s_parse_only = false;
@@ -553,6 +558,7 @@ int main(int argc, char** argv)
 {
     int timeout = 10;
     bool enable_debug_printing = false;
+    bool disable_core_dumping = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("LibJS test262 runner for streaming tests");
@@ -561,7 +567,15 @@ int main(int argc, char** argv)
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
+    args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
     args_parser.parse(argc, argv);
+
+#ifndef AK_OS_MACOS
+    if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {
+        perror("prctl(PR_SET_DUMPABLE)");
+        return 2;
+    }
+#endif
 
     if (s_harness_file_directory.is_empty()) {
         s_automatic_harness_detection_mode = true;
