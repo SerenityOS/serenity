@@ -30,7 +30,7 @@
     }
 
     @GUI::HorizontalSplitter {
-        fixed_resizee: "Second"
+        opportunistic_resizee: "First"
 
         @GUI::Widget {
             layout: @GUI::VerticalBoxLayout {}
@@ -59,7 +59,7 @@
         }
 
         @GUI::ListView {
-            max_width: 175
+            preferred_width: 175
             name: "unicode_block_listview"
         }
     }
