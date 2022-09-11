@@ -815,6 +815,37 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Rotate Layer Clockwise"sv);
         }));
 
+    m_layer_menu->add_separator();
+    m_layer_menu->add_action(GUI::Action::create(
+        "&Crop Layer to Selection", g_icon_bag.crop, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            // FIXME: disable this action if there is no selection
+            auto active_layer = editor->active_layer();
+            if (!active_layer || editor->image().selection().is_empty())
+                return;
+            auto intersection = editor->image().rect().intersected(editor->image().selection().bounding_rect());
+            auto crop_rect = intersection.translated(-active_layer->location());
+            active_layer->crop(crop_rect);
+            active_layer->set_location(intersection.location());
+            editor->image().selection().clear();
+            editor->did_complete_action("Crop Layer to Selection"sv);
+        }));
+    m_layer_menu->add_action(GUI::Action::create(
+        "&Crop Layer to Content", g_icon_bag.crop, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            auto content_bounding_rect = active_layer->nonempty_content_bounding_rect();
+            if (!content_bounding_rect.has_value())
+                return;
+            active_layer->crop(content_bounding_rect.value());
+            active_layer->set_location(content_bounding_rect->location());
+            editor->did_complete_action("Crop Layer to Content"sv);
+        }));
+
     m_filter_menu = window.add_menu("&Filter");
 
     m_filter_menu->add_action(GUI::Action::create("Filter &Gallery", g_icon_bag.filter, [&](auto&) {
