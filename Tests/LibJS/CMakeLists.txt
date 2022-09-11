@@ -20,3 +20,11 @@ add_executable(test262-runner test262-runner.cpp)
 target_link_libraries(test262-runner LibJS LibCore)
 link_with_locale_data(test262-runner)
 install(TARGETS test262-runner RUNTIME DESTINATION bin OPTIONAL)
+
+serenity_component(
+        test-test262
+        TARGETS test-test262
+)
+add_executable(test-test262 test-test262.cpp)
+target_link_libraries(test-test262 LibMain LibCore)
+install(TARGETS test-test262 RUNTIME DESTINATION bin OPTIONAL)
