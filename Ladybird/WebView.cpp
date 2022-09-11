@@ -580,6 +580,19 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
 
 void WebView::keyPressEvent(QKeyEvent* event)
 {
+    switch (event->key()) {
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+    case Qt::Key_Up:
+    case Qt::Key_Down:
+    case Qt::Key_PageUp:
+    case Qt::Key_PageDown:
+        QAbstractScrollArea::keyPressEvent(event);
+        break;
+    default:
+        break;
+    }
+
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
     auto point = event->text()[0].unicode();
