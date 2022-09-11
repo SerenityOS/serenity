@@ -63,10 +63,15 @@ TEST_CASE(no_allocation)
 
     EXPECT_NO_CRASH("Move", [&] {
         FixedArray<int> moved_from_array = FixedArray<int>::must_create_but_fixme_should_propagate_errors(6);
-        NoAllocationGuard guard;
-        FixedArray<int> moved_to_array(move(moved_from_array));
-        // We need to ensure that this destructor runs before the FixedArray destructor.
-        guard.~NoAllocationGuard();
+        // We need an Optional here to ensure that the NoAllocationGuard is
+        // destroyed before the moved_to_array, because that would call free
+        Optional<FixedArray<int>> moved_to_array;
+
+        {
+            NoAllocationGuard guard;
+            moved_to_array.emplace(move(moved_from_array));
+        }
+
         return Test::Crash::Failure::DidNotCrash;
     });
 
