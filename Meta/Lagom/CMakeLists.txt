@@ -621,6 +621,10 @@ if (BUILD_LAGOM)
         set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
         target_link_libraries(shell_lagom LibCore LibShell LibMain)
 
+        add_executable(test262-runner_lagom ../../Tests/LibJS/test262-runner.cpp)
+        set_target_properties(test262-runner_lagom PROPERTIES OUTPUT_NAME test262-runner)
+        target_link_libraries(test262-runner_lagom LibJS LibCore)
+
         add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
         target_link_libraries(wasm_lagom LibCore LibWasm LibLine LibMain)
