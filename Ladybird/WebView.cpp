@@ -324,6 +324,11 @@ public:
         m_cookie_jar.set_cookie(url, cookie, source);
     }
 
+    void dump_cookies() const
+    {
+        m_cookie_jar.dump_cookies();
+    }
+
     void request_file(NonnullRefPtr<Web::FileRequest>& request) override
     {
         auto const file = Core::System::open(request->path(), O_RDONLY);
@@ -923,6 +928,9 @@ void WebView::debug_request(String const& request, String const& argument)
         if (auto* doc = page.top_level_browsing_context().active_document())
             doc->window().local_storage()->dump();
     }
+
+    if (request == "dump-cookies"sv)
+        m_page_client->dump_cookies();
 }
 
 String WebView::source() const
