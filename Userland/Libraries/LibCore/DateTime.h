@@ -39,6 +39,7 @@ public:
     static Optional<DateTime> parse(StringView format, DeprecatedString const& string);
 
     bool operator<(DateTime const& other) const { return m_timestamp < other.m_timestamp; }
+    bool operator==(DateTime const& other) const { return m_timestamp == other.m_timestamp; }
 
 private:
     time_t m_timestamp { 0 };
@@ -50,6 +51,19 @@ private:
     int m_second { 0 };
 };
 
+}
+
+namespace AK {
+template<>
+struct Formatter<Core::DateTime> : StandardFormatter {
+    ErrorOr<void> format(FormatBuilder& builder, Core::DateTime const& value)
+    {
+        // Can't use DateTime::to_string() here: It doesn't propagate allocation failure.
+        return builder.builder().try_appendff("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}"sv,
+            value.year(), value.month(), value.day(),
+            value.hour(), value.minute(), value.second());
+    }
+};
 }
 
 namespace IPC {
