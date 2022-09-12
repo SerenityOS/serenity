@@ -28,11 +28,11 @@ for cmd in \
         Meta/check-png-sizes.sh \
         Meta/check-style.py \
         Meta/lint-executable-resources.sh \
-        Meta/lint-keymaps.py \
-        Meta/lint-shell-scripts.sh \
         Meta/lint-gml-format.sh \
+        Meta/lint-keymaps.py \
         Meta/lint-prettier.sh \
-        Meta/lint-python.sh; do
+        Meta/lint-python.sh \
+        Meta/lint-shell-scripts.sh; do
     echo "Running ${cmd}... "
     if "${cmd}" "$@"; then
         echo -e "[${GREEN}OK${NC}]: ${cmd}"
@@ -76,7 +76,6 @@ if [ "$ports" = true ]; then
     fi
 fi
 
-echo "(Not running lint-missing-resources.sh due to high false-positive rate.)"
 echo "(Also look out for check-symbols.sh, which can only be executed after the build!)"
 
 exit "${FAILURES}"
