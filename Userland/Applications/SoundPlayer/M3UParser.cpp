@@ -9,17 +9,16 @@
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Utf8View.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 M3UParser::M3UParser()
 {
 }
 
-NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
+NonnullOwnPtr<M3UParser> M3UParser::from_file(StringView path)
 {
-    auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
-    VERIFY(!file_result.is_error());
-    auto contents = file_result.value()->read_all();
+    auto file_result = Core::Stream::File::open(path, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    auto contents = file_result->read_all().release_value_but_fixme_should_propagate_errors();
     auto use_utf8 = path.ends_with(".m3u8"sv, CaseSensitivity::CaseInsensitive);
     return from_memory(String { contents, NoChomp }, use_utf8);
 }
