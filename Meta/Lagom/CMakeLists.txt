@@ -525,31 +525,33 @@ if (BUILD_LAGOM)
     )
 
     # Web
-    include(libweb_generators)
-    file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
-    file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
-    file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
-    file(GLOB LIBWEB_SUBSUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*/*.cpp")
-    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
-    list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
+    if (ENABLE_LAGOM_LIBWEB)
+        include(libweb_generators)
+        file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
+        file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
+        file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
+        file(GLOB LIBWEB_SUBSUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*/*.cpp")
+        list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
+        list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
 
-    generate_css_implementation()
+        generate_css_implementation()
 
-    set(LIBWEB_GENERATED_SOURCES
-        LibWeb/CSS/DefaultStyleSheetSource.cpp
-        LibWeb/CSS/Enums.cpp
-        LibWeb/CSS/MediaFeatureID.cpp
-        LibWeb/CSS/PropertyID.cpp
-        LibWeb/CSS/QuirksModeStyleSheetSource.cpp
-        LibWeb/CSS/TransformFunctions.cpp
-        LibWeb/CSS/ValueID.cpp
-    )
+        set(LIBWEB_GENERATED_SOURCES
+            LibWeb/CSS/DefaultStyleSheetSource.cpp
+            LibWeb/CSS/Enums.cpp
+            LibWeb/CSS/MediaFeatureID.cpp
+            LibWeb/CSS/PropertyID.cpp
+            LibWeb/CSS/QuirksModeStyleSheetSource.cpp
+            LibWeb/CSS/TransformFunctions.cpp
+            LibWeb/CSS/ValueID.cpp
+        )
 
-    lagom_lib(Web web
-        SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
-        LIBS LibMarkdown LibGemini LibGfx LibGL LibJS LibTextCodec LibWasm LibXML
-    )
-    generate_js_wrappers(LibWeb)
+        lagom_lib(Web web
+            SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
+            LIBS LibMarkdown LibGemini LibGfx LibGL LibJS LibTextCodec LibWasm LibXML
+        )
+        generate_js_wrappers(LibWeb)
+    endif()
 
     # WebSocket
     file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
@@ -601,9 +603,11 @@ if (BUILD_LAGOM)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
         target_link_libraries(gml-format_lagom LibCore LibGML LibMain)
 
-        add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
-        set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
-        target_link_libraries(headless_browser_lagom LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
+        if (ENABLE_LAGOM_LIBWEB)
+            add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
+            set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
+            target_link_libraries(headless_browser_lagom LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
+        endif()
 
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
