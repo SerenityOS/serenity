@@ -19,7 +19,7 @@ namespace AK {
 // NOTE: This is similar to the LibC macro EOF = -1.
 constexpr u32 end_of_file = 0xFFFFFFFF;
 
-constexpr bool is_url_code_point(u32 code_point)
+static bool is_url_code_point(u32 code_point)
 {
     // FIXME: [...] and code points in the range U+00A0 to U+10FFFD, inclusive, excluding surrogates and noncharacters.
     return is_ascii_alphanumeric(code_point) || code_point >= 0xA0 || "!$&'()*+,-./:;=?@_~"sv.contains(code_point);
