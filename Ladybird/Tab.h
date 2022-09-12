@@ -29,6 +29,7 @@ public:
     void debug_request(String const& request, String const& argument);
 
 public slots:
+    void focus_location_editor();
     void location_edit_return_pressed();
     void page_title_changed(QString);
     void page_favicon_changed(QIcon);

@@ -212,6 +212,8 @@ void BrowserWindow::new_tab()
 
     if (m_tabs_container->count() > 1)
         m_tabs_bar->show();
+
+    tab_ptr->focus_location_editor();
 }
 
 void BrowserWindow::close_tab(int index)
