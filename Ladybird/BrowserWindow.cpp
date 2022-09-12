@@ -46,6 +46,18 @@ BrowserWindow::BrowserWindow()
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
 
+    auto* view_menu = menuBar()->addMenu("&View");
+
+    auto* open_next_tab_action = new QAction("Open &Next Tab");
+    open_next_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageDown));
+    view_menu->addAction(open_next_tab_action);
+    QObject::connect(open_next_tab_action, &QAction::triggered, this, &BrowserWindow::open_next_tab);
+
+    auto* open_previous_tab_action = new QAction("Open &Previous Tab");
+    open_previous_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp));
+    view_menu->addAction(open_previous_tab_action);
+    QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
+
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
     auto* view_source_action = new QAction("View &Source");
@@ -257,4 +269,26 @@ void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
     m_tabs_container->setTabIcon(index, icon);
     setWindowIcon(icon);
+}
+
+void BrowserWindow::open_next_tab()
+{
+    if (m_tabs_container->count() <= 1)
+        return;
+
+    auto next_index = m_tabs_container->currentIndex() + 1;
+    if (next_index >= m_tabs_container->count())
+        next_index = 0;
+    m_tabs_container->setCurrentIndex(next_index);
+}
+
+void BrowserWindow::open_previous_tab()
+{
+    if (m_tabs_container->count() <= 1)
+        return;
+
+    auto next_index = m_tabs_container->currentIndex() - 1;
+    if (next_index < 0)
+        next_index = m_tabs_container->count() - 1;
+    m_tabs_container->setCurrentIndex(next_index);
 }
