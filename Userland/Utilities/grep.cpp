@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 // Human-readable indexes start at 1, so it's fine to increment already.
                 line_number += 1;
                 StringView line_view(line, nread);
-                bool is_binary = line_view.contains(0);
+                bool is_binary = line_view.contains('\0');
 
                 if (is_binary && binary_mode == BinaryFileMode::Skip)
                     return 1;

@@ -406,7 +406,7 @@ bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncode
     case URL::PercentEncodeSet::EncodeURI:
         // NOTE: This is the same percent encode set that JS encodeURI() uses.
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
-        return code_point >= 0x7E || (!is_ascii_alphanumeric(code_point) && !";,/?:@&=+$-_.!~*'()#"sv.contains(code_point));
+        return code_point >= 0x7E || (!is_ascii_alphanumeric(code_point) && !";,/?:@&=+$-_.!~*'()#"sv.contains(static_cast<char>(code_point)));
     default:
         VERIFY_NOT_REACHED();
     }
