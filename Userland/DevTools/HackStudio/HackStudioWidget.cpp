@@ -311,6 +311,17 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
     if (Core::File::is_directory(filename) || !Core::File::exists(filename))
         return false;
 
+    auto editor_wrapper_or_none = m_all_editor_wrappers.first_matching([&](auto& wrapper) {
+        return wrapper->filename() == filename;
+    });
+
+    if (editor_wrapper_or_none.has_value()) {
+        set_current_editor_wrapper(editor_wrapper_or_none.release_value());
+        return true;
+    } else {
+        add_new_editor(*m_current_editor_tab_widget);
+    }
+
     if (!active_file().is_empty()) {
         // Since the file is previously open, it should always be in m_open_files.
         VERIFY(m_open_files.find(active_file()) != m_open_files.end());
@@ -1175,6 +1186,7 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
     update_current_editor_title();
     update_tree_view();
     set_current_editor_tab_widget(static_cast<GUI::TabWidget*>(m_current_editor_wrapper->parent()));
+    m_current_editor_tab_widget->set_active_widget(editor_wrapper);
     update_statusbar();
 }
 
