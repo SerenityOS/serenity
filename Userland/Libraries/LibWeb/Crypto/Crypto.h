@@ -25,6 +25,9 @@ public:
     DOM::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
     String random_uuid() const;
 
+protected:
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     explicit Crypto(HTML::Window&);
     virtual void initialize(JS::Realm&) override;

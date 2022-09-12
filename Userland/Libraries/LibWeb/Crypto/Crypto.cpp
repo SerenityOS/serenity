@@ -114,4 +114,10 @@ String Crypto::random_uuid() const
     return builder.to_string();
 }
 
+void Crypto::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_subtle.ptr());
+}
+
 }
