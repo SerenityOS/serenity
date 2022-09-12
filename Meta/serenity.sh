@@ -311,6 +311,16 @@ ensure_toolchain() {
 
 }
 
+confirm_rebuild_if_toolchain_exists() {
+    [ ! -d "$TOOLCHAIN_DIR" ] && return
+
+    read -rp "You already have a toolchain, are you sure you want to delete and rebuild one [y/N]? " input
+
+    if [[ "$input" != "y" && "$input" != "Y" ]]; then
+        die "Aborted rebuild"
+    fi
+}
+
 delete_toolchain() {
     [ ! -d "$TOOLCHAIN_DIR" ] || rm -rf "$TOOLCHAIN_DIR"
 }
@@ -482,6 +492,7 @@ elif [ "$CMD" = "delete" ]; then
 elif [ "$CMD" = "rebuild-toolchain" ]; then
     cmd_with_target
     lagom_unsupported "The lagom target uses the host toolchain"
+    confirm_rebuild_if_toolchain_exists
     delete_toolchain
     ensure_toolchain
 elif [ "$CMD" = "rebuild-world" ]; then
