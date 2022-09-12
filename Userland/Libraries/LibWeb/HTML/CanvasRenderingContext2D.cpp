@@ -58,37 +58,58 @@ JS::NonnullGCPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding
     return *m_element;
 }
 
+// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
+    // FIXME 1. If any of the arguments are infinite or NaN, then return.
+
+    // FIXME 2. If either w or h are zero, then return.
+
     auto& drawing_state = this->drawing_state();
 
+    // 3. Paint the specified rectangular area using this's fill style.
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
     painter->fill_rect(enclosing_int_rect(rect), drawing_state.fill_style);
     did_draw(rect);
 }
 
+// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
 void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
     if (!painter)
         return;
+    
+    // FIXME: 1. If any of the arguments are infinite or NaN, then return.
 
     auto rect = drawing_state().transform.map(Gfx::FloatRect(x, y, width, height));
+
+    // 2. Let pixels be the set of pixels in the specified rectangle that also intersect the current clipping region.
+    // 3. Clear the pixels in pixels to a transparent black, erasing any previous image.
     painter->clear_rect(enclosing_int_rect(rect), Color());
     did_draw(rect);
 }
 
+// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokerect
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
+    // FIXME: 1. If any of the arguments are infinite or NaN, then return.
+    
     auto& drawing_state = this->drawing_state();
+
+    // 2. Take the result of tracing the path described below, using the CanvasPathDrawingStyles interface's line styles, and fill it with this's stroke style.
+
+    // FIXME:  If both w and h are zero, the path has a single subpath with just one point (x, y), and no lines, and this method thus has no effect (the trace a path algorithm returns an empty path in that case).
+
+    // FIXME: If just one of either w or h is zero, then the path has a single subpath consisting of two points, with coordinates (x, y) and (x+w, y+h), in that order, connected by a single straight line.
 
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
 
