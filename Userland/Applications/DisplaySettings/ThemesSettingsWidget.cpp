@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
- * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

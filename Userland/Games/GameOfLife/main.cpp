@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
- * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2021, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
