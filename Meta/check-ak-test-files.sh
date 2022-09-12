@@ -14,7 +14,7 @@ while IFS= read -r FILENAME; do
         MISSING_FILES=y
     fi
 done < <(
-    git ls-files 'Tests/AK/Test*.cpp' | xargs basename
+    git ls-files 'Tests/AK/Test*.cpp' | xargs -n1 basename
 )
 
 if [ "n" != "${MISSING_FILES}" ] ; then
