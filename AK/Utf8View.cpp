@@ -274,6 +274,10 @@ u32 Utf8CodePointIterator::operator*() const
         code_point_value_so_far |= m_ptr[offset] & 63;
     }
 
+    if (code_point_value_so_far > 0x10FFFF) {
+        dbgln_if(UTF8_DEBUG, "Multi-byte sequence is otherwise valid, but code point {:#x} is not permissible.", code_point_value_so_far);
+        return 0xFFFD;
+    }
     return code_point_value_so_far;
 }
 

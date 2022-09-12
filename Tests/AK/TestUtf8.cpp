@@ -191,6 +191,33 @@ TEST_CASE(decode_invalid_ut8)
         }
         VERIFY(i == expected_size);
     }
+
+    // Test case 5 : Oversized four-byte sequence (e.g. U+123456)
+    {
+        // Want to encode: (000)1 0010 0011 0100 0101 0110
+        // Into mask: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+        // Shifted:        100   100011   010001   010110
+        // Result:    11110100 10100011 10010001 10010110
+        char raw_data[] = { 'a', (char)0xF4, (char)0xA3, (char)0x91, (char)0x96, 'b' };
+        Utf8View view { StringView { raw_data, 6 } };
+        // This definition seems to suggest that we should instead output multiple replacement characters:
+        // https://encoding.spec.whatwg.org/#ref-for-concept-stream-prepend②
+        // This is supported by the plaintext description and example collection, which annoyingly does not give an example of how to deal with this:
+        // https://www.unicode.org/versions/Unicode14.0.0/ch03.pdf , section "U+FFFD Substitution of Maximal Subparts"
+        // However, that would go against how we deal with several other kinds of errors, so we stick to emitting only one U+FFFD.
+        u32 expected_characters[] = { 'a', 0xFFFD, 'b' };
+        String expected_underlying_bytes[] = { "a", "\xF4\xA3\x91\x96", "b" };
+        size_t expected_size = sizeof(expected_characters) / sizeof(expected_characters[0]);
+        size_t i = 0;
+        for (auto it = view.begin(); it != view.end(); ++it) {
+            u32 code_point = *it;
+            VERIFY(i < expected_size);
+            EXPECT_EQ(code_point, expected_characters[i]);
+            EXPECT_EQ(it.underlying_code_point_bytes(), expected_underlying_bytes[i].bytes());
+            i++;
+        }
+        VERIFY(i == expected_size);
+    }
 }
 
 TEST_CASE(trim)
