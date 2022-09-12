@@ -34,6 +34,8 @@ public slots:
     void new_tab();
     void close_tab(int index);
     void close_current_tab();
+    void open_next_tab();
+    void open_previous_tab();
 
 private:
     void debug_request(String const& request, String const& argument = "");
