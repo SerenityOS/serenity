@@ -7,7 +7,7 @@
 #include "SourceModel.h"
 #include "Gradient.h"
 #include "Profile.h"
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibSymbolication/Symbolication.h>
@@ -24,21 +24,26 @@ public:
 
     static constexpr StringView source_root_path = "/usr/src/serenity/"sv;
 
-public:
     SourceFile(StringView filename)
     {
         String source_file_name = filename.replace("../../"sv, source_root_path, ReplaceMode::FirstOnly);
 
-        auto maybe_file = Core::File::open(source_file_name, Core::OpenMode::ReadOnly);
-        if (maybe_file.is_error()) {
-            dbgln("Could not map source file \"{}\". Tried {}. {} (errno={})", filename, source_file_name, maybe_file.error().string_literal(), maybe_file.error().code());
+        auto try_read_lines = [&]() -> ErrorOr<void> {
+            auto unbuffered_file = TRY(Core::Stream::File::open(source_file_name, Core::Stream::OpenMode::Read));
+            auto file = TRY(Core::Stream::BufferedFile::create(move(unbuffered_file)));
+
+            Array<u8, 1024> buffer;
+            while (!file->is_eof())
+                m_lines.append({ TRY(file->read_line(buffer)), 0 });
+
+            return {};
+        };
+
+        auto maybe_error = try_read_lines();
+        if (maybe_error.is_error()) {
+            dbgln("Could not map source file \"{}\". Tried {}. {} (errno={})", filename, source_file_name, maybe_error.error().string_literal(), maybe_error.error().code());
             return;
         }
-
-        auto file = maybe_file.value();
-
-        while (!file->eof())
-            m_lines.append({ file->read_line(1024), 0 });
     }
 
     void try_add_samples(size_t line, size_t samples)
