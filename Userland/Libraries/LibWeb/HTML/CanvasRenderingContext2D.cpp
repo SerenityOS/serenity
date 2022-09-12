@@ -58,7 +58,7 @@ JS::NonnullGCPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding
     return *m_element;
 }
 
-// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
+// 4https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
@@ -77,7 +77,7 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     did_draw(rect);
 }
 
-// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
 void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
@@ -94,7 +94,7 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
     did_draw(rect);
 }
 
-// 4.12.5.1.10 https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokerect
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokerect
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
