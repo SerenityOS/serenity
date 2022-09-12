@@ -34,9 +34,9 @@ Tab::Tab(QMainWindow* window)
     m_hover_label->setFrameShape(QFrame::Shape::Box);
     m_hover_label->setAutoFillBackground(true);
 
-    auto* focus_location_edit_action = new QAction("Edit Location");
-    focus_location_edit_action->setShortcut(QKeySequence("Ctrl+L"));
-    addAction(focus_location_edit_action);
+    auto* focus_location_editor_action = new QAction("Edit Location");
+    focus_location_editor_action->setShortcut(QKeySequence("Ctrl+L"));
+    addAction(focus_location_editor_action);
 
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
@@ -80,8 +80,13 @@ Tab::Tab(QMainWindow* window)
     QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);
     QObject::connect(m_home_action, &QAction::triggered, this, &Tab::home);
     QObject::connect(m_reload_action, &QAction::triggered, this, &Tab::reload);
-    QObject::connect(focus_location_edit_action, &QAction::triggered, m_location_edit, qOverload<>(&QWidget::setFocus));
-    QObject::connect(focus_location_edit_action, &QAction::triggered, m_location_edit, &QLineEdit::selectAll);
+    QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
+}
+
+void Tab::focus_location_editor()
+{
+    m_location_edit->setFocus();
+    m_location_edit->selectAll();
 }
 
 void Tab::navigate(QString url)
