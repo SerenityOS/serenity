@@ -32,9 +32,9 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
 
 static Optional<String> parse_opaque_host(StringView input)
 {
-    auto forbidden_host_code_points_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
-    for (auto code_point : forbidden_host_code_points_excluding_percent) {
-        if (input.contains(code_point)) {
+    auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
+    for (auto character : forbidden_host_characters_excluding_percent) {
+        if (input.contains(character)) {
             report_validation_error();
             return {};
         }
@@ -72,9 +72,9 @@ static Optional<String> parse_host(StringView input, bool is_not_special = false
     // FIXME: Let asciiDomain be the result of running domain to ASCII on domain.
     auto& ascii_domain = domain;
 
-    auto forbidden_host_code_points = "\0\t\n\r #%/:<>?@[\\]^|"sv;
-    for (auto code_point : forbidden_host_code_points) {
-        if (ascii_domain.view().contains(code_point)) {
+    auto forbidden_host_characters = "\0\t\n\r #%/:<>?@[\\]^|"sv;
+    for (auto character : forbidden_host_characters) {
+        if (ascii_domain.view().contains(character)) {
             report_validation_error();
             return {};
         }

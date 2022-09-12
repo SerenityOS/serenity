@@ -350,7 +350,7 @@ static ThrowCompletionOr<String> encode(VM& vm, String const& string, StringView
         auto code_unit = utf16_string.code_unit_at(k);
         // c. If C is in unescapedSet, then
         // NOTE: We assume the unescaped set only contains ascii characters as unescaped_set is a StringView.
-        if (code_unit < 0x80 && unescaped_set.contains(code_unit)) {
+        if (code_unit < 0x80 && unescaped_set.contains(static_cast<char>(code_unit))) {
             // i. Set k to k + 1.
             k++;
 
@@ -420,8 +420,8 @@ static ThrowCompletionOr<String> decode(VM& vm, String const& string, StringView
             continue;
         }
 
-        if ((decoded_code_unit & 0x80) == 0) {
-            if (reserved_set.contains(decoded_code_unit))
+        if (decoded_code_unit < 0x80) {
+            if (reserved_set.contains(static_cast<char>(decoded_code_unit)))
                 decoded_builder.append(string.substring_view(k - 2, 3));
             else
                 decoded_builder.append(decoded_code_unit);
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
     StringBuilder escaped;
     for (auto code_point : utf8_to_utf16(string)) {
         if (code_point < 256) {
-            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(code_point))
+            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(static_cast<char>(code_point)))
                 escaped.append(code_point);
             else
                 escaped.appendff("%{:02X}", code_point);

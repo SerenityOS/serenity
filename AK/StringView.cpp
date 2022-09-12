@@ -9,6 +9,7 @@
 #include <AK/Find.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -135,6 +136,20 @@ bool StringView::contains(char needle) const
             return true;
     }
     return false;
+}
+
+bool StringView::contains(u32 needle) const
+{
+    // A code point should be at most four UTF-8 bytes, which easily fits into StringBuilder's inline-buffer.
+    // Therefore, this will not allocate.
+    StringBuilder needle_builder;
+    auto result = needle_builder.try_append_code_point(needle);
+    if (result.is_error()) {
+        // The needle is invalid, therefore the string does not contain it.
+        return false;
+    }
+
+    return contains(needle_builder.string_view());
 }
 
 bool StringView::contains(StringView needle, CaseSensitivity case_sensitivity) const

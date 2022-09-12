@@ -402,7 +402,7 @@ bool is_cors_safelisted_request_header(Header const& header)
     else if (name.is_one_of_ignoring_case("accept-language"sv, "content-language"sv)) {
         // If value contains a byte that is not in the range 0x30 (0) to 0x39 (9), inclusive, is not in the range 0x41 (A) to 0x5A (Z), inclusive, is not in the range 0x61 (a) to 0x7A (z), inclusive, and is not 0x20 (SP), 0x2A (*), 0x2C (,), 0x2D (-), 0x2E (.), 0x3B (;), or 0x3D (=), then return false.
         if (any_of(value.span(), [](auto byte) {
-                return !(is_ascii_digit(byte) || is_ascii_alpha(byte) || " *,-.;="sv.contains(byte));
+                return !(is_ascii_digit(byte) || is_ascii_alpha(byte) || " *,-.;="sv.contains(static_cast<char>(byte)));
             }))
             return false;
     }
