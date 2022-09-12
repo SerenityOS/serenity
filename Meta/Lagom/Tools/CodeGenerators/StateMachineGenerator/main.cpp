@@ -12,7 +12,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 
 struct Range {
@@ -213,19 +214,15 @@ parse_state_machine(StringView input)
 
 void output_header(StateMachine const&, SourceGenerator&);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
-    char const* path = nullptr;
+    StringView path;
     args_parser.add_positional_argument(path, "Path to parser description", "input", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        fprintf(stderr, "Cannot open %s\n", path);
-    }
-
-    auto content = file_or_error.value()->read_all();
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto content = TRY(file->read_all());
     auto state_machine = parse_state_machine(content);
 
     StringBuilder builder;

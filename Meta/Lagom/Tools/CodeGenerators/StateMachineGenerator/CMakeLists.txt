@@ -2,4 +2,4 @@ set(SOURCES
     main.cpp
 )
 
-lagom_tool(StateMachineGenerator)
+lagom_tool(StateMachineGenerator LIBS LibMain)
