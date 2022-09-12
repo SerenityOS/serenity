@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -797,9 +797,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto file = TRY(Core::File::open(arguments.strings[1], Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open(arguments.strings[1], Core::Stream::OpenMode::Read));
 
-    auto file_contents = file->read_all();
+    auto file_contents = TRY(file->read_all());
 
     auto endpoints = parse(file_contents);
 
