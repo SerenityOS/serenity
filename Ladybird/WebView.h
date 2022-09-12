@@ -50,9 +50,9 @@ public:
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
 
 signals:
-    void linkHovered(QString, int timeout = 0);
-    void linkUnhovered();
-    void loadStarted(const URL&);
+    void link_hovered(QString, int timeout = 0);
+    void link_unhovered();
+    void load_started(const URL&);
     void title_changed(QString);
     void favicon_changed(QIcon);
 

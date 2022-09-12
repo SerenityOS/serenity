@@ -59,16 +59,16 @@ Tab::Tab(QMainWindow* window)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
-    QObject::connect(m_view, &WebView::linkHovered, [this](QString const& title) {
+    QObject::connect(m_view, &WebView::link_hovered, [this](QString const& title) {
         m_hover_label->setText(title);
         update_hover_label();
         m_hover_label->show();
     });
-    QObject::connect(m_view, &WebView::linkUnhovered, [this] {
+    QObject::connect(m_view, &WebView::link_unhovered, [this] {
         m_hover_label->hide();
     });
 
-    QObject::connect(m_view, &WebView::loadStarted, [this](const URL& url) {
+    QObject::connect(m_view, &WebView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
         m_history.push(url, m_title.toUtf8().data());
     });

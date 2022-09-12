@@ -173,7 +173,7 @@ public:
 
     virtual void page_did_start_loading(AK::URL const& url) override
     {
-        emit m_view.loadStarted(url);
+        emit m_view.load_started(url);
     }
 
     virtual void page_did_finish_loading(AK::URL const&) override
@@ -252,12 +252,12 @@ public:
 
     virtual void page_did_hover_link(AK::URL const& url) override
     {
-        emit m_view.linkHovered(url.to_string().characters());
+        emit m_view.link_hovered(url.to_string().characters());
     }
 
     virtual void page_did_unhover_link() override
     {
-        emit m_view.linkUnhovered();
+        emit m_view.link_unhovered();
     }
 
     virtual void page_did_invalidate(Gfx::IntRect const&) override
