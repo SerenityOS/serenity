@@ -213,9 +213,7 @@ void AESCipher::encrypt_block(AESCipherBlock const& in, AESCipherBlock& out)
     r = dec_key.rounds() >> 1;
 
     // apply the first |r - 1| rounds
-    auto i { 0 };
     for (;;) {
-        ++i;
         // clang-format off
         t0 = AESTables::Encode0[(s0 >> 24)       ] ^
              AESTables::Encode1[(s1 >> 16) & 0xff] ^
@@ -237,7 +235,6 @@ void AESCipher::encrypt_block(AESCipherBlock const& in, AESCipherBlock& out)
 
         round_keys += 8;
         --r;
-        ++i;
         if (r == 0)
             break;
 

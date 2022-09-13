@@ -167,7 +167,6 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManage
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
     VERIFY(!m_storage_devices.is_empty());
-    size_t device_index = 0;
     for (auto& device : m_storage_devices) {
         auto partition_table_or_error = try_to_initialize_partition_table(device);
         if (partition_table_or_error.is_error())
@@ -180,7 +179,6 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
             auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata.value());
             device.add_partition(disk_partition);
         }
-        device_index++;
     }
 }
 

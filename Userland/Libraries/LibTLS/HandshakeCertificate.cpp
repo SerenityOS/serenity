@@ -39,11 +39,9 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     }
     size_t size = certificate_total_length;
 
-    size_t index = 0;
     bool valid_certificate = false;
 
     while (size > 0) {
-        ++index;
         if (buffer.size() - res < 3) {
             dbgln_if(TLS_DEBUG, "not enough data for certificate length");
             return (i8)Error::NeedMoreData;
@@ -58,14 +56,12 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
         auto res_cert = res;
         auto remaining = certificate_size;
-        size_t certificates_in_chain = 0;
 
         do {
             if (remaining <= 3) {
                 dbgln("Ran out of data");
                 break;
             }
-            ++certificates_in_chain;
             if (buffer.size() < (size_t)res_cert + 3) {
                 dbgln("not enough data to read cert size ({} < {})", buffer.size(), res_cert + 3);
                 break;
