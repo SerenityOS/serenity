@@ -794,15 +794,11 @@ void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
             set_current_editor_wrapper(tab);
             parent.remove_tab(tab);
             m_all_editor_wrappers.remove_first_matching([&tab](auto& entry) { return entry == &tab; });
-            if (parent.children().is_empty()) {
+            if (parent.children().is_empty() && m_all_editor_tab_widgets.size() > 1) {
                 m_switch_to_next_editor_tab_widget->activate();
                 m_editors_splitter->remove_child(parent);
                 m_all_editor_tab_widgets.remove_first_matching([&parent](auto& entry) { return entry == &parent; });
-                if (m_current_editor_tab_widget->children().size() == 1)
-                    m_current_editor_tab_widget->set_close_button_enabled(false);
             }
-            if (parent.children().size() == 1 && m_all_editor_tab_widgets.size() <= 1)
-                parent.set_close_button_enabled(false);
             update_actions();
         });
     };
