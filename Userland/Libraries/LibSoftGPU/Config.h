@@ -21,7 +21,7 @@ static constexpr int MILLISECONDS_PER_STATISTICS_PERIOD = 500;
 static constexpr int NUM_LIGHTS = 8;
 static constexpr int MAX_CLIP_PLANES = 6;
 static constexpr float MAX_TEXTURE_LOD_BIAS = 2.f;
-static constexpr int SUBPIXEL_BITS = 6;
+static constexpr int SUBPIXEL_BITS = 4;
 
 // See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
 // FIXME: make this dynamically configurable through ConfigServer
