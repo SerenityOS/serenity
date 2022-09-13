@@ -89,6 +89,15 @@ bool Node::establishes_stacking_context() const
         return true;
     if (!computed_values().transformations().is_empty())
         return true;
+
+    // Element that is a child of a flex container, with z-index value other than auto.
+    if (parent() && parent()->computed_values().display().is_flex_inside() && computed_values().z_index().has_value())
+        return true;
+
+    // Element that is a child of a grid container, with z-index value other than auto.
+    if (parent() && parent()->computed_values().display().is_grid_inside() && computed_values().z_index().has_value())
+        return true;
+
     return computed_values().opacity() < 1.0f;
 }
 
