@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::IntersectionObserver {

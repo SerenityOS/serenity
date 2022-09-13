@@ -454,6 +454,7 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
+class CallbackType;
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;

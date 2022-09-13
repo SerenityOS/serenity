@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/Origin.h>
 
 namespace Web::HTML {

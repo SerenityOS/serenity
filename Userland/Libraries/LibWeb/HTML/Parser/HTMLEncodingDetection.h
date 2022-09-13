@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
