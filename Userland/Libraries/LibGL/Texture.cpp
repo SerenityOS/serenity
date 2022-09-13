@@ -588,6 +588,7 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
 
     // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
     RETURN_WITH_ERROR_IF(pname != GL_GENERATE_MIPMAP
+            && pname != GL_TEXTURE_LOD_BIAS
             && pname != GL_TEXTURE_MIN_FILTER
             && pname != GL_TEXTURE_MAG_FILTER
             && pname != GL_TEXTURE_WRAP_S
@@ -602,6 +603,9 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     case GL_GENERATE_MIPMAP:
         RETURN_WITH_ERROR_IF(param != GL_TRUE && param != GL_FALSE, GL_INVALID_ENUM);
         texture_2d->set_generate_mipmaps(param == GL_TRUE);
+        break;
+    case GL_TEXTURE_LOD_BIAS:
+        texture_2d->set_level_of_detail_bias(param);
         break;
     case GL_TEXTURE_MIN_FILTER:
         RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
@@ -733,7 +737,7 @@ void GLContext::sync_device_sampler_config()
         auto texture_2d = texture_unit.texture_2d_target_texture();
         VERIFY(!texture_2d.is_null());
         config.bound_image = texture_2d->device_image();
-        config.level_of_detail_bias = texture_unit.level_of_detail_bias();
+        config.level_of_detail_bias = texture_2d->level_of_detail_bias() + texture_unit.level_of_detail_bias();
 
         auto const& sampler = texture_2d->sampler();
 
