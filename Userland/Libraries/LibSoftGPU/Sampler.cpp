@@ -134,7 +134,6 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     if (m_config.mipmap_filter == GPU::MipMapFilter::None)
         return sample_2d_lod(uv, expand4(base_level), m_config.texture_min_filter);
 
-    // FIXME: add texture-level support for GL_TEXTURE_LOD_BIAS; below is only texture unit-level
     auto texture_lod_bias = AK::clamp(m_config.level_of_detail_bias, -MAX_TEXTURE_LOD_BIAS, MAX_TEXTURE_LOD_BIAS);
     // FIXME: Instead of clamping to num_levels - 1, actually make the max mipmap level configurable with glTexParameteri(GL_TEXTURE_MAX_LEVEL, max_level)
     auto min_level = expand4(static_cast<float>(base_level));
