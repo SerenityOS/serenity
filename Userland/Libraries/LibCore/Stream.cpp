@@ -148,6 +148,19 @@ bool File::exists(StringView filename)
     return !Core::System::stat(filename).is_error();
 }
 
+ErrorOr<NonnullOwnPtr<File>> File::standard_input()
+{
+    return File::adopt_fd(STDIN_FILENO, OpenMode::Read, ShouldCloseFileDescriptor::No);
+}
+ErrorOr<NonnullOwnPtr<File>> File::standard_output()
+{
+    return File::adopt_fd(STDOUT_FILENO, OpenMode::Write, ShouldCloseFileDescriptor::No);
+}
+ErrorOr<NonnullOwnPtr<File>> File::standard_error()
+{
+    return File::adopt_fd(STDERR_FILENO, OpenMode::Write, ShouldCloseFileDescriptor::No);
+}
+
 ErrorOr<NonnullOwnPtr<File>> File::open_file_or_standard_stream(StringView filename, OpenMode mode)
 {
     if (!filename.is_empty() && filename != "-"sv)
@@ -155,9 +168,9 @@ ErrorOr<NonnullOwnPtr<File>> File::open_file_or_standard_stream(StringView filen
 
     switch (mode) {
     case OpenMode::Read:
-        return File::adopt_fd(STDIN_FILENO, mode);
+        return standard_input();
     case OpenMode::Write:
-        return File::adopt_fd(STDOUT_FILENO, mode);
+        return standard_output();
     default:
         VERIFY_NOT_REACHED();
     }

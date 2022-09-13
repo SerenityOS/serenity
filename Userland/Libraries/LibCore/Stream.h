@@ -198,6 +198,9 @@ public:
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode, ShouldCloseFileDescriptor = ShouldCloseFileDescriptor::Yes);
     static bool exists(StringView filename);
 
+    static ErrorOr<NonnullOwnPtr<File>> standard_input();
+    static ErrorOr<NonnullOwnPtr<File>> standard_output();
+    static ErrorOr<NonnullOwnPtr<File>> standard_error();
     static ErrorOr<NonnullOwnPtr<File>> open_file_or_standard_stream(StringView filename, OpenMode mode);
 
     File(File&& other) { operator=(move(other)); }
