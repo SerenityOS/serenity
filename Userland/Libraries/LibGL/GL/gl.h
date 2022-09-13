@@ -146,6 +146,8 @@ extern "C" {
 #define GL_MAP2_VERTEX_4 0x0DB8
 #define GL_NORMAL_ARRAY 0x8075
 #define GL_NORMAL_ARRAY_TYPE 0x807E
+#define GL_SAMPLE_BUFFERS 0x80A8
+#define GL_SAMPLES 0x80A9
 #define GL_MAX_TEXTURE_LOD_BIAS 0x84FD
 
 // Blend factors
