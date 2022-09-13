@@ -146,6 +146,7 @@ public:
 
 protected:
     void initialize_event(String const&, bool, bool);
+    virtual void visit_edges(Visitor&) override;
 
 private:
     FlyString m_type;

@@ -41,6 +41,23 @@ Event::Event(HTML::Window& window, FlyString const& type, EventInit const& event
 {
 }
 
+void Event::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_target.ptr());
+    visitor.visit(m_related_target.ptr());
+    visitor.visit(m_current_target.ptr());
+    for (auto& it : m_path) {
+        visitor.visit(it.invocation_target.ptr());
+        visitor.visit(it.shadow_adjusted_target.ptr());
+        visitor.visit(it.related_target.ptr());
+        for (auto& itit : it.touch_target_list)
+            visitor.visit(itit.ptr());
+    }
+    for (auto& it : m_touch_target_list)
+        visitor.visit(it.ptr());
+}
+
 // https://dom.spec.whatwg.org/#concept-event-path-append
 void Event::append_to_path(EventTarget& invocation_target, JS::GCPtr<EventTarget> shadow_adjusted_target, JS::GCPtr<EventTarget> related_target, TouchTargetList& touch_targets, bool slot_in_closed_tree)
 {
