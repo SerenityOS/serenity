@@ -141,6 +141,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
+    // If the most recent line read was not a match, then the last line read from one of the files has not yet been output.
+    // So let's output it!
+    if (!read_file1 && !suppress_col1) {
+        ++col1_count;
+        outln(col1_fmt, file1_line);
+    } else if (!read_file2 && !suppress_col2) {
+        ++col2_count;
+        outln(col2_fmt, file2_line);
+    }
+
     process_remaining(col1_fmt, file1, col1_count, !suppress_col1);
     process_remaining(col2_fmt, file2, col2_count, !suppress_col2);
 
