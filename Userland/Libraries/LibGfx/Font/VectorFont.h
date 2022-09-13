@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
+#include <LibGfx/Forward.h>
 
 namespace Gfx {
 

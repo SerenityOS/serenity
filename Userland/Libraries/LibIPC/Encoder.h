@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
 #include <LibCore/SharedCircularQueue.h>
 #include <LibIPC/Forward.h>

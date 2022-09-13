@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Answer.h"
 #include "Name.h"
 #include <AK/Types.h>
 
