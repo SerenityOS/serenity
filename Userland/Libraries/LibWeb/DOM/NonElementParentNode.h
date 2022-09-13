@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/TreeNode.h>
