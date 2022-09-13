@@ -633,12 +633,17 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
     // 6. Let value be ? ToString(value).
     auto value_string = TRY(value.to_string(vm));
 
-    // 7. If values does not contain an element equal to value, return fallback.
-    auto it = find(values.begin(), values.end(), value_string);
-    if (it == values.end())
+    // 7. NOTE: For historical reasons, the strings "true" and "false" are treated the same as the boolean value true.
+    // 8. If value is "true" or "false", return fallback.
+    if (value_string.is_one_of("true"sv, "false"sv))
         return fallback;
 
-    // 8. Return value.
+    // 9. If values does not contain an element equal to value, throw a RangeError exception.
+    auto it = find(values.begin(), values.end(), value_string);
+    if (it == values.end())
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
+
+    // 10. Return value.
     return StringOrBoolean { *it };
 }
 

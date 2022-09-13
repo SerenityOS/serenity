@@ -209,6 +209,12 @@ describe("errors", () => {
         }).toThrowWithMessage(RangeError, "hello! is not a valid value for option signDisplay");
     });
 
+    test("useGrouping option is invalid", () => {
+        expect(() => {
+            new Intl.NumberFormat("en", { useGrouping: "hello!" });
+        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option useGrouping");
+    });
+
     test("roundingPriority option is invalid", () => {
         expect(() => {
             new Intl.NumberFormat("en", { roundingPriority: "hello!" });
@@ -416,7 +422,7 @@ describe("normal behavior", () => {
     });
 
     test("valid useGrouping options", () => {
-        ["min2", "auto", "always", false, true, ""].forEach(useGrouping => {
+        ["min2", "auto", "always", false, true, "false", "true", ""].forEach(useGrouping => {
             expect(() => {
                 new Intl.NumberFormat("en", { useGrouping: useGrouping });
             }).not.toThrow();
