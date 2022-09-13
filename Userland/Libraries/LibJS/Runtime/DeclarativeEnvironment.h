@@ -8,6 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
+#include <LibJS/AST.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>

@@ -8,6 +8,7 @@
 
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
 namespace JS::Temporal {
 
