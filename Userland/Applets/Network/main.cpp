@@ -5,7 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -109,14 +109,19 @@ private:
     {
         StringBuilder adapter_info;
 
-        auto file = Core::File::construct("/proc/net/adapters");
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            dbgln("Error: Could not open {}: {}", file->name(), file->error_string());
-            return adapter_info.to_string();
+        auto file_or_error = Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read);
+        if (file_or_error.is_error()) {
+            dbgln("Error: Could not open /proc/net/adapters: {}", file_or_error.error());
+            return "";
         }
 
-        auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents);
+        auto file_contents_or_error = file_or_error.value()->read_all();
+        if (file_contents_or_error.is_error()) {
+            dbgln("Error: Could not read /proc/net/adapters: {}", file_contents_or_error.error());
+            return "";
+        }
+
+        auto json = JsonValue::from_string(file_contents_or_error.value());
 
         if (json.is_error())
             return adapter_info.to_string();
