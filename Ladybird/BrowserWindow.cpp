@@ -46,7 +46,6 @@ BrowserWindow::BrowserWindow()
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
 
-
     auto* view_menu = menuBar()->addMenu("&View");
 
     auto* open_next_tab_action = new QAction("Open &Next Tab");
@@ -293,4 +292,3 @@ void BrowserWindow::open_previous_tab()
         next_index = m_tabs_container->count() - 1;
     m_tabs_container->setCurrentIndex(next_index);
 }
-
