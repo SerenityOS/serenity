@@ -12,7 +12,9 @@ TEST_FILE_TEMPLATE = '''\
 
 
 def get_headers_here():
-    result = subprocess.run(['git', 'ls-files', 'Userland/Libraries/*.h'], check=True, capture_output=True, text=True)
+    result = subprocess.run(
+        ['git', 'ls-files', 'AK/*.h', 'Userland/Libraries/*.h'],
+        check=True, capture_output=True, text=True)
     assert result.stderr == ''
     output = result.stdout.split('\n')
     assert output[-1] == ''  # Trailing newline
