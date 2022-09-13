@@ -38,7 +38,8 @@ void WorkerGlobalScope::initialize(JS::Realm& realm)
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_location);
+    visitor.visit(m_location.ptr());
+    visitor.visit(m_navigator.ptr());
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries
