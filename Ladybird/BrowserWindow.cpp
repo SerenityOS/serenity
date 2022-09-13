@@ -10,6 +10,7 @@
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "WebView.h"
+#include <AK/TypeCasts.h>
 #include <QAction>
 #include <QDialog>
 #include <QPlainTextEdit>
@@ -190,6 +191,7 @@ BrowserWindow::BrowserWindow()
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
         setWindowIcon(m_tabs_container->tabIcon(index));
+        m_current_tab = verify_cast<Tab>(m_tabs_container->widget(index));
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
