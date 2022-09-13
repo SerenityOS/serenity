@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/SIMDExtras.h>
+#include <AK/SIMDMath.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>

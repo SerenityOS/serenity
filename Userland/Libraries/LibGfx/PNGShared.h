@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Array.h>
+#include <AK/SIMD.h>
+
 namespace Gfx::PNG {
 
 // https://www.w3.org/TR/PNG/#5PNG-file-signature
@@ -33,9 +36,9 @@ enum class FilterType : u8 {
 ALWAYS_INLINE u8 paeth_predictor(u8 a, u8 b, u8 c)
 {
     int p = a + b - c;
-    int pa = abs(p - a);
-    int pb = abs(p - b);
-    int pc = abs(p - c);
+    int pa = AK::abs(p - a);
+    int pb = AK::abs(p - b);
+    int pc = AK::abs(p - c);
     if (pa <= pb && pa <= pc)
         return a;
     if (pb <= pc)

@@ -19,7 +19,7 @@ private:
     ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : LanguageServers::ConnectionFromClient(move(socket))
     {
-        m_autocomplete_engine = make<ShellComprehensionEngine>(m_filedb);
+        m_autocomplete_engine = make<CodeComprehension::Shell::ShellComprehensionEngine>(m_filedb);
         m_autocomplete_engine->set_declarations_of_document_callback = [this](String const& filename, Vector<CodeComprehension::Declaration>&& declarations) {
             async_declarations_in_document(filename, move(declarations));
         };
