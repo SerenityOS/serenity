@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
@@ -89,19 +89,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln();
 
     if (!flag_set && !flag_delete) {
-        auto file = Core::File::construct("/sys/kernel/net/arp");
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", file->name(), file->error_string());
-            return 1;
-        }
-
-        auto file_contents = file->read_all();
-        auto json_or_error = JsonValue::from_string(file_contents);
-        if (json_or_error.is_error()) {
-            warnln("Failed to decode JSON: {}", json_or_error.error());
-            return 1;
-        }
-        auto json = json_or_error.release_value();
+        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/arp"sv, Core::Stream::OpenMode::Read));
+        auto file_contents = TRY(file->read_all());
+        auto json = TRY(JsonValue::from_string(file_contents));
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
