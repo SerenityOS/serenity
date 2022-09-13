@@ -10,6 +10,8 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGL/GLContext.h>
+#include <LibJS/Heap/GCPtr.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebGL/WebGLContextAttributes.h>
 

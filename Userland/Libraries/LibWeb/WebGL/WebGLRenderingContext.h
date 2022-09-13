@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibJS/Heap/GCPtr.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {
