@@ -20,17 +20,17 @@ Layout::SVGBox const& SVGPaintable::layout_box() const
     return static_cast<Layout::SVGBox const&>(layout_node());
 }
 
-void SVGPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const
+void SVGPaintable::before_children_paint(PaintContext& context, PaintPhase phase, ShouldClipOverflow should_clip_overflow) const
 {
-    PaintableBox::before_children_paint(context, phase);
+    PaintableBox::before_children_paint(context, phase, should_clip_overflow);
     if (phase != PaintPhase::Foreground)
         return;
     context.svg_context().save();
 }
 
-void SVGPaintable::after_children_paint(PaintContext& context, PaintPhase phase) const
+void SVGPaintable::after_children_paint(PaintContext& context, PaintPhase phase, ShouldClipOverflow should_clip_overflow) const
 {
-    PaintableBox::after_children_paint(context, phase);
+    PaintableBox::after_children_paint(context, phase, should_clip_overflow);
     if (phase != PaintPhase::Foreground)
         return;
     context.svg_context().restore();

@@ -83,8 +83,13 @@ public:
     }
 
     virtual void paint(PaintContext&, PaintPhase) const { }
-    virtual void before_children_paint(PaintContext&, PaintPhase) const { }
-    virtual void after_children_paint(PaintContext&, PaintPhase) const { }
+
+    enum class ShouldClipOverflow {
+        No,
+        Yes
+    };
+    virtual void before_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const { }
+    virtual void after_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const { }
 
     virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const;
 

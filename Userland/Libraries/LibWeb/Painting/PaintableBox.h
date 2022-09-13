@@ -107,8 +107,8 @@ public:
     DOM::Document const& document() const { return layout_box().document(); }
     DOM::Document& document() { return layout_box().document(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void before_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
+    virtual void after_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
 
     virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 

@@ -13,8 +13,8 @@ namespace Web::Painting {
 
 class SVGPaintable : public PaintableBox {
 public:
-    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void before_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
+    virtual void after_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
 
     Layout::SVGBox const& layout_box() const;
 

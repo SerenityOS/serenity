@@ -257,9 +257,12 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase, ShouldClipOverflow should_clip_overflow) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
+    if (should_clip_overflow == ShouldClipOverflow::No)
         return;
 
     // FIXME: Support more overflow variations.
@@ -293,9 +296,12 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     }
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase, ShouldClipOverflow should_clip_overflow) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
+        return;
+
+    if (should_clip_overflow == ShouldClipOverflow::No)
         return;
 
     // FIXME: Support more overflow variations.

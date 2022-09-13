@@ -15,8 +15,8 @@ class SVGSVGPaintable : public PaintableBox {
 public:
     static NonnullRefPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void before_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
+    virtual void after_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
 
     Layout::SVGSVGBox const& layout_box() const;
 
