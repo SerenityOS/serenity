@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,9 +17,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
-#include <spawn.h>
-#include <stdio.h>
 
 class NetworkWidget final : public GUI::ImageWidget {
     C_OBJECT_ABSTRACT(NetworkWidget)
@@ -53,7 +51,7 @@ private:
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", "network" });
     }
 
-    virtual void update_widget()
+    void update_widget()
     {
         auto adapter_info = get_adapter_info();
 
@@ -74,7 +72,7 @@ private:
         update();
     }
 
-    virtual void notify_on_connect()
+    void notify_on_connect()
     {
         if (!m_notifications)
             return;
@@ -85,7 +83,7 @@ private:
         notification->show();
     }
 
-    virtual void notify_on_disconnect()
+    void notify_on_disconnect()
     {
         if (!m_notifications)
             return;
@@ -96,7 +94,7 @@ private:
         notification->show();
     }
 
-    virtual void set_connected(bool connected)
+    void set_connected(bool connected)
     {
         if (m_connected != connected) {
             connected ? notify_on_connect() : notify_on_disconnect();
@@ -105,7 +103,7 @@ private:
         m_connected = connected;
     }
 
-    virtual String get_adapter_info()
+    String get_adapter_info()
     {
         StringBuilder adapter_info;
 
