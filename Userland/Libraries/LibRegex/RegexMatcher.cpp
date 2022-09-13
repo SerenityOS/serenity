@@ -415,7 +415,9 @@ template<class Parser>
 bool Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t& operations) const
 {
     BumpAllocatedLinkedList<MatchState> states_to_try_next;
+#if REGEX_DEBUG
     size_t recursion_level = 0;
+#endif
 
     auto& bytecode = m_pattern->parser_result.bytecode;
 
@@ -483,7 +485,9 @@ bool Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t
                 states_to_try_next.last().initiating_fork = state.instruction_position - opcode.size();
             }
             state.instruction_position = state.fork_at_position;
+#if REGEX_DEBUG
             ++recursion_level;
+#endif
             continue;
         }
         case ExecutionResult::Continue:
@@ -501,7 +505,9 @@ bool Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t
                 return false;
             }
             state = states_to_try_next.take_last();
+#if REGEX_DEBUG
             ++recursion_level;
+#endif
             continue;
         }
         }

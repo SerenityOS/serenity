@@ -1512,7 +1512,6 @@ void Terminal::set_size(u16 columns, u16 rows)
                 if (buffer[i].length() != columns)
                     lines_to_reevaluate.enqueue(i);
             }
-            size_t rows_inserted = 0;
             while (!lines_to_reevaluate.is_empty()) {
                 auto index = lines_to_reevaluate.dequeue();
                 auto is_at_seam = index + 1 == buffer.size();
@@ -1524,7 +1523,6 @@ void Terminal::set_size(u16 columns, u16 rows)
                     auto current_cursor = cursor_on_line(index);
                     // Split the line into two (or more)
                     ++index;
-                    ++rows_inserted;
                     buffer.insert(index, make<Line>(0));
                     VERIFY(buffer[index].length() == 0);
                     line.rewrap(columns, &buffer[index], current_cursor, false);

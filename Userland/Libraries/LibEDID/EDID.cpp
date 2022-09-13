@@ -79,7 +79,6 @@ public:
         if (dtd_start > offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming))
             return Error::from_string_literal("CEA 861 extension block has invalid DTD list");
 
-        size_t dtd_index = 0;
         for (size_t offset = dtd_start; offset <= offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming); offset += sizeof(Definitions::DetailedTiming)) {
             auto& dtd = *(Definitions::DetailedTiming const*)((u8 const*)m_block + offset);
             if (m_edid.read_host(&dtd.pixel_clock) == 0)
@@ -88,8 +87,6 @@ public:
             IterationDecision decision = callback(Parser::DetailedTiming(m_edid, &dtd));
             if (decision != IterationDecision::Continue)
                 return decision;
-
-            dtd_index++;
         }
         return IterationDecision::Continue;
     }

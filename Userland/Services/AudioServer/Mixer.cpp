@@ -76,14 +76,12 @@ void Mixer::mix()
 
         m_main_volume.advance_time();
 
-        int active_queues = 0;
         // Mix the buffers together into the output
         for (auto& queue : active_mix_queues) {
             if (!queue->client()) {
                 queue->clear();
                 continue;
             }
-            ++active_queues;
             queue->volume().advance_time();
 
             for (auto& mixed_sample : mixed_buffer) {
