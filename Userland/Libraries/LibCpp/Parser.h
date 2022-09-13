@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "AK/NonnullRefPtr.h"
-#include "AST.h"
-#include "Preprocessor.h"
 #include <AK/Noncopyable.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibCodeComprehension/Types.h>
+#include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
+#include <LibCpp/Preprocessor.h>
 
 namespace Cpp {
 

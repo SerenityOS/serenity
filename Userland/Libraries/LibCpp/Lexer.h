@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "LibCpp/Token.h"
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCpp/Token.h>
 
 namespace Cpp {
 
