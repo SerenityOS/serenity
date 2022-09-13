@@ -21,6 +21,13 @@ On Fedora or derivates:
 sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel
 ```
 
+On macOS:
+
+```
+xcode-select --install
+brew install qt ninja
+```
+
 For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
@@ -58,7 +65,7 @@ To run without ninja rule:
 ```
 # or your existing serenity checkout /path/to/serenity
 export SERENITY_SOURCE_DIR=${PWD}/Build/serenity
-./Build/ladybird
+./Build/ladybird # or, in macOS: open ./Build/ladybird.app
 ```
 
 ## Experimental Android Build Steps
