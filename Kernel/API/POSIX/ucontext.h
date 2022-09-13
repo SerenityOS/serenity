@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/sys/types.h>
 #include <Kernel/Arch/mcontext.h>
 
