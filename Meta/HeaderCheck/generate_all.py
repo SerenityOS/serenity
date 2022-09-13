@@ -61,8 +61,6 @@ if __name__ == '__main__':
         print('Must set SERENITY_SOURCE_DIR first!', file=sys.stderr)
         exit(1)
     if len(sys.argv) == 2:
-        with open('/tmp/the_arg', 'w') as fp:
-            fp.write(sys.argv[1])
         run(os.environ['SERENITY_SOURCE_DIR'], sys.argv[1])
     else:
         print('Usage: SERENITY_SOURCE_DIR=/path/to/serenity {} SERENITY_BUILD_ARCH'
