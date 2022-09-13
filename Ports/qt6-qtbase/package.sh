@@ -57,7 +57,3 @@ install() {
     echo "The development of the Qt Serenity platform plugin is happening here. Fixes for things like input handling, window management and theme integration should go here:"
     echo -e "\t" "https://github.com/SerenityPorts/QSerenityPlatform"
 }
-
-clean() {
-    run ninja clean
-}

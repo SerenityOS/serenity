@@ -37,7 +37,3 @@ build() {
 install() {
     run ninja install
 }
-
-clean() {
-    run ninja clean
-}
