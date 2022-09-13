@@ -28,6 +28,7 @@ Length::Length(float value, Type type)
     , m_value(value)
 {
 }
+Length::~Length() = default;
 
 Length Length::make_auto()
 {
@@ -202,6 +203,13 @@ NonnullRefPtr<CalculatedStyleValue> Length::calculated_style_value() const
 {
     VERIFY(!m_calculated_style.is_null());
     return *m_calculated_style;
+}
+
+bool Length::operator==(Length const& other) const
+{
+    if (is_calculated())
+        return m_calculated_style == other.m_calculated_style;
+    return m_type == other.m_type && m_value == other.m_value;
 }
 
 }

@@ -359,20 +359,20 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Margin: {
         auto margin = layout_node.computed_values().margin();
         auto values = NonnullRefPtrVector<StyleValue> {};
-        values.append(style_value_for_length_percentage(margin.top));
-        values.append(style_value_for_length_percentage(margin.right));
-        values.append(style_value_for_length_percentage(margin.bottom));
-        values.append(style_value_for_length_percentage(margin.left));
+        values.append(style_value_for_length_percentage(margin.top()));
+        values.append(style_value_for_length_percentage(margin.right()));
+        values.append(style_value_for_length_percentage(margin.bottom()));
+        values.append(style_value_for_length_percentage(margin.left()));
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
     case CSS::PropertyID::MarginBottom:
-        return style_value_for_length_percentage(layout_node.computed_values().margin().bottom);
+        return style_value_for_length_percentage(layout_node.computed_values().margin().bottom());
     case CSS::PropertyID::MarginLeft:
-        return style_value_for_length_percentage(layout_node.computed_values().margin().left);
+        return style_value_for_length_percentage(layout_node.computed_values().margin().left());
     case CSS::PropertyID::MarginRight:
-        return style_value_for_length_percentage(layout_node.computed_values().margin().right);
+        return style_value_for_length_percentage(layout_node.computed_values().margin().right());
     case CSS::PropertyID::MarginTop:
-        return style_value_for_length_percentage(layout_node.computed_values().margin().top);
+        return style_value_for_length_percentage(layout_node.computed_values().margin().top());
     case CSS::PropertyID::MaxHeight:
         return style_value_for_length_percentage(layout_node.computed_values().max_height());
     case CSS::PropertyID::MaxWidth:
@@ -392,20 +392,20 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Padding: {
         auto padding = layout_node.computed_values().padding();
         auto values = NonnullRefPtrVector<StyleValue> {};
-        values.append(style_value_for_length_percentage(padding.top));
-        values.append(style_value_for_length_percentage(padding.right));
-        values.append(style_value_for_length_percentage(padding.bottom));
-        values.append(style_value_for_length_percentage(padding.left));
+        values.append(style_value_for_length_percentage(padding.top()));
+        values.append(style_value_for_length_percentage(padding.right()));
+        values.append(style_value_for_length_percentage(padding.bottom()));
+        values.append(style_value_for_length_percentage(padding.left()));
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
     case CSS::PropertyID::PaddingBottom:
     case CSS::PropertyID::PaddingLeft:
-        return style_value_for_length_percentage(layout_node.computed_values().padding().left);
-        return style_value_for_length_percentage(layout_node.computed_values().padding().bottom);
+        return style_value_for_length_percentage(layout_node.computed_values().padding().left());
+        return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
     case CSS::PropertyID::PaddingRight:
-        return style_value_for_length_percentage(layout_node.computed_values().padding().right);
+        return style_value_for_length_percentage(layout_node.computed_values().padding().right());
     case CSS::PropertyID::PaddingTop:
-        return style_value_for_length_percentage(layout_node.computed_values().padding().top);
+        return style_value_for_length_percentage(layout_node.computed_values().padding().top());
     case CSS::PropertyID::Position:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().position()));
     case CSS::PropertyID::TextAlign:
