@@ -49,6 +49,19 @@ public:
 
     void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box);
 
+    static bool should_treat_width_as_auto(Box const&, LayoutState const&);
+    static bool should_treat_height_as_auto(Box const&, LayoutState const&);
+
+    bool should_treat_width_as_auto(Box const& box) const
+    {
+        return should_treat_width_as_auto(box, m_state);
+    }
+
+    bool should_treat_height_as_auto(Box const& box) const
+    {
+        return should_treat_height_as_auto(box, m_state);
+    }
+
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 

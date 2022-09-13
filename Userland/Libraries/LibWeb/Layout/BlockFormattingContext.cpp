@@ -196,10 +196,14 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto input_width = [&] {
+        if (should_treat_width_as_auto(box))
+            return CSS::Length::make_auto();
+        return computed_values.width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    }();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto used_width = try_compute_width(specified_width);
+    auto used_width = try_compute_width(input_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
@@ -272,10 +276,14 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto input_width = [&] {
+        if (should_treat_width_as_auto(box))
+            return CSS::Length::make_auto();
+        return computed_values.width().resolved(box, width_of_containing_block_as_length).resolved(box);
+    }();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto width = compute_width(specified_width);
+    auto width = compute_width(input_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
@@ -318,9 +326,7 @@ float BlockFormattingContext::compute_theoretical_height(LayoutState const& stat
     if (is<ReplacedBox>(box)) {
         height = compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
     } else {
-        // NOTE: We treat percentage heights as "auto" if the containing block has indefinite height.
-        if (box.computed_values().height().is_auto()
-            || (box.computed_values().height().is_percentage() && !state.get(*box.containing_block()).has_definite_height())) {
+        if (should_treat_height_as_auto(box, state)) {
             height = compute_auto_height_for_block_level_element(state, box);
         } else {
             height = computed_values.height().resolved(box, containing_block_height).to_px(box);
@@ -363,9 +369,9 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     auto& block_container_state = m_state.get_mutable(block_container);
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
-        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+        if (should_treat_width_as_auto(block_container) || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(containing_block_width_for(block_container));
-        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+        if (should_treat_height_as_auto(block_container) || block_container_state.height_constraint != SizeConstraint::None)
             block_container_state.set_content_height(containing_block_height_for(block_container));
     }
 
@@ -381,7 +387,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     }
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
-        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+        if (should_treat_width_as_auto(block_container) || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(max_line_width);
     }
 
@@ -467,9 +473,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+        if (should_treat_width_as_auto(block_container) || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(containing_block_width_for(block_container));
-        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+        if (should_treat_height_as_auto(block_container) || block_container_state.height_constraint != SizeConstraint::None)
             block_container_state.set_content_height(containing_block_height_for(block_container));
     }
 
@@ -480,9 +486,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
-        if (block_container.computed_values().width().is_auto() || block_container_state.width_constraint != SizeConstraint::None)
+        if (should_treat_width_as_auto(block_container) || block_container_state.width_constraint != SizeConstraint::None)
             block_container_state.set_content_width(greatest_child_width(block_container));
-        if (block_container.computed_values().height().is_auto() || block_container_state.height_constraint != SizeConstraint::None)
+        if (should_treat_height_as_auto(block_container) || block_container_state.height_constraint != SizeConstraint::None)
             block_container_state.set_content_height(bottom_of_lowest_margin_box);
     }
 }
@@ -806,6 +812,18 @@ float BlockFormattingContext::greatest_child_width(Box const& box)
         });
     }
     return max_width;
+}
+
+bool BlockFormattingContext::should_treat_width_as_auto(Box const& box, LayoutState const& state)
+{
+    return box.computed_values().width().is_auto()
+        || (box.computed_values().width().is_percentage() && !state.get(*box.containing_block()).has_definite_width());
+}
+
+bool BlockFormattingContext::should_treat_height_as_auto(Box const& box, LayoutState const& state)
+{
+    return box.computed_values().height().is_auto()
+        || (box.computed_values().height().is_percentage() && !state.get(*box.containing_block()).has_definite_height());
 }
 
 }
