@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
