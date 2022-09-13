@@ -228,9 +228,9 @@ ErrorOr<void> VirtualFileSystem::utimensat(Credentials const& credentials, Strin
 
     // NOTE: A standard ext2 inode cannot store nanosecond timestamps.
     TRY(inode.update_timestamps(
-        (atime.tv_nsec != UTIME_OMIT) ? atime.tv_nsec : Optional<time_t> {},
+        (atime.tv_nsec != UTIME_OMIT) ? atime.tv_sec : Optional<time_t> {},
         {},
-        (mtime.tv_nsec != UTIME_OMIT) ? mtime.tv_nsec : Optional<time_t> {}));
+        (mtime.tv_nsec != UTIME_OMIT) ? mtime.tv_sec : Optional<time_t> {}));
 
     return {};
 }
