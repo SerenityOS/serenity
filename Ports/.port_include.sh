@@ -440,10 +440,10 @@ func_defined install || install() {
 func_defined post_install || post_install() {
     echo
 }
-func_defined clean || clean() {
+clean() {
     rm -rf "${PORT_BUILD_DIR}"
 }
-func_defined clean_dist || clean_dist() {
+clean_dist() {
     OLDIFS=$IFS
     IFS=$'\n'
     for f in $files; do
@@ -452,7 +452,7 @@ func_defined clean_dist || clean_dist() {
         rm -f "${PORT_META_DIR}/${filename}"
     done
 }
-func_defined clean_all || clean_all() {
+clean_all() {
     clean
     clean_dist
 }
