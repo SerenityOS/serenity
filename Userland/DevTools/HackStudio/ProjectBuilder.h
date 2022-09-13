@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "AK/Error.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
+#include <AK/Error.h>
 #include <AK/Noncopyable.h>
 #include <LibCore/TempFile.h>
 

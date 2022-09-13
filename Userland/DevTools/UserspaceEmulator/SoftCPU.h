@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "AK/Debug.h"
 #include "Emulator.h"
 #include "Region.h"
 #include "SoftFPU.h"
 #include "SoftVPU.h"
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
+#include <AK/Debug.h>
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
