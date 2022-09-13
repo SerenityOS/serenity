@@ -731,9 +731,24 @@ void glPushMatrix()
     g_gl_context->gl_push_matrix();
 }
 
+void glRasterPos2d(GLdouble x, GLdouble y)
+{
+    g_gl_context->gl_raster_pos(static_cast<float>(x), static_cast<float>(y), 0.f, 1.f);
+}
+
+void glRasterPos2f(GLfloat x, GLfloat y)
+{
+    g_gl_context->gl_raster_pos(x, y, 0.f, 1.f);
+}
+
 void glRasterPos2i(GLint x, GLint y)
 {
-    g_gl_context->gl_raster_pos(static_cast<float>(x), static_cast<float>(y), 0.0f, 1.0f);
+    g_gl_context->gl_raster_pos(static_cast<float>(x), static_cast<float>(y), 0.f, 1.f);
+}
+
+void glRasterPos2s(GLshort x, GLshort y)
+{
+    g_gl_context->gl_raster_pos(static_cast<float>(x), static_cast<float>(y), 0.f, 1.f);
 }
 
 void glReadBuffer(GLenum mode)
