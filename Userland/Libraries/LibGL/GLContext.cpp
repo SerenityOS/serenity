@@ -650,29 +650,10 @@ void GLContext::gl_depth_func(GLenum func)
 void GLContext::gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
     auto options = m_rasterizer->options();
-    auto mask = options.color_mask;
-
-    if (!red)
-        mask &= ~0x000000ff;
-    else
-        mask |= 0x000000ff;
-
-    if (!green)
-        mask &= ~0x0000ff00;
-    else
-        mask |= 0x0000ff00;
-
-    if (!blue)
-        mask &= ~0x00ff0000;
-    else
-        mask |= 0x00ff0000;
-
-    if (!alpha)
-        mask &= ~0xff000000;
-    else
-        mask |= 0xff000000;
-
-    options.color_mask = mask;
+    options.color_mask = (red == GL_TRUE ? 0xff : 0)
+        | (green == GL_TRUE ? 0xff00 : 0)
+        | (blue == GL_TRUE ? 0xff0000 : 0)
+        | (alpha == GL_TRUE ? 0xff000000 : 0);
     m_rasterizer->set_options(options);
 }
 
