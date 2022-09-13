@@ -8,8 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/Types.h>
-
-#include "LibDebug/DebugSession.h"
+#include <LibDebug/DebugSession.h>
 
 namespace Debug::StackFrameUtils {
 
