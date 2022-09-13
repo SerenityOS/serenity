@@ -15,6 +15,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
+#include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibTest/TestRunnerUtil.h>
 #include <spawn.h>
@@ -111,47 +113,34 @@ static constexpr StringView total_test_emoji = "🧪"sv;
 
 class Test262RunnerHandler {
 public:
-    static OwnPtr<Test262RunnerHandler> create(char const* const command[])
+    static ErrorOr<OwnPtr<Test262RunnerHandler>> create(StringView command, char const* const arguments[])
     {
-        int write_pipe_fds[2];
-        int read_pipe_fds[2];
-        if (pipe2(write_pipe_fds, O_CLOEXEC) < 0) {
-            perror("pipe2");
-            return nullptr;
-        }
-
-        if (pipe2(read_pipe_fds, O_CLOEXEC) < 0) {
-            perror("pipe2");
-            return nullptr;
-        }
+        auto write_pipe_fds = TRY(Core::System::pipe2(O_CLOEXEC));
+        auto read_pipe_fds = TRY(Core::System::pipe2(O_CLOEXEC));
 
         posix_spawn_file_actions_t file_actions;
         posix_spawn_file_actions_init(&file_actions);
         posix_spawn_file_actions_adddup2(&file_actions, write_pipe_fds[0], STDIN_FILENO);
         posix_spawn_file_actions_adddup2(&file_actions, read_pipe_fds[1], STDOUT_FILENO);
 
-        pid_t pid {};
-
-        if (posix_spawnp(&pid, command[0], &file_actions, nullptr, const_cast<char**>(command), environ) < 0) {
-            perror("posix_spawnp");
-            return nullptr;
-        }
+        auto pid = TRY(Core::System::posix_spawnp(command, &file_actions, nullptr, const_cast<char**>(arguments), environ));
 
         posix_spawn_file_actions_destroy(&file_actions);
+        ArmedScopeGuard runner_kill { [&pid] { kill(pid, SIGKILL); } };
 
-        close(write_pipe_fds[0]);
-        close(read_pipe_fds[1]);
+        TRY(Core::System::close(write_pipe_fds[0]));
+        TRY(Core::System::close(read_pipe_fds[1]));
 
-        auto infile = Core::File::construct();
-        infile->open(read_pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+        auto infile = TRY(Core::Stream::File::adopt_fd(read_pipe_fds[0], Core::Stream::OpenMode::Read));
 
-        auto outfile = Core::File::construct();
-        outfile->open(write_pipe_fds[1], Core::OpenMode::WriteOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+        auto outfile = TRY(Core::Stream::File::adopt_fd(write_pipe_fds[1], Core::Stream::OpenMode::Write));
+
+        runner_kill.disarm();
 
         return make<Test262RunnerHandler>(pid, move(infile), move(outfile));
     }
 
-    Test262RunnerHandler(pid_t pid, NonnullRefPtr<Core::File> in_file, NonnullRefPtr<Core::File> out_file)
+    Test262RunnerHandler(pid_t pid, NonnullOwnPtr<Core::Stream::File> in_file, NonnullOwnPtr<Core::Stream::File> out_file)
         : m_pid(pid)
         , m_input(move(in_file))
         , m_output(move(out_file))
@@ -162,17 +151,17 @@ public:
     {
         // It's possible the process dies before we can write all the tests
         // to the stdin. So make sure that we don't crash but just stop writing.
-        struct sigaction action_handler { };
+        struct sigaction action_handler {
+            .sa_handler = SIG_IGN, .sa_mask = {}, .sa_flags = 0,
+        };
         struct sigaction old_action_handler;
-        action_handler.sa_flags = 0;
-        action_handler.sa_handler = SIG_IGN;
         if (sigaction(SIGPIPE, &action_handler, &old_action_handler) < 0) {
             perror("sigaction");
             return false;
         }
 
         for (String const& line : lines) {
-            if (!m_output->write(String::formatted("{}\n", line)))
+            if (!m_output->write_or_error(String::formatted("{}\n", line).bytes()))
                 break;
         }
 
@@ -188,7 +177,12 @@ public:
 
     String read_all()
     {
-        return String(m_input->read_all().bytes(), Chomp);
+        auto all_output_or_error = m_input->read_all();
+        if (all_output_or_error.is_error()) {
+            warnln("Got error: {} while reading runner output", all_output_or_error.error());
+            return ""sv;
+        }
+        return String(all_output_or_error.value().bytes(), Chomp);
     }
 
     enum class ProcessResult {
@@ -199,23 +193,24 @@ public:
         Unknown,
     };
 
-    ProcessResult status()
+    ErrorOr<ProcessResult> status()
     {
         if (m_pid == -1)
             return ProcessResult::Unknown;
 
-        int wstatus { 0 };
-        int rc = waitpid(m_pid, &wstatus, WNOHANG);
-        if (rc == 0) {
+        m_output->close();
+
+        auto wait_result = TRY(Core::System::waitpid(m_pid, WNOHANG));
+        if (wait_result.pid == 0) {
             // Attempt to kill it, since it has not finished yet somehow
             return ProcessResult::Running;
         }
         m_pid = -1;
 
-        if (WIFSIGNALED(wstatus) && WTERMSIG(wstatus) == SIGALRM)
+        if (WIFSIGNALED(wait_result.status) && WTERMSIG(wait_result.status) == SIGALRM)
             return ProcessResult::FailedFromTimeout;
 
-        if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0)
+        if (WIFEXITED(wait_result.status) && WEXITSTATUS(wait_result.status) == 0)
             return ProcessResult::DoneWithZeroExitCode;
 
         return ProcessResult::Failed;
@@ -223,11 +218,11 @@ public:
 
 public:
     pid_t m_pid;
-    NonnullRefPtr<Core::File> m_input;
-    NonnullRefPtr<Core::File> m_output;
+    NonnullOwnPtr<Core::Stream::File> m_input;
+    NonnullOwnPtr<Core::Stream::File> m_output;
 };
 
-static HashMap<size_t, TestResult> run_test_files(Span<String> files, size_t offset, char const* const command[])
+static HashMap<size_t, TestResult> run_test_files(Span<String> files, size_t offset, StringView command, char const* const arguments[])
 {
     HashMap<size_t, TestResult> results {};
     results.ensure_capacity(files.size());
@@ -239,11 +234,12 @@ static HashMap<size_t, TestResult> run_test_files(Span<String> files, size_t off
     };
 
     while (test_index < files.size()) {
-        auto runner_process = Test262RunnerHandler::create(command);
-        if (!runner_process) {
+        auto runner_process_or_error = Test262RunnerHandler::create(command, arguments);
+        if (runner_process_or_error.is_error()) {
             fail_all_after();
             return results;
         }
+        auto& runner_process = runner_process_or_error.value();
 
         if (!runner_process->write_lines(files.slice(test_index))) {
             fail_all_after();
@@ -251,9 +247,12 @@ static HashMap<size_t, TestResult> run_test_files(Span<String> files, size_t off
         }
 
         String output = runner_process->read_all();
-        auto status = runner_process->status();
-        VERIFY(status != Test262RunnerHandler::ProcessResult::Running);
-        bool failed = status != Test262RunnerHandler::ProcessResult::DoneWithZeroExitCode;
+        auto status_or_error = runner_process->status();
+        bool failed = false;
+        if (!status_or_error.is_error()) {
+            VERIFY(status_or_error.value() != Test262RunnerHandler::ProcessResult::Running);
+            failed = status_or_error.value() != Test262RunnerHandler::ProcessResult::DoneWithZeroExitCode;
+        }
 
         for (StringView line : output.split_view('\n')) {
             if (!line.starts_with("RESULT "sv))
@@ -286,7 +285,7 @@ static HashMap<size_t, TestResult> run_test_files(Span<String> files, size_t off
 
         if (failed) {
             TestResult result = TestResult::ProcessError;
-            if (status == Test262RunnerHandler::ProcessResult::FailedFromTimeout) {
+            if (!status_or_error.is_error() && status_or_error.value() == Test262RunnerHandler::ProcessResult::FailedFromTimeout) {
                 result = TestResult::TimeoutError;
             }
             // assume the last test failed, if by SIGALRM signal it's a timeout
@@ -379,7 +378,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     while (index < paths.size()) {
         print_progress();
         auto this_batch_size = min(batch_size, paths.size() - index);
-        auto batch_results = run_test_files(paths.span().slice(index, this_batch_size), index, raw_args.data());
+        auto batch_results = run_test_files(paths.span().slice(index, this_batch_size), index, args[0], raw_args.data());
 
         results.ensure_capacity(results.size() + batch_results.size());
         for (auto& [key, value] : batch_results) {
@@ -412,7 +411,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<String> const& paths, StringView per_file_name, double time_taken_in_ms)
 {
 
-    auto file_or_error = Core::File::open(per_file_name, Core::OpenMode::WriteOnly);
+    auto file_or_error = Core::Stream::File::open(per_file_name, Core::Stream::OpenMode::Write);
     if (file_or_error.is_error()) {
         warnln("Failed to open per file for writing at {}: {}", per_file_name, file_or_error.error().string_literal());
         return;
@@ -428,7 +427,7 @@ void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<String
     complete_results.set("duration", time_taken_in_ms / 1000.);
     complete_results.set("results", result_object);
 
-    if (!file->write(complete_results.to_string()))
+    if (!file->write_or_error(complete_results.to_string().bytes()))
         warnln("Failed to write per-file");
     file->close();
 }
