@@ -161,12 +161,12 @@ public:
     bool write_lines(Span<String> lines)
     {
         // It's possible the process dies before we can write all the tests
-        // to the stdin. So make sure that
-        struct sigaction act { };
-        struct sigaction oldAct;
-        act.sa_flags = 0;
-        act.sa_handler = SIG_IGN;
-        if (sigaction(SIGPIPE, &act, &oldAct) < 0) {
+        // to the stdin. So make sure that we don't crash but just stop writing.
+        struct sigaction action_handler { };
+        struct sigaction old_action_handler;
+        action_handler.sa_flags = 0;
+        action_handler.sa_handler = SIG_IGN;
+        if (sigaction(SIGPIPE, &action_handler, &old_action_handler) < 0) {
             perror("sigaction");
             return false;
         }
@@ -176,8 +176,11 @@ public:
                 break;
         }
 
+        // Ensure that the input stream ends here, whether we were able to write all lines or not
+        m_output->close();
+
         // It's not really a problem if this signal failed
-        if (sigaction(SIGPIPE, &oldAct, nullptr) < 0)
+        if (sigaction(SIGPIPE, &old_action_handler, nullptr) < 0)
             perror("sigaction");
 
         return true;
