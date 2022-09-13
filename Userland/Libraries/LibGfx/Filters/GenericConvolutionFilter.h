@@ -34,7 +34,7 @@ class GenericConvolutionFilter : public Filter {
 public:
     class Parameters : public Filter::Parameters {
     public:
-        Parameters(Gfx::Matrix<N, float> const& kernel, bool should_wrap = false)
+        Parameters(Gfx::Matrix<N, float> const& kernel, bool should_wrap = true)
             : m_kernel(kernel)
             , m_should_wrap(should_wrap)
 
