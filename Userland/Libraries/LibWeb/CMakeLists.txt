@@ -38,6 +38,7 @@ set(SOURCES
     CSS/GridTrackPlacement.cpp
     CSS/GridTrackSize.cpp
     CSS/Length.cpp
+    CSS/LengthBox.cpp
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp

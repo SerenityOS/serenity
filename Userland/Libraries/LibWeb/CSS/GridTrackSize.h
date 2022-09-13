@@ -25,6 +25,7 @@ public:
     GridTrackSize(Length);
     GridTrackSize(Percentage);
     GridTrackSize(float);
+    ~GridTrackSize();
 
     static GridTrackSize make_auto();
 
@@ -34,7 +35,7 @@ public:
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_flexible_length() const { return m_type == Type::FlexibleLength; }
 
-    Length length() const { return m_length; }
+    Length length() const;
     Percentage percentage() const { return m_percentage; }
     float flexible_length() const { return m_flexible_length; }
 
@@ -57,7 +58,9 @@ public:
 
 private:
     Type m_type;
-    Length m_length { Length::make_px(0) };
+    // Length includes a RefPtr<CalculatedStyleValue> member, but we can't include the header StyleValue.h as it includes
+    // this file already. To break the cyclic dependency, we must initialize m_length in the constructor.
+    Length m_length;
     Percentage m_percentage { Percentage(0) };
     float m_flexible_length { 0 };
 };

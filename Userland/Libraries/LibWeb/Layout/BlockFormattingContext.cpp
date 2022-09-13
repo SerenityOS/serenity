@@ -103,13 +103,13 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length).resolved(box);
 
     auto try_compute_width = [&](auto const& a_width) {
         CSS::Length width = a_width;
-        margin_left = computed_values.margin().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-        margin_right = computed_values.margin().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+        margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length).resolved(box);
+        margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length).resolved(box);
         float total_px = computed_values.border_left().width + computed_values.border_right().width;
         for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
             total_px += value.to_px(box);
@@ -245,10 +245,10 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto zero_value = CSS::Length::make_px(0);
 
-    auto margin_left = computed_values.margin().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto margin_right = computed_values.margin().right.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto const padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto const padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length).resolved(box);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
@@ -351,13 +351,13 @@ void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
 
     auto& box_state = state.get_mutable(box);
 
-    box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
     box_state.border_top = computed_values.border_top().width;
     box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
     box_state.set_content_height(compute_theoretical_height(state, box));
 }
@@ -499,12 +499,12 @@ void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, 
     auto const& computed_values = box.computed_values();
     auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box));
 
-    box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
+    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
+    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
     box_state.border_top = computed_values.border_top().width;
     box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
+    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
+    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
 }
 
 void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, BlockContainer const& containing_block)

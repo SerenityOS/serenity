@@ -67,6 +67,7 @@ class ImageStyleValue;
 class InheritStyleValue;
 class InitialStyleValue;
 class Length;
+class LengthBox;
 class LengthPercentage;
 class LengthStyleValue;
 class LinearGradientStyleValue;
