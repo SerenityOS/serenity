@@ -550,7 +550,7 @@ void __assertion_failed(char const* assertion)
     handle_failed_assert(assertion);
 }
 #else
-[[noreturn]] void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
+extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
 {
     auto full_message = String::formatted("{}:{}: {}: Assertion `{}' failed.", file, line, function, assertion);
     handle_failed_assert(full_message.characters());
