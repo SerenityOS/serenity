@@ -9,8 +9,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
-#include <LibCore/System.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibMain/Main.h>
@@ -22,7 +21,7 @@ struct Options {
     bool clear;
 };
 
-static Options parse_options(Main::Arguments arguments)
+static ErrorOr<Options> parse_options(Main::Arguments arguments)
 {
     auto type = "text/plain"sv;
     Vector<String> text;
@@ -43,15 +42,11 @@ static Options parse_options(Main::Arguments arguments)
         // We're not copying anything.
     } else if (text.is_empty()) {
         // Copy our stdin.
-        auto c_stdin = Core::File::construct();
-        bool success = c_stdin->open(
-            STDIN_FILENO,
-            Core::OpenMode::ReadOnly,
-            Core::File::ShouldCloseFileDescriptor::No);
-        VERIFY(success);
-        auto buffer = c_stdin->read_all();
+        auto c_stdin = TRY(Core::Stream::File::standard_input());
+        auto buffer = TRY(c_stdin->read_all());
         dbgln("Read size {}", buffer.size());
-        options.data = String((char*)buffer.data(), buffer.size());
+        dbgln("Read data: `{}`", StringView(buffer.bytes()));
+        options.data = buffer.bytes();
     } else {
         // Copy the rest of our command-line args.
         StringBuilder builder;
@@ -66,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Options options = parse_options(arguments);
+    Options options = TRY(parse_options(arguments));
 
     auto& clipboard = GUI::Clipboard::the();
     if (options.clear)
