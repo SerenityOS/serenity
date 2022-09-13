@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -136,8 +136,8 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
 {
     auto cache = s_cached_harness_files.find(harness_file);
     if (cache == s_cached_harness_files.end()) {
-        auto file = Core::File::construct(String::formatted("{}{}", s_harness_file_directory, harness_file));
-        if (!file->open(Core::OpenMode::ReadOnly)) {
+        auto file_or_error = Core::Stream::File::open(String::formatted("{}{}", s_harness_file_directory, harness_file), Core::Stream::OpenMode::Read);
+        if (file_or_error.is_error()) {
             return TestError {
                 NegativePhase::Harness,
                 "filesystem",
@@ -146,8 +146,17 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
             };
         }
 
-        auto contents = file->read_all();
-        StringView contents_view = contents;
+        auto contents_or_error = file_or_error.value()->read_all();
+        if (contents_or_error.is_error()) {
+            return TestError {
+                NegativePhase::Harness,
+                "filesystem",
+                String::formatted("Could not read file: {}", harness_file),
+                harness_file
+            };
+        }
+
+        StringView contents_view = contents_or_error.value();
         s_cached_harness_files.set(harness_file, contents_view.to_string());
         cache = s_cached_harness_files.find(harness_file);
         VERIFY(cache != s_cached_harness_files.end());
@@ -654,14 +663,25 @@ int main(int argc, char** argv)
 #define DISARM_TIMER() \
     alarm(0)
 
-    auto standard_input = Core::File::standard_input();
+    auto standard_input_or_error = Core::Stream::File::standard_input();
+    if (standard_input_or_error.is_error())
+        return 7;
+
+    Array<u8, 1024> input_buffer {};
+    auto buffered_standard_input_or_error = Core::Stream::BufferedFile::create(standard_input_or_error.release_value());
+    if (buffered_standard_input_or_error.is_error())
+        return 7;
+
+    auto& buffered_input_stream = buffered_standard_input_or_error.value();
+
     size_t count = 0;
 
-    while (!standard_input->eof()) {
-        auto path = standard_input->read_line();
-        if (path.is_empty()) {
+    while (!buffered_input_stream->is_eof()) {
+        auto path_or_error = buffered_input_stream->read_line(input_buffer);
+        if (path_or_error.is_error() || path_or_error.value().is_empty())
             continue;
-        }
+
+        auto& path = path_or_error.value();
 
         s_current_test = path;
 
@@ -672,20 +692,26 @@ int main(int argc, char** argv)
             VERIFY(!s_harness_file_directory.is_empty());
         }
 
-        auto file = Core::File::construct(path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
+        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        if (file_or_error.is_error()) {
             warnln("Could not open file: {}", path);
             return 3;
         }
+        auto& file = file_or_error.value();
 
         count++;
 
         String source_with_strict;
-        static String use_strict = "'use strict';\n";
+        static StringView use_strict = "'use strict';\n"sv;
         static size_t strict_length = use_strict.length();
 
         {
-            auto contents = file->read_all();
+            auto contents_or_error = file->read_all();
+            if (contents_or_error.is_error()) {
+                warnln("Could not read contents of file: {}", path);
+                return 3;
+            }
+            auto& contents = contents_or_error.value();
             StringBuilder builder { contents.size() + strict_length };
             builder.append(use_strict);
             builder.append(contents);
