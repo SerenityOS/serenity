@@ -59,6 +59,18 @@ TEST_CASE(0001_program_creation)
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
+    glUseProgram(program);
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(1, 0, 0);
+    glVertex2i(-1, -1);
+    glColor3f(0, 1, 0);
+    glVertex2i(1, -1);
+    glColor3f(0, 0, 1);
+    glVertex2i(1, 1);
+    glEnd();
+
+    context->present();
 
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);

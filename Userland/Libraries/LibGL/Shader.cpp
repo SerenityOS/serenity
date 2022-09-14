@@ -157,7 +157,7 @@ void GLContext::gl_link_program(GLuint program)
     // FIXME: implement check "GL_INVALID_OPERATION is generated if program is the currently active program object and transform feedback mode is active."
 
     // NOTE: We are ignoring the link result since this is tracked inside the program object
-    (void)program_it->value->link();
+    (void)program_it->value->link(*m_rasterizer);
 }
 
 void GLContext::gl_use_program(GLuint program)

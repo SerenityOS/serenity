@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
+#include <LibGPU/IR.h>
 #include <LibGPU/Image.h>
 #include <LibGPU/ImageDataLayout.h>
 #include <LibGPU/Light.h>
@@ -20,6 +21,7 @@
 #include <LibGPU/RasterPosition.h>
 #include <LibGPU/RasterizerOptions.h>
 #include <LibGPU/SamplerConfig.h>
+#include <LibGPU/Shader.h>
 #include <LibGPU/StencilConfiguration.h>
 #include <LibGPU/TextureUnitConfiguration.h>
 #include <LibGPU/Vertex.h>
@@ -56,6 +58,7 @@ public:
     virtual LightModelParameters light_model() const = 0;
 
     virtual NonnullRefPtr<Image> create_image(PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels) = 0;
+    virtual ErrorOr<NonnullRefPtr<Shader>> create_shader(IR::Shader const&) = 0;
 
     virtual void set_sampler_config(unsigned, SamplerConfig const&) = 0;
     virtual void set_light_state(unsigned, Light const&) = 0;
