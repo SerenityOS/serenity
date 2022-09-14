@@ -6,7 +6,7 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 
@@ -151,8 +151,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto fn = parse_target_name(type);
 
-    auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
-    auto input = file->read_all();
+    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+    auto input = TRY(file->read_all());
 
     return fn(input.data(), input.size());
 }
