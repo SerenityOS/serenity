@@ -92,6 +92,19 @@ public:
         return result.to_string();
     }
 
+    // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain
+    Optional<String> effective_domain() const
+    {
+        // 1. If origin is an opaque origin, then return null.
+        if (is_opaque())
+            return Optional<String> {};
+
+        // FIXME: 2. If origin's domain is non-null, then return origin's domain.
+
+        // 3. Return origin's host.
+        return m_host;
+    }
+
     bool operator==(Origin const& other) const { return is_same_origin(other); }
     bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
