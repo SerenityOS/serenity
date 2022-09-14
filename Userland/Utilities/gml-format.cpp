@@ -5,24 +5,18 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/GML/Formatter.h>
 #include <LibMain/Main.h>
 
-ErrorOr<bool> format_file(StringView, bool);
-
-ErrorOr<bool> format_file(StringView path, bool inplace)
+static ErrorOr<bool> format_file(StringView path, bool inplace)
 {
     auto read_from_stdin = path == "-";
-    RefPtr<Core::File> file;
-    if (read_from_stdin) {
-        file = Core::File::standard_input();
-    } else {
-        auto open_mode = inplace ? Core::OpenMode::ReadWrite : Core::OpenMode::ReadOnly;
-        file = TRY(Core::File::open(path, open_mode));
-    }
-    auto contents = file->read_all();
+    auto open_mode = (inplace && !read_from_stdin) ? Core::Stream::OpenMode::ReadWrite : Core::Stream::OpenMode::Read;
+    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, open_mode));
+
+    auto contents = TRY(file->read_all());
     auto formatted_gml_or_error = GUI::GML::format_gml(contents);
     if (formatted_gml_or_error.is_error()) {
         warnln("Failed to parse GML: {}", formatted_gml_or_error.error());
@@ -32,14 +26,9 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
     if (inplace && !read_from_stdin) {
         if (formatted_gml == contents)
             return true;
-        if (!file->seek(0) || !file->truncate(0)) {
-            warnln("Could not truncate {}: {}", path, file->error_string());
-            return false;
-        }
-        if (!file->write(formatted_gml)) {
-            warnln("Could not write to {}: {}", path, file->error_string());
-            return false;
-        }
+        TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
+        TRY(file->truncate(0));
+        TRY(file->write(formatted_gml.bytes()));
     } else {
         out("{}", formatted_gml);
     }
