@@ -52,7 +52,7 @@ ErrorOr<ByteBuffer> Stream::read_all(size_t block_size)
     return read_all_impl(block_size);
 }
 
-ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t file_size)
+ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t expected_file_size)
 {
     ByteBuffer data;
     data.ensure_capacity(file_size);
