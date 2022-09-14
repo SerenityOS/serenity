@@ -1368,7 +1368,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 
             auto path = source.url.path();
             if (!path.ends_with(".woff"sv, AK::CaseSensitivity::CaseInsensitive)
-                || path.ends_with(".ttf"sv, AK::CaseSensitivity::CaseInsensitive)) {
+                && !path.ends_with(".ttf"sv, AK::CaseSensitivity::CaseInsensitive)) {
                 continue;
             }
 
