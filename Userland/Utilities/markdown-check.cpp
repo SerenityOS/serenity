@@ -20,6 +20,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
@@ -233,14 +234,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Reading and parsing Markdown files ...");
     HashMap<String, MarkdownLinkage> files;
     for (auto path : file_paths) {
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
         if (file_or_error.is_error()) {
-            warnln("Failed to read {}: {}", path, file_or_error.error());
+            warnln("Failed to open {}: {}", path, file_or_error.error());
             // Since this should never happen anyway, fail early.
             return file_or_error.release_error();
         }
         auto file = file_or_error.release_value();
-        auto content_buffer = file->read_all();
+
+        auto content_buffer_or_error = file->read_all();
+        if (content_buffer_or_error.is_error()) {
+            warnln("Failed to read {}: {}", path, file_or_error.error());
+            // Since this should never happen anyway, fail early.
+            return file_or_error.release_error();
+        }
+        auto content_buffer = content_buffer_or_error.release_value();
+
         auto content = StringView(content_buffer);
         auto document = Markdown::Document::parse(content);
         if (!document) {
