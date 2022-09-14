@@ -16,6 +16,11 @@ On Arch Linux/Manjaro:
 sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
 ```
 
+On Fedora or derivates:
+```
+sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel
+```
+
 For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
