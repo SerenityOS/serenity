@@ -47,14 +47,18 @@
     JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES \
     __JS_ENUMERATE(TypedArray, typed_array, TypedArrayPrototype, TypedArrayConstructor, void)
 
-#define JS_ENUMERATE_NATIVE_ERRORS                                                                            \
-    __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                     \
-    __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor, void)     \
-    __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor, void)                 \
-    __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor, void) \
-    __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor, void)             \
-    __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor, void)                     \
-    __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor, void)
+#define JS_ENUMERATE_NATIVE_ERRORS                                                                                                                  \
+    __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                                                           \
+    __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor, void)                                           \
+    __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor, void)                                                       \
+    __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor, void)                                       \
+    __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor, void)                                                   \
+    __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor, void)                                                           \
+    __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor, void)                                                               \
+    /* 4.7. Error Objects https://webassembly.github.io/spec/js-api/#error-objects */                                                               \
+    __JS_ENUMERATE(WebAssemblyCompileError, web_assembly_compile_error, WebAssemblyCompileErrorPrototype, WebAssemblyCompileErrorConstructor, void) \
+    __JS_ENUMERATE(WebAssemblyRuntimeError, web_assembly_runtime_error, WebAssemblyRuntimeErrorPrototype, WebAssemblyRuntimeErrorConstructor, void) \
+    __JS_ENUMERATE(WebAssemblyLinkError, web_assembly_link_error, WebAssemblyLinkErrorPrototype, WebAssemblyLinkErrorConstructor, void)
 
 #define JS_ENUMERATE_TYPED_ARRAYS                                                                                               \
     __JS_ENUMERATE(Uint8Array, uint8_array, Uint8ArrayPrototype, Uint8ArrayConstructor, u8)                                     \

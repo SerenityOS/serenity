@@ -16,6 +16,8 @@
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
@@ -66,6 +68,12 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
     auto& table_prototype = window.ensure_web_prototype<WebAssemblyTablePrototype>("WebAssemblyTablePrototype");
     table_prototype.define_direct_property(vm.names.constructor, &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+
+    auto* runtime_error_constructor = realm.intrinsics().web_assembly_runtime_error_constructor();
+    runtime_error_constructor->define_direct_property(vm.names.name, js_string(vm, "WebAssembly.RuntimeError"), JS::Attribute::Configurable);
+    auto* runtime_error_prototype = realm.intrinsics().web_assembly_runtime_error_prototype();
+    runtime_error_prototype->define_direct_property(vm.names.constructor, runtime_error_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    define_direct_property("RuntimeError", runtime_error_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
