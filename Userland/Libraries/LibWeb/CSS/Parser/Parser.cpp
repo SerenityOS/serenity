@@ -2341,7 +2341,10 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
                 if (data_url.data_mime_type().starts_with("image"sv, CaseSensitivity::CaseInsensitive))
                     return data_url;
                 break;
-
+            case AllowedDataUrlType::Font:
+                if (data_url.data_mime_type().starts_with("font"sv, CaseSensitivity::CaseInsensitive))
+                    return data_url;
+                break;
             default:
                 break;
             }
@@ -4820,9 +4823,8 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         auto& first = source_tokens.next_token();
 
         // <url> [ format(<font-format>)]?
-        // FIXME: Allow data urls for fonts.
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
-        if (auto maybe_url = parse_url_function(first); maybe_url.has_value()) {
+        if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
             Optional<FlyString> format;
 

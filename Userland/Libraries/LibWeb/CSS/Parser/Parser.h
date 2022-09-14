@@ -318,6 +318,7 @@ private:
     enum class AllowedDataUrlType {
         None,
         Image,
+        Font,
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
