@@ -34,7 +34,7 @@ while read -r line; do
     error "Empty line between commit title and body is missing"
   fi
 
-  category_pattern="^\S.*?\S: .+"
+  category_pattern='^(Revert "|\S+: )'
   if [[ $line_number -eq 1 ]] && (echo "$line" | grep -E -v -q "$category_pattern"); then
     error "Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)"
   fi
