@@ -77,6 +77,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
                 auto item_inner_cross_size = item_preferred_outer_cross_size - item.margins.cross_before - item.margins.cross_after - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after;
                 set_cross_size(item.box, item_inner_cross_size);
                 set_has_definite_cross_size(item.box, true);
+                item.has_assigned_definite_cross_size = true;
             }
         }
     }
@@ -172,6 +173,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
             for (auto& item : m_flex_items) {
                 set_cross_size(item.box, item.cross_size);
                 set_has_definite_cross_size(item.box, true);
+                item.has_assigned_definite_cross_size = true;
             }
         }
     }
@@ -344,26 +346,18 @@ float FlexFormattingContext::specified_cross_size(Box const& box) const
     return is_row_layout() ? box_state.content_height() : box_state.content_width();
 }
 
-float FlexFormattingContext::resolved_definite_cross_size(Box const& box) const
+float FlexFormattingContext::resolved_definite_cross_size(FlexItem const& item) const
 {
-    auto const& cross_value = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
-    if (cross_value.is_auto())
-        return specified_cross_size(flex_container());
-    if (cross_value.is_length())
-        return specified_cross_size(box);
-    auto containing_block_size = !is_row_layout() ? containing_block_width_for(box) : containing_block_height_for(box);
-    return cross_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+    if (item.has_assigned_definite_cross_size)
+        return specified_cross_size(item.box);
+    return !is_row_layout() ? m_state.resolved_definite_width(item.box) : m_state.resolved_definite_height(item.box);
 }
 
-float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
+float FlexFormattingContext::resolved_definite_main_size(FlexItem const& item) const
 {
-    auto const& main_value = is_row_layout() ? box.computed_values().width() : box.computed_values().height();
-    if (main_value.is_auto())
-        return specified_main_size(flex_container());
-    if (main_value.is_length())
-        return specified_main_size(box);
-    auto containing_block_size = is_row_layout() ? containing_block_width_for(box) : containing_block_height_for(box);
-    return main_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+    if (item.has_assigned_definite_main_size)
+        return specified_main_size(item.box);
+    return is_row_layout() ? m_state.resolved_definite_width(item.box) : m_state.resolved_definite_height(item.box);
 }
 
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
@@ -524,7 +518,7 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
     auto containing_block_effective_main_size = [&](Box const& box) -> Optional<float> {
         auto& containing_block = *box.containing_block();
         if (has_definite_main_size(containing_block))
-            return resolved_definite_main_size(containing_block);
+            return is_row_layout() ? m_state.resolved_definite_width(box) : m_state.resolved_definite_height(box);
         return {};
     };
 
@@ -688,7 +682,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
             && flex_item.used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(flex_item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
-            return resolved_definite_cross_size(flex_item.box) * flex_item.box.intrinsic_aspect_ratio().value();
+            return resolved_definite_cross_size(flex_item) * flex_item.box.intrinsic_aspect_ratio().value();
         }
 
         // C. If the used flex basis is content or depends on its available space,
@@ -721,7 +715,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         // FIXME: This is probably too naive.
         // FIXME: Care about FlexBasis::Auto
         if (has_definite_main_size(child_box))
-            return resolved_definite_main_size(child_box);
+            return resolved_definite_main_size(flex_item);
 
         // NOTE: To avoid repeated layout work, we keep a cache of flex item main sizes on the
         //       root LayoutState object. It's available through a full layout cycle.
@@ -774,7 +768,7 @@ Optional<float> FlexFormattingContext::transferred_size_suggestion(FlexItem cons
     if (item.box.has_intrinsic_aspect_ratio() && has_definite_cross_size(item.box)) {
         auto aspect_ratio = item.box.intrinsic_aspect_ratio().value();
         // FIXME: Clamp cross size to min/max cross size before this conversion.
-        return resolved_definite_cross_size(item.box) * aspect_ratio;
+        return resolved_definite_cross_size(item) * aspect_ratio;
     }
 
     // It is otherwise undefined.
@@ -1033,6 +1027,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
             // 2. If a flex-item’s flex basis is definite, then its post-flexing main size is also definite.
             if (has_definite_main_size(flex_container()) || flex_item->used_flex_basis_is_definite) {
                 set_has_definite_main_size(flex_item->box, true);
+                flex_item->has_assigned_definite_main_size = true;
             }
         }
 
@@ -1055,7 +1050,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
     if (has_definite_cross_size(item.box)) {
-        item.hypothetical_cross_size = css_clamp(resolved_definite_cross_size(item.box), clamp_min, clamp_max);
+        item.hypothetical_cross_size = css_clamp(resolved_definite_cross_size(item), clamp_min, clamp_max);
         return;
     }
 

@@ -232,4 +232,26 @@ void LayoutState::UsedValues::set_content_height(float height)
     m_content_height = height;
 }
 
+float LayoutState::resolved_definite_width(Box const& box) const
+{
+    auto const& computed_value = box.computed_values().width();
+    if (computed_value.is_auto())
+        return get(*box.containing_block()).content_width();
+    if (computed_value.is_length())
+        return get(box).content_width();
+    auto containing_block_size = get(*box.containing_block()).content_width();
+    return computed_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+}
+
+float LayoutState::resolved_definite_height(Box const& box) const
+{
+    auto const& computed_value = box.computed_values().height();
+    if (computed_value.is_auto())
+        return get(*box.containing_block()).content_height();
+    if (computed_value.is_length())
+        return get(box).content_height();
+    auto containing_block_size = get(*box.containing_block()).content_height();
+    return computed_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+}
+
 }

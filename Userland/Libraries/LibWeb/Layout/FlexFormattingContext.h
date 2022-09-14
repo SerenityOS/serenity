@@ -62,6 +62,8 @@ private:
         DirectionAgnosticMargins padding {};
         bool is_min_violation { false };
         bool is_max_violation { false };
+        bool has_assigned_definite_main_size { false };
+        bool has_assigned_definite_cross_size { false };
 
         float add_main_margin_box_sizes(float content_size) const
         {
@@ -85,8 +87,8 @@ private:
     bool has_definite_cross_size(Box const&) const;
     float specified_main_size(Box const&) const;
     float specified_cross_size(Box const&) const;
-    float resolved_definite_main_size(Box const&) const;
-    float resolved_definite_cross_size(Box const&) const;
+    float resolved_definite_main_size(FlexItem const&) const;
+    float resolved_definite_cross_size(FlexItem const&) const;
     bool has_main_min_size(Box const&) const;
     bool has_cross_min_size(Box const&) const;
     float specified_main_max_size(Box const&) const;
