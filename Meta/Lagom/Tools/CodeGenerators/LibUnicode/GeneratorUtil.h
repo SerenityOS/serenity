@@ -332,17 +332,9 @@ inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView p
 inline ErrorOr<JsonValue> read_json_file(StringView path)
 {
     auto file = TRY(open_file(path, Core::Stream::OpenMode::Read));
+    auto buffer = TRY(file->read_all());
 
-    StringBuilder builder;
-    Array<u8, 4096> buffer;
-
-    // FIXME: When Core::Stream supports reading an entire file, use that.
-    while (TRY(file->can_read_line())) {
-        auto bytes_read = TRY(file->read(buffer));
-        TRY(builder.try_append(StringView { bytes_read }));
-    }
-
-    return JsonValue::from_string(builder.build());
+    return JsonValue::from_string(buffer);
 }
 
 inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView subpath = "main"sv)
