@@ -1066,7 +1066,7 @@ void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect 
         ARGB32 const* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         size_t const src_skip = source.pitch() / sizeof(ARGB32);
         for (int row = first_row; row <= last_row; ++row) {
-            fast_u32_copy(dst, src, clipped_rect.width());
+            memcpy(dst, src, sizeof(ARGB32) * clipped_rect.width());
             dst += dst_skip;
             src += src_skip;
         }
