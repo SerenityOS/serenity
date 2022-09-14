@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {
 

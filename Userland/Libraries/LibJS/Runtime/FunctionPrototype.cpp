@@ -12,7 +12,6 @@
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
