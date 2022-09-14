@@ -30,6 +30,7 @@ public:
     static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(String const& app_name, AllowWriting = AllowWriting::No);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, AllowWriting = AllowWriting::No);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, int fd);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(String const& filename, NonnullOwnPtr<Core::Stream::File>);
     ~ConfigFile();
 
     bool has_group(String const&) const;
