@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open(String::formatted("/proc/{}/vm", pid), Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open(String::formatted("/proc/{}/vm", pid), Core::Stream::OpenMode::Read));
 
     outln("{}:", pid);
 
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Address{}           Size Access  Name", padding);
     }
 
-    auto file_contents = file->read_all();
+    auto file_contents = TRY(file->read_all());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     Vector<JsonValue> sorted_regions = json.as_array().values();
