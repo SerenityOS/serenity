@@ -16,7 +16,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCore/IODevice.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -725,7 +724,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (Core::File::exists(output_file_path))
                 [[maybe_unused]]
                 auto ignored = Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed, true);
-            auto output_file = MUST(Core::File::open(output_file_path, Core::OpenMode::WriteOnly));
+            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 
             auto output_rect = page_client->screen_rect();
             auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
@@ -733,7 +732,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             page_client->paint(output_rect, output_bitmap);
 
             auto image_buffer = Gfx::PNGWriter::encode(output_bitmap);
-            output_file->write(image_buffer.data(), image_buffer.size());
+            MUST(output_file->write(image_buffer.bytes()));
 
             exit(0);
         });
