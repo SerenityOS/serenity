@@ -115,6 +115,10 @@ unsigned get_button_from_qt_event(QMouseEvent const& event)
         return 2;
     if (event.button() == Qt::MouseButton::MiddleButton)
         return 4;
+    if (event.button() == Qt::MouseButton::BackButton)
+        return 8;
+    if (event.buttons() == Qt::MouseButton::ForwardButton)
+        return 16;
     return 0;
 }
 
@@ -127,6 +131,10 @@ unsigned get_buttons_from_qt_event(QMouseEvent const& event)
         buttons |= 2;
     if (event.buttons() & Qt::MouseButton::MiddleButton)
         buttons |= 4;
+    if (event.buttons() & Qt::MouseButton::BackButton)
+        buttons |= 8;
+    if (event.buttons() & Qt::MouseButton::ForwardButton)
+        buttons |= 16;
     return buttons;
 }
 
@@ -296,6 +304,12 @@ void WebView::mousePressEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
+    if (button == 0) {
+        // We could not convert Qt buttons to something that Lagom can
+        // recognize - don't even bother propagating this to the web engine
+        // as it will not handle it anyway, and it will (currently) assert
+        return;
+    }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     m_page_client->page().handle_mousedown(to_content(position), button, modifiers);
 }
@@ -304,6 +318,12 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
+    if (button == 0) {
+        // We could not convert Qt buttons to something that Lagom can
+        // recognize - don't even bother propagating this to the web engine
+        // as it will not handle it anyway, and it will (currently) assert
+        return;
+    }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     m_page_client->page().handle_mouseup(to_content(position), button, modifiers);
 }
