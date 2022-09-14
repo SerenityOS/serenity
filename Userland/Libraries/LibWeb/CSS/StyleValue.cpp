@@ -2054,4 +2054,51 @@ NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const
     return BorderRadiusStyleValue::create(absolutized_horizontal_radius, absolutized_vertical_radius);
 }
 
+bool CalculatedStyleValue::contains_percentage() const
+{
+    return m_expression->contains_percentage();
+}
+
+bool CalculatedStyleValue::CalcSum::contains_percentage() const
+{
+    if (first_calc_product->contains_percentage())
+        return true;
+    for (auto& part : zero_or_more_additional_calc_products) {
+        if (part.contains_percentage())
+            return true;
+    }
+    return false;
+}
+
+bool CalculatedStyleValue::CalcSumPartWithOperator::contains_percentage() const
+{
+    return value->contains_percentage();
+}
+
+bool CalculatedStyleValue::CalcProduct::contains_percentage() const
+{
+    if (first_calc_value.contains_percentage())
+        return true;
+    for (auto& part : zero_or_more_additional_calc_values) {
+        if (part.contains_percentage())
+            return true;
+    }
+    return false;
+}
+
+bool CalculatedStyleValue::CalcProductPartWithOperator::contains_percentage() const
+{
+    return value.visit(
+        [](CalcValue const& value) { return value.contains_percentage(); },
+        [](CalcNumberValue const&) { return false; });
+}
+
+bool CalculatedStyleValue::CalcValue::contains_percentage() const
+{
+    return value.visit(
+        [](Percentage const&) { return true; },
+        [](NonnullOwnPtr<CalcSum> const& sum) { return sum->contains_percentage(); },
+        [](auto const&) { return false; });
+}
+
 }

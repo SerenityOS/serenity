@@ -77,6 +77,15 @@ public:
     bool is_percentage() const { return m_value.template has<Percentage>(); }
     bool is_calculated() const { return m_value.template has<NonnullRefPtr<CalculatedStyleValue>>(); }
 
+    bool contains_percentage() const
+    {
+        if (is_percentage())
+            return true;
+        if (is_calculated())
+            return calculated()->contains_percentage();
+        return false;
+    }
+
     Percentage const& percentage() const
     {
         VERIFY(is_percentage());

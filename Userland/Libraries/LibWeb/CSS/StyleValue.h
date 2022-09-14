@@ -609,6 +609,7 @@ public:
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
+        bool contains_percentage() const;
     };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
@@ -623,6 +624,8 @@ public:
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
+
+        bool contains_percentage() const;
     };
 
     struct CalcNumberSum {
@@ -645,6 +648,7 @@ public:
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
+        bool contains_percentage() const;
     };
 
     struct CalcSumPartWithOperator {
@@ -658,6 +662,7 @@ public:
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
+        bool contains_percentage() const;
     };
 
     struct CalcProductPartWithOperator {
@@ -667,6 +672,8 @@ public:
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
+
+        bool contains_percentage() const;
     };
 
     struct CalcNumberProduct {
@@ -733,6 +740,8 @@ public:
     bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
     Optional<float> resolve_number();
     Optional<i64> resolve_integer();
+
+    bool contains_percentage() const;
 
 private:
     explicit CalculatedStyleValue(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
