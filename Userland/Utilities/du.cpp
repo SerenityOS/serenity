@@ -11,12 +11,11 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <limits.h>
 #include <string.h>
-#include <sys/stat.h>
 
 struct DuOption {
     enum class TimeType {
@@ -55,8 +54,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option)
 {
     bool summarize = false;
-    char const* pattern = nullptr;
-    char const* exclude_from = nullptr;
+    StringView pattern;
+    StringView exclude_from;
     Vector<StringView> files_to_process;
 
     Core::ArgsParser::Option time_option {
@@ -112,11 +111,11 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     if (summarize)
         du_option.max_depth = 0;
 
-    if (pattern)
+    if (!pattern.is_empty())
         du_option.excluded_patterns.append(pattern);
-    if (exclude_from) {
-        auto file = TRY(Core::File::open(exclude_from, Core::OpenMode::ReadOnly));
-        auto const buff = file->read_all();
+    if (!exclude_from.is_empty()) {
+        auto file = TRY(Core::Stream::File::open(exclude_from, Core::Stream::OpenMode::Read));
+        auto const buff = TRY(file->read_all());
         if (!buff.is_empty()) {
             String patterns = String::copy(buff, Chomp);
             du_option.excluded_patterns.extend(patterns.split('\n'));
