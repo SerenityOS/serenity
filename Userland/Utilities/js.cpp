@@ -12,8 +12,8 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
@@ -1271,11 +1271,11 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
     auto& realm = *vm.current_realm();
 
     auto filename = TRY(vm.argument(0).to_string(vm));
-    auto file = Core::File::construct(filename);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
+    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error())
+        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
-    auto config_file = MUST(Core::ConfigFile::open(filename, file->fd()));
+    auto config_file = MUST(Core::ConfigFile::open(filename, file_or_error.release_value()));
     auto* object = JS::Object::create(realm, realm.intrinsics().object_prototype());
     for (auto const& group : config_file->groups()) {
         auto* group_object = JS::Object::create(realm, realm.intrinsics().object_prototype());
@@ -1291,11 +1291,15 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
     auto filename = TRY(vm.argument(0).to_string(vm));
-    auto file = Core::File::construct(filename);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file->error_string()));
-    auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents);
+    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error())
+        return vm.throw_completion<JS::Error>(String::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+
+    auto file_contents_or_error = file_or_error.value()->read_all();
+    if (file_contents_or_error.is_error())
+        return vm.throw_completion<JS::Error>(String::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
+
+    auto json = JsonValue::from_string(file_contents_or_error.value());
     if (json.is_error())
         return vm.throw_completion<JS::SyntaxError>(JS::ErrorType::JsonMalformed);
     return JS::JSONObject::parse_json_value(vm, json.value());
@@ -1790,8 +1794,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
 
             for (auto& path : script_paths) {
-                auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
-                auto file_contents = file->read_all();
+                auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+                auto file_contents = TRY(file->read_all());
                 auto source = StringView { file_contents };
 
                 if (Utf8View { file_contents }.validate()) {
