@@ -5325,6 +5325,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             params.append(Length::make_auto());
             continue;
         }
+        if (component_value.is_block()) {
+            params.append(Length::make_auto());
+            continue;
+        }
         if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv)) {
             params.append(Length::make_auto());
             continue;
