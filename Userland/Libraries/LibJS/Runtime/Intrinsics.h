@@ -8,7 +8,6 @@
 
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Runtime/Realm.h>
 
 namespace JS {
 
