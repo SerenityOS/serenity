@@ -16,7 +16,7 @@
 namespace JS {
 
 class FunctionObject : public Object {
-    JS_OBJECT(Function, Object);
+    JS_OBJECT(FunctionObject, Object);
 
 public:
     virtual ~FunctionObject() = default;
