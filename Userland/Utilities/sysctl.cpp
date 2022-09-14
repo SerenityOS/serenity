@@ -7,7 +7,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 
 static bool s_set_variable = false;
@@ -15,17 +15,17 @@ static bool s_set_variable = false;
 static String get_variable(StringView name)
 {
     auto path = String::formatted("/sys/kernel/variables/{}", name);
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", path, file->error_string());
+    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+    if (file.is_error()) {
+        warnln("Failed to open {}: {}", path, file.error());
         return {};
     }
-    auto buffer = file->read_all();
-    if (file->error() < 0) {
-        warnln("Failed to read {}: {}", path, file->error_string());
+    auto buffer = file.value()->read_all();
+    if (buffer.is_error()) {
+        warnln("Failed to read {}: {}", path, buffer.error());
         return {};
     }
-    return { (char const*)buffer.data(), buffer.size(), Chomp };
+    return { (char const*)buffer.value().data(), buffer.value().size(), Chomp };
 }
 
 static bool read_variable(StringView name)
@@ -43,13 +43,13 @@ static bool write_variable(StringView name, StringView value)
     if (old_value.is_null())
         return false;
     auto path = String::formatted("/sys/kernel/variables/{}", name);
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::OpenMode::WriteOnly)) {
-        warnln("Failed to open {}: {}", path, file->error_string());
+    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Write);
+    if (file.is_error()) {
+        warnln("Failed to open {}: {}", path, file.error());
         return false;
     }
-    if (!file->write(value)) {
-        warnln("Failed to write {}: {}", path, file->error_string());
+    if (auto result = file.value()->write(value.bytes()); result.is_error()) {
+        warnln("Failed to write {}: {}", path, result.error());
         return false;
     }
     outln("{}: {} -> {}", name, old_value, value);
