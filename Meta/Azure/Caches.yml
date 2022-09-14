@@ -79,7 +79,7 @@ steps:
 
     - task: Cache@2
       inputs:
-        key: '"unicode_locale" | Meta/CMake/unicode_data.cmake | "$(timestamp)"'
+        key: '"unicode_locale" | Meta/CMake/locale_data.cmake | "$(timestamp)"'
         restoreKeys: |
             "unicode_locale" | Meta/CMake/locale_data.cmake
         path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
