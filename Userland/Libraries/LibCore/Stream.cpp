@@ -55,26 +55,21 @@ ErrorOr<ByteBuffer> Stream::read_all(size_t block_size)
 ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t expected_file_size)
 {
     ByteBuffer data;
-    data.ensure_capacity(file_size);
+    data.ensure_capacity(expected_file_size);
 
-    size_t total_read {};
-    size_t next_reading_size { block_size };
-    for (Span<u8> chunk; !is_eof();) {
-        if (next_reading_size == block_size)
-            chunk = TRY(data.get_bytes_for_writing(next_reading_size));
-        auto const nread = TRY(read(chunk)).size();
+    size_t total_read = 0;
+    Bytes buffer;
+    while (!is_eof()) {
+        if (buffer.is_empty()) {
+            buffer = TRY(data.get_bytes_for_writing(block_size));
+        }
 
-        next_reading_size -= nread;
-
-        if (next_reading_size == 0)
-            next_reading_size = block_size;
-
+        auto nread = TRY(read(buffer)).size();
         total_read += nread;
-
-        if (nread < block_size)
-            data.resize(total_read);
+        buffer = buffer.slice(nread);
     }
 
+    data.resize(total_read);
     return data;
 }
 
