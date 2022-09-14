@@ -757,6 +757,7 @@ void Document::force_layout()
 void Document::invalidate_layout()
 {
     tear_down_layout_tree();
+    schedule_layout_update();
 }
 
 void Document::update_layout()
