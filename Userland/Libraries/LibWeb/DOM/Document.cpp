@@ -1831,4 +1831,24 @@ JS::NonnullGCPtr<HTML::History> Document::history()
     return *m_history;
 }
 
+// https://html.spec.whatwg.org/multipage/origin.html#dom-document-domain
+String Document::domain() const
+{
+    // 1. Let effectiveDomain be this's origin's effective domain.
+    auto effective_domain = origin().effective_domain();
+
+    // 2. If effectiveDomain is null, then return the empty string.
+    if (!effective_domain.has_value())
+        return String::empty();
+
+    // 3. Return effectiveDomain, serialized.
+    // FIXME: Implement host serialization.
+    return effective_domain.release_value();
+}
+
+void Document::set_domain(String const& domain)
+{
+    dbgln("(STUBBED) Document::set_domain(domain='{}')", domain);
+}
+
 }

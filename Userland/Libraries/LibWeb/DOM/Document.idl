@@ -27,6 +27,7 @@ interface Document : Node {
 
     // FIXME: These attributes currently don't do anything.
     [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
+    attribute USVString domain;
 
     readonly attribute DOMImplementation implementation;
 
