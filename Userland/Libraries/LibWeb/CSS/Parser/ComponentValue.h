@@ -9,7 +9,6 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
-#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/Forward.h>
 

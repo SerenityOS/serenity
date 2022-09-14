@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
 
 namespace Web::CSS::Parser {
 
