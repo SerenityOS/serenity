@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibUSBDB/Database.h>
@@ -48,14 +48,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     while (usb_devices.has_next()) {
         auto full_path = LexicalPath(usb_devices.next_full_path());
 
-        auto proc_usb_device = Core::File::construct(full_path.string());
-        if (!proc_usb_device->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", proc_usb_device->name(), proc_usb_device->error_string());
+        auto proc_usb_device = Core::Stream::File::open(full_path.string(), Core::Stream::OpenMode::Read);
+        if (proc_usb_device.is_error()) {
+            warnln("Failed to open {}: {}", full_path.string(), proc_usb_device.error());
             continue;
         }
 
-        auto contents = proc_usb_device->read_all();
-        auto json_or_error = JsonValue::from_string(contents);
+        auto contents = proc_usb_device.value()->read_all();
+        if (contents.is_error()) {
+            warnln("Failed to read {}: {}", full_path.string(), contents.error());
+            continue;
+        }
+
+        auto json_or_error = JsonValue::from_string(contents.value());
         if (json_or_error.is_error()) {
             warnln("Failed to decode JSON: {}", json_or_error.error());
             continue;
