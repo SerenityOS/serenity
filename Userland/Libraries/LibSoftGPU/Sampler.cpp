@@ -73,10 +73,10 @@ static f32x4 wrap(f32x4 value, GPU::TextureWrapMode mode, f32x4 num_texels)
 
 ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 level, u32x4 x, u32x4 y, u32x4 z)
 {
-    auto t0 = image.texel(level[0], x[0], y[0], z[0]);
-    auto t1 = image.texel(level[1], x[1], y[1], z[1]);
-    auto t2 = image.texel(level[2], x[2], y[2], z[2]);
-    auto t3 = image.texel(level[3], x[3], y[3], z[3]);
+    auto const& t0 = image.texel(level[0], x[0], y[0], z[0]);
+    auto const& t1 = image.texel(level[1], x[1], y[1], z[1]);
+    auto const& t2 = image.texel(level[2], x[2], y[2], z[2]);
+    auto const& t3 = image.texel(level[3], x[3], y[3], z[3]);
 
     return Vector4<f32x4> {
         f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
@@ -90,10 +90,10 @@ ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 level
 {
     auto border_mask = maskbits(x < 0 || x >= w || y < 0 || y >= h);
 
-    auto t0 = border_mask & 1 ? border : image.texel(level[0], x[0], y[0], z[0]);
-    auto t1 = border_mask & 2 ? border : image.texel(level[1], x[1], y[1], z[1]);
-    auto t2 = border_mask & 4 ? border : image.texel(level[2], x[2], y[2], z[2]);
-    auto t3 = border_mask & 8 ? border : image.texel(level[3], x[3], y[3], z[3]);
+    auto const& t0 = (border_mask & 1) > 0 ? border : image.texel(level[0], x[0], y[0], z[0]);
+    auto const& t1 = (border_mask & 2) > 0 ? border : image.texel(level[1], x[1], y[1], z[1]);
+    auto const& t2 = (border_mask & 4) > 0 ? border : image.texel(level[2], x[2], y[2], z[2]);
+    auto const& t3 = (border_mask & 8) > 0 ? border : image.texel(level[3], x[3], y[3], z[3]);
 
     return Vector4<f32x4> {
         f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
