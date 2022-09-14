@@ -602,18 +602,25 @@ void WebView::keyPressEvent(QKeyEvent* event)
         break;
     }
 
+    auto text = event->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    auto point = event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    auto point = event->text()[0].unicode();
-    //    dbgln(String::formatted("keycode={}, modifiers={}, point={}", (int32_t)keycode, modifiers, point));
     m_page_client->page().handle_keydown(keycode, modifiers, point);
 }
 
 void WebView::keyReleaseEvent(QKeyEvent* event)
 {
+    auto text = event->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    auto point = event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
-    auto point = event->text()[0].unicode();
     m_page_client->page().handle_keyup(keycode, modifiers, point);
 }
 
