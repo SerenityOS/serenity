@@ -5,7 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibDiff/Generator.h>
 #include <LibMain/Main.h>
@@ -23,10 +23,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
     parser.parse(arguments);
 
-    auto file1 = TRY(Core::File::open(filename1, Core::OpenMode::ReadOnly));
-    auto file2 = TRY(Core::File::open(filename2, Core::OpenMode::ReadOnly));
+    auto file1 = TRY(Core::Stream::File::open(filename1, Core::Stream::OpenMode::Read));
+    auto file2 = TRY(Core::Stream::File::open(filename2, Core::Stream::OpenMode::Read));
 
-    auto hunks = Diff::from_text(file1->read_all(), file2->read_all());
+    bool color_output = TRY(Core::System::isatty(STDOUT_FILENO));
+
+    auto hunks = Diff::from_text(TRY(file1->read_all()), TRY(file2->read_all()));
     for (auto const& hunk : hunks) {
         auto original_start = hunk.original_start_line;
         auto target_start = hunk.target_start_line;
@@ -51,8 +53,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         sb.appendff("{}", target_start);
         if (num_added > 1)
             sb.appendff(",{}", target_start + num_added - 1);
-
-        bool color_output = isatty(STDOUT_FILENO);
 
         outln("Hunk: {}", sb.build());
         for (auto const& line : hunk.removed_lines) {
