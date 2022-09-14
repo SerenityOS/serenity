@@ -11,8 +11,8 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <net/if.h>
@@ -89,8 +89,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     if (modify_action.is_empty()) {
-        auto file = TRY(Core::File::open("/sys/kernel/net/route", Core::OpenMode::ReadOnly));
-        auto file_contents = file->read_all();
+        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/route"sv, Core::Stream::OpenMode::Read));
+        auto file_contents = TRY(file->read_all());
         auto json = TRY(JsonValue::from_string(file_contents));
 
         outln("Kernel IP routing table");
