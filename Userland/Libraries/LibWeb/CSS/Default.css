@@ -7,10 +7,6 @@ body {
     margin: 8px;
 }
 
-a {
-    cursor: pointer;
-}
-
 center {
     text-align: -libweb-center;
 }
