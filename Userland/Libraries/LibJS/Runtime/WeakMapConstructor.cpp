@@ -14,7 +14,7 @@
 namespace JS {
 
 WeakMapConstructor::WeakMapConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakMap.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.WeakMap.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

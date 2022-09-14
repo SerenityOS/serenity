@@ -14,7 +14,7 @@
 namespace JS {
 
 SetConstructor::SetConstructor(Realm& realm)
-    : NativeFunction(vm().names.Set.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Set.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

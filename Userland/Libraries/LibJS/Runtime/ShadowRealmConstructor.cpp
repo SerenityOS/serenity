@@ -12,7 +12,7 @@ namespace JS {
 
 // 3.2 The ShadowRealm Constructor, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm-constructor
 ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
-    : NativeFunction(vm().names.ShadowRealm.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.ShadowRealm.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

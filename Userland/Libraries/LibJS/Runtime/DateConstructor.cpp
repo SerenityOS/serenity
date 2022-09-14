@@ -163,7 +163,7 @@ static double parse_date_string(String const& date_string)
 }
 
 DateConstructor::DateConstructor(Realm& realm)
-    : NativeFunction(vm().names.Date.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Date.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

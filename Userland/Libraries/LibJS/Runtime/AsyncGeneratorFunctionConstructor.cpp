@@ -13,7 +13,7 @@
 namespace JS {
 
 AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.AsyncGeneratorFunction.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.AsyncGeneratorFunction.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

@@ -14,7 +14,7 @@
 namespace JS {
 
 FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
-    : NativeFunction(vm().names.FinalizationRegistry.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.FinalizationRegistry.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

@@ -13,7 +13,7 @@
 namespace JS {
 
 WeakRefConstructor::WeakRefConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakRef.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.WeakRef.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

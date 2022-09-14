@@ -217,7 +217,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 
 // 14.1 The Intl.Locale Constructor, https://tc39.es/ecma402/#sec-intl-locale-constructor
 LocaleConstructor::LocaleConstructor(Realm& realm)
-    : NativeFunction(vm().names.Locale.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Locale.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

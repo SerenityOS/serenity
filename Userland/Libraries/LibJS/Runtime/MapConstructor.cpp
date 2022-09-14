@@ -14,7 +14,7 @@
 namespace JS {
 
 MapConstructor::MapConstructor(Realm& realm)
-    : NativeFunction(vm().names.Map.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Map.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
