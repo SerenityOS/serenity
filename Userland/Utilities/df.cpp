@@ -7,9 +7,8 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -33,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open("/sys/kernel/df", Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
 
     if (flag_human_readable) {
         outln("Filesystem      Size        Used    Available   Mount point");
@@ -41,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Filesystem    Blocks        Used    Available   Mount point");
     }
 
-    auto file_contents = file->read_all();
+    auto file_contents = TRY(file->read_all());
     auto json_result = TRY(JsonValue::from_string(file_contents));
     auto const& json = json_result.as_array();
     json.for_each([](auto& value) {
