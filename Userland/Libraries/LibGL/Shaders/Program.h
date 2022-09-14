@@ -15,6 +15,8 @@
 #include <AK/Vector.h>
 #include <LibGL/Shaders/Shader.h>
 #include <LibGLSL/LinkedShader.h>
+#include <LibGPU/Device.h>
+#include <LibGPU/Shader.h>
 
 namespace GL {
 
@@ -24,7 +26,7 @@ public:
 
     bool is_shader_attached(Shader const&) const;
     ErrorOr<void> attach_shader(Shader&);
-    ErrorOr<void> link();
+    ErrorOr<void> link(GPU::Device&);
     bool link_status() const { return m_link_status; }
     size_t info_log_length() const;
 
@@ -35,6 +37,8 @@ private:
     Optional<String> m_info_log;
     OwnPtr<GLSL::LinkedShader> m_linked_vertex_shader;
     OwnPtr<GLSL::LinkedShader> m_linked_fragment_shader;
+    RefPtr<GPU::Shader> m_gpu_vertex_shader;
+    RefPtr<GPU::Shader> m_gpu_fragment_shader;
 };
 
 }

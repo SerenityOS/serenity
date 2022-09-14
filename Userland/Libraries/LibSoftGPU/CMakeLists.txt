@@ -4,6 +4,7 @@ set(SOURCES
     Image.cpp
     PixelConverter.cpp
     Sampler.cpp
+    Shader.cpp
 )
 
 add_compile_options(-Wno-psabi)

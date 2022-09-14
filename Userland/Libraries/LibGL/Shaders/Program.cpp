@@ -52,7 +52,7 @@ ErrorOr<void> Program::attach_shader(Shader& shader)
     return {};
 }
 
-ErrorOr<void> Program::link()
+ErrorOr<void> Program::link(GPU::Device& device)
 {
     m_info_log = String::empty();
 
@@ -89,6 +89,9 @@ ErrorOr<void> Program::link()
     }
 
     m_linked_fragment_shader = linked_fragment_shader_or_error.release_value();
+
+    m_gpu_vertex_shader = TRY(device.create_shader({}));
+    m_gpu_fragment_shader = TRY(device.create_shader({}));
 
     m_link_status = true;
     return {};

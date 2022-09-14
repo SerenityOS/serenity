@@ -65,6 +65,7 @@ public:
     virtual GPU::LightModelParameters light_model() const override { return m_lighting_model; }
 
     virtual NonnullRefPtr<GPU::Image> create_image(GPU::PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels) override;
+    virtual ErrorOr<NonnullRefPtr<GPU::Shader>> create_shader(GPU::IR::Shader const&) override;
 
     virtual void set_sampler_config(unsigned, GPU::SamplerConfig const&) override;
     virtual void set_light_state(unsigned, GPU::Light const&) override;
