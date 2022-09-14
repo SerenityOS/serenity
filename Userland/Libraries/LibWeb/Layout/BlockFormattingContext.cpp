@@ -818,13 +818,13 @@ float BlockFormattingContext::greatest_child_width(Box const& box)
 bool BlockFormattingContext::should_treat_width_as_auto(Box const& box, LayoutState const& state)
 {
     return box.computed_values().width().is_auto()
-        || (box.computed_values().width().is_percentage() && !state.get(*box.containing_block()).has_definite_width());
+        || (box.computed_values().width().contains_percentage() && !state.get(*box.containing_block()).has_definite_width());
 }
 
 bool BlockFormattingContext::should_treat_height_as_auto(Box const& box, LayoutState const& state)
 {
     return box.computed_values().height().is_auto()
-        || (box.computed_values().height().is_percentage() && !state.get(*box.containing_block()).has_definite_height());
+        || (box.computed_values().height().contains_percentage() && !state.get(*box.containing_block()).has_definite_height());
 }
 
 }

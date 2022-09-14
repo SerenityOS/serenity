@@ -542,7 +542,7 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
     } else {
         if (has_main_max_size(flex_container())) {
             bool main_max_size_behaves_like_auto = false;
-            if (computed_main_max_size(flex_container()).is_percentage())
+            if (computed_main_max_size(flex_container()).contains_percentage())
                 main_max_size_behaves_like_auto = !has_definite_main_size(*flex_container().containing_block());
 
             if (!main_max_size_behaves_like_auto) {
@@ -575,7 +575,7 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
         if (has_cross_max_size(flex_container())) {
 
             bool cross_max_size_behaves_like_auto = false;
-            if (computed_cross_max_size(flex_container()).is_percentage())
+            if (computed_cross_max_size(flex_container()).contains_percentage())
                 cross_max_size_behaves_like_auto = !has_definite_cross_size(*flex_container().containing_block());
 
             if (!cross_max_size_behaves_like_auto) {
@@ -1050,8 +1050,8 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
     auto const& computed_min_size = this->computed_cross_min_size(item.box);
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
-    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.is_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.is_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
+    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
 
     // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
     if (has_definite_cross_size(item.box)) {
@@ -1340,7 +1340,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
     } else {
         // Flex container has indefinite cross size.
         auto cross_size_value = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
-        if (cross_size_value.is_auto() || cross_size_value.is_percentage()) {
+        if (cross_size_value.is_auto() || cross_size_value.contains_percentage()) {
             // If a content-based cross size is needed, use the sum of the flex lines' cross sizes.
             float sum_of_flex_lines_cross_sizes = 0;
             for (auto& flex_line : m_flex_lines) {
@@ -1348,7 +1348,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
             }
             cross_size = sum_of_flex_lines_cross_sizes;
 
-            if (cross_size_value.is_percentage()) {
+            if (cross_size_value.contains_percentage()) {
                 // FIXME: Handle percentage values here! Right now we're just treating them as "auto"
             }
         } else {
@@ -1537,8 +1537,8 @@ float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(Lay
                 auto const& computed_min_size = this->computed_main_min_size(flex_item->box);
                 auto const& computed_max_size = this->computed_main_max_size(flex_item->box);
 
-                auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.is_percentage())) ? specified_main_min_size(flex_item->box) : automatic_minimum_size(*flex_item);
-                auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.is_percentage())) ? specified_main_max_size(flex_item->box) : NumericLimits<float>::max();
+                auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_main_min_size(flex_item->box) : automatic_minimum_size(*flex_item);
+                auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_main_max_size(flex_item->box) : NumericLimits<float>::max();
 
                 result = css_clamp(result, clamp_min, clamp_max);
 
@@ -1654,8 +1654,8 @@ float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem c
     auto const& computed_min_size = this->computed_cross_min_size(item.box);
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
-    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.is_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.is_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
+    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
 
     auto clamped_inner_size = css_clamp(larger_size, clamp_min, clamp_max);
 
@@ -1675,8 +1675,8 @@ float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem c
     auto const& computed_min_size = this->computed_cross_min_size(item.box);
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
-    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.is_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.is_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
+    auto clamp_max = (!computed_max_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
 
     auto clamped_inner_size = css_clamp(larger_size, clamp_min, clamp_max);
 
