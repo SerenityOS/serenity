@@ -129,7 +129,7 @@ void Image::copy_texels(GPU::Image const& source, u32 source_level, Vector3<u32>
     for (u32 z = 0; z < size.z(); ++z) {
         for (u32 y = 0; y < size.y(); ++y) {
             for (u32 x = 0; x < size.x(); ++x) {
-                auto color = src_image.texel(source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
+                auto const& color = src_image.texel(source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
                 set_texel(destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
             }
         }

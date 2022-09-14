@@ -33,7 +33,7 @@ public:
     GPU::ImageDataLayout image_data_layout(u32 level, Vector3<i32> offset) const;
     virtual void regenerate_mipmaps() override;
 
-    FloatVector4 texel(u32 level, int x, int y, int z) const
+    FloatVector4 const& texel(u32 level, int x, int y, int z) const
     {
         return *texel_pointer(level, x, y, z);
     }
