@@ -42,10 +42,7 @@ public:
         for (int y = target.bottom(); y >= target.top(); --y) {
             auto const* buffer_scanline = scanline(source_y++);
             auto* bitmap_scanline = bitmap.scanline(y);
-
-            int source_x = 0;
-            for (int x = target.left(); x <= target.right(); ++x)
-                bitmap_scanline[x] = buffer_scanline[source_x++];
+            memcpy(bitmap_scanline + target.left(), buffer_scanline, sizeof(u32) * target.width());
         }
     }
 
