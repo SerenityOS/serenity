@@ -93,8 +93,8 @@ if (ENABLE_MEMORY_SANITIZER)
 endif()
 
 if (ENABLE_UNDEFINED_SANITIZER)
-    add_compile_options(-fsanitize=undefined -fno-sanitize=vptr -fno-omit-frame-pointer)
-    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
 endif()
 
 if (ENABLE_FUZZERS)
