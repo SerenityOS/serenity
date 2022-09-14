@@ -23,6 +23,7 @@ for cmd in \
         Meta/check-ak-test-files.sh \
         Meta/check-debug-flags.sh \
         Meta/check-emoji.py \
+        Meta/check-headers-acyclic.py \
         Meta/check-markdown.sh \
         Meta/check-newlines-at-eof.py \
         Meta/check-png-sizes.sh \
