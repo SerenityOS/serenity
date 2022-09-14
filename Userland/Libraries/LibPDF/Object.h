@@ -13,7 +13,6 @@
 #include <AK/SourceLocation.h>
 #include <LibPDF/Error.h>
 #include <LibPDF/Forward.h>
-#include <LibPDF/Value.h>
 
 #ifdef PDF_DEBUG
 namespace {
