@@ -60,6 +60,11 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, Allo
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int fd)
 {
     auto file = TRY(Stream::File::adopt_fd(fd, Stream::OpenMode::ReadWrite));
+    return open(filename, move(file));
+}
+
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+{
     auto buffered_file = TRY(Stream::BufferedFile::create(move(file)));
 
     auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
