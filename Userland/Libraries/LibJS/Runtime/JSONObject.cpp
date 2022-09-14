@@ -207,7 +207,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(VM& vm, StringifyS
 
         // b. If isArray is true, return ? SerializeJSONArray(state, value).
         if (is_array)
-            return serialize_json_array(vm, state, static_cast<Array&>(value.as_object()));
+            return serialize_json_array(vm, state, value.as_object());
 
         // c. Return ? SerializeJSONObject(state, value).
         return serialize_json_object(vm, state, value.as_object());
