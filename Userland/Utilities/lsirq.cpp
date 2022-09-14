@@ -7,7 +7,7 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
@@ -17,11 +17,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/interrupts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto proc_interrupts = TRY(Core::File::open("/sys/kernel/interrupts", Core::OpenMode::ReadOnly));
+    auto proc_interrupts = TRY(Core::Stream::File::open("/sys/kernel/interrupts"sv, Core::Stream::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 
-    auto file_contents = proc_interrupts->read_all();
+    auto file_contents = TRY(proc_interrupts->read_all());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     auto cpu_count = json.as_array().at(0).as_object().get("per_cpu_call_counts"sv).as_array().size();
