@@ -16,7 +16,7 @@ namespace JS::Temporal {
 
 // 5.1 The Temporal.PlainDateTime Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plaindatetime-constructor
 PlainDateTimeConstructor::PlainDateTimeConstructor(Realm& realm)
-    : NativeFunction(vm().names.PlainDateTime.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.PlainDateTime.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

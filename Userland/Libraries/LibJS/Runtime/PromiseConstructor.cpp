@@ -240,7 +240,7 @@ static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_
 }
 
 PromiseConstructor::PromiseConstructor(Realm& realm)
-    : NativeFunction(vm().names.Promise.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Promise.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

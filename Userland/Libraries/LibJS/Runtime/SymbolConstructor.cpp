@@ -11,7 +11,7 @@
 namespace JS {
 
 SymbolConstructor::SymbolConstructor(Realm& realm)
-    : NativeFunction(vm().names.Symbol.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Symbol.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

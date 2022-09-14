@@ -13,7 +13,7 @@
 namespace JS {
 
 AsyncFunctionConstructor::AsyncFunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.AsyncFunction.as_string(), *realm.intrinsics().function_constructor())
+    : NativeFunction(realm.vm().names.AsyncFunction.as_string(), *realm.intrinsics().function_constructor())
 {
 }
 

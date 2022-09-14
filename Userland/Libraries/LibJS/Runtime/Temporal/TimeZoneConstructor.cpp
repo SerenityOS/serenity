@@ -12,7 +12,7 @@ namespace JS::Temporal {
 
 // 11.2 The Temporal.TimeZone Constructor, https://tc39.es/proposal-temporal/#sec-temporal-timezone-constructor
 TimeZoneConstructor::TimeZoneConstructor(Realm& realm)
-    : NativeFunction(vm().names.TimeZone.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.TimeZone.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

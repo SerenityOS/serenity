@@ -12,7 +12,7 @@
 namespace JS {
 
 BooleanConstructor::BooleanConstructor(Realm& realm)
-    : NativeFunction(vm().names.Boolean.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Boolean.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

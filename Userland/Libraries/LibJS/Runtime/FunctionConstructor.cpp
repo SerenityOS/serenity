@@ -20,7 +20,7 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor(Realm& realm)
-    : NativeFunction(vm().names.Function.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Function.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

@@ -17,7 +17,7 @@ TypedArrayConstructor::TypedArrayConstructor(FlyString const& name, Object& prot
 }
 
 TypedArrayConstructor::TypedArrayConstructor(Realm& realm)
-    : NativeFunction(vm().names.TypedArray.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.TypedArray.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

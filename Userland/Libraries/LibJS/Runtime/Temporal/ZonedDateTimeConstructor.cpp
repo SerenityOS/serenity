@@ -17,7 +17,7 @@ namespace JS::Temporal {
 
 // 6.1 The Temporal.ZonedDateTime Constructor, https://tc39.es/proposal-temporal/#sec-temporal-zoneddatetime-constructor
 ZonedDateTimeConstructor::ZonedDateTimeConstructor(Realm& realm)
-    : NativeFunction(vm().names.ZonedDateTime.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.ZonedDateTime.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

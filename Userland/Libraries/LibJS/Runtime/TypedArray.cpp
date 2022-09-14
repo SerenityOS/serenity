@@ -478,7 +478,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                            \
                                                                                                                                  \
     ConstructorName::ConstructorName(Realm& realm)                                                                               \
-        : TypedArrayConstructor(vm().names.ClassName.as_string(), *realm.intrinsics().typed_array_constructor())                 \
+        : TypedArrayConstructor(realm.vm().names.ClassName.as_string(), *realm.intrinsics().typed_array_constructor())           \
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \

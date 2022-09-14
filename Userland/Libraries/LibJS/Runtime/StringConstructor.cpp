@@ -18,7 +18,7 @@
 namespace JS {
 
 StringConstructor::StringConstructor(Realm& realm)
-    : NativeFunction(vm().names.String.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.String.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

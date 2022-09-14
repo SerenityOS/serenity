@@ -14,7 +14,7 @@
 namespace JS {
 
 WeakSetConstructor::WeakSetConstructor(Realm& realm)
-    : NativeFunction(vm().names.WeakSet.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.WeakSet.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 

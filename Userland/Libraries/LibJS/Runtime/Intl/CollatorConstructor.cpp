@@ -131,7 +131,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
 
 // 10.1 The Intl.Collator Constructor, https://tc39.es/ecma402/#sec-the-intl-collator-constructor
 CollatorConstructor::CollatorConstructor(Realm& realm)
-    : NativeFunction(vm().names.Collator.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Collator.as_string(), *realm.intrinsics().function_prototype())
 {
 }
 
