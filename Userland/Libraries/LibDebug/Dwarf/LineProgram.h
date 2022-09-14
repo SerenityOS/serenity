@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include "DwarfInfo.h"
 #include <AK/FlyString.h>
 #include <AK/MemoryStream.h>
 #include <AK/Vector.h>
+#include <LibDebug/Dwarf/DwarfTypes.h>
 
 namespace Debug::Dwarf {
+
+class DwarfInfo;
 
 struct [[gnu::packed]] LineProgramUnitHeader32Common {
     u32 length;

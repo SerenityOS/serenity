@@ -9,6 +9,7 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibDebug/Dwarf/DwarfInfo.h>
 
 namespace Debug::Dwarf {
 

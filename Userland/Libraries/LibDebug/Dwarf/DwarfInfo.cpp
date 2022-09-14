@@ -31,6 +31,8 @@ DwarfInfo::DwarfInfo(ELF::Image const& elf)
     populate_compilation_units();
 }
 
+DwarfInfo::~DwarfInfo() = default;
+
 ReadonlyBytes DwarfInfo::section_data(StringView section_name) const
 {
     auto section = m_elf.lookup_section(section_name);
