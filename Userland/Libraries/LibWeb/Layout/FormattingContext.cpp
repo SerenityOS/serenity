@@ -802,6 +802,9 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
         used_offset.set_y(y_offset);
     }
 
+    // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
+    used_offset.translate_by(-containing_block_state.padding_left, -containing_block_state.padding_top);
+
     box_state.offset = used_offset;
 
     if (independent_formatting_context)
