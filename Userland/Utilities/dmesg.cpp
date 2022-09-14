@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
@@ -14,8 +14,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/dmesg", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto file = TRY(Core::File::open("/sys/kernel/dmesg", Core::OpenMode::ReadOnly));
-    auto buffer = file->read_all();
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/dmesg"sv, Core::Stream::OpenMode::Read));
+    auto buffer = TRY(file->read_all());
     out("{}", StringView { buffer });
     return 0;
 }
