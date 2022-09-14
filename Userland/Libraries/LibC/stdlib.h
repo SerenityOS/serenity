@@ -25,8 +25,6 @@ size_t malloc_good_size(size_t);
 void serenity_dump_malloc_stats(void);
 void free(void*);
 __attribute__((alloc_size(2))) void* realloc(void* ptr, size_t);
-__attribute__((malloc, alloc_size(1), alloc_align(2))) void* _aligned_malloc(size_t size, size_t alignment);
-void _aligned_free(void* memblock);
 char* getenv(char const* name);
 char* secure_getenv(char const* name);
 int putenv(char*);
