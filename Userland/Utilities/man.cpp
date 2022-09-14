@@ -8,7 +8,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
@@ -108,12 +108,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly), StringView(section).replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly));
     pid_t pager_pid = TRY(pipe_to_pager(pager_command));
 
-    auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio proc"));
 
-    dbgln("Loading man page from {}", file->filename());
-    auto buffer = file->read_all();
+    dbgln("Loading man page from {}", filename);
+    auto buffer = TRY(file->read_all());
     auto source = String::copy(buffer);
 
     const String title("SerenityOS manual");
