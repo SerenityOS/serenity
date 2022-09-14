@@ -7,14 +7,17 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
+#include <AK/OwnPtr.h>
+#include <LibGfx/Forward.h>
+#include <LibVideo/DecoderError.h>
+
 #include "BitStream.h"
 #include "LookupTables.h"
 #include "MV.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 #include "TreeParser.h"
-#include <AK/ByteBuffer.h>
-#include <AK/OwnPtr.h>
 
 namespace Video::VP9 {
 
@@ -27,23 +30,12 @@ class Parser {
 public:
     explicit Parser(Decoder&);
     ~Parser();
-    ErrorOr<void> parse_frame(ByteBuffer const&);
+    DecoderErrorOr<void> parse_frame(ByteBuffer const&);
     void dump_info();
 
 private:
-    ErrorOr<FrameType> read_frame_type()
-    {
-        if (TRY(m_bit_stream->read_bit()))
-            return NonKeyFrame;
-        return KeyFrame;
-    }
-
-    ErrorOr<ColorRange> read_color_range()
-    {
-        if (TRY(m_bit_stream->read_bit()))
-            return FullSwing;
-        return StudioSwing;
-    }
+    DecoderErrorOr<FrameType> read_frame_type();
+    DecoderErrorOr<ColorRange> read_color_range();
 
     /* Utilities */
     void clear_context(Vector<u8>& context, size_t size);
@@ -53,84 +45,84 @@ private:
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
-    ErrorOr<void> refresh_probs();
+    DecoderErrorOr<void> refresh_probs();
 
     /* (6.2) Uncompressed Header Syntax */
-    ErrorOr<void> uncompressed_header();
-    ErrorOr<void> frame_sync_code();
-    ErrorOr<void> color_config();
-    ErrorOr<void> frame_size();
-    ErrorOr<void> render_size();
-    ErrorOr<void> frame_size_with_refs();
+    DecoderErrorOr<void> uncompressed_header();
+    DecoderErrorOr<void> frame_sync_code();
+    DecoderErrorOr<void> color_config();
+    DecoderErrorOr<void> frame_size();
+    DecoderErrorOr<void> render_size();
+    DecoderErrorOr<void> frame_size_with_refs();
     void compute_image_size();
-    ErrorOr<void> read_interpolation_filter();
-    ErrorOr<void> loop_filter_params();
-    ErrorOr<void> quantization_params();
-    ErrorOr<i8> read_delta_q();
-    ErrorOr<void> segmentation_params();
-    ErrorOr<u8> read_prob();
-    ErrorOr<void> tile_info();
+    DecoderErrorOr<void> read_interpolation_filter();
+    DecoderErrorOr<void> loop_filter_params();
+    DecoderErrorOr<void> quantization_params();
+    DecoderErrorOr<i8> read_delta_q();
+    DecoderErrorOr<void> segmentation_params();
+    DecoderErrorOr<u8> read_prob();
+    DecoderErrorOr<void> tile_info();
     u16 calc_min_log2_tile_cols();
     u16 calc_max_log2_tile_cols();
     void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
-    ErrorOr<void> compressed_header();
-    ErrorOr<void> read_tx_mode();
-    ErrorOr<void> tx_mode_probs();
-    ErrorOr<u8> diff_update_prob(u8 prob);
-    ErrorOr<u8> decode_term_subexp();
+    DecoderErrorOr<void> compressed_header();
+    DecoderErrorOr<void> read_tx_mode();
+    DecoderErrorOr<void> tx_mode_probs();
+    DecoderErrorOr<u8> diff_update_prob(u8 prob);
+    DecoderErrorOr<u8> decode_term_subexp();
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    ErrorOr<void> read_coef_probs();
-    ErrorOr<void> read_skip_prob();
-    ErrorOr<void> read_inter_mode_probs();
-    ErrorOr<void> read_interp_filter_probs();
-    ErrorOr<void> read_is_inter_probs();
-    ErrorOr<void> frame_reference_mode();
-    ErrorOr<void> frame_reference_mode_probs();
-    ErrorOr<void> read_y_mode_probs();
-    ErrorOr<void> read_partition_probs();
-    ErrorOr<void> mv_probs();
-    ErrorOr<u8> update_mv_prob(u8 prob);
+    DecoderErrorOr<void> read_coef_probs();
+    DecoderErrorOr<void> read_skip_prob();
+    DecoderErrorOr<void> read_inter_mode_probs();
+    DecoderErrorOr<void> read_interp_filter_probs();
+    DecoderErrorOr<void> read_is_inter_probs();
+    DecoderErrorOr<void> frame_reference_mode();
+    DecoderErrorOr<void> frame_reference_mode_probs();
+    DecoderErrorOr<void> read_y_mode_probs();
+    DecoderErrorOr<void> read_partition_probs();
+    DecoderErrorOr<void> mv_probs();
+    DecoderErrorOr<u8> update_mv_prob(u8 prob);
     void setup_compound_reference_mode();
 
     /* (6.4) Decode Tiles Syntax */
-    ErrorOr<void> decode_tiles();
+    DecoderErrorOr<void> decode_tiles();
     void clear_above_context();
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
-    ErrorOr<void> decode_tile();
+    DecoderErrorOr<void> decode_tile();
     void clear_left_context();
-    ErrorOr<void> decode_partition(u32 row, u32 col, u8 block_subsize);
-    ErrorOr<void> decode_block(u32 row, u32 col, u8 subsize);
-    ErrorOr<void> mode_info();
-    ErrorOr<void> intra_frame_mode_info();
-    ErrorOr<void> intra_segment_id();
-    ErrorOr<void> read_skip();
+    DecoderErrorOr<void> decode_partition(u32 row, u32 col, u8 block_subsize);
+    DecoderErrorOr<void> decode_block(u32 row, u32 col, u8 subsize);
+    DecoderErrorOr<void> mode_info();
+    DecoderErrorOr<void> intra_frame_mode_info();
+    DecoderErrorOr<void> intra_segment_id();
+    DecoderErrorOr<void> read_skip();
     bool seg_feature_active(u8 feature);
-    ErrorOr<void> read_tx_size(bool allow_select);
-    ErrorOr<void> inter_frame_mode_info();
-    ErrorOr<void> inter_segment_id();
+    DecoderErrorOr<void> read_tx_size(bool allow_select);
+    DecoderErrorOr<void> inter_frame_mode_info();
+    DecoderErrorOr<void> inter_segment_id();
     u8 get_segment_id();
-    ErrorOr<void> read_is_inter();
-    ErrorOr<void> intra_block_mode_info();
-    ErrorOr<void> inter_block_mode_info();
-    ErrorOr<void> read_ref_frames();
-    ErrorOr<void> assign_mv(bool is_compound);
-    ErrorOr<void> read_mv(u8 ref);
-    ErrorOr<i32> read_mv_component(u8 component);
-    ErrorOr<void> residual();
+    DecoderErrorOr<void> read_is_inter();
+    DecoderErrorOr<void> intra_block_mode_info();
+    DecoderErrorOr<void> inter_block_mode_info();
+    DecoderErrorOr<void> read_ref_frames();
+    DecoderErrorOr<void> assign_mv(bool is_compound);
+    DecoderErrorOr<void> read_mv(u8 ref);
+    DecoderErrorOr<i32> read_mv_component(u8 component);
+    DecoderErrorOr<void> residual();
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
-    ErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
+    DecoderErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
     u32 const* get_scan(size_t plane, TXSize tx_size, u32 block_index);
-    ErrorOr<i32> read_coef(Token token);
+    DecoderErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    ErrorOr<void> find_mv_refs(ReferenceFrame, int block);
-    ErrorOr<void> find_best_ref_mvs(int ref_list);
-    ErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
-    bool use_mv_hp(MV const& delta_mv);
+    DecoderErrorOr<void> find_mv_refs(ReferenceFrame, int block);
+    DecoderErrorOr<void> find_best_ref_mvs(int ref_list);
+    DecoderErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
+    DecoderErrorOr<bool> use_mv_hp(MV const& delta_mv);
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };

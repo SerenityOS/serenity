@@ -15,7 +15,7 @@ Decoder::Decoder()
 {
 }
 
-ErrorOr<void> Decoder::decode_frame(ByteBuffer const& frame_data)
+DecoderErrorOr<void> Decoder::decode_frame(ByteBuffer const& frame_data)
 {
     TRY(m_parser->parse_frame(frame_data));
     // TODO:
@@ -51,7 +51,7 @@ u8 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 co
     return left_count + right_count;
 }
 
-ErrorOr<void> Decoder::adapt_coef_probs()
+DecoderErrorOr<void> Decoder::adapt_coef_probs()
 {
     u8 update_factor;
     if (m_parser->m_frame_is_intra || m_parser->m_last_frame_type != KeyFrame)
@@ -96,7 +96,7 @@ ErrorOr<void> Decoder::adapt_coef_probs()
         }                                                                                                  \
     } while (0)
 
-ErrorOr<void> Decoder::adapt_non_coef_probs()
+DecoderErrorOr<void> Decoder::adapt_non_coef_probs()
 {
     auto& probs = *m_parser->m_probability_tables;
     auto& counter = *m_parser->m_syntax_element_counter;
@@ -152,25 +152,25 @@ u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
 }
 
-ErrorOr<void> Decoder::predict_intra(size_t, u32, u32, bool, bool, bool, TXSize, u32)
+DecoderErrorOr<void> Decoder::predict_intra(size_t, u32, u32, bool, bool, bool, TXSize, u32)
 {
     // TODO: Implement
-    return Error::from_string_literal("predict_intra not implemented");
+    return DecoderError::not_implemented();
 }
 
-ErrorOr<void> Decoder::predict_inter(size_t, u32, u32, u32, u32, u32)
+DecoderErrorOr<void> Decoder::predict_inter(size_t, u32, u32, u32, u32, u32)
 {
     // TODO: Implement
-    return Error::from_string_literal("predict_inter not implemented");
+    return DecoderError::not_implemented();
 }
 
-ErrorOr<void> Decoder::reconstruct(size_t, u32, u32, TXSize)
+DecoderErrorOr<void> Decoder::reconstruct(size_t, u32, u32, TXSize)
 {
     // TODO: Implement
-    return Error::from_string_literal("reconstruct not implemented");
+    return DecoderError::not_implemented();
 }
 
-ErrorOr<void> Decoder::update_reference_frames()
+DecoderErrorOr<void> Decoder::update_reference_frames()
 {
     for (auto i = 0; i < NUM_REF_FRAMES; i++) {
         dbgln("updating frame {}? {}", i, (m_parser->m_refresh_frame_flags & (1 << i)) == 1);
