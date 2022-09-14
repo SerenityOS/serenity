@@ -2608,7 +2608,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
         if (has_ignored_vendor_prefix(rule->at_rule_name())) {
             return {};
         } else if (rule->at_rule_name().equals_ignoring_case("font-face"sv)) {
-            if (rule->prelude().is_empty() || !rule->block() || !rule->block()->is_curly()) {
+            if (!rule->block() || !rule->block()->is_curly()) {
                 dbgln_if(CSS_PARSER_DEBUG, "@font-face rule is malformed.");
                 return {};
             }
