@@ -59,6 +59,34 @@ static void resize_bitmap_if_needed(NonnullRefPtr<Gfx::Bitmap>& bitmap)
     }
 }
 
+class EmojiButton final : public Button {
+    C_OBJECT(EmojiButton);
+
+private:
+    explicit EmojiButton(String emoji_icon_path)
+        : Button()
+        , m_emoji_icon_path(move(emoji_icon_path))
+    {
+    }
+
+    virtual void paint_event(PaintEvent& event) override
+    {
+        if (m_first_paint_event) {
+            m_first_paint_event = false;
+
+            auto bitmap = Gfx::Bitmap::try_load_from_file(m_emoji_icon_path).release_value_but_fixme_should_propagate_errors();
+            resize_bitmap_if_needed(bitmap);
+
+            set_icon(move(bitmap));
+        }
+
+        Button::paint_event(event);
+    }
+
+    bool m_first_paint_event { true };
+    String m_emoji_icon_path;
+};
+
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
     , m_category_action_group(make<ActionGroup>())
@@ -158,11 +186,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             emoji->display_order = NumericLimits<u32>::max();
         }
 
-        auto bitmap = Gfx::Bitmap::try_load_from_file(filename).release_value_but_fixme_should_propagate_errors();
-        resize_bitmap_if_needed(bitmap);
-
-        auto button = Button::construct();
-        button->set_icon(bitmap);
+        auto button = EmojiButton::construct(move(filename));
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
         button->on_click = [this, text = builder.to_string()](auto) {
