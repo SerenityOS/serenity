@@ -7,9 +7,8 @@
 #pragma once
 
 #include "AbbreviationsMap.h"
-#include "DIE.h"
-#include "LineProgram.h"
 #include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 
 namespace Debug::Dwarf {
@@ -24,6 +23,7 @@ class CompilationUnit {
 
 public:
     CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&, NonnullOwnPtr<LineProgram>&& line_program);
+    ~CompilationUnit();
 
     u32 offset() const { return m_offset; }
     u32 size() const { return m_header.length() + sizeof(u32); }
@@ -38,7 +38,7 @@ public:
 
     DwarfInfo const& dwarf_info() const { return m_dwarf_info; }
     AbbreviationsMap const& abbreviations_map() const { return m_abbreviations; }
-    LineProgram const& line_program() const { return *m_line_program; }
+    LineProgram const& line_program() const;
     Optional<FlatPtr> base_address() const;
 
     // DW_AT_addr_base
