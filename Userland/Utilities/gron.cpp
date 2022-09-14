@@ -9,7 +9,7 @@
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
@@ -41,16 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    RefPtr<Core::File> file;
-
-    if (path.is_null())
-        file = Core::File::standard_input();
-    else
-        file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 
-    auto file_contents = file->read_all();
+    auto file_contents = TRY(file->read_all());
     auto json = TRY(JsonValue::from_string(file_contents));
 
     if (use_color) {
