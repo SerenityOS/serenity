@@ -244,11 +244,6 @@ void Node::invalidate_style()
     document().schedule_style_update();
 }
 
-bool Node::is_link() const
-{
-    return enclosing_link_element();
-}
-
 String Node::child_text_content() const
 {
     if (!is<ParentNode>(*this))

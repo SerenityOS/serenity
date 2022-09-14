@@ -170,8 +170,6 @@ public:
 
     void invalidate_style();
 
-    bool is_link() const;
-
     void set_document(Badge<Document>, Document&);
 
     virtual EventTarget* get_parent(Event const&) override;

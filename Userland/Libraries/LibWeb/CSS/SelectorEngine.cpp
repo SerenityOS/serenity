@@ -11,6 +11,8 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
@@ -42,6 +44,15 @@ static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector
         return parts[0].equals_ignoring_case(language);
     }
     return false;
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-link
+static inline bool matches_link_pseudo_class(DOM::Element const& element)
+{
+    // All a elements that have an href attribute, and all area elements that have an href attribute, must match one of :link and :visited.
+    if (!is<HTML::HTMLAnchorElement>(element) && !is<HTML::HTMLAreaElement>(element))
+        return false;
+    return element.has_attribute(HTML::AttributeNames::href);
 }
 
 static inline bool matches_hover_pseudo_class(DOM::Element const& element)
@@ -163,7 +174,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
 {
     switch (pseudo_class.type) {
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
-        return element.is_link();
+        return matches_link_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
