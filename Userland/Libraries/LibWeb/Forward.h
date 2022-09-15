@@ -50,6 +50,7 @@ class CSSStyleSheet;
 class CSSSupportsRule;
 class Display;
 class ElementInlineCSSStyleDeclaration;
+class FilterValueListStyleValue;
 class FlexFlowStyleValue;
 class FlexStyleValue;
 class FontFace;

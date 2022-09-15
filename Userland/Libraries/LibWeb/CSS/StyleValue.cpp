@@ -96,6 +96,12 @@ ContentStyleValue const& StyleValue::as_content() const
     return static_cast<ContentStyleValue const&>(*this);
 }
 
+FilterValueListStyleValue const& StyleValue::as_filter_value_list() const
+{
+    VERIFY(is_filter_value_list());
+    return static_cast<FilterValueListStyleValue const&>(*this);
+}
+
 FlexStyleValue const& StyleValue::as_flex() const
 {
     VERIFY(is_flex());
@@ -1160,6 +1166,171 @@ bool ContentStyleValue::equals(StyleValue const& other) const
         return false;
     if (!m_alt_text.is_null())
         return m_alt_text->equals(*typed_other.m_alt_text);
+    return true;
+}
+
+float Filter::Blur::resolved_radius(Layout::Node const& node) const
+{
+    // Default value when omitted is 0px.
+    auto sigma = 0;
+    if (radius.has_value())
+        sigma = radius->resolved(node).to_px(node);
+    // Note: The radius/sigma of the blur needs to be doubled for LibGfx's blur functions.
+    return sigma * 2;
+}
+
+Filter::DropShadow::Resolved Filter::DropShadow::resolved(Layout::Node const& node) const
+{
+    // The default value for omitted values is missing length values set to 0
+    // and the missing used color is taken from the color property.
+    return Resolved {
+        offset_x.resolved(node).to_px(node),
+        offset_y.resolved(node).to_px(node),
+        radius.has_value() ? radius->resolved(node).to_px(node) : 0.0f,
+        color.has_value() ? *color : node.computed_values().color()
+    };
+}
+
+float Filter::HueRotate::angle_degrees() const
+{
+    // Default value when omitted is 0deg.
+    if (!angle.has_value())
+        return 0.0f;
+    return angle->visit([&](Angle const& angle) { return angle.to_degrees(); }, [&](auto) { return 0.0f; });
+}
+
+float Filter::Color::resolved_amount() const
+{
+    if (amount.has_value()) {
+        if (amount->is_percentage())
+            return amount->percentage().as_fraction();
+        return amount->number().value();
+    }
+    // All color filters (brightness, sepia, etc) have a default amount of 1.
+    return 1.0f;
+}
+
+String FilterValueListStyleValue::to_string() const
+{
+    StringBuilder builder {};
+    bool first = true;
+    for (auto& filter_function : filter_value_list()) {
+        if (!first)
+            builder.append(' ');
+        filter_function.visit(
+            [&](Filter::Blur const& blur) {
+                builder.append("blur("sv);
+                if (blur.radius.has_value())
+                    builder.append(blur.radius->to_string());
+            },
+            [&](Filter::DropShadow const& drop_shadow) {
+                builder.appendff("drop-shadow({} {}"sv,
+                    drop_shadow.offset_x, drop_shadow.offset_y);
+                if (drop_shadow.radius.has_value())
+                    builder.appendff(" {}", drop_shadow.radius->to_string());
+                if (drop_shadow.color.has_value()) {
+                    builder.append(' ');
+                    serialize_a_srgb_value(builder, *drop_shadow.color);
+                }
+            },
+            [&](Filter::HueRotate const& hue_rotate) {
+                builder.append("hue-rotate("sv);
+                if (hue_rotate.angle.has_value()) {
+                    hue_rotate.angle->visit(
+                        [&](Angle const& angle) {
+                            builder.append(angle.to_string());
+                        },
+                        [&](auto&) {
+                            builder.append('0');
+                        });
+                }
+            },
+            [&](Filter::Color const& color) {
+                builder.appendff("{}(",
+                    [&] {
+                        switch (color.operation) {
+                        case Filter::Color::Operation::Brightness:
+                            return "brightness"sv;
+                        case Filter::Color::Operation::Contrast:
+                            return "contrast"sv;
+                        case Filter::Color::Operation::Grayscale:
+                            return "grayscale"sv;
+                        case Filter::Color::Operation::Invert:
+                            return "invert"sv;
+                        case Filter::Color::Operation::Opacity:
+                            return "opacity"sv;
+                        case Filter::Color::Operation::Saturate:
+                            return "saturate"sv;
+                        case Filter::Color::Operation::Sepia:
+                            return "sepia"sv;
+                        default:
+                            VERIFY_NOT_REACHED();
+                        }
+                    }());
+                if (color.amount.has_value())
+                    builder.append(color.amount->to_string());
+            });
+        builder.append(')');
+        first = false;
+    }
+    return builder.to_string();
+}
+
+static bool operator==(Filter::Blur const& a, Filter::Blur const& b)
+{
+    return a.radius == b.radius;
+}
+
+static bool operator==(Filter::DropShadow const& a, Filter::DropShadow const& b)
+{
+    return a.offset_x == b.offset_x && a.offset_y == b.offset_y && a.radius == b.radius && a.color == b.color;
+}
+
+static bool operator==(Filter::HueRotate::Zero const&, Filter::HueRotate::Zero const&)
+{
+    return true;
+}
+
+static bool operator==(Filter::Color const& a, Filter::Color const& b)
+{
+    return a.operation == b.operation && a.amount == b.amount;
+}
+
+static bool operator==(Filter::HueRotate const& a, Filter::HueRotate const& b)
+{
+    return a.angle == b.angle;
+}
+
+static bool variant_equals(auto const& a, auto const& b)
+{
+    return a.visit([&](auto const& held_value) {
+        using HeldType = AK::Detail::Decay<decltype(held_value)>;
+        bool other_holds_same_type = b.template has<HeldType>();
+        return other_holds_same_type && held_value == b.template get<HeldType>();
+    });
+}
+
+static bool operator==(Filter::HueRotate::AngleOrZero const& a, Filter::HueRotate::AngleOrZero const& b)
+{
+    return variant_equals(a, b);
+}
+
+static bool operator==(FilterFunction const& a, FilterFunction const& b)
+{
+    return variant_equals(a, b);
+}
+
+bool FilterValueListStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_filter_value_list();
+    if (m_filter_value_list.size() != typed_other.m_filter_value_list.size())
+        return false;
+    for (size_t i = 0; i < m_filter_value_list.size(); i++) {
+        if (m_filter_value_list[i] != typed_other.m_filter_value_list[i])
+            return false;
+    }
     return true;
 }
 
