@@ -251,11 +251,15 @@ Vector<String> Element::get_attribute_names() const
 
 bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
-    return any_of(m_classes, [&](auto& it) {
-        return case_sensitivity == CaseSensitivity::CaseSensitive
-            ? it == class_name
-            : it.equals_ignoring_case(class_name);
-    });
+    if (case_sensitivity == CaseSensitivity::CaseSensitive) {
+        return any_of(m_classes, [&](auto& it) {
+            return it == class_name;
+        });
+    } else {
+        return any_of(m_classes, [&](auto& it) {
+            return it.equals_ignoring_case(class_name);
+        });
+    }
 }
 
 RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
