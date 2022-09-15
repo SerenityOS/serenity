@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Number.h>
 #include <LibWeb/CSS/Time.h>
 
 namespace Web::CSS {
@@ -207,6 +208,14 @@ public:
     bool is_time() const { return is_t(); }
     Time const& time() const { return get_t(); }
     virtual Time resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Time const& reference_value) const override;
+};
+
+struct NumberPercentage : public PercentageOr<Number> {
+public:
+    using PercentageOr<Number>::PercentageOr;
+
+    bool is_number() const { return is_t(); }
+    Number const& number() const { return get_t(); }
 };
 
 }
