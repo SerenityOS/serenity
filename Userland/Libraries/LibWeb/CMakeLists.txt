@@ -334,6 +334,7 @@ set(SOURCES
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
     Painting/GradientPainting.cpp
+    Painting/FilterPainting.cpp
     Painting/ImagePaintable.cpp
     Painting/InlinePaintable.cpp
     Painting/LabelablePaintable.cpp

@@ -11,6 +11,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
+#include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 #include <LibWeb/Painting/StackingContext.h>
@@ -122,6 +123,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             auto border_box = absolute_border_box_rect();
             context.painter().add_clip_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box).to_rounded<int>());
         }
+        paint_backdrop_filter(context);
         paint_background(context);
         paint_box_shadow(context);
     }
@@ -191,6 +193,13 @@ void PaintableBox::paint_border(PaintContext& context) const
         .left = computed_values().border_left(),
     };
     paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
+}
+
+void PaintableBox::paint_backdrop_filter(PaintContext& context) const
+{
+    auto& backdrop_filter = computed_values().backdrop_filter();
+    if (!backdrop_filter.is_none())
+        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
