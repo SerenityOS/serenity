@@ -76,6 +76,11 @@ public:
         return String::number(m_value);
     }
 
+    bool operator==(Number const& other) const
+    {
+        return m_type == other.m_type && m_value == other.m_value;
+    }
+
 private:
     float m_value { 0 };
     Type m_type;
