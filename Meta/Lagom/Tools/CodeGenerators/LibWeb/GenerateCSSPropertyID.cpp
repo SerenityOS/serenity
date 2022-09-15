@@ -490,7 +490,7 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                             output_numeric_value_check(property_generator, "is_frequency"sv, "as_frequency().frequency().to_hertz()"sv, Array { "Frequency"sv }, min_value, max_value);
                         } else if (type_name == "image") {
                             property_generator.append(R"~~~(
-        if (style_value.is_image() || style_value.is_linear_gradient())
+        if (style_value.is_abstract_image())
             return true;
 )~~~");
                         } else if (type_name == "integer") {
