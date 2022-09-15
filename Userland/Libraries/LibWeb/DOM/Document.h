@@ -353,6 +353,9 @@ public:
     bool is_initial_about_blank() const { return m_is_initial_about_blank; }
     void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
 
+    String domain() const;
+    void set_domain(String const& domain);
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
