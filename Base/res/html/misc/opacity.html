@@ -24,6 +24,13 @@
             .red {
             background: red;
             }
+            .hover-visible {
+                display: inline-block;
+                opacity: 0;
+            }
+            .hover:hover .hover-visible {
+                opacity: 1;
+            }
         </style>
     </head>
     <body>
@@ -64,6 +71,14 @@
             70% opacity
             <div class=op-50>
                 50% opacity inside 70% opacity
+            </div>
+        </div>
+
+        <div class="red hover">
+            Visible on hover
+
+            <div class="hover-visible">
+                I'm visible!
             </div>
         </div>
     </body>
