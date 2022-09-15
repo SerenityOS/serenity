@@ -13,7 +13,7 @@ sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev 
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
+sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
 ```
 
 For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
