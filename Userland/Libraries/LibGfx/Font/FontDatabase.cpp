@@ -119,7 +119,7 @@ Font& FontDatabase::default_fixed_width_font()
 
 struct FontDatabase::Private {
     HashMap<String, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
-    Vector<RefPtr<Typeface>> typefaces;
+    HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>> typefaces;
 };
 
 void FontDatabase::load_all_fonts_from_path(String const& root)
@@ -217,8 +217,11 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
 
 RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
-    for (auto typeface : m_private->typefaces) {
-        if (typeface->family() == family && typeface->weight() == weight && typeface->slope() == slope)
+    auto it = m_private->typefaces.find(family);
+    if (it == m_private->typefaces.end())
+        return nullptr;
+    for (auto const& typeface : it->value) {
+        if (typeface->weight() == weight && typeface->slope() == slope)
             return typeface->get_font(point_size, allow_inexact_size_match);
     }
     return nullptr;
@@ -226,8 +229,11 @@ RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, u
 
 RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
-    for (auto typeface : m_private->typefaces) {
-        if (typeface->family() == family && typeface->variant() == variant)
+    auto it = m_private->typefaces.find(family);
+    if (it == m_private->typefaces.end())
+        return nullptr;
+    for (auto const& typeface : it->value) {
+        if (typeface->variant() == variant)
             return typeface->get_font(point_size, allow_inexact_size_match);
     }
     return nullptr;
@@ -235,19 +241,24 @@ RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& va
 
 RefPtr<Typeface> FontDatabase::get_or_create_typeface(String const& family, String const& variant)
 {
-    for (auto typeface : m_private->typefaces) {
-        if (typeface->family() == family && typeface->variant() == variant)
-            return typeface;
+    auto it = m_private->typefaces.find(family);
+    if (it != m_private->typefaces.end()) {
+        for (auto const& typeface : it->value) {
+            if (typeface->variant() == variant)
+                return typeface;
+        }
     }
     auto typeface = adopt_ref(*new Typeface(family, variant));
-    m_private->typefaces.append(typeface);
+    m_private->typefaces.ensure(family).append(typeface);
     return typeface;
 }
 
 void FontDatabase::for_each_typeface(Function<void(Typeface const&)> callback)
 {
-    for (auto typeface : m_private->typefaces) {
-        callback(*typeface);
+    for (auto const& it : m_private->typefaces) {
+        for (auto const& jt : it.value) {
+            callback(*jt);
+        }
     }
 }
 
