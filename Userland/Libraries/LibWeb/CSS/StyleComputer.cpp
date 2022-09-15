@@ -1366,10 +1366,12 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
             if (!source.url.is_valid())
                 continue;
 
-            auto path = source.url.path();
-            if (!path.ends_with(".woff"sv, AK::CaseSensitivity::CaseInsensitive)
-                && !path.ends_with(".ttf"sv, AK::CaseSensitivity::CaseInsensitive)) {
-                continue;
+            if (source.url.protocol() != "data") {
+                auto path = source.url.path();
+                if (!path.ends_with(".woff"sv, AK::CaseSensitivity::CaseInsensitive)
+                    && !path.ends_with(".ttf"sv, AK::CaseSensitivity::CaseInsensitive)) {
+                    continue;
+                }
             }
 
             candidate_url = source.url;
