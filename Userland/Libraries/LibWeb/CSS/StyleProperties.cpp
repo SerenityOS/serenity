@@ -355,6 +355,14 @@ Optional<CSS::Appearance> StyleProperties::appearance() const
     return appearance;
 }
 
+CSS::BackdropFilter StyleProperties::backdrop_filter() const
+{
+    auto value = property(CSS::PropertyID::BackdropFilter);
+    if (value->is_filter_value_list())
+        return BackdropFilter(value->as_filter_value_list());
+    return BackdropFilter::make_none();
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
