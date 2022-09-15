@@ -695,7 +695,7 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
             }
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::Class,
-                .value = FlyString { class_name_value.token().ident() }
+                .value = Selector::SimpleSelector::Name { class_name_value.token().ident() }
             };
         }
         case '>':
@@ -719,13 +719,13 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
         }
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::Id,
-            .value = FlyString { first_value.token().hash_value() }
+            .value = Selector::SimpleSelector::Name { first_value.token().hash_value() }
         };
     }
     if (first_value.is(Token::Type::Ident)) {
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::TagName,
-            .value = FlyString { first_value.token().ident() }
+            .value = Selector::SimpleSelector::Name { first_value.token().ident() }
         };
     }
     if (first_value.is_block() && first_value.block().is_square())

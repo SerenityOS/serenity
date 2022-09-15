@@ -142,8 +142,19 @@ public:
             CaseType case_type;
         };
 
+        struct Name {
+            Name(FlyString n)
+                : name(move(n))
+                , lowercase_name(name.to_lowercase())
+            {
+            }
+
+            FlyString name;
+            FlyString lowercase_name;
+        };
+
         Type type;
-        Variant<Empty, Attribute, PseudoClass, PseudoElement, FlyString> value {};
+        Variant<Empty, Attribute, PseudoClass, PseudoElement, Name> value {};
 
         Attribute const& attribute() const { return value.get<Attribute>(); }
         Attribute& attribute() { return value.get<Attribute>(); }
@@ -151,8 +162,11 @@ public:
         PseudoClass& pseudo_class() { return value.get<PseudoClass>(); }
         PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
         PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
-        FlyString const& name() const { return value.get<FlyString>(); }
-        FlyString& name() { return value.get<FlyString>(); }
+
+        FlyString const& name() const { return value.get<Name>().name; }
+        FlyString& name() { return value.get<Name>().name; }
+        FlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
+        FlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
 
         String serialize() const;
     };

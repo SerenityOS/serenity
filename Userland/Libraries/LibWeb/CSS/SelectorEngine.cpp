@@ -353,9 +353,9 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
         return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::TagName:
         // See https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors
-        if (is<HTML::HTMLElement>(element) && element.document().document_type() != DOM::Document::Type::XML)
-            return component.name().equals_ignoring_case(element.local_name());
-        return component.name() == element.local_name();
+        if (element.document().document_type() == DOM::Document::Type::HTML)
+            return component.lowercase_name() == element.local_name();
+        return component.name().equals_ignoring_case(element.local_name());
     case CSS::Selector::SimpleSelector::Type::Attribute:
         return matches_attribute(component.attribute(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:

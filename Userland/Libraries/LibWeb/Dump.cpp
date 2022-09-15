@@ -372,7 +372,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
             builder.appendff("{}:", type_description);
             // FIXME: This is goofy
-            if (simple_selector.value.has<FlyString>())
+            if (simple_selector.value.has<CSS::Selector::SimpleSelector::Name>())
                 builder.append(simple_selector.name());
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
