@@ -480,7 +480,7 @@ void explicit_bzero(void* ptr, size_t size)
     secure_zero(ptr, size);
 }
 
-void* (*volatile memset_ptr)(void*, int, size_t) = memset;
+static void* (*volatile memset_ptr)(void*, int, size_t) = memset;
 
 // Not in POSIX yet, this was added in C23.
 // https://www.open-std.org/JTC1/SC22/WG14/www/docs/n2897.htm
