@@ -340,6 +340,7 @@ private:
     RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
     RefPtr<StyleValue> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
 
+    RefPtr<StyleValue> parse_filter_value_list_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_background_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_single_background_position_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
