@@ -235,6 +235,8 @@ public:
 #endif
     }
 
+    Color mixed_with(Color const& other, float weight) const;
+
     Color interpolate(Color const& other, float weight) const noexcept
     {
         u8 r = red() + round_to<u8>(static_cast<float>(other.red() - red()) * weight);
