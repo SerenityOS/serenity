@@ -12,7 +12,17 @@ namespace Gfx {
 
 class ColorFilter : public Filter {
 public:
+    ColorFilter(float amount = 1.0f)
+        : m_amount(amount)
+    {
+    }
+
     virtual ~ColorFilter() = default;
+
+    virtual bool amount_handled_in_filter() const
+    {
+        return false;
+    }
 
     virtual void apply(Bitmap& target_bitmap, IntRect const& target_rect, Bitmap const& source_bitmap, IntRect const& source_rect) override
     {
@@ -30,15 +40,14 @@ public:
                 auto source_pixel = source_bitmap.get_pixel(source_x, source_y);
                 auto target_color = convert_color(source_pixel);
 
-                target_bitmap.set_pixel(target_x, target_y, target_color);
+                target_bitmap.set_pixel(target_x, target_y, m_amount < 1.0f && !amount_handled_in_filter() ? source_pixel.mixed_with(target_color, m_amount) : target_color);
             }
         }
     }
 
 protected:
-    ColorFilter() = default;
-
     virtual Color convert_color(Color) = 0;
+    float m_amount { 1.0f };
 };
 
 }
