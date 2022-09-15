@@ -134,36 +134,6 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
     return { gradient_angle, resolved_color_stops, repeat_length };
 }
 
-static float mix(float x, float y, float a)
-{
-    return x * (1 - a) + y * a;
-}
-
-// Note: Gfx::gamma_accurate_blend() is NOT correct for linear gradients!
-static Gfx::Color color_mix(Gfx::Color x, Gfx::Color y, float a)
-{
-    if (x.alpha() == y.alpha() || x.with_alpha(0) == y.with_alpha(0)) {
-        return Gfx::Color {
-            round_to<u8>(mix(x.red(), y.red(), a)),
-            round_to<u8>(mix(x.green(), y.green(), a)),
-            round_to<u8>(mix(x.blue(), y.blue(), a)),
-            round_to<u8>(mix(x.alpha(), y.alpha(), a)),
-        };
-    }
-    // Use slower but more visually pleasing premultiplied alpha mixing if both the color and alpha differ.
-    // https://drafts.csswg.org/css-images/#coloring-gradient-line
-    auto mixed_alpha = mix(x.alpha(), y.alpha(), a);
-    auto premultiplied_mix_channel = [&](float channel_x, float channel_y, float a) {
-        return round_to<u8>(mix(channel_x * (x.alpha() / 255.0f), channel_y * (y.alpha() / 255.0f), a) / (mixed_alpha / 255.0f));
-    };
-    return Gfx::Color {
-        premultiplied_mix_channel(x.red(), y.red(), a),
-        premultiplied_mix_channel(x.green(), y.green(), a),
-        premultiplied_mix_channel(x.blue(), y.blue(), a),
-        round_to<u8>(mixed_alpha),
-    };
-}
-
 void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, LinearGradientData const& data)
 {
     float angle = normalized_gradient_angle_radians(data.gradient_angle);
@@ -213,17 +183,19 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     auto& color_stops = data.color_stops;
     auto start_offset = data.repeat_length.has_value() ? color_stops.first().position : 0.0f;
     auto start_offset_int = round_to<int>(start_offset);
+
+    // Note: color.mixed_with() performs premultiplied alpha mixing when necessary as defined in:
+    // https://drafts.csswg.org/css-images/#coloring-gradient-line
+
     for (int loc = 0; loc < gradient_color_count; loc++) {
-        Gfx::Color gradient_color = color_mix(
-            color_stops[0].color,
+        Gfx::Color gradient_color = color_stops[0].color.mixed_with(
             color_stops[1].color,
             color_stop_step(
                 color_stops[0],
                 color_stops[1],
                 loc + start_offset_int));
         for (size_t i = 1; i < color_stops.size() - 1; i++) {
-            gradient_color = color_mix(
-                gradient_color,
+            gradient_color = gradient_color.mixed_with(
                 color_stops[i + 1].color,
                 color_stop_step(
                     color_stops[i],
@@ -247,7 +219,7 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
             }
             // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
             auto blend = loc - static_cast<int>(loc);
-            auto gradient_color = color_mix(lookup_color(loc - 1), lookup_color(loc), blend);
+            auto gradient_color = lookup_color(loc - 1).mixed_with(lookup_color(loc), blend);
             context.painter().set_pixel(gradient_rect.x() + x, gradient_rect.y() + y, gradient_color, gradient_color.alpha() < 255);
         }
     }

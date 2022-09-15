@@ -310,6 +310,30 @@ Optional<Color> Color::from_string(StringView string)
     return Color(r.value(), g.value(), b.value(), a.value());
 }
 
+Color Color::mixed_with(Color const& other, float weight) const
+{
+    if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0)) {
+        return Gfx::Color {
+            round_to<u8>(mix<float>(red(), other.red(), weight)),
+            round_to<u8>(mix<float>(green(), other.green(), weight)),
+            round_to<u8>(mix<float>(blue(), other.blue(), weight)),
+            round_to<u8>(mix<float>(alpha(), other.alpha(), weight)),
+        };
+    }
+    // Fallback to slower, but more visually pleasing premultiplied alpha mix.
+    // This is needed for linear-gradient()s in LibWeb.
+    auto mixed_alpha = mix<float>(alpha(), other.alpha(), weight);
+    auto premultiplied_mix_channel = [&](float channel, float other_channel, float weight) {
+        return round_to<u8>(mix<float>(channel * (alpha() / 255.0f), other_channel * (other.alpha() / 255.0f), weight) / (mixed_alpha / 255.0f));
+    };
+    return Gfx::Color {
+        premultiplied_mix_channel(red(), other.red(), weight),
+        premultiplied_mix_channel(green(), other.green(), weight),
+        premultiplied_mix_channel(blue(), other.blue(), weight),
+        round_to<u8>(mixed_alpha),
+    };
+}
+
 Vector<Color> Color::shades(u32 steps, float max) const
 {
     float shade = 1.f;
