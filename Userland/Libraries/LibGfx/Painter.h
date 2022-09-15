@@ -62,6 +62,7 @@ public:
     void set_pixel(IntPoint const&, Color, bool blend = false);
     void set_pixel(int x, int y, Color color, bool blend = false) { set_pixel({ x, y }, color, blend); }
     Optional<Color> get_pixel(IntPoint const&);
+    ErrorOr<NonnullRefPtr<Bitmap>> get_region_bitmap(IntRect const&, BitmapFormat format, Optional<IntRect&> actual_region = {});
     void draw_line(IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
     void draw_triangle_wave(IntPoint const&, IntPoint const&, Color color, int amplitude, int thickness = 1);
     void draw_quadratic_bezier_curve(IntPoint const& control_point, IntPoint const&, IntPoint const&, Color, int thickness = 1, LineStyle style = LineStyle::Solid);

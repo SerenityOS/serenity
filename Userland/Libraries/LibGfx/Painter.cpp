@@ -1799,6 +1799,15 @@ Optional<Color> Painter::get_pixel(IntPoint const& p)
     return Color::from_argb(m_target->scanline(point.y())[point.x()]);
 }
 
+ErrorOr<NonnullRefPtr<Bitmap>> Painter::get_region_bitmap(IntRect const& region, BitmapFormat format, Optional<IntRect&> actual_region)
+{
+    VERIFY(scale() == 1);
+    auto bitmap_region = region.translated(state().translation).intersected(m_target->rect());
+    if (actual_region.has_value())
+        actual_region.value() = bitmap_region.translated(-state().translation);
+    return m_target->cropped(bitmap_region, format);
+}
+
 ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
 {
     // This always sets a single physical pixel, independent of scale().
