@@ -12,7 +12,7 @@ This patch should be removed when we implement proper TLS support.
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Clang.cpp b/clang/lib/Driver/ToolChains/Clang.cpp
-index 3704ed858..cc7b59809 100644
+index 3704ed8586682677882acb8e1b82bfc14b1d07a5..cc7b598090a8795e5906abc7341f798be7dd638f 100644
 --- a/clang/lib/Driver/ToolChains/Clang.cpp
 +++ b/clang/lib/Driver/ToolChains/Clang.cpp
 @@ -6029,7 +6029,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,

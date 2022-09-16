@@ -8,7 +8,7 @@ Subject: [PATCH] [compiler-rt] Build crtbegin.o/crtend.o for SerenityOS
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/compiler-rt/cmake/crt-config-ix.cmake b/compiler-rt/cmake/crt-config-ix.cmake
-index 78d1a0de1..c8622c458 100644
+index 78d1a0de1c8a7caab9d30cc8f445d5d8c485dfc0..c8622c458ea49c7ed656d2fb8d164576bba107f8 100644
 --- a/compiler-rt/cmake/crt-config-ix.cmake
 +++ b/compiler-rt/cmake/crt-config-ix.cmake
 @@ -43,7 +43,7 @@ if(NOT APPLE)

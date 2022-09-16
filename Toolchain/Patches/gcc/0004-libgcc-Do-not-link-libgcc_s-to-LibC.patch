@@ -1,7 +1,7 @@
-From c4e0f7d997b3f7cd5c5465a636e097e43170d609 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <awesomekling@gmail.com>
 Date: Mon, 16 May 2022 15:03:14 +0200
-Subject: [PATCH 4/6] libgcc: Do not link libgcc_s to LibC
+Subject: [PATCH] libgcc: Do not link libgcc_s to LibC
 
 The toolchain is built before LibC, so linking to the C runtime library
 would fail.
@@ -17,7 +17,7 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
  1 file changed, 1 deletion(-)
 
 diff --git a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
-index 4efd7b43d..932fa0cfb 100644
+index 4efd7b43dff96b6adb87993e4c66cbcb5ae144dc..932fa0cfbdeff6bb029fcf4b44d93d126d1ecd5f 100644
 --- a/libgcc/config/t-slibgcc
 +++ b/libgcc/config/t-slibgcc
 @@ -26,7 +26,6 @@ SHLIB_MAP = @shlib_map_file@
@@ -28,6 +28,3 @@ index 4efd7b43d..932fa0cfb 100644
  SHLIB_MAKE_SOLINK = $(LN_S) $(SHLIB_SONAME) $(SHLIB_DIR)/$(SHLIB_SOLINK)
  SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
  	$(DESTDIR)$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SOLINK)
--- 
-2.36.1
-

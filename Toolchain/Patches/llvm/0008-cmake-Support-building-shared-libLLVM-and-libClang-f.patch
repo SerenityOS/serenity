@@ -16,7 +16,7 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/clang/tools/libclang/CMakeLists.txt b/clang/tools/libclang/CMakeLists.txt
-index c6b3b44a7..d43e0b4c1 100644
+index c6b3b44a76334b86167971c48891db898d01f8d0..d43e0b4c1f7796c17c524626fba59e0dfaebf4b2 100644
 --- a/clang/tools/libclang/CMakeLists.txt
 +++ b/clang/tools/libclang/CMakeLists.txt
 @@ -96,7 +96,7 @@ if(MSVC)
@@ -29,7 +29,7 @@ index c6b3b44a7..d43e0b4c1 100644
    set(USE_VERSION_SCRIPT ${LLVM_HAVE_LINK_VERSION_SCRIPT})
  endif()
 diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
-index 8e2b78f1b..909018753 100644
+index 8e2b78f1b85c0f2664f84e24d7588bb60e37fe77..909018753e2e09cb3a46bae35e9aaa45cc7703bc 100644
 --- a/llvm/tools/llvm-shlib/CMakeLists.txt
 +++ b/llvm/tools/llvm-shlib/CMakeLists.txt
 @@ -39,6 +39,7 @@ if(LLVM_BUILD_LLVM_DYLIB)

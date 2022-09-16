@@ -1,7 +1,7 @@
-From e7d65e2c0943078214d9231cbb5c5e8eb9b5c726 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <awesomekling@gmail.com>
 Date: Fri, 5 Apr 2019 03:02:52 +0200
-Subject: [PATCH 2/6] fixincludes: Skip for SerenityOS targets
+Subject: [PATCH] fixincludes: Skip for SerenityOS targets
 
 `fixincludes` is responsible for fixing mistakes in system headers that
 rely in compiler extensions that GCC doesn't support or cause errors in
@@ -13,7 +13,7 @@ Our headers don't have such problems, so this hack is of no use for us.
  1 file changed, 1 insertion(+)
 
 diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
-index df90720b7..a45cdd0de 100755
+index df90720b716f2386f343f5ba46a2d8d706188dd5..a45cdd0de6833a1e632292722387be453a079053 100755
 --- a/fixincludes/mkfixinc.sh
 +++ b/fixincludes/mkfixinc.sh
 @@ -11,6 +11,7 @@ target=fixinc.sh
@@ -24,6 +24,3 @@ index df90720b7..a45cdd0de 100755
      i?86-*-cygwin* | \
      i?86-*-mingw32* | \
      x86_64-*-mingw32* | \
--- 
-2.36.1
-
