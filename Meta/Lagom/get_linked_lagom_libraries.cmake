@@ -11,6 +11,11 @@ function(get_linked_lagom_libraries_impl target output)
         return()
     endif()
 
+    get_target_property(target_is_imported "${target}" IMPORTED)
+    if (target_is_imported)
+        return()
+    endif()
+
     get_target_property(target_type "${target}" TYPE)
 
     if ("${target_type}" STREQUAL "SHARED_LIBRARY")
