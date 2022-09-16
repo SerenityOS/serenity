@@ -6,6 +6,8 @@ project(ladybird
     DESCRIPTION "Ladybird Web Browser"
 )
 
+include(GNUInstallDirs)
+
 if (ANDROID)
     set(BUILD_SHARED_LIBS OFF)
 endif()
@@ -19,7 +21,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # See slide 100 of the following ppt :^)
 # https://crascit.com/wp-content/uploads/2019/09/Deep-CMake-For-Library-Authors-Craig-Scott-CppCon-2019.pdf
 if (NOT APPLE)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
+    set(CMAKE_INSTALL_RPATH $ORIGIN;$ORIGIN/../${CMAKE_INSTALL_LIBDIR})
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -92,8 +94,6 @@ add_custom_target(debug
 
 qt_finalize_executable(ladybird)
 
-install(TARGETS ladybird
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    BUNDLE DESTINATION bundle
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if(NOT CMAKE_SKIP_INSTALL_RULES)
+    include(cmake/InstallRules.cmake)
+endif()
