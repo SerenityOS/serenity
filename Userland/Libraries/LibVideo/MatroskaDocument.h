@@ -122,7 +122,8 @@ public:
     bool discardable() const { return m_discardable; }
     void set_discardable(bool discardable) { m_discardable = discardable; }
     u64 frame_count() const { return m_frames.size(); }
-    ByteBuffer const& frame(size_t index) const { return m_frames.at(index); }
+    Vector<ByteBuffer> const& frames() const { return m_frames; }
+    ByteBuffer const& frame(size_t index) const { return frames()[index]; }
     void add_frame(ByteBuffer frame) { m_frames.append(move(frame)); }
 
 private:
