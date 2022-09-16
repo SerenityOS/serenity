@@ -75,6 +75,11 @@ TEST_CASE(brotli_decompress_katica_regular_10_font)
     run_test("KaticaRegular10.font"sv);
 }
 
+TEST_CASE(brotli_single_z)
+{
+    run_test("single-z.txt"sv);
+}
+
 TEST_CASE(brotli_decompress_zero_one_bin)
 {
     // This makes sure that the tests will run both on target and in Lagom.
