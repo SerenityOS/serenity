@@ -323,6 +323,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -cpu pentium3
 -machine isapc
 -d guest_errors
+-device isa-vga
 -chardev stdio,id=stdout,mux=on
 -device isa-debugcon,chardev=stdout
 $SERENITY_BOOT_DRIVE
@@ -336,7 +337,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d guest_errors
 -chardev stdio,id=stdout,mux=on
 -device isa-debugcon,chardev=stdout
--device isa-cirrus-vga
+-device isa-vga
 -device isa-ide
 $SERENITY_BOOT_DRIVE
 -device i8042 
