@@ -534,6 +534,5 @@ private:
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
-void present_context(GLContext*);
 
 }
