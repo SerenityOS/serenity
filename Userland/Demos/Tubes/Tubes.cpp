@@ -125,7 +125,7 @@ void Tubes::choose_new_direction_for_tube(Tube& tube)
 ErrorOr<void> Tubes::create_buffer(Gfx::IntSize size)
 {
     m_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size));
-    m_gl_context = GL::create_context(*m_bitmap);
+    m_gl_context = TRY(GL::create_context(*m_bitmap));
     return {};
 }
 
