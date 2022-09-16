@@ -30,6 +30,7 @@ public:
     static Access& the();
     static bool is_initialized();
     static bool is_disabled();
+    static bool is_hardware_disabled();
 
     void write8_field(Address address, u32 field, u8 value);
     void write16_field(Address address, u32 field, u16 value);
