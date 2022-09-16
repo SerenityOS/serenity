@@ -1700,6 +1700,19 @@ void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 co
     m_raster_position.eye_coordinate_distance = eye_coordinates.length();
 }
 
+void Device::bind_fragment_shader(RefPtr<GPU::Shader> shader)
+{
+    VERIFY(shader.is_null() || shader->ownership_token() == this);
+
+    if (shader.is_null()) {
+        m_current_fragment_shader = nullptr;
+        return;
+    }
+
+    auto softgpu_shader = static_ptr_cast<Shader>(shader);
+    m_current_fragment_shader = softgpu_shader;
+}
+
 Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size) const
 {
     // Round the X and Y floating point coordinates to the nearest integer; OpenGL 1.5 spec:

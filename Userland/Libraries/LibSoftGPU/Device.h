@@ -35,6 +35,7 @@
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Sampler.h>
+#include <LibSoftGPU/Shader.h>
 #include <LibSoftGPU/Triangle.h>
 
 namespace SoftGPU {
@@ -78,6 +79,8 @@ public:
     virtual void set_raster_position(GPU::RasterPosition const& raster_position) override;
     virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
 
+    virtual void bind_fragment_shader(RefPtr<GPU::Shader>) override;
+
 private:
     void calculate_vertex_lighting(GPU::Vertex& vertex) const;
     void draw_statistics_overlay(Gfx::Bitmap&);
@@ -116,6 +119,7 @@ private:
     Vector<FloatVector4> m_clip_planes;
     Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
     Array<GPU::TextureUnitConfiguration, GPU::NUM_TEXTURE_UNITS> m_texture_unit_configuration;
+    RefPtr<Shader> m_current_fragment_shader;
 };
 
 }
