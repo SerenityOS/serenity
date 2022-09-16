@@ -718,6 +718,7 @@ do_dev() {
             git config core.autocrlf false
             git add --all --force
             git commit -a -m 'Initial import'
+            git tag import
         fi
 
         # Import patches as commits, or ask the user to commit them
@@ -792,6 +793,9 @@ do_dev() {
                 }
             done
         fi
+
+        git tag original
+
         popd
     )
 
