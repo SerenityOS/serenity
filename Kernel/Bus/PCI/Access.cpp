@@ -40,6 +40,11 @@ bool Access::is_initialized()
     return (s_access != nullptr);
 }
 
+bool Access::is_hardware_disabled()
+{
+    return g_pci_access_io_probe_failed;
+}
+
 bool Access::is_disabled()
 {
     return g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed;

@@ -7,6 +7,7 @@
 #include <AK/Platform.h>
 #include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
@@ -14,6 +15,45 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 
 namespace Kernel {
+
+static void set_register_with_io(u16 index, u16 data)
+{
+    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+    IO::out16(VBE_DISPI_IOPORT_DATA, data);
+}
+
+static u16 get_register_with_io(u16 index)
+{
+    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+    return IO::in16(VBE_DISPI_IOPORT_DATA);
+}
+
+LockRefPtr<BochsDisplayConnector> BochsDisplayConnector::try_create_for_vga_isa_connector()
+{
+    VERIFY(PCI::Access::is_hardware_disabled());
+    BochsDisplayConnector::IndexID index_id = get_register_with_io(0);
+    if (index_id != VBE_DISPI_ID5)
+        return {};
+
+    auto video_ram_64k_chunks_count = get_register_with_io(to_underlying(BochsDISPIRegisters::VIDEO_RAM_64K_CHUNKS_COUNT));
+    if (video_ram_64k_chunks_count == 0 || video_ram_64k_chunks_count == 0xffff) {
+        dmesgln("Graphics: Bochs ISA VGA compatible adapter does not indicate amount of VRAM, default to 8 MiB");
+        video_ram_64k_chunks_count = (8 * MiB) / (64 * KiB);
+    } else {
+        dmesgln("Graphics: Bochs ISA VGA compatible adapter indicates {} bytes of VRAM", video_ram_64k_chunks_count * (64 * KiB));
+    }
+
+    // Note: The default physical address for isa-vga framebuffer in QEMU is 0xE0000000.
+    // Since this is probably hardcoded at other OSes in their guest drivers,
+    // we can assume this is going to stay the same framebuffer physical address for
+    // this device and will not be changed in the future.
+    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(PhysicalAddress(0xE0000000), video_ram_64k_chunks_count * (64 * KiB));
+    VERIFY(!device_or_error.is_error());
+    auto connector = device_or_error.release_value();
+    MUST(connector->create_attached_framebuffer_console());
+    MUST(connector->initialize_edid_for_generic_monitor({}));
+    return connector;
+}
 
 NonnullLockRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
@@ -39,18 +79,6 @@ ErrorOr<void> BochsDisplayConnector::create_attached_framebuffer_console()
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), 1024, 768, 1024 * sizeof(u32));
     GraphicsManagement::the().set_console(*m_framebuffer_console);
     return {};
-}
-
-static void set_register_with_io(u16 index, u16 data)
-{
-    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
-    IO::out16(VBE_DISPI_IOPORT_DATA, data);
-}
-
-static u16 get_register_with_io(u16 index)
-{
-    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
-    return IO::in16(VBE_DISPI_IOPORT_DATA);
 }
 
 BochsDisplayConnector::IndexID BochsDisplayConnector::index_id() const

@@ -7,6 +7,9 @@
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/IO.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
@@ -204,6 +207,25 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
         VERIFY(!m_console);
         return true;
+    }
+
+    // Note: Don't try to initialize an ISA Bochs VGA adapter if PCI hardware is
+    // present but the user decided to disable its usage nevertheless.
+    // Otherwise we risk using the Bochs VBE driver on a wrong physical address
+    // for the framebuffer.
+    if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
+#if ARCH(I386) || ARCH(X86_64)
+        auto vga_isa_bochs_display_connector = BochsDisplayConnector::try_create_for_vga_isa_connector();
+        if (vga_isa_bochs_display_connector) {
+            dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");
+            MUST(vga_isa_bochs_display_connector->set_safe_mode_setting());
+            m_platform_board_specific_display_connector = vga_isa_bochs_display_connector;
+            dmesgln("Graphics: Invoking manual blanking with VGA ISA ports");
+            SpinlockLocker locker(m_main_vga_lock);
+            IO::out8(0x3c0, 0x20);
+            return true;
+        }
+#endif
     }
 
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
