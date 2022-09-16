@@ -89,7 +89,7 @@ ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PCIIDE
 }
 ErrorOr<void> IDEChannel::allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>)
 {
-    return allocate_resources(false);
+    return allocate_resources(true);
 }
 #endif
 
