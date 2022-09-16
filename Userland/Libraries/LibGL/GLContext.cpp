@@ -944,9 +944,4 @@ void make_context_current(GLContext* context)
     g_gl_context = context;
 }
 
-void present_context(GLContext* context)
-{
-    context->present();
-}
-
 }
