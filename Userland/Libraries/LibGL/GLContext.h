@@ -254,6 +254,13 @@ private:
     [[nodiscard]] bool should_append_to_listing() const { return m_current_listing_index.has_value(); }
     [[nodiscard]] bool should_execute_after_appending_to_listing() const { return m_current_listing_index.has_value() && m_current_listing_index->mode == GL_COMPILE_AND_EXECUTE; }
 
+    // FIXME: we store GPU::Texture objects that do not point back to either the driver or device, so we need
+    //        to destruct the latter two at the very end. Fix this by making all GPU objects point back to
+    //        the device that created them, and the device back to the driver.
+    RefPtr<GPU::Driver> m_driver;
+    NonnullOwnPtr<GPU::Device> m_rasterizer;
+    GPU::DeviceInfo const m_device_info;
+
     GLenum m_current_draw_mode;
     GLenum m_current_matrix_mode { GL_MODELVIEW };
 
@@ -374,9 +381,6 @@ private:
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
-    RefPtr<GPU::Driver> m_driver;
-    NonnullOwnPtr<GPU::Device> m_rasterizer;
-    GPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
 

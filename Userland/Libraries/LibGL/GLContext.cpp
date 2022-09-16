@@ -21,11 +21,11 @@ __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 namespace GL {
 
 GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> device, Gfx::Bitmap& frontbuffer)
-    : m_viewport { frontbuffer.rect() }
-    , m_frontbuffer { frontbuffer }
-    , m_driver { driver }
+    : m_driver { driver }
     , m_rasterizer { move(device) }
     , m_device_info { m_rasterizer->info() }
+    , m_viewport { frontbuffer.rect() }
+    , m_frontbuffer { frontbuffer }
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
