@@ -189,15 +189,20 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * a variant that is suitable for ISA VGA handling, and not PCI adapters.
      */
 
+    ScopeGuard assign_console_on_initialization_exit([this] {
+        if (!m_console) {
+            // If no graphics driver was instantiated and we had a bootloader provided
+            // framebuffer console we can simply re-use it.
+            if (auto* boot_console = g_boot_console.load()) {
+                m_console = *boot_console;
+                boot_console->unref(); // Drop the leaked reference from Kernel::init()
+            }
+        }
+    });
+
     auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
         VERIFY(!m_console);
-        // If no graphics driver was instantiated and we had a bootloader provided
-        // framebuffer console we can simply re-use it.
-        if (auto* boot_console = g_boot_console.load()) {
-            m_console = *boot_console;
-            boot_console->unref(); // Drop the leaked reference from Kernel::init()
-        }
         return true;
     }
 
@@ -230,15 +235,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         initialize_preset_resolution_generic_display_connector();
         return true;
-    }
-
-    if (!m_console) {
-        // If no graphics driver was instantiated and we had a bootloader provided
-        // framebuffer console we can simply re-use it.
-        if (auto* boot_console = g_boot_console.load()) {
-            m_console = *boot_console;
-            boot_console->unref(); // Drop the leaked reference from Kernel::init()
-        }
     }
 
     if (m_graphics_devices.is_empty()) {
