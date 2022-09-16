@@ -103,6 +103,29 @@ public:
 
         void rasterize_impl(Rasterizer&, Gfx::AffineTransform const&) const;
         RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale) const;
+
+        template<typename GlyphCb>
+        void rasterize_composite_loop(Rasterizer& rasterizer, Gfx::AffineTransform& transform, GlyphCb glyph_callback) const
+        {
+            ComponentIterator component_iterator(m_slice);
+
+            while (true) {
+                auto opt_item = component_iterator.next();
+                if (!opt_item.has_value()) {
+                    break;
+                }
+                auto item = opt_item.value();
+                auto affine_here = transform.multiply(item.affine);
+                Glyph glyph = glyph_callback(item.glyph_id);
+
+                if (glyph.m_type == Type::Simple) {
+                    glyph.rasterize_impl(rasterizer, affine_here);
+                } else {
+                    glyph.rasterize_composite_loop(rasterizer, transform, glyph_callback);
+                }
+            }
+        }
+
         template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
@@ -110,17 +133,9 @@ public:
             u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
             Rasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
-            ComponentIterator component_iterator(m_slice);
-            while (true) {
-                auto opt_item = component_iterator.next();
-                if (!opt_item.has_value()) {
-                    break;
-                }
-                auto item = opt_item.value();
-                auto affine_here = affine.multiply(item.affine);
-                auto glyph = glyph_callback(item.glyph_id);
-                glyph.rasterize_impl(rasterizer, affine_here);
-            }
+
+            rasterize_composite_loop(rasterizer, affine, glyph_callback);
+
             return rasterizer.accumulate();
         }
 
