@@ -826,7 +826,7 @@ do_dev() {
     if [ "$first_hash" != "$current_hash" ]; then
         >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
         rm -fr "${PORT_META_DIR}"/patches/*.patch
-        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath "${PORT_META_DIR}/patches")"
+        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature --full-index "$first_hash" -o "$(realpath "${PORT_META_DIR}/patches")"
         do_generate_patch_readme
     fi
 }
