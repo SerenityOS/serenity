@@ -18,6 +18,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/HashTable.h>
+#include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -53,6 +54,7 @@
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
 #include <LibWebSocket/WebSocket.h>
+#include <QApplication>
 #include <QCursor>
 #include <QIcon>
 #include <QLineEdit>
@@ -75,15 +77,7 @@ QString qstring_from_akstring(AK::String const& akstring)
     return QString::fromUtf8(akstring.characters(), akstring.length());
 }
 
-String s_serenity_resource_root = [] {
-    auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
-    if (source_dir) {
-        return String::formatted("{}/Base", source_dir);
-    }
-    auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
-    VERIFY(home);
-    return String::formatted("{}/.lagom", home);
-}();
+String s_serenity_resource_root;
 
 class HeadlessBrowserPageClient final : public Web::PageClient {
 public:
@@ -777,18 +771,32 @@ static void platform_init()
 #ifdef AK_OS_ANDROID
     extern void android_platform_init();
     android_platform_init();
+#else
+    s_serenity_resource_root = [] {
+        auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
+        if (source_dir) {
+            return String::formatted("{}/Base", source_dir);
+        }
+        auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
+        VERIFY(home);
+        auto home_lagom = String::formatted("{}/.lagom", home);
+        if (Core::File::is_directory(home_lagom))
+            return home_lagom;
+        auto app_dir = akstring_from_qstring(QApplication::applicationDirPath());
+        return LexicalPath(app_dir).parent().append("share"sv).string();
+    }();
 #endif
 }
 
 void initialize_web_engine()
 {
+    platform_init();
+
     Web::Platform::EventLoopPlugin::install(*new Ladybird::EventLoopPluginQt);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
 
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
-
-    platform_init();
 
     Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
