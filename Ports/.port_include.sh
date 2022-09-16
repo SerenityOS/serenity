@@ -727,7 +727,7 @@ do_dev() {
         git config receive.denyCurrentBranch ignore
         # Import patches as commits, or ask the user to commit them
         # if they're not git patches already.
-        if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
+        if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
             for patch in "${PORT_META_DIR}"/patches/*.patch; do
                 if [ -f "$workdir/.$(basename $patch).applied" ]; then
                     continue
