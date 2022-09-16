@@ -10,6 +10,7 @@ It specifies which flags need to be passed to the linker, defines the
 __serenity__ macro, sets the correct underlying type of `size_t` and
 `ptrdiff_t`, and enables IFUNCs.
 
+
 ## `0002-fixincludes-Skip-for-SerenityOS-targets.patch`
 
 fixincludes: Skip for SerenityOS targets
@@ -27,12 +28,14 @@ libgcc: Build for SerenityOS
 This patch enables building gcc's own C runtime files, and sets up
 exception handling support.
 
+
 ## `0004-libgcc-Do-not-link-libgcc_s-to-LibC.patch`
 
 libgcc: Do not link libgcc_s to LibC
 
 The toolchain is built before LibC, so linking to the C runtime library
 would fail.
+
 
 ## `0005-i386-Disable-math-errno-for-SerenityOS.patch`
 
@@ -50,4 +53,5 @@ During the toolchain build, SerenityOS libraries are not available, so
 we have to manually tell libstdc++ about what our LibC supports.
 
 In most places, we take the Newlib code paths.
+
 

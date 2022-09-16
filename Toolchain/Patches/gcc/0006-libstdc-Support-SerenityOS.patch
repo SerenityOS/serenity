@@ -1,7 +1,10 @@
-From b581fd421af5691bdafda7d30b20723f77d0cc88 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <awesomekling@gmail.com>
 Date: Mon, 16 May 2022 15:08:53 +0200
-Subject: [PATCH 6/6] libstdc++: Support SerenityOS
+Subject: [PATCH] libstdc++: Support SerenityOS
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 During the toolchain build, SerenityOS libraries are not available, so
 we have to manually tell libstdc++ about what our LibC supports.
@@ -24,7 +27,7 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 138bd58d8..6cd7564b6 100644
+index e3cc3a8e867d3428d34f2b4db9c47104a0385450..6e30c391dac74101321a52ca17d8215c05f87844 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
 @@ -1374,7 +1374,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
@@ -46,7 +49,7 @@ index 138bd58d8..6cd7564b6 100644
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 9b94fd71e..51e45878f 100755
+index eac6039212168e1cd33e1b6c2b938324fd403f12..11d23dba48e5799c31335f71911e1c4dca65a245 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -11914,6 +11914,11 @@ else
@@ -89,7 +92,7 @@ index 9b94fd71e..51e45878f 100755
  
      $as_echo "#define HAVE_ASINF 1" >>confdefs.h
 diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
-index ec32980aa..e060300f3 100644
+index ec32980aa0db898623804980af65dad588e4d9f5..e060300f3777fbd38795954ca75e9c4809cfc4e3 100644
 --- a/libstdc++-v3/configure.host
 +++ b/libstdc++-v3/configure.host
 @@ -297,6 +297,9 @@ case "${host_os}" in
@@ -103,7 +106,7 @@ index ec32980aa..e060300f3 100644
      os_include_dir="os/solaris"
      ;;
 diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
-index ae5283b7a..b9fc96e94 100644
+index ae5283b7ad378934b409455e7409ac9cac26a20a..b9fc96e942cba64aa76de1decc0daa9999fd53e9 100644
 --- a/libstdc++-v3/crossconfig.m4
 +++ b/libstdc++-v3/crossconfig.m4
 @@ -9,7 +9,7 @@ case "${host}" in
@@ -115,6 +118,3 @@ index ae5283b7a..b9fc96e94 100644
      AC_DEFINE(HAVE_ACOSF)
      AC_DEFINE(HAVE_ASINF)
      AC_DEFINE(HAVE_ATAN2F)
--- 
-2.36.1
-

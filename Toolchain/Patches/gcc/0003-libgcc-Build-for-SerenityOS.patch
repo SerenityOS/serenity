@@ -1,7 +1,7 @@
-From 9297a27635e83df95c644b9f776d65078c97162e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <awesomekling@gmail.com>
 Date: Mon, 16 May 2022 15:01:06 +0200
-Subject: [PATCH 3/6] libgcc: Build for SerenityOS
+Subject: [PATCH] libgcc: Build for SerenityOS
 
 This patch enables building gcc's own C runtime files, and sets up
 exception handling support.
@@ -20,7 +20,7 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
  3 files changed, 25 insertions(+)
 
 diff --git a/gcc/configure b/gcc/configure
-index 5ce055771..2deaac5bc 100755
+index 5ce0557719a9fe0acf9a0f0ffaf949e9eeba0eb1..2deaac5bc85815a7e3efc47a935fb81fca9b24da 100755
 --- a/gcc/configure
 +++ b/gcc/configure
 @@ -31608,6 +31608,9 @@ case "$target" in
@@ -34,7 +34,7 @@ index 5ce055771..2deaac5bc 100755
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 8c56fcae5..f5855cfa6 100644
+index 8c56fcae5d2fdfcc8d1f9b2614f0c41ad44f258f..f5855cfa66d7950c3d7565ad938b4e4727d7b46d 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -1534,6 +1534,22 @@ nvptx-*)
@@ -61,7 +61,7 @@ index 8c56fcae5..f5855cfa6 100644
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
 diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
-index 7f9be5e6b..817c3fe21 100644
+index 7f9be5e6b021a539278570ad202f1f9c45311ca1..817c3fe219252ab3e1707913ebd53dfd97616b58 100644
 --- a/libgcc/unwind-dw2-fde-dip.c
 +++ b/libgcc/unwind-dw2-fde-dip.c
 @@ -57,6 +57,12 @@
@@ -77,6 +77,3 @@ index 7f9be5e6b..817c3fe21 100644
  #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
      && defined(TARGET_DL_ITERATE_PHDR) \
      && defined(__linux__)
--- 
-2.36.1
-

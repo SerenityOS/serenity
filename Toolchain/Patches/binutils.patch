@@ -17,10 +17,10 @@ triple.
  create mode 100644 gas/config/te-serenity.h
 
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index cfe58247..9a10e011 100644
+index a4c6c8e8854f1e3841827150a900b2ce6aa0c88e..87c41563e201a75bba80a2d9f5057250b0aebcdd 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -277,6 +277,11 @@ case "${targ}" in
+@@ -274,6 +274,11 @@ case "${targ}" in
      targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
      want64=true
      ;;
@@ -32,7 +32,7 @@ index cfe58247..9a10e011 100644
    aarch64-*-linux* | aarch64-*-netbsd*)
      targ_defvec=aarch64_elf64_le_vec
      targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_vec"
-@@ -656,6 +661,11 @@ case "${targ}" in
+@@ -655,6 +660,11 @@ case "${targ}" in
      targ_selvecs=
      targ64_selvecs=x86_64_elf64_vec
      ;;
@@ -44,7 +44,7 @@ index cfe58247..9a10e011 100644
  #ifdef BFD64
    x86_64-*-cloudabi*)
      targ_defvec=x86_64_elf64_cloudabi_vec
-@@ -721,6 +731,11 @@ case "${targ}" in
+@@ -720,6 +730,11 @@ case "${targ}" in
      targ_selvecs=i386_elf32_vec
      want64=true
      ;;
@@ -57,10 +57,10 @@ index cfe58247..9a10e011 100644
    i[3-7]86-*-lynxos*)
      targ_defvec=i386_elf32_vec
 diff --git a/gas/config/tc-i386.c b/gas/config/tc-i386.c
-index e0632681..4e9ba9fd 100644
+index 9cd33a91660695cfedad2a027434d44fb515e5b5..f2a02726b6d2b561b4cdaa2106c3a9fb6c3df750 100644
 --- a/gas/config/tc-i386.c
 +++ b/gas/config/tc-i386.c
-@@ -481,7 +481,8 @@ const char extra_symbol_chars[] = "*%-([{}"
+@@ -474,7 +474,8 @@ const char extra_symbol_chars[] = "*%-([{}"
       && !defined (TE_Haiku)				\
       && !defined (TE_FreeBSD)				\
       && !defined (TE_DragonFly)				\
@@ -72,7 +72,7 @@ index e0632681..4e9ba9fd 100644
     --divide will remove '/' from this list.  */
 diff --git a/gas/config/te-serenity.h b/gas/config/te-serenity.h
 new file mode 100644
-index 00000000..f38faf59
+index 0000000000000000000000000000000000000000..f38faf598cba7f561ed9528ee37328228ee55bdc
 --- /dev/null
 +++ b/gas/config/te-serenity.h
 @@ -0,0 +1,3 @@
@@ -80,7 +80,7 @@ index 00000000..f38faf59
 +
 +#define TE_SerenityOS 1
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 62f806bd..67ca2445 100644
+index 62f806bdfe8e9f281ab0d1f19e216c7662fcf8b1..67ca244530b87c981569053cc91e9171ec1796fb 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
 @@ -134,6 +134,7 @@ case ${generic_target} in
@@ -100,10 +100,10 @@ index 62f806bd..67ca2445 100644
    ia16-*-elf*)				fmt=elf ;;
  
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index b55a873d..760f328a 100644
+index d31021c13e2e342cc82c2d49ac9c178f3a723d38..5f6f4d9a4c612691b7ea3d974cfe995a5ed80515 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -463,6 +463,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -456,6 +456,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
  	eelf_x86_64_haiku.c \
@@ -112,10 +112,10 @@ index b55a873d..760f328a 100644
  	ehppa64linux.c \
  	ei386pep.c \
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 61e93eea..8b9ee2cf 100644
+index ee0c98f65b0ff2dc9a1d4e8118e5bc8bea22ff68..170d9f090797d57814e701eb5089912bb000bd0d 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -953,6 +953,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -952,6 +952,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
  	eelf_x86_64_haiku.c \
@@ -124,10 +124,10 @@ index 61e93eea..8b9ee2cf 100644
  	ehppa64linux.c \
  	ei386pep.c \
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index c7acf3f1..d34b9ea3 100644
+index 2bae9099b6aae1f23afa5be74e84aeb7626d1058..b96ae9d69f51141780510e3a366e0f4fcd93d5c5 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -59,6 +59,9 @@ aarch64-*-freebsd*)	targ_emul=aarch64fbsd
+@@ -96,6 +96,9 @@ aarch64-*-freebsd*)	targ_emul=aarch64fbsd
  aarch64-*-fuchsia*)	targ_emul=aarch64elf
  			targ_extra_emuls="aarch64elfb armelf armelfb"
  			;;
@@ -137,7 +137,7 @@ index c7acf3f1..d34b9ea3 100644
  aarch64_be-*-linux-gnu_ilp32)
  			targ_emul=aarch64linux32b
  			targ_extra_libpath="aarch64linuxb aarch64linux aarch64linux32 armelfb_linux_eabi armelf_linux_eabi"
-@@ -332,6 +335,9 @@ i[3-7]86-*-linux-*)	targ_emul=elf_i386
+@@ -369,6 +372,9 @@ i[3-7]86-*-linux-*)	targ_emul=elf_i386
  i[3-7]86-*-redox*)	targ_emul=elf_i386
  			targ_extra_emuls=elf_x86_64
  			;;
@@ -147,7 +147,7 @@ index c7acf3f1..d34b9ea3 100644
  i[3-7]86-*-sysv[45]*)	targ_emul=elf_i386
  			targ_extra_emuls=elf_iamcu
  			;;
-@@ -970,6 +976,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+@@ -1007,6 +1013,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
  x86_64-*-redox*)	targ_emul=elf_x86_64
  			targ_extra_emuls=elf_i386
  			;;
@@ -155,5 +155,5 @@ index c7acf3f1..d34b9ea3 100644
 +			targ_extra_emuls="elf_i386"
 +			;;
  x86_64-*-solaris2*)	targ_emul=elf_x86_64_sol2
- 			targ_extra_emuls="elf_x86_64 elf_i386_sol2 elf_i386_ldso elf_i386 elf_iamcu elf_l1om elf_k1om"
+ 			targ_extra_emuls="elf_x86_64 elf_i386_sol2 elf_i386_ldso elf_i386 elf_iamcu"
  			targ_extra_libpath=$targ_extra_emuls
