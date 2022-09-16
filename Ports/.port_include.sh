@@ -624,6 +624,14 @@ do_generate_patch_readme() {
         fi
     fi
 
+    # An existing patches directory but no actual patches presumably means that we just deleted all patches,
+    # so remove the ReadMe file accordingly.
+    if [ -z "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
+        >&2 echo "Port $port does not have any patches, deleting ReadMe..."
+        rm -f "${PORT_META_DIR}/patches/ReadMe.md"
+        exit 0
+    fi
+
     local tempdir="$(pwd)/.patches.tmp"
     rm -fr "$tempdir"
     mkdir "$tempdir"
