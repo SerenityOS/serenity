@@ -813,19 +813,18 @@ do_dev() {
         exit 1
     }
 
-    local first_hash="$(git -C "$workdir" rev-list --max-parents=0 HEAD)"
-
     pushd "$workdir"
     launch_user_shell
     popd >/dev/null 2>&1
 
+    local original_hash="$(git -C "$workdir" rev-parse refs/tags/original)"
     local current_hash="$(git -C "$workdir" rev-parse HEAD)"
 
-    # If the hashes are the same, we have no patches, otherwise generate patches
-    if [ "$first_hash" != "$current_hash" ]; then
-        >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
+    # If the hashes are the same, we have no changes, otherwise generate patches
+    if [ "$original_hash" != "$current_hash" ]; then
+        >&2 echo "Note: Regenerating patches as there are changed commits in the port repo (started at $original_hash, now is $current_hash)"
         rm -fr "${PORT_META_DIR}"/patches/*.patch
-        git -C "$workdir" format-patch --no-numbered --zero-commit --no-signature --full-index "$first_hash" -o "$(realpath "${PORT_META_DIR}/patches")"
+        git -C "$workdir" format-patch --no-numbered --zero-commit --no-signature --full-index refs/tags/import -o "$(realpath "${PORT_META_DIR}/patches")"
         do_generate_patch_readme
     fi
 }
