@@ -921,11 +921,11 @@ void GLContext::build_extension_string()
     m_extensions = String::join(' ', extensions);
 }
 
-NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
+ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap& bitmap)
 {
     // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
-    auto driver = MUST(GPU::Driver::try_create("softgpu"sv));
-    auto device = MUST(driver->try_create_device(bitmap.size()));
+    auto driver = TRY(GPU::Driver::try_create("softgpu"sv));
+    auto device = TRY(driver->try_create_device(bitmap.size()));
     auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
 

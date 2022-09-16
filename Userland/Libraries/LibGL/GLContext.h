@@ -532,7 +532,7 @@ private:
     String m_extensions;
 };
 
-NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap&);
+ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
 void present_context(GLContext*);
 

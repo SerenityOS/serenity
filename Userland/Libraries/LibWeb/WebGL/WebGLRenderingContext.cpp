@@ -41,18 +41,12 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
 
-#ifndef __serenity__
-    // FIXME: Make WebGL work on other platforms.
-    (void)window;
-    (void)context_attributes;
-    dbgln("FIXME: WebGL not supported on the current platform");
-    fire_webgl_context_creation_error(canvas_element);
-    return JS::GCPtr<WebGLRenderingContext> { nullptr };
-#else
-    // FIXME: LibGL currently doesn't propagate context creation errors.
-    auto context = GL::create_context(*canvas_element.bitmap());
-    return window.heap().allocate<WebGLRenderingContext>(window.realm(), window, canvas_element, move(context), context_attributes, context_attributes);
-#endif
+    auto context_or_error = GL::create_context(*canvas_element.bitmap());
+    if (context_or_error.is_error()) {
+        fire_webgl_context_creation_error(canvas_element);
+        return JS::GCPtr<WebGLRenderingContext> { nullptr };
+    }
+    return window.heap().allocate<WebGLRenderingContext>(window.realm(), window, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
 }
 
 WebGLRenderingContext::WebGLRenderingContext(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
