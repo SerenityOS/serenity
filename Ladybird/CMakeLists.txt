@@ -51,6 +51,7 @@ set(SOURCES
     CookieJar.cpp
     EventLoopPluginQt.cpp
     FontPluginQt.cpp
+    ImageCodecPluginLadybird.cpp
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
