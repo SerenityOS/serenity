@@ -70,6 +70,8 @@ public:
     virtual RasterPosition raster_position() const = 0;
     virtual void set_raster_position(RasterPosition const& raster_position) = 0;
     virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) = 0;
+
+    virtual void bind_fragment_shader(RefPtr<Shader>) = 0;
 };
 
 }
