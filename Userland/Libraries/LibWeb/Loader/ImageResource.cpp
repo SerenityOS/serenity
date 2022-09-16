@@ -6,8 +6,8 @@
 
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/ImageResource.h>
+#include <LibWeb/Platform/ImageCodecPlugin.h>
 
 namespace Web {
 
@@ -47,7 +47,7 @@ void ImageResource::decode_if_needed() const
     if (!m_decoded_frames.is_empty())
         return;
 
-    auto image = ImageDecoding::Decoder::the().decode_image(encoded_data());
+    auto image = Platform::ImageCodecPlugin::the().decode_image(encoded_data());
 
     if (image.has_value()) {
         m_loop_count = image.value().loop_count;

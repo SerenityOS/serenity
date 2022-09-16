@@ -268,7 +268,6 @@ set(SOURCES
     HTML/WorkerLocation.cpp
     HTML/WorkerNavigator.cpp
     HighResolutionTime/Performance.cpp
-    ImageDecoding.cpp
     Infra/ByteSequences.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
@@ -355,6 +354,7 @@ set(SOURCES
     Painting/TextPaintable.cpp
     Platform/EventLoopPlugin.cpp
     Platform/FontPlugin.cpp
+    Platform/ImageCodecPlugin.cpp
     Platform/Timer.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp

@@ -1,20 +1,19 @@
 /*
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "ImageCodecPluginSerenity.h"
 #include <LibImageDecoderClient/Client.h>
-#include <LibWebView/ImageDecoderClientAdapter.h>
 
-namespace WebView {
+namespace WebContent {
 
-NonnullRefPtr<ImageDecoderClientAdapter> ImageDecoderClientAdapter::create()
-{
-    return adopt_ref(*new ImageDecoderClientAdapter());
-}
+ImageCodecPluginSerenity::ImageCodecPluginSerenity() = default;
+ImageCodecPluginSerenity::~ImageCodecPluginSerenity() = default;
 
-Optional<Web::ImageDecoding::DecodedImage> ImageDecoderClientAdapter::decode_image(ReadonlyBytes bytes)
+Optional<Web::Platform::DecodedImage> ImageCodecPluginSerenity::decode_image(ReadonlyBytes bytes)
 {
     if (!m_client) {
         m_client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
@@ -28,7 +27,7 @@ Optional<Web::ImageDecoding::DecodedImage> ImageDecoderClientAdapter::decode_ima
         return {};
     auto result = result_or_empty.release_value();
 
-    Web::ImageDecoding::DecodedImage decoded_image;
+    Web::Platform::DecodedImage decoded_image;
     decoded_image.is_animated = result.is_animated;
     decoded_image.loop_count = result.loop_count;
     for (auto const& frame : result.frames) {

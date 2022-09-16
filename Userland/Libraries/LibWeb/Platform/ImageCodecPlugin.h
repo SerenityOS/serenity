@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,9 +9,9 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <LibGfx/Bitmap.h>
+#include <LibGfx/Forward.h>
 
-namespace Web::ImageDecoding {
+namespace Web::Platform {
 
 struct Frame {
     RefPtr<Gfx::Bitmap> bitmap;
@@ -24,17 +24,14 @@ struct DecodedImage {
     Vector<Frame> frames;
 };
 
-class Decoder : public RefCounted<Decoder> {
+class ImageCodecPlugin {
 public:
-    virtual ~Decoder();
+    static ImageCodecPlugin& the();
+    static void install(ImageCodecPlugin&);
 
-    static void initialize(RefPtr<Decoder>&&);
-    static Decoder& the();
+    virtual ~ImageCodecPlugin();
 
     virtual Optional<DecodedImage> decode_image(ReadonlyBytes) = 0;
-
-protected:
-    explicit Decoder();
 };
 
 }

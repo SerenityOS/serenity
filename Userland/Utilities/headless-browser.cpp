@@ -36,11 +36,11 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
@@ -235,26 +235,22 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 };
 
-class HeadlessImageDecoderClient : public Web::ImageDecoding::Decoder {
+class ImageCodecPluginHeadless : public Web::Platform::ImageCodecPlugin {
 public:
-    static NonnullRefPtr<HeadlessImageDecoderClient> create()
-    {
-        return adopt_ref(*new HeadlessImageDecoderClient());
-    }
+    ImageCodecPluginHeadless() = default;
+    virtual ~ImageCodecPluginHeadless() override = default;
 
-    virtual ~HeadlessImageDecoderClient() override = default;
-
-    virtual Optional<Web::ImageDecoding::DecodedImage> decode_image(ReadonlyBytes data) override
+    virtual Optional<Web::Platform::DecodedImage> decode_image(ReadonlyBytes data) override
     {
         auto decoder = Gfx::ImageDecoder::try_create(data);
 
         if (!decoder)
-            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
+            return Web::Platform::DecodedImage { false, 0, Vector<Web::Platform::Frame> {} };
 
         if (!decoder->frame_count())
-            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
+            return Web::Platform::DecodedImage { false, 0, Vector<Web::Platform::Frame> {} };
 
-        Vector<Web::ImageDecoding::Frame> frames;
+        Vector<Web::Platform::Frame> frames;
         for (size_t i = 0; i < decoder->frame_count(); ++i) {
             auto frame_or_error = decoder->frame(i);
             if (frame_or_error.is_error()) {
@@ -265,15 +261,12 @@ public:
             }
         }
 
-        return Web::ImageDecoding::DecodedImage {
+        return Web::Platform::DecodedImage {
             decoder->is_animated(),
             static_cast<u32>(decoder->loop_count()),
             frames,
         };
     }
-
-private:
-    explicit HeadlessImageDecoderClient() = default;
 };
 
 static HashTable<RefPtr<Web::ResourceLoaderConnectorRequest>> s_all_requests;
@@ -675,7 +668,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    Web::ImageDecoding::Decoder::initialize(HeadlessImageDecoderClient::create());
+    Web::Platform::ImageCodecPlugin::install(*new ImageCodecPluginHeadless);
     Web::ResourceLoader::initialize(HeadlessRequestServer::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
 
