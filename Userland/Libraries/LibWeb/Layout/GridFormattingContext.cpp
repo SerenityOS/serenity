@@ -107,8 +107,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 1. Position anything that's not auto-positioned.
     for (size_t i = 0; i < boxes_to_place.size(); i++) {
         auto const& child_box = boxes_to_place[i];
-        if ((child_box.computed_values().grid_row_start().is_auto_positioned() && child_box.computed_values().grid_row_end().is_auto_positioned())
-            || (child_box.computed_values().grid_column_start().is_auto_positioned() && child_box.computed_values().grid_column_end().is_auto_positioned()))
+        if (is_auto_positioned_row(child_box.computed_values().grid_row_start(), child_box.computed_values().grid_row_end())
+            || is_auto_positioned_column(child_box.computed_values().grid_column_start(), child_box.computed_values().grid_column_end()))
             continue;
 
         int row_start = child_box.computed_values().grid_row_start().raw_value();
@@ -219,7 +219,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // FIXME: Do "dense" packing
     for (size_t i = 0; i < boxes_to_place.size(); i++) {
         auto const& child_box = boxes_to_place[i];
-        if (child_box.computed_values().grid_row_start().is_auto_positioned() && child_box.computed_values().grid_row_end().is_auto_positioned())
+        if (is_auto_positioned_row(child_box.computed_values().grid_row_start(), child_box.computed_values().grid_row_end()))
             continue;
 
         int row_start = child_box.computed_values().grid_row_start().raw_value();
@@ -349,7 +349,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // FIXME: no distinction made. See #4.2
 
         // 4.1.1. If the item has a definite column position:
-        if (!(child_box.computed_values().grid_column_start().is_auto_positioned() && child_box.computed_values().grid_column_end().is_auto_positioned())) {
+        if (!is_auto_positioned_column(child_box.computed_values().grid_column_start(), child_box.computed_values().grid_column_end())) {
             int column_start = child_box.computed_values().grid_column_start().raw_value();
             int column_end = child_box.computed_values().grid_column_end().raw_value();
 
@@ -1134,6 +1134,21 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 float GridFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;
+}
+
+bool GridFormattingContext::is_auto_positioned_row(CSS::GridTrackPlacement const& grid_row_start, CSS::GridTrackPlacement const& grid_row_end) const
+{
+    return is_auto_positioned_track(grid_row_start, grid_row_end);
+}
+
+bool GridFormattingContext::is_auto_positioned_column(CSS::GridTrackPlacement const& grid_column_start, CSS::GridTrackPlacement const& grid_column_end) const
+{
+    return is_auto_positioned_track(grid_column_start, grid_column_end);
+}
+
+bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement const& grid_track_start, CSS::GridTrackPlacement const& grid_track_end) const
+{
+    return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
 }
 
 }
