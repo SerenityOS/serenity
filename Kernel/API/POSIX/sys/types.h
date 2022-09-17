@@ -6,10 +6,9 @@
 
 #pragma once
 
-#ifndef KERNEL
-#    include <sys/cdefs.h>
-#    include <sys/types.h>
-#endif
+#include <bits/stdint.h>
+#include <stddef.h>
+#include <sys/cdefs.h>
 
 #ifdef __cplusplus
 extern "C" {

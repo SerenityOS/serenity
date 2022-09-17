@@ -6,8 +6,4 @@
 
 #pragma once
 
-#include <bits/stdint.h>
-#include <stddef.h>
-#include <sys/cdefs.h>
-
 #include <Kernel/API/POSIX/sys/types.h>
