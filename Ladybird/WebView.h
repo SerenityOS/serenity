@@ -57,6 +57,8 @@ signals:
     void favicon_changed(QIcon);
 
 private:
+    void update_viewport_rect();
+
     OwnPtr<HeadlessBrowserPageClient> m_page_client;
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
