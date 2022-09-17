@@ -295,26 +295,8 @@ void HTMLScriptElement::prepare_script()
             if (parser_document)
                 begin_delaying_document_load_event(*parser_document);
 
-            ResourceLoader::the().load(
-                request,
-                [this, url](auto data, auto&, auto) {
-                    if (data.is_null()) {
-                        dbgln("HTMLScriptElement: Failed to load {}", url);
-                        return;
-                    }
-
-                    // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(url.to_string(), data, document().relevant_settings_object(), AK::URL());
-
-                    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
-                    m_script = script;
-                    script_became_ready();
-                },
-                [this](auto&, auto) {
-                    m_failed_to_load = true;
-                    dbgln("HONK! Failed to load script, but ready nonetheless.");
-                    script_became_ready();
-                });
+            auto resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+            set_resource(resource);
         } else if (m_script_type == ScriptType::Module) {
             // FIXME: -> "module"
             //        Fetch an external module script graph given url, settings object, and options.
@@ -437,6 +419,34 @@ void HTMLScriptElement::prepare_script()
         // Immediately execute the script block, even if other scripts are already executing.
         execute_script();
     }
+}
+
+void HTMLScriptElement::resource_did_load()
+{
+    // FIXME: This is all ad-hoc and needs work.
+
+    auto data = resource()->encoded_data();
+
+    // If the resource has an explicit encoding (i.e from a HTTP Content-Type header)
+    // we have to re-encode it to UTF-8.
+    if (resource()->has_encoding()) {
+        if (auto* codec = TextCodec::decoder_for(resource()->encoding().value())) {
+            data = codec->to_utf8(data).to_byte_buffer();
+        }
+    }
+
+    auto script = ClassicScript::create(resource()->url().to_string(), data, document().relevant_settings_object(), AK::URL());
+
+    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
+    m_script = script;
+    script_became_ready();
+}
+
+void HTMLScriptElement::resource_did_fail()
+{
+    m_failed_to_load = true;
+    dbgln("HONK! Failed to load script, but ready nonetheless.");
+    script_became_ready();
 }
 
 void HTMLScriptElement::script_became_ready()
