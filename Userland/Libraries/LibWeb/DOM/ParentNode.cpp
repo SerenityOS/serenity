@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NodeOperations.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -104,18 +106,22 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
         });
     }
 
-    // FIXME: 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
-    //           (It is currently always a HTML document)
-    return HTMLCollection::create(*this, [qualified_name](Element const& element) {
-        // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
-        if (element.namespace_() == Namespace::HTML)
-            return element.qualified_name().to_lowercase() == qualified_name.to_lowercase();
+    // 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
+    if (root().document().document_type() == Document::Type::HTML) {
+        return HTMLCollection::create(*this, [qualified_name](Element const& element) {
+            // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
+            if (element.namespace_() == Namespace::HTML)
+                return element.qualified_name().to_lowercase() == qualified_name.to_lowercase();
 
-        // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
+            // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
+            return element.qualified_name() == qualified_name;
+        });
+    }
+
+    // 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
+    return HTMLCollection::create(*this, [qualified_name](Element const& element) {
         return element.qualified_name() == qualified_name;
     });
-
-    // FIXME: 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
