@@ -46,9 +46,9 @@ Tab::Tab(QMainWindow* window)
     auto home_icon_path = QString("%1/res/icons/16x16/go-home.png").arg(s_serenity_resource_root.characters());
     auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
     m_back_action = make<QAction>(QIcon(back_icon_path), "Back");
-    m_back_action->setShortcut(QKeySequence("Alt+Left"));
+    m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
     m_forward_action = make<QAction>(QIcon(forward_icon_path), "Forward");
-    m_forward_action->setShortcut(QKeySequence("Alt+Right"));
+    m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
     m_home_action = make<QAction>(QIcon(home_icon_path), "Home");
     m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
     m_reload_action->setShortcut(QKeySequence("Ctrl+R"));
