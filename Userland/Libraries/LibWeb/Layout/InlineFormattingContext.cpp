@@ -305,4 +305,23 @@ bool InlineFormattingContext::any_floats_intrude_at_y(float y) const
     return space.left > 0 || space.right > 0;
 }
 
+bool InlineFormattingContext::can_fit_new_line_at_y(float y) const
+{
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    float y_in_root = box_in_root_rect.y() + y;
+    auto space_top = parent().space_used_by_floats(y_in_root);
+    auto space_bottom = parent().space_used_by_floats(y_in_root + containing_block().line_height() - 1);
+
+    [[maybe_unused]] auto top_left_edge = space_top.left;
+    [[maybe_unused]] auto top_right_edge = m_effective_containing_block_width - space_top.right;
+    [[maybe_unused]] auto bottom_left_edge = space_bottom.left;
+    [[maybe_unused]] auto bottom_right_edge = m_effective_containing_block_width - space_bottom.right;
+
+    if (top_left_edge > bottom_right_edge)
+        return false;
+    if (bottom_left_edge > top_right_edge)
+        return false;
+    return true;
+}
+
 }

@@ -18,9 +18,9 @@ static HashMap<String, String> const s_driver_path_map
 #if defined(__serenity__)
     { "softgpu", "libsoftgpu.so.serenity" },
 #elif defined(__APPLE__)
-    { "softgpu", "./liblagom-softgpu.dylib" },
+    { "softgpu", "liblagom-softgpu.dylib" },
 #else
-    { "softgpu", "./liblagom-softgpu.so" },
+    { "softgpu", "liblagom-softgpu.so.0" },
 #endif
 };
 

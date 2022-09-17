@@ -70,6 +70,7 @@
     A(HTO)                        \
     A(ICCBased)                   \
     A(ID)                         \
+    A(Index)                      \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
     A(Kids)                       \

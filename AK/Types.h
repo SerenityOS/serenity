@@ -65,6 +65,8 @@ namespace std { // NOLINT(cert-dcl58-cpp) nullptr_t must be in ::std:: for some 
 using nullptr_t = decltype(nullptr);
 }
 
+using nullptr_t = std::nullptr_t;
+
 static constexpr FlatPtr explode_byte(u8 b)
 {
     FlatPtr value = b;

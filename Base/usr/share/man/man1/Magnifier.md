@@ -18,4 +18,4 @@ You can launch _Magnifier_ by selecting Serenity menu -> Utilities -> Magnifier.
 
 Magnifier can do 2x, 4x, or 8x zoom in realtime. Once you feel that the area being captured is just right, you can pause capture by pressing the shortcut key Spacebar.
 
-For users with sight impairment, it has the facility to apply several filters on the captured image. Click on the _Accessibility_ menu and select one of the impairment categories available on the drop-down list.
+For users with slight visual impairment, Magnifier can apply several filters to the captured image. Click on the _Accessibility_ menu and select one of the impairment categories available on the drop-down list.

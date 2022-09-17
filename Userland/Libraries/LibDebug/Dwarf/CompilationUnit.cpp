@@ -5,8 +5,10 @@
  */
 
 #include "CompilationUnit.h"
-#include "DIE.h"
 #include <AK/ByteReader.h>
+#include <LibDebug/Dwarf/DIE.h>
+#include <LibDebug/Dwarf/DwarfInfo.h>
+#include <LibDebug/Dwarf/LineProgram.h>
 
 namespace Debug::Dwarf {
 
@@ -20,6 +22,8 @@ CompilationUnit::CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, Compil
     VERIFY(header.version() < 5 || header.unit_type() == CompilationUnitType::Full);
 }
 
+CompilationUnit::~CompilationUnit() = default;
+
 DIE CompilationUnit::root_die() const
 {
     return DIE(*this, m_offset + m_header.header_size());
@@ -29,6 +33,11 @@ DIE CompilationUnit::get_die_at_offset(u32 die_offset) const
 {
     VERIFY(die_offset >= offset() && die_offset < offset() + size());
     return DIE(*this, die_offset);
+}
+
+LineProgram const& CompilationUnit::line_program() const
+{
+    return *m_line_program;
 }
 
 Optional<FlatPtr> CompilationUnit::base_address() const

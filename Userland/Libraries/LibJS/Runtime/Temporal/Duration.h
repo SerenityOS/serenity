@@ -12,7 +12,6 @@
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
-#include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/VM.h>
 

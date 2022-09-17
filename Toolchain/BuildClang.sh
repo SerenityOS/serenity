@@ -70,8 +70,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="14.0.1"
-LLVM_MD5SUM="47a50c31659488a6ae562475b41d2c32"
+LLVM_VERSION="15.0.0"
+LLVM_MD5SUM="d17f527916cb07400e336f9ba4a28903"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
@@ -248,14 +248,14 @@ popd
 # === COPY HEADERS ===
 
 SRC_ROOT=$($REALPATH "$DIR"/..)
-FILES=$(find "$SRC_ROOT"/Kernel/API "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
+FILES=$(find "$SRC_ROOT"/Kernel/API "$SRC_ROOT"/Userland/Libraries/LibC -name '*.h' -print)
 
 for arch in $ARCHS; do
     mkdir -p "$BUILD/${arch}clang"
     pushd "$BUILD/${arch}clang"
         mkdir -p Root/usr/include/
         for header in $FILES; do
-            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
+            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
             buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
         done
     popd

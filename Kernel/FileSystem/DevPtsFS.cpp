@@ -78,12 +78,12 @@ DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY* pty)
 
 DevPtsFSInode::~DevPtsFSInode() = default;
 
-ErrorOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> DevPtsFSInode::read_bytes_locked(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
+ErrorOr<size_t> DevPtsFSInode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }

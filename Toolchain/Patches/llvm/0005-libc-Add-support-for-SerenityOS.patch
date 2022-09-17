@@ -15,19 +15,19 @@ LibC, namely:
   locale.cpp to use our character type table properly.
 ---
  libcxx/include/CMakeLists.txt               |  1 +
- libcxx/include/__config                     |  6 ++++--
+ libcxx/include/__config                     |  5 +++--
  libcxx/include/__locale                     |  2 ++
  libcxx/include/__support/serenity/xlocale.h | 24 +++++++++++++++++++++
  libcxx/include/locale                       |  2 +-
  libcxx/src/include/config_elast.h           |  2 ++
- 6 files changed, 34 insertions(+), 3 deletions(-)
+ 6 files changed, 33 insertions(+), 3 deletions(-)
  create mode 100644 libcxx/include/__support/serenity/xlocale.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 53700fc9e..67d50bdbc 100644
+index f7c2d99e7..8d3cb754d 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -365,6 +365,7 @@ set(files
+@@ -495,6 +495,7 @@ set(files
    __support/musl/xlocale.h
    __support/newlib/xlocale.h
    __support/openbsd/xlocale.h
@@ -36,34 +36,33 @@ index 53700fc9e..67d50bdbc 100644
    __support/solaris/wchar.h
    __support/solaris/xlocale.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 458d0c1b8..69f627294 100644
+index 8c2f7614a..c7ebf50cb 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -1146,7 +1146,8 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
-       defined(__APPLE__) || \
-       defined(__sun__) || \
-       defined(__MVS__) || \
--      defined(_AIX)
-+      defined(_AIX) || \
-+      defined(__serenity__)
- #    define _LIBCPP_HAS_THREAD_API_PTHREAD
- #  elif defined(__Fuchsia__)
-      // TODO(44575): Switch to C11 thread API when possible.
-@@ -1225,7 +1226,8 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
+@@ -912,7 +912,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+         defined(__sun__) ||                                                                                            \
+         defined(__MVS__) ||                                                                                            \
+         defined(_AIX) ||                                                                                               \
+-        defined(__EMSCRIPTEN__)
++        defined(__EMSCRIPTEN__) ||                                                                                     \
++        defined(__serenity__)
+ // clang-format on
+ #      define _LIBCPP_HAS_THREAD_API_PTHREAD
+ #    elif defined(__Fuchsia__)
+@@ -990,7 +991,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+ #  endif
  
- #if defined(__BIONIC__) || defined(__NuttX__) ||           \
-     defined(__Fuchsia__) || defined(__wasi__) ||           \
--    defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__)
-+    defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__) || \
-+    defined(__serenity__)
- #define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
- #endif
+ #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
+-      defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__)
++      defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__) || defined(__serenity__)
+ #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
+ #  endif
  
 diff --git a/libcxx/include/__locale b/libcxx/include/__locale
-index 51f35eece..6f25098a2 100644
+index 40f9a3ff5..1c499c078 100644
 --- a/libcxx/include/__locale
 +++ b/libcxx/include/__locale
-@@ -44,6 +44,8 @@
+@@ -42,6 +42,8 @@
  # include <__support/musl/xlocale.h>
  #elif defined(_LIBCPP_HAS_MUSL_LIBC)
  # include <__support/musl/xlocale.h>
@@ -103,23 +102,23 @@ index 000000000..0f939d2f6
 +
 +#endif
 diff --git a/libcxx/include/locale b/libcxx/include/locale
-index 7c2d2361f..229ca7258 100644
+index b01c66d04..da29b7d00 100644
 --- a/libcxx/include/locale
 +++ b/libcxx/include/locale
-@@ -206,7 +206,7 @@ template <class charT> class messages_byname;
+@@ -217,7 +217,7 @@ template <class charT> class messages_byname;
  
  #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
--#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION)
-+#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__serenity__)
+-#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
  #    define _LIBCPP_HAS_CATOPEN 1
  #    include <nl_types.h>
  #  endif
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index 0ed53a3b2..7fffd937e 100644
+index bef26ec50..fbb2899b1 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
-@@ -33,6 +33,8 @@
+@@ -35,6 +35,8 @@
  #define _LIBCPP_ELAST 4095
  #elif defined(__APPLE__)
  // No _LIBCPP_ELAST needed on Apple

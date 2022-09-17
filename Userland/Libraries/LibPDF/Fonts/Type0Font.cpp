@@ -29,7 +29,7 @@ PDFErrorOr<NonnullRefPtr<Type0Font>> Type0Font::create(Document* document, Nonnu
 
     u16 default_width = 1000;
     if (descendant_font->contains(CommonNames::DW))
-        default_width = descendant_font->get_value(CommonNames::DW).get<int>();
+        default_width = descendant_font->get_value(CommonNames::DW).to_int();
 
     HashMap<u16, u16> widths;
 
@@ -40,16 +40,16 @@ PDFErrorOr<NonnullRefPtr<Type0Font>> Type0Font::create(Document* document, Nonnu
         for (size_t i = 0; i < widths_array->size(); i++) {
             auto& value = widths_array->at(i);
             if (!pending_code.has_value()) {
-                pending_code = value.get<int>();
+                pending_code = value.to_int();
             } else if (value.has<NonnullRefPtr<Object>>()) {
                 auto array = value.get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
                 auto code = pending_code.release_value();
                 for (auto& width : *array)
-                    widths.set(code++, width.get<int>());
+                    widths.set(code++, width.to_int());
             } else {
                 auto first_code = pending_code.release_value();
-                auto last_code = value.get<int>();
-                auto width = widths_array->at(i + 1).get<int>();
+                auto last_code = value.to_int();
+                auto width = widths_array->at(i + 1).to_int();
                 for (u16 code = first_code; code <= last_code; code++)
                     widths.set(code, width);
 

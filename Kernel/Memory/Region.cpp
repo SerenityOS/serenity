@@ -362,7 +362,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
         }
         if (vmobject().is_inode()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}]", this, page_index_in_region);
-            return handle_inode_fault(page_index_in_region);
+            return handle_inode_fault(page_index_in_region, offset_in_page_from_address(fault.vaddr()));
         }
 
         SpinlockLocker vmobject_locker(vmobject().m_lock);
@@ -462,7 +462,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     return response;
 }
 
-PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
+PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, size_t offset_in_page_in_region)
 {
     VERIFY(vmobject().is_inode());
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
@@ -475,6 +475,13 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     {
         // NOTE: The VMObject lock is required when manipulating the VMObject's physical page slot.
         SpinlockLocker locker(inode_vmobject.m_lock);
+        if (inode_vmobject.inode().size() == 0)
+            return PageFaultResponse::BusError;
+        auto fault_vaddr = vaddr_from_page_index(page_index_in_vmobject).offset(offset_in_page_in_region);
+        auto inode_last_valid_address = vaddr().offset(inode_vmobject.inode().size());
+        if (inode_last_valid_address < fault_vaddr)
+            return PageFaultResponse::BusError;
+
         if (!vmobject_physical_page_slot.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
             if (!remap_vmobject_page(page_index_in_vmobject, *vmobject_physical_page_slot))

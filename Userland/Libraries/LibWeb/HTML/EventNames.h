@@ -49,6 +49,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(readystatechange)        \
     __ENUMERATE_HTML_EVENT(rejectionhandled)        \
     __ENUMERATE_HTML_EVENT(reset)                   \
+    __ENUMERATE_HTML_EVENT(scroll)                  \
     __ENUMERATE_HTML_EVENT(securitypolicyviolation) \
     __ENUMERATE_HTML_EVENT(select)                  \
     __ENUMERATE_HTML_EVENT(slotchange)              \

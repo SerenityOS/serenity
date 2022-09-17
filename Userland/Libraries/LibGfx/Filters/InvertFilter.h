@@ -13,7 +13,7 @@ namespace Gfx {
 
 class InvertFilter : public ColorFilter {
 public:
-    InvertFilter() = default;
+    using ColorFilter::ColorFilter;
     virtual ~InvertFilter() = default;
 
     virtual StringView class_name() const override { return "InvertFilter"sv; }

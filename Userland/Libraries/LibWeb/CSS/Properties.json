@@ -20,6 +20,17 @@
       "appearance"
     ]
   },
+  "backdrop-filter": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "none",
+    "valid-types": [
+      "filter-value-list"
+    ],
+    "valid-identifiers": [
+      "none"
+    ]
+  },
   "background": {
     "affects-layout": false,
     "inherited": false,

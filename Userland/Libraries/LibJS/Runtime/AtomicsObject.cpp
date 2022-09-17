@@ -107,6 +107,7 @@ static ThrowCompletionOr<Value> perform_atomic_operation(VM& vm, TypedArrayBase&
 
     auto operation_wrapper = [&, operation = forward<AtomicFunction>(operation)](ByteBuffer x_bytes, ByteBuffer y_bytes) -> ByteBuffer {
         if constexpr (IsFloatingPoint<T>) {
+            (void)operation;
             VERIFY_NOT_REACHED();
         } else {
             using U = Conditional<IsSame<ClampedU8, T>, u8, T>;

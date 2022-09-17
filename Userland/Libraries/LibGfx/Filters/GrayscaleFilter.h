@@ -13,7 +13,7 @@ namespace Gfx {
 
 class GrayscaleFilter : public ColorFilter {
 public:
-    GrayscaleFilter() = default;
+    using ColorFilter::ColorFilter;
     virtual ~GrayscaleFilter() = default;
 
     virtual StringView class_name() const override { return "GrayscaleFilter"sv; }

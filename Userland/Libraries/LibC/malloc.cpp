@@ -554,37 +554,6 @@ void* malloc(size_t size)
     return ptr_or_error.value();
 }
 
-// This is a Microsoft extension, and is not found on other Unix-like systems.
-// FIXME: Remove this when all patches have been switched to aligned_alloc()
-//
-// This is used in libc++ to implement C++17 aligned new/delete.
-//
-// Both Unix-y alternatives to _aligned_malloc(), the C11 aligned_alloc() and
-// posix_memalign() say that the resulting pointer can be deallocated with
-// regular free(), which means that the allocator has to keep track of the
-// requested alignments. By contrast, _aligned_malloc() is paired with
-// _aligned_free(), so it can be easily implemented on top of malloc().
-void* _aligned_malloc(size_t size, size_t alignment)
-{
-    if (popcount(alignment) != 1) {
-        errno = EINVAL;
-        return nullptr;
-    }
-    alignment = max(alignment, sizeof(void*));
-    if (Checked<size_t>::addition_would_overflow(size, alignment)) {
-        errno = ENOMEM;
-        return nullptr;
-    }
-    void* ptr = malloc(size + alignment);
-    if (!ptr) {
-        errno = ENOMEM;
-        return nullptr;
-    }
-    auto aligned_ptr = (void*)(((FlatPtr)ptr + alignment) & ~(alignment - 1));
-    ((void**)aligned_ptr)[-1] = ptr;
-    return aligned_ptr;
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html
 void free(void* ptr)
 {
@@ -593,12 +562,6 @@ void free(void* ptr)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     ue_notify_free(ptr);
     free_impl(ptr);
-}
-
-void _aligned_free(void* ptr)
-{
-    if (ptr)
-        free(((void**)ptr)[-1]);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/calloc.html

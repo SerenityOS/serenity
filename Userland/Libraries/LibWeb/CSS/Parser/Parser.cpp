@@ -4409,6 +4409,188 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
     return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
 }
 
+RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
+{
+    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
+        auto ident = parse_identifier_value(component_values.first());
+        if (ident && ident->to_identifier() == ValueID::None)
+            return ident;
+    }
+
+    TokenStream tokens { component_values };
+
+    // FIXME: <url>s are ignored for now
+    // <filter-value-list> = [ <filter-function> | <url> ]+
+
+    enum class FilterToken {
+        // Color filters:
+        Brightness,
+        Contrast,
+        Grayscale,
+        Invert,
+        Opacity,
+        Saturate,
+        Sepia,
+        // Special filters:
+        Blur,
+        DropShadow,
+        HueRotate
+    };
+
+    auto filter_token_to_operation = [&](auto filter) {
+        VERIFY(to_underlying(filter) < to_underlying(FilterToken::Blur));
+        return static_cast<Filter::Color::Operation>(filter);
+    };
+
+    auto parse_number_percentage = [&](auto& token) -> Optional<NumberPercentage> {
+        if (token.is(Token::Type::Percentage))
+            return NumberPercentage(Percentage(token.token().percentage()));
+        if (token.is(Token::Type::Number))
+            return NumberPercentage(Number(Number::Type::Number, token.token().number_value()));
+        return {};
+    };
+
+    auto parse_filter_function_name = [&](auto name) -> Optional<FilterToken> {
+        if (name.equals_ignoring_case("blur"sv))
+            return FilterToken::Blur;
+        if (name.equals_ignoring_case("brightness"sv))
+            return FilterToken::Brightness;
+        if (name.equals_ignoring_case("contrast"sv))
+            return FilterToken::Contrast;
+        if (name.equals_ignoring_case("drop-shadow"sv))
+            return FilterToken::DropShadow;
+        if (name.equals_ignoring_case("grayscale"sv))
+            return FilterToken::Grayscale;
+        if (name.equals_ignoring_case("hue-rotate"sv))
+            return FilterToken::HueRotate;
+        if (name.equals_ignoring_case("invert"sv))
+            return FilterToken::Invert;
+        if (name.equals_ignoring_case("opacity"sv))
+            return FilterToken::Opacity;
+        if (name.equals_ignoring_case("saturate"sv))
+            return FilterToken::Saturate;
+        if (name.equals_ignoring_case("sepia"sv))
+            return FilterToken::Sepia;
+        return {};
+    };
+
+    auto parse_filter_function = [&](auto filter_token, auto function_values) -> Optional<FilterFunction> {
+        TokenStream tokens { function_values };
+        tokens.skip_whitespace();
+
+        auto if_no_more_tokens_return = [&](auto filter) -> Optional<FilterFunction> {
+            tokens.skip_whitespace();
+            if (tokens.has_next_token())
+                return {};
+            return filter;
+        };
+
+        if (filter_token == FilterToken::Blur) {
+            // blur( <length>? )
+            if (!tokens.has_next_token())
+                return Filter::Blur {};
+            auto blur_radius = parse_length(tokens.next_token());
+            if (!blur_radius.has_value())
+                return {};
+            return if_no_more_tokens_return(Filter::Blur { *blur_radius });
+        } else if (filter_token == FilterToken::DropShadow) {
+            if (!tokens.has_next_token())
+                return {};
+            auto next_token = [&]() -> auto&
+            {
+                auto& token = tokens.next_token();
+                tokens.skip_whitespace();
+                return token;
+            };
+            // drop-shadow( [ <color>? && <length>{2,3} ] )
+            // Note: The following code is a little awkward to allow the color to be before or after the lengths.
+            auto& first_param = next_token();
+            Optional<Length> maybe_radius = {};
+            auto maybe_color = parse_color(first_param);
+            auto x_offset = parse_length(maybe_color.has_value() ? next_token() : first_param);
+            if (!x_offset.has_value() || !tokens.has_next_token()) {
+                return {};
+            }
+            auto y_offset = parse_length(next_token());
+            if (!y_offset.has_value()) {
+                return {};
+            }
+            if (tokens.has_next_token()) {
+                auto& token = next_token();
+                maybe_radius = parse_length(token);
+                if (!maybe_color.has_value() && (!maybe_radius.has_value() || tokens.has_next_token())) {
+                    maybe_color = parse_color(!maybe_radius.has_value() ? token : next_token());
+                    if (!maybe_color.has_value()) {
+                        return {};
+                    }
+                } else if (!maybe_radius.has_value()) {
+                    return {};
+                }
+            }
+            return if_no_more_tokens_return(Filter::DropShadow { *x_offset, *y_offset, maybe_radius, maybe_color });
+        } else if (filter_token == FilterToken::HueRotate) {
+            // hue-rotate( [ <angle> | <zero> ]? )
+            if (!tokens.has_next_token())
+                return Filter::HueRotate {};
+            auto& token = tokens.next_token();
+            if (token.is(Token::Type::Number)) {
+                // hue-rotate(0)
+                auto number = token.token().number();
+                if (number.is_integer() && number.integer_value() == 0)
+                    return if_no_more_tokens_return(Filter::HueRotate { Filter::HueRotate::Zero {} });
+                return {};
+            }
+            if (!token.is(Token::Type::Dimension))
+                return {};
+            float angle_value = token.token().dimension_value();
+            auto angle_unit_name = token.token().dimension_unit();
+            auto angle_unit = Angle::unit_from_name(angle_unit_name);
+            if (!angle_unit.has_value())
+                return {};
+            Angle angle { angle_value, angle_unit.release_value() };
+            return if_no_more_tokens_return(Filter::HueRotate { angle });
+        } else {
+            // Simple filters:
+            // brightness( <number-percentage>? )
+            // contrast( <number-percentage>? )
+            // grayscale( <number-percentage>? )
+            // invert( <number-percentage>? )
+            // opacity( <number-percentage>? )
+            // sepia( <number-percentage>? )
+            // saturate( <number-percentage>? )
+            if (!tokens.has_next_token())
+                return Filter::Color { filter_token_to_operation(filter_token) };
+            auto amount = parse_number_percentage(tokens.next_token());
+            if (!amount.has_value())
+                return {};
+            return if_no_more_tokens_return(Filter::Color { filter_token_to_operation(filter_token), *amount });
+        }
+    };
+
+    Vector<FilterFunction> filter_value_list {};
+
+    while (tokens.has_next_token()) {
+        tokens.skip_whitespace();
+        if (!tokens.has_next_token())
+            break;
+        auto& token = tokens.next_token();
+        if (!token.is_function())
+            return {};
+        auto filter_token = parse_filter_function_name(token.function().name());
+        if (!filter_token.has_value())
+            return {};
+        auto filter_function = parse_filter_function(*filter_token, token.function().values());
+        if (!filter_function.has_value())
+            return {};
+        filter_value_list.append(*filter_function);
+    }
+
+    if (filter_value_list.is_empty())
+        return {};
+
+    return FilterValueListStyleValue::create(move(filter_value_list));
+}
+
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1) {
@@ -5492,6 +5674,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     // Special-case property handling
     switch (property_id) {
+    case PropertyID::BackdropFilter:
+        if (auto parsed_value = parse_filter_value_list_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(component_values))
             return parsed_value.release_nonnull();

@@ -616,17 +616,15 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // First we place the box normally (to get the right y coordinate.)
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
-        float y_offset = box_state.margin_box_top();
-        line_builder->break_if_needed(box_state.margin_box_width());
-        box_state.offset.set_y(line_builder->current_y() + y_offset);
-        line_builder->adjust_last_line_after_inserting_floating_box({}, box.computed_values().float_(), box_state.margin_box_width());
+        auto y = line_builder->y_for_float_to_be_inserted_here(box);
+        box_state.offset.set_y(y + box_state.margin_box_top());
     } else {
         place_block_level_element_in_normal_flow_vertically(box, containing_block);
         place_block_level_element_in_normal_flow_horizontally(box, containing_block);
     }
 
     // Then we float it to the left or right.
-    auto float_box = [&](FloatSide side, FloatSideData& side_data) {
+    auto float_box = [&](FloatSide side, FloatSideData& side_data, FloatSideData& other_side_data) {
         float offset_from_edge = 0;
         auto float_to_edge = [&] {
             if (side == FloatSide::Left)
@@ -684,7 +682,15 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 side_data.clear();
             }
         }
-        y += side_data.y_offset;
+
+        // NOTE: If we're in inline layout, the LineBuilder has already provided the right Y offset.
+        //       In block layout, we adjust by the side's current Y offset here.
+        // FIXME: It's annoying that we have different behavior for inline vs block here.
+        //        Find a way to unify the behavior so we don't need to branch here.
+
+        if (!line_builder)
+            y += side_data.y_offset;
+
         side_data.all_boxes.append(adopt_own(*new FloatingBox {
             .box = box,
             .offset_from_edge = offset_from_edge,
@@ -703,16 +709,24 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         // NOTE: We don't set the X position here, that happens later, once we know the root block width.
         //       See parent_context_did_dimension_child_root_box() for that logic.
         box_state.offset.set_y(y);
+
+        // If the new box was inserted below the bottom of the opposite side,
+        // we reset the other side back to its edge.
+        if (y > other_side_data.y_offset)
+            other_side_data.clear();
     };
 
     // Next, float to the left and/or right
     if (box.computed_values().float_() == CSS::Float::Left) {
-        float_box(FloatSide::Left, m_left_floats);
+        float_box(FloatSide::Left, m_left_floats, m_right_floats);
     } else if (box.computed_values().float_() == CSS::Float::Right) {
-        float_box(FloatSide::Right, m_right_floats);
+        float_box(FloatSide::Right, m_right_floats, m_left_floats);
     }
 
     m_state.get_mutable(root()).add_floating_descendant(box);
+
+    if (line_builder)
+        line_builder->recalculate_available_space();
 }
 
 void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_item_box)
@@ -755,7 +769,8 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
 {
     SpaceUsedByFloats space_used_by_floats;
 
-    for (auto const& floating_box : m_left_floats.current_boxes.in_reverse()) {
+    for (auto const& floating_box_ptr : m_left_floats.all_boxes.in_reverse()) {
+        auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
@@ -767,7 +782,8 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         }
     }
 
-    for (auto const& floating_box : m_right_floats.current_boxes.in_reverse()) {
+    for (auto const& floating_box_ptr : m_right_floats.all_boxes.in_reverse()) {
+        auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);

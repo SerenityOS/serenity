@@ -15,7 +15,6 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
-#include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/TreeNode.h>
 

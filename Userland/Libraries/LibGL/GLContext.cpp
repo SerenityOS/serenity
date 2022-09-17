@@ -21,11 +21,11 @@ __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 namespace GL {
 
 GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> device, Gfx::Bitmap& frontbuffer)
-    : m_viewport { frontbuffer.rect() }
-    , m_frontbuffer { frontbuffer }
-    , m_driver { driver }
+    : m_driver { driver }
     , m_rasterizer { move(device) }
     , m_device_info { m_rasterizer->info() }
+    , m_viewport { frontbuffer.rect() }
+    , m_frontbuffer { frontbuffer }
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
@@ -921,11 +921,11 @@ void GLContext::build_extension_string()
     m_extensions = String::join(' ', extensions);
 }
 
-NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
+ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap& bitmap)
 {
     // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
-    auto driver = MUST(GPU::Driver::try_create("softgpu"sv));
-    auto device = MUST(driver->try_create_device(bitmap.size()));
+    auto driver = TRY(GPU::Driver::try_create("softgpu"sv));
+    auto device = TRY(driver->try_create_device(bitmap.size()));
     auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
 
@@ -942,11 +942,6 @@ void make_context_current(GLContext* context)
 
     dbgln_if(GL_DEBUG, "GL::make_context_current({:p})", context);
     g_gl_context = context;
-}
-
-void present_context(GLContext* context)
-{
-    context->present();
 }
 
 }

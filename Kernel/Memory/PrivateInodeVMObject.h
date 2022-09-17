@@ -18,6 +18,7 @@ public:
     virtual ~PrivateInodeVMObject() override;
 
     static ErrorOr<NonnullLockRefPtr<PrivateInodeVMObject>> try_create_with_inode(Inode&);
+    static ErrorOr<NonnullLockRefPtr<PrivateInodeVMObject>> try_create_with_inode_and_range(Inode&, u64 offset, size_t range_size);
     virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override;
 
 private:

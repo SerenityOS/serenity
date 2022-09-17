@@ -24,29 +24,30 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font/Emoji.h>
 #include <stdlib.h>
 
 namespace GUI {
 
 struct EmojiCateogry {
     Unicode::EmojiGroup group;
-    StringView emoji;
+    u32 emoji_code_point { 0 };
 };
 
 static constexpr auto s_emoji_groups = Array {
-    EmojiCateogry { Unicode::EmojiGroup::SmileysAndEmotion, "/res/emoji/U+1F600.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::PeopleAndBody, "/res/emoji/U+1FAF3.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::AnimalsAndNature, "/res/emoji/U+1F33B.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::FoodAndDrink, "/res/emoji/U+1F355.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::TravelAndPlaces, "/res/emoji/U+1F3D6.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::Activities, "/res/emoji/U+1F3B3.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::Objects, "/res/emoji/U+1F4E6.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::Symbols, "/res/emoji/U+2764.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::Flags, "/res/emoji/U+1F6A9.png"sv },
-    EmojiCateogry { Unicode::EmojiGroup::SerenityOS, "/res/emoji/U+10CD0B.png"sv },
+    EmojiCateogry { Unicode::EmojiGroup::SmileysAndEmotion, 0x1F600 },
+    EmojiCateogry { Unicode::EmojiGroup::PeopleAndBody, 0x1FAF3 },
+    EmojiCateogry { Unicode::EmojiGroup::AnimalsAndNature, 0x1F33B },
+    EmojiCateogry { Unicode::EmojiGroup::FoodAndDrink, 0x1F355 },
+    EmojiCateogry { Unicode::EmojiGroup::TravelAndPlaces, 0x1F3D6 },
+    EmojiCateogry { Unicode::EmojiGroup::Activities, 0x1F3B3 },
+    EmojiCateogry { Unicode::EmojiGroup::Objects, 0x1F4E6 },
+    EmojiCateogry { Unicode::EmojiGroup::Symbols, 0x2764 },
+    EmojiCateogry { Unicode::EmojiGroup::Flags, 0x1F6A9 },
+    EmojiCateogry { Unicode::EmojiGroup::SerenityOS, 0x10CD0B },
 };
 
-static void resize_bitmap_if_needed(NonnullRefPtr<Gfx::Bitmap>& bitmap)
+static void resize_bitmap_if_needed(RefPtr<Gfx::Bitmap>& bitmap)
 {
     constexpr int max_icon_size = 12;
 
@@ -58,6 +59,35 @@ static void resize_bitmap_if_needed(NonnullRefPtr<Gfx::Bitmap>& bitmap)
         bitmap = bitmap->scaled(ratio, ratio).release_value_but_fixme_should_propagate_errors();
     }
 }
+
+class EmojiButton final : public Button {
+    C_OBJECT(EmojiButton);
+
+private:
+    explicit EmojiButton(Vector<u32> emoji_code_points)
+        : Button()
+        , m_emoji_code_points(move(emoji_code_points))
+    {
+    }
+
+    virtual void paint_event(PaintEvent& event) override
+    {
+        if (m_first_paint_event) {
+            m_first_paint_event = false;
+
+            RefPtr<Gfx::Bitmap> bitmap = Gfx::Emoji::emoji_for_code_points(m_emoji_code_points);
+            VERIFY(bitmap);
+
+            resize_bitmap_if_needed(bitmap);
+            set_icon(move(bitmap));
+        }
+
+        Button::paint_event(event);
+    }
+
+    bool m_first_paint_event { true };
+    Vector<u32> m_emoji_code_points;
+};
 
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
@@ -86,7 +116,8 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         auto name = Unicode::emoji_group_to_string(category.group);
         auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
 
-        auto bitmap = Gfx::Bitmap::try_load_from_file(category.emoji).release_value_but_fixme_should_propagate_errors();
+        RefPtr<Gfx::Bitmap> bitmap = Gfx::Emoji::emoji_for_code_point(category.emoji_code_point);
+        VERIFY(bitmap);
         resize_bitmap_if_needed(bitmap);
 
         auto set_filter_action = Action::create_checkable(
@@ -130,7 +161,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     Vector<Emoji> emojis;
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
-        auto filename = dt.next_full_path();
+        auto filename = dt.next_path();
         auto lexical_path = LexicalPath(filename);
         if (lexical_path.extension() != "png")
             continue;
@@ -158,11 +189,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             emoji->display_order = NumericLimits<u32>::max();
         }
 
-        auto bitmap = Gfx::Bitmap::try_load_from_file(filename).release_value_but_fixme_should_propagate_errors();
-        resize_bitmap_if_needed(bitmap);
-
-        auto button = Button::construct();
-        button->set_icon(bitmap);
+        auto button = EmojiButton::construct(move(code_points));
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
         button->on_click = [this, text = builder.to_string()](auto) {

@@ -56,13 +56,14 @@ public:
 
     ErrorOr<NonnullOwnPtr<KBuffer>> read_entire(OpenFileDescription* = nullptr) const;
 
+    ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*);
+    ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const;
+
     virtual ErrorOr<void> attach(OpenFileDescription&) { return {}; }
     virtual void detach(OpenFileDescription&) { }
     virtual void did_seek(OpenFileDescription&, off_t) { }
-    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) = 0;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) = 0;
     virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) = 0;
     virtual ErrorOr<void> remove_child(StringView name) = 0;
@@ -118,6 +119,9 @@ protected:
     void did_delete_self();
 
     mutable Mutex m_inode_lock { "Inode"sv };
+
+    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) = 0;
+    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
 
 private:
     ErrorOr<bool> try_apply_flock(Process const&, OpenFileDescription const&, flock const&);

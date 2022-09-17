@@ -61,12 +61,12 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
 
     HashMap<u16, u16> widths;
     for (size_t i = 0; i < widths_array->size(); i++)
-        widths.set(first_char + i, widths_array->at(i).get<int>());
+        widths.set(first_char + i, widths_array->at(i).to_int());
 
     u16 missing_width = 0;
     auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
     if (descriptor->contains(CommonNames::MissingWidth))
-        missing_width = descriptor->get_value(CommonNames::MissingWidth).get<int>();
+        missing_width = descriptor->get_value(CommonNames::MissingWidth).to_int();
 
     return Type1Font::Data { to_unicode, encoding.release_nonnull(), move(widths), missing_width };
 }

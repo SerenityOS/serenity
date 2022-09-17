@@ -7,7 +7,6 @@
 #pragma once
 
 #include "AttributeValue.h"
-#include "CompilationUnit.h"
 #include "DwarfTypes.h"
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -15,9 +14,12 @@
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <LibDebug/Dwarf/DIE.h>
 #include <LibELF/Image.h>
 
 namespace Debug::Dwarf {
+
+class CompilationUnit;
 
 class DwarfInfo {
     AK_MAKE_NONCOPYABLE(DwarfInfo);
@@ -25,6 +27,7 @@ class DwarfInfo {
 
 public:
     explicit DwarfInfo(ELF::Image const&);
+    ~DwarfInfo();
 
     ReadonlyBytes debug_info_data() const { return m_debug_info_data; }
     ReadonlyBytes abbreviation_data() const { return m_abbreviation_data; }

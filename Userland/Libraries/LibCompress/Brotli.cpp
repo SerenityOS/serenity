@@ -605,7 +605,7 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
                     return Error::from_string_literal("invalid reserved bit");
 
                 size_t skip_bytes = TRY(m_input_stream.read_bits(2));
-                size_t skip_length = TRY(m_input_stream.read_bits(8 * skip_bytes));
+                size_t skip_length = 1 + TRY(m_input_stream.read_bits(8 * skip_bytes));
 
                 u8 remainder = m_input_stream.align_to_byte_boundary();
                 if (remainder != 0)

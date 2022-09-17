@@ -32,11 +32,11 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenityevents_c.h     |  33 +
  src/video/serenity/SDL_serenitymessagebox.cpp |  40 ++
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
- src/video/serenity/SDL_serenitymouse.cpp      | 142 +++++
+ src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 600 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 605 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1295 insertions(+), 25 deletions(-)
+ 20 files changed, 1300 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -862,10 +862,10 @@ index 0000000..039f036
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000..56e6e66
+index 0000000..4ebe2ad
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,600 @@
+@@ -0,0 +1,605 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1399,7 +1399,12 @@ index 0000000..56e6e66
 +    int pitch;
 +    Serenity_CreateWindowFramebuffer(_this, window, &format, &pixels, &pitch);
 +
-+    auto gl_context = GL::create_context(*platform_window->widget()->m_buffer);
++    auto gl_context_or_error = GL::create_context(*platform_window->widget()->m_buffer);
++    if (gl_context_or_error.is_error()) {
++        SDL_SetError("Failed to initialize the GL context");
++        return nullptr;
++    }
++    auto gl_context = gl_context_or_error.release_value();
 +    auto serenity_gl_context = new SerenityGLContext(move(gl_context));
 +    platform_window->set_serenity_gl_context(serenity_gl_context);
 +    GL::make_context_current(&serenity_gl_context->gl_context());
@@ -1457,7 +1462,7 @@ index 0000000..56e6e66
 +{
 +    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
 +    if (platform_window->serenity_gl_context())
-+        GL::present_context(&platform_window->serenity_gl_context()->gl_context());
++        platform_window->serenity_gl_context()->gl_context().present();
 +
 +    platform_window->widget()->repaint();
 +    return 0;

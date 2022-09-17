@@ -115,7 +115,7 @@ public:
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> flipped(Gfx::Orientation) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(int sx, int sy) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(float sx, float sy) const;
-    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> cropped(Gfx::IntRect) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> cropped(Gfx::IntRect, Optional<BitmapFormat> new_bitmap_format = {}) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_bitmap_backed_by_anonymous_buffer() const;
     [[nodiscard]] ByteBuffer serialize_to_byte_buffer() const;
 

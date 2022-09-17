@@ -295,26 +295,8 @@ void HTMLScriptElement::prepare_script()
             if (parser_document)
                 begin_delaying_document_load_event(*parser_document);
 
-            ResourceLoader::the().load(
-                request,
-                [this, url](auto data, auto&, auto) {
-                    if (data.is_null()) {
-                        dbgln("HTMLScriptElement: Failed to load {}", url);
-                        return;
-                    }
-
-                    // FIXME: This is all ad-hoc and needs work.
-                    auto script = ClassicScript::create(url.to_string(), data, document().relevant_settings_object(), AK::URL());
-
-                    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
-                    m_script = script;
-                    script_became_ready();
-                },
-                [this](auto&, auto) {
-                    m_failed_to_load = true;
-                    dbgln("HONK! Failed to load script, but ready nonetheless.");
-                    script_became_ready();
-                });
+            auto resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+            set_resource(resource);
         } else if (m_script_type == ScriptType::Module) {
             // FIXME: -> "module"
             //        Fetch an external module script graph given url, settings object, and options.
@@ -376,29 +358,29 @@ void HTMLScriptElement::prepare_script()
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
         || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
         // Add the element to the end of the list of scripts that will execute in order as soon as possible associated with the element's preparation-time document.
-        m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
+        m_preparation_time_document->add_script_to_execute_in_order_as_soon_as_possible({}, *this);
 
         // When the script is ready, run the following steps:
         when_the_script_is_ready([this] {
             // 1. If the element is not now the first element in the list of scripts
             //    that will execute in order as soon as possible to which it was added above,
             //    then mark the element as ready but return without executing the script yet.
-            if (this != m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().ptr())
+            if (this != m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first().ptr())
                 return;
 
             for (;;) {
                 // 2. Execution: Execute the script block corresponding to the first script element
                 //    in this list of scripts that will execute in order as soon as possible.
-                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->execute_script();
+                m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first()->execute_script();
 
                 // 3. Remove the first element from this list of scripts that will execute in order
                 //    as soon as possible.
-                (void)m_preparation_time_document->scripts_to_execute_as_soon_as_possible().take_first();
+                (void)m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().take_first();
 
                 // 4. If this list of scripts that will execute in order as soon as possible is still
                 //    not empty and the first entry has already been marked as ready, then jump back
                 //    to the step labeled execution.
-                if (!m_preparation_time_document->scripts_to_execute_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->m_script_ready)
+                if (!m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first()->m_script_ready)
                     continue;
 
                 break;
@@ -437,6 +419,34 @@ void HTMLScriptElement::prepare_script()
         // Immediately execute the script block, even if other scripts are already executing.
         execute_script();
     }
+}
+
+void HTMLScriptElement::resource_did_load()
+{
+    // FIXME: This is all ad-hoc and needs work.
+
+    auto data = resource()->encoded_data();
+
+    // If the resource has an explicit encoding (i.e from a HTTP Content-Type header)
+    // we have to re-encode it to UTF-8.
+    if (resource()->has_encoding()) {
+        if (auto* codec = TextCodec::decoder_for(resource()->encoding().value())) {
+            data = codec->to_utf8(data).to_byte_buffer();
+        }
+    }
+
+    auto script = ClassicScript::create(resource()->url().to_string(), data, document().relevant_settings_object(), AK::URL());
+
+    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
+    m_script = script;
+    script_became_ready();
+}
+
+void HTMLScriptElement::resource_did_fail()
+{
+    m_failed_to_load = true;
+    dbgln("HONK! Failed to load script, but ready nonetheless.");
+    script_became_ready();
 }
 
 void HTMLScriptElement::script_became_ready()

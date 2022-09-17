@@ -466,6 +466,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
             if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
                 m_browsing_context.set_cursor_position(DOM::Position(*hit->dom_node(), *start_index));
                 layout_root()->set_selection_end({ hit->paintable->layout_node(), hit->index_in_node });
+                m_browsing_context.set_needs_display();
             }
             if (auto* page = m_browsing_context.page())
                 page->client().page_did_change_selection();

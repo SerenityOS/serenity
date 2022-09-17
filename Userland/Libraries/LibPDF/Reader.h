@@ -120,6 +120,18 @@ public:
         move_until([&predicate](char t) { return !predicate(t); });
     }
 
+    bool matches_eol() const;
+    bool matches_whitespace() const;
+    bool matches_number() const;
+    bool matches_delimiter() const;
+    bool matches_regular_character() const;
+
+    bool consume_eol();
+    bool consume_whitespace();
+    char consume();
+    void consume(int amount);
+    bool consume(char);
+
     ALWAYS_INLINE void set_reading_forwards() { m_forwards = true; }
     ALWAYS_INLINE void set_reading_backwards() { m_forwards = false; }
 

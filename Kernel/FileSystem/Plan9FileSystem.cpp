@@ -718,7 +718,7 @@ ErrorOr<void> Plan9FSInode::ensure_open_for_mode(int mode)
     return fs().post_message_and_wait_for_a_reply(message);
 }
 
-ErrorOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> Plan9FSInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     TRY(const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY));
 
@@ -750,7 +750,7 @@ ErrorOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     return nread;
 }
 
-ErrorOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& data, OpenFileDescription*)
+ErrorOr<size_t> Plan9FSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
     TRY(ensure_open_for_mode(O_WRONLY));
     size = fs().adjust_buffer_size(size);

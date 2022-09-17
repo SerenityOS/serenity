@@ -42,12 +42,7 @@ ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, U
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    size_t nwritten = 0;
-    {
-        MutexLocker locker(m_inode->m_inode_lock);
-        TRY(m_inode->prepare_to_write_data());
-        nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
-    }
+    size_t nwritten = TRY(m_inode->write_bytes(offset, count, data, &description));
     if (nwritten > 0) {
         auto mtime_result = m_inode->update_timestamps({}, {}, kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
@@ -85,11 +80,11 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> InodeFile::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64&, bool shared)
+ErrorOr<NonnullLockRefPtr<Memory::VMObject>> InodeFile::vmobject_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool shared)
 {
     if (shared)
-        return TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
-    return TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
+        return TRY(Memory::SharedInodeVMObject::try_create_with_inode_and_range(inode(), offset, range.size()));
+    return TRY(Memory::PrivateInodeVMObject::try_create_with_inode_and_range(inode(), offset, range.size()));
 }
 
 ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const&) const

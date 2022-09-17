@@ -323,6 +323,11 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& node_iterator : m_node_iterators)
         visitor.visit(node_iterator);
+
+    for (auto& target : m_pending_scroll_event_targets)
+        visitor.visit(target.ptr());
+    for (auto& target : m_pending_scrollend_event_targets)
+        visitor.visit(target.ptr());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
@@ -933,10 +938,18 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& na
     });
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_names)
 {
-    return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
-        return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
+    Vector<FlyString> list_of_class_names;
+    for (auto& name : class_names.view().split_view(' ')) {
+        list_of_class_names.append(name);
+    }
+    return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+        for (auto& name : list_of_class_names) {
+            if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
+                return false;
+        }
+        return true;
     });
 }
 
@@ -1070,14 +1083,28 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-// FIXME: This only implements step 6 of the algorithm and does not take in options.
-DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& tag_name)
+DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
 {
-    if (!is_valid_name(tag_name))
+    auto local_name = a_local_name;
+
+    // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
+    if (!is_valid_name(local_name))
         return DOM::InvalidCharacterError::create(global_object(), "Invalid character in tag name.");
 
-    // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
-    return DOM::create_element(*this, tag_name, Namespace::HTML);
+    // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
+    if (document_type() == Type::HTML)
+        local_name = local_name.to_lowercase();
+
+    // FIXME: 3. Let is be null.
+    // FIXME: 4. If options is a dictionary and options["is"] exists, then set is to it.
+
+    // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
+    FlyString namespace_;
+    if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
+        namespace_ = Namespace::HTML;
+
+    // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
+    return DOM::create_element(*this, local_name, namespace_);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
@@ -1220,6 +1247,16 @@ void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptE
 Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>)
 {
     return move(m_scripts_to_execute_as_soon_as_possible);
+}
+
+void Document::add_script_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
+{
+    m_scripts_to_execute_in_order_as_soon_as_possible.append(JS::make_handle(script));
+}
+
+Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLParser>)
+{
+    return move(m_scripts_to_execute_in_order_as_soon_as_possible);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-importnode
@@ -1536,6 +1573,29 @@ void Document::run_the_resize_steps()
     window().dispatch_event(*DOM::Event::create(window(), UIEvents::EventNames::resize));
 
     update_layout();
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#document-run-the-scroll-steps
+void Document::run_the_scroll_steps()
+{
+    // 1. For each item target in doc’s pending scroll event targets, in the order they were added to the list, run these substeps:
+    for (auto& target : m_pending_scroll_event_targets) {
+        // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
+        if (is<Document>(*target)) {
+            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            event->set_bubbles(true);
+            target->dispatch_event(*event);
+            // FIXME: Fire at the associated VisualViewport
+        }
+        // 2. Otherwise, fire an event named scroll at target.
+        else {
+            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            target->dispatch_event(*event);
+        }
+    }
+
+    // 2. Empty doc’s pending scroll event targets.
+    m_pending_scroll_event_targets.clear();
 }
 
 void Document::add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList> media_query_list)

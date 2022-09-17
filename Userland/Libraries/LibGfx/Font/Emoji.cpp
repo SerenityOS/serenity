@@ -25,7 +25,7 @@ Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
     return emoji_for_code_points(Array { code_point });
 }
 
-Bitmap const* Emoji::emoji_for_code_points(Span<u32> const& code_points)
+Bitmap const* Emoji::emoji_for_code_points(Span<u32 const> const& code_points)
 {
     // FIXME: This function is definitely not fast.
     auto basename = String::join('_', code_points, "U+{:X}"sv);

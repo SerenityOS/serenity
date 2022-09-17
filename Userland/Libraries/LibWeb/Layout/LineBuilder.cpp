@@ -27,19 +27,40 @@ LineBuilder::~LineBuilder()
 void LineBuilder::break_line(Optional<float> next_item_width)
 {
     update_last_line();
+    size_t break_count = 0;
+    bool floats_intrude_at_current_y = false;
     do {
         m_containing_block_state.line_boxes.append(LineBox());
-        begin_new_line(true);
-    } while (next_item_width.has_value()
-        && next_item_width.value() > m_available_width_for_current_line
-        && m_context.any_floats_intrude_at_y(m_current_y));
+        begin_new_line(true, break_count == 0);
+        break_count++;
+        floats_intrude_at_current_y = m_context.any_floats_intrude_at_y(m_current_y);
+    } while ((floats_intrude_at_current_y && !m_context.can_fit_new_line_at_y(m_current_y))
+        || (next_item_width.has_value()
+            && next_item_width.value() > m_available_width_for_current_line
+            && floats_intrude_at_current_y));
 }
 
-void LineBuilder::begin_new_line(bool increment_y)
+void LineBuilder::begin_new_line(bool increment_y, bool is_first_break_in_sequence)
 {
-    if (increment_y)
-        m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
-    m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
+    if (increment_y) {
+        if (is_first_break_in_sequence) {
+            // First break is simple, just go to the start of the next line.
+            m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
+        } else {
+            // We're doing more than one break in a row.
+            // This means we're trying to squeeze past intruding floats.
+            // Scan 1px at a time until we find a Y value where a new line can fit.
+            // FIXME: This is super dumb and inefficient.
+            float candidate_y = m_current_y + 1;
+            while (true) {
+                if (m_context.can_fit_new_line_at_y(candidate_y))
+                    break;
+                ++candidate_y;
+            }
+            m_current_y = candidate_y;
+        }
+    }
+    recalculate_available_space();
     m_max_height_on_current_line = 0;
     m_last_line_needs_update = true;
 }
@@ -71,6 +92,32 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
+float LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
+{
+    auto const& box_state = m_layout_state.get(box);
+    auto width = box_state.margin_box_width();
+
+    auto current_line_width = ensure_last_line_box().width();
+    if (roundf(current_line_width + width) > m_available_width_for_current_line) {
+        float candidate_y = m_current_y + m_context.containing_block().line_height();
+        // FIXME: This is super dumb, we move 1px downwards per iteration and stop
+        //        when we find an Y value where we don't collide with other floats.
+        while (true) {
+            if (width > m_context.available_space_for_line(candidate_y)) {
+                if (!m_context.any_floats_intrude_at_y(candidate_y)) {
+                    return candidate_y;
+                }
+            } else {
+                return candidate_y;
+            }
+            candidate_y += 1;
+        }
+
+        return m_current_y + m_context.containing_block().line_height();
+    }
+    return m_current_y;
+}
+
 bool LineBuilder::should_break(float next_item_width)
 {
     if (!isfinite(m_available_width_for_current_line))
@@ -81,6 +128,8 @@ bool LineBuilder::should_break(float next_item_width)
         // If we don't have a single line box yet *and* there are no floats intruding
         // at this Y coordinate, we don't need to break before inserting anything.
         if (!m_context.any_floats_intrude_at_y(m_current_y))
+            return false;
+        if (!m_context.any_floats_intrude_at_y(m_current_y + m_context.containing_block().line_height()))
             return false;
     }
     auto current_line_width = ensure_last_line_box().width();
@@ -124,7 +173,12 @@ void LineBuilder::update_last_line()
     auto& line_box = line_boxes.last();
 
     auto text_align = m_context.containing_block().computed_values().text_align();
-    float x_offset = m_context.leftmost_x_offset_at(m_current_y);
+
+    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    float x_offset_top = m_context.leftmost_x_offset_at(m_current_y);
+    float x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
+    float x_offset = max(x_offset_top, x_offset_bottom);
+
     float excess_horizontal_space = m_context.effective_containing_block_width() - line_box.width();
 
     switch (text_align) {
@@ -260,18 +314,12 @@ void LineBuilder::remove_last_line_if_empty()
     }
 }
 
-void LineBuilder::adjust_last_line_after_inserting_floating_box(Badge<BlockFormattingContext>, CSS::Float float_, float space_used_by_float)
+void LineBuilder::recalculate_available_space()
 {
-    // NOTE: LineBuilder generates lines from left-to-right, so if we've just added a left-side float,
-    //       that means every fragment already on this line has to move towards the right.
-    if (float_ == CSS::Float::Left && !m_containing_block_state.line_boxes.is_empty()) {
-        for (auto& fragment : m_containing_block_state.line_boxes.last().fragments())
-            fragment.set_offset(fragment.offset().translated(space_used_by_float, 0));
-    }
-
-    m_available_width_for_current_line -= space_used_by_float;
-    if (m_available_width_for_current_line < 0)
-        m_available_width_for_current_line = 0;
+    auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    auto available_at_top_of_line_box = m_context.available_space_for_line(m_current_y);
+    auto available_at_bottom_of_line_box = m_context.available_space_for_line(m_current_y + current_line_height - 1);
+    m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box);
 }
 
 }

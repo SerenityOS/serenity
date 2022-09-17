@@ -13,7 +13,9 @@
 
 namespace Web::HTML {
 
-class HTMLScriptElement final : public HTMLElement {
+class HTMLScriptElement final
+    : public HTMLElement
+    , public ResourceClient {
     WEB_PLATFORM_OBJECT(HTMLScriptElement, HTMLElement);
 
 public:
@@ -49,8 +51,11 @@ public:
 
     void set_source_line_number(Badge<HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
 
-private:
+public:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 
