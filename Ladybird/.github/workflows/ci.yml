@@ -1,0 +1,131 @@
+on:
+  pull_request:
+  push: # Run CI on the main branch after every merge. This is important to fill the GitHub Actions cache in a way that pull requests can see it
+    branches:
+      - master
+
+name: continuous-integration
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-22.04]
+        cxx_compiler: [clang++-14]
+        # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
+        ccache-mark: [0]
+        include:
+          - os: macos-latest
+            cxx_compiler: "$(brew --prefix llvm@14)/bin/clang++"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Checkout Serenity
+        uses: actions/checkout@v3
+        with:
+          repository: SerenityOS/serenity
+          path: serenity
+
+      ## Install Dependencies ##
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.3.*'
+
+      - name: Install Ninja
+        uses: ashutoshvarma/setup-ninja@v1.1
+        with:
+          # ninja version to download. Default: 1.10.0
+          version: 1.10.0
+
+      - name: Install ccache (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+
+      - name: Install ccache (macOS)
+        run: |
+          brew install ccache
+        if: ${{ matrix.os == 'macos-latest' }}
+
+      ## Prepare Caches ##
+      - name: Prepare useful stamps
+        id: stamps
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+          # Output everything twice to make it visible both in the logs
+          # *and* as actual output variable, in this order.
+          message("  set-output name=time::${current_date}")
+          message("::set-output name=time::${current_date}")
+
+      - name: ccache(1) cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        env:
+          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: ${{ github.workspace }}/.ccache
+          # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
+          # We want to always reuse the last cache, but upload a new one.
+          # This is achieved by using the "prefix-timestamp" format,
+          # and permitting the restore-key "prefix-" without specifying a timestamp.
+          # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
+          key: ${{ runner.os }}-ccache-v${{ matrix.ccache-mark }}-time${{ steps.stamps.outputs.time }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-v${{ matrix.ccache-mark }}
+
+      - name: Show ccache stats before build and configure
+        run: |
+          # Max Github Actions Cache size is 10GiB per repository, and we've got two builds.
+          ccache -M 4000M
+          ccache -s
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ github.workspace }}/build/TZDB
+          mkdir -p ${{ github.workspace }}/build/UCD
+          mkdir -p ${{ github.workspace }}/build/CLDR
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/build/TZDB
+          key: TimeZoneData-${{ hashFiles('serenity/Meta/CMake/time_zone_data.cmake') }}
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/build/UCD
+          key: UnicodeData-${{ hashFiles('serenity/Meta/CMake/unicode_data.cmake') }}
+      - name: UnicodeLocale Cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/build/CLDR
+          key: UnicodeLocale-${{ hashFiles('serenity/Meta/CMake/locale_data.cmake') }}
+
+      ## Finally: configure and build ##
+      - name: Configure CMake
+        run: |
+          cmake -GNinja -B build \
+           -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DSERENITY_SOURCE_DIR=${{ github.workspace }}/serenity
+
+      - name: Build ladybird
+        run: cmake --build build
+
+      - name: Verify install works
+        run: cmake --install build --prefix ladybird-install
+
+      - name: Show ccache stats after build
+        run: ccache -s
