@@ -106,6 +106,8 @@ struct EnvironmentSettingsObject
     bool is_scripting_enabled() const;
     bool is_scripting_disabled() const;
 
+    bool module_type_allowed(String const& module_type) const;
+
 protected:
     explicit EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext>);
 
