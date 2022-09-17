@@ -99,17 +99,14 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
 {
     // 1. If qualifiedName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches only descendant elements.
     if (qualified_name == "*") {
-        return HTMLCollection::create(*this, [this](Element const& element) {
-            return element.is_descendant_of(*this);
+        return HTMLCollection::create(*this, [](Element const&) {
+            return true;
         });
     }
 
     // FIXME: 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
     //           (It is currently always a HTML document)
-    return HTMLCollection::create(*this, [this, qualified_name](Element const& element) {
-        if (!element.is_descendant_of(*this))
-            return false;
-
+    return HTMLCollection::create(*this, [qualified_name](Element const& element) {
         // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
         if (element.namespace_() == Namespace::HTML)
             return element.qualified_name().to_lowercase() == qualified_name.to_lowercase();
@@ -132,28 +129,28 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyStri
 
     // 2. If both namespace and localName are "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements.
     if (namespace_ == "*" && local_name == "*") {
-        return HTMLCollection::create(*this, [this](Element const& element) {
-            return element.is_descendant_of(*this);
+        return HTMLCollection::create(*this, [](Element const&) {
+            return true;
         });
     }
 
     // 3. Otherwise, if namespace is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose local name is localName.
     if (namespace_ == "*") {
-        return HTMLCollection::create(*this, [this, local_name](Element const& element) {
-            return element.is_descendant_of(*this) && element.local_name() == local_name;
+        return HTMLCollection::create(*this, [local_name](Element const& element) {
+            return element.local_name() == local_name;
         });
     }
 
     // 4. Otherwise, if localName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace.
     if (local_name == "*") {
-        return HTMLCollection::create(*this, [this, namespace_](Element const& element) {
-            return element.is_descendant_of(*this) && element.namespace_() == namespace_;
+        return HTMLCollection::create(*this, [namespace_](Element const& element) {
+            return element.namespace_() == namespace_;
         });
     }
 
     // 5. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace and local name is localName.
-    return HTMLCollection::create(*this, [this, namespace_, local_name](Element const& element) {
-        return element.is_descendant_of(*this) && element.namespace_() == namespace_ && element.local_name() == local_name;
+    return HTMLCollection::create(*this, [namespace_, local_name](Element const& element) {
+        return element.namespace_() == namespace_ && element.local_name() == local_name;
     });
 }
 
