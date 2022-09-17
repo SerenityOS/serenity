@@ -1389,7 +1389,7 @@ bool FrequencyStyleValue::equals(StyleValue const& other) const
 
 String GridTrackPlacementShorthandStyleValue::to_string() const
 {
-    if (m_end->grid_track_placement().position() == 0)
+    if (m_end->grid_track_placement().is_auto())
         return String::formatted("{}", m_start->grid_track_placement().to_string());
     return String::formatted("{} / {}", m_start->grid_track_placement().to_string(), m_end->grid_track_placement().to_string());
 }
