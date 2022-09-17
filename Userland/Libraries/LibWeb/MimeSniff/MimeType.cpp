@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,16 @@
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::MimeSniff {
+
+// https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
+bool is_javascript_mime_type_essence_match(String const& string)
+{
+    // NOTE: The mime type parser automatically lowercases the essence.
+    auto type = MimeType::from_string(string);
+    if (!type.has_value())
+        return false;
+    return type->is_javascript();
+}
 
 static bool contains_only_http_quoted_string_token_code_points(StringView string)
 {
@@ -219,6 +230,28 @@ void MimeType::set_parameter(String const& name, String const& value)
     VERIFY(contains_only_http_quoted_string_token_code_points(name));
     VERIFY(contains_only_http_quoted_string_token_code_points(value));
     m_parameters.set(name, value);
+}
+
+// https://mimesniff.spec.whatwg.org/#javascript-mime-type
+bool MimeType::is_javascript() const
+{
+    return essence().is_one_of(
+        "application/ecmascript"sv,
+        "application/javascript"sv,
+        "application/x-ecmascript"sv,
+        "application/x-javascript"sv,
+        "text/ecmascript"sv,
+        "text/javascript"sv,
+        "text/javascript1.0"sv,
+        "text/javascript1.1"sv,
+        "text/javascript1.2"sv,
+        "text/javascript1.3"sv,
+        "text/javascript1.4"sv,
+        "text/javascript1.5"sv,
+        "text/jscript"sv,
+        "text/livescript"sv,
+        "text/x-ecmascript"sv,
+        "text/x-javascript"sv);
 }
 
 }
