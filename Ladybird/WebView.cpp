@@ -285,8 +285,16 @@ public:
         m_view.horizontalScrollBar()->setPageStep(m_viewport_rect.width());
     }
 
-    virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override
+    virtual void page_did_request_scroll_into_view(Gfx::IntRect const& rect) override
     {
+        if (m_viewport_rect.contains(rect))
+            return;
+
+        if (rect.top() < m_viewport_rect.top()) {
+            m_view.verticalScrollBar()->setValue(rect.top());
+        } else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom()) {
+            m_view.verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height() + 1);
+        }
     }
 
     virtual void page_did_request_alert(String const& message) override
