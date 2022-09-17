@@ -141,6 +141,9 @@ String HTMLElement::inner_text()
 // // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsettop
 int HTMLElement::offset_top() const
 {
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<DOM::Document&>(document()).update_layout();
+
     if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
         return 0;
     auto position = layout_node()->box_type_agnostic_position();
@@ -151,6 +154,9 @@ int HTMLElement::offset_top() const
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetleft
 int HTMLElement::offset_left() const
 {
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<DOM::Document&>(document()).update_layout();
+
     if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
         return 0;
     auto position = layout_node()->box_type_agnostic_position();
