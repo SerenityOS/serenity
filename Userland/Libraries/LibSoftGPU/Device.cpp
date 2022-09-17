@@ -829,6 +829,7 @@ void Device::rasterize_triangle(Triangle& triangle)
 
 Device::Device(Gfx::IntSize size)
     : m_frame_buffer(FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>::try_create(size).release_value_but_fixme_should_propagate_errors())
+    , m_shader_processor(m_samplers)
 {
     m_options.scissor_box = m_frame_buffer->rect();
     m_options.viewport = m_frame_buffer->rect();
@@ -1211,6 +1212,11 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
 
 ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 {
+    if (m_current_fragment_shader) {
+        m_shader_processor.execute(quad, *m_current_fragment_shader);
+        return;
+    }
+
     Array<Vector4<f32x4>, GPU::NUM_TEXTURE_UNITS> texture_stage_texel;
 
     auto current_color = quad.get_input_vector4(SHADER_INPUT_VERTEX_COLOR);
