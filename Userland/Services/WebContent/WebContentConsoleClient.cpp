@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
+#include <WebContent/ConnectionFromClient.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {

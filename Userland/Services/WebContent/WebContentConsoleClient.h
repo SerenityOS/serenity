@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include "ConnectionFromClient.h"
+#include <AK/WeakPtr.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
 
