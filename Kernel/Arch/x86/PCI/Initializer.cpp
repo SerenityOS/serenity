@@ -38,17 +38,24 @@ UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 
 UNMAP_AFTER_INIT void initialize()
 {
-    g_pci_access_io_probe_failed = !test_pci_io();
     g_pci_access_is_disabled_from_commandline = kernel_command_line().is_pci_disabled();
+    Optional<PhysicalAddress> possible_mcfg;
+    // FIXME: There are other arch-specific methods to find the memory range
+    // for accessing the PCI configuration space.
+    // For example, the QEMU microvm machine type might expose an FDT so we could
+    // parse it to find a PCI host bridge.
+    if (ACPI::is_enabled()) {
+        possible_mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
+        g_pci_access_io_probe_failed = (!test_pci_io()) && (!possible_mcfg.has_value());
+    } else {
+        g_pci_access_io_probe_failed = !test_pci_io();
+    }
     if (g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed)
         return;
     switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
-        // FIXME: There are other arch-specific methods to find the memory range
-        // for accessing the PCI configuration space.
-        auto mcfg = ACPI::Parser::the()->find_table("MCFG"sv);
-        VERIFY(mcfg.has_value());
-        auto success = Access::initialize_for_multiple_pci_domains(mcfg.value());
+        VERIFY(possible_mcfg.has_value());
+        auto success = Access::initialize_for_multiple_pci_domains(possible_mcfg.value());
         VERIFY(success);
         break;
     }
