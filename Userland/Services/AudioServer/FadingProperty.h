@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "Mixer.h"
+#include <AK/StdLibExtras.h>
+
 namespace AudioServer {
 
 // This is in buffer counts.
