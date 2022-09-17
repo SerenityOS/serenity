@@ -1070,14 +1070,28 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-// FIXME: This only implements step 6 of the algorithm and does not take in options.
-DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& tag_name)
+DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
 {
-    if (!is_valid_name(tag_name))
+    auto local_name = a_local_name;
+
+    // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
+    if (!is_valid_name(local_name))
         return DOM::InvalidCharacterError::create(global_object(), "Invalid character in tag name.");
 
-    // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
-    return DOM::create_element(*this, tag_name, Namespace::HTML);
+    // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
+    if (document_type() == Type::HTML)
+        local_name = local_name.to_lowercase();
+
+    // FIXME: 3. Let is be null.
+    // FIXME: 4. If options is a dictionary and options["is"] exists, then set is to it.
+
+    // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
+    FlyString namespace_;
+    if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
+        namespace_ = Namespace::HTML;
+
+    // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
+    return DOM::create_element(*this, local_name, namespace_);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns

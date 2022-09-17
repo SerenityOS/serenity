@@ -191,7 +191,7 @@ public:
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
-    ExceptionOr<JS::NonnullGCPtr<Element>> create_element(String const& tag_name);
+    ExceptionOr<JS::NonnullGCPtr<Element>> create_element(FlyString const& local_name);
     ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
     JS::NonnullGCPtr<Text> create_text_node(String const& data);
