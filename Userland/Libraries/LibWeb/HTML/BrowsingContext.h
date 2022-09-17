@@ -129,6 +129,8 @@ private:
 
     void reset_cursor_blink_cycle();
 
+    void scroll_offset_did_change();
+
     WeakPtr<Page> m_page;
 
     FrameLoader m_loader;

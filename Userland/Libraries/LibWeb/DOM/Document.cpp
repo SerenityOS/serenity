@@ -323,6 +323,11 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& node_iterator : m_node_iterators)
         visitor.visit(node_iterator);
+
+    for (auto& target : m_pending_scroll_event_targets)
+        visitor.visit(target.ptr());
+    for (auto& target : m_pending_scrollend_event_targets)
+        visitor.visit(target.ptr());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
@@ -1568,6 +1573,29 @@ void Document::run_the_resize_steps()
     window().dispatch_event(*DOM::Event::create(window(), UIEvents::EventNames::resize));
 
     update_layout();
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#document-run-the-scroll-steps
+void Document::run_the_scroll_steps()
+{
+    // 1. For each item target in doc’s pending scroll event targets, in the order they were added to the list, run these substeps:
+    for (auto& target : m_pending_scroll_event_targets) {
+        // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
+        if (is<Document>(*target)) {
+            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            event->set_bubbles(true);
+            target->dispatch_event(*event);
+            // FIXME: Fire at the associated VisualViewport
+        }
+        // 2. Otherwise, fire an event named scroll at target.
+        else {
+            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            target->dispatch_event(*event);
+        }
+    }
+
+    // 2. Empty doc’s pending scroll event targets.
+    m_pending_scroll_event_targets.clear();
 }
 
 void Document::add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList> media_query_list)

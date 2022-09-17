@@ -317,6 +317,7 @@ public:
     String visibility_state() const;
 
     void run_the_resize_steps();
+    void run_the_scroll_steps();
 
     void evaluate_media_queries_and_report_changes();
     void add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList>);
@@ -359,6 +360,9 @@ public:
 
     String domain() const;
     void set_domain(String const& domain);
+
+    auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
+    auto& pending_scrollend_event_targets() { return m_pending_scrollend_event_targets; }
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -455,6 +459,12 @@ private:
 
     // Used by run_the_resize_steps().
     Gfx::IntSize m_last_viewport_size;
+
+    // https://w3c.github.io/csswg-drafts/cssom-view-1/#document-pending-scroll-event-targets
+    Vector<JS::NonnullGCPtr<EventTarget>> m_pending_scroll_event_targets;
+
+    // https://w3c.github.io/csswg-drafts/cssom-view-1/#document-pending-scrollend-event-targets
+    Vector<JS::NonnullGCPtr<EventTarget>> m_pending_scrollend_event_targets;
 
     // Used by evaluate_media_queries_and_report_changes().
     Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;

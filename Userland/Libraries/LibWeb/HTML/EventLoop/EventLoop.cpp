@@ -169,7 +169,10 @@ void EventLoop::process()
         document.run_the_resize_steps();
     });
 
-    // FIXME:     8. For each fully active Document in docs, run the scroll steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    // 8. For each fully active Document in docs, run the scroll steps for that Document, passing in now as the timestamp. [CSSOMVIEW]
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        document.run_the_scroll_steps();
+    });
 
     // 9. For each fully active Document in docs, evaluate media queries and report changes for that Document, passing in now as the timestamp. [CSSOMVIEW]
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
