@@ -1638,7 +1638,7 @@ NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_for
 
 ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const&)
 {
-    return adopt_ref(*new Shader(this));
+    return adopt_ref(*new Shader(this, {}));
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)

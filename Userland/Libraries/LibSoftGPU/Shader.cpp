@@ -8,8 +8,9 @@
 
 namespace SoftGPU {
 
-Shader::Shader(void const* ownership_token)
+Shader::Shader(void const* ownership_token, Vector<Instruction> const& instructions)
     : GPU::Shader(ownership_token)
+    , m_instructions(instructions)
 {
 }
 
