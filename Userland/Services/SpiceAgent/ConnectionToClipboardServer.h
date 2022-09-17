@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include <AK/Function.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ConnectionToServer.h>
-
-#pragma once
 
 class ConnectionToClipboardServer final
     : public IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>

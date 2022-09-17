@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
-
-#pragma once
 
 class LoginWindow final : public GUI::Window {
     C_OBJECT(LoginWindow);

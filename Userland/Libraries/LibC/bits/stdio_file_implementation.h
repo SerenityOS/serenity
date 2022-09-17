@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include <AK/Array.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
@@ -12,8 +14,6 @@
 #include <LibC/bits/wchar.h>
 #include <pthread.h>
 #include <sys/types.h>
-
-#pragma once
 
 struct FILE {
 public:

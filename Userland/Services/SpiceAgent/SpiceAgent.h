@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include "ConnectionToClipboardServer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Vector.h>
 #include <LibCore/Notifier.h>
-
-#pragma once
 
 class SpiceAgent {
 public:

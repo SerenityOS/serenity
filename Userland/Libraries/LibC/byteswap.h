@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <sys/cdefs.h>
-
 #pragma once
+
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
