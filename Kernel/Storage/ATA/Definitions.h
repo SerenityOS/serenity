@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Kernel::ATA {
 
 enum DeviceSignature : u32 {
@@ -88,8 +90,6 @@ enum DeviceSignature : u32 {
 #define ATA_CTL_DEVADDRESS 0x01
 
 #define ATA_CAP_LBA 0x200
-
-#include <AK/Types.h>
 
 namespace Kernel {
 struct [[gnu::packed]] ATAIdentifyBlock {
