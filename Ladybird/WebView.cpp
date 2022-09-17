@@ -963,6 +963,7 @@ void WebView::show_js_console()
 
             m_js_console_output_edit->append(QString("> %1").arg(code));
 
+            m_page_client->initialize_js_console();
             m_page_client->m_console_client->handle_input(akstring_from_qstring(code));
         });
     }
