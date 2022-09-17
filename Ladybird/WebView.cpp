@@ -363,6 +363,13 @@ WebView::WebView()
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
+
+    QObject::connect(verticalScrollBar(), &QScrollBar::valueChanged, [this](int) {
+        update_viewport_rect();
+    });
+    QObject::connect(horizontalScrollBar(), &QScrollBar::valueChanged, [this](int) {
+        update_viewport_rect();
+    });
 }
 
 WebView::~WebView()
@@ -648,8 +655,14 @@ void WebView::paintEvent(QPaintEvent* event)
 
 void WebView::resizeEvent(QResizeEvent* event)
 {
-    auto scaled_width = int(event->size().width() / m_inverse_pixel_scaling_ratio);
-    auto scaled_height = int(event->size().height() / m_inverse_pixel_scaling_ratio);
+    QAbstractScrollArea::resizeEvent(event);
+    update_viewport_rect();
+}
+
+void WebView::update_viewport_rect()
+{
+    auto scaled_width = int(size().width() / m_inverse_pixel_scaling_ratio);
+    auto scaled_height = int(size().height() / m_inverse_pixel_scaling_ratio);
     Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
     m_page_client->set_viewport_rect(rect);
 }
