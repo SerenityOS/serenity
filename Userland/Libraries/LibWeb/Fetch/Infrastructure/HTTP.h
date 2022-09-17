@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Forward.h>
 #include <AK/StringView.h>
 
