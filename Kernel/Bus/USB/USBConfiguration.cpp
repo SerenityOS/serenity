@@ -7,10 +7,18 @@
 #include <AK/FixedArray.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBConfiguration.h>
+#include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 
 namespace Kernel::USB {
+
+USBConfiguration::USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor)
+    : m_device(device)
+    , m_descriptor(descriptor)
+{
+    m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
+}
 
 ErrorOr<void> USBConfiguration::enumerate_interfaces()
 {

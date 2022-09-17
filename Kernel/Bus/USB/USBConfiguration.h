@@ -8,7 +8,6 @@
 
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
-#include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 
 namespace Kernel::USB {
@@ -18,12 +17,7 @@ class Device;
 class USBConfiguration {
 public:
     USBConfiguration() = delete;
-    USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor)
-        : m_device(device)
-        , m_descriptor(descriptor)
-    {
-        m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
-    }
+    USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor);
 
     Device const& device() const { return m_device; }
     USBConfigurationDescriptor const& descriptor() const { return m_descriptor; }
