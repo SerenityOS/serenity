@@ -84,15 +84,22 @@ u32 ParentNode::child_element_count() const
     return count;
 }
 
+void ParentNode::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_children);
+}
+
 // https://dom.spec.whatwg.org/#dom-parentnode-children
 JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
 {
     // The children getter steps are to return an HTMLCollection collection rooted at this matching only element children.
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [this](Element const& element) {
-        return is_parent_of(element);
-    });
+    if (!m_children) {
+        m_children = HTMLCollection::create(*this, [this](Element const& element) {
+            return is_parent_of(element);
+        });
+    }
+    return *m_children;
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagname
