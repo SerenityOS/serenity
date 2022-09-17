@@ -3,6 +3,7 @@ set(SOURCES
     Device.cpp
     Image.cpp
     PixelConverter.cpp
+    ShaderProcessor.cpp
     Sampler.cpp
     Shader.cpp
 )

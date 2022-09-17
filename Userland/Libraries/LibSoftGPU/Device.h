@@ -36,6 +36,7 @@
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Shader.h>
+#include <LibSoftGPU/ShaderProcessor.h>
 #include <LibSoftGPU/Triangle.h>
 
 namespace SoftGPU {
@@ -120,6 +121,7 @@ private:
     Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
     Array<GPU::TextureUnitConfiguration, GPU::NUM_TEXTURE_UNITS> m_texture_unit_configuration;
     RefPtr<Shader> m_current_fragment_shader;
+    ShaderProcessor m_shader_processor;
 };
 
 }
