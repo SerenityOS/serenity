@@ -143,14 +143,18 @@ String Node::descendant_text_content() const
 String Node::text_content() const
 {
     // The textContent getter steps are to return the following, switching on the interface this implements:
+
     // If DocumentFragment or Element, return the descendant text content of this.
     if (is<DocumentFragment>(this) || is<Element>(this))
         return descendant_text_content();
-    else if (is<CharacterData>(this))
-        // If CharacterData, return this’s data.
-        return verify_cast<CharacterData>(this)->data();
 
-    // FIXME: If this is an Attr node, return this's value.
+    // If CharacterData, return this’s data.
+    if (is<CharacterData>(this))
+        return static_cast<CharacterData const&>(*this).data();
+
+    // If Attr node, return this's value.
+    if (is<Attr>(*this))
+        return static_cast<Attr const&>(*this).value();
 
     // Otherwise, return null
     return {};
@@ -165,16 +169,21 @@ void Node::set_text_content(String const& content)
     // If DocumentFragment or Element, string replace all with the given value within this.
     if (is<DocumentFragment>(this) || is<Element>(this)) {
         string_replace_all(content);
-    } else if (is<CharacterData>(this)) {
-        // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
+    }
+
+    // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
+    else if (is<CharacterData>(this)) {
+
         auto* character_data_node = verify_cast<CharacterData>(this);
         character_data_node->set_data(content);
 
         // FIXME: CharacterData::set_data is not spec compliant. Make this match the spec when set_data becomes spec compliant.
         //        Do note that this will make this function able to throw an exception.
-    } else {
-        // FIXME: If this is an Attr node, set an existing attribute value with this and the given value.
-        return;
+    }
+
+    // If Attr, set an existing attribute value with this and the given value.
+    if (is<Attr>(*this)) {
+        static_cast<Attr&>(*this).set_value(content);
     }
 
     // Otherwise, do nothing.
