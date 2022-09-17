@@ -147,6 +147,11 @@ static double parse_simplified_iso8601(String const& iso_8601)
     return time_clip(time_ms);
 }
 
+static constexpr AK::Array<StringView, 2> extra_formats = {
+    "%a %b %e %T %z %Y"sv,
+    "%m/%e/%Y"sv
+};
+
 static double parse_date_string(String const& date_string)
 {
     auto value = parse_simplified_iso8601(date_string);
@@ -155,9 +160,15 @@ static double parse_date_string(String const& date_string)
 
     // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
     // Parse formats of this type: "Wed Apr 17 23:08:53 +0000 2019"
-    auto maybe_datetime = Core::DateTime::parse("%a %b %e %T %z %Y"sv, date_string);
-    if (maybe_datetime.has_value())
-        return 1000.0 * maybe_datetime->timestamp();
+    // And: "4/17/2019"
+    // FIXME: Exactly what timezone and which additional formats we should support is unclear.
+    //        Both Chrome and Firefox seem to support "4/17/2019 11:08 PM +0000" with most parts
+    //        being optional, however this is not clearly documented anywhere.
+    for (auto const& format : extra_formats) {
+        auto maybe_datetime = Core::DateTime::parse(format, date_string);
+        if (maybe_datetime.has_value())
+            return 1000.0 * maybe_datetime->timestamp();
+    }
 
     return NAN;
 }
