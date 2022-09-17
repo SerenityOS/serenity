@@ -545,7 +545,7 @@ CSS::CSSStyleDeclaration* Element::style_for_bindings()
 void Element::make_html_uppercased_qualified_name()
 {
     // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
-    if (namespace_() == Namespace::HTML /* FIXME: and its node document is an HTML document */)
+    if (namespace_() == Namespace::HTML && document().document_type() == Document::Type::HTML)
         m_html_uppercased_qualified_name = qualified_name().to_uppercase();
     else
         m_html_uppercased_qualified_name = qualified_name();
