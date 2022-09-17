@@ -14,13 +14,13 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#attr
-class Attribute final : public Node {
-    WEB_PLATFORM_OBJECT(Attribute, Node);
+class Attr final : public Node {
+    WEB_PLATFORM_OBJECT(Attr, Node);
 
 public:
-    static JS::NonnullGCPtr<Attribute> create(Document&, FlyString local_name, String value, Element const* = nullptr);
+    static JS::NonnullGCPtr<Attr> create(Document&, FlyString local_name, String value, Element const* = nullptr);
 
-    virtual ~Attribute() override = default;
+    virtual ~Attr() override = default;
 
     virtual FlyString node_name() const override { return name(); }
 
@@ -42,7 +42,7 @@ public:
     void handle_attribute_changes(Element&, String const& old_value, String const& new_value);
 
 private:
-    Attribute(Document&, FlyString local_name, String value, Element const*);
+    Attr(Document&, FlyString local_name, String value, Element const*);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -52,8 +52,8 @@ private:
 };
 
 template<>
-inline bool Node::fast_is<Attribute>() const { return is_attribute(); }
+inline bool Node::fast_is<Attr>() const { return is_attribute(); }
 
 }
 
-WRAPPER_HACK(Attribute, Web::DOM)
+WRAPPER_HACK(Attr, Web::DOM)

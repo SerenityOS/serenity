@@ -129,7 +129,7 @@ namespace Web::DOM {
 class AbstractRange;
 class AbortController;
 class AbortSignal;
-class Attribute;
+class Attr;
 class CDATASection;
 class CharacterData;
 class Comment;

@@ -14,8 +14,8 @@
 #include <LibWeb/Bindings/AbortSignalPrototype.h>
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
-#include <LibWeb/Bindings/AttributeConstructor.h>
-#include <LibWeb/Bindings/AttributePrototype.h>
+#include <LibWeb/Bindings/AttrConstructor.h>
+#include <LibWeb/Bindings/AttrPrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
 #include <LibWeb/Bindings/BlobConstructor.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
@@ -402,7 +402,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
-    ADD_WINDOW_OBJECT_INTERFACE(Attribute)                                                          \
+    ADD_WINDOW_OBJECT_INTERFACE(Attr)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(Blob)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(CDATASection)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSConditionRule)                                                   \

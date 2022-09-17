@@ -98,7 +98,7 @@ ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& va
 
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
+        auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
         m_attributes->append_attribute(new_attribute);
 
         attribute = new_attribute.ptr();
@@ -208,7 +208,7 @@ DOM::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional
     if (!attribute) {
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
             m_attributes->append_attribute(new_attribute);
 
             parse_attribute(new_attribute->local_name(), "");

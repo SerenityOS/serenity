@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/Namespace.h>
@@ -63,7 +63,7 @@ Vector<String> NamedNodeMap::supported_property_names() const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-item
-Attribute const* NamedNodeMap::item(u32 index) const
+Attr const* NamedNodeMap::item(u32 index) const
 {
     // 1. If index is equal to or greater than this’s attribute list’s size, then return null.
     if (index >= m_attributes.size())
@@ -74,19 +74,19 @@ Attribute const* NamedNodeMap::item(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditem
-Attribute const* NamedNodeMap::get_named_item(StringView qualified_name) const
+Attr const* NamedNodeMap::get_named_item(StringView qualified_name) const
 {
     return get_attribute(qualified_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
-ExceptionOr<Attribute const*> NamedNodeMap::set_named_item(Attribute& attribute)
+ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
 {
     return set_attribute(attribute);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditem
-ExceptionOr<Attribute const*> NamedNodeMap::remove_named_item(StringView qualified_name)
+ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qualified_name)
 {
     // 1. Let attr be the result of removing an attribute given qualifiedName and element.
     auto const* attribute = remove_attribute(qualified_name);
@@ -100,13 +100,13 @@ ExceptionOr<Attribute const*> NamedNodeMap::remove_named_item(StringView qualifi
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
-Attribute* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index)
+Attr* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index)
 {
-    return const_cast<Attribute*>(const_cast<NamedNodeMap const*>(this)->get_attribute(qualified_name, item_index));
+    return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute(qualified_name, item_index));
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
-Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index) const
+Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_index) const
 {
     if (item_index)
         *item_index = 0;
@@ -133,7 +133,7 @@ Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* 
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set
-ExceptionOr<Attribute const*> NamedNodeMap::set_attribute(Attribute& attribute)
+ExceptionOr<Attr const*> NamedNodeMap::set_attribute(Attr& attribute)
 {
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
     if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &associated_element()))
@@ -162,7 +162,7 @@ ExceptionOr<Attribute const*> NamedNodeMap::set_attribute(Attribute& attribute)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-replace
-void NamedNodeMap::replace_attribute(Attribute& old_attribute, Attribute& new_attribute, size_t old_attribute_index)
+void NamedNodeMap::replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index)
 {
     // 1. Handle attribute changes for oldAttr with oldAttr’s element, oldAttr’s value, and newAttr’s value.
     VERIFY(old_attribute.owner_element());
@@ -180,7 +180,7 @@ void NamedNodeMap::replace_attribute(Attribute& old_attribute, Attribute& new_at
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-append
-void NamedNodeMap::append_attribute(Attribute& attribute)
+void NamedNodeMap::append_attribute(Attr& attribute)
 {
     // 1. Handle attribute changes for attribute with element, null, and attribute’s value.
     attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
@@ -195,7 +195,7 @@ void NamedNodeMap::append_attribute(Attribute& attribute)
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove
 void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
 {
-    JS::NonnullGCPtr<Attribute> attribute = m_attributes.at(attribute_index);
+    JS::NonnullGCPtr<Attr> attribute = m_attributes.at(attribute_index);
 
     // 1. Handle attribute changes for attribute with attribute’s element, attribute’s value, and null.
     VERIFY(attribute->owner_element());
@@ -209,7 +209,7 @@ void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
-Attribute const* NamedNodeMap::remove_attribute(StringView qualified_name)
+Attr const* NamedNodeMap::remove_attribute(StringView qualified_name)
 {
     size_t item_index = 0;
 

@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NamedNodeMap.h>

@@ -188,8 +188,8 @@ String Node::node_value() const
     // The nodeValue getter steps are to return the following, switching on the interface this implements:
 
     // If Attr, return this’s value.
-    if (is<Attribute>(this)) {
-        return verify_cast<Attribute>(this)->value();
+    if (is<Attr>(this)) {
+        return verify_cast<Attr>(this)->value();
     }
 
     // If CharacterData, return this’s data.
@@ -208,8 +208,8 @@ void Node::set_node_value(String const& value)
     // and then do as described below, switching on the interface this implements:
 
     // If Attr, set an existing attribute value with this and the given value.
-    if (is<Attribute>(this)) {
-        verify_cast<Attribute>(this)->set_value(value);
+    if (is<Attr>(this)) {
+        verify_cast<Attr>(this)->set_value(value);
     } else if (is<CharacterData>(this)) {
         // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
         verify_cast<CharacterData>(this)->set_data(value);
@@ -733,7 +733,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         document_type_copy->set_public_id(document_type->public_id());
         document_type_copy->set_system_id(document_type->system_id());
         copy = move(document_type_copy);
-    } else if (is<Attribute>(this)) {
+    } else if (is<Attr>(this)) {
         // FIXME:
         // Attr
         // Set copy’s namespace, namespace prefix, local name, and value to those of node.
@@ -898,19 +898,19 @@ u16 Node::compare_document_position(JS::GCPtr<Node> other)
     Node* node2 = this;
 
     // 3. Let attr1 and attr2 be null.
-    Attribute* attr1;
-    Attribute* attr2;
+    Attr* attr1;
+    Attr* attr2;
 
     // 4. If node1 is an attribute, then set attr1 to node1 and node1 to attr1’s element.
-    if (is<Attribute>(node1)) {
-        attr1 = verify_cast<Attribute>(node1);
+    if (is<Attr>(node1)) {
+        attr1 = verify_cast<Attr>(node1);
         node1 = const_cast<Element*>(attr1->owner_element());
     }
 
     // 5. If node2 is an attribute, then:
-    if (is<Attribute>(node2)) {
+    if (is<Attr>(node2)) {
         // 1. Set attr2 to node2 and node2 to attr2’s element.
-        attr2 = verify_cast<Attribute>(node2);
+        attr2 = verify_cast<Attr>(node2);
         node2 = const_cast<Element*>(attr2->owner_element());
 
         // 2. If attr1 and node1 are non-null, and node2 is node1, then:

@@ -16,7 +16,7 @@ bool prescan_should_abort(ByteBuffer const& input, size_t const& position);
 bool prescan_is_whitespace_or_slash(u8 const& byte);
 bool prescan_skip_whitespace_and_slashes(ByteBuffer const& input, size_t& position);
 Optional<StringView> extract_character_encoding_from_meta_element(String const&);
-JS::GCPtr<DOM::Attribute> prescan_get_attribute(DOM::Document&, ByteBuffer const& input, size_t& position);
+JS::GCPtr<DOM::Attr> prescan_get_attribute(DOM::Document&, ByteBuffer const& input, size_t& position);
 Optional<String> run_prescan_byte_stream_algorithm(DOM::Document&, ByteBuffer const& input);
 String run_encoding_sniffing_algorithm(DOM::Document&, ByteBuffer const& input);
 

@@ -41,7 +41,7 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name() == "Selection")
         return true;
-    if (type.name() == "Attribute")
+    if (type.name() == "Attr")
         return true;
     if (type.name() == "NamedNodeMap")
         return true;
