@@ -186,7 +186,7 @@ void Device::setup_blend_factors()
 
 ALWAYS_INLINE static void test_alpha(PixelQuad& quad, GPU::AlphaTestFunction alpha_test_function, f32x4 const& reference_value)
 {
-    auto const alpha = quad.out_color.w();
+    auto const alpha = quad.get_output_float(SHADER_OUTPUT_FIRST_COLOR + 3);
 
     switch (alpha_test_function) {
     case GPU::AlphaTestFunction::Always:
@@ -494,11 +494,13 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
             if (m_options.enable_blending || m_options.color_mask != 0xffffffff)
                 dst_u32 = load4_masked(color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
 
+            auto out_color = quad.get_output_vector4(SHADER_OUTPUT_FIRST_COLOR);
+
             if (m_options.enable_blending) {
                 INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
 
                 // Blend color values from pixel_staging into color_buffer
-                auto const& src = quad.out_color;
+                auto const& src = out_color;
                 auto dst = to_vec4(dst_u32);
 
                 auto src_factor = expand4(m_alpha_blend_factors.src_constant)
@@ -513,10 +515,10 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
                     + dst * m_alpha_blend_factors.dst_factor_dst_color
                     + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * m_alpha_blend_factors.dst_factor_dst_alpha;
 
-                quad.out_color = src * src_factor + dst * dst_factor;
+                out_color = src * src_factor + dst * dst_factor;
             }
 
-            auto const argb32_color = to_argb32(quad.out_color);
+            auto const argb32_color = to_argb32(out_color);
             if (m_options.color_mask == 0xffffffff)
                 store4_masked(argb32_color, color_ptrs[0], color_ptrs[1], color_ptrs[2], color_ptrs[3], quad.mask);
             else
@@ -1331,7 +1333,6 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             break;
         }
     }
-    quad.out_color = current_color;
 
     // Calculate fog
     // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
@@ -1358,13 +1359,16 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 
         // Mix texel's RGB with fog's RBG - leave alpha alone
         auto fog_color = expand4(m_options.fog_color);
-        quad.out_color.set_x(mix(fog_color.x(), quad.out_color.x(), factor));
-        quad.out_color.set_y(mix(fog_color.y(), quad.out_color.y(), factor));
-        quad.out_color.set_z(mix(fog_color.z(), quad.out_color.z(), factor));
+        current_color.set_x(mix(fog_color.x(), current_color.x(), factor));
+        current_color.set_y(mix(fog_color.y(), current_color.y(), factor));
+        current_color.set_z(mix(fog_color.z(), current_color.z(), factor));
     }
 
+    quad.set_output(SHADER_OUTPUT_FIRST_COLOR, current_color.x());
+    quad.set_output(SHADER_OUTPUT_FIRST_COLOR + 1, current_color.y());
+    quad.set_output(SHADER_OUTPUT_FIRST_COLOR + 2, current_color.z());
     // Multiply coverage with the fragment's alpha to obtain the final alpha value
-    quad.out_color.set_w(quad.out_color.w() * quad.coverage);
+    quad.set_output(SHADER_OUTPUT_FIRST_COLOR + 3, current_color.w() * quad.coverage);
 }
 
 void Device::resize(Gfx::IntSize size)

@@ -32,6 +32,13 @@ static_assert(NUM_SHADER_INPUTS >= 4 + GPU::NUM_TEXTURE_UNITS * 4);
 static constexpr int SHADER_INPUT_VERTEX_COLOR = 0;
 static constexpr int SHADER_INPUT_FIRST_TEXCOORD = 4;
 
+static constexpr int NUM_SHADER_OUTPUTS = 4;
+
+// Verify that we have enough outputs to hold the fragment's color
+static_assert(NUM_SHADER_OUTPUTS >= 4);
+
+static constexpr int SHADER_OUTPUT_FIRST_COLOR = 0;
+
 // See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
 // FIXME: make this dynamically configurable through ConfigServer
 static constexpr bool CLAMP_DEPRECATED_BEHAVIOR = false;
