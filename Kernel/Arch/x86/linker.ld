@@ -71,7 +71,7 @@ SECTIONS
         end_of_kernel_data = .;
     } :data
 
-    .ro_after_init ALIGN(4K) (NOLOAD) : AT(ADDR(.ro_after_init))
+    .ro_after_init ALIGN(4K) : AT(ADDR(.ro_after_init))
     {
         start_of_ro_after_init = .;
         *(.ro_after_init);
