@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace Web::Platform {
 
@@ -29,6 +30,9 @@ public:
     static void install(FontPlugin&);
 
     virtual ~FontPlugin();
+
+    virtual Gfx::Font& default_font() = 0;
+    virtual Gfx::Font& default_fixed_width_font() = 0;
 
     virtual String generic_font_name(GenericFont) = 0;
 };

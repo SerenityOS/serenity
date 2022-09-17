@@ -5,7 +5,6 @@
  */
 
 #include <AK/Demangle.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -15,6 +14,7 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Platform/FontPlugin.h>
 #include <typeinfo>
 
 namespace Web::Layout {
@@ -198,7 +198,7 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     , m_computed_values(move(computed_values))
 {
     m_has_style = true;
-    m_font = Gfx::FontDatabase::default_font();
+    m_font = Platform::FontPlugin::the().default_font();
 }
 
 void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const&)

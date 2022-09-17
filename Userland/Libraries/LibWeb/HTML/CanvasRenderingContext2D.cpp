@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::HTML {
 
@@ -406,7 +407,7 @@ JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String cons
     auto prepared_text = prepare_text(text);
     auto metrics = TextMetrics::create(global_object());
     // FIXME: Use the font that was used to create the glyphs in prepared_text.
-    auto& font = Gfx::FontDatabase::default_font();
+    auto& font = Platform::FontPlugin::the().default_font();
 
     // width attribute: The width of that inline box, in CSS pixels. (The text's advance width.)
     metrics->set_width(prepared_text.bounding_box.width());
@@ -477,7 +478,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     // ...and with all other properties set to their initial values.
     // FIXME: Actually use a LineBox here instead of, you know, using the default font and measuring its size (which is not the spec at all).
     // FIXME: Once we have CanvasTextDrawingStyles, add the CSS attributes.
-    auto& font = Gfx::FontDatabase::default_font();
+    auto& font = Platform::FontPlugin::the().default_font();
     size_t width = 0;
     size_t height = font.pixel_size();
     for (auto c : Utf8View { replaced_text }) {

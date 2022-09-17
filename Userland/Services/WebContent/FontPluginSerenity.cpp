@@ -16,6 +16,16 @@ FontPluginSerenity::FontPluginSerenity()
 
 FontPluginSerenity::~FontPluginSerenity() = default;
 
+Gfx::Font& FontPluginSerenity::default_font()
+{
+    return Gfx::FontDatabase::default_font();
+}
+
+Gfx::Font& FontPluginSerenity::default_fixed_width_font()
+{
+    return Gfx::FontDatabase::default_fixed_width_font();
+}
+
 String FontPluginSerenity::generic_font_name(Web::Platform::GenericFont generic_font)
 {
     // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
