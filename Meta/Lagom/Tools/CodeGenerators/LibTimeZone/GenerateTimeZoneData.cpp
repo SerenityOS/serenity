@@ -50,7 +50,7 @@ struct TimeZoneOffset {
 struct DaylightSavingsOffset {
     i64 offset { 0 };
     u16 year_from { 0 };
-    u16 year_to { 0 };
+    Optional<u16> year_to;
     DateTime in_effect;
 
     StringIndexType format { 0 };
@@ -112,11 +112,19 @@ template<>
 struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
     {
+        auto format_time = [&](auto year) {
+            return String::formatted("AK::Time::from_timestamp({}, 1, 1, 0, 0, 0, 0)", year);
+        };
+
+        static String max_year_as_time("max_year_as_time"sv);
+
         return Formatter<FormatString>::format(builder,
             "{{ {}, {}, {}, {}, {} }}"sv,
             dst_offset.offset,
-            dst_offset.year_from,
-            dst_offset.year_to,
+            format_time(dst_offset.year_from),
+            dst_offset.year_to.has_value()
+                ? format_time(*dst_offset.year_to + 1)
+                : max_year_as_time,
             dst_offset.in_effect,
             dst_offset.format);
     }
@@ -292,9 +300,7 @@ static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
 
     if (segments[3] == "only")
         dst_offset.year_to = dst_offset.year_from;
-    else if (segments[3] == "max"sv)
-        dst_offset.year_to = NumericLimits<u16>::max();
-    else
+    else if (segments[3] != "max"sv)
         dst_offset.year_to = segments[3].to_uint().value();
 
     auto in_effect = Array { "0"sv, segments[5], segments[6], segments[7] };
@@ -482,12 +488,15 @@ static ErrorOr<void> generate_time_zone_data_implementation(Core::Stream::Buffer
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/NumericLimits.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <LibTimeZone/TimeZone.h>
 #include <LibTimeZone/TimeZoneData.h>
 
 namespace TimeZone {
+
+static constexpr auto max_year_as_time = AK::Time::from_timestamp(NumericLimits<u16>::max(), 1, 1, 0, 0, 0, 0);
 
 struct DateTime {
     AK::Time time_since_epoch() const
@@ -532,8 +541,8 @@ struct DaylightSavingsOffset {
     }
 
     i64 offset { 0 };
-    u16 year_from { 0 };
-    u16 year_to { 0 };
+    AK::Time year_from {};
+    AK::Time year_to {};
     DateTime in_effect {};
 
     @string_index_type@ format { 0 };
@@ -643,10 +652,7 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
 
     for (size_t index = 0; (index < dst_rules.size()) && (!standard_offset || !daylight_offset); ++index) {
         auto const& dst_rule = dst_rules[index];
-
-        auto year_from = AK::Time::from_timestamp(dst_rule.year_from, 1, 1, 0, 0, 0, 0);
-        auto year_to = AK::Time::from_timestamp(dst_rule.year_to + 1, 1, 1, 0, 0, 0, 0);
-        if ((time < year_from) || (time >= year_to))
+        if ((time < dst_rule.year_from) || (time >= dst_rule.year_to))
             continue;
 
         if (dst_rule.offset == 0)
