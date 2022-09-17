@@ -211,6 +211,10 @@ public:
     Vector<JS::Handle<HTML::HTMLScriptElement>> take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>);
     Vector<JS::Handle<HTML::HTMLScriptElement>>& scripts_to_execute_as_soon_as_possible() { return m_scripts_to_execute_as_soon_as_possible; }
 
+    void add_script_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement&);
+    Vector<JS::Handle<HTML::HTMLScriptElement>> take_scripts_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLParser>);
+    Vector<JS::Handle<HTML::HTMLScriptElement>>& scripts_to_execute_in_order_as_soon_as_possible() { return m_scripts_to_execute_in_order_as_soon_as_possible; }
+
     QuirksMode mode() const { return m_quirks_mode; }
     bool in_quirks_mode() const { return m_quirks_mode == QuirksMode::Yes; }
     void set_quirks_mode(QuirksMode mode) { m_quirks_mode = mode; }
@@ -398,7 +402,13 @@ private:
     String m_source;
 
     JS::GCPtr<HTML::HTMLScriptElement> m_pending_parsing_blocking_script;
+
     Vector<JS::Handle<HTML::HTMLScriptElement>> m_scripts_to_execute_when_parsing_has_finished;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#list-of-scripts-that-will-execute-in-order-as-soon-as-possible
+    Vector<JS::Handle<HTML::HTMLScriptElement>> m_scripts_to_execute_in_order_as_soon_as_possible;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#set-of-scripts-that-will-execute-as-soon-as-possible
     Vector<JS::Handle<HTML::HTMLScriptElement>> m_scripts_to_execute_as_soon_as_possible;
 
     QuirksMode m_quirks_mode { QuirksMode::No };

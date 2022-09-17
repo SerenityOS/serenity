@@ -1244,6 +1244,16 @@ Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_as
     return move(m_scripts_to_execute_as_soon_as_possible);
 }
 
+void Document::add_script_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
+{
+    m_scripts_to_execute_in_order_as_soon_as_possible.append(JS::make_handle(script));
+}
+
+Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLParser>)
+{
+    return move(m_scripts_to_execute_in_order_as_soon_as_possible);
+}
+
 // https://dom.spec.whatwg.org/#dom-document-importnode
 ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCPtr<Node> node, bool deep)
 {

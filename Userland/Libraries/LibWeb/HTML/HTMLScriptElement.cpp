@@ -376,29 +376,29 @@ void HTMLScriptElement::prepare_script()
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
         || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
         // Add the element to the end of the list of scripts that will execute in order as soon as possible associated with the element's preparation-time document.
-        m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
+        m_preparation_time_document->add_script_to_execute_in_order_as_soon_as_possible({}, *this);
 
         // When the script is ready, run the following steps:
         when_the_script_is_ready([this] {
             // 1. If the element is not now the first element in the list of scripts
             //    that will execute in order as soon as possible to which it was added above,
             //    then mark the element as ready but return without executing the script yet.
-            if (this != m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first().ptr())
+            if (this != m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first().ptr())
                 return;
 
             for (;;) {
                 // 2. Execution: Execute the script block corresponding to the first script element
                 //    in this list of scripts that will execute in order as soon as possible.
-                m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->execute_script();
+                m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first()->execute_script();
 
                 // 3. Remove the first element from this list of scripts that will execute in order
                 //    as soon as possible.
-                (void)m_preparation_time_document->scripts_to_execute_as_soon_as_possible().take_first();
+                (void)m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().take_first();
 
                 // 4. If this list of scripts that will execute in order as soon as possible is still
                 //    not empty and the first entry has already been marked as ready, then jump back
                 //    to the step labeled execution.
-                if (!m_preparation_time_document->scripts_to_execute_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_as_soon_as_possible().first()->m_script_ready)
+                if (!m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().is_empty() && m_preparation_time_document->scripts_to_execute_in_order_as_soon_as_possible().first()->m_script_ready)
                     continue;
 
                 break;
