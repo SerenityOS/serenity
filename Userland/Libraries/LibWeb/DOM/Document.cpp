@@ -933,10 +933,18 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& na
     });
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_names)
 {
-    return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
-        return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
+    Vector<FlyString> list_of_class_names;
+    for (auto& name : class_names.view().split_view(' ')) {
+        list_of_class_names.append(name);
+    }
+    return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+        for (auto& name : list_of_class_names) {
+            if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
+                return false;
+        }
+        return true;
     });
 }
 
