@@ -7,6 +7,7 @@
 
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
+#include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
 
 namespace Kernel {

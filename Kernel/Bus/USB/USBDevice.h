@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Bus/USB/USBConfiguration.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 
 namespace Kernel {
