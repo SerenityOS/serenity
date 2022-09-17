@@ -6,13 +6,20 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibGPU/Shader.h>
+#include <LibSoftGPU/ISA.h>
 
 namespace SoftGPU {
 
 class Shader final : public GPU::Shader {
 public:
-    Shader(void const* ownership_token);
+    Shader(void const* ownership_token, Vector<Instruction> const&);
+
+    Vector<Instruction> const& instructions() const { return m_instructions; }
+
+private:
+    Vector<Instruction> m_instructions;
 };
 
 }
