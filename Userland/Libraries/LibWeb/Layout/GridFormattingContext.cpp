@@ -107,18 +107,29 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 1. Position anything that's not auto-positioned.
     for (size_t i = 0; i < boxes_to_place.size(); i++) {
         auto const& child_box = boxes_to_place[i];
-        if (child_box.computed_values().grid_row_start().is_auto()
-            || child_box.computed_values().grid_row_end().is_auto()
-            || child_box.computed_values().grid_column_start().is_auto()
-            || child_box.computed_values().grid_column_end().is_auto())
+        if ((child_box.computed_values().grid_row_start().is_auto_positioned() && child_box.computed_values().grid_row_end().is_auto_positioned())
+            || (child_box.computed_values().grid_column_start().is_auto_positioned() && child_box.computed_values().grid_column_end().is_auto_positioned()))
             continue;
 
-        int row_start = child_box.computed_values().grid_row_start().position();
-        int row_end = child_box.computed_values().grid_row_end().position();
-        int column_start = child_box.computed_values().grid_column_start().position();
-        int column_end = child_box.computed_values().grid_column_end().position();
-        int row_span = 1;
-        int column_span = 1;
+        int row_start = child_box.computed_values().grid_row_start().raw_value();
+        int row_end = child_box.computed_values().grid_row_end().raw_value();
+        int column_start = child_box.computed_values().grid_column_start().raw_value();
+        int column_end = child_box.computed_values().grid_column_end().raw_value();
+
+        // https://drafts.csswg.org/css-grid/#line-placement
+        // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-slot
+        // FIXME: <custom-ident>
+        // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
+        // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
+        // contributes the first such line to the grid item’s placement.
+
+        // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
+        // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
+        // line named foo-start was explicitly specified before it).
+
+        // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
         // https://drafts.csswg.org/css-grid/#grid-placement-int
         // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
@@ -128,33 +139,68 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
         if (column_end < 0)
             column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
-        // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+
+        // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
         // of finding this position.
 
-        // FIXME: An <integer> value of zero makes the declaration invalid.
+        // An <integer> value of zero makes the declaration invalid.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
+        // span && [ <integer [1,∞]> || <custom-ident> ]
+        // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
+        // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
+        // grid-column-end: span 2 indicates the second grid line in the endward direction from the
+        // grid-column-start line.
+        int row_span = 1;
+        int column_span = 1;
+        if (child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_span())
+            row_span = child_box.computed_values().grid_row_end().raw_value();
+        if (child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_span())
+            column_span = child_box.computed_values().grid_column_end().raw_value();
+        if (child_box.computed_values().grid_row_end().is_position() && child_box.computed_values().grid_row_start().is_span()) {
+            row_span = child_box.computed_values().grid_row_start().raw_value();
+            row_start = row_end - row_span;
+        }
+        if (child_box.computed_values().grid_column_end().is_position() && child_box.computed_values().grid_column_start().is_span()) {
+            column_span = child_box.computed_values().grid_column_start().raw_value();
+            column_start = column_end - column_span;
+        }
+
+        // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+        // lines with that name exist, all implicit grid lines on the side of the explicit grid
+        // corresponding to the search direction are assumed to have that name for the purpose of counting
+        // this span.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-auto
+        // auto
+        // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
+        // default span of one. (See § 8 Placing Grid Items, above.)
 
         // https://drafts.csswg.org/css-grid/#grid-placement-errors
         // 8.3.1. Grid Placement Conflict Handling
         // If the placement for a grid item contains two lines, and the start line is further end-ward than
         // the end line, swap the two lines. If the start line is equal to the end line, remove the end
         // line.
-        if (row_start > row_end) {
-            auto temp = row_end;
-            row_end = row_start;
-            row_start = temp;
+        if (child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_position()) {
+            if (row_start > row_end)
+                swap(row_start, row_end);
+            if (row_start != row_end)
+                row_span = row_end - row_start;
         }
-        if (column_start > column_end) {
-            auto temp = column_end;
-            column_end = column_start;
-            column_start = temp;
+        if (child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_position()) {
+            if (column_start > column_end)
+                swap(column_start, column_end);
+            if (column_start != column_end)
+                column_span = column_end - column_start;
         }
-        if (row_start != row_end)
-            row_span = row_end - row_start;
-        if (column_start != column_end)
-            column_span = column_end - column_start;
-        // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+
+        // If the placement contains two spans, remove the one contributed by the end grid-placement
         // property.
+        if (child_box.computed_values().grid_row_start().is_span() && child_box.computed_values().grid_row_end().is_span())
+            row_span = child_box.computed_values().grid_row_start().raw_value();
+        if (child_box.computed_values().grid_column_start().is_span() && child_box.computed_values().grid_column_end().is_span())
+            column_span = child_box.computed_values().grid_column_start().raw_value();
 
         // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
@@ -173,13 +219,26 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // FIXME: Do "dense" packing
     for (size_t i = 0; i < boxes_to_place.size(); i++) {
         auto const& child_box = boxes_to_place[i];
-        if (child_box.computed_values().grid_row_start().is_auto()
-            || child_box.computed_values().grid_row_end().is_auto())
+        if (child_box.computed_values().grid_row_start().is_auto_positioned() && child_box.computed_values().grid_row_end().is_auto_positioned())
             continue;
 
-        int row_start = child_box.computed_values().grid_row_start().position();
-        int row_end = child_box.computed_values().grid_row_end().position();
-        int row_span = 1;
+        int row_start = child_box.computed_values().grid_row_start().raw_value();
+        int row_end = child_box.computed_values().grid_row_end().raw_value();
+
+        // https://drafts.csswg.org/css-grid/#line-placement
+        // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-slot
+        // FIXME: <custom-ident>
+        // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
+        // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
+        // contributes the first such line to the grid item’s placement.
+
+        // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
+        // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
+        // line named foo-start was explicitly specified before it).
+
+        // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
         // https://drafts.csswg.org/css-grid/#grid-placement-int
         // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
@@ -187,26 +246,53 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // instead counts in reverse, starting from the end edge of the explicit grid.
         if (row_end < 0)
             row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
-        // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+
+        // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
         // of finding this position.
 
-        // FIXME: An <integer> value of zero makes the declaration invalid.
+        // An <integer> value of zero makes the declaration invalid.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
+        // span && [ <integer [1,∞]> || <custom-ident> ]
+        // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
+        // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
+        // grid-column-end: span 2 indicates the second grid line in the endward direction from the
+        // grid-column-start line.
+        int row_span = 1;
+        if (child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_span())
+            row_span = child_box.computed_values().grid_row_end().raw_value();
+        if (child_box.computed_values().grid_row_end().is_position() && child_box.computed_values().grid_row_start().is_span()) {
+            row_span = child_box.computed_values().grid_row_start().raw_value();
+            row_start = row_end - row_span;
+        }
+
+        // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+        // lines with that name exist, all implicit grid lines on the side of the explicit grid
+        // corresponding to the search direction are assumed to have that name for the purpose of counting
+        // this span.
+
+        // https://drafts.csswg.org/css-grid/#grid-placement-auto
+        // auto
+        // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
+        // default span of one. (See § 8 Placing Grid Items, above.)
 
         // https://drafts.csswg.org/css-grid/#grid-placement-errors
         // 8.3.1. Grid Placement Conflict Handling
         // If the placement for a grid item contains two lines, and the start line is further end-ward than
         // the end line, swap the two lines. If the start line is equal to the end line, remove the end
         // line.
-        if (row_start > row_end) {
-            auto temp = row_end;
-            row_end = row_start;
-            row_start = temp;
+        if (child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_position()) {
+            if (row_start > row_end)
+                swap(row_start, row_end);
+            if (row_start != row_end)
+                row_span = row_end - row_start;
         }
-        if (row_start != row_end)
-            row_span = row_end - row_start;
-        // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+
+        // If the placement contains two spans, remove the one contributed by the end grid-placement
         // property.
+        if (child_box.computed_values().grid_row_start().is_span() && child_box.computed_values().grid_row_end().is_span())
+            row_span = child_box.computed_values().grid_row_start().raw_value();
 
         // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
@@ -263,10 +349,24 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // FIXME: no distinction made. See #4.2
 
         // 4.1.1. If the item has a definite column position:
-        if (!child_box.computed_values().grid_column_start().is_auto()) {
-            int column_start = child_box.computed_values().grid_column_start().position();
-            int column_end = child_box.computed_values().grid_column_end().position();
-            int column_span = 1;
+        if (!(child_box.computed_values().grid_column_start().is_auto_positioned() && child_box.computed_values().grid_column_end().is_auto_positioned())) {
+            int column_start = child_box.computed_values().grid_column_start().raw_value();
+            int column_end = child_box.computed_values().grid_column_end().raw_value();
+
+            // https://drafts.csswg.org/css-grid/#line-placement
+            // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
+
+            // https://drafts.csswg.org/css-grid/#grid-placement-slot
+            // FIXME: <custom-ident>
+            // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
+            // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
+            // contributes the first such line to the grid item’s placement.
+
+            // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
+            // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
+            // line named foo-start was explicitly specified before it).
+
+            // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
             // https://drafts.csswg.org/css-grid/#grid-placement-int
             // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
@@ -274,28 +374,53 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // instead counts in reverse, starting from the end edge of the explicit grid.
             if (column_end < 0)
                 column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
-            // FIXME: If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+
+            // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
             // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
             // of finding this position.
 
-            // FIXME: An <integer> value of zero makes the declaration invalid.
+            // An <integer> value of zero makes the declaration invalid.
+
+            // https://drafts.csswg.org/css-grid/#grid-placement-span-int
+            // span && [ <integer [1,∞]> || <custom-ident> ]
+            // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
+            // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
+            // grid-column-end: span 2 indicates the second grid line in the endward direction from the
+            // grid-column-start line.
+            int column_span = 1;
+            if (child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_span())
+                column_span = child_box.computed_values().grid_column_end().raw_value();
+            if (child_box.computed_values().grid_column_end().is_position() && child_box.computed_values().grid_column_start().is_span()) {
+                column_span = child_box.computed_values().grid_column_start().raw_value();
+                column_start = column_end - column_span;
+            }
+
+            // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
+            // lines with that name exist, all implicit grid lines on the side of the explicit grid
+            // corresponding to the search direction are assumed to have that name for the purpose of counting
+            // this span.
+
+            // https://drafts.csswg.org/css-grid/#grid-placement-auto
+            // auto
+            // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
+            // default span of one. (See § 8 Placing Grid Items, above.)
 
             // https://drafts.csswg.org/css-grid/#grid-placement-errors
             // 8.3.1. Grid Placement Conflict Handling
             // If the placement for a grid item contains two lines, and the start line is further end-ward than
             // the end line, swap the two lines. If the start line is equal to the end line, remove the end
             // line.
-            if (!child_box.computed_values().grid_column_end().is_auto()) {
-                if (column_start > column_end) {
-                    auto temp = column_end;
-                    column_end = column_start;
-                    column_start = temp;
-                }
+            if (child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_position()) {
+                if (column_start > column_end)
+                    swap(column_start, column_end);
                 if (column_start != column_end)
                     column_span = column_end - column_start;
             }
-            // FIXME: If the placement contains two spans, remove the one contributed by the end grid-placement
+
+            // If the placement contains two spans, remove the one contributed by the end grid-placement
             // property.
+            if (child_box.computed_values().grid_column_start().is_span() && child_box.computed_values().grid_column_end().is_span())
+                column_span = child_box.computed_values().grid_column_start().raw_value();
 
             // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 

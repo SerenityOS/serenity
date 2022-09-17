@@ -5457,20 +5457,14 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         return {};
     }
 
-    auto first_grid_track_placement = CSS::GridTrackPlacement();
     auto has_span = false;
     if (current_token.to_string() == "span"sv) {
         has_span = true;
         tokens.skip_whitespace();
         current_token = tokens.next_token().token();
     }
-    if (current_token.is(Token::Type::Number) && current_token.number().is_integer()) {
-        first_grid_track_placement.set_position(static_cast<int>(current_token.number_value()));
-        first_grid_track_placement.set_has_span(has_span);
-    }
-
-    if (!tokens.has_next_token())
-        return GridTrackPlacementStyleValue::create(first_grid_track_placement);
+    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && !tokens.has_next_token())
+        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value()), has_span));
     return {};
 }
 
@@ -5488,18 +5482,15 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     }
 
     auto calculate_grid_track_placement = [](auto& current_token, auto& tokens) -> CSS::GridTrackPlacement {
-        auto grid_track_placement = CSS::GridTrackPlacement();
         auto has_span = false;
         if (current_token.to_string() == "span"sv) {
             has_span = true;
             tokens.skip_whitespace();
             current_token = tokens.next_token().token();
         }
-        if (current_token.is(Token::Type::Number) && current_token.number().is_integer()) {
-            grid_track_placement.set_position(static_cast<int>(current_token.number_value()));
-            grid_track_placement.set_has_span(has_span);
-        }
-        return grid_track_placement;
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
+            return CSS::GridTrackPlacement(static_cast<int>(current_token.number_value()), has_span);
+        return CSS::GridTrackPlacement();
     };
 
     auto first_grid_track_placement = calculate_grid_track_placement(current_token, tokens);

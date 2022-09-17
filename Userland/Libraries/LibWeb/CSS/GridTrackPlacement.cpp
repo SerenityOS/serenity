@@ -9,28 +9,23 @@
 
 namespace Web::CSS {
 
-GridTrackPlacement::GridTrackPlacement(int position, bool has_span)
-    : m_position(position)
-    , m_has_span(has_span)
-{
-}
-
-GridTrackPlacement::GridTrackPlacement(int position)
-    : m_position(position)
+GridTrackPlacement::GridTrackPlacement(int span_or_position, bool has_span)
+    : m_type(has_span ? Type::Span : Type::Position)
+    , m_value(span_or_position)
 {
 }
 
 GridTrackPlacement::GridTrackPlacement()
-    : m_is_auto(true)
+    : m_type(Type::Auto)
 {
 }
 
 String GridTrackPlacement::to_string() const
 {
     StringBuilder builder;
-    if (m_has_span)
+    if (is_span())
         builder.append("span "sv);
-    builder.append(String::number(m_position));
+    builder.append(String::number(m_value));
     return builder.to_string();
 }
 

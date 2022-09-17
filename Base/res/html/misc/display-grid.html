@@ -40,26 +40,6 @@
   <div class="grid-item">1</div>
 </div>
 
-<!-- Using grid-row and grid-column -->
-<p>Should render a full-width 4x4 grid with:
-<ul>
-  <li>one large column on the left</li>
-  <li>one large column on the right, being split in half vertically, with the number 2 in the top half, and numbers 3, 4, 5, and 6 in the bottom</li>
-</ul>
-<div 
-  class="grid-container"
-  style="
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 50px 50px 50px 50px;
-  ">
-  <div class="grid-item" style="grid-row: 1/-1; grid-column: 1/3;">1</div>
-  <div class="grid-item" style="grid-row: 1/3; grid-column: 3/-1;">2</div>
-  <div class="grid-item">3</div>  
-  <div class="grid-item">4</div>
-  <div class="grid-item">5</div>  
-  <div class="grid-item">6</div>
-</div>
- 
 <!-- Different column sizes -->
 <p>Should render a 2x2 grid with columns 50px and 50%</p>
 <div 
@@ -84,3 +64,23 @@
     grid-column: 2 / 2;
     grid-row: 2 / 2">4</div>
 </div>
+
+<!-- Using grid-row and grid-column -->
+<p>Should render a full-width 4x4 grid with:
+  <ul>
+    <li>one large column on the left</li>
+    <li>one large column on the right, being split in half vertically, with the number 2 in the top half, and numbers 3, 4, 5, and 6 in the bottom</li>
+  </ul>
+  <div 
+    class="grid-container"
+    style="
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-template-rows: 25px 25px 25px 25px 25px 25px 25px 25px;
+    ">
+    <div class="grid-item" style="grid-row: 1 / -1; grid-column: span 4;">1</div>
+    <div class="grid-item" style="grid-row: 1 / 5; grid-column: 5 / -1;">2</div>
+    <div class="grid-item" style="grid-column: span 2; grid-row: span 2;">3</div>
+    <div class="grid-item" style="grid-column: span 2 / -1; grid-row: span 2;">4</div>
+    <div class="grid-item" style="grid-column: span 2; grid-row: 7 / span 100;">5</div>  
+    <div class="grid-item" style="grid-column: 7 / span 2; grid-row: span 2 / -1;">6</div>
+  </div>
