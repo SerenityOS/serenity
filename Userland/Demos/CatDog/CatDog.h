@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/ElapsedTimer.h>
@@ -14,8 +16,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <unistd.h>
-
-#pragma once
 
 class CatDog final : public GUI::Widget
     , GUI::MouseTracker {

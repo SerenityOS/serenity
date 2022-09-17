@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
-
 #pragma once
+
+#include <AK/Types.h>
 
 namespace GPU {
 

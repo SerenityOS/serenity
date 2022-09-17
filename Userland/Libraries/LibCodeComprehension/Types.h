@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
-
 #pragma once
+
+#include <AK/String.h>
 
 namespace CodeComprehension {
 
