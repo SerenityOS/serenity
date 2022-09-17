@@ -28,9 +28,23 @@ FontPluginQt::FontPluginQt()
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
     update_generic_fonts();
+
+    auto default_font_name = generic_font_name(Web::Platform::GenericFont::UiSansSerif);
+    m_default_font = Gfx::FontDatabase::the().get(default_font_name, 12.0, 400, 0);
+    VERIFY(m_default_font);
 }
 
 FontPluginQt::~FontPluginQt() = default;
+
+Gfx::Font& FontPluginQt::default_font()
+{
+    return *m_default_font;
+}
+
+Gfx::Font& FontPluginQt::default_fixed_width_font()
+{
+    return *m_default_fixed_width_font;
+}
 
 void FontPluginQt::update_generic_fonts()
 {
