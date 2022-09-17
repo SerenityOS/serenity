@@ -578,9 +578,10 @@ void Device::rasterize_line_antialiased(GPU::Vertex& from, GPU::Vertex& to)
         [&from_color4, &from, &from_fog_depth4](auto& quad) {
             // FIXME: interpolate color, tex coords and fog depth along the distance of the line
             //        in clip space (i.e. NOT distance_from_line)
-            quad.vertex_color = from_color4;
+            quad.set_input(SHADER_INPUT_VERTEX_COLOR, from_color4);
             for (size_t i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i)
-                quad.texture_coordinates[i] = expand4(from.tex_coords[i]);
+                quad.set_input(SHADER_INPUT_FIRST_TEXCOORD + i * 4, expand4(from.tex_coords[i]));
+
             quad.fog_depth = from_fog_depth4;
         });
 }
@@ -625,9 +626,10 @@ void Device::rasterize_point_aliased(GPU::Vertex& point)
             quad.depth = expand4(point.window_coordinates.z());
         },
         [&point](auto& quad) {
-            quad.vertex_color = expand4(point.color);
+            quad.set_input(SHADER_INPUT_VERTEX_COLOR, expand4(point.color));
             for (size_t i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i)
-                quad.texture_coordinates[i] = expand4(point.tex_coords[i]);
+                quad.set_input(SHADER_INPUT_FIRST_TEXCOORD + i * 4, expand4(point.tex_coords[i]));
+
             quad.fog_depth = expand4(abs(point.eye_coordinates.z()));
         });
 }
@@ -660,9 +662,10 @@ void Device::rasterize_point_antialiased(GPU::Vertex& point)
             quad.depth = expand4(point.window_coordinates.z());
         },
         [&point](auto& quad) {
-            quad.vertex_color = expand4(point.color);
+            quad.set_input(SHADER_INPUT_VERTEX_COLOR, expand4(point.color));
             for (size_t i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i)
-                quad.texture_coordinates[i] = expand4(point.tex_coords[i]);
+                quad.set_input(SHADER_INPUT_FIRST_TEXCOORD + i * 4, expand4(point.tex_coords[i]));
+
             quad.fog_depth = expand4(abs(point.eye_coordinates.z()));
         });
 }
@@ -810,12 +813,12 @@ void Device::rasterize_triangle(Triangle& triangle)
 
             // FIXME: make this more generic. We want to interpolate more than just color and uv
             if (m_options.shade_smooth)
-                quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
+                quad.set_input(SHADER_INPUT_VERTEX_COLOR, interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics));
             else
-                quad.vertex_color = expand4(vertex0.color);
+                quad.set_input(SHADER_INPUT_VERTEX_COLOR, expand4(vertex0.color));
 
             for (GPU::TextureUnitIndex i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i)
-                quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
+                quad.set_input(SHADER_INPUT_FIRST_TEXCOORD + i * 4, interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics));
 
             if (m_options.fog_enabled)
                 quad.fog_depth = fog_depth.dot(quad.barycentrics);
@@ -1208,14 +1211,16 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 {
     Array<Vector4<f32x4>, GPU::NUM_TEXTURE_UNITS> texture_stage_texel;
 
-    auto current_color = quad.vertex_color;
+    auto current_color = quad.get_input_vector4(SHADER_INPUT_VERTEX_COLOR);
+
     for (GPU::TextureUnitIndex i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i) {
         if (!m_texture_unit_configuration[i].enabled)
             continue;
         auto const& sampler = m_samplers[i];
 
         // OpenGL 2.0 ¶ 3.5.1 states (in a roundabout way) that texture coordinates must be divided by Q
-        auto texel = sampler.sample_2d(quad.texture_coordinates[i].xy() / quad.texture_coordinates[i].w());
+        auto homogeneous_texture_coordinate = quad.get_input_vector4(SHADER_INPUT_FIRST_TEXCOORD + i * 4);
+        auto texel = sampler.sample_2d(homogeneous_texture_coordinate.xy() / homogeneous_texture_coordinate.w());
         texture_stage_texel[i] = texel;
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
@@ -1244,7 +1249,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
                 case GPU::TextureSource::Previous:
                     return current_color;
                 case GPU::TextureSource::PrimaryColor:
-                    return quad.vertex_color;
+                    return quad.get_input_vector4(SHADER_INPUT_VERTEX_COLOR);
                 case GPU::TextureSource::Texture:
                     return texel;
                 case GPU::TextureSource::TextureStage:
