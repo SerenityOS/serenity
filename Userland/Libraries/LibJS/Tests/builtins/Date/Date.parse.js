@@ -63,3 +63,18 @@ test("extra micro seconds extension", () => {
     expect(Date.parse("2021-06-26T07:24:40.0079999999999999999+00:00")).toBe(1624692280007);
     expect(Date.parse("2021-04-15T18:47:25.606000+00:00")).toBe(1618512445606);
 });
+
+test("extra date extension", () => {
+    function expectStringToGiveDate(input, fullYear, month, dayInMonth) {
+        // Since the timezone is not specified we just say it has to equal the date parts.
+        const date = new Date(Date.parse(input));
+        expect(date.getFullYear()).toBe(fullYear);
+        expect(date.getMonth() + 1).toBe(month);
+        expect(date.getDate()).toBe(dayInMonth);
+    }
+
+    expectStringToGiveDate("01/30/2021", 2021, 1, 30);
+    expectStringToGiveDate("10/1/2021", 2021, 10, 1);
+    expectStringToGiveDate("7/07/1977", 1977, 7, 7);
+    expectStringToGiveDate("2/27/3058", 3058, 2, 27);
+});
