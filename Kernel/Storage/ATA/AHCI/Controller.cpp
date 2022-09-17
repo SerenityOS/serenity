@@ -14,6 +14,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
+#include <Kernel/Storage/ATA/AHCI/Port.h>
 
 namespace Kernel {
 

@@ -21,8 +21,8 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/AHCI/Definitions.h>
-#include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
 #include <Kernel/Storage/ATA/ATADevice.h>
 #include <Kernel/Storage/ATA/Definitions.h>
 #include <Kernel/WaitQueue.h>
@@ -31,7 +31,6 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class AHCIInterruptHandler;
 class AHCIPort
     : public AtomicRefCounted<AHCIPort>
     , public LockWeakable<AHCIPort> {

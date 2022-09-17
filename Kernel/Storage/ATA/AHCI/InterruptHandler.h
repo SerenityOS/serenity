@@ -16,7 +16,6 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
-#include <Kernel/Storage/ATA/AHCI/Port.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/WaitQueue.h>
 
@@ -25,7 +24,6 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class AHCIController;
-class AHCIPort;
 class AHCIInterruptHandler final : public IRQHandler {
     friend class AHCIController;
 

@@ -8,6 +8,7 @@
 // please look at Documentation/Kernel/AHCILocking.md
 
 #include <AK/Atomic.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
