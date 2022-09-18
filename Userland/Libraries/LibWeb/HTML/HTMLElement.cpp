@@ -196,9 +196,16 @@ int HTMLElement::offset_height() const
     return paint_box()->border_box_height();
 }
 
+// https://html.spec.whatwg.org/multipage/links.html#cannot-navigate
 bool HTMLElement::cannot_navigate() const
 {
-    // FIXME: Return true if element's node document is not fully active
+    // An element element cannot navigate if one of the following is true:
+
+    // - element's node document is not fully active
+    if (!document().is_fully_active())
+        return true;
+
+    // - element is not an a element and is not connected.
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
