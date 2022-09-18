@@ -38,10 +38,7 @@ void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue>
 
 NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id) const
 {
-    auto value = m_property_values[to_underlying(property_id)];
-    // By the time we call this method, all properties have values assigned.
-    VERIFY(!value.is_null());
-    return value.release_nonnull();
+    return property_computed_value(property_id, m_property_values);
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const

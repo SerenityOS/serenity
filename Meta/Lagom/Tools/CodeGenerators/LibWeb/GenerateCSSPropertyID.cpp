@@ -107,6 +107,7 @@ PropertyID property_id_from_string(StringView);
 StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 NonnullRefPtr<StyleValue> property_initial_value(PropertyID);
+NonnullRefPtr<StyleValue> property_computed_value(PropertyID, Array<RefPtr<StyleValue>, to_underlying(PropertyID::@last_property_id@) + 1> const& resolved_values);
 
 bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
@@ -360,6 +361,69 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
     }
 
     return *initial_values[to_underlying(property_id)];
+}
+
+NonnullRefPtr<StyleValue> property_computed_value(PropertyID property_id, Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> const& resolved_values)
+{
+    switch (property_id) {
+    // For longhands, simply return the resolved value.
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        if (value.as_object().has("longhands"sv))
+            return;
+
+        auto case_generator = generator.fork();
+        case_generator.set("name:titlecase", title_casify(name));
+        case_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@:)~~~");
+    });
+
+    generator.append(R"~~~( {
+        auto property = resolved_values[to_underlying(property_id)];
+        return property.release_nonnull();
+    };
+
+    // Shorthands return a StyleValueList of all their longhands.
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto property = value.as_object();
+        if (!property.has("longhands"sv))
+            return;
+        auto const& longhands = property.get("longhands"sv).as_array();
+
+        auto case_generator = generator.fork();
+        case_generator.set("name:titlecase", title_casify(name));
+        case_generator.set("longhand_count", String::formatted("{}", longhands.size()));
+        case_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@: {
+        NonnullRefPtrVector<StyleValue> computed_longhand_values;
+        computed_longhand_values.ensure_capacity(@longhand_count@);
+)~~~");
+
+        for (auto const& longhand : longhands.values()) {
+            auto append_generator = generator.fork();
+            append_generator.set("longhand_name:titlecase", title_casify(longhand.as_string()));
+            append_generator.append(R"~~~(
+        computed_longhand_values.unchecked_append(RefPtr{ resolved_values[to_underlying(PropertyID::@longhand_name:titlecase@)] }.release_nonnull());
+)~~~");
+        }
+
+        case_generator.append(R"~~~(
+        return StyleValueList::create(move(computed_longhand_values), StyleValueList::Separator::Space);
+    };)~~~");
+    });
+
+    generator.append(R"~~~(
+    case PropertyID::Invalid:
+    case PropertyID::Custom:
+        VERIFY_NOT_REACHED();
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)
