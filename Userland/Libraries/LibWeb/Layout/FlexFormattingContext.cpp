@@ -713,16 +713,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         if (has_definite_main_size(child_box))
             return resolved_definite_main_size(flex_item);
 
-        // NOTE: To avoid repeated layout work, we keep a cache of flex item main sizes on the
-        //       root LayoutState object. It's available through a full layout cycle.
-        // FIXME: Make sure this cache isn't overly permissive..
-        auto& size_cache = m_state.m_root.flex_item_size_cache;
-        auto it = size_cache.find(&flex_item.box);
-        if (it != size_cache.end())
-            return it->value;
-        auto main_size = calculate_indefinite_main_size(flex_item);
-        size_cache.set(&flex_item.box, main_size);
-        return main_size;
+        return calculate_indefinite_main_size(flex_item);
     }();
 
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
