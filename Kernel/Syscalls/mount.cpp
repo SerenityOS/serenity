@@ -8,6 +8,7 @@
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/DevTmpFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/FATFileSystem.h>
 #include <Kernel/FileSystem/ISO9660FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
@@ -37,6 +38,7 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {} },
     { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {} },
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {} },
+    { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {} },
 };
 
 static ErrorOr<NonnullLockRefPtr<FileSystem>> create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
