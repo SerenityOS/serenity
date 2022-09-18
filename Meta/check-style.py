@@ -37,18 +37,33 @@ PRAGMA_ONCE_CHECK_EXCLUDES = {
 # We make sure that there's a blank line before and after pragma once
 GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
 
-GIT_LS_FILES = ['git', 'ls-files', '--', '*.cpp', '*.h', ':!:Base', ':!:Kernel/FileSystem/ext2_fs.h']
+
+def should_check_file(filename):
+    if not filename.endswith('.cpp') and not filename.endswith('.h'):
+        return False
+    if filename.startswith('Base/'):
+        return False
+    if filename == 'Kernel/FileSystem/ext2_fs.h':
+        return False
+    return True
+
+
+def find_files_here_or_argv():
+    if len(sys.argv) > 1:
+        raw_list = sys.argv[1:]
+    else:
+        process = subprocess.run(["git", "ls-files"], check=True, capture_output=True)
+        raw_list = process.stdout.decode().strip('\n').split('\n')
+
+    return filter(should_check_file, raw_list)
 
 
 def run():
-    files = subprocess.run(GIT_LS_FILES, check=True, capture_output=True).stdout.decode().strip('\n').split('\n')
-    assert len(files) > 1000
-
     errors_license = []
     errors_pragma_once_bad = []
     errors_pragma_once_missing = []
 
-    for filename in files:
+    for filename in find_files_here_or_argv():
         with open(filename, "r") as f:
             file_content = f.read()
         if not any(filename.startswith(forbidden_prefix) for forbidden_prefix in LICENSE_HEADER_CHECK_EXCLUDES):
