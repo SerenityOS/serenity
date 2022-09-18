@@ -553,10 +553,6 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
         if (!main_is_constrained) {
             auto available_main_size = containing_block_effective_main_size(flex_container());
             main_available_space = available_main_size.value_or(NumericLimits<float>::max()) - sum_of_margin_padding_border_in_main_axis(flex_container());
-            if (flex_container().computed_values().flex_wrap() == CSS::FlexWrap::Wrap || flex_container().computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse) {
-                main_available_space = specified_main_size(*flex_container().containing_block());
-                main_is_constrained = true;
-            }
         }
     }
 
