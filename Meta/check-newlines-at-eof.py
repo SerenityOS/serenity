@@ -1,40 +1,47 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import subprocess
 import sys
 
 
+RE_RELEVANT_FILE_EXTENSION = re.compile('\\.(cpp|h|gml|html|js|css|sh|py|json|txt)$')
+
+
+def should_check_file(filename):
+    if not RE_RELEVANT_FILE_EXTENSION.search(filename):
+        return False
+    if filename.startswith('Userland/Libraries/LibCodeComprehension/Cpp/Tests/'):
+        return False
+    if filename.startswith('Userland/Libraries/LibCpp/Tests/parser/'):
+        return False
+    if filename.startswith('Userland/Libraries/LibCpp/Tests/preprocessor/'):
+        return False
+    if filename == 'Kernel/FileSystem/ext2_fs.h':
+        return False
+    if filename.endswith('.txt'):
+        return 'CMake' in filename
+    return True
+
+
+def find_files_here_or_argv():
+    if len(sys.argv) > 1:
+        raw_list = sys.argv[1:]
+    else:
+        process = subprocess.run(["git", "ls-files"], check=True, capture_output=True)
+        raw_list = process.stdout.decode().strip('\n').split('\n')
+
+    return filter(should_check_file, raw_list)
+
+
 def run():
     """Check files checked in to git for trailing newlines at end of file."""
-    files = subprocess.run(
-        [
-            "git", "ls-files", "--",
-            "*.cpp",
-            "*.h",
-            "*.gml",
-            "*.html",
-            "*.js",
-            "*.css",
-            "*.sh",
-            "*.py",
-            "*.json",
-            "CMake*.txt",
-            "**/CMake*.txt",
-            ":!:Kernel/FileSystem/ext2_fs.h",
-            ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*',
-            ':!:Userland/Libraries/LibCpp/Tests/parser/*',
-            ':!:Userland/Libraries/LibCpp/Tests/preprocessor/*'
-        ],
-        check=True,
-        capture_output=True
-    ).stdout.decode().strip('\n').split('\n')
-
     no_newline_at_eof_errors = []
     blank_lines_at_eof_errors = []
 
     did_fail = False
-    for filename in files:
+    for filename in find_files_here_or_argv():
         with open(filename, "r") as f:
             f.seek(0, os.SEEK_END)
 
