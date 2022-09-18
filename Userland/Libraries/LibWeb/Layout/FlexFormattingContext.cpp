@@ -1135,7 +1135,10 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
                 && !flex_item->margins.cross_before_is_auto
                 && !flex_item->margins.cross_after_is_auto) {
                 // FIXME: Clamp to the item's used min and max cross sizes.
-                flex_item->cross_size = flex_line.cross_size - flex_item->margins.cross_before - flex_item->margins.cross_after;
+                flex_item->cross_size = flex_line.cross_size
+                    - flex_item->margins.cross_before - flex_item->margins.cross_after
+                    - flex_item->padding.cross_before - flex_item->padding.cross_after
+                    - flex_item->borders.cross_before - flex_item->borders.cross_after;
             } else {
                 // Otherwise, the used cross size is the item’s hypothetical cross size.
                 flex_item->cross_size = flex_item->hypothetical_cross_size;
