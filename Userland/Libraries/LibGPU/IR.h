@@ -72,6 +72,8 @@ struct Temporary final {
 struct Shader final {
     Vector<Constant> constants;
     Vector<Uniform> uniforms;
+    Vector<Input> inputs;
+    Vector<Output> outputs;
     Vector<Temporary> temporaries;
     Vector<Instruction> instructions;
 };
