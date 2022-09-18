@@ -23,6 +23,7 @@
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
 #include <LibSoftGPU/Shader.h>
+#include <LibSoftGPU/ShaderCompiler.h>
 #include <math.h>
 
 namespace SoftGPU {
@@ -1642,9 +1643,11 @@ NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_for
     return adopt_ref(*new Image(this, pixel_format, width, height, depth, max_levels));
 }
 
-ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const&)
+ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const& intermediate_representation)
 {
-    return adopt_ref(*new Shader(this, {}));
+    ShaderCompiler compiler;
+    auto shader = TRY(compiler.compile(this, intermediate_representation));
+    return shader;
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)
