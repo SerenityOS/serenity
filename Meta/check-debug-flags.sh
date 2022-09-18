@@ -21,15 +21,27 @@ while IFS= read -r FLAG; do
         MISSING_FLAGS=y
     fi
 done < <(
-    git ls-files -- \
-        '*.cpp' \
-        '*.h' \
-        '*.in' \
-        ':!:Kernel/FileSystem/ext2_fs.h' \
+    if [ "$#" -eq "0" ]; then
+        git ls-files -- \
+            '*.cpp' \
+            '*.h' \
+            '*.in' \
+            ':!:Kernel/FileSystem/ext2_fs.h'
+    else
+        # We're in the middle of a pre-commit run, so we should only check the files that have
+        # actually changed. The reason is that "git ls-files | grep" on the entire repo takes
+        # about 100ms. That is perfectly fine during a CI run, but becomes noticable during a
+        # pre-commit hook. It is unnecessary to check the entire repository on every single
+        # commit, so we save some time here.
+        for file in "$@"; do
+            if [[ ("${file}" =~ \.cpp || "${file}" =~ \.h || "${file}" =~ \.in) && ! "${file}" == "Kernel/FileSystem/ext2_fs.h" ]]; then
+                echo "$file"
+            fi
+        done
+    fi \
     | xargs grep -E '(_DEBUG|DEBUG_)' \
     | sed -re 's,^.*[^a-zA-Z0-9_]([a-zA-Z0-9_]*DEBUG[a-zA-Z0-9_]*).*$,\1,' \
-    | sort \
-    | uniq
+    | sort -u
 )
 
 if [ "n" != "${MISSING_FLAGS}" ] ; then
