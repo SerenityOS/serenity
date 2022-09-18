@@ -183,6 +183,7 @@ public:
     JS::NonnullGCPtr<HTMLCollection> links();
     JS::NonnullGCPtr<HTMLCollection> forms();
     JS::NonnullGCPtr<HTMLCollection> scripts();
+    JS::NonnullGCPtr<HTMLCollection> all();
 
     String const& source() const { return m_source; }
     void set_source(String const& source) { m_source = source; }
@@ -494,6 +495,7 @@ private:
     JS::GCPtr<HTMLCollection> m_links;
     JS::GCPtr<HTMLCollection> m_forms;
     JS::GCPtr<HTMLCollection> m_scripts;
+    JS::GCPtr<HTMLCollection> m_all;
 };
 
 }

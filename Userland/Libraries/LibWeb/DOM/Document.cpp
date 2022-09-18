@@ -323,6 +323,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_links);
     visitor.visit(m_forms);
     visitor.visit(m_scripts);
+    visitor.visit(m_all);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
@@ -1039,6 +1040,17 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
         });
     }
     return *m_scripts;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-all
+JS::NonnullGCPtr<HTMLCollection> Document::all()
+{
+    if (!m_all) {
+        m_all = HTMLCollection::create(*this, [](Element const&) {
+            return true;
+        });
+    }
+    return *m_all;
 }
 
 Color Document::link_color() const
