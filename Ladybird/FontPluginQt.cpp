@@ -32,6 +32,10 @@ FontPluginQt::FontPluginQt()
     auto default_font_name = generic_font_name(Web::Platform::GenericFont::UiSansSerif);
     m_default_font = Gfx::FontDatabase::the().get(default_font_name, 12.0, 400, 0);
     VERIFY(m_default_font);
+
+    auto default_fixed_width_font_name = generic_font_name(Web::Platform::GenericFont::UiMonospace);
+    m_default_fixed_width_font = Gfx::FontDatabase::the().get(default_fixed_width_font_name, 12.0, 400, 0);
+    VERIFY(m_default_fixed_width_font);
 }
 
 FontPluginQt::~FontPluginQt() = default;
