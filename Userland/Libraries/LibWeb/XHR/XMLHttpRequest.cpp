@@ -493,8 +493,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
                 request.set_body(byte_buffer);
                 return {}; }, [](auto&) -> ErrorOr<void> { return {}; }));
-        if (body_with_type->type.has_value())
-            request.set_header("Content-Type", String { body_with_type->type->span() });
+        if (body_with_type->type.has_value()) {
+            // If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
+            if (!m_request_headers.contains("Content-Type"sv))
+                request.set_header("Content-Type", String { body_with_type->type->span() });
+        }
     }
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
