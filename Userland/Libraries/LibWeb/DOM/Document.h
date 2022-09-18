@@ -486,6 +486,14 @@ private:
 
     // https://dom.spec.whatwg.org/#concept-document-origin
     HTML::Origin m_origin;
+
+    JS::GCPtr<HTMLCollection> m_applets;
+    JS::GCPtr<HTMLCollection> m_anchors;
+    JS::GCPtr<HTMLCollection> m_images;
+    JS::GCPtr<HTMLCollection> m_embeds;
+    JS::GCPtr<HTMLCollection> m_links;
+    JS::GCPtr<HTMLCollection> m_forms;
+    JS::GCPtr<HTMLCollection> m_scripts;
 };
 
 }

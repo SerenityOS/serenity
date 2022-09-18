@@ -316,6 +316,14 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_pending_parsing_blocking_script.ptr());
     visitor.visit(m_history.ptr());
 
+    visitor.visit(m_applets);
+    visitor.visit(m_anchors);
+    visitor.visit(m_images);
+    visitor.visit(m_embeds);
+    visitor.visit(m_links);
+    visitor.visit(m_forms);
+    visitor.visit(m_scripts);
+
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
     for (auto& script : m_scripts_to_execute_as_soon_as_possible)
@@ -956,39 +964,42 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](auto&) { return false; });
+    if (!m_applets)
+        m_applets = HTMLCollection::create(*this, [](auto&) { return false; });
+    return *m_applets;
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-anchors
 JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
-    });
+    if (!m_anchors) {
+        m_anchors = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
+        });
+    }
+    return *m_anchors;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-images
 JS::NonnullGCPtr<HTMLCollection> Document::images()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLImageElement>(element);
-    });
+    if (!m_images) {
+        m_images = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLImageElement>(element);
+        });
+    }
+    return *m_images;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-embeds
 JS::NonnullGCPtr<HTMLCollection> Document::embeds()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLEmbedElement>(element);
-    });
+    if (!m_embeds) {
+        m_embeds = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLEmbedElement>(element);
+        });
+    }
+    return *m_embeds;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-plugins
@@ -1000,31 +1011,34 @@ JS::NonnullGCPtr<HTMLCollection> Document::plugins()
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-links
 JS::NonnullGCPtr<HTMLCollection> Document::links()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
-    });
+    if (!m_links) {
+        m_links = HTMLCollection::create(*this, [](Element const& element) {
+            return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
+        });
+    }
+    return *m_links;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-forms
 JS::NonnullGCPtr<HTMLCollection> Document::forms()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLFormElement>(element);
-    });
+    if (!m_forms) {
+        m_forms = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLFormElement>(element);
+        });
+    }
+    return *m_forms;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-scripts
 JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLScriptElement>(element);
-    });
+    if (!m_scripts) {
+        m_scripts = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLScriptElement>(element);
+        });
+    }
+    return *m_scripts;
 }
 
 Color Document::link_color() const
