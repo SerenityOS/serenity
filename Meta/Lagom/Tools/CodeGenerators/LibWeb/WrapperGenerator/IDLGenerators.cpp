@@ -1334,7 +1334,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 if (!optional_default_value.has_value() || optional_default_value == "null"sv) {
                     union_generator.append(R"~~~(
     Optional<@union_type@> @cpp_name@;
-    if (!@js_name@@js_suffix@.is_undefined())
+    if (!@js_name@@js_suffix@.is_nullish())
         @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
                 } else {
