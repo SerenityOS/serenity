@@ -589,22 +589,59 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
             if (m_read_final_block)
                 break;
 
+            // RFC 7932 section 9.1
+            //
+            // 1 bit:  ISLAST, set to 1 if this is the last meta-block
             m_read_final_block = TRY(m_input_stream.read_bit());
             if (m_read_final_block) {
+                // 1 bit:  ISLASTEMPTY, if set to 1, the meta-block is empty; this
+                //       field is only present if ISLAST bit is set -- if it is 1,
+                //       then the meta-block and the brotli stream ends at that
+                //       bit, with any remaining bits in the last byte of the
+                //       compressed stream filled with zeros (if the fill bits are
+                //       not zero, then the stream should be rejected as invalid)
                 bool is_last_block_empty = TRY(m_input_stream.read_bit());
                 // If the last block is empty we are done decompressing
                 if (is_last_block_empty)
                     break;
             }
 
+            // 2 bits: MNIBBLES, number of nibbles to represent the uncompressed
+            //         length
             size_t size_number_of_nibbles = TRY(read_size_number_of_nibbles());
+
+            // If MNIBBLES is 0, the meta-block is empty, i.e., it does
+            // not generate any uncompressed data.  In this case, the
+            // rest of the meta-block has the following format:
             if (size_number_of_nibbles == 0) {
-                // This block only contains meta-data
+
+                // 1 bit:  reserved, must be zero
                 bool reserved = TRY(m_input_stream.read_bit());
                 if (reserved)
                     return Error::from_string_literal("invalid reserved bit");
 
+                // 2 bits: MSKIPBYTES, number of bytes to represent
+                //         metadata length
+                //
+                // MSKIPBYTES * 8 bits: MSKIPLEN - 1, where MSKIPLEN is
+                //    the number of metadata bytes; this field is
+                //    only present if MSKIPBYTES is positive;
+                //    otherwise, MSKIPLEN is 0 (if MSKIPBYTES is
+                //    greater than 1, and the last byte is all
+                //    zeros, then the stream should be rejected as
+                //    invalid)
                 size_t skip_bytes = TRY(m_input_stream.read_bits(2));
+                if (skip_bytes == 0) {
+                    // 0..7 bits: fill bits until the next byte boundary,
+                    //         must be all zeros
+                    u8 remainder = m_input_stream.align_to_byte_boundary();
+                    if (remainder != 0)
+                        return Error::from_string_literal("remainder bits are non-zero");
+                    continue;
+                }
+
+                // MSKIPLEN bytes of metadata, not part of the
+                //         uncompressed data or the sliding window
                 size_t skip_length = 1 + TRY(m_input_stream.read_bits(8 * skip_bytes));
 
                 u8 remainder = m_input_stream.align_to_byte_boundary();
@@ -619,6 +656,8 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
                     auto metadata_bytes = TRY(m_input_stream.read(temp_bytes_slice));
                     if (metadata_bytes.is_empty())
                         return Error::from_string_literal("eof");
+                    if (metadata_bytes.last() == 0)
+                        return Error::from_string_literal("invalid stream");
                     skip_length -= metadata_bytes.size();
                 }
 
@@ -626,6 +665,13 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
             }
 
             size_t uncompressed_size = 1 + TRY(m_input_stream.read_bits(4 * size_number_of_nibbles));
+
+            // 1 bit:  ISUNCOMPRESSED, if set to 1, any bits of compressed data
+            //       up to the next byte boundary are ignored, and the rest of
+            //       the meta-block contains MLEN bytes of literal data; this
+            //       field is only present if the ISLAST bit is not set (if the
+            //       ignored bits are not all zeros, the stream should be
+            //       rejected as invalid)
             bool is_uncompressed = false;
             if (!m_read_final_block)
                 is_uncompressed = TRY(m_input_stream.read_bit());
