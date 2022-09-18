@@ -168,17 +168,20 @@ void ResourceClient::set_resource(Resource* resource)
         // This ensures that these callbacks always happen in a consistent way, instead of being invoked
         // synchronously in some cases, and asynchronously in others.
         if (resource->is_loaded() || resource->is_failed()) {
-            Platform::EventLoopPlugin::the().deferred_invoke([this, strong_resource = NonnullRefPtr { *m_resource }] {
-                if (m_resource != strong_resource.ptr())
+            Platform::EventLoopPlugin::the().deferred_invoke([weak_this = make_weak_ptr(), strong_resource = NonnullRefPtr { *m_resource }]() mutable {
+                if (!weak_this)
+                    return;
+
+                if (weak_this->m_resource != strong_resource.ptr())
                     return;
 
                 // Make sure that reused resources also have their load callback fired.
-                if (m_resource->is_loaded())
-                    resource_did_load();
+                if (weak_this->m_resource->is_loaded())
+                    weak_this->resource_did_load();
 
                 // Make sure that reused resources also have their fail callback fired.
-                if (m_resource->is_failed())
-                    resource_did_fail();
+                if (weak_this->m_resource->is_failed())
+                    weak_this->resource_did_fail();
             });
         }
     }
