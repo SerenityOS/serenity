@@ -429,9 +429,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
             // 4.1.1.1. Set the column position of the cursor to the grid item's column-start line. If this is
             // less than the previous column position of the cursor, increment the row position by 1.
-            auto_placement_cursor_x = column_start;
             if (column_start < auto_placement_cursor_x)
                 auto_placement_cursor_y++;
+            auto_placement_cursor_x = column_start;
 
             maybe_add_column_to_occupation_grid(auto_placement_cursor_x + column_span, occupation_grid);
             maybe_add_row_to_occupation_grid(auto_placement_cursor_y + row_span, occupation_grid);
