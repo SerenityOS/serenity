@@ -344,22 +344,8 @@ float BlockFormattingContext::compute_theoretical_height(LayoutState const& stat
 
 void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
 {
-    auto const& computed_values = box.computed_values();
-    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
-
-    // First, resolve the top/bottom parts of the surrounding box model.
-
-    auto& box_state = state.get_mutable(box);
-
-    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
-
-    box_state.border_top = computed_values.border_top().width;
-    box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
-
-    box_state.set_content_height(compute_theoretical_height(state, box));
+    resolve_vertical_box_model_metrics(box, *box.containing_block(), state);
+    state.get_mutable(box).set_content_height(compute_theoretical_height(state, box));
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode)
@@ -493,11 +479,11 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     }
 }
 
-void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block)
+void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block, LayoutState& state)
 {
-    auto& box_state = m_state.get_mutable(box);
+    auto& box_state = state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box));
+    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box, state));
 
     box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
     box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
@@ -512,7 +498,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
 
-    compute_vertical_box_model_metrics(child_box, containing_block);
+    resolve_vertical_box_model_metrics(child_box, containing_block, m_state);
 
     auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box, box_state);
 

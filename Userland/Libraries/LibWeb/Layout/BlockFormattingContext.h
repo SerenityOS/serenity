@@ -74,7 +74,7 @@ private:
     void layout_block_level_children(BlockContainer const&, LayoutMode);
     void layout_inline_children(BlockContainer const&, LayoutMode);
 
-    void compute_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block);
+    static void resolve_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block, LayoutState&);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, BlockContainer const&);
     void place_block_level_element_in_normal_flow_vertically(Box const& child_box, BlockContainer const&);
 
