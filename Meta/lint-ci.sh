@@ -33,8 +33,8 @@ for cmd in \
         Meta/lint-prettier.sh \
         Meta/lint-python.sh \
         Meta/lint-shell-scripts.sh; do
-    echo "Running ${cmd}... "
-    if "${cmd}" "$@"; then
+    echo "Running ${cmd}"
+    if "/usr/bin/time" "${cmd}" "$@"; then
         echo -e "[${GREEN}OK${NC}]: ${cmd}"
     else
         echo -e "[${RED}FAIL${NC}]: ${cmd}"
@@ -43,7 +43,8 @@ for cmd in \
 done
 
 if [ -x ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter ]; then
-    if git ls-files '*.ipc' | xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; then
+    echo "Running IPCMagicLinter"
+    if git ls-files '*.ipc' | /usr/bin/time xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; then
         echo -e "[${GREEN}OK${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
     else
         echo -e "[${RED}FAIL${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
@@ -54,7 +55,7 @@ else
 fi
 
 echo "Running Meta/lint-clang-format.sh"
-if Meta/lint-clang-format.sh --overwrite-inplace "$@" && git diff --exit-code; then
+if /usr/bin/time Meta/lint-clang-format.sh --overwrite-inplace "$@" && git diff --exit-code; then
     echo -e "[${GREEN}OK${NC}]: Meta/lint-clang-format.sh"
 else
     echo -e "[${RED}FAIL${NC}]: Meta/lint-clang-format.sh"
@@ -68,7 +69,8 @@ fi
 # when Ports/ files have changed and only invoke lint-ports.py when needed.
 #
 if [ "$ports" = true ]; then
-    if Meta/lint-ports.py; then
+    echo "Running Meta/lint-ports.py"
+    if /usr/bin/time Meta/lint-ports.py; then
         echo -e "[${GREEN}OK${NC}]: Meta/lint-ports.py"
     else
         echo -e "[${RED}FAIL${NC}]: Meta/lint-ports.py"
