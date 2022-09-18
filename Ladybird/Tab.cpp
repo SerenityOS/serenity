@@ -46,8 +46,10 @@ Tab::Tab(QMainWindow* window)
     auto home_icon_path = QString("%1/res/icons/16x16/go-home.png").arg(s_serenity_resource_root.characters());
     auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
     m_back_action = make<QAction>(QIcon(back_icon_path), "Back");
+    m_back_action->setEnabled(false);
     m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
     m_forward_action = make<QAction>(QIcon(forward_icon_path), "Forward");
+    m_forward_action->setEnabled(false);
     m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
     m_home_action = make<QAction>(QIcon(home_icon_path), "Home");
     m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
@@ -71,6 +73,8 @@ Tab::Tab(QMainWindow* window)
     QObject::connect(m_view, &WebView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
         m_history.push(url, m_title.toUtf8().data());
+        m_back_action->setEnabled(m_history.can_go_back());
+        m_forward_action->setEnabled(m_history.can_go_forward());
     });
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
     QObject::connect(m_view, &WebView::title_changed, this, &Tab::page_title_changed);
