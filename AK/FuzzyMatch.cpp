@@ -21,7 +21,7 @@ static constexpr int const LEADING_LETTER_PENALTY = -5;      // penalty applied 
 static constexpr int const MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
 static constexpr int const UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
 
-static int calculate_score(String const& string, u8* index_points, size_t index_points_size)
+static int calculate_score(StringView string, u8* index_points, size_t index_points_size)
 {
     int out_score = 100;
 
@@ -59,7 +59,7 @@ static int calculate_score(String const& string, u8* index_points, size_t index_
     return out_score;
 }
 
-FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const& haystack, size_t needle_idx, size_t haystack_idx,
+static FuzzyMatchResult fuzzy_match_recursive(StringView needle, StringView haystack, size_t needle_idx, size_t haystack_idx,
     u8 const* src_matches, u8* matches, int next_match, int& recursion_count)
 {
     int out_score = 0;
@@ -125,7 +125,7 @@ FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const& hayst
 // Scores are not normalized between any values and have no particular meaning. The starting value is 100 and when we
 // detect good indicators of a match we add to the score. When we detect bad indicators, we penalize the match and subtract
 // from its score. Therefore, the longer the needle/haystack the greater the range of scores could be.
-FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack)
+FuzzyMatchResult fuzzy_match(StringView needle, StringView haystack)
 {
     int recursion_count = 0;
     u8 matches[MAX_MATCHES] {};

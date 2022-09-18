@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/StringView.h>
 
 namespace AK {
 
@@ -15,10 +15,7 @@ struct FuzzyMatchResult {
     int score { 0 };
 };
 
-FuzzyMatchResult fuzzy_match_recursive(String const& needle, String const& haystack, size_t needle_idx, size_t haystack_idx,
-    u8 const* src_matches, u8* matches, int next_match, int& recursion_count);
-
-FuzzyMatchResult fuzzy_match(String const& needle, String const& haystack);
+FuzzyMatchResult fuzzy_match(StringView needle, StringView haystack);
 
 }
 
