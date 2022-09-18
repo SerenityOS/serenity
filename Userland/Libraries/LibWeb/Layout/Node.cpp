@@ -201,10 +201,6 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     m_font = Platform::FontPlugin::the().default_font();
 }
 
-void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const&)
-{
-}
-
 void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 {
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);

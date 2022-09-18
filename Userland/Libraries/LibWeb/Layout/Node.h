@@ -170,8 +170,6 @@ public:
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
-    void did_insert_into_layout_tree(CSS::StyleProperties const&);
-
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
