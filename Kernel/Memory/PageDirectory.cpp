@@ -16,9 +16,6 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 
-extern u8 start_of_kernel_image[];
-extern u8 end_of_kernel_image[];
-
 namespace Kernel::Memory {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()

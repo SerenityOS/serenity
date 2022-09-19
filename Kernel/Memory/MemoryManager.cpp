@@ -13,6 +13,7 @@
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Arch/linker.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -28,18 +29,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
-
-extern u8 start_of_kernel_image[];
-extern u8 end_of_kernel_image[];
-extern u8 start_of_kernel_text[];
-extern u8 start_of_kernel_data[];
-extern u8 end_of_kernel_bss[];
-extern u8 start_of_ro_after_init[];
-extern u8 end_of_ro_after_init[];
-extern u8 start_of_unmap_after_init[];
-extern u8 end_of_unmap_after_init[];
-extern u8 start_of_kernel_ksyms[];
-extern u8 end_of_kernel_ksyms[];
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;

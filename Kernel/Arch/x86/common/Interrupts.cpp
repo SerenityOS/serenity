@@ -33,13 +33,6 @@
 #include <Kernel/Arch/x86/ISRStubs.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
-extern FlatPtr start_of_unmap_after_init;
-extern FlatPtr end_of_unmap_after_init;
-extern FlatPtr start_of_ro_after_init;
-extern FlatPtr end_of_ro_after_init;
-extern FlatPtr start_of_kernel_ksyms;
-extern FlatPtr end_of_kernel_ksyms;
-
 namespace Kernel {
 
 READONLY_AFTER_INIT static DescriptorTablePointer s_idtr;
