@@ -19,6 +19,12 @@ class QLineEdit;
 
 class HeadlessBrowserPageClient;
 
+enum class ColorScheme {
+    Auto,
+    Light,
+    Dark,
+};
+
 class WebView final : public QAbstractScrollArea {
     Q_OBJECT
 public:
@@ -48,6 +54,8 @@ public:
 
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
+
+    void set_color_scheme(ColorScheme);
 
 signals:
     void link_hovered(QString, int timeout = 0);

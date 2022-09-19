@@ -12,6 +12,7 @@
 #include "WebView.h"
 #include <AK/TypeCasts.h>
 #include <QAction>
+#include <QActionGroup>
 #include <QDialog>
 #include <QPlainTextEdit>
 
@@ -58,6 +59,32 @@ BrowserWindow::BrowserWindow()
     open_previous_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp));
     view_menu->addAction(open_previous_tab_action);
     QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
+
+    view_menu->addSeparator();
+
+    auto* color_scheme_menu = view_menu->addMenu("&Color Scheme");
+
+    auto* group = new QActionGroup(this);
+
+    auto* auto_color_scheme = new QAction("&Auto");
+    auto_color_scheme->setCheckable(true);
+    group->addAction(auto_color_scheme);
+    color_scheme_menu->addAction(auto_color_scheme);
+    QObject::connect(auto_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_auto_color_scheme);
+
+    auto* light_color_scheme = new QAction("&Light");
+    light_color_scheme->setCheckable(true);
+    group->addAction(light_color_scheme);
+    color_scheme_menu->addAction(light_color_scheme);
+    QObject::connect(light_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_light_color_scheme);
+
+    auto* dark_color_scheme = new QAction("&Dark");
+    dark_color_scheme->setCheckable(true);
+    group->addAction(dark_color_scheme);
+    color_scheme_menu->addAction(dark_color_scheme);
+    QObject::connect(dark_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_dark_color_scheme);
+
+    auto_color_scheme->setChecked(true);
 
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
@@ -293,4 +320,25 @@ void BrowserWindow::open_previous_tab()
     if (next_index < 0)
         next_index = m_tabs_container->count() - 1;
     m_tabs_container->setCurrentIndex(next_index);
+}
+
+void BrowserWindow::enable_auto_color_scheme()
+{
+    for (auto& tab : m_tabs) {
+        tab.view().set_color_scheme(ColorScheme::Auto);
+    }
+}
+
+void BrowserWindow::enable_light_color_scheme()
+{
+    for (auto& tab : m_tabs) {
+        tab.view().set_color_scheme(ColorScheme::Light);
+    }
+}
+
+void BrowserWindow::enable_dark_color_scheme()
+{
+    for (auto& tab : m_tabs) {
+        tab.view().set_color_scheme(ColorScheme::Dark);
+    }
 }
