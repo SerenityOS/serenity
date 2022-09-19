@@ -38,16 +38,16 @@ void HTMLIFrameElement::inserted()
 {
     HTMLElement::inserted();
 
-    if (!is_connected())
-        return;
+    // When an iframe element element is inserted into a document whose browsing context is non-null, the user agent must run these steps:
+    if (document().browsing_context()) {
+        // 1. Create a new nested browsing context for element.
+        create_new_nested_browsing_context();
 
-    // 1. Create a new nested browsing context for element.
-    create_new_nested_browsing_context();
+        // FIXME: 2. If element has a sandbox attribute, then parse the sandboxing directive given the attribute's value and element's iframe sandboxing flag set.
 
-    // FIXME: 2. If element has a sandbox attribute, then parse the sandboxing directive given the attribute's value and element's iframe sandboxing flag set.
-
-    // 3. Process the iframe attributes for element, with initialInsertion set to true.
-    load_src(attribute(HTML::AttributeNames::src));
+        // 3. Process the iframe attributes for element, with initialInsertion set to true.
+        load_src(attribute(HTML::AttributeNames::src));
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-7
