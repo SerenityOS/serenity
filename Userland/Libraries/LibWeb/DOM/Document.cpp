@@ -1578,13 +1578,31 @@ Bindings::LocationObject* Document::location()
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
 bool Document::hidden() const
 {
-    return false;
+    return visibility_state() == "hidden";
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-visibilitystate
 String Document::visibility_state() const
 {
-    return hidden() ? "hidden" : "visible";
+    return m_visibility_state;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
+void Document::update_the_visibility_state(String visibility_state)
+{
+    // 1. If document's visibility state equals visibilityState, then return.
+    if (m_visibility_state == visibility_state)
+        return;
+
+    // 2. Set document's visibility state to visibilityState.
+    m_visibility_state = visibility_state;
+
+    // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
+
+    // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
+    auto event = DOM::Event::create(window(), HTML::EventNames::visibilitychange);
+    event->set_bubbles(true);
+    dispatch_event(event);
 }
 
 // https://drafts.csswg.org/cssom-view/#run-the-resize-steps

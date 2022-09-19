@@ -317,6 +317,9 @@ public:
     bool hidden() const;
     String visibility_state() const;
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
+    void update_the_visibility_state(String visibility_state);
+
     void run_the_resize_steps();
     void run_the_scroll_steps();
 
@@ -502,6 +505,9 @@ private:
 
     // https://html.spec.whatwg.org/#completely-loaded-time
     Optional<AK::Time> m_completely_loaded_time;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#visibility-state
+    String m_visibility_state { "hidden" };
 };
 
 }
