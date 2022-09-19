@@ -10,19 +10,12 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicyEnforcementResult.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 
 namespace Web::HTML {
-
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#history-handling-behavior
-enum class HistoryHandlingBehavior {
-    Default,
-    EntryUpdate,
-    Reload,
-    Replace,
-};
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params
 struct NavigationParams {
