@@ -1,6 +1,6 @@
 # Ladybird Web Browser
 
-The Ladybird Web Browser is a browser using the SerenityOS LibWeb engine with a Qt GUI.
+The Ladybird Web Browser is a browser using the [SerenityOS LibWeb](https://github.com/SerenityOS/serenity/tree/master/Userland/Libraries/LibWeb) engine with a Qt GUI.
 
 ## Build Prerequisites
 
