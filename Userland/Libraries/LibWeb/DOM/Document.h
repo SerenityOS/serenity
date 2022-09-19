@@ -365,6 +365,9 @@ public:
     auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
     auto& pending_scrollend_event_targets() { return m_pending_scrollend_event_targets; }
 
+    // https://html.spec.whatwg.org/#completely-loaded
+    bool is_completely_loaded() const;
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -496,6 +499,9 @@ private:
     JS::GCPtr<HTMLCollection> m_forms;
     JS::GCPtr<HTMLCollection> m_scripts;
     JS::GCPtr<HTMLCollection> m_all;
+
+    // https://html.spec.whatwg.org/#completely-loaded-time
+    Optional<AK::Time> m_completely_loaded_time;
 };
 
 }

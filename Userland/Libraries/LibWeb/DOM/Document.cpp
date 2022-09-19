@@ -1454,24 +1454,31 @@ EventTarget* Document::get_parent(Event const& event)
     return &window();
 }
 
+// https://html.spec.whatwg.org/#completely-loaded
+bool Document::is_completely_loaded() const
+{
+    return m_completely_loaded_time.has_value();
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#completely-finish-loading
 void Document::completely_finish_loading()
 {
     // 1. Assert: document's browsing context is non-null.
     VERIFY(browsing_context());
 
-    // FIXME: 2. Set document's completely loaded time to the current time.
+    // 2. Set document's completely loaded time to the current time.
+    m_completely_loaded_time = AK::Time::now_realtime();
 
     // 3. Let container be document's browsing context's container.
     auto container = JS::make_handle(browsing_context()->container());
 
-    // If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
+    // 4. If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
     if (container && is<HTML::HTMLIFrameElement>(*container)) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
             run_iframe_load_event_steps(static_cast<HTML::HTMLIFrameElement&>(*container));
         });
     }
-    // Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
+    // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
             container->dispatch_event(*DOM::Event::create(container->window(), HTML::EventNames::load));
