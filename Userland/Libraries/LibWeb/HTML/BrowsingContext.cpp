@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -86,8 +87,18 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
     return url_origin(*url);
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-top-level-browsing-context
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsing_context(Web::Page& page)
+{
+    // 1. Let group be the result of creating a new browsing context group.
+    auto group = BrowsingContextGroup::create_a_new_browsing_context_group(page);
+
+    // 2. Return group's browsing context set[0].
+    return *group->browsing_context_set().begin();
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
-NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder)
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&)
 {
     // 1. Let browsingContext be a new browsing context.
     BrowsingContextContainer* container = (embedder && is<BrowsingContextContainer>(*embedder)) ? static_cast<BrowsingContextContainer*>(embedder.ptr()) : nullptr;
@@ -803,6 +814,35 @@ void BrowsingContext::scroll_offset_did_change()
 
     // 3. Append doc to doc’s pending scroll event targets.
     doc->pending_scroll_event_targets().append(*doc);
+}
+
+BrowsingContextGroup* BrowsingContext::group()
+{
+    return m_group;
+}
+
+void BrowsingContext::set_group(BrowsingContextGroup* group)
+{
+    m_group = group;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#bcg-remove
+void BrowsingContext::remove()
+{
+    // 1. Assert: browsingContext's group is non-null, because a browsing context only gets discarded once.
+    VERIFY(group());
+
+    // 2. Let group be browsingContext's group.
+    NonnullRefPtr<BrowsingContextGroup> group = *this->group();
+
+    // 3. Set browsingContext's group to null.
+    set_group(nullptr);
+
+    // 4. Remove browsingContext from group's browsing context set.
+    group->browsing_context_set().remove(*this);
+
+    // 5. If group's browsing context set is empty, then remove group from the user agent's browsing context group set.
+    // NOTE: This is done by ~BrowsingContextGroup() when the refcount reaches 0.
 }
 
 }

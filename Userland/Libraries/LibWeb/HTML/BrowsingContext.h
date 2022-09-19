@@ -26,7 +26,8 @@ namespace Web::HTML {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder);
+    static NonnullRefPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&);
+    static NonnullRefPtr<BrowsingContext> create_a_new_top_level_browsing_context(Page&);
 
     ~BrowsingContext();
 
@@ -124,6 +125,12 @@ public:
     // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
     bool still_on_its_initial_about_blank_document() const;
 
+    BrowsingContextGroup* group();
+    void set_group(BrowsingContextGroup*);
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#bcg-remove
+    void remove();
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -161,6 +168,9 @@ private:
 
     HashMap<AK::URL, size_t> m_frame_nesting_levels;
     String m_name;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
+    RefPtr<BrowsingContextGroup> m_group;
 };
 
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin);

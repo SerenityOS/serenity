@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Page/Page.h>
 
@@ -25,18 +26,19 @@ BrowsingContextContainer::~BrowsingContextContainer() = default;
 void BrowsingContextContainer::create_new_nested_browsing_context()
 {
     // 1. Let group be element's node document's browsing context's top-level browsing context's group.
-    // FIXME: We do not have a concept of "browsing context groups" yet.
-    auto* group = document().browsing_context();
-    if (!group)
-        return;
+    VERIFY(document().browsing_context());
+    auto* group = document().browsing_context()->top_level_browsing_context().group();
 
+    // NOTE: The spec assumes that `group` is non-null here.
+    VERIFY(group);
     VERIFY(group->page());
 
     // 2. Let browsingContext be the result of creating a new browsing context with element's node document, element, and group.
     // 3. Set element's nested browsing context to browsingContext.
-    m_nested_browsing_context = BrowsingContext::create_a_new_browsing_context(*group->page(), document(), *this);
-    group->append_child(*m_nested_browsing_context);
-    m_nested_browsing_context->set_frame_nesting_levels(group->frame_nesting_levels());
+    m_nested_browsing_context = BrowsingContext::create_a_new_browsing_context(*group->page(), document(), *this, *group);
+
+    document().browsing_context()->append_child(*m_nested_browsing_context);
+    m_nested_browsing_context->set_frame_nesting_levels(document().browsing_context()->frame_nesting_levels());
     m_nested_browsing_context->register_frame_nesting(document().url());
 
     // 4. If element has a name attribute, then set browsingContext's name to the value of this attribute.

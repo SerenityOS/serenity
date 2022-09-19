@@ -98,7 +98,7 @@ static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for
 
     // 3. Let newBrowsingContext be the result of creating a new top-level browsing context.
     VERIFY(browsing_context.page());
-    auto new_browsing_context = HTML::BrowsingContext::create_a_new_browsing_context(*browsing_context.page(), nullptr, nullptr);
+    auto new_browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*browsing_context.page());
 
     // FIXME: 4. If navigationCOOP's value is "same-origin-plurs-COEP", then set newBrowsingContext's group's
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.
