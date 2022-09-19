@@ -29,6 +29,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -371,6 +372,16 @@ public:
     // https://html.spec.whatwg.org/#completely-loaded
     bool is_completely_loaded() const;
 
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
+    Optional<String> navigation_id() const;
+    void set_navigation_id(Optional<String>);
+
+    // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
+    HTML::SandboxingFlagSet active_sandboxing_flag_set() const;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
+    HTML::PolicyContainer policy_container() const;
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -505,6 +516,15 @@ private:
 
     // https://html.spec.whatwg.org/#completely-loaded-time
     Optional<AK::Time> m_completely_loaded_time;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
+    Optional<String> m_navigation_id;
+
+    // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
+    HTML::SandboxingFlagSet m_active_sandboxing_flag_set;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
+    HTML::PolicyContainer m_policy_container;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#visibility-state
     String m_visibility_state { "hidden" };

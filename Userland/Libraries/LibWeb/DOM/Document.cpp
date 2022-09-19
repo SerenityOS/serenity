@@ -216,16 +216,19 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
     //    whose type is type,
     //    content type is contentType,
     //    origin is navigationParams's origin,
-    //    FIXME: policy container is navigationParams's policy container,
+    //    policy container is navigationParams's policy container,
     //    FIXME: permissions policy is permissionsPolicy,
-    //    FIXME: active sandboxing flag set is navigationParams's final sandboxing flag set,
+    //    active sandboxing flag set is navigationParams's final sandboxing flag set,
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
-    //    FIXME: and navigation id is navigationParams's id.
+    //    and navigation id is navigationParams's id.
     auto document = Document::create(*window);
     document->m_type = type;
     document->m_content_type = content_type;
     document->set_origin(navigation_params.origin);
+    document->m_policy_container = navigation_params.policy_container;
+    document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
+    document->m_navigation_id = navigation_params.id;
 
     document->m_window = window;
     window->set_associated_document(*document);
@@ -1960,6 +1963,26 @@ String Document::domain() const
 void Document::set_domain(String const& domain)
 {
     dbgln("(STUBBED) Document::set_domain(domain='{}')", domain);
+}
+
+void Document::set_navigation_id(Optional<AK::String> navigation_id)
+{
+    m_navigation_id = move(navigation_id);
+}
+
+Optional<String> Document::navigation_id() const
+{
+    return m_navigation_id;
+}
+
+HTML::SandboxingFlagSet Document::active_sandboxing_flag_set() const
+{
+    return m_active_sandboxing_flag_set;
+}
+
+HTML::PolicyContainer Document::policy_container() const
+{
+    return m_policy_container;
 }
 
 }
