@@ -17,7 +17,9 @@
 class QTextEdit;
 class QLineEdit;
 
-class HeadlessBrowserPageClient;
+namespace Ladybird {
+class PageClientLadybird;
+}
 
 enum class ColorScheme {
     Auto,
@@ -67,7 +69,7 @@ signals:
 private:
     void update_viewport_rect();
 
-    OwnPtr<HeadlessBrowserPageClient> m_page_client;
+    OwnPtr<Ladybird::PageClientLadybird> m_page_client;
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
