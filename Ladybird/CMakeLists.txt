@@ -54,6 +54,7 @@ set(SOURCES
     EventLoopPluginQt.cpp
     FontPluginQt.cpp
     ImageCodecPluginLadybird.cpp
+    PageClientLadybird.cpp
     RequestManagerQt.cpp
     main.cpp
     WebView.cpp
@@ -62,6 +63,7 @@ set(SOURCES
     SettingsDialog.cpp
     Tab.cpp
     TimerQt.cpp
+    Utilities.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES}
