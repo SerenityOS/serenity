@@ -587,3 +587,15 @@ void WebView::set_color_scheme(ColorScheme color_scheme)
     if (auto* document = m_page_client->page().top_level_browsing_context().active_document())
         document->invalidate_style();
 }
+
+void WebView::showEvent(QShowEvent* event)
+{
+    QAbstractScrollArea::showEvent(event);
+    m_page_client->page().top_level_browsing_context().set_system_visibility_state(Web::HTML::VisibilityState::Visible);
+}
+
+void WebView::hideEvent(QHideEvent* event)
+{
+    QAbstractScrollArea::hideEvent(event);
+    m_page_client->page().top_level_browsing_context().set_system_visibility_state(Web::HTML::VisibilityState::Hidden);
+}
