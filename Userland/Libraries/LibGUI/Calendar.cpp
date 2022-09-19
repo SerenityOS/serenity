@@ -45,6 +45,14 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
         }
     }
 
+    auto default_view = Config::read_string("Calendar"sv, "View"sv, "DefaultView"sv, "Month"sv);
+    if (default_view == "Year") {
+        m_mode = Year;
+        m_show_days = false;
+        m_show_year = true;
+        m_show_month_year = true;
+    }
+
     update_tiles(m_selected_date.year(), m_selected_date.month());
 }
 
