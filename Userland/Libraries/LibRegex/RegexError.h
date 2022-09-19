@@ -9,9 +9,9 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #ifdef __serenity__
-#    include <regex.h>
+#    include <bits/regex_defs.h>
 #else
-#    include <LibC/regex.h>
+#    include <LibC/bits/regex_defs.h>
 #endif
 
 namespace regex {
