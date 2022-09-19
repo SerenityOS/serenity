@@ -8,13 +8,16 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibConfig/Listener.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
 
-class Calendar final : public GUI::Frame {
+class Calendar final
+    : public GUI::Frame
+    , public Config::Listener {
     C_OBJECT(Calendar)
 
 public:
@@ -66,6 +69,8 @@ public:
         m_unadjusted_tile_size.set_width(width);
         m_unadjusted_tile_size.set_height(height);
     }
+
+    virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;

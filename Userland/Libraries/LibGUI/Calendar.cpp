@@ -754,4 +754,13 @@ size_t Calendar::day_of_week_index(String const& day_name)
     auto const& day_names = AK::long_day_names;
     return AK::find_index(day_names.begin(), day_names.end(), day_name);
 }
+
+void Calendar::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    VERIFY(domain == "Calendar");
+    if (group == "View" && key == "FirstDayOfWeek") {
+        m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(value));
+        update_tiles(m_view_year, m_view_month);
+    }
+}
 }
