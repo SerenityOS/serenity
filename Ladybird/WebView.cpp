@@ -16,6 +16,7 @@
 #include "PageClientLadybird.h"
 #include "RequestManagerQt.h"
 #include "Utilities.h"
+#include "WebSocketClientManagerLadybird.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
@@ -52,10 +53,6 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
-#include <LibWeb/WebSockets/WebSocket.h>
-#include <LibWebSocket/ConnectionInfo.h>
-#include <LibWebSocket/Message.h>
-#include <LibWebSocket/WebSocket.h>
 #include <QApplication>
 #include <QCursor>
 #include <QIcon>
@@ -390,118 +387,6 @@ void WebView::update_viewport_rect()
     m_page_client->set_viewport_rect(rect);
 }
 
-class HeadlessWebSocketClientManager : public Web::WebSockets::WebSocketClientManager {
-public:
-    class HeadlessWebSocket
-        : public Web::WebSockets::WebSocketClientSocket
-        , public Weakable<HeadlessWebSocket> {
-    public:
-        static NonnullRefPtr<HeadlessWebSocket> create(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
-        {
-            return adopt_ref(*new HeadlessWebSocket(move(underlying_socket)));
-        }
-
-        virtual ~HeadlessWebSocket() override
-        {
-        }
-
-        virtual Web::WebSockets::WebSocket::ReadyState ready_state() override
-        {
-            switch (m_websocket->ready_state()) {
-            case WebSocket::ReadyState::Connecting:
-                return Web::WebSockets::WebSocket::ReadyState::Connecting;
-            case WebSocket::ReadyState::Open:
-                return Web::WebSockets::WebSocket::ReadyState::Open;
-            case WebSocket::ReadyState::Closing:
-                return Web::WebSockets::WebSocket::ReadyState::Closing;
-            case WebSocket::ReadyState::Closed:
-                return Web::WebSockets::WebSocket::ReadyState::Closed;
-            }
-            VERIFY_NOT_REACHED();
-        }
-
-        virtual void send(ByteBuffer binary_or_text_message, bool is_text) override
-        {
-            m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
-        }
-
-        virtual void send(StringView message) override
-        {
-            m_websocket->send(WebSocket::Message(message));
-        }
-
-        virtual void close(u16 code, String reason) override
-        {
-            m_websocket->close(code, reason);
-        }
-
-    private:
-        HeadlessWebSocket(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
-            : m_websocket(move(underlying_socket))
-        {
-            m_websocket->on_open = [weak_this = make_weak_ptr()] {
-                if (auto strong_this = weak_this.strong_ref())
-                    if (strong_this->on_open)
-                        strong_this->on_open();
-            };
-            m_websocket->on_message = [weak_this = make_weak_ptr()](auto message) {
-                if (auto strong_this = weak_this.strong_ref()) {
-                    if (strong_this->on_message) {
-                        strong_this->on_message(Web::WebSockets::WebSocketClientSocket::Message {
-                            .data = move(message.data()),
-                            .is_text = message.is_text(),
-                        });
-                    }
-                }
-            };
-            m_websocket->on_error = [weak_this = make_weak_ptr()](auto error) {
-                if (auto strong_this = weak_this.strong_ref()) {
-                    if (strong_this->on_error) {
-                        switch (error) {
-                        case WebSocket::WebSocket::Error::CouldNotEstablishConnection:
-                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::CouldNotEstablishConnection);
-                            return;
-                        case WebSocket::WebSocket::Error::ConnectionUpgradeFailed:
-                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::ConnectionUpgradeFailed);
-                            return;
-                        case WebSocket::WebSocket::Error::ServerClosedSocket:
-                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::ServerClosedSocket);
-                            return;
-                        }
-                        VERIFY_NOT_REACHED();
-                    }
-                }
-            };
-            m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, String reason, bool was_clean) {
-                if (auto strong_this = weak_this.strong_ref())
-                    if (strong_this->on_close)
-                        strong_this->on_close(code, move(reason), was_clean);
-            };
-        }
-
-        NonnullRefPtr<WebSocket::WebSocket> m_websocket;
-    };
-
-    static NonnullRefPtr<HeadlessWebSocketClientManager> create()
-    {
-        return adopt_ref(*new HeadlessWebSocketClientManager());
-    }
-
-    virtual ~HeadlessWebSocketClientManager() override { }
-
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, String const& origin) override
-    {
-        WebSocket::ConnectionInfo connection_info(url);
-        connection_info.set_origin(origin);
-
-        auto connection = HeadlessWebSocket::create(WebSocket::WebSocket::create(move(connection_info)));
-        return connection;
-    }
-
-private:
-    HeadlessWebSocketClientManager() { }
-};
-
 static void platform_init()
 {
 #ifdef AK_OS_ANDROID
@@ -532,7 +417,7 @@ void initialize_web_engine()
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
 
     Web::ResourceLoader::initialize(RequestManagerQt::create());
-    Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());
+    Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());
 
     Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
