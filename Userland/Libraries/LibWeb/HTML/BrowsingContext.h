@@ -15,6 +15,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/Loader/FrameLoader.h>
@@ -46,6 +47,9 @@ public:
     DOM::Document* active_document();
 
     void set_active_document(DOM::Document*);
+
+    HTML::Window* active_window();
+    HTML::Window const* active_window() const;
 
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
@@ -131,6 +135,31 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#bcg-remove
     void remove();
 
+    // https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
+    bool is_allowed_to_navigate(BrowsingContext const&) const;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+    DOM::ExceptionOr<void> navigate(
+        Fetch::Infrastructure::Request resource,
+        BrowsingContext& source_browsing_context,
+        bool exceptions_enabled = false,
+        HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
+        Optional<PolicyContainer> history_policy_container = {},
+        String navigation_type = "other",
+        Optional<String> navigation_id = {},
+        Function<void(NonnullOwnPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {});
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
+    DOM::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+
+    // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
+    BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
+    DOM::ExceptionOr<void> traverse_the_history(size_t entry_index, HistoryHandlingBehavior = HistoryHandlingBehavior::Default, bool explicit_history_navigation = false);
+
+    bool document_family_contains(DOM::Document const&) const;
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -142,6 +171,11 @@ private:
 
     FrameLoader m_loader;
     Web::EventHandler m_event_handler;
+
+    // https://html.spec.whatwg.org/multipage/history.html#current-entry
+    SessionHistoryEntry& current_entry() { return m_session_history[*m_session_history_index]; }
+    SessionHistoryEntry const& current_entry() const { return m_session_history[*m_session_history_index]; }
+    Optional<size_t> m_session_history_index { 0 };
 
     // https://html.spec.whatwg.org/multipage/history.html#session-history
     Vector<SessionHistoryEntry> m_session_history;

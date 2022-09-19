@@ -213,14 +213,13 @@ void BrowsingContextContainer::navigate_an_iframe_or_frame(Fetch::Infrastructure
     //           given element's node document's relevant global object
     //           to finalize and report timing given response, element's node document's relevant global object, and element's local name.
 
-    // FIXME: 4. Navigate element's nested browsing context to resource,
-    //           with historyHandling set to historyHandling,
-    //           the source browsing context set to element's node document's browsing context,
-    //           and processResponseEndOfBody set to reportFrameTiming.
-    (void)history_handling;
-
-    // AD-HOC:
-    m_nested_browsing_context->loader().load(resource.url(), FrameLoader::Type::IFrame);
+    // 4. Navigate element's nested browsing context to resource,
+    //    with historyHandling set to historyHandling,
+    //    the source browsing context set to element's node document's browsing context,
+    //    FIXME: and processResponseEndOfBody set to reportFrameTiming.
+    auto* source_browsing_context = document().browsing_context();
+    VERIFY(source_browsing_context);
+    m_nested_browsing_context->navigate(move(resource), *source_browsing_context, false, history_handling);
 }
 
 }

@@ -629,6 +629,13 @@ void Window::set_name(String const& name)
     browsing_context()->set_name(name);
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
+bool Window::has_transient_activation() const
+{
+    // FIXME: Implement this.
+    return false;
+}
+
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {
