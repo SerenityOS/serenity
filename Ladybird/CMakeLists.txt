@@ -64,6 +64,8 @@ set(SOURCES
     Tab.cpp
     TimerQt.cpp
     Utilities.cpp
+    WebSocketClientManagerLadybird.cpp
+    WebSocketLadybird.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES}
