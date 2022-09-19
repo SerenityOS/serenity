@@ -99,6 +99,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_type_action_group->set_exclusive(true);
     view_type_action_group->add_action(*view_month_action);
     view_type_action_group->add_action(*view_year_action);
+    auto default_view = Config::read_string("Calendar"sv, "View"sv, "DefaultView"sv, "Month"sv);
+    if (default_view == "Year")
+        view_year_action->set_checked(true);
 
     (void)TRY(toolbar->try_add_action(prev_date_action));
     (void)TRY(toolbar->try_add_action(next_date_action));
