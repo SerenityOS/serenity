@@ -27,6 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Calendar");
+    Config::monitor_domain("Calendar");
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/etc/timezone", "r"));

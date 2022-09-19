@@ -50,6 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains({ "Taskbar", "Calendar" });
     Config::monitor_domain("Taskbar");
+    Config::monitor_domain("Calendar");
     app->event_loop().register_signal(SIGCHLD, [](int) {
         // Wait all available children
         while (waitpid(-1, nullptr, WNOHANG) > 0)
