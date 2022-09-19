@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -7,9 +7,12 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/Page/Page.h>
 
@@ -112,6 +115,112 @@ HTML::Window* BrowsingContextContainer::content_window() const
     if (!document)
         return nullptr;
     return const_cast<HTML::Window*>(&document->window());
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
+static bool url_matches_about_blank(AK::URL const& url)
+{
+    // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
+    return url.scheme() == "about"sv
+        && url.path() == "blank"sv
+        && url.username().is_empty()
+        && url.password().is_empty()
+        && url.host().is_null();
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
+void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
+{
+    // 1. Let url be the URL record about:blank.
+    auto url = AK::URL("about:blank");
+
+    // 2. If element has a src attribute specified, and its value is not the empty string,
+    //    then parse the value of that attribute relative to element's node document.
+    //    If this is successful, then set url to the resulting URL record.
+    auto src_attribute_value = attribute(HTML::AttributeNames::src);
+    if (!src_attribute_value.is_null() && !src_attribute_value.is_empty()) {
+        auto parsed_src = document().parse_url(src_attribute_value);
+        if (parsed_src.is_valid())
+            url = parsed_src;
+    }
+
+    // 3. If there exists an ancestor browsing context of element's nested browsing context
+    //    whose active document's URL, ignoring fragments, is equal to url, then return.
+    if (m_nested_browsing_context) {
+        for (auto* ancestor = m_nested_browsing_context->parent(); ancestor; ancestor = ancestor->parent()) {
+            VERIFY(ancestor->active_document());
+            if (ancestor->active_document()->url().equals(url, AK::URL::ExcludeFragment::Yes))
+                return;
+        }
+    }
+
+    // 4. If url matches about:blank and initialInsertion is true, then:
+    if (url_matches_about_blank(url) && initial_insertion) {
+        // FIXME: 1. Perform the URL and history update steps given element's nested browsing context's active document and url.
+
+        // 2. Run the iframe load event steps given element.
+        // FIXME: The spec doesn't check frame vs iframe here. Bug: https://github.com/whatwg/html/issues/8295
+        if (is<HTMLIFrameElement>(*this)) {
+            run_iframe_load_event_steps(static_cast<HTMLIFrameElement&>(*this));
+        }
+
+        // 3. Return.
+    }
+
+    // 5. Let resource be a new request whose URL is url and whose referrer policy is the current state of element's referrerpolicy content attribute.
+    auto resource = Fetch::Infrastructure::Request();
+    resource.set_url(url);
+    // FIXME: Set the referrer policy.
+
+    // AD-HOC:
+    if (url.protocol() == "file" && document().origin().protocol() != "file") {
+        dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
+        return;
+    }
+
+    // 6. If element is an iframe element, then set element's current navigation was lazy loaded boolean to false.
+    if (is<HTMLIFrameElement>(*this)) {
+        static_cast<HTMLIFrameElement&>(*this).set_current_navigation_was_lazy_loaded(false);
+    }
+
+    // 7. If element is an iframe element, and the will lazy load element steps given element return true, then:
+    if (is<HTMLIFrameElement>(*this) && static_cast<HTMLIFrameElement&>(*this).will_lazy_load_element()) {
+        // FIXME: 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate to the resource.
+        // FIXME: 2. Set element's current navigation was lazy loaded boolean to true.
+        // FIXME: 3. Start intersection-observing a lazy loading element for element.
+        // FIXME: 4. Return.
+    }
+
+    // 8. Navigate to the resource: navigate an iframe or frame given element and resource.
+    navigate_an_iframe_or_frame(move(resource));
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
+void BrowsingContextContainer::navigate_an_iframe_or_frame(Fetch::Infrastructure::Request resource)
+{
+    // 1. Let historyHandling be "default".
+    auto history_handling = HistoryHandlingBehavior::Default;
+
+    // 2. If element's nested browsing context's active document is not completely loaded, then set historyHandling to "replace".
+    VERIFY(m_nested_browsing_context);
+    VERIFY(m_nested_browsing_context->active_document());
+    if (!m_nested_browsing_context->active_document()->is_completely_loaded()) {
+        history_handling = HistoryHandlingBehavior::Replace;
+    }
+
+    // FIXME: 3. Let reportFrameTiming be the following step given response response:
+    //           queue an element task on the networking task source
+    //           given element's node document's relevant global object
+    //           to finalize and report timing given response, element's node document's relevant global object, and element's local name.
+
+    // FIXME: 4. Navigate element's nested browsing context to resource,
+    //           with historyHandling set to historyHandling,
+    //           the source browsing context set to element's node document's browsing context,
+    //           and processResponseEndOfBody set to reportFrameTiming.
+    (void)history_handling;
+
+    // AD-HOC:
+    m_nested_browsing_context->loader().load(resource.url(), FrameLoader::Type::IFrame);
 }
 
 }

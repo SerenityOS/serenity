@@ -18,6 +18,11 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
+    bool will_lazy_load_element() const;
+
+    void set_current_navigation_was_lazy_loaded(bool value) { m_current_navigation_was_lazy_loaded = value; }
+
 private:
     HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
 
@@ -25,7 +30,13 @@ private:
     virtual void removed_from(Node*) override;
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
+    void process_the_iframe_attributes(bool initial_insertion = false);
+
     void load_src(String const&);
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#current-navigation-was-lazy-loaded
+    bool m_current_navigation_was_lazy_loaded { false };
 };
 
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement&);
