@@ -647,6 +647,8 @@ void Document::set_title(String const& title)
 void Document::attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
 {
     m_browsing_context = browsing_context;
+
+    update_the_visibility_state(browsing_context.system_visibility_state());
 }
 
 void Document::detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
@@ -1587,11 +1589,17 @@ bool Document::hidden() const
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-visibilitystate
 String Document::visibility_state() const
 {
-    return m_visibility_state;
+    switch (m_visibility_state) {
+    case HTML::VisibilityState::Hidden:
+        return "hidden"sv;
+    case HTML::VisibilityState::Visible:
+        return "visible"sv;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
-void Document::update_the_visibility_state(String visibility_state)
+void Document::update_the_visibility_state(HTML::VisibilityState visibility_state)
 {
     // 1. If document's visibility state equals visibilityState, then return.
     if (m_visibility_state == visibility_state)
@@ -1983,6 +1991,27 @@ HTML::SandboxingFlagSet Document::active_sandboxing_flag_set() const
 HTML::PolicyContainer Document::policy_container() const
 {
     return m_policy_container;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
+Vector<NonnullRefPtr<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
+{
+    // 1. Let list be an empty list.
+    Vector<NonnullRefPtr<HTML::BrowsingContext>> list;
+
+    // 2. For each browsing context container container,
+    //    whose nested browsing context is non-null and whose shadow-including root is d, in shadow-including tree order:
+
+    // NOTE: We already store our browsing contexts in a tree structure, so we can simply collect all the descendants
+    //       of this document's browsing context.
+    if (browsing_context()) {
+        browsing_context()->for_each_in_subtree([&](auto& context) {
+            list.append(context);
+            return IterationDecision::Continue;
+        });
+    }
+
+    return list;
 }
 
 }

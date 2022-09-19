@@ -54,4 +54,6 @@ endpoint WebContentServer
     get_session_storage_entries() => (OrderedHashMap<String,String> entries)
 
     handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
+
+    set_system_visibility_state(bool visible) =|
 }

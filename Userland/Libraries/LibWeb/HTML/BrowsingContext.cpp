@@ -1113,7 +1113,7 @@ DOM::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_index,
             new_document->set_page_showing(true);
 
             // 3. Update the visibility state of newDocument to "hidden".
-            new_document->update_the_visibility_state("hidden");
+            new_document->update_the_visibility_state(VisibilityState::Hidden);
 
             // 4. Fire a page transition event named pageshow at newDocument's relevant global object with true.
             auto& window = verify_cast<HTML::Window>(relevant_global_object(*new_document));
@@ -1248,18 +1248,55 @@ BrowsingContext const* BrowsingContext::the_one_permitted_sandboxed_navigator() 
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#document-family
-bool BrowsingContext::document_family_contains(DOM::Document const& document) const
+Vector<JS::Handle<DOM::Document>> BrowsingContext::document_family() const
 {
-    HashTable<DOM::Document const*> family;
-
+    HashTable<DOM::Document*> documents;
     for (auto& entry : m_session_history) {
         if (!entry.document)
             continue;
-        if (family.set(entry.document) == AK::HashSetResult::ReplacedExistingEntry)
+        if (documents.set(entry.document.ptr()) == AK::HashSetResult::ReplacedExistingEntry)
             continue;
-        // FIXME: The document family of a Document object consists of the union of all the document families of the browsing contexts in the list of the descendant browsing contexts of the Document object.
+        for (auto& context : entry.document->list_of_descendant_browsing_contexts()) {
+            for (auto& document : context->document_family()) {
+                documents.set(document.ptr());
+            }
+        }
     }
 
-    return family.contains(&document);
+    Vector<JS::Handle<DOM::Document>> family;
+    for (auto* document : documents) {
+        family.append(*document);
+    }
+    return family;
 }
+
+// https://html.spec.whatwg.org/multipage/browsers.html#document-family
+bool BrowsingContext::document_family_contains(DOM::Document const& document) const
+{
+    return document_family().first_matching([&](auto& entry) { return entry.ptr() == &document; }).has_value();
+}
+
+VisibilityState BrowsingContext::system_visibility_state() const
+{
+    return m_system_visibility_state;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
+void BrowsingContext::set_system_visibility_state(VisibilityState visibility_state)
+{
+    if (m_system_visibility_state == visibility_state)
+        return;
+    m_system_visibility_state = visibility_state;
+
+    // When a user-agent determines that the system visibility state for top-level browsing context context
+    // has changed to newState, it must queue a task on the user interaction task source to update
+    // the visibility state of all the Document objects in the top-level browsing context's document family with newState.
+    auto document_family = top_level_browsing_context().document_family();
+    queue_global_task(Task::Source::UserInteraction, Bindings::main_thread_vm().current_realm()->global_object(), [visibility_state, document_family = move(document_family)]() mutable {
+        for (auto& document : document_family) {
+            document->update_the_visibility_state(visibility_state);
+        }
+    });
+}
+
 }

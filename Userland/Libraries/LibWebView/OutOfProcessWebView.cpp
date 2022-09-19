@@ -540,4 +540,14 @@ void OutOfProcessWebView::focusout_event(GUI::FocusEvent&)
     client().async_set_has_focus(false);
 }
 
+void OutOfProcessWebView::show_event(GUI::ShowEvent&)
+{
+    client().async_set_system_visibility_state(true);
+}
+
+void OutOfProcessWebView::hide_event(GUI::HideEvent&)
+{
+    client().async_set_system_visibility_state(false);
+}
+
 }

@@ -16,6 +16,8 @@ class BrowsingContextContainer : public HTMLElement {
 public:
     virtual ~BrowsingContextContainer() override;
 
+    static HashTable<BrowsingContextContainer*>& all_instances();
+
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
     BrowsingContext const* nested_browsing_context() const { return m_nested_browsing_context; }
 

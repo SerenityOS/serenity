@@ -636,4 +636,14 @@ void Tab::show_storage_inspector()
     window->move_to_front();
 }
 
+void Tab::show_event(GUI::ShowEvent&)
+{
+    m_web_content_view->set_visible(true);
+}
+
+void Tab::hide_event(GUI::HideEvent&)
+{
+    m_web_content_view->set_visible(false);
+}
+
 }

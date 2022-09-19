@@ -31,6 +31,7 @@
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
@@ -319,7 +320,7 @@ public:
     String visibility_state() const;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
-    void update_the_visibility_state(String visibility_state);
+    void update_the_visibility_state(HTML::VisibilityState);
 
     void run_the_resize_steps();
     void run_the_scroll_steps();
@@ -381,6 +382,9 @@ public:
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
     HTML::PolicyContainer policy_container() const;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
+    Vector<NonnullRefPtr<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -527,7 +531,7 @@ private:
     HTML::PolicyContainer m_policy_container;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#visibility-state
-    String m_visibility_state { "hidden" };
+    HTML::VisibilityState m_visibility_state { HTML::VisibilityState::Hidden };
 };
 
 }

@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
+#include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Platform/Timer.h>
@@ -158,7 +159,11 @@ public:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
     DOM::ExceptionOr<void> traverse_the_history(size_t entry_index, HistoryHandlingBehavior = HistoryHandlingBehavior::Default, bool explicit_history_navigation = false);
 
+    Vector<JS::Handle<DOM::Document>> document_family() const;
     bool document_family_contains(DOM::Document const&) const;
+
+    VisibilityState system_visibility_state() const;
+    void set_system_visibility_state(VisibilityState);
 
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
@@ -205,6 +210,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     RefPtr<BrowsingContextGroup> m_group;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
+    VisibilityState m_system_visibility_state { VisibilityState::Hidden };
 };
 
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin);

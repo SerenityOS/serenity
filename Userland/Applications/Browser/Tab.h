@@ -85,6 +85,9 @@ public:
 private:
     explicit Tab(BrowserWindow&);
 
+    virtual void show_event(GUI::ShowEvent&) override;
+    virtual void hide_event(GUI::HideEvent&) override;
+
     BrowserWindow const& window() const;
     BrowserWindow& window();
 

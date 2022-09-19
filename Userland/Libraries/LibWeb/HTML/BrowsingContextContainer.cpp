@@ -18,6 +18,12 @@
 
 namespace Web::HTML {
 
+HashTable<BrowsingContextContainer*>& BrowsingContextContainer::all_instances()
+{
+    static HashTable<BrowsingContextContainer*> set;
+    return set;
+}
+
 BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
