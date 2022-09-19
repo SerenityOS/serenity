@@ -970,3 +970,20 @@ void WebView::show_js_console()
     m_js_console_widget->show();
     m_js_console_input_edit->setFocus();
 }
+
+void WebView::set_color_scheme(ColorScheme color_scheme)
+{
+    switch (color_scheme) {
+    case ColorScheme::Auto:
+        m_page_client->m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Auto;
+        break;
+    case ColorScheme::Light:
+        m_page_client->m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Light;
+        break;
+    case ColorScheme::Dark:
+        m_page_client->m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Dark;
+        break;
+    }
+    if (auto* document = m_page_client->page().top_level_browsing_context().active_document())
+        document->invalidate_style();
+}
