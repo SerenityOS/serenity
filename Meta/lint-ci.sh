@@ -34,7 +34,7 @@ for cmd in \
         Meta/lint-python.sh \
         Meta/lint-shell-scripts.sh; do
     echo "Running ${cmd}"
-    if "time" "${cmd}" "$@"; then
+    if time "${cmd}" "$@"; then
         echo -e "[${GREEN}OK${NC}]: ${cmd}"
     else
         echo -e "[${RED}FAIL${NC}]: ${cmd}"
@@ -44,7 +44,7 @@ done
 
 if [ -x ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter ]; then
     echo "Running IPCMagicLinter"
-    if git ls-files '*.ipc' | time xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; then
+    if time { git ls-files '*.ipc' | xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; }; then
         echo -e "[${GREEN}OK${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
     else
         echo -e "[${RED}FAIL${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
