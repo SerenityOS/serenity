@@ -5,7 +5,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibMain/Main.h>
@@ -42,38 +43,48 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         paths.append("-");
 
     bool fail = false;
+    Array<u8, PAGE_SIZE> buffer;
+
     for (auto& path : paths) {
+        auto file_or_error = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read);
         auto filepath = (path == "-") ? "/dev/stdin" : path;
-        auto file = Core::File::construct(filepath);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("{}: {}: {}", arguments.strings[0], path, file->error_string());
+        if (file_or_error.is_error()) {
+            warnln("{}: {}: {}", arguments.strings[0], filepath, file_or_error.error());
             fail = true;
             continue;
         }
-        struct stat st;
-        if (fstat(file->fd(), &st) < 0) {
-            warnln("{}: Failed to fstat {}: {}", arguments.strings[0], filepath, strerror(errno));
+        auto file = file_or_error.release_value();
+
+        auto stat_or_error = Core::System::stat(filepath);
+        if (stat_or_error.is_error()) {
+            warnln("{}: Failed to fstat {}: {}", arguments.strings[0], filepath, stat_or_error.error());
             fail = true;
             continue;
         }
+        auto st = stat_or_error.release_value();
+
         if (algorithm == "crc32") {
             Crypto::Checksum::CRC32 crc32;
-            while (!file->eof() && !file->has_error())
-                crc32.update(file->read(PAGE_SIZE));
-            if (file->has_error()) {
-                warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, file->error_string());
-                fail = true;
-                continue;
+            while (!file->is_eof()) {
+                auto data_or_error = file->read(buffer);
+                if (data_or_error.is_error()) {
+                    warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
+                    fail = true;
+                    continue;
+                }
+                crc32.update(data_or_error.value());
             }
             outln("{:08x} {} {}", crc32.digest(), st.st_size, path);
         } else if (algorithm == "adler32") {
             Crypto::Checksum::Adler32 adler32;
-            while (!file->eof() && !file->has_error())
-                adler32.update(file->read(PAGE_SIZE));
-            if (file->has_error()) {
-                warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, file->error_string());
-                fail = true;
-                continue;
+            while (!file->is_eof()) {
+                auto data_or_error = file->read(buffer);
+                if (data_or_error.is_error()) {
+                    warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
+                    fail = true;
+                    continue;
+                }
+                adler32.update(data_or_error.value());
             }
             outln("{:08x} {} {}", adler32.digest(), st.st_size, path);
         } else {
