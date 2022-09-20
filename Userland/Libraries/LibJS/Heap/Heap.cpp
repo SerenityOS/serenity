@@ -142,7 +142,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
             // match any pointer-backed tag, in that case we have to extract the pointer to its
             // canonical form and add that as a possible pointer.
             if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
-                possible_pointers.set((u64)(((i64)data << 16) >> 16));
+                possible_pointers.set(Value::extract_pointer_bits(data));
             else
                 possible_pointers.set(data);
         } else {

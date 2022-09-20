@@ -18,6 +18,12 @@
 #    define AK_ARCH_AARCH64 1
 #endif
 
+#if (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8) || defined(_WIN64)
+#    define AK_ARCH_64_BIT
+#else
+#    define AK_ARCH_32_BIT
+#endif
+
 #if defined(__APPLE__) && defined(__MACH__)
 #    define AK_OS_MACOS
 #    define AK_OS_BSD_GENERIC
