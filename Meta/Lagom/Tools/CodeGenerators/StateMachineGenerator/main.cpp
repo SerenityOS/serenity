@@ -398,11 +398,9 @@ private:
         _Anywhere,
 )~~~");
 
-    int largest_state_value = 0;
     for (auto s : machine.states) {
         auto state_generator = generator.fork();
         state_generator.set("state.name", s.name);
-        largest_state_value++;
         state_generator.append(R"~~~(
         @state.name@,
 )~~~");
