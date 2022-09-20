@@ -45,8 +45,7 @@ ConsoleWidget::ConsoleWidget()
     m_input->on_return_pressed = [this] {
         auto js_source = m_input->text();
 
-        // FIXME: An is_blank check to check if there is only whitespace would probably be preferable.
-        if (js_source.is_empty())
+        if (js_source.is_whitespace())
             return;
 
         m_input->add_current_text_to_history();
