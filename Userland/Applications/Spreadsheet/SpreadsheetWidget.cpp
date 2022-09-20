@@ -11,6 +11,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ColorPicker.h>
 #include <LibGUI/EmojiInputDialog.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -250,6 +251,21 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_undo_action->set_enabled(false);
     m_redo_action->set_enabled(false);
 
+    m_change_background_color_action = GUI::Action::create(
+        "&Change Background Color", { Mod_Ctrl, Key_B }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(Spreadsheet::FormatType::Background);
+        },
+        window());
+
+    m_change_foreground_color_action = GUI::Action::create(
+        "&Change Foreground Color", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/text-color.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(Spreadsheet::FormatType::Foreground);
+        },
+        window());
+
+    m_change_background_color_action->set_enabled(false);
+    m_change_foreground_color_action->set_enabled(false);
+
     m_functions_help_action = GUI::Action::create(
         "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
@@ -274,6 +290,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_change_background_color_action);
+    toolbar.add_action(*m_change_foreground_color_action);
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
@@ -334,6 +353,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_insert_emoji_action->set_enabled(true);
             m_current_cell_label->set_enabled(true);
             m_cell_value_editor->set_enabled(true);
+            m_change_background_color_action->set_enabled(true);
+            m_change_foreground_color_action->set_enabled(true);
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
@@ -453,6 +474,21 @@ void SpreadsheetWidget::redo()
 
     m_undo_stack.redo();
     update();
+}
+
+void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType format_type)
+{
+    VERIFY(current_worksheet_if_available());
+
+    auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
+    if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+        for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            if (format_type == Spreadsheet::FormatType::Background)
+                current_worksheet_if_available()->at(position)->type_metadata().static_format.background_color = dialog->color();
+            else
+                current_worksheet_if_available()->at(position)->type_metadata().static_format.foreground_color = dialog->color();
+        }
+    }
 }
 
 void SpreadsheetWidget::save(Core::File& file)

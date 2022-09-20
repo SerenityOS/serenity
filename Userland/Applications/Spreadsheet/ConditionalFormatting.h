@@ -22,6 +22,11 @@ struct ConditionalFormat : public Format {
     String condition;
 };
 
+enum class FormatType {
+    Background = 0,
+    Foreground = 1
+};
+
 class ConditionView : public GUI::Widget {
     C_OBJECT(ConditionView)
 public:
