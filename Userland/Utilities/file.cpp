@@ -10,6 +10,7 @@
 #include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -153,9 +154,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     bool all_ok = true;
+    // Read accounts for longest possible offset + signature we currently match against.
+    auto buffer = TRY(ByteBuffer::create_uninitialized(0x9006));
 
-    for (auto path : paths) {
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    for (auto const& path : paths) {
+        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
         if (file_or_error.is_error()) {
             perror(path.characters());
             all_ok = false;
@@ -166,15 +169,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct stat file_stat = TRY(Core::System::lstat(path));
 
         auto file_size_in_bytes = file_stat.st_size;
-        if (file->is_directory()) {
+        if (S_ISDIR(file_stat.st_mode)) {
             outln("{}: directory", path);
         } else if (!file_size_in_bytes) {
             outln("{}: empty", path);
         } else {
-            // Read accounts for longest possible offset + signature we currently match against.
-            auto bytes = file->read(0x9006);
+            auto bytes = TRY(file->read(buffer));
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
-            auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes()).value_or(file_name_guess);
+            auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes).value_or(file_name_guess);
             auto human_readable_description = get_description_from_mime_type(mime_type, String(path)).value_or(mime_type);
             outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
         }
