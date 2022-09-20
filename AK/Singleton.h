@@ -13,6 +13,12 @@
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
 #    include <Kernel/Locking/SpinlockProtected.h>
+#elif defined(AK_OS_WINDOWS)
+// Forward declare to avoid pulling Windows.h into every file in existence.
+extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long);
+#    ifndef sched_yield
+#        define sched_yield() Sleep(0)
+#    endif
 #else
 #    include <sched.h>
 #endif

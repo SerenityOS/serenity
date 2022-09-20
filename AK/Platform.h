@@ -33,6 +33,10 @@
 #    define AK_OS_BSD_GENERIC
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+#    define AK_OS_WINDOWS
+#endif
+
 // FIXME: Remove clang-format suppression after https://github.com/llvm/llvm-project/issues/56602 resolved
 // clang-format off
 #if defined(__ANDROID__)
@@ -127,7 +131,11 @@ extern "C" {
 #    endif
 #endif
 
-#ifdef AK_OS_BSD_GENERIC
+#if defined(AK_OS_WINDOWS)
+#    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
+#endif
+
+#if defined(AK_OS_BSD_GENERIC)
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif
