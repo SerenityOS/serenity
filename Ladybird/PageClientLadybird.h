@@ -18,6 +18,7 @@ namespace Ladybird {
 class PageClientLadybird final : public Web::PageClient {
 public:
     static NonnullOwnPtr<PageClientLadybird> create(WebView&);
+    virtual ~PageClientLadybird() override;
 
     Web::Page& page() { return *m_page; }
     Web::Page const& page() const { return *m_page; }
