@@ -129,7 +129,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             // Note: Already done in step iv. above.
 
             // 4. Insert d as the first element of functionsToInitialize.
-            functions_to_initialize.prepend(function);
+            functions_to_initialize.append(function);
             return {};
         });
 
@@ -221,7 +221,8 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
         });
 
         // 16. For each Parse Node f of functionsToInitialize, do
-        for (auto& function_declaration : functions_to_initialize) {
+        // Note: We used append in place of prepend, so we have to iterate in reverse
+        for (auto const& function_declaration : functions_to_initialize.in_reverse()) {
             // FIXME: Do this more correctly.
             // a. Let fn be the sole element of the BoundNames of f.
             // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
