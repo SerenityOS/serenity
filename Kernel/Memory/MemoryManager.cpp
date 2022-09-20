@@ -243,7 +243,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_global_data.with([&](auto& global_data) {
         global_data.used_memory_ranges.ensure_capacity(4);
+#if ARCH(I386) || ARCH(X86_64)
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
+#endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
         if (multiboot_flags & 0x4) {
