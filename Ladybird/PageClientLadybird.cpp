@@ -34,6 +34,11 @@ PageClientLadybird::PageClientLadybird(WebView& view)
 {
 }
 
+PageClientLadybird::~PageClientLadybird()
+{
+    m_page->top_level_browsing_context().close();
+}
+
 Web::Layout::InitialContainingBlock* PageClientLadybird::layout_root()
 {
     auto* document = page().top_level_browsing_context().active_document();
