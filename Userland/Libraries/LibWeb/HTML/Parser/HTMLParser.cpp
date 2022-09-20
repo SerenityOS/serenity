@@ -3751,4 +3751,25 @@ JS::Realm& HTMLParser::realm()
     return m_document->realm();
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#abort-a-parser
+void HTMLParser::abort()
+{
+    // 1. Throw away any pending content in the input stream, and discard any future content that would have been added to it.
+    m_tokenizer.abort();
+
+    // FIXME: 2. Stop the speculative HTML parser for this HTML parser.
+
+    // 3. Update the current document readiness to "interactive".
+    m_document->update_readiness(DocumentReadyState::Interactive);
+
+    // 4. Pop all the nodes off the stack of open elements.
+    while (!m_stack_of_open_elements.is_empty())
+        m_stack_of_open_elements.pop();
+
+    // 5. Update the current document readiness to "complete".
+    m_document->update_readiness(DocumentReadyState::Complete);
+
+    m_aborted = true;
+}
+
 }

@@ -68,7 +68,11 @@ public:
 
     HTMLTokenizer& tokenizer() { return m_tokenizer; }
 
+    // https://html.spec.whatwg.org/multipage/parsing.html#abort-a-parser
+    void abort();
+
     bool aborted() const { return m_aborted; }
+    bool stopped() const { return m_stop_parsing; }
 
     size_t script_nesting_level() const { return m_script_nesting_level; }
 

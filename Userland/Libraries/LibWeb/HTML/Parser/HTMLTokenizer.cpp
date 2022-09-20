@@ -257,6 +257,9 @@ _StartOfFunction:
     if (!m_queued_tokens.is_empty())
         return m_queued_tokens.dequeue();
 
+    if (m_aborted)
+        return {};
+
     for (;;) {
         auto current_input_character = next_code_point();
         switch (m_state) {
