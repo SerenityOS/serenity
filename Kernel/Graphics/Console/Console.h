@@ -50,8 +50,6 @@ public:
     virtual bool has_hardware_cursor() const = 0;
 
     virtual void set_cursor(size_t x, size_t y) = 0;
-    virtual void hide_cursor() = 0;
-    virtual void show_cursor() = 0;
 
     virtual void clear(size_t x, size_t y, size_t length) = 0;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) = 0;
@@ -62,6 +60,9 @@ public:
     virtual ~Console() = default;
 
 protected:
+    virtual void hide_cursor() = 0;
+    virtual void show_cursor() = 0;
+
     Console(size_t width, size_t height)
         : m_width(width)
         , m_height(height)
