@@ -463,7 +463,14 @@ template<typename T, typename V>
 struct VaArgNextArgument {
     ALWAYS_INLINE T operator()(V ap) const
     {
+#ifdef AK_OS_WINDOWS
+        // GCC on msys2 complains about the type of ap,
+        // so let's force the compiler to belive its a
+        // va_list.
+        return va_arg((va_list&)ap, T);
+#else
         return va_arg(ap, T);
+#endif
     }
 };
 
