@@ -394,7 +394,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
     lagom_lib(GPU gpu
         SOURCES ${LIBGPU_SOURCES}
-        LIBS dl
+        LIBS ${CMAKE_DL_LIBS}
     )
 
     # GL
