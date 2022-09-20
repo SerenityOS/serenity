@@ -568,26 +568,40 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 // B.2.2.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
 {
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
     auto string = TRY(utf16_string_from(vm));
+
+    // 3. Let size be the length of S.
     auto size = string.length_in_code_units();
 
+    // 4. Let intStart be ? ToIntegerOrInfinity(start).
     auto int_start = TRY(vm.argument(0).to_integer_or_infinity(vm));
+
+    // 5. If intStart is -∞, set intStart to 0.
     if (Value(int_start).is_negative_infinity())
         int_start = 0;
+    // 6. Else if intStart < 0, set intStart to max(size + intStart, 0).
     else if (int_start < 0)
         int_start = max(size + int_start, 0);
+    // 7. Else, set intStart to min(intStart, size).
+    else
+        int_start = min(int_start, size);
 
+    // 8. If length is undefined, let intLength be size; otherwise let intLength be ? ToIntegerOrInfinity(length).
     auto length = vm.argument(1);
-
     auto int_length = length.is_undefined() ? size : TRY(length.to_integer_or_infinity(vm));
-    if (Value(int_start).is_positive_infinity() || (int_length <= 0) || Value(int_length).is_positive_infinity())
-        return js_string(vm, String::empty());
 
+    // 9. Set intLength to the result of clamping intLength between 0 and size.
+    int_length = clamp(int_length, 0, size);
+
+    // 10. Let intEnd be min(intStart + intLength, size).
     auto int_end = min((i32)(int_start + int_length), size);
 
     if (int_start >= int_end)
         return js_string(vm, String::empty());
 
+    // 11. Return the substring of S from intStart to intEnd.
     return js_string(vm, string.substring_view(int_start, int_end - int_start));
 }
 
