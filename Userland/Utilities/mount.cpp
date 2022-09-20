@@ -9,7 +9,7 @@
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -97,7 +97,7 @@ static bool mount_by_line(String const& line)
 
     auto error_or_void = Core::System::mount(fd, mountpoint, fstype, flags);
     if (error_or_void.is_error()) {
-        warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
+        warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, error_or_void.error());
         return false;
     }
 
@@ -108,16 +108,24 @@ static ErrorOr<void> mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
     dbgln("Mounting all filesystems...");
-
-    auto fstab = TRY(Core::File::open("/etc/fstab", Core::OpenMode::ReadOnly));
+    Array<u8, PAGE_SIZE> buffer;
 
     bool all_ok = true;
-    while (fstab->can_read_line()) {
-        auto line = fstab->read_line();
+    auto process_fstab_entries = [&](StringView path) -> ErrorOr<void> {
+        auto file_unbuffered = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::Stream::BufferedFile::create(move(file_unbuffered)));
 
-        if (!mount_by_line(line))
-            all_ok = false;
-    }
+        while (TRY(file->can_read_line())) {
+            auto line = TRY(file->read_line(buffer));
+
+            if (!mount_by_line(line))
+                all_ok = false;
+        }
+        return {};
+    };
+
+    if (auto result = process_fstab_entries("/etc/fstab"sv); result.is_error())
+        dbgln("Failed to read '/etc/fstab': {}", result.error());
 
     auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d", Core::DirIterator::SkipDots);
 
@@ -126,36 +134,23 @@ static ErrorOr<void> mount_all()
     } else if (!fstab_directory_iterator.has_error()) {
         while (fstab_directory_iterator.has_next()) {
             auto path = fstab_directory_iterator.next_full_path();
-            auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-
-            if (file_or_error.is_error()) {
-                dbgln("Failed to open '{}': {}", path, file_or_error.error());
-                continue;
-            }
-
-            auto file = file_or_error.release_value();
-
-            while (file->can_read_line()) {
-                auto line = file->read_line();
-
-                if (!mount_by_line(line))
-                    all_ok = false;
-            }
+            if (auto result = process_fstab_entries(path); result.is_error())
+                dbgln("Failed to read '{}': {}", path, result.error());
         }
     }
 
     if (all_ok)
         return {};
-    else
-        return Error::from_string_literal("One or more errors occurred. Please verify earlier output.");
+
+    return Error::from_string_literal("One or more errors occurred. Please verify earlier output.");
 }
 
 static ErrorOr<void> print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = TRY(Core::File::open("/sys/kernel/df", Core::OpenMode::ReadOnly));
+    auto df = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
 
-    auto content = df->read_all();
+    auto content = TRY(df->read_all());
     auto json = TRY(JsonValue::from_string(content));
 
     json.as_array().for_each([](auto& value) {
