@@ -243,9 +243,16 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
 
     // 12. If navigationParams's request is non-null, then:
     if (navigation_params.request) {
-        // FIXME: 1. Set document's referrer to the empty string.
-        // FIXME: 2. Let referrer be navigationParams's request's referrer.
-        // FIXME: 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
+        // 1. Set document's referrer to the empty string.
+        document->m_referrer = String::empty();
+
+        // 2. Let referrer be navigationParams's request's referrer.
+        auto& referrer = navigation_params.request->referrer();
+
+        // 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
+        if (referrer.has<AK::URL>()) {
+            document->m_referrer = referrer.get<AK::URL>().serialize();
+        }
     }
 
     // FIXME: 13. Let historyHandling be navigationParams's history handling.
