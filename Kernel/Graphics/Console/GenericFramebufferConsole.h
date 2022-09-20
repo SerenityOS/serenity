@@ -24,8 +24,6 @@ public:
     virtual bool has_hardware_cursor() const override { return false; }
 
     virtual void set_cursor(size_t x, size_t y) override;
-    virtual void hide_cursor() override;
-    virtual void show_cursor() override;
 
     virtual void clear(size_t x, size_t y, size_t length) override;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
@@ -38,6 +36,9 @@ public:
     virtual void set_resolution(size_t width, size_t height, size_t pitch) = 0;
 
 protected:
+    virtual void hide_cursor() override;
+    virtual void show_cursor() override;
+
     GenericFramebufferConsoleImpl(size_t width, size_t height, size_t pitch)
         : Console(width, height)
         , m_pitch(pitch)

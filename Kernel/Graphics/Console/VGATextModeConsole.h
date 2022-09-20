@@ -21,8 +21,6 @@ public:
 
     virtual size_t bytes_per_base_glyph() const override { return 2; }
     virtual void set_cursor(size_t x, size_t y) override;
-    virtual void hide_cursor() override;
-    virtual void show_cursor() override;
     virtual void clear(size_t x, size_t y, size_t length) override;
     virtual void write(size_t x, size_t y, char ch, bool critical = false) override;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
@@ -33,6 +31,9 @@ public:
     virtual void disable() override { }
 
 private:
+    virtual void hide_cursor() override;
+    virtual void show_cursor() override;
+
     void clear_vga_row(u16 row);
 
     explicit VGATextModeConsole(NonnullOwnPtr<Memory::Region>);
