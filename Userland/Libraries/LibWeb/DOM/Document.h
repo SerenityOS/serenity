@@ -424,11 +424,13 @@ public:
     RefPtr<HTML::HTMLParser> active_parser();
 
     // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
-    DocumentLoadTimingInfo const& load_timing_info() { return m_load_timing_info; }
+    DocumentLoadTimingInfo& load_timing_info() { return m_load_timing_info; }
+    DocumentLoadTimingInfo const& load_timing_info() const { return m_load_timing_info; }
     void set_load_timing_info(DocumentLoadTimingInfo const& load_timing_info) { m_load_timing_info = load_timing_info; }
 
     // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
-    DocumentUnloadTimingInfo const& previous_document_unload_timing() { return m_previous_document_unload_timing; }
+    DocumentUnloadTimingInfo& previous_document_unload_timing() { return m_previous_document_unload_timing; }
+    DocumentUnloadTimingInfo const& previous_document_unload_timing() const { return m_previous_document_unload_timing; }
     void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
 
 protected:

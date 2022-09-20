@@ -173,14 +173,16 @@ void XMLDocumentBuilder::document_end()
     }
     // Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
     old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = JS::make_handle(m_document)]() mutable {
-        // FIXME: Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
+        // Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
+        document->load_timing_info().dom_content_loaded_event_start_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
         // Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
         auto content_loaded_event = DOM::Event::create(document->window(), HTML::EventNames::DOMContentLoaded);
         content_loaded_event->set_bubbles(true);
         document->dispatch_event(*content_loaded_event);
 
-        // FIXME: Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
+        // Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
+        document->load_timing_info().dom_content_loaded_event_end_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
         // FIXME: Enable the client message queue of the ServiceWorkerContainer object whose associated service worker client is the Document object's relevant settings object.
 
@@ -209,7 +211,8 @@ void XMLDocumentBuilder::document_end()
         // Let window be the Document's relevant global object.
         JS::NonnullGCPtr<HTML::Window> window = document->window();
 
-        // FIXME: Set the Document's load timing info's load event start time to the current high resolution time given window.
+        // Set the Document's load timing info's load event start time to the current high resolution time given window.
+        document->load_timing_info().load_event_start_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
         // Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
@@ -220,7 +223,8 @@ void XMLDocumentBuilder::document_end()
 
         // FIXME: Set the Document object's navigation id to null.
 
-        // FIXME: Set the Document's load timing info's load event end time to the current high resolution time given window.
+        // Set the Document's load timing info's load event end time to the current high resolution time given window.
+        document->load_timing_info().dom_content_loaded_event_end_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
         // Assert: Document's page showing is false.
         VERIFY(!document->page_showing());
