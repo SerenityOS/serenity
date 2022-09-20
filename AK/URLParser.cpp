@@ -84,11 +84,12 @@ static Optional<String> parse_host(StringView input, bool is_not_special = false
     return ipv4_host;
 }
 
+// https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
 constexpr bool starts_with_windows_drive_letter(StringView input)
 {
     if (input.length() < 2)
         return false;
-    if (!is_ascii_alpha(input[0]) && !(input[1] == ':' || input[1] == '|'))
+    if (!is_ascii_alpha(input[0]) || !(input[1] == ':' || input[1] == '|'))
         return false;
     if (input.length() == 2)
         return true;
