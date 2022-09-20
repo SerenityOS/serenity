@@ -730,4 +730,77 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
     }
 }
 
+// https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
+DOM::ExceptionOr<void> Element::insert_adjacent_html(String position, String text)
+{
+    JS::GCPtr<Node> context;
+    // 1. Use the first matching item from this list:
+    // - If position is an ASCII case-insensitive match for the string "beforebegin"
+    // - If position is an ASCII case-insensitive match for the string "afterend"
+    if (position.equals_ignoring_case("beforebegin"sv) || position.equals_ignoring_case("afterend"sv)) {
+        // Let context be the context object's parent.
+        context = this->parent();
+
+        // If context is null or a Document, throw a "NoModificationAllowedError" DOMException.
+        if (!context || context->is_document())
+            return NoModificationAllowedError::create(window(), "insertAdjacentHTML: context is null or a Document"sv);
+    }
+    // - If position is an ASCII case-insensitive match for the string "afterbegin"
+    // - If position is an ASCII case-insensitive match for the string "beforeend"
+    else if (position.equals_ignoring_case("afterbegin"sv) || position.equals_ignoring_case("beforeend"sv)) {
+        // Let context be the context object.
+        context = this;
+    }
+    // Otherwise
+    else {
+        // Throw a "SyntaxError" DOMException.
+        return SyntaxError::create(window(), "insertAdjacentHTML: invalid position argument"sv);
+    }
+
+    // 2. If context is not an Element or the following are all true:
+    //    - context's node document is an HTML document,
+    //    - context's local name is "html", and
+    //    - context's namespace is the HTML namespace;
+    if (!is<Element>(*context)
+        || (context->document().document_type() == Document::Type::HTML
+            && static_cast<Element const&>(*context).local_name() == "html"sv
+            && static_cast<Element const&>(*context).namespace_() == Namespace::HTML)) {
+        // FIXME: let context be a new Element with
+        //        - body as its local name,
+        //        - The HTML namespace as its namespace, and
+        //        - The context object's node document as its node document.
+        TODO();
+    }
+
+    // 3. Let fragment be the result of invoking the fragment parsing algorithm with text as markup, and context as the context element.
+    auto fragment = TRY(DOMParsing::parse_fragment(text, verify_cast<Element>(*context)));
+
+    // 4. Use the first matching item from this list:
+
+    // - If position is an ASCII case-insensitive match for the string "beforebegin"
+    if (position.equals_ignoring_case("beforebegin"sv)) {
+        // Insert fragment into the context object's parent before the context object.
+        parent()->insert_before(fragment, this);
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "afterbegin"
+    else if (position.equals_ignoring_case("afterbegin"sv)) {
+        // Insert fragment into the context object before its first child.
+        insert_before(fragment, first_child());
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "beforeend"
+    else if (position.equals_ignoring_case("beforeend"sv)) {
+        // Append fragment to the context object.
+        TRY(append_child(fragment));
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "afterend"
+    else if (position.equals_ignoring_case("afterend"sv)) {
+        // Insert fragment into the context object's parent before the context object's next sibling.
+        parent()->insert_before(fragment, next_sibling());
+    }
+    return {};
+}
+
 }

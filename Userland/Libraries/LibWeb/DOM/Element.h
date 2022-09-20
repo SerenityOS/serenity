@@ -108,6 +108,8 @@ public:
     String inner_html() const;
     ExceptionOr<void> set_inner_html(String const&);
 
+    ExceptionOr<void> insert_adjacent_html(String position, String text);
+
     bool is_focused() const;
     bool is_active() const;
 

@@ -16,4 +16,6 @@ namespace Web::DOMParsing {
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 DOM::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value);
 
+DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element);
+
 }
