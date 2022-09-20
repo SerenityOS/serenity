@@ -97,6 +97,18 @@ ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject&)
     return {};
 }
 
+ErrorOr<size_t> Inode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+{
+    VERIFY_NOT_REACHED();
+    return 0;
+}
+
+ErrorOr<size_t> Inode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
+{
+    VERIFY_NOT_REACHED();
+    return 0;
+}
+
 }
 
 // UserOrKernelBuffer.cpp
