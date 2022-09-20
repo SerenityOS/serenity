@@ -615,8 +615,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
         // 6. TODO: process %c
         else if (specifier == "%c"sv) {
             // NOTE: This has no spec yet. `%c` specifiers treat the argument as CSS styling for the log message.
-            //       For now, we'll just consume the specifier and the argument.
-            // FIXME: Actually style the message somehow.
+            add_css_style_to_current_message(TRY(current.to_string(vm)));
             converted = js_string(vm, "");
         }
 

@@ -27,6 +27,12 @@ private:
     virtual void clear() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
+    virtual void add_css_style_to_current_message(StringView style) override
+    {
+        m_current_message_style.append(style);
+        m_current_message_style.append(';');
+    }
+
     ConnectionFromClient& m_client;
     WeakPtr<JS::Realm> m_realm;
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
@@ -48,6 +54,8 @@ private:
         String data;
     };
     Vector<ConsoleOutput> m_message_log;
+
+    StringBuilder m_current_message_style;
 };
 
 }
