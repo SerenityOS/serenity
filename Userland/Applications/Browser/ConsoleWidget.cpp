@@ -199,7 +199,7 @@ void ConsoleWidget::begin_group(StringView label, bool start_expanded)
         var group = document.createElement("details");
         group.id = "group_{}";
         var label = document.createElement("summary");
-        label.innerText = ")~~~",
+        label.innerHTML = ")~~~",
         group.id);
     builder.append_escaped_for_json(label);
     builder.append(R"~~~(";
