@@ -764,6 +764,7 @@ void Window::initialize(JS::Realm& realm)
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1132,6 +1133,33 @@ JS_DEFINE_NATIVE_FUNCTION(Window::document_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return &impl->associated_document();
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-frameelement
+JS_DEFINE_NATIVE_FUNCTION(Window::frame_element_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    // 1. Let current be this Window object's browsing context.
+    auto* current = impl->browsing_context();
+
+    // 2. If current is null, then return null.
+    if (!current)
+        return JS::js_null();
+
+    // 3. Let container be current's container.
+    auto* container = current->container();
+
+    // 4. If container is null, then return null.
+    if (!container)
+        return JS::js_null();
+
+    // 5. If container's node document's origin is not same origin-domain with the current settings object's origin, then return null.
+    if (!container->document().origin().is_same_origin(current_settings_object().origin()))
+        return JS::js_null();
+
+    // 6. Return container.
+    return container;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::performance_getter)
