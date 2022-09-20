@@ -55,17 +55,6 @@ void BrowsingContextContainer::create_new_nested_browsing_context()
         m_nested_browsing_context->set_name(name);
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
-void BrowsingContextContainer::discard_nested_browsing_context()
-{
-    // 1. Discard all Document objects for all the entries in browsingContext's session history.
-    if (m_nested_browsing_context && m_nested_browsing_context->parent())
-        m_nested_browsing_context->parent()->remove_child(*m_nested_browsing_context);
-
-    // 2. If browsingContext is a top-level browsing context, then remove browsingContext.
-    // NOTE: We skip this here because this is by definition a nested browsing context, not top-level.
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
 const DOM::Document* BrowsingContextContainer::content_document() const
 {

@@ -275,7 +275,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
 
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
     parser->run(url);
-    browsing_context().set_active_document(&parser->document());
+    browsing_context().set_active_document(parser->document());
 }
 
 static String s_error_page_url = "file:///res/html/error.html";

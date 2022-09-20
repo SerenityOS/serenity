@@ -651,20 +651,6 @@ void Document::set_title(String const& title)
     }
 }
 
-void Document::attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
-{
-    m_browsing_context = browsing_context;
-
-    update_the_visibility_state(browsing_context.system_visibility_state());
-}
-
-void Document::detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
-{
-    VERIFY(&browsing_context == m_browsing_context);
-    tear_down_layout_tree();
-    m_browsing_context = nullptr;
-}
-
 void Document::tear_down_layout_tree()
 {
     if (!m_layout_root)
@@ -1605,6 +1591,11 @@ String Document::visibility_state() const
     VERIFY_NOT_REACHED();
 }
 
+void Document::set_visibility_state(Badge<HTML::BrowsingContext>, HTML::VisibilityState visibility_state)
+{
+    m_visibility_state = visibility_state;
+}
+
 // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
 void Document::update_the_visibility_state(HTML::VisibilityState visibility_state)
 {
@@ -2019,6 +2010,102 @@ Vector<NonnullRefPtr<HTML::BrowsingContext>> Document::list_of_descendant_browsi
     }
 
     return list;
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
+void Document::discard()
+{
+    // 1. Set document's salvageable state to false.
+    m_salvageable = false;
+
+    // FIXME: 2. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 3. Abort document.
+    abort();
+
+    // 4. Remove any tasks associated with document in any task source, without running those tasks.
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
+        return task.document() == this;
+    });
+
+    // 5. Discard all the child browsing contexts of document.
+    if (browsing_context()) {
+        browsing_context()->for_each_child([](HTML::BrowsingContext& child_browsing_context) {
+            child_browsing_context.discard();
+        });
+    }
+
+    // FIXME: 6. For each session history entry entry whose document is equal to document, set entry's document to null.
+
+    // 7. Set document's browsing context to null.
+    tear_down_layout_tree();
+    m_browsing_context = nullptr;
+
+    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+
+    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
+void Document::abort()
+{
+    // 1. Abort the active documents of every child browsing context.
+    //    If this results in any of those Document objects having their salvageable state set to false,
+    //    then set document's salvageable state to false also.
+    if (browsing_context()) {
+        browsing_context()->for_each_child([this](HTML::BrowsingContext& child_browsing_context) {
+            if (auto* child_document = child_browsing_context.active_document()) {
+                child_document->abort();
+                if (!child_document->m_salvageable)
+                    m_salvageable = false;
+            }
+        });
+    }
+
+    // FIXME: 2. Cancel any instances of the fetch algorithm in the context of document,
+    //           discarding any tasks queued for them, and discarding any further data received from the network for them.
+    //           If this resulted in any instances of the fetch algorithm being canceled
+    //           or any queued tasks or any network data getting discarded,
+    //           then set document's salvageable state to false.
+
+    // 3. If document's navigation id is non-null, then:
+    if (m_navigation_id.has_value()) {
+        // 1. FIXME: Invoke WebDriver BiDi navigation aborted with document's browsing context,
+        //           and new WebDriver BiDi navigation status whose whose id is document's navigation id,
+        //           status is "canceled", and url is document's URL.
+
+        // 2. Set document's navigation id to null.
+        m_navigation_id = {};
+    }
+
+    // 4. If document has an active parser, then:
+    if (auto parser = active_parser()) {
+        // 1. Set document's active parser was aborted to true.
+        m_active_parser_was_aborted = true;
+
+        // 2. Abort that parser.
+        parser->abort();
+
+        // 3. Set document's salvageable state to false.
+        m_salvageable = false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#active-parser
+RefPtr<HTML::HTMLParser> Document::active_parser()
+{
+    if (!m_parser)
+        return nullptr;
+
+    if (m_parser->aborted() || m_parser->stopped())
+        return nullptr;
+
+    return m_parser;
+}
+
+void Document::set_browsing_context(HTML::BrowsingContext* browsing_context)
+{
+    m_browsing_context = browsing_context;
 }
 
 }

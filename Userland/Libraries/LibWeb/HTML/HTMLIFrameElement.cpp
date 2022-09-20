@@ -95,7 +95,13 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
 void HTMLIFrameElement::removed_from(DOM::Node* node)
 {
     HTMLElement::removed_from(node);
-    discard_nested_browsing_context();
+
+    // When an iframe element is removed from a document, the user agent must discard the element's nested browsing context,
+    // if it is not null, and then set the element's nested browsing context to null.
+    if (m_nested_browsing_context) {
+        m_nested_browsing_context->discard();
+        m_nested_browsing_context = nullptr;
+    }
 }
 
 void HTMLIFrameElement::load_src(String const& value)
@@ -123,8 +129,12 @@ void HTMLIFrameElement::load_src(String const& value)
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-load-event-steps
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
 {
-    // 1. Assert: element's nested browsing context is not null.
-    VERIFY(element.nested_browsing_context());
+    // FIXME: 1. Assert: element's nested browsing context is not null.
+    if (!element.nested_browsing_context()) {
+        // FIXME: For some reason, we sometimes end up here in the middle of SunSpider.
+        dbgln("FIXME: run_iframe_load_event_steps called with null nested browsing context");
+        return;
+    }
 
     // 2. Let childDocument be the active document of element's nested browsing context.
     [[maybe_unused]] auto* child_document = element.nested_browsing_context()->active_document();

@@ -47,7 +47,7 @@ public:
     DOM::Document const* active_document() const;
     DOM::Document* active_document();
 
-    void set_active_document(DOM::Document*);
+    void set_active_document(JS::NonnullGCPtr<DOM::Document>);
 
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
@@ -165,6 +165,9 @@ public:
     VisibilityState system_visibility_state() const;
     void set_system_visibility_state(VisibilityState);
 
+    // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
+    void discard();
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -195,7 +198,7 @@ private:
     Optional<HTML::Origin> m_creator_origin;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
-    JS::Handle<DOM::Document> m_active_document;
+    JS::Handle<HTML::Window> m_active_window;
     Gfx::IntSize m_size;
     Gfx::IntPoint m_viewport_scroll_offset;
 

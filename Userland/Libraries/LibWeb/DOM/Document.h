@@ -135,11 +135,10 @@ public:
     String title() const;
     void set_title(String const&);
 
-    void attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
-    void detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
-
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
+
+    void set_browsing_context(HTML::BrowsingContext*);
 
     Page* page();
     Page const* page() const;
@@ -322,6 +321,9 @@ public:
     // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
     void update_the_visibility_state(HTML::VisibilityState);
 
+    // NOTE: This does not fire any events, unlike update_the_visibility_state().
+    void set_visibility_state(Badge<HTML::BrowsingContext>, HTML::VisibilityState);
+
     void run_the_resize_steps();
     void run_the_scroll_steps();
 
@@ -385,6 +387,15 @@ public:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
     Vector<NonnullRefPtr<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
+
+    // https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
+    void discard();
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
+    void abort();
+
+    // https://html.spec.whatwg.org/multipage/dom.html#active-parser
+    RefPtr<HTML::HTMLParser> active_parser();
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -475,6 +486,9 @@ private:
     JS::GCPtr<HTML::History> m_history;
 
     size_t m_number_of_things_delaying_the_load_event { 0 };
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#concept-document-salvageable
+    bool m_salvageable { true };
 
     // https://html.spec.whatwg.org/#page-showing
     bool m_page_showing { false };

@@ -207,7 +207,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     document->append_child(html_node);
 
     // 19. Set the active document of browsingContext to document.
-    browsing_context->m_active_document = JS::make_handle(*document);
+    browsing_context->set_active_document(*document);
 
     // 20. If browsingContext's creator URL is non-null, then set document's referrer to the serialization of it.
     if (browsing_context->m_creator_url.has_value()) {
@@ -226,9 +226,6 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
         .browsing_context_name = {},
         .original_source_browsing_context = {},
     });
-
-    // Non-standard:
-    document->attach_to_browsing_context({}, browsing_context);
 
     // 23. Completely finish loading document.
     document->completely_finish_loading();
@@ -286,36 +283,29 @@ bool BrowsingContext::is_focused_context() const
     return m_page && &m_page->focused_context() == this;
 }
 
-void BrowsingContext::set_active_document(DOM::Document* document)
+// https://html.spec.whatwg.org/multipage/browsers.html#set-the-active-document
+void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> document)
 {
-    if (m_active_document.ptr() == document)
-        return;
+    // 1. Let window be document's relevant global object.
+    auto& window = verify_cast<HTML::Window>(relevant_global_object(document));
 
-    m_cursor_position = {};
+    // 2. Set document's visibility state to browsingContext's top-level browsing context's system visibility state.
+    document->set_visibility_state({}, top_level_browsing_context().system_visibility_state());
 
-    if (m_active_document)
-        m_active_document->detach_from_browsing_context({}, *this);
+    // 3. Set browsingContext's active window to window.
+    m_active_window = window;
 
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#resetBCName
-    // FIXME: The rest of set_active_document does not follow the spec very closely, this just implements the
-    //   relevant steps for resetting the browsing context name and should be updated closer to the spec once
-    //   the other parts of history handling/navigating are implemented
-    // 3. If newDocument's origin is not same origin with the current entry's document's origin, then:
-    if (!document || !m_active_document || !document->origin().is_same_origin(m_active_document->origin())) {
-        // 3. If the browsing context is a top-level browsing context, but not an auxiliary browsing context
-        //    whose disowned is false, then set the browsing context's name to the empty string.
-        // FIXME: this is not checking the second part of the condition yet
-        if (is_top_level())
-            m_name = String::empty();
-    }
+    // 4. Set window's associated Document to document.
+    window.set_associated_document(document);
 
-    m_active_document = JS::make_handle(document);
+    // 5. Set window's relevant settings object's execution ready flag.
+    relevant_settings_object(window).execution_ready = true;
 
-    if (m_active_document) {
-        m_active_document->attach_to_browsing_context({}, *this);
-        if (m_page && is_top_level())
-            m_page->client().page_did_change_title(m_active_document->title());
-    }
+    // AD-HOC:
+    document->set_browsing_context(this);
+
+    if (m_page && is_top_level())
+        m_page->client().page_did_change_title(document->title());
 }
 
 void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
@@ -792,22 +782,26 @@ bool BrowsingContext::still_on_its_initial_about_blank_document() const
 
 DOM::Document const* BrowsingContext::active_document() const
 {
-    return m_active_document.cell();
+    if (!m_active_window)
+        return nullptr;
+    return &m_active_window->associated_document();
 }
 
 DOM::Document* BrowsingContext::active_document()
 {
-    return m_active_document.cell();
+    if (!m_active_window)
+        return nullptr;
+    return &m_active_window->associated_document();
 }
 
 HTML::Window* BrowsingContext::active_window()
 {
-    return m_active_document ? &m_active_document->window() : nullptr;
+    return m_active_window;
 }
 
 HTML::Window const* BrowsingContext::active_window() const
 {
-    return m_active_document ? &m_active_document->window() : nullptr;
+    return m_active_window;
 }
 
 void BrowsingContext::scroll_offset_did_change()
@@ -1087,7 +1081,7 @@ DOM::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_index,
     }
 
     // 4. Set the active document of the browsing context to newDocument.
-    set_active_document(new_document);
+    set_active_document(*new_document);
 
     // 5. If entry's browsing context name is not null, then:
     if (entry->browsing_context_name.has_value()) {
@@ -1297,6 +1291,29 @@ void BrowsingContext::set_system_visibility_state(VisibilityState visibility_sta
             document->update_the_visibility_state(visibility_state);
         }
     });
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
+void BrowsingContext::discard()
+{
+    // 1. Discard all Document objects for all the entries in browsingContext's session history.
+    for (auto& entry : m_session_history) {
+        if (entry.document)
+            entry.document->discard();
+    }
+
+    // AD-HOC:
+    // FIXME: This should be in the session history!
+    if (auto* document = active_document())
+        document->discard();
+
+    // 2. If browsingContext is a top-level browsing context, then remove browsingContext.
+    if (is_top_level())
+        remove();
+
+    // AD-HOC:
+    if (parent())
+        parent()->remove_child(*this);
 }
 
 }

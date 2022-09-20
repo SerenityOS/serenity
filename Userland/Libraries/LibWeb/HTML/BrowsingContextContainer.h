@@ -38,7 +38,6 @@ protected:
     void navigate_an_iframe_or_frame(Fetch::Infrastructure::Request);
 
     void create_new_nested_browsing_context();
-    void discard_nested_browsing_context();
 
     RefPtr<BrowsingContext> m_nested_browsing_context;
 
