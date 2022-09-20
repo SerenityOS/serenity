@@ -269,6 +269,7 @@ set(SOURCES
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
     HTML/WorkerNavigator.cpp
+    HighResolutionTime/CoarsenTime.cpp
     HighResolutionTime/Performance.cpp
     Infra/ByteSequences.cpp
     IntersectionObserver/IntersectionObserver.cpp
