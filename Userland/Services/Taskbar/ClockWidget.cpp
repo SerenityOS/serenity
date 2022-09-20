@@ -6,10 +6,13 @@
 
 #include "ClockWidget.h"
 #include <LibConfig/Client.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
@@ -194,6 +197,22 @@ void ClockWidget::mousedown_event(GUI::MouseEvent& event)
         else
             close();
     }
+}
+
+void ClockWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (!m_context_menu) {
+        m_context_menu = GUI::Menu::construct();
+
+        auto settings_icon = MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv));
+        auto open_clock_settings_action = GUI::Action::create("Clock &Settings", *settings_icon, [this](auto&) {
+            GUI::Process::spawn_or_show_error(window(), "/bin/ClockSettings"sv, Array { "--open-tab", "clock" });
+        });
+
+        m_context_menu->add_action(open_clock_settings_action);
+    }
+
+    m_context_menu->popup(event.screen_position());
 }
 
 void ClockWidget::open()
