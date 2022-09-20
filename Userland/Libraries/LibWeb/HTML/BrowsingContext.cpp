@@ -953,7 +953,8 @@ DOM::ExceptionOr<void> BrowsingContext::navigate(
 
     // FIXME: 13. If unloadPromptResult is "refuse", then return a new WebDriver BiDi navigation status whose id is navigationId and status is "canceled".
 
-    // FIXME: 14. Abort the active document of browsingContext.
+    // 14. Abort the active document of browsingContext.
+    active_document()->abort();
 
     // FIXME: 15. If browsingContext is a child browsing context, then put it in the delaying load events mode.
     //            The user agent must take this child browsing context out of the delaying load events mode when this navigation algorithm later matures,
