@@ -61,6 +61,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -2117,6 +2118,97 @@ RefPtr<HTML::HTMLParser> Document::active_parser()
 void Document::set_browsing_context(HTML::BrowsingContext* browsing_context)
 {
     m_browsing_context = browsing_context;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
+void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> unload_timing_info)
+{
+    // 1. Increase the event loop's termination nesting level by one.
+    HTML::main_thread_event_loop().increment_termination_nesting_level();
+
+    // 2. Increase document's unload counter by 1.
+    m_unload_counter += 1;
+
+    // 3. If the user agent does not intend to keep document alive in a session history entry
+    //    (such that it can be reused later on history traversal), set document's salvageable state to false.
+    // FIXME: If we want to implement fast back/forward cache, this has to change.
+    m_salvageable = false;
+
+    // 4. If document's page showing flag is true:
+    if (m_page_showing) {
+        // 1. Set document's page showing flag to false.
+        m_page_showing = false;
+
+        // 2. Fire a page transition event named pagehide at document's relevant global object with document's salvageable state.
+        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
+
+        // 3. Update the visibility state of newDocument to "hidden".
+        update_the_visibility_state(HTML::VisibilityState::Hidden);
+    }
+
+    // 5. If unloadTimingInfo is not null,
+    if (unload_timing_info.has_value()) {
+        // then set unloadTimingInfo's unload event start time to the current high resolution time given newGlobal,
+        // coarsened given document's relevant settings object's cross-origin isolated capability.
+        unload_timing_info->unload_event_start_time = HighResolutionTime::coarsen_time(
+            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+    }
+
+    // 6. If document's salvageable state is false,
+    if (!m_salvageable) {
+        // then fire an event named unload at document's relevant global object, with legacy target override flag set.
+        // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
+        //        We should reorganize this so that the flag appears explicitly here instead.
+        auto event = DOM::Event::create(global_object(), HTML::EventNames::unload);
+        global_object().dispatch_event(event);
+    }
+
+    // 7. If unloadTimingInfo is not null,
+    if (unload_timing_info.has_value()) {
+        // then set unloadTimingInfo's unload event end time to the current high resolution time given newGlobal,
+        // coarsened given document's relevant settings object's cross-origin isolated capability.
+        unload_timing_info->unload_event_end_time = HighResolutionTime::coarsen_time(
+            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+    }
+
+    // 8. Decrease the event loop's termination nesting level by one.
+    HTML::main_thread_event_loop().decrement_termination_nesting_level();
+
+    // FIXME: 9. Set document's suspension time to the current high resolution time given document's relevant global object.
+
+    // FIXME: 10. Set document's suspended timer handles to the result of getting the keys for the map of active timers.
+
+    // FIXME: 11. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 12. If the recursiveFlag is not set, then:
+    if (!recursive_flag) {
+        // 1. Let descendants be the list of the descendant browsing contexts of document.
+        auto descendants = list_of_descendant_browsing_contexts();
+
+        // 2. For each browsingContext in descendants:
+        for (auto browsing_context : descendants) {
+            JS::GCPtr<Document> active_document = browsing_context->active_document();
+            if (!active_document)
+                continue;
+
+            // 1. Unload the active document of browsingContext with the recursiveFlag set.
+            active_document->unload(true);
+
+            // 2. If the salvageable state of the active document of browsingContext is false,
+            //    then set the salvageable state of document to false also.
+            if (!active_document->m_salvageable)
+                m_salvageable = false;
+        }
+
+        // 3. If document's salvageable state is false, then discard document.
+        if (!m_salvageable)
+            discard();
+    }
+
+    // 13. Decrease document's unload counter by 1.
+    m_unload_counter -= 1;
 }
 
 }

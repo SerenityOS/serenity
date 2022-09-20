@@ -39,6 +39,11 @@ public:
     void spin_until(Function<bool()> goal_condition);
     void process();
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
+    size_t termination_nesting_level() const { return m_termination_nesting_level; }
+    void increment_termination_nesting_level() { ++m_termination_nesting_level; }
+    void decrement_termination_nesting_level() { --m_termination_nesting_level; }
+
     Task const* currently_running_task() const { return m_currently_running_task; }
 
     JS::VM& vm() { return *m_vm; }
@@ -96,6 +101,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#backup-incumbent-settings-object-stack
     Vector<EnvironmentSettingsObject&> m_backup_incumbent_settings_object_stack;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
+    size_t m_termination_nesting_level { 0 };
 };
 
 EventLoop& main_thread_event_loop();
