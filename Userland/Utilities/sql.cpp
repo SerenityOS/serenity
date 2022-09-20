@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibSQL/AST/Lexer.h>
@@ -170,30 +171,42 @@ private:
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
     int m_connection_id { 0 };
     Core::EventLoop m_loop;
-    RefPtr<Core::File> m_input_file { nullptr };
+    OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
     Vector<String> m_input_file_chain {};
+    Array<u8, PAGE_SIZE> m_buffer {};
 
     Optional<String> get_line()
     {
         if (!m_input_file && !m_input_file_chain.is_empty()) {
             auto file_name = m_input_file_chain.take_first();
-            auto file_or_error = Core::File::open(file_name, Core::OpenMode::ReadOnly);
+            auto file_or_error = Core::Stream::File::open(file_name, Core::Stream::OpenMode::Read);
             if (file_or_error.is_error()) {
                 warnln("Input file {} could not be opened: {}", file_name, file_or_error.error());
                 return {};
             }
-            m_input_file = file_or_error.value();
+
+            auto buffered_file_or_error = Core::Stream::BufferedFile::create(file_or_error.release_value());
+            if (buffered_file_or_error.is_error()) {
+                warnln("Input file {} could not be buffered: {}", file_name, buffered_file_or_error.error());
+                return {};
+            }
+
+            m_input_file = buffered_file_or_error.release_value();
         }
         if (m_input_file) {
-            auto line = m_input_file->read_line();
-            if (m_input_file->eof()) {
+            auto line = m_input_file->read_line(m_buffer);
+            if (line.is_error()) {
+                warnln("Failed to read line: {}", line.error());
+                return {};
+            }
+            if (m_input_file->is_eof()) {
                 m_input_file->close();
                 m_input_file = nullptr;
                 if (m_quit_when_files_read && m_input_file_chain.is_empty())
                     return {};
             }
-            return line;
+            return line.release_value();
             // If the last file is exhausted but m_quit_when_files_read is false
             // we fall through to the standard reading from the editor behaviour
         }
