@@ -42,6 +42,32 @@ enum class QuirksMode {
     Yes
 };
 
+// https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
+struct DocumentLoadTimingInfo {
+    // https://html.spec.whatwg.org/multipage/dom.html#navigation-start-time
+    double navigation_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-interactive-time
+    double dom_interactive_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-content-loaded-event-start-time
+    double dom_content_loaded_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-content-loaded-event-end-time
+    double dom_content_loaded_event_end_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-complete-time
+    double dom_complete_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#load-event-start-time
+    double load_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#load-event-end-time
+    double load_event_end_time { 0 };
+};
+
+// https://html.spec.whatwg.org/multipage/dom.html#document-unload-timing-info
+struct DocumentUnloadTimingInfo {
+    // https://html.spec.whatwg.org/multipage/dom.html#unload-event-start-time
+    double unload_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#unload-event-end-time
+    double unload_event_end_time { 0 };
+};
+
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
@@ -397,6 +423,14 @@ public:
     // https://html.spec.whatwg.org/multipage/dom.html#active-parser
     RefPtr<HTML::HTMLParser> active_parser();
 
+    // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
+    DocumentLoadTimingInfo const& load_timing_info() { return m_load_timing_info; }
+    void set_load_timing_info(DocumentLoadTimingInfo const& load_timing_info) { m_load_timing_info = load_timing_info; }
+
+    // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
+    DocumentUnloadTimingInfo const& previous_document_unload_timing() { return m_previous_document_unload_timing; }
+    void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -546,6 +580,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#visibility-state
     HTML::VisibilityState m_visibility_state { HTML::VisibilityState::Hidden };
+
+    // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
+    DocumentLoadTimingInfo m_load_timing_info;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
+    DocumentUnloadTimingInfo m_previous_document_unload_timing;
 };
 
 }
