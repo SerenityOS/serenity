@@ -1414,23 +1414,34 @@ String Document::ready_state() const
     VERIFY_NOT_REACHED();
 }
 
-// https://html.spec.whatwg.org/#update-the-current-document-readiness
+// https://html.spec.whatwg.org/multipage/dom.html#update-the-current-document-readiness
 void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 {
     // 1. If document's current document readiness equals readinessValue, then return.
     if (m_readiness == readiness_value)
         return;
 
-    // The spec doesn't actually mention updating the current readiness value.
-    // FIXME: https://github.com/whatwg/html/issues/7120
+    // 2. Set document's current document readiness to readinessValue.
     m_readiness = readiness_value;
 
-    // FIXME: 2. If document is associated with an HTML parser, then:
-    // FIXME:    1. If document is associated with an HTML parser, then:
-    // FIXME:    2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0, then set document's load timing info's DOM complete time to now.
-    // FIXME:    3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0, then set document's load timing info's DOM interactive time to now.
+    // 3. If document is associated with an HTML parser, then:
+    if (m_parser) {
+        // 1. Let now be the current high resolution time given document's relevant global object.
+        auto now = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
-    // 3. Fire an event named readystatechange at document.
+        // 2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0,
+        //    then set document's load timing info's DOM complete time to now.
+        if (readiness_value == HTML::DocumentReadyState::Complete && m_load_timing_info.dom_complete_time == 0) {
+            m_load_timing_info.dom_complete_time = now;
+        }
+        // 3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0,
+        //    then set document's load timing info's DOM interactive time to now.
+        else if (readiness_value == HTML::DocumentReadyState::Interactive && m_load_timing_info.dom_interactive_time == 0) {
+            m_load_timing_info.dom_interactive_time = now;
+        }
+    }
+
+    // 4. Fire an event named readystatechange at document.
     dispatch_event(*Event::create(window(), HTML::EventNames::readystatechange));
 }
 
