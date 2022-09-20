@@ -110,6 +110,7 @@ public:
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }
+    virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
     virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
 

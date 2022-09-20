@@ -168,6 +168,9 @@ public:
     // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
     void discard();
 
+    // https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
+    void close();
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
