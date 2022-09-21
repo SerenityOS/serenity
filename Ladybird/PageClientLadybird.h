@@ -40,7 +40,7 @@ public:
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override;
     virtual void page_did_change_title(String const& title) override;
     virtual void page_did_start_loading(AK::URL const& url) override;
-    virtual void page_did_finish_loading(AK::URL const&) override;
+    virtual void page_did_create_main_document() override;
     void initialize_js_console();
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;

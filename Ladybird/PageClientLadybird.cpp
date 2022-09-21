@@ -118,7 +118,7 @@ void PageClientLadybird::page_did_start_loading(AK::URL const& url)
     emit m_view.load_started(url);
 }
 
-void PageClientLadybird::page_did_finish_loading(AK::URL const&)
+void PageClientLadybird::page_did_create_main_document()
 {
     initialize_js_console();
     m_console_client->send_messages(0);
