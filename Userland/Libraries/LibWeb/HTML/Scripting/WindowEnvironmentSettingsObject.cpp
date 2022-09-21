@@ -32,8 +32,7 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
     VERIFY(realm);
 
     // 2. Let window be realm's global object.
-    // NOTE: We want to store the Window impl rather than the WindowObject.
-    auto& window = verify_cast<HTML::Window>(realm->global_object()).impl();
+    auto& window = verify_cast<HTML::Window>(realm->global_object());
 
     // 3. Let settings object be a new environment settings object whose algorithms are defined as follows:
     // NOTE: See the functions defined for this class.
