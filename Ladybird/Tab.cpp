@@ -18,7 +18,7 @@
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-Tab::Tab(QMainWindow* window)
+Tab::Tab(BrowserWindow* window)
     : m_window(window)
 {
     m_layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom, this);
@@ -146,10 +146,7 @@ void Tab::page_favicon_changed(QIcon icon)
 
 int Tab::tab_index()
 {
-    // FIXME: I hear you like footguns...
-    //        There has to be a better way of doing this
-    auto browser_window = reinterpret_cast<BrowserWindow*>(m_window);
-    return browser_window->tab_index(this);
+    return m_window->tab_index(this);
 }
 
 void Tab::debug_request(String const& request, String const& argument)
