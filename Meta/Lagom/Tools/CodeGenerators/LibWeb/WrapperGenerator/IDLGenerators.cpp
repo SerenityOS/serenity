@@ -368,11 +368,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("parameter.type.name", parameter.type->name());
-    if (parameter.type->name() == "Window")
-        scoped_generator.set("wrapper_name", "HTML::Window");
-    else {
-        scoped_generator.set("wrapper_name", String::formatted("{}Wrapper", parameter.type->name()));
-    }
 
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
@@ -457,19 +452,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!parameter.type->is_nullable()) {
             if (!optional) {
                 scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
+    if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-    auto& @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
+    auto& @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     Optional<JS::NonnullGCPtr<@parameter.type.name@>> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
-        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
+        if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
+        @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
 )~~~");
             }
@@ -477,10 +472,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        if (!@js_name@@js_suffix@.is_object() || !is<@wrapper_name@>(@js_name@@js_suffix@.as_object()))
+        if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = &static_cast<@wrapper_name@&>(@js_name@@js_suffix@.as_object()).impl();
+        @cpp_name@ = &static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
     }
 )~~~");
         }
@@ -1063,7 +1058,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                     continue;
 
                 auto union_platform_object_type_generator = union_generator.fork();
-                union_platform_object_type_generator.set("platform_object_type", String::formatted("{}Wrapper", type.name()));
+                union_platform_object_type_generator.set("platform_object_type", type.name());
                 auto cpp_type = IDL::idl_type_name_to_cpp_type(type, interface);
                 union_platform_object_type_generator.set("refptr_type", cpp_type.name);
 
@@ -2131,7 +2126,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 
     generator.set("name", interface.name);
     generator.set("prototype_class", interface.prototype_class);
-    generator.set("wrapper_class", interface.wrapper_class);
     generator.set("constructor_class", interface.constructor_class);
     generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
@@ -2458,14 +2452,12 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("prototype_base_class", interface.prototype_base_class);
-    generator.set("wrapper_class", interface.wrapper_class);
     generator.set("constructor_class", interface.constructor_class);
     generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", String::formatted("{}Iterator", interface.name));
-        generator.set("iterator_wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
     }
 
     generator.append(R"~~~(
@@ -2927,7 +2919,6 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 
     generator.set("name", String::formatted("{}Iterator", interface.name));
     generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
-    generator.set("wrapper_class", String::formatted("{}IteratorWrapper", interface.name));
     generator.set("fully_qualified_name", String::formatted("{}Iterator", interface.fully_qualified_name));
     generator.set("possible_include_path", String::formatted("{}Iterator", interface.name.replace("::"sv, "/"sv, ReplaceMode::All)));
 
