@@ -13,7 +13,9 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
+#include <Kernel/BootInfo.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 
 // Documentation here for Aarch64 Address Translations
 // https://documentation-service.arm.com/static/5efa1d23dbdee951c1ccdec5?token=
@@ -79,48 +81,59 @@ private:
 };
 }
 
+static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, VirtualAddress virtual_addr)
+{
+    // Each level has 9 bits (512 entries)
+    u64 level0_idx = (virtual_addr.get() >> 39) & 0x1FF;
+    u64 level1_idx = (virtual_addr.get() >> 30) & 0x1FF;
+    u64 level2_idx = (virtual_addr.get() >> 21) & 0x1FF;
+
+    u64* level1_table = page_table;
+
+    if (level1_table[level0_idx] == 0) {
+        level1_table[level0_idx] = (FlatPtr)allocator.take_page();
+        level1_table[level0_idx] |= TABLE_DESCRIPTOR;
+    }
+
+    u64* level2_table = descriptor_to_pointer(level1_table[level0_idx]);
+
+    if (level2_table[level1_idx] == 0) {
+        level2_table[level1_idx] = (FlatPtr)allocator.take_page();
+        level2_table[level1_idx] |= TABLE_DESCRIPTOR;
+    }
+
+    u64* level3_table = descriptor_to_pointer(level2_table[level1_idx]);
+
+    if (level3_table[level2_idx] == 0) {
+        level3_table[level2_idx] = (FlatPtr)allocator.take_page();
+        level3_table[level2_idx] |= TABLE_DESCRIPTOR;
+    }
+
+    return descriptor_to_pointer(level3_table[level2_idx]);
+}
+
 static void insert_identity_entries_for_physical_memory_range(PageBumpAllocator& allocator, u64* page_table, FlatPtr start, FlatPtr end, u64 flags)
 {
     // Not very efficient, but simple and it works.
     for (FlatPtr addr = start; addr < end; addr += GRANULE_SIZE) {
-        // Each level has 9 bits (512 entries)
-        u64 level0_idx = (addr >> 39) & 0x1FF;
-        u64 level1_idx = (addr >> 30) & 0x1FF;
-        u64 level2_idx = (addr >> 21) & 0x1FF;
+        u64* level4_table = insert_page_table(allocator, page_table, VirtualAddress { addr });
+
         u64 level3_idx = (addr >> 12) & 0x1FF;
-
-        u64* level1_table = page_table;
-
-        if (level1_table[level0_idx] == 0) {
-            level1_table[level0_idx] = (FlatPtr)allocator.take_page();
-            level1_table[level0_idx] |= TABLE_DESCRIPTOR;
-        }
-
-        u64* level2_table = descriptor_to_pointer(level1_table[level0_idx]);
-
-        if (level2_table[level1_idx] == 0) {
-            level2_table[level1_idx] = (FlatPtr)allocator.take_page();
-            level2_table[level1_idx] |= TABLE_DESCRIPTOR;
-        }
-
-        u64* level3_table = descriptor_to_pointer(level2_table[level1_idx]);
-
-        if (level3_table[level2_idx] == 0) {
-            level3_table[level2_idx] = (FlatPtr)allocator.take_page();
-            level3_table[level2_idx] |= TABLE_DESCRIPTOR;
-        }
-
-        u64* level4_table = descriptor_to_pointer(level3_table[level2_idx]);
         u64* l4_entry = &level4_table[level3_idx];
         *l4_entry = addr;
         *l4_entry |= flags;
     }
 }
 
-static void build_identity_map(PageBumpAllocator& allocator)
+static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_table)
 {
-    u64* level1_table = allocator.take_page();
+    // FIXME: Rename boot_pd_kernel_pt1023 to quickmap_page_table
+    // FIXME: Rename KERNEL_PT1024_BASE to quickmap_page_table_address
+    boot_pd_kernel_pt1023 = (PageTableEntry*)insert_page_table(allocator, root_table, VirtualAddress { KERNEL_PT1024_BASE });
+}
 
+static void build_identity_map(PageBumpAllocator& allocator, u64* root_table)
+{
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
@@ -128,8 +141,8 @@ static void build_identity_map(PageBumpAllocator& allocator)
     FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
     FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1;
 
-    insert_identity_entries_for_physical_memory_range(allocator, level1_table, start_of_range, end_of_range, normal_memory_flags);
-    insert_identity_entries_for_physical_memory_range(allocator, level1_table, RPi::MMIO::the().peripheral_base_address(), RPi::MMIO::the().peripheral_end_address(), device_memory_flags);
+    insert_identity_entries_for_physical_memory_range(allocator, root_table, start_of_range, end_of_range, normal_memory_flags);
+    insert_identity_entries_for_physical_memory_range(allocator, root_table, RPi::MMIO::the().peripheral_base_address(), RPi::MMIO::the().peripheral_end_address(), device_memory_flags);
 }
 
 static void switch_to_page_table(u8* page_table)
@@ -177,8 +190,15 @@ static void activate_mmu()
 
 void init_page_tables()
 {
+    // We currently identity map the physical memory, so the offset is 0.
+    physical_to_virtual_offset = 0;
+    kernel_mapping_base = 0;
+
     PageBumpAllocator allocator((u64*)page_tables_phys_start, (u64*)page_tables_phys_end);
-    build_identity_map(allocator);
+    auto root_table = allocator.take_page();
+    build_identity_map(allocator, root_table);
+    setup_quickmap_page_table(allocator, root_table);
+
     switch_to_page_table(page_tables_phys_start);
     activate_mmu();
 }
