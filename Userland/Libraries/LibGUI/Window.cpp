@@ -165,6 +165,7 @@ void Window::show()
         parent_window ? parent_window->window_id() : 0,
         launch_origin_rect);
     m_visible = true;
+    m_visible_for_timer_purposes = true;
 
     apply_icon();
 
