@@ -5,12 +5,12 @@
  */
 
 #include "EventLoopPluginSerenity.h"
-#include "TimerSerenity.h"
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibCore/EventLoop.h>
+#include <LibWeb/Platform/TimerSerenity.h>
 
-namespace WebContent {
+namespace Web::Platform {
 
 EventLoopPluginSerenity::EventLoopPluginSerenity() = default;
 EventLoopPluginSerenity::~EventLoopPluginSerenity() = default;
@@ -26,7 +26,7 @@ void EventLoopPluginSerenity::deferred_invoke(Function<void()> function)
     Core::deferred_invoke(move(function));
 }
 
-NonnullRefPtr<Web::Platform::Timer> EventLoopPluginSerenity::create_timer()
+NonnullRefPtr<Timer> EventLoopPluginSerenity::create_timer()
 {
     return TimerSerenity::create();
 }

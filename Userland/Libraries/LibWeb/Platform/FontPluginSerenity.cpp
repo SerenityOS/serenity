@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <LibGfx/Font/FontDatabase.h>
 
-namespace WebContent {
+namespace Web::Platform {
 
 FontPluginSerenity::FontPluginSerenity()
 {
@@ -26,26 +26,26 @@ Gfx::Font& FontPluginSerenity::default_fixed_width_font()
     return Gfx::FontDatabase::default_fixed_width_font();
 }
 
-String FontPluginSerenity::generic_font_name(Web::Platform::GenericFont generic_font)
+String FontPluginSerenity::generic_font_name(GenericFont generic_font)
 {
     // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
     // Currently, we cannot request the default font's name, or request it at a specific size and weight.
     // So, hard-coded font names it is.
     switch (generic_font) {
-    case Web::Platform::GenericFont::SansSerif:
-    case Web::Platform::GenericFont::UiSansSerif:
-    case Web::Platform::GenericFont::Cursive:
-    case Web::Platform::GenericFont::UiRounded:
+    case GenericFont::SansSerif:
+    case GenericFont::UiSansSerif:
+    case GenericFont::Cursive:
+    case GenericFont::UiRounded:
         return "Katica";
-    case Web::Platform::GenericFont::Monospace:
-    case Web::Platform::GenericFont::UiMonospace:
+    case GenericFont::Monospace:
+    case GenericFont::UiMonospace:
         return "Csilla";
-    case Web::Platform::GenericFont::Serif:
-    case Web::Platform::GenericFont::UiSerif:
+    case GenericFont::Serif:
+    case GenericFont::UiSerif:
         return "Roman";
-    case Web::Platform::GenericFont::Fantasy:
+    case GenericFont::Fantasy:
         return "Comic Book";
-    case Web::Platform::GenericFont::__Count:
+    case GenericFont::__Count:
         VERIFY_NOT_REACHED();
     }
     VERIFY_NOT_REACHED();

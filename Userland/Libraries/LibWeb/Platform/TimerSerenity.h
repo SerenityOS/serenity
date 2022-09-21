@@ -10,9 +10,9 @@
 #include <LibCore/Forward.h>
 #include <LibWeb/Platform/Timer.h>
 
-namespace WebContent {
+namespace Web::Platform {
 
-class TimerSerenity final : public Web::Platform::Timer {
+class TimerSerenity final : public Timer {
 public:
     static NonnullRefPtr<TimerSerenity> create();
 

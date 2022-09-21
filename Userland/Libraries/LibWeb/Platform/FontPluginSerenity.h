@@ -9,16 +9,16 @@
 #include <AK/Vector.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
-namespace WebContent {
+namespace Web::Platform {
 
-class FontPluginSerenity final : public Web::Platform::FontPlugin {
+class FontPluginSerenity final : public FontPlugin {
 public:
     FontPluginSerenity();
     virtual ~FontPluginSerenity();
 
     virtual Gfx::Font& default_font() override;
     virtual Gfx::Font& default_fixed_width_font() override;
-    virtual String generic_font_name(Web::Platform::GenericFont) override;
+    virtual String generic_font_name(GenericFont) override;
 };
 
 }
