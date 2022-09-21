@@ -7,7 +7,7 @@
     },
     "displayName": "SerenityOS DSL Syntax Highlight",
     "description": "Syntax Highlighting for the DSLs in SerenityOS",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "engines": {
         "vscode": "^1.58.0"
     },

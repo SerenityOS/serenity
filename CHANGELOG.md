@@ -28,7 +28,7 @@
 - IDL: Fix ExtendedAttributes before optional arguments
 - GML: Allow object lookups of arbitrary namespace depth
 
-# 0.2.2
+## 0.2.2
 
 - IDL: Colour brace-pairs
 - GML: Remove one trailing comma to reenable the highlighting
