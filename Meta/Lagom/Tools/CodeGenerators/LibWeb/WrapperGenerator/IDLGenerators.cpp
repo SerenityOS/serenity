@@ -201,16 +201,8 @@ static String union_type_to_variant(UnionType const& union_type, Interface const
 
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
-    if (is_wrappable_type(type)) {
-        if (impl_is_wrapper(type)) {
-            return { .name = String::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
-        }
-
-        if (type.is_nullable())
-            return { .name = String::formatted("RefPtr<{}>", type.name()), .sequence_storage_type = SequenceStorageType::Vector };
-
-        return { .name = String::formatted("NonnullRefPtr<{}>", type.name()), .sequence_storage_type = SequenceStorageType::Vector };
-    }
+    if (is_wrappable_type(type))
+        return { .name = String::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.is_string())
         return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
@@ -1052,6 +1044,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             if (is<PlatformObject>(@js_name@@js_suffix@_object)) {
 )~~~");
 
+            // NOTE: This codegen assumes that all union types are cells or values we can create a handle for.
+
             //    1. If types includes an interface type that V implements, then return the IDL value that is a reference to the object V.
             for (auto& type : types) {
                 if (!IDL::is_wrappable_type(type))
@@ -1059,19 +1053,17 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto union_platform_object_type_generator = union_generator.fork();
                 union_platform_object_type_generator.set("platform_object_type", type.name());
-                auto cpp_type = IDL::idl_type_name_to_cpp_type(type, interface);
-                union_platform_object_type_generator.set("refptr_type", cpp_type.name);
 
                 union_platform_object_type_generator.append(R"~~~(
                 if (is<@platform_object_type@>(@js_name@@js_suffix@_object))
-                    return @refptr_type@ { static_cast<@platform_object_type@&>(@js_name@@js_suffix@_object).impl() };
+                    return JS::make_handle(static_cast<@platform_object_type@&>(@js_name@@js_suffix@_object));
 )~~~");
             }
 
             //    2. If types includes object, then return the IDL value that is a reference to the object V.
             if (includes_object) {
                 union_generator.append(R"~~~(
-                return @js_name@@js_suffix@_object;
+                return JS::make_handle(@js_name@@js_suffix@_object);
 )~~~");
             }
 
