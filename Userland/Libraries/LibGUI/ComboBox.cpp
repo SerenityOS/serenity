@@ -58,6 +58,7 @@ ComboBox::ComboBox()
 {
     REGISTER_STRING_PROPERTY("placeholder", editor_placeholder, set_editor_placeholder);
     REGISTER_BOOL_PROPERTY("model_only", only_allow_values_from_model, set_only_allow_values_from_model);
+    REGISTER_INT_PROPERTY("max_visible_items", max_visible_items, set_max_visible_items);
 
     set_min_size({ 40, 22 });
     set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
