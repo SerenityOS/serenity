@@ -23,6 +23,8 @@ public:
     virtual void flush(size_t, size_t, size_t, size_t) override { }
     virtual void set_resolution(size_t, size_t, size_t) override { }
 
+    u8* unsafe_framebuffer_data() { return m_framebuffer_data; }
+
     BootFramebufferConsole(PhysicalAddress framebuffer_addr, size_t width, size_t height, size_t pitch);
 
 private:
