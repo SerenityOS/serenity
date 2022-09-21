@@ -20,7 +20,8 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment
 struct Environment {
-    // FIXME: An id https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-id
+    // An id https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-id
+    String id;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-creation-url
     AK::URL creation_url;

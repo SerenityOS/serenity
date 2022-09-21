@@ -43,9 +43,11 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
         // FIXME:    1. Set settings object's id to reservedEnvironment's id,
         //              target browsing context to reservedEnvironment's target browsing context,
         //              and active service worker to reservedEnvironment's active service worker.
+        settings_object->id = reserved_environment->id;
         settings_object->target_browsing_context = reserved_environment->target_browsing_context;
 
-        // FIXME:    2. Set reservedEnvironment's id to the empty string.
+        // 2. Set reservedEnvironment's id to the empty string.
+        reserved_environment->id = String::empty();
     }
 
     // 5. Otherwise, ...
@@ -53,6 +55,8 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
         // FIXME: ...set settings object's id to a new unique opaque string,
         //        settings object's target browsing context to null,
         //        and settings object's active service worker to null.
+        static i64 next_id = 1;
+        settings_object->id = String::number(next_id++);
         settings_object->target_browsing_context = nullptr;
     }
 
