@@ -287,8 +287,6 @@ public:
     HashMap<String, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
-    String wrapper_class;
-    String wrapper_base_class;
     String fully_qualified_name;
     String constructor_class;
     String prototype_class;

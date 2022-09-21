@@ -570,9 +570,6 @@ void Parser::parse_interface(Interface& interface)
         parse_function(extended_attributes, interface);
     }
 
-    interface.wrapper_class = interface.name;
-
-    interface.wrapper_base_class = String::formatted("{}Wrapper", interface.parent_name.is_empty() ? String::empty() : interface.parent_name);
     interface.constructor_class = String::formatted("{}Constructor", interface.name);
     interface.prototype_class = String::formatted("{}Prototype", interface.name);
     interface.prototype_base_class = String::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
