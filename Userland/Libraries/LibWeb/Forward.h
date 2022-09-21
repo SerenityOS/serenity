@@ -366,6 +366,14 @@ namespace Web::ResizeObserver {
 class ResizeObserver;
 }
 
+namespace Web::Selection {
+class Selection;
+}
+
+namespace Web::Streams {
+class ReadableStream;
+}
+
 namespace Web::SVG {
 class SVGAnimatedLength;
 class SVGCircleElement;
@@ -382,10 +390,6 @@ class SVGPolygonElement;
 class SVGPolylineElement;
 class SVGRectElement;
 class SVGSVGElement;
-}
-
-namespace Web::Selection {
-class Selection;
 }
 
 namespace Web::WebSockets {
