@@ -13,6 +13,8 @@ SECTIONS
 {
     . = 0x00080000;
 
+    start_of_kernel_image = .;
+
     .text ALIGN(4K) : AT (ADDR(.text))
     {
         *(.text.first)
@@ -62,8 +64,6 @@ SECTIONS
     /* FIXME: Placeholder to satisfy linker */
     start_of_kernel_text = .;
     end_of_kernel_text = .;
-    start_of_kernel_image = .;
-    end_of_kernel_image = .;
     start_of_unmap_after_init = .;
     end_of_unmap_after_init = .;
     start_of_ro_after_init = .;
@@ -76,6 +76,8 @@ SECTIONS
     
     . += 8M;
     page_tables_phys_end = .;
+
+    end_of_kernel_image = .;
 }
 
 size_of_bss_divided_by_8 = (end_of_bss - start_of_bss + 7) / 8;

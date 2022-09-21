@@ -21,6 +21,8 @@
 // These come from the linker script
 extern u8 page_tables_phys_start[];
 extern u8 page_tables_phys_end[];
+extern u8 start_of_kernel_image[];
+extern u8 end_of_kernel_image[];
 
 namespace Kernel {
 
@@ -122,7 +124,11 @@ static void build_identity_map(PageBumpAllocator& allocator)
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
-    insert_identity_entries_for_physical_memory_range(allocator, level1_table, START_OF_NORMAL_MEMORY, END_OF_NORMAL_MEMORY, normal_memory_flags);
+    // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
+    FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
+    FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1;
+
+    insert_identity_entries_for_physical_memory_range(allocator, level1_table, start_of_range, end_of_range, normal_memory_flags);
     insert_identity_entries_for_physical_memory_range(allocator, level1_table, RPi::MMIO::the().peripheral_base_address(), RPi::MMIO::the().peripheral_end_address(), device_memory_flags);
 }
 
