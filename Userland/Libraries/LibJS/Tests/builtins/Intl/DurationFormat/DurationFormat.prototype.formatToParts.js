@@ -123,13 +123,13 @@ describe("correct behavior", () => {
         ]);
         expect(new Intl.DurationFormat("en", { style: "digital" }).formatToParts(duration)).toEqual(
             [
-                { type: "element", value: "1y" },
+                { type: "element", value: "1 yr" },
                 { type: "literal", value: " " },
-                { type: "element", value: "2m" },
+                { type: "element", value: "2 mths" },
                 { type: "literal", value: " " },
-                { type: "element", value: "3w" },
+                { type: "element", value: "3 wks" },
                 { type: "literal", value: " " },
-                { type: "element", value: "3d" },
+                { type: "element", value: "3 days" },
                 { type: "literal", value: " " },
                 { type: "element", value: "4:05:06" },
             ]
@@ -227,11 +227,11 @@ describe("correct behavior", () => {
             [
                 { type: "element", value: "1 J" },
                 { type: "literal", value: ", " },
-                { type: "element", value: "2 M" },
+                { type: "element", value: "2 Mon." },
                 { type: "literal", value: ", " },
-                { type: "element", value: "3 W" },
+                { type: "element", value: "3 Wo." },
                 { type: "literal", value: ", " },
-                { type: "element", value: "3 T" },
+                { type: "element", value: "3 Tg." },
                 { type: "literal", value: " und " },
                 { type: "element", value: "4:05:06" },
             ]
