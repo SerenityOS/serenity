@@ -8,6 +8,7 @@
 
 #include <Kernel/Arch/aarch64/CPU.h>
 
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
@@ -26,26 +27,6 @@ namespace Kernel {
 // physical memory
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;
 constexpr u32 END_OF_NORMAL_MEMORY = 0x3EFFFFFF;
-
-// 4KiB page size was chosen for the prekernel to make this code slightly simpler
-constexpr u32 GRANULE_SIZE = 0x1000;
-constexpr u32 PAGE_TABLE_SIZE = 0x1000;
-
-// Documentation for translation table format
-// https://developer.arm.com/documentation/101811/0101/Controlling-address-translation
-constexpr u32 PAGE_DESCRIPTOR = 0b11;
-constexpr u32 TABLE_DESCRIPTOR = 0b11;
-constexpr u32 DESCRIPTOR_MASK = ~0b11;
-
-constexpr u32 ACCESS_FLAG = 1 << 10;
-
-// shareability
-constexpr u32 OUTER_SHAREABLE = (2 << 8);
-constexpr u32 INNER_SHAREABLE = (3 << 8);
-
-// these index into the MAIR attribute table
-constexpr u32 NORMAL_MEMORY = (0 << 2);
-constexpr u32 DEVICE_MEMORY = (1 << 2);
 
 ALWAYS_INLINE static u64* descriptor_to_pointer(FlatPtr descriptor)
 {
