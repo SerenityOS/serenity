@@ -353,7 +353,7 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey co
 
     auto css_text = TRY(value.to_string(vm()));
 
-    impl().set_property(property_id, css_text);
+    set_property(property_id, css_text);
     return true;
 }
 

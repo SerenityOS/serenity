@@ -844,7 +844,7 @@ void Window::initialize(JS::Realm& realm)
 
 HTML::Origin Window::origin() const
 {
-    return impl().associated_document().origin();
+    return associated_document().origin();
 }
 
 // https://webidl.spec.whatwg.org/#platform-object-setprototypeof
@@ -870,7 +870,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
 
     if (!is<Window>(*this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
-    return &static_cast<Window*>(this_object)->impl();
+    return static_cast<Window*>(this_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::alert)

@@ -43,7 +43,7 @@ JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, N
 
 JS::NonnullGCPtr<Range> Range::create_with_global_object(HTML::Window& window)
 {
-    return Range::create(window.impl());
+    return Range::create(window);
 }
 
 Range::Range(Document& document)
