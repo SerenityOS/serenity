@@ -356,9 +356,12 @@ set(SOURCES
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp
     Platform/EventLoopPlugin.cpp
+    Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp
+    Platform/FontPluginSerenity.cpp
     Platform/ImageCodecPlugin.cpp
     Platform/Timer.cpp
+    Platform/TimerSerenity.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
     SVG/AttributeNames.cpp

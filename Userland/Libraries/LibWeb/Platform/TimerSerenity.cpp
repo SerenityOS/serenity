@@ -8,7 +8,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibCore/Timer.h>
 
-namespace WebContent {
+namespace Web::Platform {
 
 NonnullRefPtr<TimerSerenity> TimerSerenity::create()
 {
