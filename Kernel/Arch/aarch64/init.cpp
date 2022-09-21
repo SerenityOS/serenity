@@ -49,6 +49,8 @@ extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
 
         auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
         dbgln("esr_el1: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
+
+        dump_backtrace_from_base_pointer(trap_frame->x[29]);
     }
 
     Kernel::Processor::halt();
