@@ -17,10 +17,12 @@
 #include <QToolBar>
 #include <QWidget>
 
+class BrowserWindow;
+
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    explicit Tab(QMainWindow* window);
+    explicit Tab(BrowserWindow* window);
 
     WebView& view() { return *m_view; }
 
@@ -51,7 +53,7 @@ private:
     QToolBar* m_toolbar { nullptr };
     QLineEdit* m_location_edit { nullptr };
     WebView* m_view { nullptr };
-    QMainWindow* m_window { nullptr };
+    BrowserWindow* m_window { nullptr };
     Browser::History m_history;
     QString m_title;
     QLabel* m_hover_label { nullptr };
