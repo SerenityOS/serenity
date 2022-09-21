@@ -126,7 +126,7 @@ ComboBox::ComboBox()
     m_list_window->on_input_preemption = [this](auto) { close(); };
 
     m_list_view = m_list_window->set_main_widget<ListView>();
-    m_list_view->horizontal_scrollbar().set_visible(false);
+    m_list_view->set_should_hide_unnecessary_scrollbars(true);
     m_list_view->set_alternating_row_colors(false);
     m_list_view->set_hover_highlighting(true);
     m_list_view->set_frame_thickness(1);
@@ -247,44 +247,29 @@ void ComboBox::select_all()
 
 void ComboBox::open()
 {
-    if (!model())
-        return;
-
-    auto my_screen_rect = screen_relative_rect();
-
-    int longest_item_width = 0;
-    for (int i = 0; i < model()->row_count(); ++i) {
-        auto index = model()->index(i);
-        auto item_text = index.data().to_string();
-        longest_item_width = max(longest_item_width, m_list_view->font().width(item_text));
-    }
-    Gfx::IntSize size {
-        max(width(), longest_item_width + m_list_view->width_occupied_by_vertical_scrollbar() + m_list_view->frame_thickness() * 2 + m_list_view->horizontal_padding()),
-        model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
-    };
-
-    auto taskbar_height = GUI::Desktop::the().taskbar_height();
-    Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
-    list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height * 2));
-
     m_editor->set_focus(true);
-    if (m_selected_index.has_value()) {
-        // Don't set m_updating_model to true here because we only want to
-        // change the list view's selected item without triggering a change to it.
-        m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
-    }
 
-    // Change direction and go upwards to prevent the list from becoming
-    // infinitesimally small when pushed up against the screen edge.
-    auto minimum_height = min(3, model()->row_count()) * m_list_view->item_height() + m_list_view->frame_thickness() * 2;
-    bool go_upwards_instead = list_window_rect.height() < minimum_height;
+    // Force content size update while invisible
+    m_list_view->resize({});
+
+    auto frame = m_list_view->frame_thickness() * 2;
+    auto max_height = min(m_list_view->item_height() * m_max_visible_items, m_list_view->content_height());
+    Gfx::IntSize size { max(width(), m_list_view->content_width() + frame), max_height + frame };
+    Gfx::IntRect rect { screen_relative_rect().bottom_left(), size };
+
+    auto desktop = Desktop::the().rect().shrunken(0, 0, Desktop::the().taskbar_height(), 0);
+    auto min_height = 5 * m_list_view->item_height() + frame;
+    auto go_upwards_instead = rect.bottom() >= desktop.height() && rect.intersected(desktop).height() < min_height;
     if (go_upwards_instead) {
-        auto origin_point = my_screen_rect.top_left();
-        list_window_rect = { Gfx::IntPoint { origin_point.x(), origin_point.y() - size.height() }, size };
-        list_window_rect.intersect(Desktop::the().rect());
+        auto origin = screen_relative_rect().top_left();
+        rect = { Gfx::IntPoint { origin.x(), origin.y() - size.height() }, size };
     }
+    rect.intersect(desktop);
+    m_list_window->set_rect(rect);
 
-    m_list_window->set_rect(list_window_rect);
+    if (m_selected_index.has_value())
+        m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
+
     m_list_window->show();
 }
 
