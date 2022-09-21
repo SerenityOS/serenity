@@ -98,7 +98,7 @@ DOM::ExceptionOr<String> Headers::get(String const& name_string)
 
     // 2. Return the result of getting name from this’s header list.
     auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_header_list.get(name));
-    // FIXME: Teach WrapperGenerator about Optional<String>
+    // FIXME: Teach BindingsGenerator about Optional<String>
     return byte_buffer.has_value() ? String { byte_buffer->span() } : String {};
 }
 

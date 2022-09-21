@@ -436,7 +436,7 @@ serenity_lib(LibWeb web)
 target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
-generate_js_wrappers(LibWeb)
+generate_js_bindings(LibWeb)
 
-# Note: If you're looking for the calls to "libweb_js_wrapper()",
+# Note: If you're looking for the calls to "libweb_js_bindings()",
 # they have been moved to "idl_files.cmake"

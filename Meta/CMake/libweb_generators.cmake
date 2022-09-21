@@ -90,7 +90,7 @@ function (generate_css_implementation)
 
 endfunction()
 
-function (generate_js_wrappers target)
+function (generate_js_bindings target)
 
     if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibWeb")
         # Serenity build
@@ -104,8 +104,8 @@ function (generate_js_wrappers target)
         SET(LIBWEB_META_PREFIX "Lagom")
     endif()
 
-    function(libweb_js_wrapper class)
-        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_WRAPPER "ITERABLE" "" "")
+    function(libweb_js_bindings class)
+        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "ITERABLE" "" "")
         get_filename_component(basename "${class}" NAME)
         set(BINDINGS_SOURCES
             "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}Constructor.h"
@@ -120,8 +120,8 @@ function (generate_js_wrappers target)
             prototype-implementation
         )
 
-        # FIXME: Instead of requiring a manual declaration of iterable wrappers, we should ask WrapperGenerator if it's iterable
-        if(LIBWEB_WRAPPER_ITERABLE)
+        # FIXME: Instead of requiring a manual declaration of iterable bindings, we should ask BindingsGenerator if it's iterable
+        if(LIBWEB_BINDINGS_ITERABLE)
             list(APPEND BINDINGS_SOURCES
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.h"
                 "${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}IteratorPrototype.cpp"
@@ -142,11 +142,11 @@ function (generate_js_wrappers target)
             list(TRANSFORM include_paths PREPEND -i)
             add_custom_command(
                 OUTPUT "${bindings_src}"
-                COMMAND "$<TARGET_FILE:Lagom::WrapperGenerator>" "--${bindings_type}" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}" > "${bindings_src}.tmp"
+                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}" > "${bindings_src}.tmp"
                 COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
                 COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
                 VERBATIM
-                DEPENDS Lagom::WrapperGenerator
+                DEPENDS Lagom::BindingsGenerator
                 MAIN_DEPENDENCY ${LIBWEB_INPUT_FOLDER}/${class}.idl
             )
         endforeach()

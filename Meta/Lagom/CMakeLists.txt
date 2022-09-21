@@ -292,7 +292,7 @@ lagom_lib(TimeZone timezone
 target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
 
 # LibIDL
-# This is used by the WrapperGenerator so needs to always be built.
+# This is used by the BindingsGenerator so needs to always be built.
 file(GLOB LIBIDL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIDL/*.cpp")
 lagom_lib(IDL idl
     SOURCES ${LIBIDL_SOURCES}
@@ -557,7 +557,7 @@ if (BUILD_LAGOM)
             SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
             LIBS LibMarkdown LibGemini LibGfx LibGL LibIDL LibJS LibTextCodec LibWasm LibXML
         )
-        generate_js_wrappers(LibWeb)
+        generate_js_bindings(LibWeb)
     endif()
 
     # WebSocket

@@ -63,7 +63,7 @@ describe("HTMLTableElement", () => {
             let table = page.document.createElement("table");
             expect(table).not.toBeNull();
 
-            // We hardcode the default value in a few places, due to the WrapperGenerator's bug with default values
+            // We hardcode the default value in a few places, due to the BindingsGenerator's bug with default values
             const defaultValue = -1;
 
             expect(table.rows.length).toBe(0);
@@ -96,7 +96,7 @@ describe("HTMLTableElement", () => {
             let table = page.document.createElement("table");
             expect(table).not.toBeNull();
 
-            // We hardcode the default value in a few places, due to the WrapperGenerator's bug with default values
+            // We hardcode the default value in a few places, due to the BindingsGenerator's bug with default values
             const defaultValue = -1;
 
             // deleteRow with an index > number of rows will throw

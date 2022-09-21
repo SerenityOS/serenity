@@ -6,4 +6,4 @@ lagom_tool(GenerateCSSPropertyID           SOURCES GenerateCSSPropertyID.cpp LIB
 lagom_tool(GenerateCSSTransformFunctions   SOURCES GenerateCSSTransformFunctions.cpp LIBS LibMain)
 lagom_tool(GenerateCSSValueID              SOURCES GenerateCSSValueID.cpp LIBS LibMain)
 
-add_subdirectory(WrapperGenerator)
+add_subdirectory(BindingsGenerator)
