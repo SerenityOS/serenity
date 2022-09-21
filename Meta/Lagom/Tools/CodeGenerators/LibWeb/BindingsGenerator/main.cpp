@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
         interface.fully_qualified_name = interface.name;
     }
 
-    if constexpr (WRAPPER_GENERATOR_DEBUG) {
+    if constexpr (BINDINGS_GENERATOR_DEBUG) {
         dbgln("Attributes:");
         for (auto& attribute : interface.attributes) {
             dbgln("  {}{}{} {}",

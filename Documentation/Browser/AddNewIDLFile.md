@@ -28,7 +28,7 @@ interface CSSRule {
     - `#include <LibWeb/Bindings/HTMLDetailsElementPrototype.h>` to the includes list.
     - `ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)      \` to the macro at the bottom.
 
-4. Add a `libweb_js_wrapper(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
+4. Add a `libweb_js_bindings(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
 
 5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
     - `HTMLDetailsElement` in its namespace.
@@ -38,5 +38,5 @@ interface CSSRule {
    - It must inherit from `public RefCounted<HTMLDetailsElement>` and `public Bindings::Wrappable`
    - It must have a public `using WrapperType = Bindings::HTMLDetailsElementWrapper;`
 
-8. If your type isn't an Event or Element, you will need to add it to [`is_wrappable_type()`](../../Meta/Lagom/Tools/CodeGenerators/LibWeb/WrapperGenerator/IDLGenerators.cpp)
+8. If your type isn't an Event or Element, you will need to add it to [`is_wrappable_type()`](../../Meta/Lagom/Tools/CodeGenerators/LibWeb/BindingsGenerator/IDLGenerators.cpp)
    so that it can be accepted as an IDL parameter, attribute or return type.
