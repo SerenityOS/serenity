@@ -129,11 +129,6 @@ extern "C" [[noreturn]] void init()
 
     CommandLine::initialize();
 
-    auto& framebuffer = RPi::Framebuffer::the();
-    if (framebuffer.initialized()) {
-        g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(framebuffer.gpu_buffer(), framebuffer.width(), framebuffer.width(), framebuffer.pitch()).value().leak_ref();
-        draw_logo();
-    }
     dmesgln("Starting SerenityOS...");
 
     dmesgln("Initialize MMU");
@@ -144,6 +139,12 @@ extern "C" [[noreturn]] void init()
     // Note that we want to do this as early as possible.
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
+
+    auto& framebuffer = RPi::Framebuffer::the();
+    if (framebuffer.initialized()) {
+        g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(PhysicalAddress((PhysicalPtr)framebuffer.gpu_buffer()), framebuffer.width(), framebuffer.height(), framebuffer.pitch()).value().leak_ref();
+        draw_logo();
+    }
 
     initialize_interrupts();
     InterruptManagement::initialize();
