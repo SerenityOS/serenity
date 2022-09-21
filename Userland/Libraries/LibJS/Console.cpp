@@ -13,8 +13,8 @@
 
 namespace JS {
 
-Console::Console(VM& vm)
-    : m_vm(vm)
+Console::Console(Realm& realm)
+    : m_realm(realm)
 {
 }
 
@@ -91,9 +91,11 @@ ThrowCompletionOr<Value> Console::trace()
     if (!m_client)
         return js_undefined();
 
+    auto& vm = realm().vm();
+
     // 1. Let trace be some implementation-specific, potentially-interactive representation of the callstack from where this function was called.
     Console::Trace trace;
-    auto& execution_context_stack = vm().execution_context_stack();
+    auto& execution_context_stack = vm.execution_context_stack();
     // NOTE: -2 to skip the console.trace() execution context
     for (ssize_t i = execution_context_stack.size() - 2; i >= 0; --i) {
         auto& function_name = execution_context_stack[i]->function_name;
@@ -101,7 +103,7 @@ ThrowCompletionOr<Value> Console::trace()
     }
 
     // 2. Optionally, let formattedData be the result of Formatter(data), and incorporate formattedData as a label for trace.
-    if (vm().argument_count() > 0) {
+    if (vm.argument_count() > 0) {
         StringBuilder builder;
         auto data = vm_arguments();
         auto formatted_data = TRY(m_client->formatter(data));
@@ -115,7 +117,7 @@ ThrowCompletionOr<Value> Console::trace()
 // 1.2.1. count(label), https://console.spec.whatwg.org/#count
 ThrowCompletionOr<Value> Console::count()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-count
     auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
@@ -146,7 +148,7 @@ ThrowCompletionOr<Value> Console::count()
 // 1.2.2. countReset(label), https://console.spec.whatwg.org/#countreset
 ThrowCompletionOr<Value> Console::count_reset()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-countreset
     auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
@@ -176,7 +178,7 @@ ThrowCompletionOr<Value> Console::count_reset()
 // 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
 ThrowCompletionOr<Value> Console::assert_()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // 1. If condition is true, return.
     auto condition = vm.argument(0).to_boolean();
@@ -307,7 +309,7 @@ ThrowCompletionOr<Value> Console::group_end()
 // 1.4.1. time(label), https://console.spec.whatwg.org/#time
 ThrowCompletionOr<Value> Console::time()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-time
     auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
@@ -331,7 +333,7 @@ ThrowCompletionOr<Value> Console::time()
 // 1.4.2. timeLog(label, ...data), https://console.spec.whatwg.org/#timelog
 ThrowCompletionOr<Value> Console::time_log()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timelog
     auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
@@ -374,7 +376,7 @@ ThrowCompletionOr<Value> Console::time_log()
 // 1.4.3. timeEnd(label), https://console.spec.whatwg.org/#timeend
 ThrowCompletionOr<Value> Console::time_end()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timeend
     auto label = vm.argument_count() ? TRY(vm.argument(0).to_string(vm)) : "default";
@@ -415,7 +417,7 @@ ThrowCompletionOr<Value> Console::time_end()
 
 MarkedVector<Value> Console::vm_arguments()
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     MarkedVector<Value> arguments { vm.heap() };
     arguments.ensure_capacity(vm.argument_count());
@@ -453,7 +455,7 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
 
 ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> const& values)
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
     StringBuilder builder;
     for (auto const& item : values) {
         if (!builder.is_empty())
@@ -465,7 +467,7 @@ ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> co
 
 ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
 {
-    auto& vm = this->vm();
+    auto& vm = realm().vm();
 
     auto elapsed_ms = timer.elapsed_time().to_milliseconds();
     auto duration = TRY(Temporal::balance_duration(vm, 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"));
@@ -493,7 +495,7 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger
 ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, MarkedVector<Value> const& args)
 {
-    auto& vm = m_console.vm();
+    auto& vm = m_console.realm().vm();
 
     // 1. If args is empty, return.
     if (args.is_empty())
@@ -525,8 +527,8 @@ ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, Mark
 // 2.2. Formatter(args), https://console.spec.whatwg.org/#formatter
 ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Value> const& args)
 {
-    auto& vm = m_console.vm();
-    auto& realm = *vm.current_realm();
+    auto& realm = m_console.realm();
+    auto& vm = realm.vm();
 
     // 1. If args’s size is 1, return args.
     if (args.size() == 1)
