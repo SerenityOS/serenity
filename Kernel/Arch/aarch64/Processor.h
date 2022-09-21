@@ -77,10 +77,7 @@ public:
     }
 
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
-    ALWAYS_INLINE static void flush_tlb(Memory::PageDirectory const*, VirtualAddress const&, size_t)
-    {
-        VERIFY_NOT_REACHED();
-    }
+    static void flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
 
     // FIXME: When aarch64 supports multiple cores, return the correct core id here.
     ALWAYS_INLINE static u32 current_id()
