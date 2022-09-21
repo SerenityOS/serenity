@@ -59,6 +59,8 @@ static bool is_wrappable_type(Type const& type)
         return true;
     if (type.name() == "Path2D")
         return true;
+    if (type.name() == "MutationRecord")
+        return true;
     return false;
 }
 
@@ -72,106 +74,6 @@ static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorage
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-static bool impl_is_wrapper(Type const& type)
-{
-    if (type.name() == "StyleSheet"sv)
-        return true;
-
-    if (type.name() == "CSSStyleSheet"sv)
-        return true;
-
-    if (type.name() == "StyleSheetList"sv)
-        return true;
-
-    if (type.name() == "CSSRuleList"sv)
-        return true;
-
-    if (type.name() == "CSSRule"sv)
-        return true;
-
-    if (type.name() == "CSSStyleRule"sv)
-        return true;
-
-    if (type.name() == "CSSFontFaceRule"sv)
-        return true;
-
-    if (type.name() == "CSSConditionRule"sv)
-        return true;
-
-    if (type.name() == "CSSGroupingRule"sv)
-        return true;
-
-    if (type.name() == "CSSMediaRule"sv)
-        return true;
-
-    if (type.name() == "CSSImportRule"sv)
-        return true;
-
-    if (type.name() == "EventTarget"sv)
-        return true;
-
-    if (type.name() == "Node"sv)
-        return true;
-    if (type.name() == "ShadowRoot"sv)
-        return true;
-    if (type.name() == "DocumentTemporary"sv)
-        return true;
-    if (type.name() == "Text"sv)
-        return true;
-    if (type.name() == "Document"sv)
-        return true;
-    if (type.name() == "DocumentType"sv)
-        return true;
-    if (type.name().ends_with("Element"sv))
-        return true;
-    if (type.name() == "XMLHttpRequest"sv)
-        return true;
-    if (type.name() == "XMLHttpRequestEventTarget"sv)
-        return true;
-    if (type.name() == "AbortSignal"sv)
-        return true;
-    if (type.name() == "WebSocket"sv)
-        return true;
-    if (type.name() == "Worker"sv)
-        return true;
-    if (type.name() == "NodeIterator"sv)
-        return true;
-    if (type.name() == "TreeWalker"sv)
-        return true;
-    if (type.name() == "MediaQueryList"sv)
-        return true;
-    if (type.name() == "MessagePort"sv)
-        return true;
-    if (type.name() == "NodeFilter"sv)
-        return true;
-    if (type.name() == "DOMTokenList"sv)
-        return true;
-    if (type.name() == "DOMStringMap"sv)
-        return true;
-    if (type.name() == "MutationRecord"sv)
-        return true;
-    if (type.name() == "CanvasRenderingContext2D"sv)
-        return true;
-    if (type.name() == "WebGLRenderingContext"sv)
-        return true;
-    if (type.name() == "Path2D"sv)
-        return true;
-    if (type.name() == "Storage"sv)
-        return true;
-    if (type.name() == "File"sv)
-        return true;
-    if (type.name() == "Blob"sv)
-        return true;
-    if (type.name() == "URL"sv)
-        return true;
-    if (type.name() == "URLSearchParams"sv)
-        return true;
-    if (type.name() == "DOMException"sv)
-        return true;
-
-    return false;
 }
 
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface);
@@ -1529,7 +1431,10 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
         }
 
-        if (impl_is_wrapper(sequence_generic_type.parameters().first())) {
+        // If the type is a platform object we currently return a Vector<JS::Handle<T>> from the
+        // C++ implementation, thus allowing us to unwrap the element (a handle) like below.
+        // This might need to change if we switch to a MarkedVector.
+        if (is_wrappable_type(sequence_generic_type.parameters().first())) {
             scoped_generator.append(R"~~~(
             auto* wrapped_element@recursion_depth@ = &(*element@recursion_depth@);
 )~~~");
