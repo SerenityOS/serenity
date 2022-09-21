@@ -247,7 +247,7 @@ void queue_global_task(HTML::Task::Source source, JS::Object& global_object, Fun
     DOM::Document* document { nullptr };
     if (is<HTML::Window>(global_object)) {
         auto& window_object = verify_cast<HTML::Window>(global_object);
-        document = &window_object.impl().associated_document();
+        document = &window_object.associated_document();
     }
 
     // 3. Queue a task given source, event loop, document, and steps.

@@ -337,7 +337,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-    auto& @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
+    auto& @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object());
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
@@ -346,7 +346,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
+        @cpp_name@ = static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object());
     }
 )~~~");
             }
@@ -357,7 +357,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!@js_name@@js_suffix@.is_object() || !is<@parameter.type.name@>(@js_name@@js_suffix@.as_object()))
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
-        @cpp_name@ = &static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object()).impl();
+        @cpp_name@ = &static_cast<@parameter.type.name@&>(@js_name@@js_suffix@.as_object());
     }
 )~~~");
         }
@@ -2567,7 +2567,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
         if (interface.name == "EventTarget") {
             generator.append(R"~~~(
     if (is<HTML::Window>(this_object)) {
-        return &static_cast<HTML::Window*>(this_object)->impl();
+        return static_cast<HTML::Window*>(this_object);
     }
 )~~~");
         }
@@ -2576,7 +2576,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
     if (!is<@fully_qualified_name@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
 
-    return &static_cast<@fully_qualified_name@*>(this_object)->impl();
+    return static_cast<@fully_qualified_name@*>(this_object);
 }
 )~~~");
     }
@@ -2869,7 +2869,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
     auto* this_object = TRY(vm.this_value().to_object(vm));
     if (!is<@fully_qualified_name@>(this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
-    return &static_cast<@fully_qualified_name@*>(this_object)->impl();
+    return static_cast<@fully_qualified_name@*>(this_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)

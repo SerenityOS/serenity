@@ -14,15 +14,7 @@
 namespace Web::Bindings {
 
 #define WEB_PLATFORM_OBJECT(class_, base_class) \
-    JS_OBJECT(class_, base_class)               \
-    auto& impl()                                \
-    {                                           \
-        return *this;                           \
-    }                                           \
-    auto const& impl() const                    \
-    {                                           \
-        return *this;                           \
-    }
+    JS_OBJECT(class_, base_class)
 
 #define WRAPPER_HACK(class_, namespace_)        \
     namespace Web::Bindings {                   \

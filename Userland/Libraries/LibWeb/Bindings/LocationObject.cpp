@@ -108,12 +108,12 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 
     // 2. Parse the given value relative to the entry settings object. If that failed, throw a TypeError exception.
     auto new_href = TRY(vm.argument(0).to_string(vm));
-    auto href_url = window.impl().associated_document().parse_url(new_href);
+    auto href_url = window.associated_document().parse_url(new_href);
     if (!href_url.is_valid())
         return vm.throw_completion<JS::URIError>(String::formatted("Invalid URL '{}'", new_href));
 
     // 3. Location-object navigate given the resulting URL record.
-    window.impl().did_set_location_href({}, href_url);
+    window.did_set_location_href({}, href_url);
 
     return JS::js_undefined();
 }
@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
 {
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    window.impl().did_call_location_reload({});
+    window.did_call_location_reload({});
     return JS::js_undefined();
 }
 
@@ -236,7 +236,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
     auto url = TRY(vm.argument(0).to_string(vm));
     // FIXME: This needs spec compliance work.
-    window.impl().did_call_location_replace({}, move(url));
+    window.did_call_location_replace({}, move(url));
     return JS::js_undefined();
 }
 
