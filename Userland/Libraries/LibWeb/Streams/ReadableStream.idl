@@ -1,0 +1,5 @@
+// Dummy definition so we can use ReadableStream as a type in Fetch.
+
+// https://streams.spec.whatwg.org/#readablestream
+interface ReadableStream {
+};

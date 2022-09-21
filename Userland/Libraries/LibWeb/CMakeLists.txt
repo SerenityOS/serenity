@@ -364,6 +364,8 @@ set(SOURCES
     Platform/TimerSerenity.cpp
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
+    Streams/AbstractOperations.cpp
+    Streams/ReadableStream.cpp
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
