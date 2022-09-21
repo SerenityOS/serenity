@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,5 +31,7 @@ inline constexpr Array FETCH_SCHEMES = {
 };
 
 [[nodiscard]] bool is_local_url(AK::URL const&);
+[[nodiscard]] bool is_fetch_scheme(StringView);
+[[nodiscard]] bool is_http_or_https_scheme(StringView);
 
 }
