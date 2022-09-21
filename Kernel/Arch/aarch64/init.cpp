@@ -98,7 +98,7 @@ extern "C" [[noreturn]] void init()
     multiboot_memory_map_t mmap[] = {
         { sizeof(struct multiboot_mmap_entry) - sizeof(u32),
             (u64)0x0,
-            (u64)0xA2F000,
+            (u64)0x3F000000,
             MULTIBOOT_MEMORY_AVAILABLE }
     };
 
@@ -114,6 +114,9 @@ extern "C" [[noreturn]] void init()
 
     new (&bootstrap_processor()) Processor();
     bootstrap_processor().initialize(0);
+
+    // We want to enable the MMU as fast as possible to make the boot faster.
+    init_page_tables();
 
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
     // might rely on being able to call new/kmalloc in the constructor. We do have to run the
@@ -134,7 +137,6 @@ extern "C" [[noreturn]] void init()
     dmesgln("Starting SerenityOS...");
 
     dmesgln("Initialize MMU");
-    init_page_tables();
     Memory::MemoryManager::initialize(0);
     DeviceManagement::initialize();
 
