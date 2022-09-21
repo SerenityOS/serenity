@@ -54,7 +54,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
     Tuple tuple(descriptor);
     Vector<Tuple> rows;
     descriptor->empend("__unity__"sv);
-    tuple.append(Value(SQLType::Boolean, true));
+    tuple.append(Value { true });
     rows.append(tuple);
 
     for (auto& table_descriptor : table_or_subquery_list()) {

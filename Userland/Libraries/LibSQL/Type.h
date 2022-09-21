@@ -18,8 +18,7 @@ namespace SQL {
     S("int", 4, Integer, int, sizeof(int))       \
     S("float", 8, Float, double, sizeof(double)) \
     S("bool", 16, Boolean, bool, sizeof(bool))   \
-    S("tuple", 32, Tuple, int, sizeof(int))      \
-    S("array", 64, Array, int, sizeof(int))
+    S("tuple", 32, Tuple, int, sizeof(int))
 
 enum class SQLType {
 #undef __ENUMERATE_SQL_TYPE

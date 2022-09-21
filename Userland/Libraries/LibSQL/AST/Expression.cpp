@@ -16,21 +16,17 @@ static constexpr auto s_posix_basic_metacharacters = ".^$*[]+\\"sv;
 
 ResultOr<Value> NumericLiteral::evaluate(ExecutionContext&) const
 {
-    Value ret(SQLType::Float);
-    ret = value();
-    return ret;
+    return Value { value() };
 }
 
 ResultOr<Value> StringLiteral::evaluate(ExecutionContext&) const
 {
-    Value ret(SQLType::Text);
-    ret = value();
-    return ret;
+    return Value { value() };
 }
 
 ResultOr<Value> NullLiteral::evaluate(ExecutionContext&) const
 {
-    return Value::null();
+    return Value {};
 }
 
 ResultOr<Value> NestedExpression::evaluate(ExecutionContext& context) const
@@ -46,7 +42,7 @@ ResultOr<Value> ChainedExpression::evaluate(ExecutionContext& context) const
     for (auto& expression : expressions())
         values.unchecked_append(TRY(expression.evaluate(context)));
 
-    return Value { move(values) };
+    return Value::create_tuple(move(values));
 }
 
 ResultOr<Value> BinaryOperatorExpression::evaluate(ExecutionContext& context) const

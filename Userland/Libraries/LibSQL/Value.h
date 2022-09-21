@@ -1,22 +1,21 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
-#include <AK/ScopeGuard.h>
+#include <AK/Format.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Variant.h>
+#include <AK/Vector.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Result.h>
-#include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Type.h>
-#include <LibSQL/ValueImpl.h>
-#include <string.h>
 
 namespace SQL {
 
@@ -27,49 +26,28 @@ namespace SQL {
  */
 class Value {
 public:
-    Value(Value&) = default;
-    Value(Value const&) = default;
-
     explicit Value(SQLType sql_type = SQLType::Null);
-
-    template<typename... Ts>
-    explicit Value(Variant<Ts...> impl)
-        : m_impl(impl)
-    {
-    }
-
-    enum SetImplementation {
-        SetImplementationSingleton
-    };
-
-    template<typename I>
-    Value(SetImplementation, I&& impl)
-    {
-        m_impl.set<I>(forward<I>(impl));
-    }
-
-    Value(SQLType, Value const&);
-    Value(SQLType, String const&);
-    Value(SQLType, char const*);
-    Value(SQLType, int);
-    Value(SQLType, double);
-    Value(SQLType, bool);
-    explicit Value(String const&);
-    explicit Value(char const*);
+    explicit Value(String);
     explicit Value(int);
     explicit Value(u32);
     explicit Value(double);
-    explicit Value(bool);
+    Value(Value const&);
+    Value(Value&&);
+    ~Value();
 
-    ~Value() = default;
+    static ResultOr<Value> create_tuple(NonnullRefPtr<TupleDescriptor>);
+    static ResultOr<Value> create_tuple(Vector<Value>);
 
-    [[nodiscard]] bool is_null() const;
+    template<typename T>
+    requires(SameAs<RemoveCVReference<T>, bool>) explicit Value(T value)
+        : m_type(SQLType::Boolean)
+        , m_value(value)
+    {
+    }
+
     [[nodiscard]] SQLType type() const;
-    [[nodiscard]] String type_name() const;
-    [[nodiscard]] BaseTypeImpl downcast_to_basetype() const;
-
-    template<typename Impl>
-    Impl const& get_impl(Badge<Impl>) const { return m_impl.get<Impl>(); }
+    [[nodiscard]] StringView type_name() const;
+    [[nodiscard]] bool is_null() const;
 
     [[nodiscard]] String to_string() const;
     [[nodiscard]] Optional<int> to_int() const;
@@ -78,34 +56,33 @@ public:
     [[nodiscard]] Optional<bool> to_bool() const;
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
 
-    void assign(Value const& other_value);
-    void assign(String const& string_value);
-    void assign(int int_value);
-    void assign(u32 unsigned_int_value);
-    void assign(double double_value);
-    void assign(bool bool_value);
-    void assign(Vector<Value> const& values);
-
-    Value& operator=(Value const& other);
-
-    Value& operator=(String const&);
-    Value& operator=(char const*);
+    Value& operator=(Value);
+    Value& operator=(String);
     Value& operator=(int);
     Value& operator=(u32);
     Value& operator=(double);
-    Value& operator=(bool);
-    Value& operator=(Vector<Value> const&);
+
+    ResultOr<void> assign_tuple(NonnullRefPtr<TupleDescriptor>);
+    ResultOr<void> assign_tuple(Vector<Value>);
+
+    template<typename T>
+    requires(SameAs<RemoveCVReference<T>, bool>) Value& operator=(T value)
+    {
+        m_type = SQLType::Boolean;
+        m_value = value;
+        return *this;
+    }
 
     [[nodiscard]] size_t length() const;
     [[nodiscard]] u32 hash() const;
-    [[nodiscard]] bool can_cast(Value const&) const;
     void serialize(Serializer&) const;
     void deserialize(Serializer&);
 
     [[nodiscard]] int compare(Value const&) const;
     bool operator==(Value const&) const;
-    bool operator==(String const&) const;
+    bool operator==(StringView) const;
     bool operator==(int) const;
+    bool operator==(u32) const;
     bool operator==(double) const;
     bool operator!=(Value const&) const;
     bool operator<(Value const&) const;
@@ -123,20 +100,31 @@ public:
     ResultOr<Value> bitwise_or(Value const&) const;
     ResultOr<Value> bitwise_and(Value const&) const;
 
-    [[nodiscard]] TupleElementDescriptor descriptor() const
-    {
-        return { "", "", "", type(), Order::Ascending };
-    }
-
-    static Value const& null();
-    static Value create_tuple(NonnullRefPtr<TupleDescriptor> const&);
-    static Value create_array(SQLType element_type, Optional<size_t> const& max_size = {});
+    [[nodiscard]] TupleElementDescriptor descriptor() const;
 
 private:
-    void setup(SQLType type);
-
-    ValueTypeImpl m_impl { NullImpl() };
     friend Serializer;
+
+    struct TupleValue {
+        NonnullRefPtr<TupleDescriptor> descriptor;
+        Vector<Value> values;
+    };
+
+    using ValueType = Variant<String, int, double, bool, TupleValue>;
+
+    static ResultOr<NonnullRefPtr<TupleDescriptor>> infer_tuple_descriptor(Vector<Value> const& values);
+    Value(NonnullRefPtr<TupleDescriptor> descriptor, Vector<Value> values);
+
+    SQLType m_type { SQLType::Null };
+    Optional<ValueType> m_value;
 };
 
 }
+
+template<>
+struct AK::Formatter<SQL::Value> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, SQL::Value const& value)
+    {
+        return Formatter<StringView>::format(builder, value.to_string());
+    }
+};
