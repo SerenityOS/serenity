@@ -188,6 +188,30 @@ static void activate_mmu()
     Aarch64::Asm::flush();
 }
 
+static u64* get_page_directory(u64* root_table, VirtualAddress virtual_addr)
+{
+    u64 level0_idx = (virtual_addr.get() >> 39) & 0x1FF;
+    u64 level1_idx = (virtual_addr.get() >> 30) & 0x1FF;
+
+    u64* level1_table = root_table;
+
+    if (level1_table[level0_idx] == 0)
+        return nullptr;
+
+    u64* level2_table = descriptor_to_pointer(level1_table[level0_idx]);
+
+    if (level2_table[level1_idx] == 0)
+        return nullptr;
+
+    return descriptor_to_pointer(level2_table[level1_idx]);
+}
+
+static void setup_kernel_page_directory(u64* root_table)
+{
+    boot_pd_kernel = PhysicalAddress((PhysicalPtr)get_page_directory(root_table, VirtualAddress { kernel_mapping_base }));
+    VERIFY(!boot_pd_kernel.is_null());
+}
+
 void init_page_tables()
 {
     // We currently identity map the physical memory, so the offset is 0.
@@ -198,6 +222,7 @@ void init_page_tables()
     auto root_table = allocator.take_page();
     build_identity_map(allocator, root_table);
     setup_quickmap_page_table(allocator, root_table);
+    setup_kernel_page_directory(root_table);
 
     switch_to_page_table(page_tables_phys_start);
     activate_mmu();
